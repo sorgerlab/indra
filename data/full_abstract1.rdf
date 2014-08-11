@@ -1,0 +1,587 @@
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK1))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> kin(p(HGNC:MAPK1))" .
+_:g2210806060 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2210806060 .
+_:g2210806060 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK1> .
+_:g2210806060 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2210806060 <http://www.openbel.org/vocabulary/hasEvidenceText> "Phorbol ester tumor promoters, such as phorbol\\\n12-myristate 13-acetate (PMA), are potent activators of\\\nextracellular signal-regulated kinase 2 (ERK2), stress-activated\\\nprotein kinase (SAPK), and p38 mitogen-activated protein kinase\\\n(MAPK) in U937 human leukemic cells." .
+_:g2210806060 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2210806060 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK8))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> kin(p(HGNC:MAPK8))" .
+_:g2208286180 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasEvidence> _:g2208286180 .
+_:g2208286180 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_HGNC_MAPK8> .
+_:g2208286180 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2208286180 <http://www.openbel.org/vocabulary/hasEvidenceText> "Phorbol ester tumor promoters, such as phorbol\\\n12-myristate 13-acetate (PMA), are potent activators of\\\nextracellular signal-regulated kinase 2 (ERK2), stress-activated\\\nprotein kinase (SAPK), and p38 mitogen-activated protein kinase\\\n(MAPK) in U937 human leukemic cells." .
+_:g2208286180 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2208286180 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(SFAM:\"MAPK p38 Family\"))" .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\")" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK%20p38%20Family> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> kin(p(SFAM:\"MAPK p38 Family\"))" .
+_:g2211511980 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasEvidence> _:g2211511980 .
+_:g2211511980 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_kin_p_SFAM_MAPK_p38_Family> .
+_:g2211511980 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2211511980 <http://www.openbel.org/vocabulary/hasEvidenceText> "Phorbol ester tumor promoters, such as phorbol\\\n12-myristate 13-acetate (PMA), are potent activators of\\\nextracellular signal-regulated kinase 2 (ERK2), stress-activated\\\nprotein kinase (SAPK), and p38 mitogen-activated protein kinase\\\n(MAPK) in U937 human leukemic cells." .
+_:g2211511980 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2211511980 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1,pmod(P,T))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationThreonine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK1))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1,pmod(P,T)) => kin(p(HGNC:MAPK1))" .
+_:g2208433780 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2208433780 .
+_:g2208433780 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> .
+_:g2208433780 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2208433780 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2208433780 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2208433780 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1,pmod(P,Y))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationTyrosine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK1))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1,pmod(P,Y)) => kin(p(HGNC:MAPK1))" .
+_:g2208696080 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2208696080 .
+_:g2208696080 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK1> .
+_:g2208696080 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2208696080 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2208696080 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2208696080 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8,pmod(P,T))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationThreonine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK8))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8,pmod(P,T)) => kin(p(HGNC:MAPK8))" .
+_:g2208966660 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasEvidence> _:g2208966660 .
+_:g2208966660 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> .
+_:g2208966660 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2208966660 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2208966660 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2208966660 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8,pmod(P,Y))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationTyrosine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK8))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8,pmod(P,Y)) => kin(p(HGNC:MAPK8))" .
+_:g2209229060 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasEvidence> _:g2209229060 .
+_:g2209229060 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_HGNC_MAPK8> .
+_:g2209229060 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2209229060 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2209229060 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2209229060 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14,pmod(P,T))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationThreonine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK14> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK14> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(SFAM:\"MAPK p38 Family\"))" .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\")" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK%20p38%20Family> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14,pmod(P,T)) => kin(p(SFAM:\"MAPK p38 Family\"))" .
+_:g2209216440 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasEvidence> _:g2209216440 .
+_:g2209216440 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_T_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> .
+_:g2209216440 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2209216440 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2209216440 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2209216440 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14,pmod(P,Y))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/PhosphorylationTyrosine> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK14> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK14> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK14> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(SFAM:\"MAPK p38 Family\"))" .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\")" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK%20p38%20Family> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyIncreases> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK14,pmod(P,Y)) => kin(p(SFAM:\"MAPK p38 Family\"))" .
+_:g2211177860 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasEvidence> _:g2211177860 .
+_:g2211177860 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_MAPK14_pmod_P_Y_http://www.openbel.org/vocabulary/DirectlyIncreases_kin_p_SFAM_MAPK_p38_Family> .
+_:g2211177860 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2211177860 <http://www.openbel.org/vocabulary/hasEvidenceText> "These kinases are regulated by the reversible dual\\\nphosphorylation of conserved threonine and tyrosine residues." .
+_:g2211177860 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2211177860 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1,pmod(P))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/Phosphorylation> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/p_HGNC_MAPK1_pmod_P> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| p(HGNC:MAPK1,pmod(P))" .
+_:g2207890880 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> <http://www.openbel.org/vocabulary/hasEvidence> _:g2207890880 .
+_:g2207890880 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK1_pmod_P> .
+_:g2207890880 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2207890880 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2207890880 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2207890880 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8,pmod(P))" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/Phosphorylation> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/p_HGNC_MAPK8_pmod_P> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| p(HGNC:MAPK8,pmod(P))" .
+_:g2207599820 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> <http://www.openbel.org/vocabulary/hasEvidence> _:g2207599820 .
+_:g2207599820 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_HGNC_MAPK8_pmod_P> .
+_:g2207599820 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2207599820 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2207599820 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2207599820 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ModifiedProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\",pmod(P))" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasModificationType> <http://www.openbel.org/vocabulary/Phosphorylation> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\")" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK%20p38%20Family> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family_pmod_P> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| p(SFAM:\"MAPK p38 Family\",pmod(P))" .
+_:g2210786920 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> <http://www.openbel.org/vocabulary/hasEvidence> _:g2210786920 .
+_:g2210786920 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_p_SFAM_MAPK_p38_Family_pmod_P> .
+_:g2210786920 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2210786920 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2210786920 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2210786920 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK1))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK1)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| kin(p(HGNC:MAPK1))" .
+_:g2190349020 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2190349020 .
+_:g2190349020 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK1> .
+_:g2190349020 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2190349020 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2190349020 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2190349020 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(HGNC:MAPK8))" .
+<http://www.openbel.org/bel/kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MAPK8)" .
+<http://www.openbel.org/bel/p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK8> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_HGNC_MAPK8> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| kin(p(HGNC:MAPK8))" .
+_:g2153894600 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> <http://www.openbel.org/vocabulary/hasEvidence> _:g2153894600 .
+_:g2153894600 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_HGNC_MAPK8> .
+_:g2153894600 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2153894600 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2153894600 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2153894600 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Kinase> .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "kin(p(SFAM:\"MAPK p38 Family\"))" .
+<http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "p(SFAM:\"MAPK p38 Family\")" .
+<http://www.openbel.org/bel/p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MAPK%20p38%20Family> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/kin_p_SFAM_MAPK_p38_Family> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/DirectlyDecreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) =| kin(p(SFAM:\"MAPK p38 Family\"))" .
+_:g2153595580 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> <http://www.openbel.org/vocabulary/hasEvidence> _:g2153595580 .
+_:g2153595580 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/DirectlyDecreases_kin_p_SFAM_MAPK_p38_Family> .
+_:g2153595580 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2153595580 <http://www.openbel.org/vocabulary/hasEvidenceText> "The dual specificity protein phosphatase MAPK\\\nphosphatase-1(MKP-1) has been shown to dephosphorylate and inactivate ERK2, SAPK, and\\\np38 MAPK in transient transfection studies." .
+_:g2153595580 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2153595580 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> p(HGNC:DUSP1)" .
+_:g2158827700 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2158827700 .
+_:g2158827700 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> .
+_:g2158827700 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2158827700 <http://www.openbel.org/vocabulary/hasEvidenceText> "Here we demonstrate that PMA treatment induces MKP-1\\\nprotein expression in U937 cells, which is detectable within 30 min\\\nwith maximal levels attained after 4 h." .
+_:g2158827700 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2158827700 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Transcription> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "tscript(p(HGNC:JUN))" .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_JUN> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:JUN)" .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/JUN> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/tscript_p_HGNC_JUN> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> tscript(p(HGNC:JUN))" .
+_:g2158597220 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasEvidence> _:g2158597220 .
+_:g2158597220 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_JUN> .
+_:g2158597220 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2158597220 <http://www.openbel.org/vocabulary/hasEvidenceText> "This differential substrate specificity of MKP-1 can be\\\nfunctionally extended to nuclear transcriptional events in that PMAinduced\\\nc-Jun transcriptional activity was more sensitive to inhibition by MKP-1\\\nthan either Elk-1 or c-Myc." .
+_:g2158597220 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2158597220 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Phosphatase> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1))" .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Transcription> .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "tscript(p(HGNC:JUN))" .
+<http://www.openbel.org/bel/tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_JUN> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:JUN)" .
+<http://www.openbel.org/bel/p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/JUN> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/tscript_p_HGNC_JUN> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Decreases> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.w3.org/2000/01/rdf-schema#label> "phos(p(HGNC:DUSP1)) -| tscript(p(HGNC:JUN))" .
+_:g2158399200 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> <http://www.openbel.org/vocabulary/hasEvidence> _:g2158399200 .
+_:g2158399200 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/phos_p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_tscript_p_HGNC_JUN> .
+_:g2158399200 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2158399200 <http://www.openbel.org/vocabulary/hasEvidenceText> "This differential substrate specificity of MKP-1 can be\\\nfunctionally extended to nuclear transcriptional events in that PMAinduced\\\nc-Jun transcriptional activity was more sensitive to inhibition by MKP-1\\\nthan either Elk-1 or c-Myc." .
+_:g2158399200 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2158399200 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/tscript_p_HGNC_ELK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/tscript_p_HGNC_ELK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Transcription> .
+<http://www.openbel.org/bel/tscript_p_HGNC_ELK1> <http://www.w3.org/2000/01/rdf-schema#label> "tscript(p(HGNC:ELK1))" .
+<http://www.openbel.org/bel/tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_ELK1> .
+<http://www.openbel.org/bel/p_HGNC_ELK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_ELK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_ELK1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:ELK1)" .
+<http://www.openbel.org/bel/p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/ELK1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/tscript_p_HGNC_ELK1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> tscript(p(HGNC:ELK1))" .
+_:g2158105700 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2158105700 .
+_:g2158105700 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_ELK1> .
+_:g2158105700 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2158105700 <http://www.openbel.org/vocabulary/hasEvidenceText> "This differential substrate specificity of MKP-1 can be\\\nfunctionally extended to nuclear transcriptional events in that PMAinduced\\\nc-Jun transcriptional activity was more sensitive to inhibition by MKP-1\\\nthan either Elk-1 or c-Myc." .
+_:g2158105700 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2158105700 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/tscript_p_HGNC_MYC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/tscript_p_HGNC_MYC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/AbundanceActivity> .
+<http://www.openbel.org/bel/tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasActivityType> <http://www.openbel.org/vocabulary/Transcription> .
+<http://www.openbel.org/bel/tscript_p_HGNC_MYC> <http://www.w3.org/2000/01/rdf-schema#label> "tscript(p(HGNC:MYC))" .
+<http://www.openbel.org/bel/tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasChild> <http://www.openbel.org/bel/p_HGNC_MYC> .
+<http://www.openbel.org/bel/p_HGNC_MYC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_MYC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_MYC> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:MYC)" .
+<http://www.openbel.org/bel/p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/MYC> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/tscript_p_HGNC_MYC> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> tscript(p(HGNC:MYC))" .
+_:g2153171300 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> <http://www.openbel.org/vocabulary/hasEvidence> _:g2153171300 .
+_:g2153171300 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_tscript_p_HGNC_MYC> .
+_:g2153171300 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2153171300 <http://www.openbel.org/vocabulary/hasEvidenceText> "This differential substrate specificity of MKP-1 can be\\\nfunctionally extended to nuclear transcriptional events in that PMAinduced\\\nc-Jun transcriptional activity was more sensitive to inhibition by MKP-1\\\nthan either Elk-1 or c-Myc." .
+_:g2153171300 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2153171300 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Abundance> .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.w3.org/2000/01/rdf-schema#label> "a(CHEBI:\"phorbol 13-acetate 12-myristate\")" .
+<http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/phorbol%2013-acetate%2012-myristate> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Term> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/ProteinAbundance> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1)" .
+<http://www.openbel.org/bel/p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasConcept> <http://www.openbel.org/bel/namespace/DUSP1> .
+<http://www.openbel.org/bel/_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases__HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/a_CHEBI_phorbol_13-acetate_12-myristate> .
+<http://www.openbel.org/bel/_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases__HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases__HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Increases> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasSubject> <http://www.openbel.org/bel/p_HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasObject> <http://www.openbel.org/bel/_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases__HGNC_DUSP1> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasRelationship> <http://www.openbel.org/vocabulary/Decreases> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Statement> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.w3.org/2000/01/rdf-schema#label> "p(HGNC:DUSP1) -| (a(CHEBI:\"phorbol 13-acetate 12-myristate\") -> p(HGNC:DUSP1))" .
+_:g2156831460 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openbel.org/vocabulary/Evidence> .
+<http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> <http://www.openbel.org/vocabulary/hasEvidence> _:g2156831460 .
+_:g2156831460 <http://www.openbel.org/vocabulary/hasStatement> <http://www.openbel.org/bel/p_HGNC_DUSP1_http://www.openbel.org/vocabulary/Decreases_a_CHEBI_phorbol_13-acetate_12-myristate_http://www.openbel.org/vocabulary/Increases_p_HGNC_DUSP1> .
+_:g2156831460 <http://www.openbel.org/vocabulary/hasCitation> <http://bio2rdf.org/pubmed:9202001> .
+_:g2156831460 <http://www.openbel.org/vocabulary/hasEvidenceText> "Conditional expression of MKP-1 also abolished the\\\ninduction of endogenous MKP-1 protein expression in response to\\\nPMA treatment." .
+_:g2156831460 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/species-taxonomy-id/9606> .
+_:g2156831460 <http://www.openbel.org/vocabulary/hasAnnotation> <http://www.openbel.org/bel/annotation/cell-line/U-937%20cell> .
