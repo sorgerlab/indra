@@ -3,6 +3,7 @@ from rdflib import URIRef
 from rdflib.namespace import RDF
 from rdflib import Namespace
 import urllib
+import sys
 
 """
 Abundance types
@@ -75,11 +76,6 @@ def term_from_uri(uri):
 
 BEL = Namespace("http://www.openbel.org/")
 
-g = rdflib.Graph()
-#g.parse('full_abstract1.rdf', format='nt')
-g.parse('small_corpus.rdf', format='nt')
-#g.parse('sample_rules.rdf', format='nt')
-
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>
     PREFIX belsc: <http://www.openbel.org/bel/>
@@ -114,7 +110,7 @@ states = {
 }
 
 
-def get_monomers():
+def get_monomers(g):
     # PROTEINS ----
     # Get the full list of proteins by querying for protein abundances
     q_prots = prefixes + """
@@ -244,4 +240,15 @@ def get_statements():
             print s, p, o
 
 if __name__ == '__main__':
-    get_monomers()
+    if len(sys.argv) < 2:
+        print "Usage: python rdf_to_pysb.py file.rdf"
+        sys.exit()
+
+    rdf_filename = sys.argv[1]
+
+    g = rdflib.Graph()
+    g.parse(rdf_filename, format='nt')
+    #g.parse('full_abstract1.rdf', format='nt')
+    #g.parse('sample_rules.rdf', format='nt')
+
+    get_monomers(g)
