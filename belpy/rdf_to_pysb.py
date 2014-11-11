@@ -4,6 +4,11 @@ from rdflib.namespace import RDF
 from rdflib import Namespace
 import urllib
 import sys
+from pysb import *
+from pysb import SelfExporter
+from pysb import InvalidComponentNameError
+
+SelfExporter.do_export = False
 
 """
 Abundance types
@@ -58,6 +63,12 @@ that a kinase activity on the left hand side is being specified implicitly.
 Perhaps for starters, we could assert that only activities, not abundances,
 could be candidates for rules.
 
+Protein families
+----------------
+When protein families appear in BEL statements, these are currently getting
+converted into monomers in the resulting PySB model. Instead, these should
+mapped onto representative monomers in same way. An interesting use case for
+a MetaKappa inheritance-type mechanism.
 """
 
 def term_from_uri(uri):
@@ -96,17 +107,17 @@ abbrevs = {
 }
 
 states = {
-    'PhosphorylationSerine': "['u', 'p']",
-    'PhosphorylationThreonine': "['u', 'p']",
-    'PhosphorylationTyrosine': "['u', 'p']",
-    'Phosphorylation': "['y', 'n']",
-    'Ubiquitination': "['y', 'n']",
-    'Farnesylation': "['y', 'n']",
-    'Hydroxylation': "['y', 'n']",
-    'Acetylation': "['y', 'n']",
-    'Sumoylation': "['y', 'n']",
-    'Glycosylation': "['y', 'n']",
-    'Methylation': "['y', 'n']",
+    'PhosphorylationSerine': ['u', 'p'],
+    'PhosphorylationThreonine': ['u', 'p'],
+    'PhosphorylationTyrosine': ['u', 'p'],
+    'Phosphorylation': ['y', 'n'],
+    'Ubiquitination': ['y', 'n'],
+    'Farnesylation': ['y', 'n'],
+    'Hydroxylation': ['y', 'n'],
+    'Acetylation': ['y', 'n'],
+    'Sumoylation': ['y', 'n'],
+    'Glycosylation': ['y', 'n'],
+    'Methylation': ['y', 'n'],
 }
 
 
@@ -182,34 +193,43 @@ def get_monomers(g):
         act_type = term_from_uri(act[1])
         agents[protein]['Activity'].add(act_type)
 
-
     # ASSEMBLY -----
-    # Now we convert to PySB monomer declarations.
-    # In reality, instead of making PySB as text, would create PySB objects.
+    # Now we assemble the PySB model.
+    model = Model()
     for k, v in agents.iteritems():
-        #print '%s:' % k
-        #print '    Mod: %s' % v['Modification']
-        #print '    Act: %s' % v['Activity']
-        mstr  = "Monomer('%s', [" % k
-        for mod in v['Modification']:
-            if len(mod) == 2:
-                mstr += "'%s%s', " % (abbrevs[mod[0]], mod[1])
-            elif len(mod) == 1:
-                mstr += "'%s', " % abbrevs[mod[0]]
-            else:
-                raise Exception("Unknown modification.")
-        mstr += "], {"
-        for mod in v['Modification']:
-            if len(mod) == 2:
-                mstr += "'%s%s': %s, " % (abbrevs[mod[0]], mod[1], states[mod[0]])
-            elif len(mod) == 1:
-                mstr += "'%s': %s, " % (abbrevs[mod[0]], states[mod[0]])
-            else:
-                raise Exception("Unknown modification.")
-        mstr += "})"
-        print mstr
+        monomer_name = k
+        site_list = []
 
-def get_statements():
+        for mod in v['Modification']:
+            if len(mod) == 2:
+                site_name = '%s%s' % (abbrevs[mod[0]], mod[1])
+            elif len(mod) == 1:
+                site_name = '%s' % abbrevs[mod[0]]
+            else:
+                raise Exception("Unknown modification.")
+            site_list.append(site_name)
+        state_dict = {}
+        for mod in v['Modification']:
+            if len(mod) == 2:
+                state_key = '%s%s' % (abbrevs[mod[0]], mod[1])
+                state_value = states[mod[0]]
+            elif len(mod) == 1:
+                state_key = '%s' % abbrevs[mod[0]]
+                state_value = states[mod[0]]
+            else:
+                raise Exception("Unknown modification.")
+            state_dict[state_key] = state_value
+        # Ignore components that have invalid names (e.g., starting with a
+        # number
+        try:
+            m = Monomer(monomer_name, site_list, state_dict)
+            model.add_component(m)
+        except InvalidComponentNameError as e:
+            print "Warning: %s" % e
+
+    return model
+
+def get_statements(g):
     # Query for statements
     q_stmts = prefixes + """
         SELECT ?subject ?object
@@ -240,15 +260,16 @@ def get_statements():
             print s, p, o
 
 if __name__ == '__main__':
+    # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
         print "Usage: python rdf_to_pysb.py file.rdf"
         sys.exit()
-
+    # We take the RDF filename as the argument
     rdf_filename = sys.argv[1]
 
+    # Parse the RDF
     g = rdflib.Graph()
     g.parse(rdf_filename, format='nt')
-    #g.parse('full_abstract1.rdf', format='nt')
-    #g.parse('sample_rules.rdf', format='nt')
-
-    get_monomers(g)
+    # Build the PySB model
+    model = get_monomers(g)
+    #get_statements(g)
