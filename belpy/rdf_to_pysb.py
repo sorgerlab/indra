@@ -1,14 +1,14 @@
-import rdflib
-from rdflib import URIRef
-from rdflib.namespace import RDF
-from rdflib import Namespace
-import urllib
-import sys
-from pysb import *
-from pysb import SelfExporter
-from pysb import InvalidComponentNameError
 import re
+import sys
 import keyword
+import urllib
+
+import rdflib
+from rdflib import URIRef, Namespace
+from rdflib.namespace import RDF
+
+from pysb import *
+from pysb import SelfExporter, InvalidComponentNameError
 
 SelfExporter.do_export = False
 
