@@ -33,6 +33,13 @@ Types of uncertainty
   modification sites)
     - Which modifications on kinases are the activating ones?
 
+Todo
+----
+- Kin -> Kin rules
+- Phosphatase -> Kin rules
+- Get all complexes and make binding rules
+- Get amino acid substitutions ("sub" terms in protein abundances)
+
 Abundance types
 ---------------
 
@@ -139,7 +146,7 @@ BEL = Namespace("http://www.openbel.org/")
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>
     PREFIX belsc: <http://www.openbel.org/bel/>
-    PREFIX belns: <http://www.openbel.org/namespace/>"""
+    PREFIX belns: <http://www.openbel.org/bel/namespace/>"""
 
 abbrevs = {
     'PhosphorylationSerine': 'S',
@@ -153,6 +160,7 @@ abbrevs = {
     'Sumoylation': 'sumo',
     'Glycosylation': 'glycosyl',
     'Methylation': 'methyl',
+    'Modification': 'mod',
 }
 
 states = {
@@ -167,6 +175,7 @@ states = {
     'Sumoylation': ['y', 'n'],
     'Glycosylation': ['y', 'n'],
     'Methylation': ['y', 'n'],
+    'Modification': ['y', 'n'],
 }
 
 
@@ -271,13 +280,16 @@ def get_monomers(g):
             site_list.append(act)
             state_dict[state_key] = state_value
 
-        # Ignore components that have invalid names (e.g., starting with a
-        # number
-        try:
-            m = Monomer(monomer_name, site_list, state_dict)
-            model.add_component(m)
-        except InvalidComponentNameError as e:
-            print "Warning: %s" % e
+        ic_param = Parameter('default_ic', 10.)
+        m = Monomer(monomer_name, site_list, state_dict)
+        model.add_component(m)
+        sites = {}
+        for s in m.sites:
+            if s in m.site_states:
+                sites[s] = m.site_states[s][0]
+            else:
+                sites[s] = None
+        model.initial(m(sites), ic_param)
 
     return model
 
