@@ -21,10 +21,6 @@ Documentation for rdflib can be found at
 
 https://rdflib.readthedocs.org
 
-Currently:
-
-- Searches the graph for all protein abundances. Makes 
-
 Types of uncertainty
 --------------------
 
@@ -36,6 +32,7 @@ Types of uncertainty
 - Uncertainty about structural aspects of interactions (binding sites,
   modification sites)
     - Which modifications on kinases are the activating ones?
+
 Abundance types
 ---------------
 
@@ -73,7 +70,7 @@ Activity (?)
 
 For Tsc2, we find a PhosphorylationSerine and a PhosphorylationThreonine at the
 same site! So this presumably reflects an error. We need for screen for
-consistency of this type.
+inconsistency of this type.
 
 Also, Histone_H3_Family have methylation at position 27 but the residue type is
 not specified? (it is, but it's not in the name of the modification).
@@ -288,8 +285,8 @@ def get_statements(g, model):
     # Query for all statements where a kinase directlyIncreases modified
     # form of substrate. Ignore kinase activity of complexes for now and
     # include only the kinase activities of ProteinAbundances.
-    q_stmts = prefixes + """
-        SELECT ?kinaseName ?substrateName
+    q_phospho = prefixes + """
+        SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object
         WHERE {
             ?stmt a belvoc:Statement .
             ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -300,50 +297,54 @@ def get_statements(g, model):
             ?kinase a belvoc:ProteinAbundance .
             ?kinase belvoc:hasConcept ?kinaseName .
             ?object a belvoc:ModifiedProteinAbundance .
+            ?object belvoc:hasModificationType ?mod .
             ?object belvoc:hasChild ?substrate .
             ?substrate belvoc:hasConcept ?substrateName .
+            OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
         }
     """
 
     # Now make the PySB for the phosphorylation
-    res_stmts = g.query(q_stmts)
+    res_phospho = g.query(q_phospho)
 
-    for stmt in res_stmts:
+    # A default parameter object for phosphorylation
+    kf_phospho = Parameter('kf_phospho', 1.)
+
+    for stmt in res_phospho:
         kin_name = name_from_uri(stmt[0])
         sub_name = name_from_uri(stmt[1])
-        print "kinase: %s" % kin_name
-        print "substrate: %s" % sub_name
+        mod = term_from_uri(stmt[2])
+        mod_pos = term_from_uri(stmt[3])
+        # For the rule names: unfortunately, due to what looks like a bug in
+        # the BEL to RDF conversion, the statements themselves are stringified
+        # as, e.g.,
+        # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
+        # where the subject and object are separated by a URI-prefixed relationship
+        # term. This screws up the term_from_uri function which strips the
+        # URI off. As a result I've manually reconstituted valid names here.
+        subj = term_from_uri(stmt[4])
+        obj = term_from_uri(stmt[5])
+        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+        # Get the monomer objects from the model
         kin_mono = model.monomers[kin_name]
         sub_mono = model.monomers[sub_name]
+        # This represents just one (perhaps the simplest one) interpretation
+        # of phosphorylation: pseudo first-order, in which there is no binding
+        # between the kinase and substrate. Merely sufficient to get some dynamics.
+        # The form of the rule here is dependent on the conversion of activity
+        # names (e.g., 'Kinase', 'Phosphatase') directly from the RDF-ified BEL.
+        # If alternative PySB shorthands were developed for these activities this
+        # would have to be modified.
+        if mod_pos is not None:
+            site_name = '%s%s' % (abbrevs[mod], mod_pos)
+        else:
+            site_name = abbrevs[mod]
 
-    import ipdb; ipdb.set_trace()
-
-    prot = URIRef('http://www.openbel.org/vocabulary/ProteinAbundance')
-    modprot = URIRef('http://www.openbel.org/vocabulary/ModifiedProteinAbundance')
-    act = URIRef('http://www.openbel.org/vocabulary/AbundanceActivity')
-    kin = URIRef('http://www.openbel.org/vocabulary/KinaseActivity')
-    # 1. Find all complexes. Give them rules for binding, and binding sites.
-    # 2. Find all kinase activities with substrates: give them rules for
-    #    phosphorylating substrate.
-    # 3. Add DNA->mRNA->protein relationships for all monomers
-    # 3. Find all oth
-
-    # Now, use the subjects/objects from the query, which we know have a
-    # directly increases relationship, and find those involve a modified
-    # protein abundance on the right hand side.
-    for stmt in res_stmts:
-        print stmt
-        sub = stmt[0]
-        obj = stmt[1]
-        print "-----------"
-        print sub
-        print obj
-        for subject, pred, object in g.triples( (sub, RDF.type, kin) ):
-            #print "protein abundance!"
-            print "found"
-            print subject, pred, object
-            # But the subjects are still going to be complex objects
-            import ipdb; ipdb.set_trace()
+        rule = Rule(rule_name,
+                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
+                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
+                    kf_phospho)
+        model.add_component(rule)
 
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
