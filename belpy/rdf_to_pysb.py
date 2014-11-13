@@ -36,7 +36,7 @@ Types of uncertainty
 Todo
 ----
 - Kin -> Kin rules
-- Phosphatase -> Kin rules
+- Phosphatase --> Kin rules
 - Get all complexes and make binding rules
 - Get amino acid substitutions ("sub" terms in protein abundances)
 
@@ -105,7 +105,7 @@ def name_from_uri(uri):
     First strips of the extra URI information by calling term_from_uri,
     then checks to make sure the name is a valid Python identifier.
     Currently fixes identifiers starting with numbers by prepending with
-    an underscore. For other cases it raises an exception.
+    the letter 'p'. For other cases it raises an exception.
 
     This function should be called when the string that is returned is to be
     used as a PySB component name, which are required to be valid Python
@@ -114,7 +114,7 @@ def name_from_uri(uri):
     name = term_from_uri(uri)
     # Handle the case where the string starts with a number
     if name[0].isdigit():
-        name = '_' + name
+        name = 'p' + name
     if re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) \
             and not keyword.iskeyword(name):
         pass
@@ -167,7 +167,7 @@ states = {
     'PhosphorylationSerine': ['u', 'p'],
     'PhosphorylationThreonine': ['u', 'p'],
     'PhosphorylationTyrosine': ['u', 'p'],
-    'Phosphorylation': ['y', 'n'],
+    'Phosphorylation': ['u', 'p'],
     'Ubiquitination': ['y', 'n'],
     'Farnesylation': ['y', 'n'],
     'Hydroxylation': ['y', 'n'],
@@ -254,6 +254,8 @@ def get_monomers(g):
     # ASSEMBLY -----
     # Now we assemble the PySB model.
     model = Model()
+    ic_param = Parameter('default_ic', 10.)
+    model.add_component(ic_param)
     for k, v in agents.iteritems():
         monomer_name = k
         site_list = []
@@ -280,7 +282,6 @@ def get_monomers(g):
             site_list.append(act)
             state_dict[state_key] = state_value
 
-        ic_param = Parameter('default_ic', 10.)
         m = Monomer(monomer_name, site_list, state_dict)
         model.add_component(m)
         sites = {}
@@ -321,6 +322,7 @@ def get_statements(g, model):
 
     # A default parameter object for phosphorylation
     kf_phospho = Parameter('kf_phospho', 1.)
+    model.add_component(kf_phospho)
 
     for stmt in res_phospho:
         kin_name = name_from_uri(stmt[0])
