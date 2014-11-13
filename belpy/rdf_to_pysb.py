@@ -163,6 +163,10 @@ abbrevs = {
     'Modification': 'mod',
 }
 
+active_site_names = {
+    'Kinase': 'kin_site',
+}
+
 states = {
     'PhosphorylationSerine': ['u', 'p'],
     'PhosphorylationThreonine': ['u', 'p'],
@@ -252,7 +256,8 @@ def get_monomers(g):
         agents[protein]['Activity'].add(act_type)
 
     # ASSEMBLY -----
-    # Now we assemble the PySB model.
+    # Now that we know all the activities and modification states of the
+    # proteins mentioned in the entire corpus, we assemble the PySB model.
     model = Model()
     ic_param = Parameter('default_ic', 10.)
     model.add_component(ic_param)
@@ -278,9 +283,12 @@ def get_monomers(g):
         # Iterate over all activities
         for act in v['Activity']:
             state_key = act
-            state_value = ['active', 'inactive']
+            state_value = ['inactive', 'active']
             site_list.append(act)
             state_dict[state_key] = state_value
+            # Add the active site for binding, if there is one
+            if act in active_site_names:
+                site_list.append(active_site_names[act])
 
         m = Monomer(monomer_name, site_list, state_dict)
         model.add_component(m)
@@ -290,11 +298,14 @@ def get_monomers(g):
                 sites[s] = m.site_states[s][0]
             else:
                 sites[s] = None
+        if monomer_name == 'AKT_Family' or \
+           monomer_name == 'RPS6KA_Family':
+            sites['Kinase'] = 'active'
         model.initial(m(sites), ic_param)
 
     return model
 
-def get_statements(g, model):
+def get_statements(g, model, rule_type='binding'):
     # Query for all statements where a kinase directlyIncreases modified
     # form of substrate. Ignore kinase activity of complexes for now and
     # include only the kinase activities of ProteinAbundances.
@@ -354,10 +365,76 @@ def get_statements(g, model):
         else:
             site_name = abbrevs[mod]
 
+        if rule_type == 'no_binding':
+            rule = Rule(rule_name,
+                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
+                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
+                        kf_phospho)
+            model.add_component(rule)
+        elif rule_type == 'binding':
+            rule_bind = Rule('%s_bind' % rule_name,
+                        kin_mono(Kinase='active', kin_site=None) +
+                        sub_mono(**{site_name: 'u'}) <>
+                        kin_mono(Kinase='active', kin_site=1) %
+                        sub_mono(**{site_name: ('u', 1)}),
+                        kf_phospho, kf_phospho)
+            rule_cat =  Rule('%s_cat' % rule_name,
+                        kin_mono(Kinase='active', kin_site=1) %
+                        sub_mono(**{site_name: ('u', 1)}) >>
+                        kin_mono(Kinase='active', kin_site=None) +
+                        sub_mono(**{site_name: 'p'}),
+                        kf_phospho)
+            model.add_component(rule_bind)
+            model.add_component(rule_cat)
+
+def get_activating_mods(g, model):
+    # Query for all statements where a kinase directlyIncreases modified
+    # form of substrate. Ignore kinase activity of complexes for now and
+    # include only the kinase activities of ProteinAbundances.
+    q_phospho = prefixes + """
+        SELECT ?kinaseName ?mod ?pos ?subject ?object
+        WHERE {
+            ?stmt a belvoc:Statement .
+            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+            ?stmt belvoc:hasSubject ?subject .
+            ?stmt belvoc:hasObject ?object .
+            ?object belvoc:hasActivityType belvoc:Kinase .
+            ?object belvoc:hasChild ?kinase .
+            ?kinase a belvoc:ProteinAbundance .
+            ?kinase belvoc:hasConcept ?kinaseName .
+            ?subject a belvoc:ModifiedProteinAbundance .
+            ?subject belvoc:hasModificationType ?mod .
+            ?subject belvoc:hasChild ?kinase .
+            OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
+        }
+    """
+
+    # Now make the PySB for the phosphorylation
+    res_phospho = g.query(q_phospho)
+
+    kf_activation = Parameter('kf_activation', 1e5)
+    model.add_component(kf_activation)
+
+    for stmt in res_phospho:
+        print stmt
+        kin_name = name_from_uri(stmt[0])
+        mod = term_from_uri(stmt[1])
+        mod_pos = term_from_uri(stmt[2])
+        # Get the monomer objects from the model
+        kin_mono = model.monomers[kin_name]
+        subj = term_from_uri(stmt[3])
+        obj = term_from_uri(stmt[4])
+        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+
+        if mod_pos is not None:
+            site_name = '%s%s' % (abbrevs[mod], mod_pos)
+        else:
+            site_name = abbrevs[mod]
+
         rule = Rule(rule_name,
-                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
-                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                    kf_phospho)
+                    kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
+                    kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
+                    kf_activation)
         model.add_component(rule)
 
 if __name__ == '__main__':
@@ -374,3 +451,4 @@ if __name__ == '__main__':
     # Build the PySB model
     model = get_monomers(g)
     get_statements(g, model)
+    get_activating_mods(g, model)
