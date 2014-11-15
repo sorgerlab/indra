@@ -54,3 +54,4 @@ docs/_build/
 
 # Vim temp files
 *.swp
+large_corpus.rdf
