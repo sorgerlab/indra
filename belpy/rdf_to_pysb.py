@@ -2,13 +2,15 @@ import re
 import sys
 import keyword
 import urllib
+import collections
 
 import rdflib
 from rdflib import URIRef, Namespace
 from rdflib.namespace import RDF
 
 from pysb import *
-from pysb import SelfExporter, InvalidComponentNameError
+from pysb.core import SelfExporter, InvalidComponentNameError, \
+                      ComplexPattern, ReactionPattern
 
 SelfExporter.do_export = False
 
@@ -135,9 +137,10 @@ def term_from_uri(uri):
     term = uri.rsplit('/')[-1]
     # Decode URL to handle spaces, special characters
     term = urllib.unquote(term)
-    # Replace any spaces or hyphens with underscores
+    # Replace any spaces, hyphens, or periods with underscores
     term = term.replace(' ', '_')
     term = term.replace('-', '_')
+    term = term.replace('.', '_')
     return term
 
 
@@ -198,7 +201,13 @@ def get_monomers(g):
     res_prots = g.query(q_prots)
 
     # Parse out the gene names, we'll use these for our monomer names
-    gene_names = [name_from_uri(r[0]) for r in res_prots]
+    gene_names = []
+    for r in res_prots:
+        try:
+            gene_names.append(name_from_uri(r[0]))
+        except InvalidComponentNameError as e:
+            print "Warning: %s" % e
+            continue
 
     # Initialize agents dict from list of monomers.
     # For each gene name in the dict, keep a set of modifications, and a set
@@ -226,9 +235,14 @@ def get_monomers(g):
     # For each modification returned by the query, add the modification to the
     # list for the appropriate gene
     for mod in res_modprots:
-        protein = name_from_uri(mod[0])
-        mod_type = term_from_uri(mod[1])
-        pos = term_from_uri(mod[2])
+        try:
+            protein = name_from_uri(mod[0])
+            mod_type = term_from_uri(mod[1])
+            pos = term_from_uri(mod[2])
+        except InvalidComponentNameError as e:
+            print "Warning: %s" % e
+            continue
+
         if pos is not None:
             mod_type = (mod_type, pos)
         else:
@@ -251,8 +265,13 @@ def get_monomers(g):
     res_acts = g.query(q_acts)
     # Add the activities to the list for the appropriate gene
     for act in res_acts:
-        protein = name_from_uri(act[0])
-        act_type = term_from_uri(act[1])
+        try:
+            protein = name_from_uri(act[0])
+            act_type = term_from_uri(act[1])
+        except InvalidComponentNameError as e:
+            print "Warning: %s" % e
+            continue
+
         agents[protein]['Activity'].add(act_type)
 
     # ASSEMBLY -----
@@ -289,7 +308,7 @@ def get_monomers(g):
             # Add the active site for binding, if there is one
             if act in active_site_names:
                 site_list.append(active_site_names[act])
-
+        site_list.append('b') # FIXME
         m = Monomer(monomer_name, site_list, state_dict)
         model.add_component(m)
         sites = {}
@@ -298,11 +317,7 @@ def get_monomers(g):
                 sites[s] = m.site_states[s][0]
             else:
                 sites[s] = None
-        if monomer_name == 'AKT_Family' or \
-           monomer_name == 'RPS6KA_Family':
-            sites['Kinase'] = 'active'
         model.initial(m(sites), ic_param)
-
     return model
 
 def get_statements(g, model, rule_type='binding'):
@@ -340,6 +355,7 @@ def get_statements(g, model, rule_type='binding'):
         sub_name = name_from_uri(stmt[1])
         mod = term_from_uri(stmt[2])
         mod_pos = term_from_uri(stmt[3])
+
         # For the rule names: unfortunately, due to what looks like a bug in
         # the BEL to RDF conversion, the statements themselves are stringified
         # as, e.g.,
@@ -416,9 +432,8 @@ def get_activating_mods(g, model):
     model.add_component(kf_activation)
 
     for stmt in res_phospho:
-        print stmt
         kin_name = name_from_uri(stmt[0])
-        mod = term_from_uri(stmt[1])
+        mod = term_froom_uri(stmt[1])
         mod_pos = term_from_uri(stmt[2])
         # Get the monomer objects from the model
         kin_mono = model.monomers[kin_name]
@@ -437,6 +452,50 @@ def get_activating_mods(g, model):
                     kf_activation)
         model.add_component(rule)
 
+def get_complexes(g, model):
+    # Query for all statements where a kinase directlyIncreases modified
+    # form of substrate. Ignore kinase activity of complexes for now and
+    # include only the kinase activities of ProteinAbundances.
+    q_cmplx = prefixes + """
+        SELECT ?term ?childName
+        WHERE {
+            ?term a belvoc:Term .
+            ?term a belvoc:ComplexAbundance .
+            ?term belvoc:hasChild ?child .
+            ?child belvoc:hasConcept ?childName .
+        }
+    """
+
+    # Now make the PySB for the phosphorylation
+    res_cmplx = g.query(q_cmplx)
+
+    kf_binding = Parameter('kf_binding', 1)
+    model.add_component(kf_binding)
+
+    cmplx_dict = collections.defaultdict(list)
+    for stmt in res_cmplx:
+        cmplx_name = term_from_uri(stmt[0])
+        child_name = name_from_uri(stmt[1])
+        cmplx_dict[cmplx_name].append(child_name)
+
+    for cmplx_name, cmplx_list in cmplx_dict.iteritems():
+        lhs = ReactionPattern([])
+        rhs = ComplexPattern([], None)
+        try:
+            for monomer_name in cmplx_list:
+                mono = model.monomers[monomer_name]
+                mp_free = mono(b=None)
+                mp_bound = mono(b=1)
+                lhs = lhs + mp_free
+                rhs = rhs % mp_bound
+            rule_name = '%s_bind' % cmplx_name
+            if not model.rules.get(rule_name):
+                rule = Rule('%s_bind' % cmplx_name,
+                            lhs <> rhs, kf_binding, kf_binding)
+                model.add_component(rule)
+        except KeyError as ke:
+            print "Warning: Monomer not found, ignoring: %s" % ke
+
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -450,5 +509,7 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     model = get_monomers(g)
-    get_statements(g, model)
-    get_activating_mods(g, model)
+    #get_statements(g, model)
+    #get_statements(g, model, rule_type='no_binding')
+    #get_activating_mods(g, model)
+    get_complexes(g, model)
