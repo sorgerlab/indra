@@ -24,7 +24,7 @@ Documentation for rdflib can be found at
 https://rdflib.readthedocs.org
 
 Types of uncertainty
---------------------
+====================
 
 - Uncertainty about initial conditions
     - Concentrations of protein and mRNA species
@@ -35,12 +35,24 @@ Types of uncertainty
   modification sites)
     - Which modifications on kinases are the activating ones?
 
-Todo
-----
-- Kin -> Kin rules
-- Phosphatase --> Kin rules
-- Get all complexes and make binding rules
+Types of statements
+===================
+
+- Kinase -> Modified substrate (can generalize to all site-modifiers?
+  Should be general for Ub, Kinase, Phosphatase, Glycos, others?
+- Complex(X, Y), indicates that X and Y bind
+- Modified protein -> kinase activity (can be make this general to other
+  activities?)
+- Activity of X -> GtpBoundActivity(Y) (i.e., X is RAS GEF)
+- Activity of X -| GtpBoundActivity(Y) (i.e., X is RAS GAP)
+- Substitution in X -> GtpBoundActivity(Y) (i.e., activation mutation in RAS)
 - Get amino acid substitutions ("sub" terms in protein abundances)
+- RasGTPases slowly hydrolyze GTP by themselves, so need to add default
+  rule for each monomer with a GtpBoundActivity
+- Protein families: expand out to members, or use representative?
+
+Notes on RDF representation
+===========================
 
 Abundance types
 ---------------
@@ -49,10 +61,11 @@ ProteinAbundance
 ModifiedProteinAbundance
 AbundanceActivity
 
-NOTE:
-ModifiedProteinAbundances will be a subset of ProteinAbundances, since all
-ModifiedProteinAbundances have a protein abundance as a child (via the
-relationship hasChild).
+.. note::
+
+    ModifiedProteinAbundances will be a subset of ProteinAbundances, since all
+    ModifiedProteinAbundances have a ProteinAbundance as a child (via the
+    relationship hasChild).
 
 Modification types
 ------------------
@@ -77,6 +90,9 @@ GtpBound
 Ubiquitination
 Activity (?)
 
+Other notes
+===========
+
 For Tsc2, we find a PhosphorylationSerine and a PhosphorylationThreonine at the
 same site! So this presumably reflects an error. We need for screen for
 inconsistency of this type.
@@ -94,6 +110,20 @@ that a kinase activity on the left hand side is being specified implicitly.
 Perhaps for starters, we could assert that only activities, not abundances,
 could be candidates for rules.
 
+Redundancies
+------------
+
+What to do about the following example, in which the BEL corpus contained the
+following overlapping statements? Have seen similar things where statements
+regarding the family overlap those of specific genes.
+
+Rule(u'cat_p_HGNC_SOS1_directlyIncreases_gtp_p_HGNC_KRAS',
+     SOS1(Catalytic='active') + KRAS(GtpBound='inactive') >>
+     SOS1(Catalytic='active') + KRAS(GtpBound='active'), kf_gef),
+Rule(u'cat_p_PFH_SOS_Family_directlyIncreases_gtp_p_HGNC_NRAS',
+     SOS_Family(Catalytic='active') + NRAS(GtpBound='inactive') >>
+     SOS_Family(Catalytic='active') + NRAS(GtpBound='active'), kf_gef),
+
 Protein families
 ----------------
 When protein families appear in BEL statements, these are currently getting
@@ -101,6 +131,7 @@ converted into monomers in the resulting PySB model. Instead, these should
 mapped onto representative monomers in same way. An interesting use case for
 a MetaKappa inheritance-type mechanism.
 """
+
 def name_from_uri(uri):
     """Make the URI term usable as a valid Python identifier, if possible.
 
@@ -143,6 +174,12 @@ def term_from_uri(uri):
     term = term.replace('.', '_')
     return term
 
+def get_rule_name(subj_uri, obj_uri, relation):
+    """Serializes a BEL statement to a string for use as a rule name."""
+    subj = term_from_uri(subj_uri)
+    obj = term_from_uri(obj_uri)
+    rule_name = name_from_uri('%s_%s_%s' % (subj, relation, obj))
+    return rule_name
 
 BEL = Namespace("http://www.openbel.org/")
 
@@ -320,7 +357,7 @@ def get_monomers(g):
         model.initial(m(sites), ic_param)
     return model
 
-def get_statements(g, model, rule_type='binding'):
+def get_phosphorylation_rules(g, model, rule_type='binding'):
     # Query for all statements where a kinase directlyIncreases modified
     # form of substrate. Ignore kinase activity of complexes for now and
     # include only the kinase activities of ProteinAbundances.
@@ -363,9 +400,7 @@ def get_statements(g, model, rule_type='binding'):
         # where the subject and object are separated by a URI-prefixed relationship
         # term. This screws up the term_from_uri function which strips the
         # URI off. As a result I've manually reconstituted valid names here.
-        subj = term_from_uri(stmt[4])
-        obj = term_from_uri(stmt[5])
-        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+        rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
         # Get the monomer objects from the model
         kin_mono = model.monomers[kin_name]
         sub_mono = model.monomers[sub_name]
@@ -496,6 +531,103 @@ def get_complexes(g, model):
         except KeyError as ke:
             print "Warning: Monomer not found, ignoring: %s" % ke
 
+def get_gef_rules(g, model, rule_type='no_binding'):
+    # First, get the statements with activities as subjects.
+    q_gef = prefixes + """
+        SELECT ?gefName ?rasName ?gefActivity ?subject ?object
+        WHERE {
+            ?stmt a belvoc:Statement .
+            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+            ?stmt belvoc:hasSubject ?subject .
+            ?stmt belvoc:hasObject ?object .
+            ?subject a belvoc:AbundanceActivity .
+            ?subject belvoc:hasActivityType ?gefActivity .
+            ?subject belvoc:hasChild ?gef .
+            ?gef a belvoc:ProteinAbundance .
+            ?gef belvoc:hasConcept ?gefName .
+            ?object a belvoc:AbundanceActivity .
+            ?object belvoc:hasActivityType belvoc:GtpBound .
+            ?object belvoc:hasChild ?ras .
+            ?ras belvoc:hasConcept ?rasName .
+        }
+    """
+    res_gef = g.query(q_gef)
+
+    # A default parameter object for gef
+    kf_gef = Parameter('kf_gef', 1.)
+    model.add_component(kf_gef)
+
+    for stmt in res_gef:
+        gef_name = name_from_uri(stmt[0])
+        ras_name = name_from_uri(stmt[1])
+        gef_activity = name_from_uri(stmt[2])
+        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+        # Get the monomer objects from the model
+        gef_mono = model.monomers[gef_name]
+        ras_mono = model.monomers[ras_name]
+        if rule_type == 'no_binding':
+            rule = Rule(rule_name,
+                        gef_mono(**{gef_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'inactive'}) >>
+                        gef_mono(**{gef_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'active'}),
+                        kf_gef)
+            model.add_component(rule)
+
+    """
+        kin_name = name_from_uri(stmt[0])
+        sub_name = name_from_uri(stmt[1])
+        mod = term_from_uri(stmt[2])
+        mod_pos = term_from_uri(stmt[3])
+
+        # For the rule names: unfortunately, due to what looks like a bug in
+        # the BEL to RDF conversion, the statements themselves are stringified
+        # as, e.g.,
+        # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
+        # where the subject and object are separated by a URI-prefixed relationship
+        # term. This screws up the term_from_uri function which strips the
+        # URI off. As a result I've manually reconstituted valid names here.
+        subj = term_from_uri(stmt[4])
+        obj = term_from_uri(stmt[5])
+        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+        # Get the monomer objects from the model
+        kin_mono = model.monomers[kin_name]
+        sub_mono = model.monomers[sub_name]
+        # This represents just one (perhaps the simplest one) interpretation
+        # of phosphorylation: pseudo first-order, in which there is no binding
+        # between the kinase and substrate. Merely sufficient to get some dynamics.
+        # The form of the rule here is dependent on the conversion of activity
+        # names (e.g., 'Kinase', 'Phosphatase') directly from the RDF-ified BEL.
+        # If alternative PySB shorthands were developed for these activities this
+        # would have to be modified.
+        if mod_pos is not None:
+            site_name = '%s%s' % (abbrevs[mod], mod_pos)
+        else:
+            site_name = abbrevs[mod]
+
+        if rule_type == 'no_binding':
+            rule = Rule(rule_name,
+                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
+                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
+                        kf_phospho)
+            model.add_component(rule)
+        elif rule_type == 'binding':
+            rule_bind = Rule('%s_bind' % rule_name,
+                        kin_mono(Kinase='active', kin_site=None) +
+                        sub_mono(**{site_name: 'u'}) <>
+                        kin_mono(Kinase='active', kin_site=1) %
+                        sub_mono(**{site_name: ('u', 1)}),
+                        kf_phospho, kf_phospho)
+            rule_cat =  Rule('%s_cat' % rule_name,
+                        kin_mono(Kinase='active', kin_site=1) %
+                        sub_mono(**{site_name: ('u', 1)}) >>
+                        kin_mono(Kinase='active', kin_site=None) +
+                        sub_mono(**{site_name: 'p'}),
+                        kf_phospho)
+            model.add_component(rule_bind)
+            model.add_component(rule_cat)
+    """
+
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -509,7 +641,8 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     model = get_monomers(g)
-    #get_statements(g, model)
-    #get_statements(g, model, rule_type='no_binding')
+    #get_phosphorylation_rules(g, model)
+    #get_phosphorylation_rules(g, model, rule_type='no_binding')
     #get_activating_mods(g, model)
-    get_complexes(g, model)
+    #get_complexes(g, model)
+    get_gef_rules(g, model)
