@@ -26,14 +26,17 @@ https://rdflib.readthedocs.org
 Types of uncertainty
 ====================
 
-- Uncertainty about initial conditions
+- Initial conditions
     - Concentrations of protein and mRNA species
     - Activity states of signaling molecules (e.g., how much AKT is "active"
       in basal conditions?)
-- Uncertainty about kinetic rate parameters
-- Uncertainty about structural aspects of interactions (binding sites,
+- Kinetic rate parameters
+- Structural aspects of interactions (which/how many binding sites,
   modification sites)
-    - Which modifications on kinases are the activating ones?
+- Significance of modifications, e.g., which phospho-states are the
+  activating ones?
+- Significance of complexes. Is binding another protein inhibitory or
+  activating?
 
 Types of statements
 ===================
@@ -468,7 +471,7 @@ def get_activating_mods(g, model):
 
     for stmt in res_phospho:
         kin_name = name_from_uri(stmt[0])
-        mod = term_froom_uri(stmt[1])
+        mod = term_from_uri(stmt[1])
         mod_pos = term_from_uri(stmt[2])
         # Get the monomer objects from the model
         kin_mono = model.monomers[kin_name]
@@ -574,59 +577,89 @@ def get_gef_rules(g, model, rule_type='no_binding'):
                         kf_gef)
             model.add_component(rule)
 
+def get_gap_rules(g, model, rule_type='no_binding'):
+    # First, get the statements with activities as subjects.
+    q_gap = prefixes + """
+        SELECT ?gapName ?rasName ?gapActivity ?subject ?object
+        WHERE {
+            ?stmt a belvoc:Statement .
+            ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
+            ?stmt belvoc:hasSubject ?subject .
+            ?stmt belvoc:hasObject ?object .
+            ?subject a belvoc:AbundanceActivity .
+            ?subject belvoc:hasActivityType ?gapActivity .
+            ?subject belvoc:hasChild ?gap .
+            ?gap a belvoc:ProteinAbundance .
+            ?gap belvoc:hasConcept ?gapName .
+            ?object a belvoc:AbundanceActivity .
+            ?object belvoc:hasActivityType belvoc:GtpBound .
+            ?object belvoc:hasChild ?ras .
+            ?ras belvoc:hasConcept ?rasName .
+        }
     """
-        kin_name = name_from_uri(stmt[0])
-        sub_name = name_from_uri(stmt[1])
-        mod = term_from_uri(stmt[2])
-        mod_pos = term_from_uri(stmt[3])
+    res_gap = g.query(q_gap)
 
-        # For the rule names: unfortunately, due to what looks like a bug in
-        # the BEL to RDF conversion, the statements themselves are stringified
-        # as, e.g.,
-        # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
-        # where the subject and object are separated by a URI-prefixed relationship
-        # term. This screws up the term_from_uri function which strips the
-        # URI off. As a result I've manually reconstituted valid names here.
-        subj = term_from_uri(stmt[4])
-        obj = term_from_uri(stmt[5])
-        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+    # A default parameter object for gap
+    kf_gap = Parameter('kf_gap', 1.)
+    model.add_component(kf_gap)
+
+    for stmt in res_gap:
+        gap_name = name_from_uri(stmt[0])
+        ras_name = name_from_uri(stmt[1])
+        gap_activity = name_from_uri(stmt[2])
+        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
         # Get the monomer objects from the model
-        kin_mono = model.monomers[kin_name]
-        sub_mono = model.monomers[sub_name]
-        # This represents just one (perhaps the simplest one) interpretation
-        # of phosphorylation: pseudo first-order, in which there is no binding
-        # between the kinase and substrate. Merely sufficient to get some dynamics.
-        # The form of the rule here is dependent on the conversion of activity
-        # names (e.g., 'Kinase', 'Phosphatase') directly from the RDF-ified BEL.
-        # If alternative PySB shorthands were developed for these activities this
-        # would have to be modified.
-        if mod_pos is not None:
-            site_name = '%s%s' % (abbrevs[mod], mod_pos)
-        else:
-            site_name = abbrevs[mod]
-
+        gap_mono = model.monomers[gap_name]
+        ras_mono = model.monomers[ras_name]
         if rule_type == 'no_binding':
             rule = Rule(rule_name,
-                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
-                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                        kf_phospho)
+                        gap_mono(**{gap_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'active'}) >>
+                        gap_mono(**{gap_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'inactive'}),
+                        kf_gap)
             model.add_component(rule)
-        elif rule_type == 'binding':
-            rule_bind = Rule('%s_bind' % rule_name,
-                        kin_mono(Kinase='active', kin_site=None) +
-                        sub_mono(**{site_name: 'u'}) <>
-                        kin_mono(Kinase='active', kin_site=1) %
-                        sub_mono(**{site_name: ('u', 1)}),
-                        kf_phospho, kf_phospho)
-            rule_cat =  Rule('%s_cat' % rule_name,
-                        kin_mono(Kinase='active', kin_site=1) %
-                        sub_mono(**{site_name: ('u', 1)}) >>
-                        kin_mono(Kinase='active', kin_site=None) +
-                        sub_mono(**{site_name: 'p'}),
-                        kf_phospho)
-            model.add_component(rule_bind)
-            model.add_component(rule_cat)
+
+def get_ras_rules(g, model, rule_type='no_binding'):
+    # First, get the statements with activities as subjects.
+    q_ras = prefixes + """
+        SELECT ?stmt
+        WHERE {
+            ?stmt a belvoc:Statement .
+            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+            ?stmt belvoc:hasSubject ?subject .
+            ?stmt belvoc:hasObject ?object .
+            ?subject a belvoc:AbundanceActivity .
+            ?subject belvoc:hasActivityType belvoc:GtpBound .
+        }
     """
+    res_ras = g.query(q_ras)
+
+    # A default parameter object for ras
+    #kf_ras = Parameter('kf_ras', 1.)
+    #model.add_component(kf_ras)
+
+    for stmt in res_ras:
+        print stmt[0]
+    """
+        ras_name = name_from_uri(stmt[0])
+        ras_name = name_from_uri(stmt[1])
+        ras_activity = name_from_uri(stmt[2])
+        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+        # Get the monomer objects from the model
+        ras_mono = model.monomers[ras_name]
+        ras_mono = model.monomers[ras_name]
+        if rule_type == 'no_binding':
+            rule = Rule(rule_name,
+                        ras_mono(**{ras_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'active'}) >>
+                        ras_mono(**{ras_activity: 'active'}) +
+                        ras_mono(**{'GtpBound': 'inactive'}),
+                        kf_ras)
+            model.add_component(rule)
+    """
+
+
 
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
@@ -641,8 +674,9 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     model = get_monomers(g)
-    #get_phosphorylation_rules(g, model)
     #get_phosphorylation_rules(g, model, rule_type='no_binding')
     #get_activating_mods(g, model)
     #get_complexes(g, model)
-    get_gef_rules(g, model)
+    #get_gef_rules(g, model)
+    #get_gap_rules(g, model)
+    get_ras_rules(g, model)
