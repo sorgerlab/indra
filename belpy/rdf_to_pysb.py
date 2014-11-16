@@ -46,6 +46,9 @@ Types of statements
 - Complex(X, Y), indicates that X and Y bind
 - Modified protein -> kinase activity (can be make this general to other
   activities?)
+- Kinase activity => Kinase activity. These statements are labeled as being
+  "direct", i.e., mechanistic, even though the phosphorylation site on the
+  substrate is unspecified.
 - Activity of X -> GtpBoundActivity(Y) (i.e., X is RAS GEF)
 - Activity of X -| GtpBoundActivity(Y) (i.e., X is RAS GAP)
 - Substitution in X -> GtpBoundActivity(Y) (i.e., activation mutation in RAS)
@@ -365,7 +368,7 @@ def get_phosphorylation_rules(g, model, rule_type='binding'):
     # form of substrate. Ignore kinase activity of complexes for now and
     # include only the kinase activities of ProteinAbundances.
     q_phospho = prefixes + """
-        SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object
+        SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object ?stmt
         WHERE {
             ?stmt a belvoc:Statement .
             ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -389,12 +392,14 @@ def get_phosphorylation_rules(g, model, rule_type='binding'):
     # A default parameter object for phosphorylation
     kf_phospho = Parameter('kf_phospho', 1.)
     model.add_component(kf_phospho)
+    statements = []
 
     for stmt in res_phospho:
         kin_name = name_from_uri(stmt[0])
         sub_name = name_from_uri(stmt[1])
         mod = term_from_uri(stmt[2])
         mod_pos = term_from_uri(stmt[3])
+        statements.append(stmt[6])
 
         # For the rule names: unfortunately, due to what looks like a bug in
         # the BEL to RDF conversion, the statements themselves are stringified
@@ -440,13 +445,14 @@ def get_phosphorylation_rules(g, model, rule_type='binding'):
                         kf_phospho)
             model.add_component(rule_bind)
             model.add_component(rule_cat)
+    return statements
 
 def get_activating_mods(g, model):
     # Query for all statements where a kinase directlyIncreases modified
     # form of substrate. Ignore kinase activity of complexes for now and
     # include only the kinase activities of ProteinAbundances.
     q_phospho = prefixes + """
-        SELECT ?kinaseName ?mod ?pos ?subject ?object
+        SELECT ?kinaseName ?mod ?pos ?subject ?object ?stmt
         WHERE {
             ?stmt a belvoc:Statement .
             ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -468,11 +474,12 @@ def get_activating_mods(g, model):
 
     kf_activation = Parameter('kf_activation', 1e5)
     model.add_component(kf_activation)
-
+    statements = []
     for stmt in res_phospho:
         kin_name = name_from_uri(stmt[0])
         mod = term_from_uri(stmt[1])
         mod_pos = term_from_uri(stmt[2])
+        statements.append(stmt[5])
         # Get the monomer objects from the model
         kin_mono = model.monomers[kin_name]
         subj = term_from_uri(stmt[3])
@@ -489,6 +496,7 @@ def get_activating_mods(g, model):
                     kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
                     kf_activation)
         model.add_component(rule)
+    return statements
 
 def get_complexes(g, model):
     # Query for all statements where a kinase directlyIncreases modified
@@ -537,7 +545,7 @@ def get_complexes(g, model):
 def get_gef_rules(g, model, rule_type='no_binding'):
     # First, get the statements with activities as subjects.
     q_gef = prefixes + """
-        SELECT ?gefName ?rasName ?gefActivity ?subject ?object
+        SELECT ?gefName ?rasName ?gefActivity ?subject ?object ?stmt
         WHERE {
             ?stmt a belvoc:Statement .
             ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -559,11 +567,12 @@ def get_gef_rules(g, model, rule_type='no_binding'):
     # A default parameter object for gef
     kf_gef = Parameter('kf_gef', 1.)
     model.add_component(kf_gef)
-
+    statements = []
     for stmt in res_gef:
         gef_name = name_from_uri(stmt[0])
         ras_name = name_from_uri(stmt[1])
         gef_activity = name_from_uri(stmt[2])
+        statements.append(stmt[5])
         rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
         # Get the monomer objects from the model
         gef_mono = model.monomers[gef_name]
@@ -576,11 +585,12 @@ def get_gef_rules(g, model, rule_type='no_binding'):
                         ras_mono(**{'GtpBound': 'active'}),
                         kf_gef)
             model.add_component(rule)
+    return statements
 
 def get_gap_rules(g, model, rule_type='no_binding'):
     # First, get the statements with activities as subjects.
     q_gap = prefixes + """
-        SELECT ?gapName ?rasName ?gapActivity ?subject ?object
+        SELECT ?gapName ?rasName ?gapActivity ?subject ?object ?stmt
         WHERE {
             ?stmt a belvoc:Statement .
             ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
@@ -602,11 +612,12 @@ def get_gap_rules(g, model, rule_type='no_binding'):
     # A default parameter object for gap
     kf_gap = Parameter('kf_gap', 1.)
     model.add_component(kf_gap)
-
+    statements = []
     for stmt in res_gap:
         gap_name = name_from_uri(stmt[0])
         ras_name = name_from_uri(stmt[1])
         gap_activity = name_from_uri(stmt[2])
+        statements.append(stmt[5])
         rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
         # Get the monomer objects from the model
         gap_mono = model.monomers[gap_name]
@@ -619,6 +630,20 @@ def get_gap_rules(g, model, rule_type='no_binding'):
                         ras_mono(**{'GtpBound': 'inactive'}),
                         kf_gap)
             model.add_component(rule)
+    return statements
+
+def get_all_direct_statements(g):
+    q_stmts = prefixes + """
+        SELECT ?stmt
+        WHERE {
+            ?stmt a belvoc:Statement .
+            { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+            UNION
+            { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+        }
+    """
+    res_stmts = g.query(q_stmts)
+    return [stmt[0] for stmt in res_stmts]
 
 def get_ras_rules(g, model, rule_type='no_binding'):
     # First, get the statements with activities as subjects.
@@ -634,7 +659,6 @@ def get_ras_rules(g, model, rule_type='no_binding'):
         }
     """
     res_ras = g.query(q_ras)
-
     # A default parameter object for ras
     #kf_ras = Parameter('kf_ras', 1.)
     #model.add_component(kf_ras)
@@ -673,10 +697,23 @@ if __name__ == '__main__':
     g = rdflib.Graph()
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
+    all_stmts = get_all_direct_statements(g)
+
     model = get_monomers(g)
-    #get_phosphorylation_rules(g, model, rule_type='no_binding')
-    #get_activating_mods(g, model)
+    phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
+    mod_stmts = get_activating_mods(g, model)
     #get_complexes(g, model)
-    #get_gef_rules(g, model)
-    #get_gap_rules(g, model)
-    get_ras_rules(g, model)
+    gef_stmts = get_gef_rules(g, model)
+    gap_stmts = get_gap_rules(g, model)
+    #get_ras_rules(g, model)
+    print '\n'.join(all_stmts)
+    print "Total statements: %d" % len(all_stmts)
+    print("Converted statements: %d" % (len(phos_stmts) + len(mod_stmts) +
+                                        len(gef_stmts) + len(gap_stmts)))
+    for stmt in phos_stmts + mod_stmts + gef_stmts + gap_stmts:
+        print "removing: %s" % stmt
+        all_stmts.remove(stmt)
+    print
+    print "--- Unconverted statements ---------"
+    print '\n'.join(all_stmts)
+
