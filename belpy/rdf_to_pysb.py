@@ -574,8 +574,7 @@ class BelProcessor(object):
             except KeyError as ke:
                 print "Warning: Monomer not found, ignoring: %s" % ke
 
-    def get_gef_rules(g, model, rule_type='no_binding'):
-        # First, get the statements with activities as subjects.
+    def get_ras_gefs(self):
         q_gef = prefixes + """
             SELECT ?gefName ?rasName ?gefActivity ?subject ?object ?stmt
             WHERE {
@@ -596,16 +595,19 @@ class BelProcessor(object):
         """
         res_gef = g.query(q_gef)
 
-        # A default parameter object for gef
-        kf_gef = Parameter('kf_gef', 1.)
-        model.add_component(kf_gef)
-        statements = []
         for stmt in res_gef:
             gef_name = name_from_uri(stmt[0])
             ras_name = name_from_uri(stmt[1])
             gef_activity = name_from_uri(stmt[2])
-            statements.append(stmt[5])
-            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+            subj = term_from_uri(stmt[3])
+            obj = term_from_uri(stmt[4])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt[5])
+            self.belpy_stmts.append(
+                    RasGef(gef_name, gef_activity, ras_name,
+                           subj, obj, stmt[5]))
+
+        """
             # Get the monomer objects from the model
             gef_mono = model.monomers[gef_name]
             ras_mono = model.monomers[ras_name]
@@ -618,8 +620,9 @@ class BelProcessor(object):
                             kf_gef)
                 model.add_component(rule)
         return statements
+        """
 
-    def get_gap_rules(g, model, rule_type='no_binding'):
+    def get_ras_gaps(self):
         # First, get the statements with activities as subjects.
         q_gap = prefixes + """
             SELECT ?gapName ?rasName ?gapActivity ?subject ?object ?stmt
@@ -641,16 +644,18 @@ class BelProcessor(object):
         """
         res_gap = g.query(q_gap)
 
-        # A default parameter object for gap
-        kf_gap = Parameter('kf_gap', 1.)
-        model.add_component(kf_gap)
-        statements = []
         for stmt in res_gap:
             gap_name = name_from_uri(stmt[0])
             ras_name = name_from_uri(stmt[1])
             gap_activity = name_from_uri(stmt[2])
-            statements.append(stmt[5])
-            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+            subj = term_from_uri(stmt[3])
+            obj = term_from_uri(stmt[4])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt[5])
+            self.belpy_stmts.append(
+                    RasGap(gap_name, gap_activity, ras_name,
+                           subj, obj, stmt[5]))
+            """
             # Get the monomer objects from the model
             gap_mono = model.monomers[gap_name]
             ras_mono = model.monomers[ras_name]
@@ -663,6 +668,7 @@ class BelProcessor(object):
                             kf_gap)
                 model.add_component(rule)
         return statements
+            """
 
     def get_kinase_kinase_rules(g, model, rule_type='no_binding'):
         # Query for all statements where a kinase directlyIncreases modified
@@ -788,12 +794,12 @@ if __name__ == '__main__':
     bp = BelProcessor(g)
     bp.get_phosphorylations()
     bp.get_activating_mods()
-    bp.belpy_stmts[0]
+    bp.get_ras_gefs()
+    bp.get_ras_gaps()
+    bp.print_statements()
     #model = get_monomers(g)
     #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
     #get_complexes(g, model)
-    #gef_stmts = get_gef_rules(g, model)
-    #gap_stmts = get_gap_rules(g, model)
     #get_ras_rules(g, model)
     #get_kinase_kinase_rules(g, model)
 
