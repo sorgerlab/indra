@@ -144,6 +144,8 @@ from pysb import *
 from pysb.core import SelfExporter, InvalidComponentNameError, \
                       ComplexPattern, ReactionPattern
 
+from belpy_statements import *
+
 SelfExporter.do_export = False
 
 def name_from_uri(uri):
@@ -235,7 +237,6 @@ states = {
     'Methylation': ['y', 'n'],
     'Modification': ['y', 'n'],
 }
-
 
 def get_monomers(g):
     # PROTEINS ----
@@ -371,382 +372,401 @@ def get_monomers(g):
         model.initial(m(sites), ic_param)
     return model
 
-def get_phosphorylation_rules(g, model, rule_type='binding'):
-    # Query for all statements where a kinase directlyIncreases modified
-    # form of substrate. Ignore kinase activity of complexes for now and
-    # include only the kinase activities of ProteinAbundances.
-    q_phospho = prefixes + """
-        SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?subject belvoc:hasActivityType belvoc:Kinase .
-            ?subject belvoc:hasChild ?kinase .
-            ?kinase a belvoc:ProteinAbundance .
-            ?kinase belvoc:hasConcept ?kinaseName .
-            ?object a belvoc:ModifiedProteinAbundance .
-            ?object belvoc:hasModificationType ?mod .
-            ?object belvoc:hasChild ?substrate .
-            ?substrate belvoc:hasConcept ?substrateName .
-            OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
-        }
-    """
+class BelProcessor(object):
+    def __init__(self, g):
+        self.g = g
+        self.belpy_stmts = []
+        self.all_stmts = []
+        self.converted_stmts = []
 
-    # Now make the PySB for the phosphorylation
-    res_phospho = g.query(q_phospho)
+    def print_statements(self):
+        for stmt in self.belpy_stmts:
+            print stmt
 
-    # A default parameter object for phosphorylation
-    kf_phospho = Parameter('kf_phospho', 1.)
-    model.add_component(kf_phospho)
-    statements = []
+    def get_phosphorylations(self):
+        # Query for all statements where a kinase directlyIncreases modified
+        # form of substrate. Ignore kinase activity of complexes for now and
+        # include only the kinase activities of ProteinAbundances.
+        q_phospho = prefixes + """
+            SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject belvoc:hasActivityType belvoc:Kinase .
+                ?subject belvoc:hasChild ?kinase .
+                ?kinase a belvoc:ProteinAbundance .
+                ?kinase belvoc:hasConcept ?kinaseName .
+                ?object a belvoc:ModifiedProteinAbundance .
+                ?object belvoc:hasModificationType ?mod .
+                ?object belvoc:hasChild ?substrate .
+                ?substrate belvoc:hasConcept ?substrateName .
+                OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
+            }
+        """
 
-    for stmt in res_phospho:
-        kin_name = name_from_uri(stmt[0])
-        sub_name = name_from_uri(stmt[1])
-        mod = term_from_uri(stmt[2])
-        mod_pos = term_from_uri(stmt[3])
-        statements.append(stmt[6])
+        # Now make the PySB for the phosphorylation
+        res_phospho = self.g.query(q_phospho)
 
-        # For the rule names: unfortunately, due to what looks like a bug in
-        # the BEL to RDF conversion, the statements themselves are stringified
-        # as, e.g.,
-        # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
-        # where the subject and object are separated by a URI-prefixed relationship
-        # term. This screws up the term_from_uri function which strips the
-        # URI off. As a result I've manually reconstituted valid names here.
-        rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
-        # Get the monomer objects from the model
-        kin_mono = model.monomers[kin_name]
-        sub_mono = model.monomers[sub_name]
-        # This represents just one (perhaps the simplest one) interpretation
-        # of phosphorylation: pseudo first-order, in which there is no binding
-        # between the kinase and substrate. Merely sufficient to get some dynamics.
-        # The form of the rule here is dependent on the conversion of activity
-        # names (e.g., 'Kinase', 'Phosphatase') directly from the RDF-ified BEL.
-        # If alternative PySB shorthands were developed for these activities this
-        # would have to be modified.
-        if mod_pos is not None:
-            site_name = '%s%s' % (abbrevs[mod], mod_pos)
-        else:
-            site_name = abbrevs[mod]
+        for stmt in res_phospho:
+            # Parse out the elements of the query
+            kin_name = name_from_uri(stmt[0])
+            sub_name = name_from_uri(stmt[1])
+            mod = term_from_uri(stmt[2])
+            mod_pos = term_from_uri(stmt[3])
+            subj = term_from_uri(stmt[4])
+            obj = term_from_uri(stmt[5])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt[6])
 
-        if rule_type == 'no_binding':
+            #rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
+            self.belpy_stmts.append(
+                    Phosphorylation(kin_name, sub_name, mod, mod_pos,
+                                    subj, obj, stmt))
+
+            # For the rule names: unfortunately, due to what looks like a bug
+            # in the BEL to RDF conversion, the statements themselves are
+            # stringified as, e.g.,
+            # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
+            # where the subject and object are separated by a URI-prefixed
+            # relationship term. This screws up the term_from_uri function
+            # which strips the URI off. As a result I've manually reconstituted
+            # valid names here.
+            # Get the monomer objects from the model
+            #kin_mono = model.monomers[kin_name]
+            #sub_mono = model.monomers[sub_name]
+            # This represents just one (perhaps the simplest one)
+            # interpretation of phosphorylation: pseudo first-order, in which
+            # there is no binding between the kinase and substrate. Merely
+            # sufficient to get some dynamics.  The form of the rule here is
+            # dependent on the conversion of activity names (e.g., 'Kinase',
+            # 'Phosphatase') directly from the RDF-ified BEL.  If alternative
+            # PySB shorthands were developed for these activities this would
+            # have to be modified.
+
+            """
+            if mod_pos is not None:
+                site_name = '%s%s' % (abbrevs[mod], mod_pos)
+            else:
+                site_name = abbrevs[mod]
+
+            if rule_type == 'no_binding':
+                rule = Rule(rule_name,
+                            kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
+                            kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
+                            kf_phospho)
+                model.add_component(rule)
+            elif rule_type == 'binding':
+                rule_bind = Rule('%s_bind' % rule_name,
+                            kin_mono(Kinase='active', kin_site=None) +
+                            sub_mono(**{site_name: 'u'}) <>
+                            kin_mono(Kinase='active', kin_site=1) %
+                            sub_mono(**{site_name: ('u', 1)}),
+                            kf_phospho, kf_phospho)
+                rule_cat =  Rule('%s_cat' % rule_name,
+                            kin_mono(Kinase='active', kin_site=1) %
+                            sub_mono(**{site_name: ('u', 1)}) >>
+                            kin_mono(Kinase='active', kin_site=None) +
+                            sub_mono(**{site_name: 'p'}),
+                            kf_phospho)
+                model.add_component(rule_bind)
+                model.add_component(rule_cat)
+        return statements
+            """
+
+    def get_activating_mods(self):
+        # Query for all statements where a kinase directlyIncreases modified
+        # form of substrate. Ignore kinase activity of complexes for now and
+        # include only the kinase activities of ProteinAbundances.
+        q_phospho = prefixes + """
+            SELECT ?kinaseName ?mod ?pos ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?object belvoc:hasActivityType belvoc:Kinase .
+                ?object belvoc:hasChild ?kinase .
+                ?kinase a belvoc:ProteinAbundance .
+                ?kinase belvoc:hasConcept ?kinaseName .
+                ?subject a belvoc:ModifiedProteinAbundance .
+                ?subject belvoc:hasModificationType ?mod .
+                ?subject belvoc:hasChild ?kinase .
+                OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_phospho = g.query(q_phospho)
+
+        kf_activation = Parameter('kf_activation', 1e5)
+        model.add_component(kf_activation)
+        statements = []
+        for stmt in res_phospho:
+            kin_name = name_from_uri(stmt[0])
+            mod = term_from_uri(stmt[1])
+            mod_pos = term_from_uri(stmt[2])
+            statements.append(stmt[5])
+            # Get the monomer objects from the model
+            kin_mono = model.monomers[kin_name]
+            subj = term_from_uri(stmt[3])
+            obj = term_from_uri(stmt[4])
+            rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+
+            if mod_pos is not None:
+                site_name = '%s%s' % (abbrevs[mod], mod_pos)
+            else:
+                site_name = abbrevs[mod]
+
             rule = Rule(rule_name,
+                        kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
+                        kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
+                        kf_activation)
+            model.add_component(rule)
+        return statements
+
+    def get_complexes(g, model):
+        # Query for all statements where a kinase directlyIncreases modified
+        # form of substrate. Ignore kinase activity of complexes for now and
+        # include only the kinase activities of ProteinAbundances.
+        q_cmplx = prefixes + """
+            SELECT ?term ?childName
+            WHERE {
+                ?term a belvoc:Term .
+                ?term a belvoc:ComplexAbundance .
+                ?term belvoc:hasChild ?child .
+                ?child belvoc:hasConcept ?childName .
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_cmplx = g.query(q_cmplx)
+
+        kf_binding = Parameter('kf_binding', 1)
+        model.add_component(kf_binding)
+
+        cmplx_dict = collections.defaultdict(list)
+        for stmt in res_cmplx:
+            cmplx_name = term_from_uri(stmt[0])
+            child_name = name_from_uri(stmt[1])
+            cmplx_dict[cmplx_name].append(child_name)
+
+        for cmplx_name, cmplx_list in cmplx_dict.iteritems():
+            lhs = ReactionPattern([])
+            rhs = ComplexPattern([], None)
+            try:
+                for monomer_name in cmplx_list:
+                    mono = model.monomers[monomer_name]
+                    mp_free = mono(b=None)
+                    mp_bound = mono(b=1)
+                    lhs = lhs + mp_free
+                    rhs = rhs % mp_bound
+                rule_name = '%s_bind' % cmplx_name
+                if not model.rules.get(rule_name):
+                    rule = Rule('%s_bind' % cmplx_name,
+                                lhs <> rhs, kf_binding, kf_binding)
+                    model.add_component(rule)
+            except KeyError as ke:
+                print "Warning: Monomer not found, ignoring: %s" % ke
+
+    def get_gef_rules(g, model, rule_type='no_binding'):
+        # First, get the statements with activities as subjects.
+        q_gef = prefixes + """
+            SELECT ?gefName ?rasName ?gefActivity ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType ?gefActivity .
+                ?subject belvoc:hasChild ?gef .
+                ?gef a belvoc:ProteinAbundance .
+                ?gef belvoc:hasConcept ?gefName .
+                ?object a belvoc:AbundanceActivity .
+                ?object belvoc:hasActivityType belvoc:GtpBound .
+                ?object belvoc:hasChild ?ras .
+                ?ras belvoc:hasConcept ?rasName .
+            }
+        """
+        res_gef = g.query(q_gef)
+
+        # A default parameter object for gef
+        kf_gef = Parameter('kf_gef', 1.)
+        model.add_component(kf_gef)
+        statements = []
+        for stmt in res_gef:
+            gef_name = name_from_uri(stmt[0])
+            ras_name = name_from_uri(stmt[1])
+            gef_activity = name_from_uri(stmt[2])
+            statements.append(stmt[5])
+            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+            # Get the monomer objects from the model
+            gef_mono = model.monomers[gef_name]
+            ras_mono = model.monomers[ras_name]
+            if rule_type == 'no_binding':
+                rule = Rule(rule_name,
+                            gef_mono(**{gef_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'inactive'}) >>
+                            gef_mono(**{gef_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'active'}),
+                            kf_gef)
+                model.add_component(rule)
+        return statements
+
+    def get_gap_rules(g, model, rule_type='no_binding'):
+        # First, get the statements with activities as subjects.
+        q_gap = prefixes + """
+            SELECT ?gapName ?rasName ?gapActivity ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType ?gapActivity .
+                ?subject belvoc:hasChild ?gap .
+                ?gap a belvoc:ProteinAbundance .
+                ?gap belvoc:hasConcept ?gapName .
+                ?object a belvoc:AbundanceActivity .
+                ?object belvoc:hasActivityType belvoc:GtpBound .
+                ?object belvoc:hasChild ?ras .
+                ?ras belvoc:hasConcept ?rasName .
+            }
+        """
+        res_gap = g.query(q_gap)
+
+        # A default parameter object for gap
+        kf_gap = Parameter('kf_gap', 1.)
+        model.add_component(kf_gap)
+        statements = []
+        for stmt in res_gap:
+            gap_name = name_from_uri(stmt[0])
+            ras_name = name_from_uri(stmt[1])
+            gap_activity = name_from_uri(stmt[2])
+            statements.append(stmt[5])
+            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+            # Get the monomer objects from the model
+            gap_mono = model.monomers[gap_name]
+            ras_mono = model.monomers[ras_name]
+            if rule_type == 'no_binding':
+                rule = Rule(rule_name,
+                            gap_mono(**{gap_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'active'}) >>
+                            gap_mono(**{gap_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'inactive'}),
+                            kf_gap)
+                model.add_component(rule)
+        return statements
+
+    def get_kinase_kinase_rules(g, model, rule_type='no_binding'):
+        # Query for all statements where a kinase directlyIncreases modified
+        # form of substrate. Ignore kinase activity of complexes for now and
+        # include only the kinase activities of ProteinAbundances.
+        q_phospho = prefixes + """
+            SELECT ?kinaseName ?substrateName ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject belvoc:hasActivityType belvoc:Kinase .
+                ?subject belvoc:hasChild ?kinase .
+                ?kinase a belvoc:ProteinAbundance .
+                ?kinase belvoc:hasConcept ?kinaseName .
+                ?object belvoc:hasActivityType belvoc:Kinase .
+                ?object belvoc:hasChild ?substrate .
+                ?substrate a belvoc:ProteinAbundance .
+                ?substrate belvoc:hasConcept ?substrateName .
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_phospho = g.query(q_phospho)
+
+        # A default parameter object for phosphorylation
+        kf_kinase = Parameter('kf_kinase', 1.)
+        model.add_component(kf_kinase)
+        statements = []
+
+        for stmt in res_phospho:
+            kin_name = name_from_uri(stmt[0])
+            sub_name = name_from_uri(stmt[1])
+            statements.append(stmt[4])
+
+            rule_name = get_rule_name(stmt[2], stmt[3], 'directlyIncreases')
+            # Get the monomer objects from the model
+            kin_mono = model.monomers[kin_name]
+            sub_mono = model.monomers[sub_name]
+
+            print "--------------------------------"
+            print stmt[4]
+            print("This statement says that:")
+            print("%s kinase activity increases kinase activity of %s" %
+                  (kin_name, sub_name))
+            print("Here are the sites on %s that I know about:" % sub_name)
+            print sub_mono.sites
+
+            """
+            if rule_type == 'no_binding':
+                rule = Rule(rule_name,
                         kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
                         kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                        kf_phospho)
-            model.add_component(rule)
-        elif rule_type == 'binding':
-            rule_bind = Rule('%s_bind' % rule_name,
-                        kin_mono(Kinase='active', kin_site=None) +
-                        sub_mono(**{site_name: 'u'}) <>
-                        kin_mono(Kinase='active', kin_site=1) %
-                        sub_mono(**{site_name: ('u', 1)}),
-                        kf_phospho, kf_phospho)
-            rule_cat =  Rule('%s_cat' % rule_name,
-                        kin_mono(Kinase='active', kin_site=1) %
-                        sub_mono(**{site_name: ('u', 1)}) >>
-                        kin_mono(Kinase='active', kin_site=None) +
-                        sub_mono(**{site_name: 'p'}),
-                        kf_phospho)
-            model.add_component(rule_bind)
-            model.add_component(rule_cat)
-    return statements
-
-def get_activating_mods(g, model):
-    # Query for all statements where a kinase directlyIncreases modified
-    # form of substrate. Ignore kinase activity of complexes for now and
-    # include only the kinase activities of ProteinAbundances.
-    q_phospho = prefixes + """
-        SELECT ?kinaseName ?mod ?pos ?subject ?object ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?object belvoc:hasActivityType belvoc:Kinase .
-            ?object belvoc:hasChild ?kinase .
-            ?kinase a belvoc:ProteinAbundance .
-            ?kinase belvoc:hasConcept ?kinaseName .
-            ?subject a belvoc:ModifiedProteinAbundance .
-            ?subject belvoc:hasModificationType ?mod .
-            ?subject belvoc:hasChild ?kinase .
-            OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
-        }
-    """
-
-    # Now make the PySB for the phosphorylation
-    res_phospho = g.query(q_phospho)
-
-    kf_activation = Parameter('kf_activation', 1e5)
-    model.add_component(kf_activation)
-    statements = []
-    for stmt in res_phospho:
-        kin_name = name_from_uri(stmt[0])
-        mod = term_from_uri(stmt[1])
-        mod_pos = term_from_uri(stmt[2])
-        statements.append(stmt[5])
-        # Get the monomer objects from the model
-        kin_mono = model.monomers[kin_name]
-        subj = term_from_uri(stmt[3])
-        obj = term_from_uri(stmt[4])
-        rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
-
-        if mod_pos is not None:
-            site_name = '%s%s' % (abbrevs[mod], mod_pos)
-        else:
-            site_name = abbrevs[mod]
-
-        rule = Rule(rule_name,
-                    kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
-                    kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
-                    kf_activation)
-        model.add_component(rule)
-    return statements
-
-def get_complexes(g, model):
-    # Query for all statements where a kinase directlyIncreases modified
-    # form of substrate. Ignore kinase activity of complexes for now and
-    # include only the kinase activities of ProteinAbundances.
-    q_cmplx = prefixes + """
-        SELECT ?term ?childName
-        WHERE {
-            ?term a belvoc:Term .
-            ?term a belvoc:ComplexAbundance .
-            ?term belvoc:hasChild ?child .
-            ?child belvoc:hasConcept ?childName .
-        }
-    """
-
-    # Now make the PySB for the phosphorylation
-    res_cmplx = g.query(q_cmplx)
-
-    kf_binding = Parameter('kf_binding', 1)
-    model.add_component(kf_binding)
-
-    cmplx_dict = collections.defaultdict(list)
-    for stmt in res_cmplx:
-        cmplx_name = term_from_uri(stmt[0])
-        child_name = name_from_uri(stmt[1])
-        cmplx_dict[cmplx_name].append(child_name)
-
-    for cmplx_name, cmplx_list in cmplx_dict.iteritems():
-        lhs = ReactionPattern([])
-        rhs = ComplexPattern([], None)
-        try:
-            for monomer_name in cmplx_list:
-                mono = model.monomers[monomer_name]
-                mp_free = mono(b=None)
-                mp_bound = mono(b=1)
-                lhs = lhs + mp_free
-                rhs = rhs % mp_bound
-            rule_name = '%s_bind' % cmplx_name
-            if not model.rules.get(rule_name):
-                rule = Rule('%s_bind' % cmplx_name,
-                            lhs <> rhs, kf_binding, kf_binding)
+                        kf_kinase)
                 model.add_component(rule)
-        except KeyError as ke:
-            print "Warning: Monomer not found, ignoring: %s" % ke
+            """
 
-def get_gef_rules(g, model, rule_type='no_binding'):
-    # First, get the statements with activities as subjects.
-    q_gef = prefixes + """
-        SELECT ?gefName ?rasName ?gefActivity ?subject ?object ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?subject a belvoc:AbundanceActivity .
-            ?subject belvoc:hasActivityType ?gefActivity .
-            ?subject belvoc:hasChild ?gef .
-            ?gef a belvoc:ProteinAbundance .
-            ?gef belvoc:hasConcept ?gefName .
-            ?object a belvoc:AbundanceActivity .
-            ?object belvoc:hasActivityType belvoc:GtpBound .
-            ?object belvoc:hasChild ?ras .
-            ?ras belvoc:hasConcept ?rasName .
-        }
-    """
-    res_gef = g.query(q_gef)
-
-    # A default parameter object for gef
-    kf_gef = Parameter('kf_gef', 1.)
-    model.add_component(kf_gef)
-    statements = []
-    for stmt in res_gef:
-        gef_name = name_from_uri(stmt[0])
-        ras_name = name_from_uri(stmt[1])
-        gef_activity = name_from_uri(stmt[2])
-        statements.append(stmt[5])
-        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
-        # Get the monomer objects from the model
-        gef_mono = model.monomers[gef_name]
-        ras_mono = model.monomers[ras_name]
-        if rule_type == 'no_binding':
-            rule = Rule(rule_name,
-                        gef_mono(**{gef_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'inactive'}) >>
-                        gef_mono(**{gef_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'active'}),
-                        kf_gef)
-            model.add_component(rule)
-    return statements
-
-def get_gap_rules(g, model, rule_type='no_binding'):
-    # First, get the statements with activities as subjects.
-    q_gap = prefixes + """
-        SELECT ?gapName ?rasName ?gapActivity ?subject ?object ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?subject a belvoc:AbundanceActivity .
-            ?subject belvoc:hasActivityType ?gapActivity .
-            ?subject belvoc:hasChild ?gap .
-            ?gap a belvoc:ProteinAbundance .
-            ?gap belvoc:hasConcept ?gapName .
-            ?object a belvoc:AbundanceActivity .
-            ?object belvoc:hasActivityType belvoc:GtpBound .
-            ?object belvoc:hasChild ?ras .
-            ?ras belvoc:hasConcept ?rasName .
-        }
-    """
-    res_gap = g.query(q_gap)
-
-    # A default parameter object for gap
-    kf_gap = Parameter('kf_gap', 1.)
-    model.add_component(kf_gap)
-    statements = []
-    for stmt in res_gap:
-        gap_name = name_from_uri(stmt[0])
-        ras_name = name_from_uri(stmt[1])
-        gap_activity = name_from_uri(stmt[2])
-        statements.append(stmt[5])
-        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
-        # Get the monomer objects from the model
-        gap_mono = model.monomers[gap_name]
-        ras_mono = model.monomers[ras_name]
-        if rule_type == 'no_binding':
-            rule = Rule(rule_name,
-                        gap_mono(**{gap_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'active'}) >>
-                        gap_mono(**{gap_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'inactive'}),
-                        kf_gap)
-            model.add_component(rule)
-    return statements
-
-def get_kinase_kinase_rules(g, model, rule_type='no_binding'):
-    # Query for all statements where a kinase directlyIncreases modified
-    # form of substrate. Ignore kinase activity of complexes for now and
-    # include only the kinase activities of ProteinAbundances.
-    q_phospho = prefixes + """
-        SELECT ?kinaseName ?substrateName ?subject ?object ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?subject belvoc:hasActivityType belvoc:Kinase .
-            ?subject belvoc:hasChild ?kinase .
-            ?kinase a belvoc:ProteinAbundance .
-            ?kinase belvoc:hasConcept ?kinaseName .
-            ?object belvoc:hasActivityType belvoc:Kinase .
-            ?object belvoc:hasChild ?substrate .
-            ?substrate a belvoc:ProteinAbundance .
-            ?substrate belvoc:hasConcept ?substrateName .
-        }
-    """
-
-    # Now make the PySB for the phosphorylation
-    res_phospho = g.query(q_phospho)
-
-    # A default parameter object for phosphorylation
-    kf_kinase = Parameter('kf_kinase', 1.)
-    model.add_component(kf_kinase)
-    statements = []
-
-    for stmt in res_phospho:
-        kin_name = name_from_uri(stmt[0])
-        sub_name = name_from_uri(stmt[1])
-        statements.append(stmt[4])
-
-        rule_name = get_rule_name(stmt[2], stmt[3], 'directlyIncreases')
-        # Get the monomer objects from the model
-        kin_mono = model.monomers[kin_name]
-        sub_mono = model.monomers[sub_name]
-
-        print "--------------------------------"
-        print stmt[4]
-        print("This statement says that:")
-        print("%s kinase activity increases kinase activity of %s" %
-              (kin_name, sub_name))
-        print("Here are the sites on %s that I know about:" % sub_name)
-        print sub_mono.sites
-
+    def get_all_direct_statements(g):
+        q_stmts = prefixes + """
+            SELECT ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+                UNION
+                { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+            }
         """
-        if rule_type == 'no_binding':
-            rule = Rule(rule_name,
-                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
-                    kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                    kf_kinase)
-            model.add_component(rule)
+        res_stmts = g.query(q_stmts)
+        return [stmt[0] for stmt in res_stmts]
+
+    def get_ras_rules(g, model, rule_type='no_binding'):
+        # First, get the statements with activities as subjects.
+        q_ras = prefixes + """
+            SELECT ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType belvoc:GtpBound .
+            }
         """
+        res_ras = g.query(q_ras)
+        # A default parameter object for ras
+        #kf_ras = Parameter('kf_ras', 1.)
+        #model.add_component(kf_ras)
 
-def get_all_direct_statements(g):
-    q_stmts = prefixes + """
-        SELECT ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
-            UNION
-            { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
-        }
-    """
-    res_stmts = g.query(q_stmts)
-    return [stmt[0] for stmt in res_stmts]
-
-def get_ras_rules(g, model, rule_type='no_binding'):
-    # First, get the statements with activities as subjects.
-    q_ras = prefixes + """
-        SELECT ?stmt
-        WHERE {
-            ?stmt a belvoc:Statement .
-            ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-            ?stmt belvoc:hasSubject ?subject .
-            ?stmt belvoc:hasObject ?object .
-            ?subject a belvoc:AbundanceActivity .
-            ?subject belvoc:hasActivityType belvoc:GtpBound .
-        }
-    """
-    res_ras = g.query(q_ras)
-    # A default parameter object for ras
-    #kf_ras = Parameter('kf_ras', 1.)
-    #model.add_component(kf_ras)
-
-    for stmt in res_ras:
-        print stmt[0]
-    """
-        ras_name = name_from_uri(stmt[0])
-        ras_name = name_from_uri(stmt[1])
-        ras_activity = name_from_uri(stmt[2])
-        rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
-        # Get the monomer objects from the model
-        ras_mono = model.monomers[ras_name]
-        ras_mono = model.monomers[ras_name]
-        if rule_type == 'no_binding':
-            rule = Rule(rule_name,
-                        ras_mono(**{ras_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'active'}) >>
-                        ras_mono(**{ras_activity: 'active'}) +
-                        ras_mono(**{'GtpBound': 'inactive'}),
-                        kf_ras)
-            model.add_component(rule)
-    """
+        for stmt in res_ras:
+            print stmt[0]
+        """
+            ras_name = name_from_uri(stmt[0])
+            ras_name = name_from_uri(stmt[1])
+            ras_activity = name_from_uri(stmt[2])
+            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
+            # Get the monomer objects from the model
+            ras_mono = model.monomers[ras_name]
+            ras_mono = model.monomers[ras_name]
+            if rule_type == 'no_binding':
+                rule = Rule(rule_name,
+                            ras_mono(**{ras_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'active'}) >>
+                            ras_mono(**{ras_activity: 'active'}) +
+                            ras_mono(**{'GtpBound': 'inactive'}),
+                            kf_ras)
+                model.add_component(rule)
+        """
 
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
@@ -760,16 +780,18 @@ if __name__ == '__main__':
     g = rdflib.Graph()
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
-    all_stmts = get_all_direct_statements(g)
-
-    model = get_monomers(g)
-    phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
-    mod_stmts = get_activating_mods(g, model)
+    #all_stmts = get_all_direct_statements(g)
+    bp = BelProcessor(g)
+    bp.get_phosphorylations()
+    bp.belpy_stmts[0]
+    #model = get_monomers(g)
+    #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
+    #mod_stmts = get_activating_mods(g, model)
     #get_complexes(g, model)
     #gef_stmts = get_gef_rules(g, model)
     #gap_stmts = get_gap_rules(g, model)
     #get_ras_rules(g, model)
-    get_kinase_kinase_rules(g, model)
+    #get_kinase_kinase_rules(g, model)
 
     """print '\n'.join(all_stmts)
     print "Total statements: %d" % len(all_stmts)
