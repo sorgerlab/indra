@@ -721,7 +721,7 @@ class BelProcessor(object):
         return statements
             """
 
-    def get_kinase_kinase_rules(g, model, rule_type='no_binding'):
+    def get_kinase_kinase_rules(self):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
         # include only the kinase activities of ProteinAbundances.
@@ -743,40 +743,31 @@ class BelProcessor(object):
             }
         """
 
-        # Now make the PySB for the phosphorylation
         res_phospho = self.g.query(q_phospho)
 
         # A default parameter object for phosphorylation
-        kf_kinase = Parameter('kf_kinase', 1.)
-        model.add_component(kf_kinase)
-        statements = []
-
         for stmt in res_phospho:
             kin_name = name_from_uri(stmt[0])
             sub_name = name_from_uri(stmt[1])
-            statements.append(stmt[4])
-
-            rule_name = get_rule_name(stmt[2], stmt[3], 'directlyIncreases')
-            # Get the monomer objects from the model
-            kin_mono = model.monomers[kin_name]
-            sub_mono = model.monomers[sub_name]
+            stmt_str = strip_statement(stmt[4])
 
             print "--------------------------------"
             print stmt[4]
             print("This statement says that:")
             print("%s kinase activity increases kinase activity of %s" %
                   (kin_name, sub_name))
-            print("Here are the sites on %s that I know about:" % sub_name)
-            print sub_mono.sites
-
-            """
-            if rule_type == 'no_binding':
-                rule = Rule(rule_name,
-                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
-                        kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                        kf_kinase)
-                model.add_component(rule)
-            """
+            print "It doesn't specify the site."
+            act_mods = []
+            for bps in self.belpy_stmts:
+                if type(bps) == ActivatingModification and \
+                   bps.monomer_name == sub_name:
+                    act_mods.append(bps)
+            # If we know about an activation modification...
+            if act_mods:
+                print "However, I happen to know about the following"
+                print "activating modifications for %s:" % sub_name
+                for act_mod in act_mods:
+                    print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
 
     def print_statement_coverage(self):
         """Display how many of the direct statements have been converted."""
@@ -787,6 +778,7 @@ class BelProcessor(object):
         #print "--- All direct statements ----------"
         #print '\n'.join(self.all_stmts)
         #print
+        print
         print "Total direct statements: %d" % len(self.all_stmts)
         print("Converted statements: %d" % len(self.converted_stmts))
         print
