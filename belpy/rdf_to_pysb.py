@@ -144,7 +144,7 @@ from pysb import *
 from pysb.core import SelfExporter, InvalidComponentNameError, \
                       ComplexPattern, ReactionPattern
 
-from belpy_statements import *
+from belpy.statements import *
 
 SelfExporter.do_export = False
 
