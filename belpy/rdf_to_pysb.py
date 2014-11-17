@@ -1,28 +1,4 @@
-import re
-import sys
-import keyword
-import urllib
-import collections
-
-import rdflib
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF
-
-from pysb import *
-from pysb.core import SelfExporter, InvalidComponentNameError, \
-                      ComplexPattern, ReactionPattern
-
-SelfExporter.do_export = False
-
 """
-For example graphs showing how BEL is represented in RDF, see:
-
-http://wiki.openbel.org/display/BEL2RDF/BEL
-
-Documentation for rdflib can be found at
-
-https://rdflib.readthedocs.org
-
 Types of uncertainty
 ====================
 
@@ -56,9 +32,18 @@ Types of statements
 - RasGTPases slowly hydrolyze GTP by themselves, so need to add default
   rule for each monomer with a GtpBoundActivity
 - Protein families: expand out to members, or use representative?
+- Mutations/substitutions that affect activity (e.g., RAS G12D)
 
 Notes on RDF representation
 ===========================
+
+For example graphs showing how BEL is represented in RDF, see:
+
+http://wiki.openbel.org/display/BEL2RDF/BEL
+
+Documentation for rdflib can be found at
+
+https://rdflib.readthedocs.org
 
 Abundance types
 ---------------
@@ -137,6 +122,22 @@ converted into monomers in the resulting PySB model. Instead, these should
 mapped onto representative monomers in same way. An interesting use case for
 a MetaKappa inheritance-type mechanism.
 """
+
+import re
+import sys
+import keyword
+import urllib
+import collections
+
+import rdflib
+from rdflib import URIRef, Namespace
+from rdflib.namespace import RDF
+
+from pysb import *
+from pysb.core import SelfExporter, InvalidComponentNameError, \
+                      ComplexPattern, ReactionPattern
+
+SelfExporter.do_export = False
 
 def name_from_uri(uri):
     """Make the URI term usable as a valid Python identifier, if possible.
@@ -683,8 +684,6 @@ def get_ras_rules(g, model, rule_type='no_binding'):
             model.add_component(rule)
     """
 
-
-
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -717,3 +716,68 @@ if __name__ == '__main__':
     print "--- Unconverted statements ---------"
     print '\n'.join(all_stmts)
 
+"""
+--- Unconverted statements from RAS neighborhood ---------
+
+-- Phosphatase activity --
+
+phos_p_HGNC_DUSP4_DirectlyDecreases_p_HGNC_MAPK1_pmod_P_T_185
+
+-- Kinase --> Kinase rules --
+
+"It says here that the kinase activity of A increases the kinase activity of B.
+Presumably this occurs through phosphorylation of B by A. At what site would
+you expect this to occur? Here are the sites that I know about:"
+
+kin_p_PFH_RAF_Family_DirectlyIncreases_kin_p_HGNC_MAP2K1
+kin_p_HGNC_ARAF_DirectlyIncreases_kin_p_HGNC_MAP2K1
+kin_p_HGNC_BRAF_DirectlyIncreases_kin_p_HGNC_MAP2K1
+kin_p_HGNC_MAP3K3_DirectlyIncreases_kin_p_HGNC_MAP2K1
+kin_p_HGNC_MAP3K1_DirectlyIncreases_kin_p_HGNC_MAP2K1
+
+-- Should have been wrapped by a kinase activity! --
+
+p_PFH_AKT_Family_DirectlyIncreases_p_HGNC_RAF1_pmod_P_S_259
+
+-- Activity state increases binding --
+
+gtp_p_HGNC_HRAS_DirectlyIncreases_complex_p_HGNC_BCL2_p_HGNC_HRAS
+
+-- Activity of a complex --
+
+kin_complex_NCH_AMP_Activated_Protein_Kinase_Complex_DirectlyIncreases_p_HGNC_RAF1_pmod_P_S_259
+
+-- Being in a complex stimulates activity of member of complex --
+
+complex_p_HGNC_BRAF_p_HGNC_PRKCE_p_HGNC_RPS6KB2_DirectlyIncreases_kin_p_HGNC_PRKCE
+
+-- Binding of A to B inhibits B's ability to phosphorylate/activate C --
+
+complex_p_HGNC_PEBP1_p_HGNC_RAF1_DirectlyDecreases_kin_p_HGNC_RAF1_DirectlyIncreases_p_HGNC_MAP2K1_pmod_P_S
+complex_p_HGNC_PEBP1_p_HGNC_RAF1_DirectlyDecreases_kin_p_HGNC_RAF1_DirectlyIncreases_kin_p_HGNC_MAP2K1
+
+-- Mutations --
+
+p_HGNC_HRAS_sub_G_12_V_DirectlyIncreases_gtp_p_HGNC_HRAS
+p_HGNC_NRAS_sub_Q_61_L_DirectlyIncreases_gtp_p_HGNC_NRAS
+p_HGNC_KRAS_sub_G_13_D_DirectlyIncreases_gtp_p_HGNC_KRAS
+p_HGNC_KRAS_sub_G_12_C_DirectlyIncreases_gtp_p_HGNC_KRAS
+p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
+p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
+p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
+
+-- Translocation -> Activity --
+
+tloc_p_HGNC_RASAL1_GOCCACC_GO_0005737_GOCCACC_GO_0005886_DirectlyDecreases_gtp_p_HGNC_KRAS
+tloc_p_HGNC_RASA4_GOCCACC_GO_0005737_GOCCACC_GO_0005886_DirectlyDecreases_gtp_p_HGNC_KRAS
+
+-- Ambiguous mechanism! --
+
+(Binding is inhibitory to the kinase in this case, but how?)
+p_HGNC_PEA15_DirectlyDecreases_kin_p_HGNC_MAPK1
+
+p_HGNC_RAF1_DirectlyDecreases_kin_p_HGNC_ATM
+
+p_HGNC_BRAF_pmod_P_S_43_DirectlyIncreases_gtp_p_PFH_RAS_Family_DirectlyIncreases_kin_p_HGNC_BRAF
+
+"""
