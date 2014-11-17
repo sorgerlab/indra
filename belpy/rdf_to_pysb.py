@@ -190,6 +190,11 @@ def term_from_uri(uri):
     term = term.replace('.', '_')
     return term
 
+def strip_statement(uri):
+    uri = uri.replace(r'http://www.openbel.org/bel/', '')
+    uri = uri.replace(r'http://www.openbel.org/vocabulary/', '')
+    return uri
+
 def get_rule_name(subj_uri, obj_uri, relation):
     """Serializes a BEL statement to a string for use as a rule name."""
     subj = term_from_uri(subj_uri)
@@ -417,13 +422,14 @@ class BelProcessor(object):
             mod_pos = term_from_uri(stmt[3])
             subj = term_from_uri(stmt[4])
             obj = term_from_uri(stmt[5])
+            stmt_str = strip_statement(stmt[6])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt[6])
+            self.converted_stmts.append(stmt_str)
 
             #rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
             self.belpy_stmts.append(
                     Phosphorylation(kin_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt[6]))
+                                    subj, obj, stmt_str))
 
             # For the rule names: unfortunately, due to what looks like a bug
             # in the BEL to RDF conversion, the statements themselves are
@@ -498,7 +504,7 @@ class BelProcessor(object):
         """
 
         # Now make the PySB for the phosphorylation
-        res_phospho = g.query(q_phospho)
+        res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
             # Parse out the elements of the query
@@ -507,11 +513,12 @@ class BelProcessor(object):
             mod_pos = term_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt[5])
+            self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivatingModification(kin_name, mod, mod_pos, 'Kinase',
-                                           subj, obj, stmt[5]))
+                                           subj, obj, stmt_str))
 
             """
             # Get the monomer objects from the model
@@ -545,7 +552,7 @@ class BelProcessor(object):
         """
 
         # Now make the PySB for the phosphorylation
-        res_cmplx = g.query(q_cmplx)
+        res_cmplx = self.g.query(q_cmplx)
 
         kf_binding = Parameter('kf_binding', 1)
         model.add_component(kf_binding)
@@ -593,7 +600,7 @@ class BelProcessor(object):
                 ?ras belvoc:hasConcept ?rasName .
             }
         """
-        res_gef = g.query(q_gef)
+        res_gef = self.g.query(q_gef)
 
         for stmt in res_gef:
             gef_name = name_from_uri(stmt[0])
@@ -601,11 +608,12 @@ class BelProcessor(object):
             gef_activity = name_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt[5])
+            self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     RasGef(gef_name, gef_activity, ras_name,
-                           subj, obj, stmt[5]))
+                           subj, obj, stmt_str))
 
         """
             # Get the monomer objects from the model
@@ -642,7 +650,7 @@ class BelProcessor(object):
                 ?ras belvoc:hasConcept ?rasName .
             }
         """
-        res_gap = g.query(q_gap)
+        res_gap = self.g.query(q_gap)
 
         for stmt in res_gap:
             gap_name = name_from_uri(stmt[0])
@@ -650,11 +658,12 @@ class BelProcessor(object):
             gap_activity = name_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt[5])
+            self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     RasGap(gap_name, gap_activity, ras_name,
-                           subj, obj, stmt[5]))
+                           subj, obj, stmt_str))
             """
             # Get the monomer objects from the model
             gap_mono = model.monomers[gap_name]
@@ -693,7 +702,7 @@ class BelProcessor(object):
         """
 
         # Now make the PySB for the phosphorylation
-        res_phospho = g.query(q_phospho)
+        res_phospho = self.g.query(q_phospho)
 
         # A default parameter object for phosphorylation
         kf_kinase = Parameter('kf_kinase', 1.)
@@ -727,7 +736,27 @@ class BelProcessor(object):
                 model.add_component(rule)
             """
 
-    def get_all_direct_statements(g):
+    def print_statement_coverage(self):
+        """Display how many of the direct statements have been converted."""
+
+        if not self.all_stmts:
+            self.get_all_direct_statements()
+
+        #print "--- All direct statements ----------"
+        #print '\n'.join(self.all_stmts)
+        #print
+        print "Total direct statements: %d" % len(self.all_stmts)
+        print("Converted statements: %d" % len(self.converted_stmts))
+        print
+        print "--- Unconverted statements ---------"
+        for stmt in self.all_stmts:
+            if not stmt in self.converted_stmts:
+                print stmt
+
+    def get_all_direct_statements(self):
+        """Get all directlyIncreases/Decreases statements in the corpus.
+        Stores the results of the query in self.all_stmts.
+        """
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -737,11 +766,10 @@ class BelProcessor(object):
                 { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
             }
         """
-        res_stmts = g.query(q_stmts)
-        return [stmt[0] for stmt in res_stmts]
+        res_stmts = self.g.query(q_stmts)
+        self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
-    def get_ras_rules(g, model, rule_type='no_binding'):
-        # First, get the statements with activities as subjects.
+    def get_ras_activities(self):
         q_ras = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -753,13 +781,11 @@ class BelProcessor(object):
                 ?subject belvoc:hasActivityType belvoc:GtpBound .
             }
         """
-        res_ras = g.query(q_ras)
-        # A default parameter object for ras
-        #kf_ras = Parameter('kf_ras', 1.)
-        #model.add_component(kf_ras)
+        res_ras = self.g.query(q_ras)
 
         for stmt in res_ras:
             print stmt[0]
+
         """
             ras_name = name_from_uri(stmt[0])
             ras_name = name_from_uri(stmt[1])
@@ -790,30 +816,20 @@ if __name__ == '__main__':
     g = rdflib.Graph()
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
-    #all_stmts = get_all_direct_statements(g)
     bp = BelProcessor(g)
     bp.get_phosphorylations()
     bp.get_activating_mods()
     bp.get_ras_gefs()
     bp.get_ras_gaps()
-    bp.print_statements()
+    bp.print_statement_coverage()
+    #bp.get_ras_activities()
+    #bp.print_statements()
+
     #model = get_monomers(g)
     #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
     #get_complexes(g, model)
-    #get_ras_rules(g, model)
     #get_kinase_kinase_rules(g, model)
 
-    """print '\n'.join(all_stmts)
-    print "Total statements: %d" % len(all_stmts)
-    print("Converted statements: %d" % (len(phos_stmts) + len(mod_stmts) +
-                                        len(gef_stmts) + len(gap_stmts)))
-    for stmt in phos_stmts + mod_stmts + gef_stmts + gap_stmts:
-        print "removing: %s" % stmt
-        all_stmts.remove(stmt)
-    print
-    print "--- Unconverted statements ---------"
-    print '\n'.join(all_stmts)
-    """
 
 """
 --- Unconverted statements from RAS neighborhood ---------
