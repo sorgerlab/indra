@@ -423,7 +423,7 @@ class BelProcessor(object):
             #rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
             self.belpy_stmts.append(
                     Phosphorylation(kin_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt))
+                                    subj, obj, stmt[6]))
 
             # For the rule names: unfortunately, due to what looks like a bug
             # in the BEL to RDF conversion, the statements themselves are
@@ -500,19 +500,22 @@ class BelProcessor(object):
         # Now make the PySB for the phosphorylation
         res_phospho = g.query(q_phospho)
 
-        kf_activation = Parameter('kf_activation', 1e5)
-        model.add_component(kf_activation)
-        statements = []
         for stmt in res_phospho:
+            # Parse out the elements of the query
             kin_name = name_from_uri(stmt[0])
             mod = term_from_uri(stmt[1])
             mod_pos = term_from_uri(stmt[2])
-            statements.append(stmt[5])
-            # Get the monomer objects from the model
-            kin_mono = model.monomers[kin_name]
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
-            rule_name = name_from_uri('%s_directlyIncreases_%s' % (subj, obj))
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt[5])
+            self.belpy_stmts.append(
+                    ActivatingModification(kin_name, mod, mod_pos, 'Kinase',
+                                           subj, obj, stmt[5]))
+
+            """
+            # Get the monomer objects from the model
+            kin_mono = model.monomers[kin_name]
 
             if mod_pos is not None:
                 site_name = '%s%s' % (abbrevs[mod], mod_pos)
@@ -525,6 +528,7 @@ class BelProcessor(object):
                         kf_activation)
             model.add_component(rule)
         return statements
+            """
 
     def get_complexes(g, model):
         # Query for all statements where a kinase directlyIncreases modified
@@ -783,10 +787,10 @@ if __name__ == '__main__':
     #all_stmts = get_all_direct_statements(g)
     bp = BelProcessor(g)
     bp.get_phosphorylations()
+    bp.get_activating_mods()
     bp.belpy_stmts[0]
     #model = get_monomers(g)
     #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
-    #mod_stmts = get_activating_mods(g, model)
     #get_complexes(g, model)
     #gef_stmts = get_gef_rules(g, model)
     #gap_stmts = get_gap_rules(g, model)
