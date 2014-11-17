@@ -482,6 +482,47 @@ class BelProcessor(object):
         return statements
             """
 
+    def get_dephosphorylations(self):
+        # Query for all statements where a phosphatase directlyDecreases
+        # modified form of substrate. Ignore kinase activity of complexes for
+        # now and include only the kinase activities of ProteinAbundances.
+        q_phospho = prefixes + """
+            SELECT ?phosName ?substrateName ?mod ?pos ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject belvoc:hasActivityType belvoc:Phosphatase .
+                ?subject belvoc:hasChild ?phosphatase .
+                ?phosphatase a belvoc:ProteinAbundance .
+                ?phosphatase belvoc:hasConcept ?phosName .
+                ?object a belvoc:ModifiedProteinAbundance .
+                ?object belvoc:hasModificationType ?mod .
+                ?object belvoc:hasChild ?substrate .
+                ?substrate belvoc:hasConcept ?substrateName .
+                OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_phospho = self.g.query(q_phospho)
+
+        for stmt in res_phospho:
+            # Parse out the elements of the query
+            phos_name = name_from_uri(stmt[0])
+            sub_name = name_from_uri(stmt[1])
+            mod = term_from_uri(stmt[2])
+            mod_pos = term_from_uri(stmt[3])
+            subj = term_from_uri(stmt[4])
+            obj = term_from_uri(stmt[5])
+            stmt_str = strip_statement(stmt[6])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt_str)
+            self.belpy_stmts.append(
+                    Dephosphorylation(phos_name, sub_name, mod, mod_pos,
+                                    subj, obj, stmt_str))
+
     def get_activating_mods(self):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
@@ -897,6 +938,7 @@ if __name__ == '__main__':
     bp = BelProcessor(g)
     bp.get_activating_subs()
     bp.get_phosphorylations()
+    bp.get_dephosphorylations()
     bp.get_activating_mods()
     bp.get_ras_gefs()
     bp.get_ras_gaps()

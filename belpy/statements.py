@@ -21,6 +21,22 @@ class Phosphorylation(Statement):
         return ("Phosphorylation(%s, %s, %s, %s)" %
                 (self.kin_name, self.sub_name, self.mod, self.mod_pos))
 
+class Dephosphorylation(Statement):
+    def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt):
+        super(Dephosphorylation, self).__init__(subj, obj, stmt)
+        self.phos_name = phos_name
+        self.sub_name = sub_name
+        self.mod = mod
+        self.mod_pos = mod_pos
+
+    def assemble(self, model):
+        kf_dephospho = Parameter('kf_dephospho', 1.)
+        model.add_component(kf_dephospho)
+
+    def __str__(self):
+        return ("Dehosphorylation(%s, %s, %s, %s)" %
+                (self.phos_name, self.sub_name, self.mod, self.mod_pos))
+
 class ActivatingModification(Statement):
     def __init__(self, monomer_name, mod, mod_pos, activity,
                  subj, obj, stmt):
