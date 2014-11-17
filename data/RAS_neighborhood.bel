@@ -2625,8 +2625,8 @@ translocation(proteinAbundance(HGNC:RASAL1),"GOCCACC:GO:0005737","GOCCACC:GO:000
 
 SET Evidence = "GAP1m, GAP1IP4BP, CAPRI (Ca2+-promoted Ras inactivator) and RASAL (Ras-GTPase-activating-like protein) [5Ã¢â‚¬â€œ8]. Each protein has a basic conserved domain architecture, although subtle variations in the function of each domain have pronounced effects on the regulation of each protein. GAP1 family members contain a centrally located Ras-GAP domain. This is the conserved region found in all Ras-GAPs that contains the catalytic machinery required to enhance the intrinsic GTPase activity of Ras [2]. "
 
-catalyticActivity(proteinAbundance(HGNC:RASA2)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:NRAS))
-catalyticActivity(proteinAbundance(HGNC:RASA3)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:KRAS))
+catalyticActivity(proteinAbundance(HGNC:RASA2)) directlyDecreases gtpBoundActivity(proteinAbundance(HGNC:NRAS))
+catalyticActivity(proteinAbundance(HGNC:RASA3)) directlyDecreases gtpBoundActivity(proteinAbundance(HGNC:KRAS))
 
 SET Evidence = "GAP1m, GAP1IP4BP, CAPRI (Ca2+-promoted Ras inactivator) and RASAL (Ras-GTPase-activating-like protein) [5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“8]. Each protein has a basic conserved domain architecture, although subtle variations in the function of each domain have pronounced effects on the regulation of each protein. GAP1 family members contain a centrally located Ras-GAP domain. This is the conserved region found in all Ras-GAPs that contains the catalytic machinery required to enhance the intrinsic GTPase activity of Ras [2]. "
 
