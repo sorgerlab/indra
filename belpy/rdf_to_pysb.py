@@ -207,7 +207,8 @@ BEL = Namespace("http://www.openbel.org/")
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>
     PREFIX belsc: <http://www.openbel.org/bel/>
-    PREFIX belns: <http://www.openbel.org/bel/namespace/>"""
+    PREFIX belns: <http://www.openbel.org/bel/namespace/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
 
 abbrevs = {
     'PhosphorylationSerine': 'S',
@@ -485,7 +486,7 @@ class BelProcessor(object):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
         # include only the kinase activities of ProteinAbundances.
-        q_phospho = prefixes + """
+        q_mods = prefixes + """
             SELECT ?kinaseName ?mod ?pos ?subject ?object ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
@@ -504,9 +505,9 @@ class BelProcessor(object):
         """
 
         # Now make the PySB for the phosphorylation
-        res_phospho = self.g.query(q_phospho)
+        res_mods = self.g.query(q_mods)
 
-        for stmt in res_phospho:
+        for stmt in res_mods:
             # Parse out the elements of the query
             kin_name = name_from_uri(stmt[0])
             mod = term_from_uri(stmt[1])
@@ -769,6 +770,83 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
         self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
+    def get_activating_subs(self):
+        """
+        p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
+        p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
+        p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
+        """
+        q_mods = prefixes + """
+            SELECT ?enzyme_name ?sub_label ?act_type ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject a belvoc:ProteinAbundance .
+                ?subject belvoc:hasConcept ?enzyme_name .
+                ?subject belvoc:hasChild ?sub_expr .
+                ?sub_expr rdfs:label ?sub_label .
+                ?object a belvoc:AbundanceActivity .
+                ?object belvoc:hasActivityType ?act_type .
+                ?object belvoc:hasChild ?enzyme .
+                ?enzyme a belvoc:ProteinAbundance .
+                ?enzyme belvoc:hasConcept ?enzyme_name .
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_mods = self.g.query(q_mods)
+
+        for stmt in res_mods:
+            # Parse out the elements of the query
+            enz_name = name_from_uri(stmt[0])
+            sub_expr = term_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[2])
+            # Parse the WT and substituted residues from the node label.
+            # Strangely, the RDF for substituted residue doesn't break the
+            # terms of the BEL expression down into their meaning, as happens
+            # for modified protein abundances. Instead, the substitution
+            # just comes back as a string, e.g., "sub(V,600,E)". This code
+            # parses the arguments back out using a regular expression.
+            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
+            if match:
+                matches = match.groups()
+                wt_residue = matches[0]
+                position = matches[1]
+                sub_residue = matches[2]
+            else:
+                print("Warning: Could not parse substitution expression %s" %
+                      sub_expr)
+                continue
+
+            subj = term_from_uri(stmt[3])
+            obj = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt_str)
+            self.belpy_stmts.append(
+                    ActivatingSubstitution(enz_name, wt_residue, position,
+                                           sub_residue, act_type,
+                                           subj, obj, stmt_str))
+
+            """
+            # Get the monomer objects from the model
+            kin_mono = model.monomers[kin_name]
+
+            if mod_pos is not None:
+                site_name = '%s%s' % (abbrevs[mod], mod_pos)
+            else:
+                site_name = abbrevs[mod]
+
+            rule = Rule(rule_name,
+                        kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
+                        kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
+                        kf_activation)
+            model.add_component(rule)
+        return statements
+            """
+
     def get_ras_activities(self):
         q_ras = prefixes + """
             SELECT ?stmt
@@ -817,11 +895,13 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     bp = BelProcessor(g)
+    bp.get_activating_subs()
     bp.get_phosphorylations()
     bp.get_activating_mods()
     bp.get_ras_gefs()
     bp.get_ras_gaps()
     bp.print_statement_coverage()
+    """
     #bp.get_ras_activities()
     #bp.print_statements()
 
@@ -829,7 +909,7 @@ if __name__ == '__main__':
     #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
     #get_complexes(g, model)
     #get_kinase_kinase_rules(g, model)
-
+    """
 
 """
 --- Unconverted statements from RAS neighborhood ---------

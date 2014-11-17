@@ -38,6 +38,25 @@ class ActivatingModification(Statement):
         return ("ActivatingModification(%s, %s, %s, %s)" %
                 (self.monomer_name, self.mod, self.mod_pos, self.activity))
 
+class ActivatingSubstitution(Statement):
+    def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,
+                 subj, obj, stmt):
+        super(ActivatingSubstitution, self).__init__(subj, obj, stmt)
+        self.monomer_name = monomer_name
+        self.wt_residue = wt_residue
+        self.pos = pos
+        self.sub_residue = sub_residue
+        self.activity = activity
+
+    def assemble(self, model):
+        kf_activation = Parameter('kf_activation', 1e5)
+        model.add_component(kf_activation)
+
+    def __str__(self):
+        return ("ActivatingSubstitution(%s, %s, %s, %s, %s)" %
+                (self.monomer_name, self.wt_residue, self.pos,
+                 self.sub_residue, self.activity))
+
 class RasGef(Statement):
     def __init__(self, gef_name, gef_activity, ras_name,
                  subj, obj, stmt):
