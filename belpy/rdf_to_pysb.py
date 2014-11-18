@@ -24,8 +24,8 @@ Potential inconsistencies
 Types of statements
 ===================
 
-- Kinase -> Modified substrate (can generalize to all site-modifiers?
-  Should be general for Ub, Kinase, Phosphatase, Glycos, others?
+- Catalytic activity of X increases protein modification Y (generalized
+  for phosphorylations, ubiquitinations, acetylations, etc.
 - Complex(X, Y), indicates that X and Y bind
 - Modified protein -> kinase activity (can be make this general to other
   activities?)
@@ -40,6 +40,10 @@ Types of statements
   rule for each monomer with a GtpBoundActivity
 - Protein families: expand out to members, or use representative?
 - Mutations/substitutions that affect activity (e.g., RAS G12D)
+- Modified protein -| or -> complex. Binding in the complex is conditional
+  on the modification. Maybe also check if the modification ever occurs in
+  the model?
+- Protein modification decreases degradation rate
 
 Notes on RDF representation
 ===========================
@@ -51,6 +55,20 @@ http://wiki.openbel.org/display/BEL2RDF/BEL
 Documentation for rdflib can be found at
 
 https://rdflib.readthedocs.org
+
+Problems in the RDF representation
+----------------------------------
+
+For non-phosphorylation modifications, the RDF representation does not contain
+the identity of the amino acid residue at the modification site, e.g.
+
+catalyticActivity(proteinAbundance(HGNC:HIF1AN)) directlyIncreases proteinAbundance(HGNC:HIF1A,proteinModification(H,N,803))
+
+will have no term for the asparagine (N) residue at position 803.
+
+Similarly, for amino acid substitutions, there is no term at all describing
+the substitution! The information about the substitution has to be parsed out
+using a regular expression.
 
 Abundance types
 ---------------
@@ -209,6 +227,13 @@ prefixes = """
     PREFIX belsc: <http://www.openbel.org/bel/>
     PREFIX belns: <http://www.openbel.org/bel/namespace/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
+
+phospho_mods = [
+    'PhosphorylationSerine',
+    'PhosphorylationThreonine',
+    'PhosphorylationTyrosine',
+    'Phosphorylation',
+]
 
 abbrevs = {
     'PhosphorylationSerine': 'S',
@@ -389,21 +414,23 @@ class BelProcessor(object):
         for stmt in self.belpy_stmts:
             print stmt
 
-    def get_phosphorylations(self):
+    def get_modifications(self):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
         # include only the kinase activities of ProteinAbundances.
         q_phospho = prefixes + """
-            SELECT ?kinaseName ?substrateName ?mod ?pos ?subject ?object ?stmt
+            SELECT ?enzName ?actType ?substrateName ?mod ?pos ?subject ?object
+                   ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
-                ?subject belvoc:hasActivityType belvoc:Kinase .
-                ?subject belvoc:hasChild ?kinase .
-                ?kinase a belvoc:ProteinAbundance .
-                ?kinase belvoc:hasConcept ?kinaseName .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType ?actType .
+                ?subject belvoc:hasChild ?enzyme .
+                ?enzyme a belvoc:ProteinAbundance .
+                ?enzyme belvoc:hasConcept ?enzName .
                 ?object a belvoc:ModifiedProteinAbundance .
                 ?object belvoc:hasModificationType ?mod .
                 ?object belvoc:hasChild ?substrate .
@@ -417,20 +444,47 @@ class BelProcessor(object):
 
         for stmt in res_phospho:
             # Parse out the elements of the query
-            kin_name = name_from_uri(stmt[0])
-            sub_name = name_from_uri(stmt[1])
-            mod = term_from_uri(stmt[2])
-            mod_pos = term_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
-            stmt_str = strip_statement(stmt[6])
+            enz_name = name_from_uri(stmt[0])
+            act_type = name_from_uri(stmt[1])
+            sub_name = name_from_uri(stmt[2])
+            mod = term_from_uri(stmt[3])
+            mod_pos = term_from_uri(stmt[4])
+            subj = term_from_uri(stmt[5])
+            obj = term_from_uri(stmt[6])
+            stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
             #rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
-            self.belpy_stmts.append(
-                    Phosphorylation(kin_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt_str))
+            if act_type == 'Kinase' and mod in phospho_mods:
+                self.belpy_stmts.append(
+                        Phosphorylation(enz_name, sub_name, mod, mod_pos,
+                                        subj, obj, stmt_str))
+            elif act_type == 'Catalytic':
+                if mod == 'Hydroxylation':
+                    self.belpy_stmts.append(
+                            Hydroxylation(enz_name, sub_name, mod, mod_pos,
+                                        subj, obj, stmt_str))
+                elif mod == 'Sumoylation':
+                    self.belpy_stmts.append(
+                            Sumoylation(enz_name, sub_name, mod, mod_pos,
+                                        subj, obj, stmt_str))
+                elif mod == 'Acetylation':
+                    self.belpy_stmts.append(
+                            Acetylation(enz_name, sub_name, mod, mod_pos,
+                                        subj, obj, stmt_str))
+                elif mod == 'Ubiquitination':
+                    self.belpy_stmts.append(
+                            Ubiquitination(enz_name, sub_name, mod, mod_pos,
+                                        subj, obj, stmt_str))
+                else:
+                    print "Warning: Unknown modification type!"
+                    print("Activity: %s, Mod: %s, Mod_Pos: %s" %
+                          (act_type, mod, mod_pos))
+            else:
+                print "Warning: Unknown modification type!"
+                print("Activity: %s, Mod: %s, Mod_Pos: %s" %
+                      (act_type, mod, mod_pos))
 
             # For the rule names: unfortunately, due to what looks like a bug
             # in the BEL to RDF conversion, the statements themselves are
@@ -928,13 +982,13 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     bp = BelProcessor(g)
-    bp.get_activating_subs()
-    bp.get_phosphorylations()
-    bp.get_dephosphorylations()
+    #bp.get_activating_subs()
+    bp.get_modifications()
+    #bp.get_dephosphorylations()
     bp.get_activating_mods()
-    bp.get_ras_gefs()
-    bp.get_ras_gaps()
-    bp.print_statement_coverage()
+    #bp.get_ras_gefs()
+    #bp.get_ras_gaps()
+    #bp.print_statement_coverage()
     """
     #bp.get_ras_activities()
     #bp.print_statements()

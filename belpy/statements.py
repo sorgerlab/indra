@@ -1,25 +1,38 @@
-
 class Statement(object):
     def __init__(self, subj, obj, stmt):
         self.subj = subj
         self.obj = obj
         self.stmt = stmt
 
-class Phosphorylation(Statement):
-    def __init__(self, kin_name, sub_name, mod, mod_pos, subj, obj, stmt):
-        super(Phosphorylation, self).__init__(subj, obj, stmt)
-        self.kin_name = kin_name
+class Modification(Statement):
+    def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt):
+        super(Modification, self).__init__(subj, obj, stmt)
+        self.enz_name = enz_name
         self.sub_name = sub_name
         self.mod = mod
         self.mod_pos = mod_pos
 
+    def __str__(self):
+        return ("%s(%s, %s, %s, %s)" %
+                (type(self).__name__, self.enz_name, self.sub_name, self.mod,
+                 self.mod_pos))
+
+class Phosphorylation(Modification):
     def assemble(self, model):
         kf_phospho = Parameter('kf_phospho', 1.)
         model.add_component(kf_phospho)
 
-    def __str__(self):
-        return ("Phosphorylation(%s, %s, %s, %s)" %
-                (self.kin_name, self.sub_name, self.mod, self.mod_pos))
+class Hydroxylation(Modification):
+    pass
+
+class Sumoylation(Modification):
+    pass
+
+class Acetylation(Modification):
+    pass
+
+class Ubiquitination(Modification):
+    pass
 
 class Dephosphorylation(Statement):
     def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt):
