@@ -2956,7 +2956,7 @@ proteinAbundance(HGNC:RASSF1) decreases proteinAbundance(HGNC:RAF1,proteinModifi
 
 SET Evidence = "Raf itself is negatively regulated by phosphorylation at Ser259 through Akt, an important effector of phosphoinositide 3-kinase (PI3K) signaling (30, 44)."
 
-proteinAbundance(PFH:"AKT Family") directlyIncreases proteinAbundance(HGNC:RAF1,proteinModification(BEL:P,BEL:S,BEL:259))
+kinaseActivity(proteinAbundance(PFH:"AKT Family")) directlyIncreases proteinAbundance(HGNC:RAF1,proteinModification(BEL:P,BEL:S,BEL:259))
 
 UNSET STATEMENT_GROUP
 
