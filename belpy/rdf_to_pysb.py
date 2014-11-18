@@ -26,7 +26,7 @@ Types of statements
 
 - Catalytic activity of X increases protein modification Y (generalized
   for phosphorylations, ubiquitinations, acetylations, etc.
-- Complex(X, Y), indicates that X and Y bind
+- Complex(X, Y): indicates that X and Y bind
 - Modified protein -> kinase activity (can be make this general to other
   activities?)
 - Kinase activity => Kinase activity. These statements are labeled as being
@@ -39,11 +39,38 @@ Types of statements
 - RasGTPases slowly hydrolyze GTP by themselves, so need to add default
   rule for each monomer with a GtpBoundActivity
 - Protein families: expand out to members, or use representative?
+- Named protein complexes, e.g. "anaphase promoting complex": expand out to
+  members?
 - Mutations/substitutions that affect activity (e.g., RAS G12D)
 - Modified protein -| or -> complex. Binding in the complex is conditional
   on the modification. Maybe also check if the modification ever occurs in
   the model?
-- Protein modification decreases degradation rate
+- Protein modification of A decreases degradation rate of A
+- Protein mod of A -> complex involving A (binding with A is conditional on mod)
+- Complex of A and B -| activity of A or B
+- Complex of A and C -| Complex of A and C. Binding is competitive?::
+
+    complex_p_HGNC_RBL2_p_SFAM_E2F_Family_DirectlyDecreases_complex_p_SFAM_E2F_Family_p_HGNC_EP300
+
+"Degenerate" statements
+-----------------------
+
+- Statements where activity of X -> activity of Y, but site or modification
+  type is not explicitly specified::
+
+    kin_p_HGNC_MAP2K7_DirectlyIncreases_kin_p_SFAM_MAPK_JNK_Family
+
+- Statements of the form protein X -> activity of Y, where the activity of
+  X is not specified. Examples::
+
+    p_HGNC_EDN1_DirectlyIncreases_act_p_HGNC_EDNRB
+    p_MGI_Camk4_DirectlyIncreases_tscript_p_MGI_Creb1
+    p_SFAM_COL1_Family_DirectlyIncreases_act_complex_p_HGNC_ITGA2_p_HGNC_ITGB1
+    p_HGNC_VHL_DirectlyDecreases_kin_p_HGNC_PRKCD
+
+- Statements that are not really direct, e.g., ligand X -> Y
+
+    p_SFAM_VEGF_Family_DirectlyIncreases_complex_p_HGNC_KDR_p_HGNC_PTPN6
 
 Notes on RDF representation
 ===========================
@@ -118,10 +145,11 @@ not specified? (it is, but it's not in the name of the modification).
 
 proteinAbundance(MGI:Akt1,proteinModification(P,S,473)) directlyIncreases proteinAbundance(MGI:Foxo1,proteinModification(P,T,24))
 
-In this case, it probably should be the kinase activity of the modprot abundance.
-Especially because it is "directlyIncreases", so a mechanism is being asserted.
-Perhaps should detect that a phosphorylation is being referred to and require
-that a kinase activity on the left hand side is being specified implicitly.
+In this case, it probably should be the kinase activity of the modprot
+abundance.  Especially because it is "directlyIncreases", so a mechanism is
+being asserted.  Perhaps should detect that a phosphorylation is being referred
+to and require that a kinase activity on the left hand side is being specified
+implicitly.
 
 Perhaps for starters, we could assert that only activities, not abundances,
 could be candidates for rules.
