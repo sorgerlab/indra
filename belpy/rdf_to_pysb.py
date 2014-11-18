@@ -437,10 +437,12 @@ class BelProcessor(object):
         self.belpy_stmts = []
         self.all_stmts = []
         self.converted_stmts = []
+        self.degenerate_stmts = []
 
     def print_statements(self):
         for stmt in self.belpy_stmts:
             print stmt
+
 
     def get_modifications(self):
         # Query for all statements where a kinase directlyIncreases modified
@@ -852,27 +854,34 @@ class BelProcessor(object):
                     print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
 
     def print_statement_coverage(self):
-        """Display how many of the direct statements have been converted."""
+        """Display how many of the direct statements have been converted,
+        and how many are considered 'degenerate' and not converted."""
 
         if not self.all_stmts:
             self.get_all_direct_statements()
+        if not self.degenerate_stmts:
+            self.get_degenerate_statements()
 
-        #print "--- All direct statements ----------"
-        #print '\n'.join(self.all_stmts)
-        #print
         print
-        print "Total direct statements: %d" % len(self.all_stmts)
+        print("Total direct statements: %d" % len(self.all_stmts))
         print("Converted statements: %d" % len(self.converted_stmts))
+        print("Degenerate statements: %d" % len(self.degenerate_stmts))
+        print(">> Total unhandled statements: %d" %
+              (len(self.all_stmts) - len(self.converted_stmts) -
+               len(self.degenerate_stmts)))
+
         print
-        print "--- Unconverted statements ---------"
+        print "--- Unhandled statements ---------"
         for stmt in self.all_stmts:
-            if not stmt in self.converted_stmts:
+            if not (stmt in self.converted_stmts or
+                    stmt in self.degenerate_stmts):
                 print stmt
 
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases statements in the corpus.
         Stores the results of the query in self.all_stmts.
         """
+        print "Getting all direct statements...\n"
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -905,6 +914,18 @@ class BelProcessor(object):
                 }
             }
         """
+        q_stmts = prefixes + """
+            SELECT ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                {
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+                  UNION
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+                }
+            }
+        """
+
         res_stmts = self.g.query(q_stmts)
         self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
@@ -1020,6 +1041,88 @@ class BelProcessor(object):
                 model.add_component(rule)
         """
 
+    def get_degenerate_statements(self):
+        print "Checking for 'degenerate' statements...\n"
+        # Get rules of type protein X -> activity Y
+        q_stmts = prefixes + """
+            SELECT ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasSubject ?subj .
+                ?stmt belvoc:hasObject ?obj .
+                {
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+                  UNION
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+                }
+                {
+                  { ?subj a belvoc:ProteinAbundance . }
+                  UNION
+                  { ?subj a belvoc:ModifiedProteinAbundance . }
+                }
+                ?subj belvoc:hasConcept ?xName .
+                {
+                  {
+                    ?obj a belvoc:ProteinAbundance .
+                    ?obj belvoc:hasConcept ?yName .
+                  }
+                  UNION
+                  {
+                    ?obj a belvoc:ModifiedProteinAbundance .
+                    ?obj belvoc:hasChild ?proteinY .
+                    ?proteinY belvoc:hasConcept ?yName .
+                  }
+                  UNION
+                  {
+                    ?obj a belvoc:AbundanceActivity .
+                    ?obj belvoc:hasChild ?objChild .
+                    ?objChild a belvoc:ProteinAbundance .
+                    ?objChild belvoc:hasConcept ?yName .
+                  }
+                }
+                FILTER (?xName != ?yName)
+            }
+        """
+        res_stmts = self.g.query(q_stmts)
+
+        print "Protein -> Protein/Activity statements:"
+        print "---------------------------------------"
+        for stmt in res_stmts:
+            stmt_str = strip_statement(stmt[0])
+            print stmt_str
+            self.degenerate_stmts.append(stmt_str)
+
+        # Get rules of type activity X -> activity Y
+        # However, we skip over rules where, say, a RasGEF/GAP modulates
+        # the activity of a Ras GTPase, since we think we know how to
+        # (fairly unambiguously) interpret these.
+        q_stmts = prefixes + """
+            SELECT ?stmt ?objActType
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasSubject ?subj .
+                ?stmt belvoc:hasObject ?obj .
+                {
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+                  UNION
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+                }
+                ?subj a belvoc:AbundanceActivity .
+                ?obj a belvoc:AbundanceActivity .
+                ?obj belvoc:hasActivityType ?objActType .
+                FILTER(?objActType != belvoc:GtpBound)
+            }
+        """
+        res_stmts = self.g.query(q_stmts)
+
+        print
+        print "Kinase -> Kinase statements:"
+        print "----------------------------"
+        for stmt in res_stmts:
+            stmt_str = strip_statement(stmt[0])
+            print stmt_str
+            self.degenerate_stmts.append(stmt_str)
+
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -1040,15 +1143,7 @@ if __name__ == '__main__':
     bp.get_ras_gefs()
     bp.get_ras_gaps()
     bp.print_statement_coverage()
-    """
-    #bp.get_ras_activities()
-    #bp.print_statements()
 
-    #model = get_monomers(g)
-    #phos_stmts = get_phosphorylation_rules(g, model, rule_type='no_binding')
-    #get_complexes(g, model)
-    #get_kinase_kinase_rules(g, model)
-    """
 
 """
 --- Unconverted statements from RAS neighborhood ---------
