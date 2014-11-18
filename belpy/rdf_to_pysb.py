@@ -877,9 +877,32 @@ class BelProcessor(object):
             SELECT ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
-                { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
-                UNION
-                { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+                ?stmt belvoc:hasSubject ?subj .
+                ?stmt belvoc:hasObject ?obj .
+                {
+                  { ?subj a belvoc:AbundanceActivity . }
+                  UNION
+                  { ?subj a belvoc:ComplexAbundance . }
+                  UNION
+                  { ?subj a belvoc:ProteinAbundance . }
+                  UNION
+                  { ?subj a belvoc:ModifiedProteinAbundance . }
+                }
+                {
+                  { ?obj a belvoc:AbundanceActivity . }
+                  UNION
+                  { ?obj a belvoc:ComplexAbundance . }
+                  UNION
+                  { ?obj a belvoc:ProteinAbundance . }
+                  UNION
+                  { ?obj a belvoc:ModifiedProteinAbundance . }
+                }
+
+                {
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
+                  UNION
+                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
+                }
             }
         """
         res_stmts = self.g.query(q_stmts)
@@ -1010,13 +1033,13 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     bp = BelProcessor(g)
-    #bp.get_activating_subs()
+    bp.get_activating_subs()
     bp.get_modifications()
-    #bp.get_dephosphorylations()
+    bp.get_dephosphorylations()
     bp.get_activating_mods()
-    #bp.get_ras_gefs()
-    #bp.get_ras_gaps()
-    #bp.print_statement_coverage()
+    bp.get_ras_gefs()
+    bp.get_ras_gaps()
+    bp.print_statement_coverage()
     """
     #bp.get_ras_activities()
     #bp.print_statements()
