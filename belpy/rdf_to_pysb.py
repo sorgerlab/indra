@@ -288,14 +288,14 @@ states = {
     'PhosphorylationThreonine': ['u', 'p'],
     'PhosphorylationTyrosine': ['u', 'p'],
     'Phosphorylation': ['u', 'p'],
-    'Ubiquitination': ['y', 'n'],
-    'Farnesylation': ['y', 'n'],
-    'Hydroxylation': ['y', 'n'],
-    'Acetylation': ['y', 'n'],
-    'Sumoylation': ['y', 'n'],
-    'Glycosylation': ['y', 'n'],
-    'Methylation': ['y', 'n'],
-    'Modification': ['y', 'n'],
+    'Ubiquitination': ['n', 'y'],
+    'Farnesylation': ['n', 'y'],
+    'Hydroxylation': ['n', 'y'],
+    'Acetylation': ['n', 'y'],
+    'Sumoylation': ['n', 'y'],
+    'Glycosylation': ['n', 'y'],
+    'Methylation': ['n', 'y'],
+    'Modification': ['n', 'y'],
 }
 
 def get_monomers(g):
