@@ -234,6 +234,7 @@ def term_from_uri(uri):
     term = term.replace(' ', '_')
     term = term.replace('-', '_')
     term = term.replace('.', '_')
+    term = term.encode('ascii', 'ignore')
     return term
 
 def strip_statement(uri):
@@ -389,8 +390,8 @@ def get_monomers(g):
     # Now that we know all the activities and modification states of the
     # proteins mentioned in the entire corpus, we assemble the PySB model.
     model = Model()
-    ic_param = Parameter('default_ic', 10.)
-    model.add_component(ic_param)
+    #ic_param = Parameter('default_ic', 10.)
+    #model.add_component(ic_param)
     for k, v in agents.iteritems():
         monomer_name = k
         site_list = []
@@ -428,7 +429,7 @@ def get_monomers(g):
                 sites[s] = m.site_states[s][0]
             else:
                 sites[s] = None
-        model.initial(m(sites), ic_param)
+        #model.initial(m(sites), ic_param)
     return model
 
 class BelProcessor(object):
@@ -1123,6 +1124,14 @@ class BelProcessor(object):
             print stmt_str
             self.degenerate_stmts.append(stmt_str)
 
+def make_model(g, bp):
+    model = get_monomers(g)
+
+    for stmt in bp.belpy_stmts:
+        if isinstance(stmt, Phosphorylation):
+            stmt.assemble(model)
+    import ipdb; ipdb.set_trace()
+
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -1143,8 +1152,8 @@ if __name__ == '__main__':
     bp.get_ras_gefs()
     bp.get_ras_gaps()
     bp.print_statement_coverage()
-
-
+    bp.print_statements()
+    make_model(g, bp)
 """
 --- Unconverted statements from RAS neighborhood ---------
 

@@ -1,3 +1,6 @@
+from pysb import *
+from rdf_to_pysb import abbrevs
+
 class Statement(object):
     def __init__(self, subj, obj, stmt):
         self.subj = subj
@@ -19,8 +22,22 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     def assemble(self, model):
-        kf_phospho = Parameter('kf_phospho', 1.)
+        try:
+            kf_phospho = model.parameters['kf_phospho']
+        except KeyError:
+            kf_phospho = Parameter('kf_phospho', 1.)
         model.add_component(kf_phospho)
+
+        enz = model.monomers[self.enz_name]
+        sub = model.monomers[self.sub_name]
+
+        site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
+        r = Rule('%s_phospho_%s_%s' %
+                 (self.enz_name, self.sub_name, site_name),
+                 enz() + sub(**{site_name:'u'}) >>
+                 enz() + sub(**{site_name:'p'}),
+                 kf_phospho)
+        model.add_component(r)
 
 class Hydroxylation(Modification):
     pass
