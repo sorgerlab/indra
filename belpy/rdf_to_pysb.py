@@ -1130,7 +1130,8 @@ def make_model(g, bp):
     for stmt in bp.belpy_stmts:
         if isinstance(stmt, Phosphorylation) or \
            isinstance(stmt, ActivatingModification) or \
-           isinstance(stmt, RasGef):
+           isinstance(stmt, RasGef) or \
+           isinstance(stmt, RasGap):
             stmt.assemble(model)
     import ipdb; ipdb.set_trace()
 

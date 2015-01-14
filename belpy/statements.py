@@ -161,8 +161,23 @@ class RasGap(Statement):
         self.ras_name = ras_name
 
     def assemble(self, model):
-        kf_gap = Parameter('kf_gap', 1.)
-        model.add_component(kf_gap)
+        try:
+            kf_gap = model.parameters['kf_gap']
+        except KeyError:
+            kf_gap = Parameter('kf_gap', 1.)
+            model.add_component(kf_gap)
+
+        gap = model.monomers[self.gap_name]
+        ras = model.monomers[self.ras_name]
+
+        r = Rule('%s_inactivates_%s' %
+                 (self.gap_name, self.ras_name),
+                 gap(**{self.gap_activity:'active'}) +
+                 ras(**{'GtpBound':'active'}) >>
+                 gap(**{self.gap_activity:'active'}) +
+                 ras(**{'GtpBound':'inactive'}),
+                 kf_gap)
+        model.add_component(r)
 
     def __str__(self):
         return ("RasGap(%s, %s, %s)" %
