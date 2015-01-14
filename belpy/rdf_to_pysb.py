@@ -1133,7 +1133,7 @@ def make_model(g, bp):
            isinstance(stmt, RasGef) or \
            isinstance(stmt, RasGap):
             stmt.assemble(model)
-    import ipdb; ipdb.set_trace()
+    return model
 
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
@@ -1156,7 +1156,7 @@ if __name__ == '__main__':
     bp.get_ras_gaps()
     bp.print_statement_coverage()
     bp.print_statements()
-    make_model(g, bp)
+    m = make_model(g, bp)
 """
 --- Unconverted statements from RAS neighborhood ---------
 
