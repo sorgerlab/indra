@@ -1,5 +1,5 @@
 from pysb import *
-from rdf_to_pysb import abbrevs
+from rdf_to_pysb import abbrevs, states
 
 class Statement(object):
     def __init__(self, subj, obj, stmt):
@@ -26,7 +26,7 @@ class Phosphorylation(Modification):
             kf_phospho = model.parameters['kf_phospho']
         except KeyError:
             kf_phospho = Parameter('kf_phospho', 1.)
-        model.add_component(kf_phospho)
+            model.add_component(kf_phospho)
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
@@ -77,8 +77,26 @@ class ActivatingModification(Statement):
         self.activity = activity
 
     def assemble(self, model):
-        kf_activation = Parameter('kf_activation', 1e5)
-        model.add_component(kf_activation)
+        try:
+            kf_activation = model.parameters['kf_activation']
+        except KeyError:
+            kf_activation = Parameter('kf_activation', 1e5)
+            model.add_component(kf_activation)
+
+        m = model.monomers[self.monomer_name]
+
+        if self.mod_pos is not None:
+            site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
+        else:
+            site_name = '%s' % abbrevs[self.mod]
+        active_state = states[self.mod][1]
+
+        r = Rule('%s_%s%s_%s' %
+                 (self.monomer_name, site_name, active_state, self.activity),
+                 m(**{site_name:active_state, self.activity:'inactive'}) >>
+                 m(**{site_name:active_state, self.activity:'active'}),
+                 kf_activation)
+        model.add_component(r)
 
     def __str__(self):
         return ("ActivatingModification(%s, %s, %s, %s)" %
@@ -112,8 +130,23 @@ class RasGef(Statement):
         self.ras_name = ras_name
 
     def assemble(self, model):
-        kf_gef = Parameter('kf_gef', 1.)
-        model.add_component(kf_gef)
+        try:
+            kf_gef = model.parameters['kf_gef']
+        except KeyError:
+            kf_gef = Parameter('kf_gef', 1.)
+            model.add_component(kf_gef)
+
+        gef = model.monomers[self.gef_name]
+        ras = model.monomers[self.ras_name]
+
+        r = Rule('%s_activates_%s' %
+                 (self.gef_name, self.ras_name),
+                 gef(**{self.gef_activity:'active'}) +
+                 ras(**{'GtpBound':'inactive'}) >>
+                 gef(**{self.gef_activity:'active'}) +
+                 ras(**{'GtpBound':'active'}),
+                 kf_gef)
+        model.add_component(r)
 
     def __str__(self):
         return ("RasGef(%s, %s, %s)" %

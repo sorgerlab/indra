@@ -1128,7 +1128,9 @@ def make_model(g, bp):
     model = get_monomers(g)
 
     for stmt in bp.belpy_stmts:
-        if isinstance(stmt, Phosphorylation):
+        if isinstance(stmt, Phosphorylation) or \
+           isinstance(stmt, ActivatingModification) or \
+           isinstance(stmt, RasGef):
             stmt.assemble(model)
     import ipdb; ipdb.set_trace()
 
