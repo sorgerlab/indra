@@ -806,53 +806,66 @@ class BelProcessor(object):
         return statements
             """
 
-    def get_kinase_kinase_rules(self):
-        # Query for all statements where a kinase directlyIncreases modified
-        # form of substrate. Ignore kinase activity of complexes for now and
-        # include only the kinase activities of ProteinAbundances.
-        q_phospho = prefixes + """
-            SELECT ?kinaseName ?substrateName ?subject ?object ?stmt
+    def get_activity_activity(self):
+        # Query for all statements where the activity of one protein
+        # directlyIncreases the activity of another protein, without reference
+        # to a modification. However, we skip over rules where, say, a
+        # RasGEF/GAP modulates the activity of a Ras GTPase, since we think we
+        # know how to (fairly unambiguously) interpret these.
+        q_stmts = prefixes + """
+            SELECT ?subjName ?subjActType ?objName ?objActType
+                   ?subj ?obj ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasSubject ?subj .
+                ?stmt belvoc:hasObject ?obj .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject belvoc:hasActivityType belvoc:Kinase .
-                ?subject belvoc:hasChild ?kinase .
-                ?kinase a belvoc:ProteinAbundance .
-                ?kinase belvoc:hasConcept ?kinaseName .
-                ?object belvoc:hasActivityType belvoc:Kinase .
-                ?object belvoc:hasChild ?substrate .
-                ?substrate a belvoc:ProteinAbundance .
-                ?substrate belvoc:hasConcept ?substrateName .
+                ?subj belvoc:hasActivityType ?subjActType .
+                ?subj belvoc:hasChild ?subjProt .
+                ?subjProt belvoc:hasConcept ?subjName .
+                ?obj belvoc:hasActivityType ?objActType .
+                ?obj belvoc:hasChild ?objProt .
+                ?objProt belvoc:hasConcept ?objName .
+                FILTER(?objActType != belvoc:GtpBound)
             }
         """
 
-        res_phospho = self.g.query(q_phospho)
+        res_stmts = self.g.query(q_stmts)
 
-        # A default parameter object for phosphorylation
-        for stmt in res_phospho:
-            kin_name = name_from_uri(stmt[0])
-            sub_name = name_from_uri(stmt[1])
-            stmt_str = strip_statement(stmt[4])
+        for stmt in res_stmts:
+            subj_name = name_from_uri(stmt[0])
+            subj_activity = name_from_uri(stmt[1])
+            obj_name = name_from_uri(stmt[2])
+            obj_activity = name_from_uri(stmt[3])
+            subj = term_from_uri(stmt[4])
+            obj = term_from_uri(stmt[5])
+            stmt_str = strip_statement(stmt[6])
+            # Mark this as a converted statement
+            #self.converted_stmts.append(stmt_str)
+            #self.belpy_stmts.append(
+            #        ActivityActivity(subj_name, subj_activity,
+            #                         obj_name, obj_activity, rel,
+            #                         subj, obj, stmt_str))
 
-            print "--------------------------------"
-            print stmt[4]
+            """
+            #print "--------------------------------"
+            print stmt_str
             print("This statement says that:")
-            print("%s kinase activity increases kinase activity of %s" %
-                  (kin_name, sub_name))
+            print("%s activity increases activity of %s" %
+                  (subj_name, obj_name))
             print "It doesn't specify the site."
             act_mods = []
             for bps in self.belpy_stmts:
                 if type(bps) == ActivatingModification and \
-                   bps.monomer_name == sub_name:
+                   bps.monomer_name == obj_name:
                     act_mods.append(bps)
             # If we know about an activation modification...
             if act_mods:
                 print "However, I happen to know about the following"
-                print "activating modifications for %s:" % sub_name
+                print "activating modifications for %s:" % obj_name
                 for act_mod in act_mods:
                     print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
+        """
 
     def print_statement_coverage(self):
         """Display how many of the direct statements have been converted,
@@ -1093,37 +1106,6 @@ class BelProcessor(object):
             print stmt_str
             self.degenerate_stmts.append(stmt_str)
 
-        # Get rules of type activity X -> activity Y
-        # However, we skip over rules where, say, a RasGEF/GAP modulates
-        # the activity of a Ras GTPase, since we think we know how to
-        # (fairly unambiguously) interpret these.
-        q_stmts = prefixes + """
-            SELECT ?stmt ?objActType
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasSubject ?subj .
-                ?stmt belvoc:hasObject ?obj .
-                {
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
-                  UNION
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
-                }
-                ?subj a belvoc:AbundanceActivity .
-                ?obj a belvoc:AbundanceActivity .
-                ?obj belvoc:hasActivityType ?objActType .
-                FILTER(?objActType != belvoc:GtpBound)
-            }
-        """
-        res_stmts = self.g.query(q_stmts)
-
-        print
-        print "Kinase -> Kinase statements:"
-        print "----------------------------"
-        for stmt in res_stmts:
-            stmt_str = strip_statement(stmt[0])
-            print stmt_str
-            self.degenerate_stmts.append(stmt_str)
-
 def make_model(g, bp):
     model = get_monomers(g)
 
@@ -1150,6 +1132,7 @@ if __name__ == '__main__':
     bp.get_activating_mods()
     bp.get_ras_gefs()
     bp.get_ras_gaps()
+    bp.get_activity_activity()
     bp.print_statement_coverage()
     bp.print_statements()
     model = make_model(g, bp)
