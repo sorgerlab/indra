@@ -744,11 +744,11 @@ class BelProcessor(object):
             obj = term_from_uri(stmt[5])
             stmt_str = strip_statement(stmt[6])
             # Mark this as a converted statement
-            #self.converted_stmts.append(stmt_str)
-            #self.belpy_stmts.append(
-            #        ActivityActivity(subj_name, subj_activity,
-            #                         obj_name, obj_activity, rel,
-            #                         subj, obj, stmt_str))
+            self.converted_stmts.append(stmt_str)
+            self.belpy_stmts.append(
+                    ActivityActivity(subj_name, subj_activity,
+                                     obj_name, obj_activity,
+                                     'DirectlyIncreases', subj, obj, stmt_str))
 
             """
             #print "--------------------------------"
@@ -1002,6 +1002,7 @@ if __name__ == '__main__':
     bp.get_ras_gaps()
     bp.get_activity_activity()
     bp.print_statement_coverage()
+    print "--------------------------------"
     bp.print_statements()
     model = make_model(g, bp)
 """

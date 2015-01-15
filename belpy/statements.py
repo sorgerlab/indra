@@ -55,6 +55,41 @@ class Acetylation(Modification):
 class Ubiquitination(Modification):
     pass
 
+class ActivityActivity(Statement):
+    def __init__(self, subj_name, subj_activity, obj_name, obj_activity,
+                 rel, subj, obj, stmt):
+        super(ActivityActivity, self).__init__(subj, obj, stmt)
+        self.subj_name = subj_name
+        self.subj_activity = subj_activity
+        self.obj_name = obj_name
+        self.obj_activity = obj_activity
+        self.rel = rel
+
+    def assemble(self, model):
+        try:
+            kf_one_step_activate = model.parameters['kf_one_step_activate']
+        except KeyError:
+            kf_one_step_activate = Parameter('kf_one_step_activate', 1.)
+            model.add_component(kf_one_step_activate)
+
+        subj = model.monomers[self.subj_name]
+        obj = model.monomers[self.obj_name]
+
+        r = Rule('%s_%s_activates_%s_%s' %
+                 (self.subj_name, self.subj_activity, self.obj_name,
+                  self.obj_activity),
+                 subj(**{self.subj_activity:'active'}) +
+                 obj(**{self.obj_activity:'inactive'}) >>
+                 subj(**{self.subj_activity:'active'}) +
+                 obj(**{self.obj_activity:'active'}),
+                 kf_one_step_activate)
+        model.add_component(r)
+
+    def __str__(self):
+        return ("%s(%s, %s, %s, %s)" %
+                (type(self).__name__, self.subj_name, self.subj_activity,
+                 self.obj_name, self.obj_activity))
+
 class Dephosphorylation(Statement):
     def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt):
         super(Dephosphorylation, self).__init__(subj, obj, stmt)
