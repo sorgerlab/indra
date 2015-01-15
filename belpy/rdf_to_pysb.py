@@ -444,7 +444,6 @@ class BelProcessor(object):
         for stmt in self.belpy_stmts:
             print stmt
 
-
     def get_modifications(self):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
@@ -516,56 +515,6 @@ class BelProcessor(object):
                 print "Warning: Unknown modification type!"
                 print("Activity: %s, Mod: %s, Mod_Pos: %s" %
                       (act_type, mod, mod_pos))
-
-            # For the rule names: unfortunately, due to what looks like a bug
-            # in the BEL to RDF conversion, the statements themselves are
-            # stringified as, e.g.,
-            # http://www.openbel.org/bel/kin_p_HGNC_KDR_http://www.openbel.org/vocabulary/DirectlyIncreases_p_HGNC_KDR_pmod_P_Y_996
-            # where the subject and object are separated by a URI-prefixed
-            # relationship term. This screws up the term_from_uri function
-            # which strips the URI off. As a result I've manually reconstituted
-            # valid names here.
-            # Get the monomer objects from the model
-            #kin_mono = model.monomers[kin_name]
-            #sub_mono = model.monomers[sub_name]
-            # This represents just one (perhaps the simplest one)
-            # interpretation of phosphorylation: pseudo first-order, in which
-            # there is no binding between the kinase and substrate. Merely
-            # sufficient to get some dynamics.  The form of the rule here is
-            # dependent on the conversion of activity names (e.g., 'Kinase',
-            # 'Phosphatase') directly from the RDF-ified BEL.  If alternative
-            # PySB shorthands were developed for these activities this would
-            # have to be modified.
-
-            """
-            if mod_pos is not None:
-                site_name = '%s%s' % (abbrevs[mod], mod_pos)
-            else:
-                site_name = abbrevs[mod]
-
-            if rule_type == 'no_binding':
-                rule = Rule(rule_name,
-                            kin_mono(Kinase='active') + sub_mono(**{site_name: 'u'}) >>
-                            kin_mono(Kinase='active') + sub_mono(**{site_name: 'p'}),
-                            kf_phospho)
-                model.add_component(rule)
-            elif rule_type == 'binding':
-                rule_bind = Rule('%s_bind' % rule_name,
-                            kin_mono(Kinase='active', kin_site=None) +
-                            sub_mono(**{site_name: 'u'}) <>
-                            kin_mono(Kinase='active', kin_site=1) %
-                            sub_mono(**{site_name: ('u', 1)}),
-                            kf_phospho, kf_phospho)
-                rule_cat =  Rule('%s_cat' % rule_name,
-                            kin_mono(Kinase='active', kin_site=1) %
-                            sub_mono(**{site_name: ('u', 1)}) >>
-                            kin_mono(Kinase='active', kin_site=None) +
-                            sub_mono(**{site_name: 'p'}),
-                            kf_phospho)
-                model.add_component(rule_bind)
-                model.add_component(rule_cat)
-        return statements
-            """
 
     def get_dephosphorylations(self):
         # Query for all statements where a phosphatase directlyDecreases
@@ -647,23 +596,6 @@ class BelProcessor(object):
                     ActivatingModification(kin_name, mod, mod_pos, 'Kinase',
                                            subj, obj, stmt_str))
 
-            """
-            # Get the monomer objects from the model
-            kin_mono = model.monomers[kin_name]
-
-            if mod_pos is not None:
-                site_name = '%s%s' % (abbrevs[mod], mod_pos)
-            else:
-                site_name = abbrevs[mod]
-
-            rule = Rule(rule_name,
-                        kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
-                        kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
-                        kf_activation)
-            model.add_component(rule)
-        return statements
-            """
-
     def get_complexes(g, model):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
@@ -742,21 +674,6 @@ class BelProcessor(object):
                     RasGef(gef_name, gef_activity, ras_name,
                            subj, obj, stmt_str))
 
-        """
-            # Get the monomer objects from the model
-            gef_mono = model.monomers[gef_name]
-            ras_mono = model.monomers[ras_name]
-            if rule_type == 'no_binding':
-                rule = Rule(rule_name,
-                            gef_mono(**{gef_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'inactive'}) >>
-                            gef_mono(**{gef_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'active'}),
-                            kf_gef)
-                model.add_component(rule)
-        return statements
-        """
-
     def get_ras_gaps(self):
         # First, get the statements with activities as subjects.
         q_gap = prefixes + """
@@ -791,20 +708,6 @@ class BelProcessor(object):
             self.belpy_stmts.append(
                     RasGap(gap_name, gap_activity, ras_name,
                            subj, obj, stmt_str))
-            """
-            # Get the monomer objects from the model
-            gap_mono = model.monomers[gap_name]
-            ras_mono = model.monomers[ras_name]
-            if rule_type == 'no_binding':
-                rule = Rule(rule_name,
-                            gap_mono(**{gap_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'active'}) >>
-                            gap_mono(**{gap_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'inactive'}),
-                            kf_gap)
-                model.add_component(rule)
-        return statements
-            """
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
@@ -1003,23 +906,6 @@ class BelProcessor(object):
                                            sub_residue, act_type,
                                            subj, obj, stmt_str))
 
-            """
-            # Get the monomer objects from the model
-            kin_mono = model.monomers[kin_name]
-
-            if mod_pos is not None:
-                site_name = '%s%s' % (abbrevs[mod], mod_pos)
-            else:
-                site_name = abbrevs[mod]
-
-            rule = Rule(rule_name,
-                        kin_mono(**{site_name: 'p', 'Kinase': 'inactive'}) >>
-                        kin_mono(**{site_name: 'p', 'Kinase': 'active'}),
-                        kf_activation)
-            model.add_component(rule)
-        return statements
-            """
-
     def get_ras_activities(self):
         q_ras = prefixes + """
             SELECT ?stmt
@@ -1036,24 +922,6 @@ class BelProcessor(object):
 
         for stmt in res_ras:
             print stmt[0]
-
-        """
-            ras_name = name_from_uri(stmt[0])
-            ras_name = name_from_uri(stmt[1])
-            ras_activity = name_from_uri(stmt[2])
-            rule_name = get_rule_name(stmt[3], stmt[4], 'directlyIncreases')
-            # Get the monomer objects from the model
-            ras_mono = model.monomers[ras_name]
-            ras_mono = model.monomers[ras_name]
-            if rule_type == 'no_binding':
-                rule = Rule(rule_name,
-                            ras_mono(**{ras_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'active'}) >>
-                            ras_mono(**{ras_activity: 'active'}) +
-                            ras_mono(**{'GtpBound': 'inactive'}),
-                            kf_ras)
-                model.add_component(rule)
-        """
 
     def get_degenerate_statements(self):
         print "Checking for 'degenerate' statements...\n"
