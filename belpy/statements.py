@@ -7,6 +7,10 @@ class Statement(object):
         self.obj = obj
         self.stmt = stmt
 
+    def assemble(self, model):
+        print("Warning: %s: assemble method not implemented." %
+              self.__class__.__name__)
+
 class Modification(Statement):
     def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt):
         super(Modification, self).__init__(subj, obj, stmt)
@@ -60,8 +64,23 @@ class Dephosphorylation(Statement):
         self.mod_pos = mod_pos
 
     def assemble(self, model):
-        kf_dephospho = Parameter('kf_dephospho', 1.)
-        model.add_component(kf_dephospho)
+        try:
+            kf_dephospho = model.parameters['kf_dephospho']
+        except KeyError:
+            kf_dephospho = Parameter('kf_dephospho', 1.)
+            model.add_component(kf_dephospho)
+
+        phos = model.monomers[self.phos_name]
+        sub = model.monomers[self.sub_name]
+
+        site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
+        r = Rule('%s_dephospho_%s_%s' %
+                 (self.phos_name, self.sub_name, site_name),
+                 phos() + sub(**{site_name:'p'}) >>
+                 phos() + sub(**{site_name:'u'}),
+                 kf_dephospho)
+        model.add_component(r)
+
 
     def __str__(self):
         return ("Dehosphorylation(%s, %s, %s, %s)" %
@@ -111,10 +130,6 @@ class ActivatingSubstitution(Statement):
         self.pos = pos
         self.sub_residue = sub_residue
         self.activity = activity
-
-    def assemble(self, model):
-        kf_activation = Parameter('kf_activation', 1e5)
-        model.add_component(kf_activation)
 
     def __str__(self):
         return ("ActivatingSubstitution(%s, %s, %s, %s, %s)" %

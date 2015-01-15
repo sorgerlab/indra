@@ -1128,11 +1128,7 @@ def make_model(g, bp):
     model = get_monomers(g)
 
     for stmt in bp.belpy_stmts:
-        if isinstance(stmt, Phosphorylation) or \
-           isinstance(stmt, ActivatingModification) or \
-           isinstance(stmt, RasGef) or \
-           isinstance(stmt, RasGap):
-            stmt.assemble(model)
+        stmt.assemble(model)
     return model
 
 if __name__ == '__main__':
@@ -1156,7 +1152,7 @@ if __name__ == '__main__':
     bp.get_ras_gaps()
     bp.print_statement_coverage()
     bp.print_statements()
-    m = make_model(g, bp)
+    model = make_model(g, bp)
 """
 --- Unconverted statements from RAS neighborhood ---------
 
