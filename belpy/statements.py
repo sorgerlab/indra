@@ -1,5 +1,36 @@
+import warnings
 from pysb import *
 from rdf_to_pysb import abbrevs, states
+
+def site_name(stmt):
+    """Return a site name for a modification-type statement."""
+    mod = abbrevs[stmt.mod]
+    mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
+    return '%s%s' % (mod, mod_pos)
+
+def get_create_monomer(model, name):
+    """Return monomer with given name, creating it if needed."""
+    monomer = model.monomers.get(name)
+    if monomer is None:
+        monomer = Monomer(name)
+        model.add_component(monomer)
+    return monomer
+
+def create_site(monomer, site, states=None):
+    if site not in monomer.sites:
+        monomer.sites.append(site)
+    if states is not None:
+        monomer.site_states.setdefault(site, [])
+        try:
+            states = list(states)
+        except TypeError:
+            return
+        add_site_states(monomer, site, states)
+
+def add_site_states(monomer, site, states):
+    for state in states:
+        if state not in monomer.site_states[site]:
+            monomer.site_states[site].append(state)
 
 class Statement(object):
     def __init__(self, subj, obj, stmt):
@@ -7,9 +38,11 @@ class Statement(object):
         self.obj = obj
         self.stmt = stmt
 
+    def monomers(self, model):
+        warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
+
     def assemble(self, model):
-        print("Warning: %s: assemble method not implemented." %
-              self.__class__.__name__)
+        warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
     def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt):
@@ -19,12 +52,23 @@ class Modification(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
+    def monomers(self, model):
+        enz = get_create_monomer(model, self.enz_name)
+        sub = get_create_monomer(model, self.sub_name)
+        create_site(sub, site_name(self), True)
+
     def __str__(self):
         return ("%s(%s, %s, %s, %s)" %
                 (type(self).__name__, self.enz_name, self.sub_name, self.mod,
                  self.mod_pos))
 
 class Phosphorylation(Modification):
+
+    def monomers(self, model):
+        super(Phosphorylation, self).monomers(model)
+        sub = model.monomers[self.sub_name]
+        add_site_states(sub, site_name(self), ('u', 'p'))
+
     def assemble(self, model):
         try:
             kf_phospho = model.parameters['kf_phospho']
@@ -35,11 +79,11 @@ class Phosphorylation(Modification):
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
 
-        site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
+        site = site_name(self)
         r = Rule('%s_phospho_%s_%s' %
-                 (self.enz_name, self.sub_name, site_name),
-                 enz() + sub(**{site_name:'u'}) >>
-                 enz() + sub(**{site_name:'p'}),
+                 (self.enz_name, self.sub_name, site),
+                 enz() + sub(**{site:'u'}) >>
+                 enz() + sub(**{site:'p'}),
                  kf_phospho)
         model.add_component(r)
 
@@ -64,6 +108,12 @@ class ActivityActivity(Statement):
         self.obj_name = obj_name
         self.obj_activity = obj_activity
         self.rel = rel
+
+    def monomers(self, model):
+        subj = get_create_monomer(model, self.subj_name)
+        create_site(subj, self.subj_activity, ('active',))
+        obj = get_create_monomer(model, self.obj_name)
+        create_site(obj, self.obj_activity, ('inactive', 'active'))
 
     def assemble(self, model):
         try:
@@ -98,6 +148,11 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
+    def monomers(self, model):
+        phos = get_create_monomer(model, self.phos_name)
+        sub = get_create_monomer(model, self.sub_name)
+        create_site(sub, site_name(self), ('u', 'p'))
+
     def assemble(self, model):
         try:
             kf_dephospho = model.parameters['kf_dephospho']
@@ -108,11 +163,11 @@ class Dephosphorylation(Statement):
         phos = model.monomers[self.phos_name]
         sub = model.monomers[self.sub_name]
 
-        site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
+        site = site_name(self)
         r = Rule('%s_dephospho_%s_%s' %
-                 (self.phos_name, self.sub_name, site_name),
-                 phos() + sub(**{site_name:'p'}) >>
-                 phos() + sub(**{site_name:'u'}),
+                 (self.phos_name, self.sub_name, site),
+                 phos() + sub(**{site:'p'}) >>
+                 phos() + sub(**{site:'u'}),
                  kf_dephospho)
         model.add_component(r)
 
@@ -130,6 +185,13 @@ class ActivatingModification(Statement):
         self.mod_pos = mod_pos
         self.activity = activity
 
+    def monomers(self, model):
+        monomer = get_create_monomer(model, self.monomer_name)
+        site = site_name(self)
+        active_state = states[self.mod][1]
+        create_site(monomer, site, (active_state,))
+        create_site(monomer, self.activity, ('inactive', 'active'))
+
     def assemble(self, model):
         try:
             kf_activation = model.parameters['kf_activation']
@@ -139,16 +201,13 @@ class ActivatingModification(Statement):
 
         m = model.monomers[self.monomer_name]
 
-        if self.mod_pos is not None:
-            site_name = '%s%s' % (abbrevs[self.mod], self.mod_pos)
-        else:
-            site_name = '%s' % abbrevs[self.mod]
+        site = site_name(self)
         active_state = states[self.mod][1]
 
         r = Rule('%s_%s%s_%s' %
-                 (self.monomer_name, site_name, active_state, self.activity),
-                 m(**{site_name:active_state, self.activity:'inactive'}) >>
-                 m(**{site_name:active_state, self.activity:'active'}),
+                 (self.monomer_name, site, active_state, self.activity),
+                 m(**{site:active_state, self.activity:'inactive'}) >>
+                 m(**{site:active_state, self.activity:'active'}),
                  kf_activation)
         model.add_component(r)
 
@@ -178,6 +237,12 @@ class RasGef(Statement):
         self.gef_name = gef_name
         self.gef_activity = gef_activity
         self.ras_name = ras_name
+
+    def monomers(self, model):
+        gef = get_create_monomer(model, self.gef_name)
+        create_site(gef, self.gef_activity, ('active',))
+        ras = get_create_monomer(model, self.ras_name)
+        create_site(ras, 'GtpBound', ('inactive', 'active'))
 
     def assemble(self, model):
         try:
@@ -209,6 +274,12 @@ class RasGap(Statement):
         self.gap_name = gap_name
         self.gap_activity = gap_activity
         self.ras_name = ras_name
+
+    def monomers(self, model):
+        gap = get_create_monomer(model, self.gap_name)
+        create_site(gap, self.gap_activity, ('active',))
+        ras = get_create_monomer(model, self.ras_name)
+        create_site(ras, 'GtpBound', ('inactive', 'active'))
 
     def assemble(self, model):
         try:

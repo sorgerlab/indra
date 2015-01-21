@@ -299,6 +299,8 @@ states = {
 }
 
 def get_monomers(g):
+    raise RuntimeError("get_monomers should no longer be called.")
+
     # PROTEINS ----
     # Get the full list of proteins by querying for protein abundances
     q_prots = prefixes + """
@@ -975,8 +977,9 @@ class BelProcessor(object):
             self.degenerate_stmts.append(stmt_str)
 
 def make_model(g, bp):
-    model = get_monomers(g)
-
+    model = Model()
+    for stmt in bp.belpy_stmts:
+        stmt.monomers(model)
     for stmt in bp.belpy_stmts:
         stmt.assemble(model)
     return model
