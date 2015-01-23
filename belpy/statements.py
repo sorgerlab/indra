@@ -52,11 +52,6 @@ class Modification(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def monomers(self, model):
-        enz = get_create_monomer(model, self.enz_name)
-        sub = get_create_monomer(model, self.sub_name)
-        create_site(sub, site_name(self), True)
-
     def __str__(self):
         return ("%s(%s, %s, %s, %s)" %
                 (type(self).__name__, self.enz_name, self.sub_name, self.mod,
@@ -65,15 +60,16 @@ class Modification(Statement):
 class Phosphorylation(Modification):
 
     def monomers(self, model):
-        super(Phosphorylation, self).monomers(model)
-        sub = model.monomers[self.sub_name]
-        add_site_states(sub, site_name(self), ('u', 'p'))
-
+        enz = get_create_monomer(model, self.enz_name)
+        create_site(enz, 'Kinase', ('inactive', 'active'))	
+        sub = get_create_monomer(model, self.sub_name)
+        create_site(sub, site_name(self), ('u', 'p'))
+	
     def assemble(self, model):
         try:
             kf_phospho = model.parameters['kf_phospho']
         except KeyError:
-            kf_phospho = Parameter('kf_phospho', 1.)
+            kf_phospho = Parameter('kf_phospho', 1e-6)
             model.add_component(kf_phospho)
 
         enz = model.monomers[self.enz_name]
@@ -82,8 +78,8 @@ class Phosphorylation(Modification):
         site = site_name(self)
         r = Rule('%s_phospho_%s_%s' %
                  (self.enz_name, self.sub_name, site),
-                 enz() + sub(**{site:'u'}) >>
-                 enz() + sub(**{site:'p'}),
+                 enz(Kinase='active') + sub(**{site:'u'}) >>
+                 enz(Kinase='active') + sub(**{site:'p'}),
                  kf_phospho)
         model.add_component(r)
 
@@ -111,7 +107,7 @@ class ActivityActivity(Statement):
 
     def monomers(self, model):
         subj = get_create_monomer(model, self.subj_name)
-        create_site(subj, self.subj_activity, ('active',))
+        create_site(subj, self.subj_activity, ('inactive','active'))
         obj = get_create_monomer(model, self.obj_name)
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
@@ -119,7 +115,7 @@ class ActivityActivity(Statement):
         try:
             kf_one_step_activate = model.parameters['kf_one_step_activate']
         except KeyError:
-            kf_one_step_activate = Parameter('kf_one_step_activate', 1.)
+            kf_one_step_activate = Parameter('kf_one_step_activate', 1e-6)
             model.add_component(kf_one_step_activate)
 
         subj = model.monomers[self.subj_name]
@@ -157,7 +153,7 @@ class Dephosphorylation(Statement):
         try:
             kf_dephospho = model.parameters['kf_dephospho']
         except KeyError:
-            kf_dephospho = Parameter('kf_dephospho', 1.)
+            kf_dephospho = Parameter('kf_dephospho', 1e-6)
             model.add_component(kf_dephospho)
 
         phos = model.monomers[self.phos_name]
@@ -196,7 +192,7 @@ class ActivatingModification(Statement):
         try:
             kf_activation = model.parameters['kf_activation']
         except KeyError:
-            kf_activation = Parameter('kf_activation', 1e5)
+            kf_activation = Parameter('kf_activation', 1e-6)
             model.add_component(kf_activation)
 
         m = model.monomers[self.monomer_name]
@@ -240,7 +236,7 @@ class RasGef(Statement):
 
     def monomers(self, model):
         gef = get_create_monomer(model, self.gef_name)
-        create_site(gef, self.gef_activity, ('active',))
+        create_site(gef, self.gef_activity, ('inactive','active'))
         ras = get_create_monomer(model, self.ras_name)
         create_site(ras, 'GtpBound', ('inactive', 'active'))
 
@@ -248,7 +244,7 @@ class RasGef(Statement):
         try:
             kf_gef = model.parameters['kf_gef']
         except KeyError:
-            kf_gef = Parameter('kf_gef', 1.)
+            kf_gef = Parameter('kf_gef', 1e-6)
             model.add_component(kf_gef)
 
         gef = model.monomers[self.gef_name]
@@ -277,7 +273,7 @@ class RasGap(Statement):
 
     def monomers(self, model):
         gap = get_create_monomer(model, self.gap_name)
-        create_site(gap, self.gap_activity, ('active',))
+        create_site(gap, self.gap_activity, ('inactive','active'))
         ras = get_create_monomer(model, self.ras_name)
         create_site(ras, 'GtpBound', ('inactive', 'active'))
 
@@ -285,7 +281,7 @@ class RasGap(Statement):
         try:
             kf_gap = model.parameters['kf_gap']
         except KeyError:
-            kf_gap = Parameter('kf_gap', 1.)
+            kf_gap = Parameter('kf_gap', 1e-6)
             model.add_component(kf_gap)
 
         gap = model.monomers[self.gap_name]
