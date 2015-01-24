@@ -48,5 +48,15 @@ DEFINE ANNOTATION Species AS  URL "http://resource.belframework.org/belframework
 ##################################################################################
 # Statements Section
 
-complexAbundance(proteinAbundance(HGNC:GRB2),proteinAbundance(HGNC:DAB2)) decreases kinaseActivity(proteinAbundance(HGNC:MAPK1))
+SET STATEMENT_GROUP = "Group 9"
+
+SET Evidence = "NO modulation of the signaling pathway was shown by its inhibitory effect on shear stress-induced ERK1/ERK2 phosphorylation and activity."
+SET Species = "9606"
+SET Cell = "natural killer cell"
+SET Tissue = "Endothelium"
+SET Citation = {"PubMed","Circ Res 1999 Aug 6 85(3) 238-46","10436166","","",""}
+
+catalyticActivity(proteinAbundance(HGNC:SOS1)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:KRAS))
+
+UNSET STATEMENT_GROUP
 

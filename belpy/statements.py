@@ -33,10 +33,13 @@ def add_site_states(monomer, site, states):
             monomer.site_states[site].append(state)
 
 class Statement(object):
-    def __init__(self, subj, obj, stmt):
+    def __init__(self, subj, obj, stmt, citation, evidence, annotations):
         self.subj = subj
         self.obj = obj
         self.stmt = stmt
+        self.citation = citation
+        self.evidence = evidence
+        self.annotations = annotations
 
     def monomers(self, model):
         warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
@@ -45,8 +48,10 @@ class Statement(object):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
-    def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt):
-        super(Modification, self).__init__(subj, obj, stmt)
+    def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt,
+                 citation, evidence, annotations):
+        super(Modification, self).__init__(subj, obj, stmt, citation, evidence,
+                                           annotations)
         self.enz_name = enz_name
         self.sub_name = sub_name
         self.mod = mod
@@ -61,10 +66,10 @@ class Phosphorylation(Modification):
 
     def monomers(self, model):
         enz = get_create_monomer(model, self.enz_name)
-        create_site(enz, 'Kinase', ('inactive', 'active'))	
+        create_site(enz, 'Kinase', ('inactive', 'active'))
         sub = get_create_monomer(model, self.sub_name)
         create_site(sub, site_name(self), ('u', 'p'))
-	
+
     def assemble(self, model):
         try:
             kf_phospho = model.parameters['kf_phospho']
@@ -97,8 +102,9 @@ class Ubiquitination(Modification):
 
 class ActivityActivity(Statement):
     def __init__(self, subj_name, subj_activity, obj_name, obj_activity,
-                 rel, subj, obj, stmt):
-        super(ActivityActivity, self).__init__(subj, obj, stmt)
+                 rel, subj, obj, stmt, citation, evidence, annotations):
+        super(ActivityActivity, self).__init__(subj, obj, stmt,
+                                               citation, evidence, annotations)
         self.subj_name = subj_name
         self.subj_activity = subj_activity
         self.obj_name = obj_name
@@ -137,8 +143,10 @@ class ActivityActivity(Statement):
                  self.obj_name, self.obj_activity))
 
 class Dephosphorylation(Statement):
-    def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt):
-        super(Dephosphorylation, self).__init__(subj, obj, stmt)
+    def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt,
+                 citation, evidence, annotations):
+        super(Dephosphorylation, self).__init__(subj, obj, stmt, citation,
+                                                evidence, annotations)
         self.phos_name = phos_name
         self.sub_name = sub_name
         self.mod = mod
@@ -174,8 +182,9 @@ class Dephosphorylation(Statement):
 
 class ActivatingModification(Statement):
     def __init__(self, monomer_name, mod, mod_pos, activity,
-                 subj, obj, stmt):
-        super(ActivatingModification, self).__init__(subj, obj, stmt)
+                 subj, obj, stmt, citation, evidence, annotations):
+        super(ActivatingModification, self).__init__(subj, obj, stmt, citation,
+                                                     evidence, annotations)
         self.monomer_name = monomer_name
         self.mod = mod
         self.mod_pos = mod_pos
@@ -213,8 +222,9 @@ class ActivatingModification(Statement):
 
 class ActivatingSubstitution(Statement):
     def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,
-                 subj, obj, stmt):
-        super(ActivatingSubstitution, self).__init__(subj, obj, stmt)
+                 subj, obj, stmt, citation, evidence, annotations):
+        super(ActivatingSubstitution, self).__init__(subj, obj, stmt, citation,
+                                                     evidence, annotations)
         self.monomer_name = monomer_name
         self.wt_residue = wt_residue
         self.pos = pos
@@ -228,8 +238,9 @@ class ActivatingSubstitution(Statement):
 
 class RasGef(Statement):
     def __init__(self, gef_name, gef_activity, ras_name,
-                 subj, obj, stmt):
-        super(RasGef, self).__init__(subj, obj, stmt)
+                 subj, obj, stmt, citation, evidence, annotations):
+        super(RasGef, self).__init__(subj, obj, stmt, citation, evidence,
+                                     annotations)
         self.gef_name = gef_name
         self.gef_activity = gef_activity
         self.ras_name = ras_name
@@ -265,8 +276,9 @@ class RasGef(Statement):
 
 class RasGap(Statement):
     def __init__(self, gap_name, gap_activity, ras_name,
-                 subj, obj, stmt):
-        super(RasGap, self).__init__(subj, obj, stmt)
+                 subj, obj, stmt, citation, evidence, annotations):
+        super(RasGap, self).__init__(subj, obj, stmt, citation, evidence,
+                                     annotations)
         self.gap_name = gap_name
         self.gap_activity = gap_activity
         self.ras_name = ras_name

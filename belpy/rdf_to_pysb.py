@@ -268,6 +268,39 @@ class BelProcessor(object):
         for stmt in self.belpy_stmts:
             print stmt
 
+    def get_evidence(self, statement):
+        evidence = None
+        citation = None
+        annotations = []
+
+        # Query for evidence text and citation
+        q_evidence = prefixes + """
+            SELECT ?evidenceText ?citation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasEvidenceText ?evidenceText .
+                ?evidence belvoc:hasCitation ?citation .
+            }
+        """ % statement.format()
+        res_evidence = self.g.query(q_evidence)
+        for stmt in res_evidence:
+            evidence = stmt[0].format()
+            citation = stmt[1].format()
+
+        # Query for all annotations of the statement
+        q_annotations = prefixes + """
+            SELECT ?annotation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasAnnotation ?annotation .
+            }
+        """ % statement.format()
+        res_annotations = self.g.query(q_annotations)
+        for stmt in res_annotations:
+            annotations.append(stmt[0].format())
+
+        return (citation, evidence, annotations)
+
     def get_modifications(self):
         # Query for all statements where a kinase directlyIncreases modified
         # form of substrate. Ignore kinase activity of complexes for now and
@@ -297,6 +330,7 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
+            (citation, evidence, annotations) = self.get_evidence(stmt[7])
             # Parse out the elements of the query
             enz_name = name_from_uri(stmt[0])
             act_type = name_from_uri(stmt[1])
@@ -313,24 +347,29 @@ class BelProcessor(object):
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.belpy_stmts.append(
                         Phosphorylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str))
+                                        subj, obj, stmt_str,
+                                        citation, evidence, annotations))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.belpy_stmts.append(
                             Hydroxylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str))
+                                        subj, obj, stmt_str,
+                                        citation, evidence, annotations))
                 elif mod == 'Sumoylation':
                     self.belpy_stmts.append(
                             Sumoylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str))
+                                        subj, obj, stmt_str,
+                                        citation, evidence, annotations))
                 elif mod == 'Acetylation':
                     self.belpy_stmts.append(
                             Acetylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str))
+                                        subj, obj, stmt_str,
+                                        citation, evidence, annotations))
                 elif mod == 'Ubiquitination':
                     self.belpy_stmts.append(
                             Ubiquitination(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str))
+                                        subj, obj, stmt_str,
+                                        citation, evidence, annotations))
                 else:
                     print "Warning: Unknown modification type!"
                     print("Activity: %s, Mod: %s, Mod_Pos: %s" %
@@ -367,6 +406,7 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
+            (citation, evidence, annotations) = self.get_evidence(stmt[6])
             # Parse out the elements of the query
             phos_name = name_from_uri(stmt[0])
             sub_name = name_from_uri(stmt[1])
@@ -379,7 +419,8 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     Dephosphorylation(phos_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt_str))
+                                    subj, obj, stmt_str, citation,
+                                    evidence, annotations))
 
     def get_activating_mods(self):
         # Query for all statements where a kinase directlyIncreases modified
@@ -407,6 +448,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             kin_name = name_from_uri(stmt[0])
             mod = term_from_uri(stmt[1])
@@ -418,7 +460,8 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivatingModification(kin_name, mod, mod_pos, 'Kinase',
-                                           subj, obj, stmt_str))
+                                           subj, obj, stmt_str,
+                                           citation, evidence, annotations))
 
     def get_complexes(g, model):
         # Query for all statements where a kinase directlyIncreases modified
@@ -486,6 +529,7 @@ class BelProcessor(object):
         res_gef = self.g.query(q_gef)
 
         for stmt in res_gef:
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             gef_name = name_from_uri(stmt[0])
             ras_name = name_from_uri(stmt[1])
             gef_activity = name_from_uri(stmt[2])
@@ -496,7 +540,8 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     RasGef(gef_name, gef_activity, ras_name,
-                           subj, obj, stmt_str))
+                           subj, obj, stmt_str, citation, evidence,
+                           annotations))
 
     def get_ras_gaps(self):
         # First, get the statements with activities as subjects.
@@ -521,6 +566,7 @@ class BelProcessor(object):
         res_gap = self.g.query(q_gap)
 
         for stmt in res_gap:
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             gap_name = name_from_uri(stmt[0])
             ras_name = name_from_uri(stmt[1])
             gap_activity = name_from_uri(stmt[2])
@@ -531,7 +577,8 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     RasGap(gap_name, gap_activity, ras_name,
-                           subj, obj, stmt_str))
+                           subj, obj, stmt_str, citation, evidence,
+                           annotations))
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
@@ -560,6 +607,7 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
+            (citation, evidence, annotations) = self.get_evidence(stmt[6])
             subj_name = name_from_uri(stmt[0])
             subj_activity = name_from_uri(stmt[1])
             obj_name = name_from_uri(stmt[2])
@@ -572,7 +620,8 @@ class BelProcessor(object):
             self.belpy_stmts.append(
                     ActivityActivity(subj_name, subj_activity,
                                      obj_name, obj_activity,
-                                     'DirectlyIncreases', subj, obj, stmt_str))
+                                     'DirectlyIncreases', subj, obj, stmt_str,
+                                     citation, evidence, annotations))
 
             """
             #print "--------------------------------"
@@ -699,6 +748,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz_name = name_from_uri(stmt[0])
             sub_expr = term_from_uri(stmt[1])
@@ -728,7 +778,8 @@ class BelProcessor(object):
             self.belpy_stmts.append(
                     ActivatingSubstitution(enz_name, wt_residue, position,
                                            sub_residue, act_type,
-                                           subj, obj, stmt_str))
+                                           subj, obj, stmt_str,
+                                           citation, evidence, annotations))
 
     def get_ras_activities(self):
         q_ras = prefixes + """
