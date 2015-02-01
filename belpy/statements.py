@@ -180,14 +180,15 @@ class Dephosphorylation(Statement):
         return ("Dehosphorylation(%s, %s, %s, %s)" %
                 (self.phos_name, self.sub_name, self.mod, self.mod_pos))
 
-class ActivatingModification(Statement):
-    def __init__(self, monomer_name, mod, mod_pos, activity,
+class ActivityModification(Statement):
+    def __init__(self, monomer_name, mod, mod_pos, relationship, activity,
                  subj, obj, stmt, citation, evidence, annotations):
-        super(ActivatingModification, self).__init__(subj, obj, stmt, citation,
+        super(ActivityModification, self).__init__(subj, obj, stmt, citation,
                                                      evidence, annotations)
         self.monomer_name = monomer_name
         self.mod = mod
         self.mod_pos = mod_pos
+        self.relationship = relationship
         self.activity = activity
 
     def monomers(self, model):
@@ -209,16 +210,26 @@ class ActivatingModification(Statement):
         site = site_name(self)
         active_state = states[self.mod][1]
 
+        if self.relationship == 'DirectlyIncreases':
+            pre_activity_state = 'inactive'
+            post_activity_state = 'active'
+        elif self.relationship == 'DirectlyDecreases':
+            pre_activity_state = 'active'
+            post_activity_state = 'inactive'
+        else:
+            raise Exception("Invalid modification/activity relationship.")
+
         r = Rule('%s_%s%s_%s' %
                  (self.monomer_name, site, active_state, self.activity),
-                 m(**{site:active_state, self.activity:'inactive'}) >>
-                 m(**{site:active_state, self.activity:'active'}),
+                 m(**{site:active_state, self.activity:pre_activity_state}) >>
+                 m(**{site:active_state, self.activity:post_activity_state}),
                  kf_activation)
         model.add_component(r)
 
     def __str__(self):
-        return ("ActivatingModification(%s, %s, %s, %s)" %
-                (self.monomer_name, self.mod, self.mod_pos, self.activity))
+        return ("ActivityModification(%s, %s, %s, %s, %s)" %
+                (self.monomer_name, self.mod, self.mod_pos, self.relationship,
+                 self.activity))
 
 class ActivatingSubstitution(Statement):
     def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,

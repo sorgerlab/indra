@@ -427,10 +427,10 @@ class BelProcessor(object):
         # form of substrate. Ignore kinase activity of complexes for now and
         # include only the kinase activities of ProteinAbundances.
         q_mods = prefixes + """
-            SELECT ?kinaseName ?mod ?pos ?subject ?object ?stmt
+            SELECT ?kinaseName ?mod ?pos ?subject ?object ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
                 ?object belvoc:hasActivityType belvoc:Kinase .
@@ -455,12 +455,13 @@ class BelProcessor(object):
             mod_pos = term_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
+            rel = term_from_uri(stmt[5])
+            stmt_str = strip_statement(stmt[6])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivatingModification(kin_name, mod, mod_pos, 'Kinase',
-                                           subj, obj, stmt_str,
+                    ActivityModification(kin_name, mod, mod_pos, rel,
+                                           'Kinase', subj, obj, stmt_str,
                                            citation, evidence, annotations))
 
     def get_complexes(g, model):
