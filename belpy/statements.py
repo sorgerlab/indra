@@ -2,6 +2,7 @@ import warnings
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern
 from rdf_to_pysb import abbrevs, states
+from sets import ImmutableSet
 
 def site_name(stmt):
     """Return a site name for a modification-type statement."""
@@ -349,36 +350,57 @@ class Complex(Statement):
                 create_site(gene_mono, bp_name)
 
     def assemble(self, model):
+        # Get the rate parameter
         try:
             kf_bind = model.parameters['kf_bind']
         except KeyError:
             kf_bind = Parameter('kf_bind', 1e-6)
             model.add_component(kf_bind)
 
+        # Make a rule name
         rule_name = '_'.join(self.members)
         rule_name += '_bind'
-
+        # Initialize the left and right-hand sides of the rule
         lhs = ReactionPattern([])
         rhs = ComplexPattern([], None)
-
+        # We need a unique bond index for each pair of proteins in the
+        # complex, resulting in n(n-1)/2 bond indices for a n-member complex.
+        # We keep track of the bond indices using the bond_indices dict,
+        # which maps each unique pair of members to a bond index.
+        bond_indices = {}
+        bond_counter = 1
         for gene_name in self.members:
             mono = model.monomers[gene_name]
-            # Specify a free and bound states for binding sites for each of
+            # Specify free and bound states for binding sites for each of
             # the other complex members
-            # bp = abbreviation for "binding partner"
+            # (bp = abbreviation for "binding partner")
             free_site_dict = {}
             bound_site_dict = {}
             for bp_name in self.members:
                 # The protein doesn't bind to itself!
                 if gene_name == bp_name:
                     continue
+                # Check to see if we've already created a bond index for these
+                # two binding partners
+                bp_set = ImmutableSet([gene_name, bp_name])
+                if bp_set in bond_indices:
+                    bond_ix = bond_indices[bp_set]
+                # If we haven't see this pair of proteins yet, add a new bond
+                # index to the dict
+                else:
+                    bond_ix = bond_counter
+                    bond_indices[bp_set] = bond_ix
+                    bond_counter += 1
+                # Fill in the entries for the site dicts
                 free_site_dict[bp_name] = None
-                bound_site_dict[bp_name] = 1
+                bound_site_dict[bp_name] = bond_ix
+            # Build up the left- and right-hand sides of the rule from
+            # monomer patterns with the appropriate site dicts
             mp_free = mono(**free_site_dict)
             mp_bound = mono(**bound_site_dict)
             lhs = lhs + mp_free
             rhs = rhs % mp_bound
-
+        # Finally, create the rule and add it to the model
         rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
         model.add_component(rule)
 
