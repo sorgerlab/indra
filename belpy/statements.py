@@ -1,6 +1,6 @@
 import warnings
 from pysb import *
-from pysb import ReactionPattern, ComplexPattern
+from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
 from rdf_to_pysb import abbrevs, states
 from sets import ImmutableSet
 
@@ -225,12 +225,19 @@ class ActivityModification(Statement):
         else:
             raise Exception("Invalid modification/activity relationship.")
 
-        r = Rule('%s_%s%s_%s' %
-                 (self.monomer_name, site, active_state, self.activity),
-                 m(**{site:active_state, self.activity:pre_activity_state}) >>
-                 m(**{site:active_state, self.activity:post_activity_state}),
-                 kf_activation)
-        model.add_component(r)
+        rule_name = '%s_%s%s_%s_%s' % \
+                    (self.monomer_name, site, active_state, self.relationship,
+                     self.activity)
+        try:
+            r = Rule(rule_name,
+                   m(**{site:active_state, self.activity:pre_activity_state}) >>
+                   m(**{site:active_state, self.activity:post_activity_state}),
+                   kf_activation)
+            model.add_component(r)
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
 
     def __str__(self):
         return ("ActivityModification(%s, %s, %s, %s, %s)" %

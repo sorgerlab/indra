@@ -40,6 +40,9 @@ def name_from_uri(uri):
 
     return name
 
+def gene_name_from_uri(uri):
+    return name_from_uri(uri).upper()
+
 def term_from_uri(uri):
     """Basic conversion of RDF URIs to more friendly strings.
 
@@ -332,9 +335,9 @@ class BelProcessor(object):
         for stmt in res_phospho:
             (citation, evidence, annotations) = self.get_evidence(stmt[7])
             # Parse out the elements of the query
-            enz_name = name_from_uri(stmt[0])
+            enz_name = gene_name_from_uri(stmt[0])
             act_type = name_from_uri(stmt[1])
-            sub_name = name_from_uri(stmt[2])
+            sub_name = gene_name_from_uri(stmt[2])
             mod = term_from_uri(stmt[3])
             mod_pos = term_from_uri(stmt[4])
             subj = term_from_uri(stmt[5])
@@ -408,8 +411,8 @@ class BelProcessor(object):
         for stmt in res_phospho:
             (citation, evidence, annotations) = self.get_evidence(stmt[6])
             # Parse out the elements of the query
-            phos_name = name_from_uri(stmt[0])
-            sub_name = name_from_uri(stmt[1])
+            phos_name = gene_name_from_uri(stmt[0])
+            sub_name = gene_name_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
             subj = term_from_uri(stmt[4])
@@ -452,7 +455,7 @@ class BelProcessor(object):
         for stmt in res_mods:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
-            kin_name = name_from_uri(stmt[0])
+            kin_name = gene_name_from_uri(stmt[0])
             mod = term_from_uri(stmt[1])
             mod_pos = term_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
@@ -485,7 +488,7 @@ class BelProcessor(object):
         cmplx_dict = collections.defaultdict(list)
         for stmt in res_cmplx:
             cmplx_name = term_from_uri(stmt[0])
-            child_name = name_from_uri(stmt[1])
+            child_name = gene_name_from_uri(stmt[1])
             cmplx_dict[cmplx_name].append(child_name)
         # Now iterate over the stored complex information and create binding
         # statements
@@ -515,8 +518,8 @@ class BelProcessor(object):
 
         for stmt in res_gef:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
-            gef_name = name_from_uri(stmt[0])
-            ras_name = name_from_uri(stmt[1])
+            gef_name = gene_name_from_uri(stmt[0])
+            ras_name = gene_name_from_uri(stmt[1])
             gef_activity = name_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
@@ -552,8 +555,8 @@ class BelProcessor(object):
 
         for stmt in res_gap:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
-            gap_name = name_from_uri(stmt[0])
-            ras_name = name_from_uri(stmt[1])
+            gap_name = gene_name_from_uri(stmt[0])
+            ras_name = gene_name_from_uri(stmt[1])
             gap_activity = name_from_uri(stmt[2])
             subj = term_from_uri(stmt[3])
             obj = term_from_uri(stmt[4])
@@ -594,10 +597,10 @@ class BelProcessor(object):
 
         for stmt in res_stmts:
             (citation, evidence, annotations) = self.get_evidence(stmt[7])
-            subj_name = name_from_uri(stmt[0])
+            subj_name = gene_name_from_uri(stmt[0])
             subj_activity = name_from_uri(stmt[1])
             rel = term_from_uri(stmt[2])
-            obj_name = name_from_uri(stmt[3])
+            obj_name = gene_name_from_uri(stmt[3])
             obj_activity = name_from_uri(stmt[4])
             subj = term_from_uri(stmt[5])
             obj = term_from_uri(stmt[6])
@@ -744,7 +747,7 @@ class BelProcessor(object):
         for stmt in res_mods:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
-            enz_name = name_from_uri(stmt[0])
+            enz_name = gene_name_from_uri(stmt[0])
             sub_expr = term_from_uri(stmt[1])
             act_type = term_from_uri(stmt[2])
             # Parse the WT and substituted residues from the node label.
@@ -857,7 +860,8 @@ if __name__ == '__main__':
     bp.get_ras_gaps()
     bp.get_activity_activity()
     bp.print_statement_coverage()
-    print "--------------------------------"
+
+    print "\n--- Converted BelPy Statements -------------"
     bp.print_statements()
     model = make_model(g, bp)
 
