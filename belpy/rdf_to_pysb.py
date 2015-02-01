@@ -466,49 +466,31 @@ class BelProcessor(object):
                                            'Kinase', subj, obj, stmt_str,
                                            citation, evidence, annotations))
 
-    def get_complexes(g, model):
-        # Query for all statements where a kinase directlyIncreases modified
-        # form of substrate. Ignore kinase activity of complexes for now and
-        # include only the kinase activities of ProteinAbundances.
+    def get_complexes(self):
+        # Find all complexes described in the corpus
         q_cmplx = prefixes + """
-            SELECT ?term ?childName
+            SELECT ?complexTerm ?childName
             WHERE {
-                ?term a belvoc:Term .
-                ?term a belvoc:ComplexAbundance .
-                ?term belvoc:hasChild ?child .
+                ?complexTerm a belvoc:Term .
+                ?complexTerm a belvoc:ComplexAbundance .
+                ?complexTerm belvoc:hasChild ?child .
                 ?child belvoc:hasConcept ?childName .
             }
         """
-
-        # Now make the PySB for the phosphorylation
+        # Run the query
         res_cmplx = self.g.query(q_cmplx)
 
-        kf_binding = Parameter('kf_binding', 1)
-        model.add_component(kf_binding)
-
+        # Store the members of each complex in a dict of lists, keyed by the
+        # term for the complex
         cmplx_dict = collections.defaultdict(list)
         for stmt in res_cmplx:
             cmplx_name = term_from_uri(stmt[0])
             child_name = name_from_uri(stmt[1])
             cmplx_dict[cmplx_name].append(child_name)
-
+        # Now iterate over the stored complex information and create binding
+        # statements
         for cmplx_name, cmplx_list in cmplx_dict.iteritems():
-            lhs = ReactionPattern([])
-            rhs = ComplexPattern([], None)
-            try:
-                for monomer_name in cmplx_list:
-                    mono = model.monomers[monomer_name]
-                    mp_free = mono(b=None)
-                    mp_bound = mono(b=1)
-                    lhs = lhs + mp_free
-                    rhs = rhs % mp_bound
-                rule_name = '%s_bind' % cmplx_name
-                if not model.rules.get(rule_name):
-                    rule = Rule('%s_bind' % cmplx_name,
-                                lhs <> rhs, kf_binding, kf_binding)
-                    model.add_component(rule)
-            except KeyError as ke:
-                print "Warning: Monomer not found, ignoring: %s" % ke
+            self.belpy_stmts.append(Complex(cmplx_list))
 
     def get_ras_gefs(self):
         q_gef = prefixes + """
@@ -866,6 +848,7 @@ if __name__ == '__main__':
     g.parse(rdf_filename, format='nt')
     # Build the PySB model
     bp = BelProcessor(g)
+    bp.get_complexes()
     bp.get_activating_subs()
     bp.get_modifications()
     bp.get_dephosphorylations()

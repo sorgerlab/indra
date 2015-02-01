@@ -1,5 +1,6 @@
 import warnings
 from pysb import *
+from pysb import ReactionPattern, ComplexPattern
 from rdf_to_pysb import abbrevs, states
 
 def site_name(stmt):
@@ -327,5 +328,61 @@ class RasGap(Statement):
         return ("RasGap(%s, %s, %s)" %
                 (self.gap_name, self.gap_activity, self.ras_name))
 
+
+class Complex(Statement):
+    def __init__(self, members):
+        self.members = members
+
+    def monomers(self, model):
+        """In this (very simple) implementation, proteins in a complex are
+        each given site names corresponding to each of the other members
+        of the complex. So the resulting complex is "fully connected" in
+        that each is specified as bound to all the others."""
+        for gene_name in self.members:
+            gene_mono = get_create_monomer(model, gene_name)
+            # Specify a binding site for each of the other complex members
+            # bp = abbreviation for "binding partner"
+            for bp_name in self.members:
+                # The protein doesn't bind to itself!
+                if gene_name == bp_name:
+                    continue
+                create_site(gene_mono, bp_name)
+
+    def assemble(self, model):
+        try:
+            kf_bind = model.parameters['kf_bind']
+        except KeyError:
+            kf_bind = Parameter('kf_bind', 1e-6)
+            model.add_component(kf_bind)
+
+        rule_name = '_'.join(self.members)
+        rule_name += '_bind'
+
+        lhs = ReactionPattern([])
+        rhs = ComplexPattern([], None)
+
+        for gene_name in self.members:
+            mono = model.monomers[gene_name]
+            # Specify a free and bound states for binding sites for each of
+            # the other complex members
+            # bp = abbreviation for "binding partner"
+            free_site_dict = {}
+            bound_site_dict = {}
+            for bp_name in self.members:
+                # The protein doesn't bind to itself!
+                if gene_name == bp_name:
+                    continue
+                free_site_dict[bp_name] = None
+                bound_site_dict[bp_name] = 1
+            mp_free = mono(**free_site_dict)
+            mp_bound = mono(**bound_site_dict)
+            lhs = lhs + mp_free
+            rhs = rhs % mp_bound
+
+        rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
+        model.add_component(rule)
+
+    def __str__(self):
+        return ("Complex(%s)" % self.members)
 
 

@@ -56,7 +56,7 @@ SET Cell = "natural killer cell"
 SET Tissue = "Endothelium"
 SET Citation = {"PubMed","Circ Res 1999 Aug 6 85(3) 238-46","10436166","","",""}
 
-catalyticActivity(proteinAbundance(HGNC:SOS1)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:KRAS))
+complexAbundance(proteinAbundance(HGNC:PRKCZ),proteinAbundance(HGNC:RAF1),proteinAbundance(HGNC:YWHAQ)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:RAF1))
 
 UNSET STATEMENT_GROUP
 
