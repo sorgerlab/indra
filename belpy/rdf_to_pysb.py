@@ -623,7 +623,11 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             if subj_activity == 'GtpBound':
-                print "Ras GTPase"
+                self.belpy_stmts.append(
+                     RasGtpActivityActivity(subj_name, subj_activity,
+                                      rel, obj_name, obj_activity,
+                                      subj, obj, stmt_str,
+                                      citation, evidence, annotations))
             else:
                 self.belpy_stmts.append(
                      ActivityActivity(subj_name, subj_activity,

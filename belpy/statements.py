@@ -139,9 +139,12 @@ class ActivityActivity(Statement):
         model.add_component(r)
 
     def __str__(self):
-        return ("%s(%s, %s, %s, %s)" %
+        return ("%s(%s, %s, %s, %s, %s)" %
                 (type(self).__name__, self.subj_name, self.subj_activity,
-                 self.obj_name, self.obj_activity))
+                 self.relationship, self.obj_name, self.obj_activity))
+
+class RasGtpActivityActivity(ActivityActivity):
+    pass
 
 class Dephosphorylation(Statement):
     def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt,
