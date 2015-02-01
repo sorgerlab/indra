@@ -441,6 +441,8 @@ class BelProcessor(object):
                 ?subject belvoc:hasModificationType ?mod .
                 ?subject belvoc:hasChild ?kinase .
                 OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
+                FILTER (?rel = belvoc:DirectlyIncreases ||
+                        ?rel = belvoc:DirectlyDecreases)
             }
         """
 
@@ -588,41 +590,46 @@ class BelProcessor(object):
         # RasGEF/GAP modulates the activity of a Ras GTPase, since we think we
         # know how to (fairly unambiguously) interpret these.
         q_stmts = prefixes + """
-            SELECT ?subjName ?subjActType ?objName ?objActType
+            SELECT ?subjName ?subjActType ?rel ?objName ?objActType
                    ?subj ?obj ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasSubject ?subj .
                 ?stmt belvoc:hasObject ?obj .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasRelationship ?rel .
                 ?subj belvoc:hasActivityType ?subjActType .
                 ?subj belvoc:hasChild ?subjProt .
                 ?subjProt belvoc:hasConcept ?subjName .
                 ?obj belvoc:hasActivityType ?objActType .
                 ?obj belvoc:hasChild ?objProt .
                 ?objProt belvoc:hasConcept ?objName .
-                FILTER(?objActType != belvoc:GtpBound)
+                FILTER (?rel = belvoc:DirectlyIncreases ||
+                        ?rel = belvoc:DirectlyDecreases)
             }
         """
 
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
-            (citation, evidence, annotations) = self.get_evidence(stmt[6])
+            (citation, evidence, annotations) = self.get_evidence(stmt[7])
             subj_name = name_from_uri(stmt[0])
             subj_activity = name_from_uri(stmt[1])
-            obj_name = name_from_uri(stmt[2])
-            obj_activity = name_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
-            stmt_str = strip_statement(stmt[6])
+            rel = term_from_uri(stmt[2])
+            obj_name = name_from_uri(stmt[3])
+            obj_activity = name_from_uri(stmt[4])
+            subj = term_from_uri(stmt[5])
+            obj = term_from_uri(stmt[6])
+            stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
-                    ActivityActivity(subj_name, subj_activity,
-                                     obj_name, obj_activity,
-                                     'DirectlyIncreases', subj, obj, stmt_str,
-                                     citation, evidence, annotations))
+            if subj_activity == 'GtpBound':
+                print "Ras GTPase"
+            else:
+                self.belpy_stmts.append(
+                     ActivityActivity(subj_name, subj_activity,
+                                      rel, obj_name, obj_activity,
+                                      subj, obj, stmt_str,
+                                      citation, evidence, annotations))
 
             """
             #print "--------------------------------"
@@ -782,22 +789,6 @@ class BelProcessor(object):
                                            subj, obj, stmt_str,
                                            citation, evidence, annotations))
 
-    def get_ras_activities(self):
-        q_ras = prefixes + """
-            SELECT ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject a belvoc:AbundanceActivity .
-                ?subject belvoc:hasActivityType belvoc:GtpBound .
-            }
-        """
-        res_ras = self.g.query(q_ras)
-
-        for stmt in res_ras:
-            print stmt[0]
 
     def get_degenerate_statements(self):
         print "Checking for 'degenerate' statements...\n"

@@ -101,15 +101,16 @@ class Ubiquitination(Modification):
     pass
 
 class ActivityActivity(Statement):
-    def __init__(self, subj_name, subj_activity, obj_name, obj_activity,
-                 rel, subj, obj, stmt, citation, evidence, annotations):
+    def __init__(self, subj_name, subj_activity, relationship, obj_name,
+                 obj_activity, subj, obj, stmt, citation, evidence,
+                 annotations):
         super(ActivityActivity, self).__init__(subj, obj, stmt,
                                                citation, evidence, annotations)
         self.subj_name = subj_name
         self.subj_activity = subj_activity
         self.obj_name = obj_name
         self.obj_activity = obj_activity
-        self.rel = rel
+        self.relationship = relationship
 
     def monomers(self, model):
         subj = get_create_monomer(model, self.subj_name)
