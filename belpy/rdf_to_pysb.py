@@ -89,40 +89,6 @@ phospho_mods = [
     'Phosphorylation',
 ]
 
-abbrevs = {
-    'PhosphorylationSerine': 'S',
-    'PhosphorylationThreonine': 'T',
-    'PhosphorylationTyrosine': 'Y',
-    'Phosphorylation': 'phospho',
-    'Ubiquitination': 'ub',
-    'Farnesylation': 'farnesyl',
-    'Hydroxylation': 'hydroxyl',
-    'Acetylation': 'acetyl',
-    'Sumoylation': 'sumo',
-    'Glycosylation': 'glycosyl',
-    'Methylation': 'methyl',
-    'Modification': 'mod',
-}
-
-active_site_names = {
-    'Kinase': 'kin_site',
-}
-
-states = {
-    'PhosphorylationSerine': ['u', 'p'],
-    'PhosphorylationThreonine': ['u', 'p'],
-    'PhosphorylationTyrosine': ['u', 'p'],
-    'Phosphorylation': ['u', 'p'],
-    'Ubiquitination': ['n', 'y'],
-    'Farnesylation': ['n', 'y'],
-    'Hydroxylation': ['n', 'y'],
-    'Acetylation': ['n', 'y'],
-    'Sumoylation': ['n', 'y'],
-    'Glycosylation': ['n', 'y'],
-    'Methylation': ['n', 'y'],
-    'Modification': ['n', 'y'],
-}
-
 class BelProcessor(object):
     def __init__(self, g):
         self.g = g
@@ -742,18 +708,11 @@ def add_default_initial_conditions(model):
         mp = m(**sites_dict)
         model.initial(mp, default_ic)
 
-if __name__ == '__main__':
-    # Make sure the user passed in an RDF filename
-    if len(sys.argv) < 2:
-        print "Usage: python rdf_to_pysb.py file.rdf"
-        sys.exit()
-    # We take the RDF filename as the argument
-    rdf_filename = sys.argv[1]
-
+def rdf_to_pysb(rdf_filename, initial_conditions=True):
     # Parse the RDF
     g = rdflib.Graph()
     g.parse(rdf_filename, format='nt')
-    # Build the PySB model
+    # Build BelPy statements from RDF
     bp = BelProcessor(g)
     bp.get_complexes()
     bp.get_activating_subs()
@@ -763,10 +722,23 @@ if __name__ == '__main__':
     bp.get_ras_gefs()
     bp.get_ras_gaps()
     bp.get_activity_activity()
-    bp.print_statement_coverage()
 
+    # Print some output about the process
+    bp.print_statement_coverage()
     print "\n--- Converted BelPy Statements -------------"
     bp.print_statements()
-    model = make_model(g, bp)
-    add_default_initial_conditions(model)
 
+    # Make the PySB model and return
+    model = make_model(g, bp)
+    if initial_conditions:
+        add_default_initial_conditions(model)
+    return model
+
+if __name__ == '__main__':
+    # Make sure the user passed in an RDF filename
+    if len(sys.argv) < 2:
+        print "Usage: python rdf_to_pysb.py file.rdf"
+        sys.exit()
+    # We take the RDF filename as the argument
+    rdf_filename = sys.argv[1]
+    model = convert(rdf_filename, initial_conditions=True)

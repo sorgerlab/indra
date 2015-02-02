@@ -1,8 +1,41 @@
 import warnings
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
-from rdf_to_pysb import abbrevs, states
 from sets import ImmutableSet
+
+abbrevs = {
+    'PhosphorylationSerine': 'S',
+    'PhosphorylationThreonine': 'T',
+    'PhosphorylationTyrosine': 'Y',
+    'Phosphorylation': 'phospho',
+    'Ubiquitination': 'ub',
+    'Farnesylation': 'farnesyl',
+    'Hydroxylation': 'hydroxyl',
+    'Acetylation': 'acetyl',
+    'Sumoylation': 'sumo',
+    'Glycosylation': 'glycosyl',
+    'Methylation': 'methyl',
+    'Modification': 'mod',
+}
+
+states = {
+    'PhosphorylationSerine': ['u', 'p'],
+    'PhosphorylationThreonine': ['u', 'p'],
+    'PhosphorylationTyrosine': ['u', 'p'],
+    'Phosphorylation': ['u', 'p'],
+    'Ubiquitination': ['n', 'y'],
+    'Farnesylation': ['n', 'y'],
+    'Hydroxylation': ['n', 'y'],
+    'Acetylation': ['n', 'y'],
+    'Sumoylation': ['n', 'y'],
+    'Glycosylation': ['n', 'y'],
+    'Methylation': ['n', 'y'],
+    'Modification': ['n', 'y'],
+}
+
+active_site_names = {
+    'Kinase': 'kin_site',
+}
 
 def site_name(stmt):
     """Return a site name for a modification-type statement."""
