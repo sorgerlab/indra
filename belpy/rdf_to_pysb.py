@@ -452,8 +452,9 @@ class BelProcessor(object):
                 ?obj belvoc:hasActivityType ?objActType .
                 ?obj belvoc:hasChild ?objProt .
                 ?objProt belvoc:hasConcept ?objName .
-                FILTER (?rel = belvoc:DirectlyIncreases ||
-                        ?rel = belvoc:DirectlyDecreases)
+                FILTER ((?rel = belvoc:DirectlyIncreases ||
+                         ?rel = belvoc:DirectlyDecreases) &&
+                        ?objActType != belvoc:GtpBound)
             }
         """
 
