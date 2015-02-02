@@ -83,12 +83,18 @@ class Phosphorylation(Modification):
         sub = model.monomers[self.sub_name]
 
         site = site_name(self)
-        r = Rule('%s_phospho_%s_%s' %
-                 (self.enz_name, self.sub_name, site),
-                 enz(Kinase='active') + sub(**{site:'u'}) >>
-                 enz(Kinase='active') + sub(**{site:'p'}),
-                 kf_phospho)
-        model.add_component(r)
+
+        rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
+        try:
+            r = Rule(rule_name,
+                     enz(Kinase='active') + sub(**{site:'u'}) >>
+                     enz(Kinase='active') + sub(**{site:'p'}),
+                     kf_phospho)
+            model.add_component(r)
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
 
 class Hydroxylation(Modification):
     pass
