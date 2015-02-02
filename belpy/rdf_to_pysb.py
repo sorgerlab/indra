@@ -130,6 +130,7 @@ class BelProcessor(object):
         self.all_stmts = []
         self.converted_stmts = []
         self.degenerate_stmts = []
+        self.indirect_stmts = []
 
     def print_statements(self):
         for i, stmt in enumerate(self.belpy_stmts):
@@ -513,8 +514,11 @@ class BelProcessor(object):
             self.get_all_direct_statements()
         if not self.degenerate_stmts:
             self.get_degenerate_statements()
+        if not self.indirect_stmts:
+            self.get_indirect_statements()
 
         print
+        print("Total indirect statements: %d" % len(self.indirect_stmts))
         print("Total direct statements: %d" % len(self.all_stmts))
         print("Converted statements: %d" % len(self.converted_stmts))
         print("Degenerate statements: %d" % len(self.degenerate_stmts))
@@ -580,6 +584,22 @@ class BelProcessor(object):
 
         res_stmts = self.g.query(q_stmts)
         self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
+
+    def get_indirect_statements(self):
+        q_stmts = prefixes + """
+            SELECT ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                {
+                  { ?stmt belvoc:hasRelationship belvoc:Increases . }
+                  UNION
+                  { ?stmt belvoc:hasRelationship belvoc:Decreases . }
+                }
+            }
+        """
+
+        res_stmts = self.g.query(q_stmts)
+        self.indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_activating_subs(self):
         """
