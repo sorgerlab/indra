@@ -132,8 +132,8 @@ class BelProcessor(object):
         self.degenerate_stmts = []
 
     def print_statements(self):
-        for stmt in self.belpy_stmts:
-            print stmt
+        for i, stmt in enumerate(self.belpy_stmts):
+            print "%s: %s" % (i, stmt)
 
     def get_evidence(self, statement):
         evidence = None
