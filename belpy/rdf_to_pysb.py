@@ -727,7 +727,8 @@ def add_default_initial_conditions(model):
     try:
         default_ic = model.parameters['default_ic']
     except KeyError:
-        default_ic = Parameter('default_ic', 10.)
+        default_ic = Parameter('default_ic', 100.)
+        model.add_component(default_ic)
 
     # Iterate over all monomers
     for m in model.monomers:
