@@ -732,7 +732,7 @@ def rdf_to_pysb(rdf_filename, initial_conditions=True):
     model = make_model(g, bp)
     if initial_conditions:
         add_default_initial_conditions(model)
-    return model
+    return (bp, model)
 
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
@@ -741,4 +741,4 @@ if __name__ == '__main__':
         sys.exit()
     # We take the RDF filename as the argument
     rdf_filename = sys.argv[1]
-    model = convert(rdf_filename, initial_conditions=True)
+    (bp, model) = rdf_to_pysb(rdf_filename, initial_conditions=True)
