@@ -239,8 +239,8 @@ class ActivityModification(Statement):
     def monomers(self, model):
         monomer = get_create_monomer(model, self.monomer_name)
         site = site_name(self)
-        active_state = states[self.mod][1]
-        create_site(monomer, site, (active_state,))
+        #active_state = states[self.mod][1]
+        create_site(monomer, site, states[self.mod])
         create_site(monomer, self.activity, ('inactive', 'active'))
 
     def assemble(self, model):
