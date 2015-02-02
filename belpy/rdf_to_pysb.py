@@ -838,6 +838,24 @@ def make_model(g, bp):
         stmt.assemble(model)
     return model
 
+def add_default_initial_conditions(model):
+    try:
+        default_ic = model.parameters['default_ic']
+    except KeyError:
+        default_ic = Parameter('default_ic', 10.)
+
+    # Iterate over all monomers
+    for m in model.monomers:
+        # Build up monomer pattern dict
+        sites_dict = {}
+        for site in m.sites:
+            if site in m.site_states:
+                sites_dict[site] = m.site_states[site][0]
+            else:
+                sites_dict[site] = None
+        mp = m(**sites_dict)
+        model.initial(mp, default_ic)
+
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
@@ -864,4 +882,5 @@ if __name__ == '__main__':
     print "\n--- Converted BelPy Statements -------------"
     bp.print_statements()
     model = make_model(g, bp)
+    add_default_initial_conditions(model)
 
