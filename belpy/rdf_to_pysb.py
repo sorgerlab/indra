@@ -273,7 +273,6 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            print stmt
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             kin_name = gene_name_from_uri(stmt[0])
@@ -320,79 +319,6 @@ class BelProcessor(object):
                 warnings.warn(msg)
             else:
                 self.belpy_stmts.append(Complex(cmplx_list))
-
-    def get_ras_gefs(self):
-        q_gef = prefixes + """
-            SELECT ?gefName ?rasName ?gefActivity ?subject ?object ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject a belvoc:AbundanceActivity .
-                ?subject belvoc:hasActivityType ?gefActivity .
-                ?subject belvoc:hasChild ?gef .
-                ?gef a belvoc:ProteinAbundance .
-                ?gef belvoc:hasConcept ?gefName .
-                ?object a belvoc:AbundanceActivity .
-                ?object belvoc:hasActivityType belvoc:GtpBound .
-                ?object belvoc:hasChild ?ras .
-                ?ras belvoc:hasConcept ?rasName .
-            }
-        """
-        res_gef = self.g.query(q_gef)
-
-        for stmt in res_gef:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
-            gef_name = gene_name_from_uri(stmt[0])
-            ras_name = gene_name_from_uri(stmt[1])
-            gef_activity = name_from_uri(stmt[2])
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
-                    RasGef(gef_name, gef_activity, ras_name,
-                           subj, obj, stmt_str, citation, evidence,
-                           annotations))
-
-    def get_ras_gaps(self):
-        # First, get the statements with activities as subjects.
-        q_gap = prefixes + """
-            SELECT ?gapName ?rasName ?gapActivity ?subject ?object ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject a belvoc:AbundanceActivity .
-                ?subject belvoc:hasActivityType ?gapActivity .
-                ?subject belvoc:hasChild ?gap .
-                ?gap a belvoc:ProteinAbundance .
-                ?gap belvoc:hasConcept ?gapName .
-                ?object a belvoc:AbundanceActivity .
-                ?object belvoc:hasActivityType belvoc:GtpBound .
-                ?object belvoc:hasChild ?ras .
-                ?ras belvoc:hasConcept ?rasName .
-            }
-        """
-        res_gap = self.g.query(q_gap)
-
-        for stmt in res_gap:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
-            gap_name = gene_name_from_uri(stmt[0])
-            ras_name = gene_name_from_uri(stmt[1])
-            gap_activity = name_from_uri(stmt[2])
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
-                    RasGap(gap_name, gap_activity, ras_name,
-                           subj, obj, stmt_str, citation, evidence,
-                           annotations))
 
     def get_activating_subs(self):
         """
@@ -459,9 +385,7 @@ class BelProcessor(object):
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
         # directlyIncreases the activity of another protein, without reference
-        # to a modification. However, we skip over rules where, say, a
-        # RasGEF/GAP modulates the activity of a Ras GTPase, since we think we
-        # know how to (fairly unambiguously) interpret these.
+        # to a modification.
         q_stmts = prefixes + """
             SELECT ?subjName ?subjActType ?rel ?objName ?objActType
                    ?subj ?obj ?stmt
@@ -476,12 +400,10 @@ class BelProcessor(object):
                 ?obj belvoc:hasActivityType ?objActType .
                 ?obj belvoc:hasChild ?objProt .
                 ?objProt belvoc:hasConcept ?objName .
-                FILTER ((?rel = belvoc:DirectlyIncreases ||
-                         ?rel = belvoc:DirectlyDecreases) &&
-                        ?objActType != belvoc:GtpBound)
+                FILTER (?rel = belvoc:DirectlyIncreases ||
+                        ?rel = belvoc:DirectlyDecreases)
             }
         """
-
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
@@ -496,12 +418,30 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
+
+            # Distinguish the case when the activator is a RasGTPase
+            # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'GtpBound':
                 self.belpy_stmts.append(
                      RasGtpActivityActivity(subj_name, subj_activity,
                                       rel, obj_name, obj_activity,
                                       subj, obj, stmt_str,
                                       citation, evidence, annotations))
+            # If the object is a Ras-like GTPase, and the subject *increases*
+            # its GtpBound activity, then the subject is a RasGEF
+            elif obj_activity == 'GtpBound' and \
+                 rel == 'DirectlyIncreases':
+                self.belpy_stmts.append(
+                        RasGef(subj_name, subj_activity, obj_name, subj, obj,
+                               stmt_str, citation, evidence, annotations))
+            # If the object is a Ras-like GTPase, and the subject *decreases*
+            # its GtpBound activity, then the subject is a RasGAP
+            elif obj_activity == 'GtpBound' and \
+                 rel == 'DirectlyDecreases':
+                self.belpy_stmts.append(
+                        RasGap(subj_name, subj_activity, obj_name, subj, obj,
+                               stmt_str, citation, evidence, annotations))
+            # Otherwise, create a generic Activity->Activity statement
             else:
                 self.belpy_stmts.append(
                      ActivityActivity(subj_name, subj_activity,
@@ -717,8 +657,6 @@ def rdf_to_pysb(rdf_filename, initial_conditions=True):
     bp.get_modifications()
     bp.get_dephosphorylations()
     bp.get_activating_mods()
-    bp.get_ras_gefs()
-    bp.get_ras_gaps()
     bp.get_activity_activity()
 
     # Print some output about the process
