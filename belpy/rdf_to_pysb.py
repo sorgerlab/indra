@@ -139,9 +139,6 @@ class BelProcessor(object):
         return (citation, evidence, annotations)
 
     def get_modifications(self):
-        # Query for all statements where a kinase directlyIncreases modified
-        # form of substrate. Ignore kinase activity of complexes for now and
-        # include only the kinase activities of ProteinAbundances.
         q_phospho = prefixes + """
             SELECT ?enzName ?actType ?substrateName ?mod ?pos ?subject ?object
                    ?stmt
@@ -217,9 +214,6 @@ class BelProcessor(object):
                       (act_type, mod, mod_pos))
 
     def get_dephosphorylations(self):
-        # Query for all statements where a phosphatase directlyDecreases
-        # modified form of substrate. Ignore kinase activity of complexes for
-        # now and include only the kinase activities of ProteinAbundances.
         q_phospho = prefixes + """
             SELECT ?phosName ?substrateName ?mod ?pos ?subject ?object ?stmt
             WHERE {
@@ -260,9 +254,6 @@ class BelProcessor(object):
                                     evidence, annotations))
 
     def get_activating_mods(self):
-        # Query for all statements where a kinase directlyIncreases modified
-        # form of substrate. Ignore kinase activity of complexes for now and
-        # include only the kinase activities of ProteinAbundances.
         q_mods = prefixes + """
             SELECT ?kinaseName ?mod ?pos ?subject ?object ?rel ?stmt
             WHERE {
