@@ -318,7 +318,12 @@ class BelProcessor(object):
         # Now iterate over the stored complex information and create binding
         # statements
         for cmplx_name, cmplx_list in cmplx_dict.iteritems():
-            self.belpy_stmts.append(Complex(cmplx_list))
+            if len(cmplx_list) < 2:
+                msg = 'Complex %s has less than 2 members! Skipping.' % \
+                       cmplx_name
+                warnings.warn(msg)
+            else:
+                self.belpy_stmts.append(Complex(cmplx_list))
 
     def get_ras_gefs(self):
         q_gef = prefixes + """
