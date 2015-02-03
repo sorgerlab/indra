@@ -447,8 +447,12 @@ class Complex(Statement):
             lhs = lhs + mp_free
             rhs = rhs % mp_bound
         # Finally, create the rule and add it to the model
-        rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
-        model.add_component(rule)
+        try:
+            rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
+            model.add_component(rule)
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
 
     def __str__(self):
         return ("Complex(%s)" % self.members)
