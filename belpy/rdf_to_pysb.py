@@ -16,6 +16,21 @@ from belpy.statements import *
 
 SelfExporter.do_export = False
 
+BEL = Namespace("http://www.openbel.org/")
+
+prefixes = """
+    PREFIX belvoc: <http://www.openbel.org/vocabulary/>
+    PREFIX belsc: <http://www.openbel.org/bel/>
+    PREFIX belns: <http://www.openbel.org/bel/namespace/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
+
+phospho_mods = [
+    'PhosphorylationSerine',
+    'PhosphorylationThreonine',
+    'PhosphorylationTyrosine',
+    'Phosphorylation',
+]
+
 def name_from_uri(uri):
     """Make the URI term usable as a valid Python identifier, if possible.
 
@@ -74,21 +89,6 @@ def get_rule_name(subj_uri, obj_uri, relation):
     rule_name = name_from_uri('%s_%s_%s' % (subj, relation, obj))
     return rule_name
 
-BEL = Namespace("http://www.openbel.org/")
-
-prefixes = """
-    PREFIX belvoc: <http://www.openbel.org/vocabulary/>
-    PREFIX belsc: <http://www.openbel.org/bel/>
-    PREFIX belns: <http://www.openbel.org/bel/namespace/>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
-
-phospho_mods = [
-    'PhosphorylationSerine',
-    'PhosphorylationThreonine',
-    'PhosphorylationTyrosine',
-    'Phosphorylation',
-]
-
 class BelProcessor(object):
     def __init__(self, g):
         self.g = g
@@ -97,10 +97,6 @@ class BelProcessor(object):
         self.converted_stmts = []
         self.degenerate_stmts = []
         self.indirect_stmts = []
-
-    def print_statements(self):
-        for i, stmt in enumerate(self.belpy_stmts):
-            print "%s: %s" % (i, stmt)
 
     def get_evidence(self, statement):
         evidence = None
@@ -177,7 +173,6 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
-            #rule_name = get_rule_name(stmt[4], stmt[5], 'directlyIncreases')
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.belpy_stmts.append(
                         Phosphorylation(enz_name, sub_name, mod, mod_pos,
@@ -278,6 +273,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
+            print stmt
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             kin_name = gene_name_from_uri(stmt[0])
@@ -398,6 +394,68 @@ class BelProcessor(object):
                            subj, obj, stmt_str, citation, evidence,
                            annotations))
 
+    def get_activating_subs(self):
+        """
+        p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
+        p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
+        p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
+        """
+        q_mods = prefixes + """
+            SELECT ?enzyme_name ?sub_label ?act_type ?subject ?object ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?subject a belvoc:ProteinAbundance .
+                ?subject belvoc:hasConcept ?enzyme_name .
+                ?subject belvoc:hasChild ?sub_expr .
+                ?sub_expr rdfs:label ?sub_label .
+                ?object a belvoc:AbundanceActivity .
+                ?object belvoc:hasActivityType ?act_type .
+                ?object belvoc:hasChild ?enzyme .
+                ?enzyme a belvoc:ProteinAbundance .
+                ?enzyme belvoc:hasConcept ?enzyme_name .
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_mods = self.g.query(q_mods)
+
+        for stmt in res_mods:
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
+            # Parse out the elements of the query
+            enz_name = gene_name_from_uri(stmt[0])
+            sub_expr = term_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[2])
+            # Parse the WT and substituted residues from the node label.
+            # Strangely, the RDF for substituted residue doesn't break the
+            # terms of the BEL expression down into their meaning, as happens
+            # for modified protein abundances. Instead, the substitution
+            # just comes back as a string, e.g., "sub(V,600,E)". This code
+            # parses the arguments back out using a regular expression.
+            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
+            if match:
+                matches = match.groups()
+                wt_residue = matches[0]
+                position = matches[1]
+                sub_residue = matches[2]
+            else:
+                print("Warning: Could not parse substitution expression %s" %
+                      sub_expr)
+                continue
+
+            subj = term_from_uri(stmt[3])
+            obj = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt_str)
+            self.belpy_stmts.append(
+                    ActivatingSubstitution(enz_name, wt_residue, position,
+                                           sub_residue, act_type,
+                                           subj, obj, stmt_str,
+                                           citation, evidence, annotations))
+
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
         # directlyIncreases the activity of another protein, without reference
@@ -471,33 +529,6 @@ class BelProcessor(object):
                     print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
         """
 
-    def print_statement_coverage(self):
-        """Display how many of the direct statements have been converted,
-        and how many are considered 'degenerate' and not converted."""
-
-        if not self.all_stmts:
-            self.get_all_direct_statements()
-        if not self.degenerate_stmts:
-            self.get_degenerate_statements()
-        if not self.indirect_stmts:
-            self.get_indirect_statements()
-
-        print
-        print("Total indirect statements: %d" % len(self.indirect_stmts))
-        print("Total direct statements: %d" % len(self.all_stmts))
-        print("Converted statements: %d" % len(self.converted_stmts))
-        print("Degenerate statements: %d" % len(self.degenerate_stmts))
-        print(">> Total unhandled statements: %d" %
-              (len(self.all_stmts) - len(self.converted_stmts) -
-               len(self.degenerate_stmts)))
-
-        print
-        print "--- Unhandled statements ---------"
-        for stmt in self.all_stmts:
-            if not (stmt in self.converted_stmts or
-                    stmt in self.degenerate_stmts):
-                print stmt
-
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases statements in the corpus.
         Stores the results of the query in self.all_stmts.
@@ -566,69 +597,6 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
         self.indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
-    def get_activating_subs(self):
-        """
-        p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
-        p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
-        p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
-        """
-        q_mods = prefixes + """
-            SELECT ?enzyme_name ?sub_label ?act_type ?subject ?object ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
-                ?stmt belvoc:hasSubject ?subject .
-                ?stmt belvoc:hasObject ?object .
-                ?subject a belvoc:ProteinAbundance .
-                ?subject belvoc:hasConcept ?enzyme_name .
-                ?subject belvoc:hasChild ?sub_expr .
-                ?sub_expr rdfs:label ?sub_label .
-                ?object a belvoc:AbundanceActivity .
-                ?object belvoc:hasActivityType ?act_type .
-                ?object belvoc:hasChild ?enzyme .
-                ?enzyme a belvoc:ProteinAbundance .
-                ?enzyme belvoc:hasConcept ?enzyme_name .
-            }
-        """
-
-        # Now make the PySB for the phosphorylation
-        res_mods = self.g.query(q_mods)
-
-        for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
-            # Parse out the elements of the query
-            enz_name = gene_name_from_uri(stmt[0])
-            sub_expr = term_from_uri(stmt[1])
-            act_type = term_from_uri(stmt[2])
-            # Parse the WT and substituted residues from the node label.
-            # Strangely, the RDF for substituted residue doesn't break the
-            # terms of the BEL expression down into their meaning, as happens
-            # for modified protein abundances. Instead, the substitution
-            # just comes back as a string, e.g., "sub(V,600,E)". This code
-            # parses the arguments back out using a regular expression.
-            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
-            if match:
-                matches = match.groups()
-                wt_residue = matches[0]
-                position = matches[1]
-                sub_residue = matches[2]
-            else:
-                print("Warning: Could not parse substitution expression %s" %
-                      sub_expr)
-                continue
-
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
-                    ActivatingSubstitution(enz_name, wt_residue, position,
-                                           sub_residue, act_type,
-                                           subj, obj, stmt_str,
-                                           citation, evidence, annotations))
-
-
     def get_degenerate_statements(self):
         print "Checking for 'degenerate' statements...\n"
         # Get rules of type protein X -> activity Y
@@ -680,13 +648,44 @@ class BelProcessor(object):
             print stmt_str
             self.degenerate_stmts.append(stmt_str)
 
-def make_model(g, bp):
-    model = Model()
-    for stmt in bp.belpy_stmts:
-        stmt.monomers(model)
-    for stmt in bp.belpy_stmts:
-        stmt.assemble(model)
-    return model
+    def print_statement_coverage(self):
+        """Display how many of the direct statements have been converted,
+        and how many are considered 'degenerate' and not converted."""
+
+        if not self.all_stmts:
+            self.get_all_direct_statements()
+        if not self.degenerate_stmts:
+            self.get_degenerate_statements()
+        if not self.indirect_stmts:
+            self.get_indirect_statements()
+
+        print
+        print("Total indirect statements: %d" % len(self.indirect_stmts))
+        print("Total direct statements: %d" % len(self.all_stmts))
+        print("Converted statements: %d" % len(self.converted_stmts))
+        print("Degenerate statements: %d" % len(self.degenerate_stmts))
+        print(">> Total unhandled statements: %d" %
+              (len(self.all_stmts) - len(self.converted_stmts) -
+               len(self.degenerate_stmts)))
+
+        print
+        print "--- Unhandled statements ---------"
+        for stmt in self.all_stmts:
+            if not (stmt in self.converted_stmts or
+                    stmt in self.degenerate_stmts):
+                print stmt
+
+    def print_statements(self):
+        for i, stmt in enumerate(self.belpy_stmts):
+            print "%s: %s" % (i, stmt)
+
+    def make_model(self):
+        model = Model()
+        for stmt in self.belpy_stmts:
+            stmt.monomers(model)
+        for stmt in self.belpy_stmts:
+            stmt.assemble(model)
+        return model
 
 def add_default_initial_conditions(model):
     try:
@@ -728,7 +727,7 @@ def rdf_to_pysb(rdf_filename, initial_conditions=True):
     bp.print_statements()
 
     # Make the PySB model and return
-    model = make_model(g, bp)
+    model = bp.make_model()
     if initial_conditions:
         add_default_initial_conditions(model)
     return (bp, model)
