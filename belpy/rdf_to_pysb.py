@@ -118,8 +118,11 @@ class BelProcessor(object):
         """ % statement.format()
         res_evidence = self.g.query(q_evidence)
         for stmt in res_evidence:
-            evidence = stmt[0].format()
-            citation = stmt[1].format()
+            try:
+                evidence = stmt[0].format()
+                citation = stmt[1].format()
+            except KeyError:
+                warnings.warn('Problem converting evidence/citation string')
 
         # Query for all annotations of the statement
         q_annotations = prefixes + """
