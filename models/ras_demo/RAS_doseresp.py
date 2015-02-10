@@ -4,8 +4,15 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 import time
+import sys
 
-#model = pickle.load(open('RAS_combined_model.pkl','rb'))
+model_fname = 'RAS_combined_model.pkl'
+try:
+    model = pickle.load(open(model_fname,'rb'))
+except IOError:
+    print 'Could not open model file %s' % model_fname
+    sys.exit()
+
 model.integrator = scipy.integrate.ode(model.odes)
 model.integrator.set_integrator('vode', method='bdf', with_jacobian=True, rtol=1e-3,atol=1e-6,nsteps=20000,order=5)
  
