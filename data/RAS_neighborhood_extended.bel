@@ -1,0 +1,67 @@
+##################################################################################
+# Document Properties Section
+
+SET DOCUMENT Name = "RAS Neighborhood"
+SET DOCUMENT Description = "Query from large corpus: 1 step neighborhood from BRAF RAF1 KRAS NRAS HRAS MAPK1 MAPK2 MAP2K1 MAP2K2"
+SET DOCUMENT Version = "N/A"
+
+##################################################################################
+# Definitions Section
+
+DEFINE NAMESPACE BEL AS URL "http://belframework.org/schema/1.0/xbel"
+DEFINE NAMESPACE TextLocation AS URL "http://belframework.org/schema/1.0/xbel/TextLocation"
+DEFINE NAMESPACE HGNC AS URL "http://resource.belframework.org/belframework/1.0/namespace/hgnc-approved-symbols.belns"
+DEFINE NAMESPACE MGI AS URL "http://resource.belframework.org/belframework/1.0/namespace/mgi-approved-symbols.belns"
+DEFINE NAMESPACE RGD AS URL "http://resource.belframework.org/belframework/1.0/namespace/rgd-approved-symbols.belns"
+DEFINE NAMESPACE EGID AS URL "http://resource.belframework.org/belframework/1.0/namespace/entrez-gene-ids-hmr.belns"
+DEFINE NAMESPACE GO AS URL "http://resource.belframework.org/belframework/1.0/namespace/go-biological-processes-names.belns"
+DEFINE NAMESPACE GOCCACC AS URL "http://resource.belframework.org/belframework/1.0/namespace/go-cellular-component-accession-numbers.belns"
+DEFINE NAMESPACE MESHCL AS URL "http://resource.belframework.org/belframework/1.0/namespace/mesh-cellular-locations.belns"
+DEFINE NAMESPACE MESHPP AS URL "http://resource.belframework.org/belframework/1.0/namespace/mesh-biological-processes.belns"
+DEFINE NAMESPACE MESHD AS URL "http://resource.belframework.org/belframework/1.0/namespace/mesh-diseases.belns"
+DEFINE NAMESPACE CHEBI AS URL "http://resource.belframework.org/belframework/1.0/namespace/chebi-names.belns"
+DEFINE NAMESPACE PFH AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-human-protein-families.belns"
+DEFINE NAMESPACE NCH AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-human-complexes.belns"
+DEFINE NAMESPACE PFM AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-mouse-protein-families.belns"
+DEFINE NAMESPACE NCM AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-mouse-complexes.belns"
+DEFINE NAMESPACE PFR AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-rat-protein-families.belns"
+DEFINE NAMESPACE NCR AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-named-rat-complexes.belns"
+DEFINE NAMESPACE SCHEM AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-legacy-chemical-names.belns"
+DEFINE NAMESPACE SDIS AS URL "http://resource.belframework.org/belframework/1.0/namespace/selventa-legacy-diseases.belns"
+
+DEFINE ANNOTATION CellLine AS  URL "http://resource.belframework.org/belframework/1.0/annotation/atcc-cell-line.belanno"
+DEFINE ANNOTATION Cell AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-cell.belanno"
+DEFINE ANNOTATION Disease AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-disease.belanno"
+DEFINE ANNOTATION HemicAndImmuneSystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-hemic-and-immune-system.belanno"
+DEFINE ANNOTATION Tissue AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-tissue.belanno"
+DEFINE ANNOTATION DigestiveSystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-digestive-system.belanno"
+DEFINE ANNOTATION BodyRegion AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-body-region.belanno"
+DEFINE ANNOTATION NervousSystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-nervous-system.belanno"
+DEFINE ANNOTATION CardiovascularSystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-cardiovascular-system.belanno"
+DEFINE ANNOTATION RespiratorySystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-respiratory-system.belanno"
+DEFINE ANNOTATION UrogenitalSystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-urogenital-system.belanno"
+DEFINE ANNOTATION CellStructure AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-cell-structure.belanno"
+DEFINE ANNOTATION FluidAndSecretion AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-fluid-and-secretion.belanno"
+DEFINE ANNOTATION IntegumentarySystem AS  URL "http://resource.belframework.org/belframework/1.0/annotation/mesh-integumentary-system.belanno"
+DEFINE ANNOTATION Species AS  URL "http://resource.belframework.org/belframework/1.0/annotation/species-taxonomy-id.belanno"
+
+##################################################################################
+# Statements Section
+
+# These statements are added manually for upstream simplification
+kinaseActivity(proteinAbundance(HGNC:EGFR)) directlyIncreases catalyticActivity(proteinAbundance(HGNC:SOS1))
+
+# Below all statements are from large_corpus.bel
+catalyticActivity(proteinAbundance(HGNC:SOS1)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+catalyticActivity(proteinAbundance(HGNC:SOS1)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:NRAS))
+catalyticActivity(proteinAbundance(HGNC:RASA3)) directlyIncreases gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+gtpBoundActivity(proteinAbundance(HGNC:NRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:ARAF))
+gtpBoundActivity(proteinAbundance(HGNC:NRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:BRAF))
+gtpBoundActivity(proteinAbundance(HGNC:KRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:ARAF))
+gtpBoundActivity(proteinAbundance(HGNC:KRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:BRAF))
+gtpBoundActivity(proteinAbundance(HGNC:KRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:RAF1))
+gtpBoundActivity(proteinAbundance(HGNC:HRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:ARAF))
+gtpBoundActivity(proteinAbundance(HGNC:HRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:BRAF))
+gtpBoundActivity(proteinAbundance(HGNC:HRAS)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:RAF1))
+kinaseActivity(proteinAbundance(HGNC:RAF1)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:MAP2K1))
+kinaseActivity(proteinAbundance(HGNC:MAP2K1)) directlyIncreases kinaseActivity(proteinAbundance(HGNC:MAPK1))
