@@ -10,19 +10,24 @@ import sys
 
 def likelihood(mcmc,position):
     yobs = mcmc.simulate(position,observables=True)
-    ll = np.sum((yobs['ERKact'][1:]-mcmc.options.exp_data) ** 2 / (2 * mcmc.options.exp_data_std**2))
+    ll = np.sum((yobs['ERKact'][1:]-mcmc.options.exp_data) ** 2 /
+                (2.0 * mcmc.options.exp_data_std**2))
     return ll
 
 def prior(mcmc,position):
-    lp = np.sum((position - mcmc.options.prior_mean) ** 2 / (2 * mcmc.options.prior_var))
+    lp = np.sum((position - mcmc.options.prior_mean) ** 2 /
+                (2.0 * mcmc.options.prior_var))
     return lp
 
 def step(mcmc):
     """Print out some statistics every 20 steps"""
     if mcmc.iter % 20 == 0:
-        print 'iter=%-5d  sigma=%-.3f  T=%-.3f  acc=%-.3f, lkl=%g  prior=%g  post=%g' % \
-            (mcmc.iter, mcmc.sig_value, mcmc.T, float(mcmc.acceptance)/(mcmc.iter+1),
-             mcmc.accept_likelihood, mcmc.accept_prior, mcmc.accept_posterior)
+        print 'iter=%-5d  sigma=%-.3f  T=%-.3f  acc=%-.3f, lkl=%g  ' \
+              'prior=%g  post=%g' % \
+              (mcmc.iter, mcmc.sig_value, mcmc.T,
+               float(mcmc.acceptance)/(mcmc.iter+1), mcmc.accept_likelihood,
+               mcmc.accept_prior, mcmc.accept_posterior)
+
 class Object:
     def __init__(self):
         self.model              = None
@@ -51,7 +56,6 @@ class Object:
         self.thermo_temp        = 1
         self.seed               = None
 
-
     def copy(self):
         new_options = Object()
         new_options.__dict__.update(self.__dict__)
@@ -65,8 +69,9 @@ except IOError:
     sys.exit()
 
 model.integrator = scipy.integrate.ode(model.odes)
-model.integrator.set_integrator('vode', method='bdf', with_jacobian=True, rtol=1e-3,atol=1e-6,nsteps=20000,order=5)
- 
+model.integrator.set_integrator('vode', method='bdf', with_jacobian=True,
+                                rtol=1e-3,atol=1e-6,nsteps=20000,order=5)
+
 opts = Object()
 
 tplot = np.linspace(0,25,101)
@@ -85,7 +90,8 @@ opts.likelihood_fn = likelihood
 opts.prior_fn = prior
 opts.step_fn = step
 opts.estimate_params = map(model.parameters.get,
-                           ['kf_phospho', 'kf_gef', 'kf_gap', 'kf_one_step_activate'])
+                           ['kf_phospho', 'kf_gef', 'kf_gap',
+                            'kf_one_step_activate'])
 opts.prior_mean = [np.log10(p.value) for p in opts.estimate_params]
 opts.prior_var = np.empty_like(opts.prior_mean)
 opts.prior_var.fill(1.0)
@@ -104,11 +110,15 @@ print "Elapsed time", end_time - start_time, "s"
 
 mcmc.options.tspan = tplot
 mcmc.solver.__init__(mcmc.solver.model, mcmc.options.tspan)
-for p in mcmc.positions[mcmc.accepts][::10]:
-	yobs = mcmc.simulate(p,observables=True)
-	plt.plot(mcmc.options.tspan,yobs['ERKact'],'b-',alpha=0.1)
+
+plt.ion()
+for p in mcmc.positions[::10]:
+    yobs = mcmc.simulate(p,observables=True)
+    plt.plot(mcmc.options.tspan,yobs['ERKact'],'b-',alpha=0.1)
+
 plt.plot(0, 0, 'b-', label='Simulation')
-plt.errorbar(np.linspace(0,25,11)[1:],opts.exp_data,opts.exp_data_std,fmt='ro',label='Data')
+plt.errorbar(np.linspace(0,25,11)[1:], opts.exp_data, opts.exp_data_std,
+             fmt='ro',label='Data')
 plt.ylim(ymin=-50000)
 plt.legend(loc='upper left')
 plt.show()
