@@ -31,23 +31,31 @@ def getSignature(e):
             return ''
 
 
+# Set the location of the paxtools jar
+# This jar was downloaded from
+# http://sourceforge.net/projects/biopax/files/paxtools/
+paxtools_jar = 'paxtools-4.3.0.jar'
+# This example data file has been extracted and renamed from
+# http://www.pathwaycommons.org/pc2/downloads/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
+data_file = '../data/pathwaycommons_nci.owl'
+
+JVM_memuse = '10g'
+
 # Start the JVM
-startJVM(getDefaultJVMPath(), "-ea", "-Xmx10g", "-Djava.class.path=paxtools-4.3.0.jar")
+startJVM(getDefaultJVMPath(), "-ea", "-Xmx%s" % JVM_memuse, "-Djava.class.path=%s" % paxtools_jar)
 
 #get the paxtools root package as a shortcut
 paxPkg = JPackage("org.biopax.paxtools")
 io = paxPkg.io.SimpleIOHandler(paxPkg.model.BioPAXLevel.L3)
 
-#import a BioPAX model of the NCI network
-fpath = "/home/bmg16/data/pathwaycommons/pathwaycommons_nci.owl"
+#import a BioPAX model from data_file
 try:
-    fileIS = java.io.FileInputStream(fpath)
+   fileIS = java.io.FileInputStream(data_file)
+   model = io.convertFromOWL(fileIS)
+   fileIS.close()
 except JavaException:
-    print 'Could not open data file %s' % fpath
+    print 'Could not read data file %s' % data_file
     sys.exit(0)
-
-model = io.convertFromOWL(fileIS)
-fileIS.close()
 
 # These are the proteins whose neighborhood we are interested in
 query_proteins = ['BRAF',]
@@ -75,5 +83,4 @@ for r in result_set:
     if isinstance(r,JClass("org.biopax.paxtools.model.level3.BiochemicalReaction")):
         print getSignature(r)
 
-#end use of jpype - docs say you can only do this once, so all java must be run before calling this
 shutdownJVM() 
