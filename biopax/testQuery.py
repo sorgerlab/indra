@@ -1,5 +1,5 @@
 from jpype import *
-import ipdb
+import os
 import sys
 
 def getHGNC(proteinName):
@@ -31,10 +31,11 @@ def getSignature(e):
             return ''
 
 
-# Set the location of the paxtools jar
+# Set default the location of the paxtools jar
+# If CLASSPATH is set, this will not be used
 # This jar was downloaded from
 # http://sourceforge.net/projects/biopax/files/paxtools/
-paxtools_jar = 'paxtools-4.3.0.jar'
+default_paxtools_jar = 'paxtools-4.3.0.jar'
 # This example data file has been extracted and renamed from
 # http://www.pathwaycommons.org/pc2/downloads/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
 data_file = '../data/pathwaycommons_nci.owl'
@@ -42,7 +43,11 @@ data_file = '../data/pathwaycommons_nci.owl'
 JVM_memuse = '10g'
 
 # Start the JVM
-startJVM(getDefaultJVMPath(), "-ea", "-Xmx%s" % JVM_memuse, "-Djava.class.path=%s" % paxtools_jar)
+java_classpath = os.environ.get('CLASSPATH')
+if java_classpath is None:
+    print "CLASSPATH environment variable not set, using default classpath %s" % default_paxtools_jar
+    java_classpath = default_paxtools_jar
+startJVM(getDefaultJVMPath(), "-ea", "-Xmx%s" % JVM_memuse, "-Djava.class.path=%s" % java_classpath)
 
 #get the paxtools root package as a shortcut
 paxPkg = JPackage("org.biopax.paxtools")
