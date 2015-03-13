@@ -8,50 +8,82 @@ import ipdb
 # https://code.google.com/p/pathway-commons/wiki/PC2Client
 from jnius import autoclass
 
+use_data_file = True
 
 def getHGNC(proteinName):
     return 'http://purl.org/pc2/6/RelationshipXref_hgnc_symbol_%s_identity' % proteinName
 
 def getSignature(e):
     if isinstance(e,autoclass("org.biopax.paxtools.impl.level3.BiochemicalReactionImpl")):
-        s = ' + '.join([getSignature(x) for x in e.getLeft()])
+        s = '\nFrom: '
+        s += ' + '.join([getSignature(x) for x in e.getLeft()])
         if e.getControlledOf():
-            s += ' ==(' + '|'.join([getSignature(x) for x in e.getControlledOf()]) + ')==> '
-        else:
-            s += ' ====> '
-        s += ' + '.join([getSignature(x) for x in e.getRight()])
+            catalyzers = [x for x in e.getControlledOf() 
+                if isinstance(x,autoclass("org.biopax.paxtools.impl.level3.CatalysisImpl"))]
+            controllers = [x for x in e.getControlledOf() 
+                if isinstance(x,autoclass("org.biopax.paxtools.impl.level3.ControlImpl"))]
+            if catalyzers:
+                s += '\nCatalyzed by: '
+                s += ' | '.join([getSignature(x) for x in catalyzers])
+            if controllers:
+                s += '\nControlled by: '
+                s += ' | '.join([getSignature(x) for x in controllers])
+        s += '\nTo: ' + ' + '.join([getSignature(x) for x in e.getRight()])
+        xrefs = e.getXref().toArray()
+        if xrefs:
+            s += '\nReferences: '
+            s += ' | '.join([x.getRDFId() for x in xrefs])
+        #evidence =  e.getEvidence().toArray()
+        #if evidence:
+        #    s += '\nEvidence: '
+        #    s += ' | '.join([getSignature(x) for x in evidence])
+        #comments = e.getComment().toArray()
+        #if comments:
+        #    s += '\nComments: '
+        #    s += ' | '.join(comments)
         return s
+    elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EvidenceImpl")):
+        s = ' | '.join(e.getComment().toArray())
+        s += ', ' + ' | '.join([getSignature(x) for x in e.getEvidenceCode()])
+        return s
+    elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EvidenceCodeVocabularyImpl")):
+        return e.toString()
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.CatalysisImpl")):
         s = ','.join([getSignature(x) for x in e.getController()])
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ProteinImpl")):
         s = e.getDisplayName()
-        s += '(' + ','.join([f.toString() for f in e.getFeature()]) + ')'
+        s += '(' + ','.join([getSignature(f) for f in e.getFeature()]) + ')'
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ComplexImpl")):
         s = '/'.join([getSignature(c) for c in e.getComponent()])
         return s
+    elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EntityFeatureImpl")):
+        s = ','.join(e.getComment().toArray())
+        return s
+    elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ControlImpl")):
+        s = ','.join([getSignature(x) for x in e.getController()])
+        return s
     else:
-        if e.getDisplayName():
+        if hasattr(e,'getDisplayName') and e.getDisplayName():
             return e.getDisplayName()
         else:
-            return ''
+            return e.toString()
 
 
 # These are the proteins whose neighborhood we are interested in
-query_proteins = ['BRAF',]
+query_proteins = ['BRAF']
 #query_proteins = ['HRAS','KRAS','NRAS','ARAF','BRAF','RAF1','MAP2K1','MAPK1']
 
-# This example data file has been extracted and renamed from
-# http://www.pathwaycommons.org/pc2/downloads/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
-data_file = '../data/pathwaycommons_nci.owl'
 
-
-io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
-io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
-
-use_data_file = False
 if use_data_file:
+    # This example data file has been extracted and renamed from
+    # http://www.pathwaycommons.org/pc2/downloads/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
+    data_file = '../data/pathwaycommons_nci.owl'
+    io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
+    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
+
+
     print 'Starting offline query of the NCI dataset'
     #import a BioPAX model from data_file
     try:
@@ -92,4 +124,4 @@ print '-----------------'
 for r in result_set:
     if isinstance(r,autoclass("org.biopax.paxtools.impl.level3.BiochemicalReactionImpl")):
         print getSignature(r)
-
+        
