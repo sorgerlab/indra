@@ -1,11 +1,14 @@
 import os
 import sys
 import ipdb
+
 # The CLASSPATH environmental variable needs to be set
 # to point to the paxtools and the cpath jar files.
 # These can be obtained from the sites below
 # http://sourceforge.net/projects/biopax/files/paxtools/
 # https://code.google.com/p/pathway-commons/wiki/PC2Client
+import jnius_config
+jnius_config.add_options('-Xmx3000m')
 from jnius import autoclass, JavaException
 
 use_data_file = True
@@ -78,7 +81,7 @@ query_proteins = ['BRAF']
 
 if use_data_file:
     # This example data file has been extracted and renamed from
-    # http://www.pathwaycommons.org/pc2/downloads/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
+    # http://www.pathwaycommons.org/archives/PC2/v6-201502/Pathway%20Commons.6.NCI%20Pathway%20Interaction%20Database:%20Pathway.BIOPAX.owl.gz
     data_file = '../data/pathwaycommons_nci.owl'
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
     io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
