@@ -6,7 +6,7 @@ import ipdb
 # These can be obtained from the sites below
 # http://sourceforge.net/projects/biopax/files/paxtools/
 # https://code.google.com/p/pathway-commons/wiki/PC2Client
-from jnius import autoclass
+from jnius import autoclass, JavaException
 
 use_data_file = True
 
