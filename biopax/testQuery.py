@@ -19,11 +19,11 @@ def getHGNC(proteinName):
 def getSignature(e):
     if isinstance(e,autoclass("org.biopax.paxtools.impl.level3.BiochemicalReactionImpl")):
         s = '\nFrom: '
-        s += ' + '.join([getSignature(x) for x in e.getLeft()])
+        s += ' + '.join([getSignature(x) for x in e.getLeft().toArray()])
         if e.getControlledOf():
-            catalyzers = [x for x in e.getControlledOf() 
+            catalyzers = [x for x in e.getControlledOf().toArray()
                 if isinstance(x,autoclass("org.biopax.paxtools.impl.level3.CatalysisImpl"))]
-            controllers = [x for x in e.getControlledOf() 
+            controllers = [x for x in e.getControlledOf().toArray() 
                 if isinstance(x,autoclass("org.biopax.paxtools.impl.level3.ControlImpl"))]
             if catalyzers:
                 s += '\nCatalyzed by: '
@@ -31,7 +31,7 @@ def getSignature(e):
             if controllers:
                 s += '\nControlled by: '
                 s += ' | '.join([getSignature(x) for x in controllers])
-        s += '\nTo: ' + ' + '.join([getSignature(x) for x in e.getRight()])
+        s += '\nTo: ' + ' + '.join([getSignature(x) for x in e.getRight().toArray()])
         xrefs = e.getXref().toArray()
         if xrefs:
             s += '\nReferences: '
@@ -47,25 +47,25 @@ def getSignature(e):
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EvidenceImpl")):
         s = ' | '.join(e.getComment().toArray())
-        s += ', ' + ' | '.join([getSignature(x) for x in e.getEvidenceCode()])
+        s += ', ' + ' | '.join([getSignature(x) for x in e.getEvidenceCode().toArray()])
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EvidenceCodeVocabularyImpl")):
         return e.toString()
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.CatalysisImpl")):
-        s = ','.join([getSignature(x) for x in e.getController()])
+        s = ','.join([getSignature(x) for x in e.getController().toArray()])
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ProteinImpl")):
         s = e.getDisplayName()
-        s += '(' + ','.join([getSignature(f) for f in e.getFeature()]) + ')'
+        s += '(' + ','.join([getSignature(f) for f in e.getFeature().toArray()]) + ')'
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ComplexImpl")):
-        s = '/'.join([getSignature(c) for c in e.getComponent()])
+        s = '/'.join([getSignature(c) for c in e.getComponent().toArray()])
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.EntityFeatureImpl")):
         s = ','.join(e.getComment().toArray())
         return s
     elif isinstance(e,autoclass("org.biopax.paxtools.impl.level3.ControlImpl")):
-        s = ','.join([getSignature(x) for x in e.getController()])
+        s = ','.join([getSignature(x) for x in e.getController().toArray()])
         return s
     else:
         if hasattr(e,'getDisplayName') and e.getDisplayName():
@@ -124,7 +124,7 @@ print 'Querying model for %s' % ','.join(query_proteins)
 print 'Neighborhood query returned %d elements' % result_set.size()
 print '-----------------'
 
-for r in result_set:
+for r in result_set.toArray():
     if isinstance(r,autoclass("org.biopax.paxtools.impl.level3.BiochemicalReactionImpl")):
         print getSignature(r)
         
