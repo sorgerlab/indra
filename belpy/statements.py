@@ -38,10 +38,19 @@ active_site_names = {
 }
 
 def site_name(stmt):
-    """Return a site name for a modification-type statement."""
-    mod = abbrevs[stmt.mod]
-    mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
-    return '%s%s' % (mod, mod_pos)
+    """Return all site names for a modification-type statement."""
+    names = []
+    if isinstance(stmt.mod,(list,tuple)):
+        for m,mp in zip(stmt.mod,stmt.mod_pos):
+            mod = abbrevs[m]
+            mod_pos = mp if mp is not None else ''
+            names.append('%s%s' % (mod, mod_pos))
+    else:
+        mod = abbrevs[stmt.mod]
+        mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
+        names.append('%s%s' % (mod, mod_pos))
+
+    return names
 
 def get_create_monomer(model, name):
     """Return monomer with given name, creating it if needed."""
@@ -103,7 +112,7 @@ class Phosphorylation(Modification):
         enz = get_create_monomer(model, self.enz_name)
         create_site(enz, 'Kinase', ('inactive', 'active'))
         sub = get_create_monomer(model, self.sub_name)
-        create_site(sub, site_name(self), ('u', 'p'))
+        create_site(sub, site_name(self)[0], ('u', 'p'))
 
     def assemble(self, model):
         try:
@@ -115,7 +124,7 @@ class Phosphorylation(Modification):
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
 
-        site = site_name(self)
+        site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
         try:
@@ -200,7 +209,7 @@ class Dephosphorylation(Statement):
     def monomers(self, model):
         phos = get_create_monomer(model, self.phos_name)
         sub = get_create_monomer(model, self.sub_name)
-        create_site(sub, site_name(self), ('u', 'p'))
+        create_site(sub, site_name(self)[0], ('u', 'p'))
 
     def assemble(self, model):
         try:
@@ -212,7 +221,7 @@ class Dephosphorylation(Statement):
         phos = model.monomers[self.phos_name]
         sub = model.monomers[self.sub_name]
 
-        site = site_name(self)
+        site = site_name(self)[0]
         r = Rule('%s_dephospho_%s_%s' %
                  (self.phos_name, self.sub_name, site),
                  phos() + sub(**{site:'p'}) >>
@@ -238,9 +247,11 @@ class ActivityModification(Statement):
 
     def monomers(self, model):
         monomer = get_create_monomer(model, self.monomer_name)
-        site = site_name(self)
-        #active_state = states[self.mod][1]
-        create_site(monomer, site, states[self.mod])
+        sites = site_name(self)
+        active_states = [states[m][1] for m in self.mod]
+        
+        for i,s in enumerate(sites):
+            create_site(monomer, s, states[self.mod[i]])
         create_site(monomer, self.activity, ('inactive', 'active'))
 
     def assemble(self, model):
@@ -252,8 +263,8 @@ class ActivityModification(Statement):
 
         m = model.monomers[self.monomer_name]
 
-        site = site_name(self)
-        active_state = states[self.mod][1]
+        sites = site_name(self)
+        active_states = [states[mod][1]for mod in self.mod]
 
         if self.relationship == 'DirectlyIncreases':
             pre_activity_state = 'inactive'
@@ -264,13 +275,17 @@ class ActivityModification(Statement):
         else:
             raise Exception("Invalid modification/activity relationship.")
 
-        rule_name = '%s_%s%s_%s_%s' % \
-                    (self.monomer_name, site, active_state, self.relationship,
+        rule_name = '%s_%s_%s_%s' % \
+                    (self.monomer_name, '_'.join([a+s for (a,s) in zip(sites,active_states)]), self.relationship,
                      self.activity)
         try:
+            pre = {key:value for (key,value) in zip(sites,active_states)}
+            pre[self.activity] = pre_activity_state
+            post = {key:value for (key,value) in zip(sites,active_states)}
+            post[self.activity] = post_activity_state
             r = Rule(rule_name,
-                   m(**{site:active_state, self.activity:pre_activity_state}) >>
-                   m(**{site:active_state, self.activity:post_activity_state}),
+                   m(**pre) >>
+                   m(**post),
                    kf_activation)
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
