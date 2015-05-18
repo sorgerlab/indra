@@ -286,7 +286,6 @@ class BelProcessor(object):
         for stmt in res_mods:
             (citation, evidence, annotations) = self.get_evidence(stmt[9])
             # Parse out the elements of the query
-            print stmt
             kin_name = gene_name_from_uri(stmt[0])
             mod1 = term_from_uri(stmt[1])
             mod_pos1 = term_from_uri(stmt[2])
