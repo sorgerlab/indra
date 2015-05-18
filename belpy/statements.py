@@ -38,10 +38,14 @@ active_site_names = {
 }
 
 def site_name(stmt):
-    """Return a site name for a modification-type statement."""
-    mod = abbrevs[stmt.mod]
-    mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
-    return '%s%s' % (mod, mod_pos)
+    """Return all site names for a modification-type statement."""
+    names = []
+    for i,m in enumerate(stmt.mod):
+        print i,m
+        mod = abbrevs[m]
+        mod_pos = stmt.mod_pos[i] if stmt.mod_pos[i] is not None else ''
+        names.append('%s%s' % (mod, mod_pos))
+    return names
 
 def get_create_monomer(model, name):
     """Return monomer with given name, creating it if needed."""
@@ -238,9 +242,11 @@ class ActivityModification(Statement):
 
     def monomers(self, model):
         monomer = get_create_monomer(model, self.monomer_name)
-        site = site_name(self)
+        sites = site_name(self)
         #active_state = states[self.mod][1]
-        create_site(monomer, site, states[self.mod])
+        
+        for i,s in enumerate(sites):
+            create_site(monomer, s, states[self.mod[i]])
         create_site(monomer, self.activity, ('inactive', 'active'))
 
     def assemble(self, model):
@@ -252,8 +258,8 @@ class ActivityModification(Statement):
 
         m = model.monomers[self.monomer_name]
 
-        site = site_name(self)
-        active_state = states[self.mod][1]
+        sites = site_name(self)
+        active_states = [states[m][1]for m in self.mod]
 
         if self.relationship == 'DirectlyIncreases':
             pre_activity_state = 'inactive'
@@ -265,8 +271,9 @@ class ActivityModification(Statement):
             raise Exception("Invalid modification/activity relationship.")
 
         rule_name = '%s_%s%s_%s_%s' % \
-                    (self.monomer_name, site, active_state, self.relationship,
+                    (self.monomer_name, '_'.join(sites), self.relationship,
                      self.activity)
+        print rule_name
         try:
             r = Rule(rule_name,
                    m(**{site:active_state, self.activity:pre_activity_state}) >>

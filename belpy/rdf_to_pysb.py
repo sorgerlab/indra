@@ -247,6 +247,64 @@ class BelProcessor(object):
                     Dephosphorylation(phos_name, sub_name, mod, mod_pos,
                                     subj, obj, stmt_str, citation,
                                     evidence, annotations))
+    
+    def get_composite_activating_mods(self):
+        # To eliminate multiple matches, we use pos1 < pos2 but this will only work
+        # if the pos is given, otherwise multiple matches of the same mod combination
+        # may appear in the result
+        q_mods = prefixes + """
+            SELECT ?kinaseName ?mod1 ?pos1 ?mod2 ?pos2 ?subject1 ?subject2 ?object ?rel ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?object .
+                ?object belvoc:hasActivityType belvoc:Kinase .
+                ?object belvoc:hasChild ?kinase .
+                ?kinase a belvoc:ProteinAbundance .
+                ?kinase belvoc:hasConcept ?kinaseName .
+                ?subject a belvoc:CompositeAbundance .
+                ?subject belvoc:hasChild ?subject1 .
+                ?subject1 a belvoc:ModifiedProteinAbundance .
+                ?subject1 belvoc:hasModificationType ?mod1 .
+                ?subject1 belvoc:hasChild ?kinase .
+                ?subject belvoc:hasChild ?subject2 .
+                ?subject2 a belvoc:ModifiedProteinAbundance .
+                ?subject2 belvoc:hasModificationType ?mod2 .
+                ?subject2 belvoc:hasChild ?kinase .
+                OPTIONAL { ?subject1 belvoc:hasModificationPosition ?pos1 . }
+                OPTIONAL { ?subject2 belvoc:hasModificationPosition ?pos2 . }
+                FILTER ((?rel = belvoc:DirectlyIncreases ||
+                        ?rel = belvoc:DirectlyDecreases) &&
+                        ?pos1 < ?pos2)
+            }
+        """
+
+        # Now make the PySB for the phosphorylation
+        res_mods = self.g.query(q_mods)
+
+        for stmt in res_mods:
+            (citation, evidence, annotations) = self.get_evidence(stmt[9])
+            # Parse out the elements of the query
+            print stmt
+            kin_name = gene_name_from_uri(stmt[0])
+            mod1 = term_from_uri(stmt[1])
+            mod_pos1 = term_from_uri(stmt[2])
+            mod2 = term_from_uri(stmt[3])
+            mod_pos2 = term_from_uri(stmt[4])
+            subj1 = term_from_uri(stmt[5])
+            subj2 = term_from_uri(stmt[6])
+            obj = term_from_uri(stmt[7])
+            rel = term_from_uri(stmt[8])
+            stmt_str = strip_statement(stmt[9])
+            # Mark this as a converted statement
+            self.converted_stmts.append(stmt_str)
+            self.belpy_stmts.append(
+                    ActivityModification(kin_name, (mod1, mod2), 
+                                            (mod_pos1, mod_pos2),
+                                            rel, 'Kinase', (subj1, subj2), obj, stmt_str,
+                                           citation, evidence, annotations))
+
 
     def get_activating_mods(self):
         q_mods = prefixes + """
@@ -285,8 +343,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(kin_name, mod, mod_pos, rel,
-                                           'Kinase', subj, obj, stmt_str,
+                    ActivityModification(kin_name, (mod,), (mod_pos,), rel,
+                                           'Kinase', (subj,), obj, stmt_str,
                                            citation, evidence, annotations))
 
     def get_complexes(self):
@@ -657,6 +715,7 @@ def rdf_to_pysb(rdf_filename, initial_conditions=True):
     bp.get_modifications()
     bp.get_dephosphorylations()
     bp.get_activating_mods()
+    bp.get_composite_activating_mods()
     bp.get_activity_activity()
 
     # Print some output about the process
