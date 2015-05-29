@@ -253,25 +253,25 @@ class BelProcessor(object):
         # if the pos is given, otherwise multiple matches of the same mod combination
         # may appear in the result
         q_mods = prefixes + """
-            SELECT ?kinaseName ?mod1 ?pos1 ?mod2 ?pos2 ?subject1 ?subject2 ?object ?rel ?stmt
+            SELECT ?speciesName ?actType ?mod1 ?pos1 ?mod2 ?pos2 ?subject1 ?subject2 ?object ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
-                ?object belvoc:hasActivityType belvoc:Kinase .
-                ?object belvoc:hasChild ?kinase .
-                ?kinase a belvoc:ProteinAbundance .
-                ?kinase belvoc:hasConcept ?kinaseName .
+                ?object belvoc:hasActivityType ?actType .
+                ?object belvoc:hasChild ?species .
+                ?species a belvoc:ProteinAbundance .
+                ?species belvoc:hasConcept ?speciesName .
                 ?subject a belvoc:CompositeAbundance .
                 ?subject belvoc:hasChild ?subject1 .
                 ?subject1 a belvoc:ModifiedProteinAbundance .
                 ?subject1 belvoc:hasModificationType ?mod1 .
-                ?subject1 belvoc:hasChild ?kinase .
+                ?subject1 belvoc:hasChild ?species .
                 ?subject belvoc:hasChild ?subject2 .
                 ?subject2 a belvoc:ModifiedProteinAbundance .
                 ?subject2 belvoc:hasModificationType ?mod2 .
-                ?subject2 belvoc:hasChild ?kinase .
+                ?subject2 belvoc:hasChild ?species .
                 OPTIONAL { ?subject1 belvoc:hasModificationPosition ?pos1 . }
                 OPTIONAL { ?subject2 belvoc:hasModificationPosition ?pos2 . }
                 FILTER ((?rel = belvoc:DirectlyIncreases ||
@@ -286,40 +286,41 @@ class BelProcessor(object):
         for stmt in res_mods:
             (citation, evidence, annotations) = self.get_evidence(stmt[9])
             # Parse out the elements of the query
-            kin_name = gene_name_from_uri(stmt[0])
-            mod1 = term_from_uri(stmt[1])
-            mod_pos1 = term_from_uri(stmt[2])
-            mod2 = term_from_uri(stmt[3])
-            mod_pos2 = term_from_uri(stmt[4])
-            subj1 = term_from_uri(stmt[5])
-            subj2 = term_from_uri(stmt[6])
-            obj = term_from_uri(stmt[7])
-            rel = term_from_uri(stmt[8])
-            stmt_str = strip_statement(stmt[9])
+            species_name = gene_name_from_uri(stmt[0])
+            act_type = term_from_uri(stmt[1])
+            mod1 = term_from_uri(stmt[2])
+            mod_pos1 = term_from_uri(stmt[3])
+            mod2 = term_from_uri(stmt[4])
+            mod_pos2 = term_from_uri(stmt[5])
+            subj1 = term_from_uri(stmt[6])
+            subj2 = term_from_uri(stmt[7])
+            obj = term_from_uri(stmt[8])
+            rel = term_from_uri(stmt[9])
+            stmt_str = strip_statement(stmt[10])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(kin_name, (mod1, mod2), 
+                    ActivityModification(species_name, (mod1, mod2), 
                                             (mod_pos1, mod_pos2),
-                                            rel, 'Kinase', (subj1, subj2), obj, stmt_str,
+                                            rel, act_type, (subj1, subj2), obj, stmt_str,
                                            citation, evidence, annotations))
 
 
     def get_activating_mods(self):
         q_mods = prefixes + """
-            SELECT ?kinaseName ?mod ?pos ?subject ?object ?rel ?stmt
+            SELECT ?speciesName ?actType ?mod ?pos ?subject ?object ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
-                ?object belvoc:hasActivityType belvoc:Kinase .
-                ?object belvoc:hasChild ?kinase .
-                ?kinase a belvoc:ProteinAbundance .
-                ?kinase belvoc:hasConcept ?kinaseName .
+                ?object belvoc:hasActivityType ?actType .
+                ?object belvoc:hasChild ?species .
+                ?species a belvoc:ProteinAbundance .
+                ?species belvoc:hasConcept ?speciesName .
                 ?subject a belvoc:ModifiedProteinAbundance .
                 ?subject belvoc:hasModificationType ?mod .
-                ?subject belvoc:hasChild ?kinase .
+                ?subject belvoc:hasChild ?species .
                 OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
                 FILTER (?rel = belvoc:DirectlyIncreases ||
                         ?rel = belvoc:DirectlyDecreases)
@@ -332,18 +333,19 @@ class BelProcessor(object):
         for stmt in res_mods:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
-            kin_name = gene_name_from_uri(stmt[0])
-            mod = term_from_uri(stmt[1])
-            mod_pos = term_from_uri(stmt[2])
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
-            rel = term_from_uri(stmt[5])
-            stmt_str = strip_statement(stmt[6])
+            species_name = gene_name_from_uri(stmt[0])
+            act_type = term_from_uri(stmt[1])
+            mod = term_from_uri(stmt[2])
+            mod_pos = term_from_uri(stmt[3])
+            subj = term_from_uri(stmt[4])
+            obj = term_from_uri(stmt[5])
+            rel = term_from_uri(stmt[6])
+            stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(kin_name, (mod,), (mod_pos,), rel,
-                                           'Kinase', (subj,), obj, stmt_str,
+                    ActivityModification(species_name, (mod,), (mod_pos,), rel,
+                                           act_type, (subj,), obj, stmt_str,
                                            citation, evidence, annotations))
 
     def get_complexes(self):
