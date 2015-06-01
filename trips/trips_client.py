@@ -1,5 +1,7 @@
 import urllib, urllib2
 import re
+import getopt
+import sys
 
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
@@ -31,8 +33,36 @@ def save_xml(xml,file_name):
     fh.close()
 
 if __name__ == '__main__':
+    filemode = False
     text = 'Active BRAF phosphorylates MEK1 at Ser222.'
+    outfile_name = 'braf_test.xml'
+
+    opts, extraparams = getopt.getopt(sys.argv[1:],'s:f:o:h',['string=','file=','output=','help'])
+    for o,p in opts:
+        if o in ['-h','--help']:
+            print 'String mode: python trips_client.py --string "RAS binds GTP" --output text.xml'
+            print 'File mode: python trips_client.py --file test.txt --output text.xml'
+            exit()
+        elif o in ['-s','--string']:
+            text = p
+        elif o in ['-f','--file']:
+            filemode = True
+            infile_name = p
+        elif o in ['-o','--output']:
+            outfile_name = p
+    
+    if filemode:
+        try:
+            fh = open(infile_name,'rt')
+        except IOError:
+            print 'Could not open %s.' % infile_name
+            exit()
+        text = fh.read()
+        fh.close()
+        print 'Parsing contents of %s...' % infile_name
+    else:
+        print 'Parsing string: %s' % text
+    
     html = send_query(text)
     xml = get_xml(html)
-    save_xml(xml,'braf_test.xml')
-
+    save_xml(xml,outfile_name)
