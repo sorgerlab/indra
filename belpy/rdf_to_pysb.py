@@ -82,13 +82,6 @@ def strip_statement(uri):
     uri = uri.replace(r'http://www.openbel.org/vocabulary/', '')
     return uri
 
-def get_rule_name(subj_uri, obj_uri, relation):
-    """Serializes a BEL statement to a string for use as a rule name."""
-    subj = term_from_uri(subj_uri)
-    obj = term_from_uri(obj_uri)
-    rule_name = name_from_uri('%s_%s_%s' % (subj, relation, obj))
-    return rule_name
-
 class BelProcessor(object):
     def __init__(self, g):
         self.g = g
@@ -176,28 +169,28 @@ class BelProcessor(object):
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.belpy_stmts.append(
                         Phosphorylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.belpy_stmts.append(
                             Hydroxylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Sumoylation':
                     self.belpy_stmts.append(
                             Sumoylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Acetylation':
                     self.belpy_stmts.append(
                             Acetylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Ubiquitination':
                     self.belpy_stmts.append(
                             Ubiquitination(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 else:
                     print "Warning: Unknown modification type!"
@@ -245,7 +238,7 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     Dephosphorylation(phos_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt_str, citation,
+                                    stmt_str, citation,
                                     evidence, annotations))
     
     def get_composite_activating_mods(self):
@@ -302,7 +295,7 @@ class BelProcessor(object):
             self.belpy_stmts.append(
                     ActivityModification(species_name, (mod1, mod2), 
                                             (mod_pos1, mod_pos2),
-                                            rel, act_type, (subj1, subj2), obj, stmt_str,
+                                            rel, act_type, stmt_str,
                                            citation, evidence, annotations))
 
 
@@ -345,7 +338,7 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivityModification(species_name, (mod,), (mod_pos,), rel,
-                                           act_type, (subj,), obj, stmt_str,
+                                           act_type, stmt_str,
                                            citation, evidence, annotations))
 
     def get_complexes(self):
@@ -438,7 +431,7 @@ class BelProcessor(object):
             self.belpy_stmts.append(
                     ActivatingSubstitution(enz_name, wt_residue, position,
                                            sub_residue, act_type,
-                                           subj, obj, stmt_str,
+                                           stmt_str,
                                            citation, evidence, annotations))
 
     def get_activity_activity(self):
@@ -484,28 +477,28 @@ class BelProcessor(object):
                 self.belpy_stmts.append(
                      RasGtpActivityActivity(subj_name, subj_activity,
                                       rel, obj_name, obj_activity,
-                                      subj, obj, stmt_str,
+                                      stmt_str,
                                       citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyIncreases':
                 self.belpy_stmts.append(
-                        RasGef(subj_name, subj_activity, obj_name, subj, obj,
+                        RasGef(subj_name, subj_activity, obj_name, 
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyDecreases':
                 self.belpy_stmts.append(
-                        RasGap(subj_name, subj_activity, obj_name, subj, obj,
+                        RasGap(subj_name, subj_activity, obj_name, 
                                stmt_str, citation, evidence, annotations))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.belpy_stmts.append(
                      ActivityActivity(subj_name, subj_activity,
                                       rel, obj_name, obj_activity,
-                                      subj, obj, stmt_str,
+                                      stmt_str,
                                       citation, evidence, annotations))
 
             """
