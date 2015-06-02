@@ -160,8 +160,6 @@ class BelProcessor(object):
             sub_name = gene_name_from_uri(stmt[2])
             mod = term_from_uri(stmt[3])
             mod_pos = term_from_uri(stmt[4])
-            subj = term_from_uri(stmt[5])
-            obj = term_from_uri(stmt[6])
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -231,8 +229,6 @@ class BelProcessor(object):
             sub_name = gene_name_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
             stmt_str = strip_statement(stmt[6])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -330,8 +326,6 @@ class BelProcessor(object):
             act_type = term_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
             rel = term_from_uri(stmt[6])
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
@@ -423,8 +417,6 @@ class BelProcessor(object):
                       sub_expr)
                 continue
 
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -465,8 +457,6 @@ class BelProcessor(object):
             rel = term_from_uri(stmt[2])
             obj_name = gene_name_from_uri(stmt[3])
             obj_activity = name_from_uri(stmt[4])
-            subj = term_from_uri(stmt[5])
-            obj = term_from_uri(stmt[6])
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
