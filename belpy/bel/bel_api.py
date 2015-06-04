@@ -1,0 +1,35 @@
+import sys
+import rdflib
+from BelProcessor import BelProcessor
+
+def process_ndex_neighborhood(gene_names):
+    pass
+
+def process_belrdf(rdf_filename):
+    # Parse the RDF
+    g = rdflib.Graph()
+    g.parse(rdf_filename, format='nt')
+    # Build BelPy statements from RDF
+    bp = BelProcessor(g)
+    bp.get_complexes()
+    bp.get_activating_subs()
+    bp.get_modifications()
+    bp.get_dephosphorylations()
+    bp.get_activating_mods()
+    bp.get_composite_activating_mods()
+    bp.get_activity_activity()
+
+    # Print some output about the process
+    bp.print_statement_coverage()
+    print "\n--- Converted BelPy Statements -------------"
+    bp.print_statements()
+    return bp
+
+if __name__ == '__main__':
+    # Make sure the user passed in an RDF filename
+    if len(sys.argv) < 2:
+        print "Usage: python rdf_to_pysb.py file.rdf"
+        sys.exit()
+    # We take the RDF filename as the argument
+    rdf_filename = sys.argv[1]
+    bp = process_belrdf(rdf_filename)
