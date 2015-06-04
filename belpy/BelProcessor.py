@@ -1,5 +1,4 @@
 from belpy.statements import *
-from pysb.core import InvalidComponentNameError
 
 from rdflib import URIRef, Namespace
 from rdflib.namespace import RDF
@@ -23,6 +22,10 @@ phospho_mods = [
     'Phosphorylation',
 ]
 
+class InvalidNameError(ValueError):
+    def __init__(self, name):
+        ValueError.__init__(self, "Not a valid name: %s" % name)
+
 def name_from_uri(uri):
     """Make the URI term usable as a valid Python identifier, if possible.
 
@@ -43,7 +46,7 @@ def name_from_uri(uri):
             and not keyword.iskeyword(name):
         pass
     else:
-        raise InvalidComponentNameError(name)
+        raise InvalidNameError(name)
 
     return name
 
