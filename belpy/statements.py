@@ -77,9 +77,7 @@ def add_site_states(monomer, site, states):
             monomer.site_states[site].append(state)
 
 class Statement(object):
-    def __init__(self, subj, obj, stmt, citation, evidence, annotations):
-        self.subj = subj
-        self.obj = obj
+    def __init__(self, stmt, citation, evidence, annotations):
         self.stmt = stmt
         self.citation = citation
         self.evidence = evidence
@@ -92,9 +90,9 @@ class Statement(object):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
-    def __init__(self, enz_name, sub_name, mod, mod_pos, subj, obj, stmt,
+    def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
                  citation, evidence, annotations):
-        super(Modification, self).__init__(subj, obj, stmt, citation, evidence,
+        super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz_name = enz_name
         self.sub_name = sub_name
@@ -152,9 +150,9 @@ class Ubiquitination(Modification):
 
 class ActivityActivity(Statement):
     def __init__(self, subj_name, subj_activity, relationship, obj_name,
-                 obj_activity, subj, obj, stmt, citation, evidence,
+                 obj_activity, stmt, citation, evidence,
                  annotations):
-        super(ActivityActivity, self).__init__(subj, obj, stmt,
+        super(ActivityActivity, self).__init__(stmt,
                                                citation, evidence, annotations)
         self.subj_name = subj_name
         self.subj_activity = subj_activity
@@ -197,9 +195,9 @@ class RasGtpActivityActivity(ActivityActivity):
     pass
 
 class Dephosphorylation(Statement):
-    def __init__(self, phos_name, sub_name, mod, mod_pos, subj, obj, stmt,
+    def __init__(self, phos_name, sub_name, mod, mod_pos, stmt,
                  citation, evidence, annotations):
-        super(Dephosphorylation, self).__init__(subj, obj, stmt, citation,
+        super(Dephosphorylation, self).__init__(stmt, citation,
                                                 evidence, annotations)
         self.phos_name = phos_name
         self.sub_name = sub_name
@@ -236,8 +234,8 @@ class Dephosphorylation(Statement):
 
 class ActivityModification(Statement):
     def __init__(self, monomer_name, mod, mod_pos, relationship, activity,
-                 subj, obj, stmt, citation, evidence, annotations):
-        super(ActivityModification, self).__init__(subj, obj, stmt, citation,
+                 stmt, citation, evidence, annotations):
+        super(ActivityModification, self).__init__(stmt, citation,
                                                      evidence, annotations)
         self.monomer_name = monomer_name
         self.mod = mod
@@ -300,8 +298,8 @@ class ActivityModification(Statement):
 
 class ActivatingSubstitution(Statement):
     def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,
-                 subj, obj, stmt, citation, evidence, annotations):
-        super(ActivatingSubstitution, self).__init__(subj, obj, stmt, citation,
+                 stmt, citation, evidence, annotations):
+        super(ActivatingSubstitution, self).__init__(stmt, citation,
                                                      evidence, annotations)
         self.monomer_name = monomer_name
         self.wt_residue = wt_residue
@@ -316,8 +314,8 @@ class ActivatingSubstitution(Statement):
 
 class RasGef(Statement):
     def __init__(self, gef_name, gef_activity, ras_name,
-                 subj, obj, stmt, citation, evidence, annotations):
-        super(RasGef, self).__init__(subj, obj, stmt, citation, evidence,
+                 stmt, citation, evidence, annotations):
+        super(RasGef, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gef_name = gef_name
         self.gef_activity = gef_activity
@@ -354,8 +352,8 @@ class RasGef(Statement):
 
 class RasGap(Statement):
     def __init__(self, gap_name, gap_activity, ras_name,
-                 subj, obj, stmt, citation, evidence, annotations):
-        super(RasGap, self).__init__(subj, obj, stmt, citation, evidence,
+                 stmt, citation, evidence, annotations):
+        super(RasGap, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gap_name = gap_name
         self.gap_activity = gap_activity

@@ -82,13 +82,6 @@ def strip_statement(uri):
     uri = uri.replace(r'http://www.openbel.org/vocabulary/', '')
     return uri
 
-def get_rule_name(subj_uri, obj_uri, relation):
-    """Serializes a BEL statement to a string for use as a rule name."""
-    subj = term_from_uri(subj_uri)
-    obj = term_from_uri(obj_uri)
-    rule_name = name_from_uri('%s_%s_%s' % (subj, relation, obj))
-    return rule_name
-
 class BelProcessor(object):
     def __init__(self, g):
         self.g = g
@@ -136,7 +129,7 @@ class BelProcessor(object):
 
     def get_modifications(self):
         q_phospho = prefixes + """
-            SELECT ?enzName ?actType ?substrateName ?mod ?pos ?subject ?object
+            SELECT ?enzName ?actType ?substrateName ?mod ?pos
                    ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
@@ -160,44 +153,42 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
-            (citation, evidence, annotations) = self.get_evidence(stmt[7])
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
             act_type = name_from_uri(stmt[1])
             sub_name = gene_name_from_uri(stmt[2])
             mod = term_from_uri(stmt[3])
             mod_pos = term_from_uri(stmt[4])
-            subj = term_from_uri(stmt[5])
-            obj = term_from_uri(stmt[6])
-            stmt_str = strip_statement(stmt[7])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.belpy_stmts.append(
                         Phosphorylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.belpy_stmts.append(
                             Hydroxylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Sumoylation':
                     self.belpy_stmts.append(
                             Sumoylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Acetylation':
                     self.belpy_stmts.append(
                             Acetylation(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Ubiquitination':
                     self.belpy_stmts.append(
                             Ubiquitination(enz_name, sub_name, mod, mod_pos,
-                                        subj, obj, stmt_str,
+                                        stmt_str,
                                         citation, evidence, annotations))
                 else:
                     print "Warning: Unknown modification type!"
@@ -210,7 +201,7 @@ class BelProcessor(object):
 
     def get_dephosphorylations(self):
         q_phospho = prefixes + """
-            SELECT ?phosName ?substrateName ?mod ?pos ?subject ?object ?stmt
+            SELECT ?phosName ?substrateName ?mod ?pos ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
@@ -232,20 +223,18 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
-            (citation, evidence, annotations) = self.get_evidence(stmt[6])
+            (citation, evidence, annotations) = self.get_evidence(stmt[4])
             # Parse out the elements of the query
             phos_name = gene_name_from_uri(stmt[0])
             sub_name = gene_name_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
-            stmt_str = strip_statement(stmt[6])
+            stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     Dephosphorylation(phos_name, sub_name, mod, mod_pos,
-                                    subj, obj, stmt_str, citation,
+                                    stmt_str, citation,
                                     evidence, annotations))
     
     def get_composite_activating_mods(self):
@@ -253,7 +242,7 @@ class BelProcessor(object):
         # if the pos is given, otherwise multiple matches of the same mod combination
         # may appear in the result
         q_mods = prefixes + """
-            SELECT ?speciesName ?actType ?mod1 ?pos1 ?mod2 ?pos2 ?subject1 ?subject2 ?object ?rel ?stmt
+            SELECT ?speciesName ?actType ?mod1 ?pos1 ?mod2 ?pos2 ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -284,7 +273,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[9])
+            (citation, evidence, annotations) = self.get_evidence(stmt[7])
             # Parse out the elements of the query
             species_name = gene_name_from_uri(stmt[0])
             act_type = term_from_uri(stmt[1])
@@ -292,23 +281,20 @@ class BelProcessor(object):
             mod_pos1 = term_from_uri(stmt[3])
             mod2 = term_from_uri(stmt[4])
             mod_pos2 = term_from_uri(stmt[5])
-            subj1 = term_from_uri(stmt[6])
-            subj2 = term_from_uri(stmt[7])
-            obj = term_from_uri(stmt[8])
-            rel = term_from_uri(stmt[9])
-            stmt_str = strip_statement(stmt[10])
+            rel = term_from_uri(stmt[6])
+            stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivityModification(species_name, (mod1, mod2), 
                                             (mod_pos1, mod_pos2),
-                                            rel, act_type, (subj1, subj2), obj, stmt_str,
+                                            rel, act_type, stmt_str,
                                            citation, evidence, annotations))
 
 
     def get_activating_mods(self):
         q_mods = prefixes + """
-            SELECT ?speciesName ?actType ?mod ?pos ?subject ?object ?rel ?stmt
+            SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -337,15 +323,13 @@ class BelProcessor(object):
             act_type = term_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
-            subj = term_from_uri(stmt[4])
-            obj = term_from_uri(stmt[5])
-            rel = term_from_uri(stmt[6])
-            stmt_str = strip_statement(stmt[7])
+            rel = term_from_uri(stmt[4])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivityModification(species_name, (mod,), (mod_pos,), rel,
-                                           act_type, (subj,), obj, stmt_str,
+                                           act_type, stmt_str,
                                            citation, evidence, annotations))
 
     def get_complexes(self):
@@ -386,7 +370,7 @@ class BelProcessor(object):
         p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
         """
         q_mods = prefixes + """
-            SELECT ?enzyme_name ?sub_label ?act_type ?subject ?object ?stmt
+            SELECT ?enzyme_name ?sub_label ?act_type ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -408,7 +392,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
+            (citation, evidence, annotations) = self.get_evidence(stmt[3])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
             sub_expr = term_from_uri(stmt[1])
@@ -430,15 +414,13 @@ class BelProcessor(object):
                       sub_expr)
                 continue
 
-            subj = term_from_uri(stmt[3])
-            obj = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
+            stmt_str = strip_statement(stmt[3])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivatingSubstitution(enz_name, wt_residue, position,
                                            sub_residue, act_type,
-                                           subj, obj, stmt_str,
+                                           stmt_str,
                                            citation, evidence, annotations))
 
     def get_activity_activity(self):
@@ -447,7 +429,7 @@ class BelProcessor(object):
         # to a modification.
         q_stmts = prefixes + """
             SELECT ?subjName ?subjActType ?rel ?objName ?objActType
-                   ?subj ?obj ?stmt
+                   ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasSubject ?subj .
@@ -466,15 +448,13 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
-            (citation, evidence, annotations) = self.get_evidence(stmt[7])
+            (citation, evidence, annotations) = self.get_evidence(stmt[5])
             subj_name = gene_name_from_uri(stmt[0])
             subj_activity = name_from_uri(stmt[1])
             rel = term_from_uri(stmt[2])
             obj_name = gene_name_from_uri(stmt[3])
             obj_activity = name_from_uri(stmt[4])
-            subj = term_from_uri(stmt[5])
-            obj = term_from_uri(stmt[6])
-            stmt_str = strip_statement(stmt[7])
+            stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
@@ -484,28 +464,28 @@ class BelProcessor(object):
                 self.belpy_stmts.append(
                      RasGtpActivityActivity(subj_name, subj_activity,
                                       rel, obj_name, obj_activity,
-                                      subj, obj, stmt_str,
+                                      stmt_str,
                                       citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyIncreases':
                 self.belpy_stmts.append(
-                        RasGef(subj_name, subj_activity, obj_name, subj, obj,
+                        RasGef(subj_name, subj_activity, obj_name, 
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyDecreases':
                 self.belpy_stmts.append(
-                        RasGap(subj_name, subj_activity, obj_name, subj, obj,
+                        RasGap(subj_name, subj_activity, obj_name, 
                                stmt_str, citation, evidence, annotations))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.belpy_stmts.append(
                      ActivityActivity(subj_name, subj_activity,
                                       rel, obj_name, obj_activity,
-                                      subj, obj, stmt_str,
+                                      stmt_str,
                                       citation, evidence, annotations))
 
             """
