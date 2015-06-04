@@ -26,6 +26,7 @@ class TripsProcessor(object):
             arg2 = event.find("arg2")
             arg2_name = self.get_text(arg2)
             self.belpy_stmts.append(Complex((arg1_name,arg2_name)))
+    
     def get_phosphorylation(self):
         phosphorylation_events = self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
         for event in phosphorylation_events:
@@ -35,10 +36,14 @@ class TripsProcessor(object):
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_name = self.get_text(affected)
             mod = 'Phosphorylation'
-            # TODO: query site one the TRIPS output is fixed
+            # TODO: query site once the TRIPS output is fixed
             site = ""
-            self.belpy_stmts.append(Phosphorylation(agent_name,affected_name,mod,site,sentence,"",sentence,""))
-            print agent_name, affected_name
+            # TODO: extract more information about text to use as evidence
+            citation = ''
+            evidence = sentence
+            annotations = ''
+            self.belpy_stmts.append(Phosphorylation(agent_name,affected_name,
+                                    mod,site,sentence,citation,evidence,annotations))
         
        
     def make_model(self):
@@ -57,7 +62,7 @@ if __name__ == '__main__':
         fh = open(input_fname,'rt')
     except IOError:
         print 'Could not open file %s' % input_fname
-        exit()
+        sys.exit()
     xml_string = fh.read()
     tp = TripsProcessor(xml_string)
     tp.get_complexes()

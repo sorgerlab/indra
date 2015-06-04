@@ -42,7 +42,7 @@ if __name__ == '__main__':
         if o in ['-h','--help']:
             print 'String mode: python trips_client.py --string "RAS binds GTP" --output text.xml'
             print 'File mode: python trips_client.py --file test.txt --output text.xml'
-            exit()
+            sys.exit()
         elif o in ['-s','--string']:
             text = p
         elif o in ['-f','--file']:
