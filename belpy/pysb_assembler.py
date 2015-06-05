@@ -43,4 +43,5 @@ if __name__ == '__main__':
   pa = pysb_assembler()
   bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
   pa.add_statements(bp.belpy_stmts)
+  bp = bel_api.process_ndex_neighborhood("ARAF")
   model = pa.make_model()

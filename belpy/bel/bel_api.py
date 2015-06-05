@@ -1,13 +1,29 @@
 import sys
+import re
 import rdflib
 from BelProcessor import BelProcessor
+import subprocess
 
 def process_ndex_neighborhood(gene_names):
-    from ndex-python-client import query_to_bel
-    bel_script = query_to_bel(gene_names)
-    fh = open('tmp.bel')
+    ndex = __import__('ndex-python-client')
+    bel_script = ndex.query_to_belscript(gene_names)
+    fh = open('tmp.bel', 'wt')
     fh.write(bel_script)
     fh.close()
+    bel_to_rdf_cmd = "bel2rdf --bel tmp.bel > tmp.rdf"
+    subprocess.call(bel_to_rdf_cmd.split(' '))
+    fh = open('tmp.rdf', 'rt')
+    rdf = fh.read()
+    fh.close()
+    res = re.findall(r'_:([^ ]+)', rdf)
+    for r in res:
+        rdf = rdf.replace(r,r.replace('-',''))
+    fh = open('tmp2.rdf','wt')
+    fh.write(rdf)
+    fh.close()
+    bp = process_belrdf('tmp2.rdf')
+    bp.print_statements()
+    return bp
     
 def process_belrdf(rdf_filename):
     # Parse the RDF
