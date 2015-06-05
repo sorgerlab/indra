@@ -3,8 +3,12 @@ import rdflib
 from BelProcessor import BelProcessor
 
 def process_ndex_neighborhood(gene_names):
-    pass
-
+    from ndex-python-client import query_to_bel
+    bel_script = query_to_bel(gene_names)
+    fh = open('tmp.bel')
+    fh.write(bel_script)
+    fh.close()
+    
 def process_belrdf(rdf_filename):
     # Parse the RDF
     g = rdflib.Graph()
