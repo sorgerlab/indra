@@ -1,4 +1,3 @@
-import sys
 from pysb import *
 from pysb.core import SelfExporter, InvalidComponentNameError, \
                       ComplexPattern, ReactionPattern
@@ -6,6 +5,7 @@ from pysb.core import SelfExporter, InvalidComponentNameError, \
 from belpy.statements import *
 
 import xml.etree.ElementTree as ET
+
 
 class TripsProcessor(object):
     def __init__(self, xml_string):
@@ -45,26 +45,3 @@ class TripsProcessor(object):
             self.belpy_stmts.append(Phosphorylation(agent_name,affected_name,
                                     mod,site,sentence,citation,evidence,annotations))
         
-       
-    def make_model(self):
-        model = Model()
-        for stmt in self.belpy_stmts:
-            stmt.monomers(model)
-        for stmt in self.belpy_stmts:
-            stmt.assemble(model)
-        return model
-
-if __name__ == '__main__':
-    input_fname = 'phosphorylate.xml'
-    if len(sys.argv)>1:
-        input_fname = sys.argv[1]
-    try:
-        fh = open(input_fname,'rt')
-    except IOError:
-        print 'Could not open file %s' % input_fname
-        sys.exit()
-    xml_string = fh.read()
-    tp = TripsProcessor(xml_string)
-    tp.get_complexes()
-    tp.get_phosphorylation()
-    model = tp.make_model()
