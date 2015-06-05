@@ -44,4 +44,7 @@ if __name__ == '__main__':
   bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
   pa.add_statements(bp.belpy_stmts)
   bp = bel_api.process_ndex_neighborhood("ARAF")
+  pa.add_statements(bp.belpy_stmts)
+  tp = trips_api.process_text("BRAF phosphorylates MEK1 at Ser222")
+  pa.add_statements(tp.belpy_stmts)
   model = pa.make_model()
