@@ -1,20 +1,11 @@
-import re
-import sys
-import keyword
-import urllib
-import collections
-
-import rdflib
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF
-
-from pysb import *
-from pysb.core import SelfExporter, InvalidComponentNameError, \
-                      ComplexPattern, ReactionPattern
-
 from belpy.statements import *
 
-SelfExporter.do_export = False
+from rdflib import URIRef, Namespace
+from rdflib.namespace import RDF
+import collections
+import urllib
+import re
+import keyword
 
 BEL = Namespace("http://www.openbel.org/")
 
@@ -30,6 +21,10 @@ phospho_mods = [
     'PhosphorylationTyrosine',
     'Phosphorylation',
 ]
+
+class InvalidNameError(ValueError):
+    def __init__(self, name):
+        ValueError.__init__(self, "Not a valid name: %s" % name)
 
 def name_from_uri(uri):
     """Make the URI term usable as a valid Python identifier, if possible.
@@ -51,7 +46,7 @@ def name_from_uri(uri):
             and not keyword.iskeyword(name):
         pass
     else:
-        raise InvalidComponentNameError(name)
+        raise InvalidNameError(name)
 
     return name
 
@@ -653,7 +648,7 @@ class BelProcessor(object):
             if not (stmt in self.converted_stmts or
                     stmt in self.degenerate_stmts):
                 print stmt
-
+    
     def print_statements(self):
         for i, stmt in enumerate(self.belpy_stmts):
             print "%s: %s" % (i, stmt)
@@ -666,55 +661,3 @@ class BelProcessor(object):
             stmt.assemble(model)
         return model
 
-def add_default_initial_conditions(model):
-    try:
-        default_ic = model.parameters['default_ic']
-    except KeyError:
-        default_ic = Parameter('default_ic', 100.)
-        model.add_component(default_ic)
-
-    # Iterate over all monomers
-    for m in model.monomers:
-        # Build up monomer pattern dict
-        sites_dict = {}
-        for site in m.sites:
-            if site in m.site_states:
-                sites_dict[site] = m.site_states[site][0]
-            else:
-                sites_dict[site] = None
-        mp = m(**sites_dict)
-        model.initial(mp, default_ic)
-
-def rdf_to_pysb(rdf_filename, initial_conditions=True):
-    # Parse the RDF
-    g = rdflib.Graph()
-    g.parse(rdf_filename, format='nt')
-    # Build BelPy statements from RDF
-    bp = BelProcessor(g)
-    bp.get_complexes()
-    bp.get_activating_subs()
-    bp.get_modifications()
-    bp.get_dephosphorylations()
-    bp.get_activating_mods()
-    bp.get_composite_activating_mods()
-    bp.get_activity_activity()
-
-    # Print some output about the process
-    bp.print_statement_coverage()
-    print "\n--- Converted BelPy Statements -------------"
-    bp.print_statements()
-
-    # Make the PySB model and return
-    model = bp.make_model()
-    if initial_conditions:
-        add_default_initial_conditions(model)
-    return (bp, model)
-
-if __name__ == '__main__':
-    # Make sure the user passed in an RDF filename
-    if len(sys.argv) < 2:
-        print "Usage: python rdf_to_pysb.py file.rdf"
-        sys.exit()
-    # We take the RDF filename as the argument
-    rdf_filename = sys.argv[1]
-    (bp, model) = rdf_to_pysb(rdf_filename, initial_conditions=True)
