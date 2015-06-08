@@ -37,25 +37,23 @@ class TripsProcessor(object):
         name = entity_term.find("name")
         return name.text
 
+    # Get all the sites recursively based on a term id. 
     def get_site_by_id(self,site_id):
         all_residues = []
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
         subterms = site_term.find("subterms")
         print subterms
-        if subterms:
+        if subterms is not None:
             for s in subterms.getchildren():
                 residue, pos = self.get_site_by_id(s.text)
-                all_residues.append(residue)
-                all_pos.append(pos)
+                all_residues.extend(residue)
+                all_pos.extend(pos)
         else:
             site_name = site_term.find("name")
             # Example name: SER-222
             residue, pos = site_name.text.split('-')
-            print residue, pos
-            return residue, pos
-        print all_residues
-        print all_pos
+            return (residue, ), (pos, )
         return all_residues, all_pos
         
 
@@ -84,7 +82,7 @@ class TripsProcessor(object):
                                     m,p,sentence,citation,evidence,annotations))
     
 if __name__ == '__main__':
-    tp = TripsProcessor(open('phosphosite.xml','rt').read())
+    tp = TripsProcessor(open('phosphosite2.xml','rt').read())
     tp.get_phosphorylation()
 
 
