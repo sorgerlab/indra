@@ -2,6 +2,7 @@ import sys
 import trips_client
 from processor import TripsProcessor
 
+
 def process_text(text):
     html = trips_client.send_query(text)
     xml = trips_client.get_xml(html)
@@ -12,10 +13,10 @@ def process_text(text):
 
 if __name__ == '__main__':
     input_fname = 'phosphorylate.xml'
-    if len(sys.argv)>1:
+    if len(sys.argv) > 1:
         input_fname = sys.argv[1]
     try:
-        fh = open(input_fname,'rt')
+        fh = open(input_fname, 'rt')
     except IOError:
         print 'Could not open file %s' % input_fname
         sys.exit()
