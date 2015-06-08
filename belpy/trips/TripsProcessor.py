@@ -22,16 +22,6 @@ class TripsProcessor(object):
         text = text_tag.text
         return text
 
-    def get_complexes(self):
-        bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
-        for event in bind_events:
-            sentence = self.get_text(event)
-            arg1 = event.find("arg1")
-            arg1_name = self.get_text(arg1)
-            arg2 = event.find("arg2")
-            arg2_name = self.get_text(arg2)
-            self.belpy_stmts.append(Complex((arg1_name,arg2_name)))
-
     def get_name_by_id(self,entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
@@ -43,7 +33,6 @@ class TripsProcessor(object):
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
         subterms = site_term.find("subterms")
-        print subterms
         if subterms is not None:
             for s in subterms.getchildren():
                 residue, pos = self.get_site_by_id(s.text)
@@ -55,7 +44,23 @@ class TripsProcessor(object):
             residue, pos = site_name.text.split('-')
             return (residue, ), (pos, )
         return all_residues, all_pos
-        
+    
+    def get_activations(self):
+       act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']") 
+       for event in act_events:
+            sentence = self.get_text(event)
+            print sentence
+
+    def get_complexes(self):
+        bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
+        for event in bind_events:
+            sentence = self.get_text(event)
+            arg1 = event.find("arg1")
+            arg1_name = self.get_name_by_id(arg1.attrib['id'])
+            arg2 = event.find("arg2")
+            arg2_name = self.get_name_by_id(arg2.attrib['id'])
+            self.belpy_stmts.append(Complex((arg1_name,arg2_name)))
+       
 
     def get_phosphorylation(self):
         phosphorylation_events = self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
@@ -82,7 +87,9 @@ class TripsProcessor(object):
                                     m,p,sentence,citation,evidence,annotations))
     
 if __name__ == '__main__':
-    tp = TripsProcessor(open('phosphosite2.xml','rt').read())
+    tp = TripsProcessor(open('wchen-v1.xml','rt').read())
+    tp.get_complexes()
     tp.get_phosphorylation()
+    tp.get_activations()
 
 
