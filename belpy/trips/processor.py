@@ -1,12 +1,12 @@
 import re
 import warnings
-import urllib
-import urllib2
 
 import xml.etree.ElementTree as ET
 from BeautifulSoup import BeautifulSoup
 
 from belpy.statements import *
+import belpy.databases.hgnc_client as hgnc_client
+import belpy.databases.uniprot_client as up_client
 
 residue_names = {
     'SER': 'Serine',
@@ -29,14 +29,6 @@ class TripsProcessor(object):
         text = text_tag.text
         return text
 
-    def get_hgnc_entry(hgnc_id):
-        hgnc_url = 'http://www.genenames.org/cgi-bin/gene_symbol_report'
-        hgnc_args = urllib.urlencode({'hgnc_id': 'HGNC:%s' % hgnc_id})
-        req = urllib2.Request(hgnc_url, hgnc_args)
-        res = urllib2.urlopen(req)
-        html = res.read()
-        return html
-
     def get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
@@ -47,11 +39,15 @@ class TripsProcessor(object):
             return name.text
         if dbid.startswith('HGNC'):
             hgnc_id = re.match(r'HGNC\:\:\|(.*)\|', dbid).groups()[0]
-            html = self.get_hgnc_entry(hgnc_id)
+            html = hgnc_client.get_hgnc_entry(hgnc_id)
             parsed_html = BeautifulSoup(html)
             hgnc_name = parsed_html.body.find('dd', attrs={'id':'app_symbol'}).text
             return hgnc_name
+        elif dbid.startswith('UP'):
+            up_id = re.match(r'UP\:\:(.*)', dbid).groups()[0]
+            up_rdf = up_client.query_protein(up_id)
             
+
         return name.text
 
     # Get all the sites recursively based on a term id.
