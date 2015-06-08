@@ -1,7 +1,7 @@
 import sys
 import re
 import rdflib
-from BelProcessor import BelProcessor
+from processor import BelProcessor
 import subprocess
 
 def process_ndex_neighborhood(gene_names):
@@ -24,7 +24,7 @@ def process_ndex_neighborhood(gene_names):
     bp = process_belrdf('tmp2.rdf')
     bp.print_statements()
     return bp
-    
+
 def process_belrdf(rdf_filename):
     # Parse the RDF
     g = rdflib.Graph()
