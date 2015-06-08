@@ -24,7 +24,7 @@ def process_ndex_neighborhood(gene_names):
     bp = process_belrdf('tmp2.rdf')
     bp.print_statements()
     return bp
-    
+
 def process_belrdf(rdf_filename):
     # Parse the RDF
     g = rdflib.Graph()
