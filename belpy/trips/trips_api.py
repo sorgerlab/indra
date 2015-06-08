@@ -1,6 +1,6 @@
 import sys
 import trips_client
-from TripsProcessor import TripsProcessor
+from processor import TripsProcessor
 
 def process_text(text):
     html = trips_client.send_query(text)
