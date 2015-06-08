@@ -32,12 +32,31 @@ def get_hgnc_name(g):
             }
         """
     res = g.query(query)
-    try:
+    if len(res) > 0:
         hgnc_name = [r for r in res][0][0].toPython()
-    except TypeError:
+        return hgnc_name
+    else:
         return None
-    return hgnc_name
 
+
+def get_gene_name(g):
+    # This is an alternative to get_hgnc_name and is useful when
+    # HGNC name is not availabe (for instance, when the organism 
+    # is not homo sapiens)
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?gene a up:Gene .
+            ?gene skos:prefLabel ?name .
+            }
+        """
+    res = g.query(query)
+    if len(res) > 0:
+        gene_name = [r for r in res][0][0].toPython()
+        return gene_name
+    else:
+        return None
+   
 
 def get_sequence(g):
     query = rdf_prefixes + """
@@ -70,7 +89,6 @@ def get_modifications(g):
     mods = []
     for r in res:
         mods.append((r[0].value, r[1].value))
-
     return mods
 
 
@@ -79,3 +97,4 @@ if __name__ == '__main__':
     seq = get_sequence(g)
     mods = get_modifications(g)
     hgnc_name = get_hgnc_name(g)
+    gene_name = get_gene_name(g)
