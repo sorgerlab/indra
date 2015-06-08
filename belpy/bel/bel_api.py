@@ -1,7 +1,7 @@
 import sys
 import re
 import rdflib
-from BelProcessor import BelProcessor
+from processor import BelProcessor
 import subprocess
 
 def process_ndex_neighborhood(gene_names):
