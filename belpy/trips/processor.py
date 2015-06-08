@@ -1,9 +1,10 @@
+import re
 import warnings
+import urllib
+import urllib2
 
 import xml.etree.ElementTree as ET
-from pysb import *
-from pysb.core import SelfExporter, InvalidComponentNameError, \
-                      ComplexPattern, ReactionPattern
+from BeautifulSoup import BeautifulSoup
 
 from belpy.statements import *
 
@@ -28,9 +29,29 @@ class TripsProcessor(object):
         text = text_tag.text
         return text
 
+    def get_hgnc_entry(hgnc_id):
+        hgnc_url = 'http://www.genenames.org/cgi-bin/gene_symbol_report'
+        hgnc_args = urllib.urlencode({'hgnc_id': 'HGNC:%s' % hgnc_id})
+        req = urllib2.Request(hgnc_url, hgnc_args)
+        res = urllib2.urlopen(req)
+        html = res.read()
+        return html
+
     def get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
+        try:
+            dbid = entity_term.attrib["dbid"]
+        except:
+            warnings.warn('No grounding information for %s' % name)
+            return name.text
+        if dbid.startswith('HGNC'):
+            hgnc_id = re.match(r'HGNC\:\:\|(.*)\|', dbid).groups()[0]
+            html = self.get_hgnc_entry(hgnc_id)
+            parsed_html = BeautifulSoup(html)
+            hgnc_name = parsed_html.body.find('dd', attrs={'id':'app_symbol'}).text
+            return hgnc_name
+            
         return name.text
 
     # Get all the sites recursively based on a term id.
@@ -116,7 +137,7 @@ class TripsProcessor(object):
                                         m, p, sentence, citation, evidence, annotations))
 
 if __name__ == '__main__':
-    tp = TripsProcessor(open('activation.xml', 'rt').read())
+    tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()
