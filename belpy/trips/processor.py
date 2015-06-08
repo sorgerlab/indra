@@ -46,8 +46,15 @@ class TripsProcessor(object):
         elif dbid.startswith('UP'):
             up_id = re.match(r'UP\:\:(.*)', dbid).groups()[0]
             up_rdf = up_client.query_protein(up_id)
-            
-
+            # First try to get HGNC name
+            hgnc_name = up_client.get_hgnc_name(up_rdf)
+            if hgnc_name is not None:
+                return hgnc_name
+            # Next, try to get the gene name
+            gene_name = up_client.get_gene_name(up_rdf)
+            if gene_name is not None:
+                return gene_name
+        # By default, return the text of the name tag
         return name.text
 
     # Get all the sites recursively based on a term id.
