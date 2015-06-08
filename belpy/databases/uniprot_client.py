@@ -5,9 +5,11 @@ uniprot_url = 'http://www.uniprot.org/uniprot/'
 
 rdf_prefixes = """
     PREFIX up: <http://purl.uniprot.org/core/>
+    PREFIX db: <http://purl.uniprot.org/database/>
     PREFIX faldo: <http://biohackathon.org/resource/faldo#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
+
 
 def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
@@ -19,7 +21,25 @@ def query_protein(protein_id):
         return None
     return g
 
-def query_sequence(g):
+
+def get_hgnc_name(g):
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?res a up:Resource .
+            ?res up:database db:HGNC .
+            ?res rdfs:comment ?name .
+            }
+        """
+    res = g.query(query)
+    try:
+        hgnc_name = [r for r in res][0][0].toPython()
+    except TypeError:
+        return None
+    return hgnc_name
+
+
+def get_sequence(g):
     query = rdf_prefixes + """
         SELECT ?seq
         WHERE {
@@ -31,7 +51,8 @@ def query_sequence(g):
     seq = [r for r in res][0][0].toPython()
     return seq
 
-def query_modifications(g):
+
+def get_modifications(g):
     query = rdf_prefixes + """
         SELECT ?beg_pos ?comment
         WHERE {
@@ -48,12 +69,13 @@ def query_modifications(g):
     res = g.query(query)
     mods = []
     for r in res:
-        mods.append((r[0].value,r[1].value))
+        mods.append((r[0].value, r[1].value))
 
     return mods
 
+
 if __name__ == '__main__':
     g = query_protein('Q02750')
-    seq = query_sequence(g)
-    mods = query_modifications(g)
-    print len([a for a in res])
+    seq = get_sequence(g)
+    mods = get_modifications(g)
+    hgnc_name = get_hgnc_name(g)
