@@ -61,6 +61,7 @@ def get_create_monomer(model, name):
     return monomer
 
 def create_site(monomer, site, states=None):
+    """Create a new site on a monomer if it doesn't already exist"""
     if site not in monomer.sites:
         monomer.sites.append(site)
     if states is not None:
@@ -72,11 +73,13 @@ def create_site(monomer, site, states=None):
         add_site_states(monomer, site, states)
 
 def add_site_states(monomer, site, states):
+    """Create new states on a monomer site if the side doesn't already exist"""
     for state in states:
         if state not in monomer.site_states[site]:
             monomer.site_states[site].append(state)
 
 class Statement(object):
+    """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
         self.stmt = stmt
         self.citation = citation
@@ -90,6 +93,7 @@ class Statement(object):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
+    """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
                  citation, evidence, annotations):
         super(Modification, self).__init__(stmt, citation, evidence,
@@ -105,7 +109,7 @@ class Modification(Statement):
                  self.mod_pos))
 
 class Phosphorylation(Modification):
-
+    """Phosphorylation modification"""
     def monomers(self, model):
         enz = get_create_monomer(model, self.enz_name)
         create_site(enz, 'Kinase', ('inactive', 'active'))
@@ -137,18 +141,24 @@ class Phosphorylation(Modification):
             warnings.warn(msg)
 
 class Hydroxylation(Modification):
+    """Hydroxylation modification"""
     pass
 
 class Sumoylation(Modification):
+    """Sumoylation modification"""
     pass
 
 class Acetylation(Modification):
+    """Acetylation modification"""
     pass
 
 class Ubiquitination(Modification):
+    """Ubiquitination modification"""
     pass
 
 class ActivityActivity(Statement):
+    """Statement representing the activation of a protein as a result of the
+    activity of another protein."""
     def __init__(self, subj_name, subj_activity, relationship, obj_name,
                  obj_activity, stmt, citation, evidence,
                  annotations):
@@ -233,6 +243,8 @@ class Dephosphorylation(Statement):
                 (self.phos_name, self.sub_name, self.mod, self.mod_pos))
 
 class ActivityModification(Statement):
+    """Statement representing the activation of a protein as a result 
+    of a residue modification"""
     def __init__(self, monomer_name, mod, mod_pos, relationship, activity,
                  stmt, citation, evidence, annotations):
         super(ActivityModification, self).__init__(stmt, citation,
@@ -297,6 +309,8 @@ class ActivityModification(Statement):
                  self.activity))
 
 class ActivatingSubstitution(Statement):
+    """Statement representing the activation of a protein as a result 
+    of a residue substitution"""
     def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,
                  stmt, citation, evidence, annotations):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
@@ -313,6 +327,9 @@ class ActivatingSubstitution(Statement):
                  self.sub_residue, self.activity))
 
 class RasGef(Statement):
+    """Statement representing the activation of a GTP-bound protein
+    upon Gef activity."""
+   
     def __init__(self, gef_name, gef_activity, ras_name,
                  stmt, citation, evidence, annotations):
         super(RasGef, self).__init__(stmt, citation, evidence,
@@ -351,6 +368,8 @@ class RasGef(Statement):
                 (self.gef_name, self.gef_activity, self.ras_name))
 
 class RasGap(Statement):
+    """Statement representing the inactivation of a GTP-bound protein
+    upon Gap activity."""
     def __init__(self, gap_name, gap_activity, ras_name,
                  stmt, citation, evidence, annotations):
         super(RasGap, self).__init__(stmt, citation, evidence,
@@ -390,6 +409,7 @@ class RasGap(Statement):
 
 
 class Complex(Statement):
+    """Statement representing complex formation between a set of members"""
     def __init__(self, members):
         self.members = members
 
