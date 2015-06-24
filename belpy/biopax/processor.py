@@ -3,6 +3,10 @@ jnius_config.add_options('-Xmx4g')
 from jnius import autoclass, JavaException
 from jnius import cast
 import ipdb
+import sys
+
+from belpy.databases import hgnc_client
+from belpy.statements import *
 
 # Functions for accessing frequently used java classes with shortened path
 def bp(path):
@@ -30,39 +34,6 @@ def autoclass_robust(path):
     return cl
 
 
-def modification(model, mf):
-    mf = cast('org.biopax.paxtools.impl.level3.ModificationFeatureImpl', model.getByID('http://purl.org/pc2/7/' + mf))
-    print mf.toString()
-    p = mf.getFeatureOf().toArray()[0]
-    print p.getStandardName()
-    print p.getDisplayName()
-    print p.getName().toArray()
-
-def protein(model, p):
-    p = cast('org.biopax.paxtools.impl.level3.ProteinImpl', model.getByID('http://purl.org/pc2/7/' + p))
-    print p.getStandardName()
-    print p.getDisplayName()
-    print p.getName().toArray()
-
-def owl_to_model(fname):
-    io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
-    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3) 
-    
-    try:
-        fileIS = autoclass('java.io.FileInputStream')(fname)
-    except JavaException:
-        print 'Could not open data file %s' % fname
-        sys.exit(0)
-    try:
-        biopax_model = io.convertFromOWL(fileIS)
-    except JavaException:
-        print 'Could not convert data file %s to BioPax model' % data_file
-        sys.exit(0)
-    
-    fileIS.close()
-
-    return biopax_model
-
 def cast_biopax_element(bpe):
     """ Casts a generic BioPAXElement object into a specific type. 
     This is useful when a search only returns generic elements. """
@@ -78,74 +49,87 @@ def print_result_generic(res):
         for bpe in res.getVariables():
             print bpe.toString()
             print '================'
+
+def get_modification(bp_ent):
+    bp_ent
+
+def get_hgnc_id(bp_entref):
+    xrefs = bp_entref.getXref().toArray()
+    hgnc_refs = [x for x in xrefs if x.getDb() == 'HGNC']
+    hgnc_id = None
+    for r in hgnc_refs:
+        try:
+            hgnc_id = int(r.getId())
+        except ValueError:
+            continue
+    return hgnc_id
+
+class BiopaxProcessor(object):
+    def __init__(self, model):
+        self.model = model
+        self.belpy_stmts = []
+        self.hgnc_cache = {}
+
+    def get_complexes(self):
+        pb = bpp('PatternBox')
+        s = bpp('Searcher')
+        p = pb.bindsTo()
+        res = s.searchPlain(self.model, p)
+        res_array = [match_to_array(m) for m in res.toArray()]
+        print '%d results found' % res.size()
+        for r in res_array:
+            members = []
+            # Extract first member
+            members += self.get_entity_names(r[0])
+            members += self.get_entity_names(r[4])
+            # Modifications of first member
+            feat_1 = r[1].getFeature().toArray()
+            # Modifications of second member
+            feat_2 = r[3].getFeature().toArray()
+            self.belpy_stmts.append(Complex(members))
+            
+    def get_entity_names(self, bp_ent):
+        names = []
+        if isinstance(bp_ent, bp('Complex')):
+            names += [self.get_entity_names(m) for m in bp_ent.getComponent().toArray()]
+        elif isinstance(bp_ent, bp('ProteinReference')) or \
+                isinstance(bp_ent, bp('SmallMoleculeReference')) or \
+                isinstance(bp_ent, bp('EntityReference')):
+            hgnc_id = get_hgnc_id(bp_ent)
+            if hgnc_id is None:
+                hgnc_name = bp_ent.getDisplayName()
+            else:
+                hgnc_name = self.get_hgnc_name(hgnc_id)
+            names += [hgnc_name]
+        elif isinstance(bp_ent, bpimpl('Protein')) or \
+                isinstance(bp_ent, bpimpl('SmallMolecule')) or \
+                isinstance(bp_ent, bp('Protein')) or \
+                isinstance(bp_ent, bp('SmallMolecule')):
+            ref = bp_ent.getEntityReference()
+            names += self.get_entity_names(ref)
+        
+        return names
+
+    def get_phosphorylation(self):
+        pb = bpp('PatternBox')
+        s = bpp('Searcher')
+        p = pb.controlsPhosphorylation()
+        res = s.searchPlain(model, p)
+        res_array = [match_to_array(m) for m in res.toArray()]
+        print '%d results found' % res.size()
+
+    def get_hgnc_name(self, hgnc_id):
+        try:
+            hgnc_name = self.hgnc_cache[hgnc_id]
+        except KeyError:
+            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+            self.hgnc_cache[hgnc_id] = hgnc_name
+        return hgnc_name
     
+    def print_statements(self):
+        for i, stmt in enumerate(self.belpy_stmts):
+            print "%s: %s" % (i, stmt)
 
 if __name__ == '__main__':
-    model = owl_to_model('BRAF.owl')
-    cb = bpp('constraint.ConBox')
-    pb = bpp('PatternBox')
-    pc = bpp('constraint.PathConstraint')
-    mcc = bpp('constraint.ModificationChangeConstraint')
-    mcct = bpp('constraint.ModificationChangeConstraint$Type')
-    pa = autoclass('org.biopax.paxtools.controller.PathAccessor')
-    fl = bpp('constraint.Field')
-    flop = bpp('constraint.Field$Operation')
-    s = bpp('Searcher')
-    
-    # SequenceEntityReference is for everything except small molecules
-    # Replace with EntityReference
-    p = bpp('Pattern')(bpimpl('BiochemicalReaction')().getClass(), "r")
-    p.add(pc("BiochemicalReaction/controlledOf*:Catalysis"), "r", "cat")
-    p.add(pc("BiochemicalReaction/left:Protein"), "r", "lPE")
-    p.add(pc("BiochemicalReaction/right:Protein"), "r", "rPE")
-    p.add(pc("Catalysis/controller*:Protein"), "cat", "cPE")
-    p.add(pc("Protein/entityReference:EntityReference"), "lPE", 'lER')
-    p.add(pc("Protein/entityReference:EntityReference"), "rPE", 'rER')
-    p.add(pc("Protein/entityReference:EntityReference"), "cPE", 'cER')
-    #p.add(pc("Protein/feature*:ModificationFeature"), "lPE", "lMF")
-    p.add(pc("Protein/feature*:ModificationFeature"), "rPE", "rMF")
-    #p.add(pc("Protein/feature*:ModificationFeature"), "cPE", "cMF")
-    #p.add(pc("ModificationFeature/modificationType*:SequenceModificationVocabulary"), "lMF", "lMFT")
-    p.add(pc("ModificationFeature/modificationType*:SequenceModificationVocabulary"), "rMF", "rMFT")
-    #p.add(pc("ModificationFeature/modificationType*:SequenceModificationVocabulary"), "cMF", "cMFT")
-    hs = autoclass('java.util.HashSet')()
-    hs.add('O-phospho-L-serine')
-    hs.add('O-phospho-L-threonine')
-    hs.add('O-phospho-L-tyrosine')
-    #p.add(fl("SequenceModificationVocabulary/term", flop.INTERSECT, hs), 'rMFT')
-    p.add(mcc(mcct.GAIN,'phospho'), 'lPE', 'rPE')
-    #p.add(fl("SequenceModificationVocabulary/term", flop.NOT_INTERSECT, hs), 'lMFT')
-    #p.add(fl("ModificationFeature/modificationType/term", flop.INTERSECT, hs), 'rMF')
-    #p.add(fl("ModificationFeature/modificationType/term", flop.NOT_INTERSECT, hs), 'lMF')
-    #p.add(pc("ModificationFeature/modificationType:SequenceModificationVocabulary"), "lmf", "lmft")
-    #p.add(mcc(bpp('constraint.ModificationChangeConstraint$Type').GAIN,'phospho'))
-    #p.add(fl("term", fl.Operator.INTERSECT,"O-phospho-L-serine"), "rmft")
-    
-    # p.add(cb.linkedER(true), "controller ER", "generic controller ER")
-    # p.add(cb.erToPE(), "generic controller ER", "controller simple PE")
-    # p.add(cb.linkToComplex(), "controller simple PE", "controller PE")
-    # p.add(cb.peToControl(), "controller PE", "Control")
-    # p.add(cb.controlToConv(), "Control", "Conversion")
-    # p.add(bpp('constraint.NOT')(cb.participantER()), "Conversion", "controller ER")
-    # p.add(bpp('Participant')(RelType.INPUT, true), "Control", "Conversion", "input PE")
-    # p.add(cb.linkToSpecific(), "input PE", "input simple PE")
-    # p.add(bpp('constraint.Type')(bpimpl('SequenceEntity')().getClass()), "input simple PE")
-    # p.add(cb.peToER(), "input simple PE", "changed generic ER")
-    # p.add(bpp('constraint.ConversionSide')(bpp('constraint.ConversionSide.Type').OTHER_SIDE), "input PE", "Conversion", "output PE")
-    # p.add(equal(false), "input PE", "output PE")
-    # p.add(cb.linkToSpecific(), "output PE", "output simple PE")
-    # p.add(cb.peToER(), "output simple PE", "changed generic ER")
-    # p.add(cb.linkedER(false), "changed generic ER", "changed ER")
-    
-    
-    #p = bpp('Pattern')(bpimpl('ProteinReference')().getClass(), 'controllerPR')
-    #p.add(cb.isHuman(), 'controllerPR')
+    pass
 
-    #p.add(pb.controlsStateChange(), 'controllerPR')
-    #p.add(cb.erToPE(),'controllerPR', 'controllerPE')
-    #p.add(cb.peToControl(),'controllerPE','control')
-    #p.add(cb.controlToInter(),'control','inter')
-
-    res = s.searchPlain(model, p)
-    res_array = [match_to_array(m) for m in res.toArray()]
-    print '%d results found' % res.size()
