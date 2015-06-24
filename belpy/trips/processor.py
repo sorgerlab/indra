@@ -1,5 +1,6 @@
 import re
 import warnings
+import ipdb
 
 import xml.etree.ElementTree as ET
 from BeautifulSoup import BeautifulSoup
@@ -23,11 +24,20 @@ class TripsProcessor(object):
     def __init__(self, xml_string):
         self.tree = ET.fromstring(xml_string)
         self.belpy_stmts = []
+        self.hgnc_cache = {}
 
     def get_text(self, element):
         text_tag = element.find("text")
         text = text_tag.text
         return text
+    
+    def get_hgnc_name(self, hgnc_id):
+        try:
+            hgnc_name = self.hgnc_cache[hgnc_id]
+        except KeyError:
+            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+            self.hgnc_cache[hgnc_id] = hgnc_name
+        return hgnc_name
 
     def get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
@@ -37,23 +47,30 @@ class TripsProcessor(object):
         except:
             warnings.warn('No grounding information for %s' % name)
             return name.text
-        if dbid.startswith('HGNC'):
-            hgnc_id = re.match(r'HGNC\:\:\|(.*)\|', dbid).groups()[0]
-            html = hgnc_client.get_hgnc_entry(hgnc_id)
-            parsed_html = BeautifulSoup(html)
-            hgnc_name = parsed_html.body.find('dd', attrs={'id':'app_symbol'}).text
+        dbids = dbid.split('|')
+        hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
+        up_ids = [i for i in dbids if i.startswith('UP')]
+
+        if hgnc_ids:
+            if len(hgnc_ids) > 1:
+                warnings.warn('%d HGNC IDs reported.' % len(hgnc_ids))
+            hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
+            hgnc_name = self.get_hgnc_name(hgnc_id)
             return hgnc_name
-        elif dbid.startswith('UP'):
-            up_id = re.match(r'UP\:\:(.*)', dbid).groups()[0]
-            up_rdf = up_client.query_protein(up_id)
-            # First try to get HGNC name
-            hgnc_name = up_client.get_hgnc_name(up_rdf)
-            if hgnc_name is not None:
-                return hgnc_name
-            # Next, try to get the gene name
-            gene_name = up_client.get_gene_name(up_rdf)
-            if gene_name is not None:
-                return gene_name
+        else:
+            if up_ids:
+                if len(hgnc_ids) > 1:
+                    warnings.warn('%d UniProt IDs reported.' % len(up_ids))
+                up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
+                up_rdf = up_client.query_protein(up_id)
+                # First try to get HGNC name
+                hgnc_name = up_client.get_hgnc_name(up_rdf)
+                if hgnc_name is not None:
+                    return hgnc_name
+                # Next, try to get the gene name
+                gene_name = up_client.get_gene_name(up_rdf)
+                if gene_name is not None:
+                    return gene_name
         # By default, return the text of the name tag
         return name.text
 
@@ -108,16 +125,20 @@ class TripsProcessor(object):
             self.belpy_stmts.append(Complex((arg1_name, arg2_name)))
 
     def get_mod_site(self, event):
-        site_tag = event.find("site")
-        site_id = site_tag.attrib['id']
-        residues, mod_pos = self.get_site_by_id(site_id)
         mod_type = event.find('type')
         mod_type_name = mod_names[mod_type.text.split('::')[1]]
+
+        site_tag = event.find("site")
+        if site_tag is None:
+            return [mod_type_name], ['']
+        site_id = site_tag.attrib['id']
+        residues, mod_pos = self.get_site_by_id(site_id)
         mod = [mod_type_name+residue_names[r] for r in residues]
         return mod, mod_pos
 
     def get_phosphorylation(self):
         phosphorylation_events = self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
+        ipdb.set_trace()
         for event in phosphorylation_events:
             sentence = self.get_text(event)
             agent = event.find(".//*[@role=':AGENT']")
@@ -135,6 +156,7 @@ class TripsProcessor(object):
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
             # independently
+
             for m, p in zip(mod, mod_pos):
                 self.belpy_stmts.append(Phosphorylation(agent_name, affected_name,
                                         m, p, sentence, citation, evidence, annotations))
