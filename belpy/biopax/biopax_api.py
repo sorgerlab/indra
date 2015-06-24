@@ -1,6 +1,5 @@
 import sys
-import re
-import subprocess
+import ipdb
 
 from processor import BiopaxProcessor
 
@@ -25,21 +24,23 @@ def owl_to_model(fname):
 
     return biopax_model
 
-def process_pc_neighborhood(gene_names):
-    bp.print_statements()
+def process_pc_neighborhood(gene_names, neighbor_limit=2):
     cpath_client = autoclass('cpath.client.CPathClient').newInstance('http://www.pathwaycommons.org/pc2/')
     query = cpath_client.createGraphQuery()
     query.kind(autoclass('cpath.service.GraphType').PATHSBETWEEN)
-    query.sources(query_proteins)
+    query.sources(gene_names)
     query.organismFilter(['homo sapiens'])
     query.mergeEquivalentInteractions(True)
-    query.limit(autoclass('java.lang.Integer')(2))
+    query.limit(autoclass('java.lang.Integer')(neighbor_limit))
     # Execute query
     model = query.result()
-    bproc = BiopaxProcessor(model)
-    bproc.get_complexes()
-    bproc.print_statements()
-    return bproc
+    if model is not None:
+        bproc = BiopaxProcessor(model)
+        bproc.get_complexes()
+        bproc.print_statements()
+        return bproc
+    else:
+        ipdb.set_trace()
 
 def process_owl(owl_filename):
     model = owl_to_model(owl_filename)
