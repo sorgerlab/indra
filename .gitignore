@@ -57,3 +57,11 @@ doc/_static/
 # Vim temp files
 *.swp
 large_corpus.rdf
+
+# Data files
+*.rdf
+*.owl
+*.xml
+
+# JARs
+*.jar
