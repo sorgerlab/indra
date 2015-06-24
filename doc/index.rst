@@ -9,9 +9,9 @@ Welcome to belpy's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   modules/index
+   modules/modules
 
 Indices and tables
 ==================
