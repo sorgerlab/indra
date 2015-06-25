@@ -5,10 +5,11 @@ from processor import BiopaxProcessor
 
 from jnius import autoclass
 
+
 def owl_to_model(fname):
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
-    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3) 
-    
+    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
+
     try:
         fileIS = autoclass('java.io.FileInputStream')(fname)
     except JavaException:
@@ -19,10 +20,11 @@ def owl_to_model(fname):
     except JavaException:
         print 'Could not convert data file %s to BioPax model' % data_file
         sys.exit(0)
-    
+
     fileIS.close()
 
     return biopax_model
+
 
 def process_pc_neighborhood(gene_names, neighbor_limit=2):
     cpath_client = autoclass('cpath.client.CPathClient').newInstance('http://www.pathwaycommons.org/pc2/')
@@ -39,9 +41,11 @@ def process_pc_neighborhood(gene_names, neighbor_limit=2):
     else:
         return None
 
+
 def process_owl(owl_filename):
     model = owl_to_model(owl_filename)
     return process_model(model)
+
 
 def process_model(model):
     bproc = BiopaxProcessor(model)
@@ -49,6 +53,7 @@ def process_model(model):
     bproc.get_phosphorylation()
     bproc.print_statements()
     return bproc
+
 
 if __name__ == '__main__':
     # Make sure the user passed in an OWL filename

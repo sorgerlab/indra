@@ -168,8 +168,8 @@ class BelProcessor(object):
                 if mod == 'Hydroxylation':
                     self.belpy_stmts.append(
                             Hydroxylation(enz_name, sub_name, mod, mod_pos,
-                                        stmt_str,
-                                        citation, evidence, annotations))
+                                          stmt_str,
+                                          citation, evidence, annotations))
                 elif mod == 'Sumoylation':
                     self.belpy_stmts.append(
                             Sumoylation(enz_name, sub_name, mod, mod_pos,
@@ -183,8 +183,8 @@ class BelProcessor(object):
                 elif mod == 'Ubiquitination':
                     self.belpy_stmts.append(
                             Ubiquitination(enz_name, sub_name, mod, mod_pos,
-                                        stmt_str,
-                                        citation, evidence, annotations))
+                                           stmt_str,
+                                           citation, evidence, annotations))
                 else:
                     print "Warning: Unknown modification type!"
                     print("Activity: %s, Mod: %s, Mod_Pos: %s" %
@@ -229,13 +229,13 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     Dephosphorylation(phos_name, sub_name, mod, mod_pos,
-                                    stmt_str, citation,
-                                    evidence, annotations))
-    
+                                      stmt_str, citation,
+                                      evidence, annotations))
+
     def get_composite_activating_mods(self):
-        # To eliminate multiple matches, we use pos1 < pos2 but this will only work
-        # if the pos is given, otherwise multiple matches of the same mod combination
-        # may appear in the result
+        # To eliminate multiple matches, we use pos1 < pos2 but this will
+        # only work if the pos is given, otherwise multiple matches of
+        # the same mod combination may appear in the result
         q_mods = prefixes + """
             SELECT ?speciesName ?actType ?mod1 ?pos1 ?mod2 ?pos2 ?rel ?stmt
             WHERE {
@@ -281,11 +281,10 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(species_name, (mod1, mod2), 
-                                            (mod_pos1, mod_pos2),
-                                            rel, act_type, stmt_str,
-                                           citation, evidence, annotations))
-
+                    ActivityModification(species_name, (mod1, mod2),
+                                         (mod_pos1, mod_pos2),
+                                         rel, act_type, stmt_str,
+                                         citation, evidence, annotations))
 
     def get_activating_mods(self):
         q_mods = prefixes + """
@@ -324,8 +323,8 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
                     ActivityModification(species_name, (mod,), (mod_pos,), rel,
-                                           act_type, stmt_str,
-                                           citation, evidence, annotations))
+                                         act_type, stmt_str,
+                                         citation, evidence, annotations))
 
     def get_complexes(self):
         # Find all complexes described in the corpus
@@ -458,22 +457,22 @@ class BelProcessor(object):
             if subj_activity == 'GtpBound':
                 self.belpy_stmts.append(
                      RasGtpActivityActivity(subj_name, subj_activity,
-                                      rel, obj_name, obj_activity,
-                                      stmt_str,
-                                      citation, evidence, annotations))
+                                            rel, obj_name, obj_activity,
+                                            stmt_str,
+                                            citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyIncreases':
                 self.belpy_stmts.append(
-                        RasGef(subj_name, subj_activity, obj_name, 
+                        RasGef(subj_name, subj_activity, obj_name,
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyDecreases':
                 self.belpy_stmts.append(
-                        RasGap(subj_name, subj_activity, obj_name, 
+                        RasGap(subj_name, subj_activity, obj_name,
                                stmt_str, citation, evidence, annotations))
             # Otherwise, create a generic Activity->Activity statement
             else:
@@ -648,9 +647,7 @@ class BelProcessor(object):
             if not (stmt in self.converted_stmts or
                     stmt in self.degenerate_stmts):
                 print stmt
-    
+
     def print_statements(self):
         for i, stmt in enumerate(self.belpy_stmts):
             print "%s: %s" % (i, stmt)
-
-
