@@ -35,17 +35,18 @@ def process_pc_neighborhood(gene_names, neighbor_limit=2):
     # Execute query
     model = query.result()
     if model is not None:
-        bproc = BiopaxProcessor(model)
-        bproc.get_complexes()
-        bproc.print_statements()
-        return bproc
+        return process_model(model)
     else:
-        ipdb.set_trace()
+        return None
 
 def process_owl(owl_filename):
     model = owl_to_model(owl_filename)
+    return process_model(model)
+
+def process_model(model):
     bproc = BiopaxProcessor(model)
     bproc.get_complexes()
+    bproc.get_phosphorylation()
     bproc.print_statements()
     return bproc
 
