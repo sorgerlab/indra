@@ -49,7 +49,7 @@ def process_owl(owl_filename):
 
 def process_model(model):
     bproc = BiopaxProcessor(model)
-    bproc.get_complexes()
+    # bproc.get_complexes()
     bproc.get_phosphorylation()
     bproc.print_statements()
     return bproc
