@@ -96,10 +96,10 @@ class BiopaxProcessor(object):
         for s in stmts:
             self.belpy_stmts.append(Glycosylation(*s))
 
-    def get_palmiotylation(self):
-        stmts = self._get_generic_modification('palmiotyl')
+    def get_palmitoylation(self):
+        stmts = self._get_generic_modification('palmitoyl')
         for s in stmts:
-            self.belpy_stmts.append(Glycosylation(*s))
+            self.belpy_stmts.append(Palmitoylation(*s))
 
     def get_activity_modification(self):
         mcc = bpp('constraint.ModificationChangeConstraint')
