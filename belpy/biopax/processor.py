@@ -181,8 +181,8 @@ class BiopaxProcessor(object):
                 mod_gain_const = mcct.GAIN
             else:
                 mod_gain_const = mcct.LOSS
-        p.add(mcc(mod_gain_const, mod_filter),
-              "input simple PE", "output simple PE")
+            p.add(mcc(mod_gain_const, mod_filter),
+                      "input simple PE", "output simple PE")
 
         s = bpp('Searcher')
         res = s.searchPlain(self.model, p)
