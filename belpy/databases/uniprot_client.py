@@ -91,6 +91,20 @@ def get_modifications(g):
         mods.append((r[0].value, r[1].value))
     return mods
 
+def verify_location(g, residue, location):
+    """
+    Verify if a given residue is at the given location
+    acording to the UniProt sequence
+    """
+    seq = get_sequence(g)
+    try:
+        if seq[location] == residue:
+            return True
+        else:
+            return False
+    except IndexError:
+        return False
+
 
 if __name__ == '__main__':
     g = query_protein('Q02750')
