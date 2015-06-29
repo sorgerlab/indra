@@ -77,31 +77,100 @@ class BiopaxProcessor(object):
             self.belpy_stmts.append(Complex(members))
 
     def get_phosphorylation(self):
-        stmts = self._get_modification('phospho')
+        stmts = self._get_generic_modification('phospho')
         for s in stmts:
             self.belpy_stmts.append(Phosphorylation(*s))
 
     def get_dephosphorylation(self):
-        stmts = self._get_modification('phospho', mod_gain=False)
+        stmts = self._get_generic_modification('phospho', mod_gain=False)
         for s in stmts:
             self.belpy_stmts.append(Dephosphorylation(*s))
 
     def get_acetylation(self):
-        stmts = self._get_modification('acetyl')
+        stmts = self._get_generic_modification('acetyl')
         for s in stmts:
             self.belpy_stmts.append(Acetylation(*s))
 
     def get_glycosylation(self):
-        stmts = self._get_modification('glycosyl')
+        stmts = self._get_generic_modification('glycosyl')
         for s in stmts:
             self.belpy_stmts.append(Glycosylation(*s))
 
     def get_palmiotylation(self):
-        stmts = self._get_modification('palmiotyl')
+        stmts = self._get_generic_modification('palmiotyl')
         for s in stmts:
             self.belpy_stmts.append(Glycosylation(*s))
 
-    def _get_modification(self, mod_filter=None, mod_gain=True):
+    def get_activity_modification(self):
+        mcc = bpp('constraint.ModificationChangeConstraint')
+        mcct = bpp('constraint.ModificationChangeConstraint$Type')
+        p = self._construct_modification_pattern()
+        mod_filter = 'residue modification, active'
+        p.add(mcc(mcct.GAIN, mod_filter),
+              "input simple PE", "output simple PE")
+
+        s = bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [match_to_array(m) for m in res.toArray()]
+        print '%d results found' % res.size()
+        for r in res_array:
+            monomer_name = self._get_entity_names(r[p.indexOf('changed generic ER')])
+            stmt_str = ''
+            citation = self._get_citation(r[p.indexOf('Conversion')])
+            evidence = ''
+            annotations = ''
+            outPE = r[p.indexOf('output PE')]
+            activity = 'Activity'
+            relationship = 'DirectlyIncreases' 
+            mod, mod_pos = self._get_modification_site(outPE)
+            if mod:
+                stmt = ActivityModification(monomer_name, mod, mod_pos, 
+                                            relationship, activity,
+                                            stmt_str, citation, evidence, 
+                                            annotations)
+                self.belpy_stmts.append(stmt)
+
+    def _get_modification_site(self, modPE):
+        # Do we need to look at EntityFeatures?
+        modMF = [mf for mf in modPE.getFeature().toArray()
+                 if isinstance(mf, bpimpl('ModificationFeature'))]
+        mod_pos = []
+        mod = []
+
+        for mf in modMF:
+            # ModificationFeature / SequenceModificationVocabulary
+            mf_type = mf.getModificationType().getTerm().toArray()[0]
+            if len(mf.getModificationType().getTerm().toArray()) != 1:
+                warnings.warn('Other than one modification term')
+            try:
+                mod_type = self._mftype_dict[mf_type]
+            except KeyError:
+                warnings.warn('Unknown modification type %s' % mf_type)
+                continue
+
+            mod.append(mod_type)
+
+            # getFeatureLocation returns SequenceLocation, which is the
+            # generic parent class of SequenceSite and SequenceInterval.
+            # Here we need to cast to SequenceSite in order to get to
+            # the sequence position.
+            mf_pos = mf.getFeatureLocation()
+            if mf_pos is not None:
+                mf_site = cast(bp('SequenceSite'), mf_pos)
+                mf_pos_status = mf_site.getPositionStatus()
+                if mf_pos_status and mf_pos_status.toString() != 'EQUAL':
+                    warnings.warn('Modification site position is %s' %
+                                  mf_pos_status.toString())
+                mod_pos.append(mf_site.getSequencePosition())
+            else:
+                mod_pos.append(None)
+            # Do we need to look at mf.getFeatureLocationType()?
+            # It seems to be always None.
+            # mf_pos_type = mf.getFeatureLocationType()
+        return mod, mod_pos
+
+
+    def _get_generic_modification(self, mod_filter=None, mod_gain=True):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
         # Start with a generic modification pattern
@@ -137,42 +206,7 @@ class BiopaxProcessor(object):
             # TODO: handle case when
             # r[p.indexOf('output simple PE')].getRDFId()
             # is not equal to r[p.indexOf('output PE')].getRDFId()
-
-            # Do we need to look at EntityFeatures?
-            modMF = [mf for mf in modPE.getFeature().toArray()
-                     if isinstance(mf, bpimpl('ModificationFeature'))]
-            mod_pos = []
-            mod = []
-            for mf in modMF:
-                # ModificationFeature / SequenceModificationVocabulary
-                mf_type = mf.getModificationType().getTerm().toArray()[0]
-                if len(mf.getModificationType().getTerm().toArray()) != 1:
-                    warnings.warn('Other than one modification term')
-                try:
-                    mod_type = self._mftype_dict[mf_type]
-                except KeyError:
-                    warnings.warn('Unknown modification type %s' % mf_type)
-                    continue
-
-                mod.append(mod_type)
-
-                # getFeatureLocation returns SequenceLocation, which is the
-                # generic parent class of SequenceSite and SequenceInterval.
-                # Here we need to cast to SequenceSite in order to get to
-                # the sequence position.
-                mf_pos = mf.getFeatureLocation()
-                if mf_pos is not None:
-                    mf_site = cast(bp('SequenceSite'), mf_pos)
-                    mf_pos_status = mf_site.getPositionStatus()
-                    if mf_pos_status and mf_pos_status.toString() != 'EQUAL':
-                        warnings.warn('Modification site position is %s' %
-                                      mf_pos_status.toString())
-                    mod_pos.append(mf_site.getSequencePosition())
-                else:
-                    mod_pos.append(None)
-                # Do we need to look at mf.getFeatureLocationType()?
-                # It seems to be always None.
-                mf_pos_type = mf.getFeatureLocationType()
+            mod, mod_pos = self._get_modification_site(modPE)
             stmts.append((enz_name, sub_name, mod, mod_pos,
                           stmt_str, citation, evidence, annotations))
         return stmts
