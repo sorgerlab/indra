@@ -26,20 +26,16 @@ def owl_to_model(fname):
     return biopax_model
 
 
-def process_pc_neighborhood(gene_names, neighbor_limit=2):
-    cpath_client = autoclass('cpath.client.CPathClient').newInstance('http://www.pathwaycommons.org/pc2/')
-    query = cpath_client.createGraphQuery()
-    query.kind(autoclass('cpath.service.GraphType').PATHSBETWEEN)
-    query.sources(gene_names)
-    query.organismFilter(['homo sapiens'])
-    query.mergeEquivalentInteractions(True)
-    query.limit(autoclass('java.lang.Integer')(neighbor_limit))
-    # Execute query
-    model = query.result()
-    if model is not None:
-        return process_model(model)
-    else:
-        return None
+def process_pc_neighborhood(gene_names, neighbor_limit=1):
+    query_type = autoclass('cpath.service.GraphType').NEIGHBORHOOD
+    model = _run_pc_query(query_type, gene_names, neighbor_limit)
+    return process_model(model)
+
+
+def process_pc_pathsbetween(gene_names, neighbor_limit=1):
+    query_type = autoclass('cpath.service.GraphType').PATHSBETWEEN
+    model = _run_pc_query(query_type, gene_names, neighbor_limit)
+    return process_model(model)
 
 
 def process_owl(owl_filename):
@@ -53,6 +49,23 @@ def process_model(model):
     bproc.get_phosphorylation()
     bproc.print_statements()
     return bproc
+
+
+def _run_pc_query(query_type, gene_names, neighbor_limit=1):
+    cpath_client = autoclass('cpath.client.CPathClient').\
+        newInstance('http://www.pathwaycommons.org/pc2/')
+    query = cpath_client.createGraphQuery()
+    query.kind(query_type)
+    query.sources(gene_names)
+    query.organismFilter(['homo sapiens'])
+    query.mergeEquivalentInteractions(True)
+    query.limit(autoclass('java.lang.Integer')(neighbor_limit))
+    # Execute query
+    model = query.result()
+    if model is not None:
+        return process_model(model)
+    else:
+        return None
 
 
 if __name__ == '__main__':
