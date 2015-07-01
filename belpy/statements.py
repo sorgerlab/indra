@@ -228,14 +228,14 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def monomers(self, model):
-        monomer = get_create_monomer(model, self.monomer_name)
+    def monomers(self, agent_set):
+        agent = agent_set.get_create_agent(self.monomer_name)
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
 
         for i, s in enumerate(sites):
-            create_site(monomer, s, states[self.mod[i]])
-        create_site(monomer, self.activity, ('inactive', 'active'))
+            agent.create_site(s, states[self.mod[i]])
+        agent.create_site(self.activity, ('inactive', 'active'))
 
     def assemble(self, model):
         try:
