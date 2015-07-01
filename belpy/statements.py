@@ -40,8 +40,8 @@ active_site_names = {
 def site_name(stmt):
     """Return all site names for a modification-type statement."""
     names = []
-    if isinstance(stmt.mod,(list,tuple)):
-        for m,mp in zip(stmt.mod,stmt.mod_pos):
+    if isinstance(stmt.mod, (list, tuple)):
+        for m, mp in zip(stmt.mod, stmt.mod_pos):
             mod = abbrevs[m]
             mod_pos = mp if mp is not None else ''
             names.append('%s%s' % (mod, mod_pos))
@@ -61,6 +61,7 @@ def get_create_monomer(model, name):
     return monomer
 
 def create_site(monomer, site, states=None):
+    """Create a new site on a monomer if it doesn't already exist"""
     if site not in monomer.sites:
         monomer.sites.append(site)
     if states is not None:
@@ -72,11 +73,13 @@ def create_site(monomer, site, states=None):
         add_site_states(monomer, site, states)
 
 def add_site_states(monomer, site, states):
+    """Create new states on a monomer site if the side doesn't already exist"""
     for state in states:
         if state not in monomer.site_states[site]:
             monomer.site_states[site].append(state)
 
 class Statement(object):
+    """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
         self.stmt = stmt
         self.citation = citation
@@ -90,6 +93,7 @@ class Statement(object):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
+    """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
                  citation, evidence, annotations):
         super(Modification, self).__init__(stmt, citation, evidence,
@@ -105,7 +109,7 @@ class Modification(Statement):
                  self.mod_pos))
 
 class Phosphorylation(Modification):
-
+    """Phosphorylation modification"""
     def monomers(self, model):
         enz = get_create_monomer(model, self.enz_name)
         create_site(enz, 'Kinase', ('inactive', 'active'))
@@ -127,8 +131,8 @@ class Phosphorylation(Modification):
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
         try:
             r = Rule(rule_name,
-                     enz(Kinase='active') + sub(**{site:'u'}) >>
-                     enz(Kinase='active') + sub(**{site:'p'}),
+                     enz(Kinase='active') + sub(**{site: 'u'}) >>
+                     enz(Kinase='active') + sub(**{site: 'p'}),
                      kf_phospho)
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
@@ -137,18 +141,24 @@ class Phosphorylation(Modification):
             warnings.warn(msg)
 
 class Hydroxylation(Modification):
+    """Hydroxylation modification"""
     pass
 
 class Sumoylation(Modification):
+    """Sumoylation modification"""
     pass
 
 class Acetylation(Modification):
+    """Acetylation modification"""
     pass
 
 class Ubiquitination(Modification):
+    """Ubiquitination modification"""
     pass
 
 class ActivityActivity(Statement):
+    """Statement representing the activation of a protein as a result of the
+    activity of another protein."""
     def __init__(self, subj_name, subj_activity, relationship, obj_name,
                  obj_activity, stmt, citation, evidence,
                  annotations):
@@ -162,7 +172,7 @@ class ActivityActivity(Statement):
 
     def monomers(self, model):
         subj = get_create_monomer(model, self.subj_name)
-        create_site(subj, self.subj_activity, ('inactive','active'))
+        create_site(subj, self.subj_activity, ('inactive', 'active'))
         obj = get_create_monomer(model, self.obj_name)
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
@@ -179,10 +189,10 @@ class ActivityActivity(Statement):
         r = Rule('%s_%s_activates_%s_%s' %
                  (self.subj_name, self.subj_activity, self.obj_name,
                   self.obj_activity),
-                 subj(**{self.subj_activity:'active'}) +
-                 obj(**{self.obj_activity:'inactive'}) >>
-                 subj(**{self.subj_activity:'active'}) +
-                 obj(**{self.obj_activity:'active'}),
+                 subj(**{self.subj_activity: 'active'}) +
+                 obj(**{self.obj_activity: 'inactive'}) >>
+                 subj(**{self.subj_activity: 'active'}) +
+                 obj(**{self.obj_activity: 'active'}),
                  kf_one_step_activate)
         model.add_component(r)
 
@@ -222,21 +232,22 @@ class Dephosphorylation(Statement):
         site = site_name(self)[0]
         r = Rule('%s_dephospho_%s_%s' %
                  (self.phos_name, self.sub_name, site),
-                 phos() + sub(**{site:'p'}) >>
-                 phos() + sub(**{site:'u'}),
+                 phos() + sub(**{site: 'p'}) >>
+                 phos() + sub(**{site: 'u'}),
                  kf_dephospho)
         model.add_component(r)
-
 
     def __str__(self):
         return ("Dehosphorylation(%s, %s, %s, %s)" %
                 (self.phos_name, self.sub_name, self.mod, self.mod_pos))
 
 class ActivityModification(Statement):
+    """Statement representing the activation of a protein as a result
+    of a residue modification"""
     def __init__(self, monomer_name, mod, mod_pos, relationship, activity,
                  stmt, citation, evidence, annotations):
         super(ActivityModification, self).__init__(stmt, citation,
-                                                     evidence, annotations)
+                                                   evidence, annotations)
         self.monomer_name = monomer_name
         self.mod = mod
         self.mod_pos = mod_pos
@@ -247,8 +258,8 @@ class ActivityModification(Statement):
         monomer = get_create_monomer(model, self.monomer_name)
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
-        
-        for i,s in enumerate(sites):
+
+        for i, s in enumerate(sites):
             create_site(monomer, s, states[self.mod[i]])
         create_site(monomer, self.activity, ('inactive', 'active'))
 
@@ -274,17 +285,18 @@ class ActivityModification(Statement):
             raise Exception("Invalid modification/activity relationship.")
 
         rule_name = '%s_%s_%s_%s' % \
-                    (self.monomer_name, '_'.join([a+s for (a,s) in zip(sites,active_states)]), self.relationship,
+                    (self.monomer_name, '_'.join([a+s for (a, s) in
+                     zip(sites, active_states)]), self.relationship,
                      self.activity)
         try:
-            pre = {key:value for (key,value) in zip(sites,active_states)}
+            pre = {key: value for (key, value) in zip(sites, active_states)}
             pre[self.activity] = pre_activity_state
-            post = {key:value for (key,value) in zip(sites,active_states)}
+            post = {key: value for (key, value) in zip(sites, active_states)}
             post[self.activity] = post_activity_state
             r = Rule(rule_name,
-                   m(**pre) >>
-                   m(**post),
-                   kf_activation)
+                     m(**pre) >>
+                     m(**post),
+                     kf_activation)
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
         except ComponentDuplicateNameError:
@@ -297,6 +309,8 @@ class ActivityModification(Statement):
                  self.activity))
 
 class ActivatingSubstitution(Statement):
+    """Statement representing the activation of a protein as a result
+    of a residue substitution"""
     def __init__(self, monomer_name, wt_residue, pos, sub_residue, activity,
                  stmt, citation, evidence, annotations):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
@@ -313,6 +327,9 @@ class ActivatingSubstitution(Statement):
                  self.sub_residue, self.activity))
 
 class RasGef(Statement):
+    """Statement representing the activation of a GTP-bound protein
+    upon Gef activity."""
+
     def __init__(self, gef_name, gef_activity, ras_name,
                  stmt, citation, evidence, annotations):
         super(RasGef, self).__init__(stmt, citation, evidence,
@@ -323,7 +340,7 @@ class RasGef(Statement):
 
     def monomers(self, model):
         gef = get_create_monomer(model, self.gef_name)
-        create_site(gef, self.gef_activity, ('inactive','active'))
+        create_site(gef, self.gef_activity, ('inactive', 'active'))
         ras = get_create_monomer(model, self.ras_name)
         create_site(ras, 'GtpBound', ('inactive', 'active'))
 
@@ -339,10 +356,10 @@ class RasGef(Statement):
 
         r = Rule('%s_activates_%s' %
                  (self.gef_name, self.ras_name),
-                 gef(**{self.gef_activity:'active'}) +
-                 ras(**{'GtpBound':'inactive'}) >>
-                 gef(**{self.gef_activity:'active'}) +
-                 ras(**{'GtpBound':'active'}),
+                 gef(**{self.gef_activity: 'active'}) +
+                 ras(**{'GtpBound': 'inactive'}) >>
+                 gef(**{self.gef_activity: 'active'}) +
+                 ras(**{'GtpBound': 'active'}),
                  kf_gef)
         model.add_component(r)
 
@@ -350,7 +367,10 @@ class RasGef(Statement):
         return ("RasGef(%s, %s, %s)" %
                 (self.gef_name, self.gef_activity, self.ras_name))
 
+
 class RasGap(Statement):
+    """Statement representing the inactivation of a GTP-bound protein
+    upon Gap activity."""
     def __init__(self, gap_name, gap_activity, ras_name,
                  stmt, citation, evidence, annotations):
         super(RasGap, self).__init__(stmt, citation, evidence,
@@ -361,7 +381,7 @@ class RasGap(Statement):
 
     def monomers(self, model):
         gap = get_create_monomer(model, self.gap_name)
-        create_site(gap, self.gap_activity, ('inactive','active'))
+        create_site(gap, self.gap_activity, ('inactive', 'active'))
         ras = get_create_monomer(model, self.ras_name)
         create_site(ras, 'GtpBound', ('inactive', 'active'))
 
@@ -377,10 +397,10 @@ class RasGap(Statement):
 
         r = Rule('%s_inactivates_%s' %
                  (self.gap_name, self.ras_name),
-                 gap(**{self.gap_activity:'active'}) +
-                 ras(**{'GtpBound':'active'}) >>
-                 gap(**{self.gap_activity:'active'}) +
-                 ras(**{'GtpBound':'inactive'}),
+                 gap(**{self.gap_activity: 'active'}) +
+                 ras(**{'GtpBound': 'active'}) >>
+                 gap(**{self.gap_activity: 'active'}) +
+                 ras(**{'GtpBound': 'inactive'}),
                  kf_gap)
         model.add_component(r)
 
@@ -390,6 +410,7 @@ class RasGap(Statement):
 
 
 class Complex(Statement):
+    """Statement representing complex formation between a set of members"""
     def __init__(self, members):
         self.members = members
 
@@ -469,5 +490,3 @@ class Complex(Statement):
 
     def __str__(self):
         return ("Complex(%s)" % self.members)
-
-

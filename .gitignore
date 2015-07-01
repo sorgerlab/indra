@@ -50,8 +50,18 @@ coverage.xml
 *.pot
 
 # Sphinx documentation
-docs/_build/
+doc/_build/
+doc/_templates/
+doc/_static/
 
 # Vim temp files
 *.swp
 large_corpus.rdf
+
+# Data files
+*.rdf
+*.owl
+*.xml
+
+# JARs
+*.jar

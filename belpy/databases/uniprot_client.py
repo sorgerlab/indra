@@ -41,7 +41,7 @@ def get_hgnc_name(g):
 
 def get_gene_name(g):
     # This is an alternative to get_hgnc_name and is useful when
-    # HGNC name is not availabe (for instance, when the organism 
+    # HGNC name is not availabe (for instance, when the organism
     # is not homo sapiens)
     query = rdf_prefixes + """
         SELECT ?name
@@ -56,7 +56,7 @@ def get_gene_name(g):
         return gene_name
     else:
         return None
-   
+
 
 def get_sequence(g):
     query = rdf_prefixes + """
@@ -91,6 +91,47 @@ def get_modifications(g):
         mods.append((r[0].value, r[1].value))
     return mods
 
+
+def verify_location(g, residue, location):
+    """
+    Verify if a given residue is at the given location
+    acording to the UniProt sequence
+    """
+    seq = get_sequence(g)
+    try:
+        if seq[location - 1] == residue:
+            return True
+        else:
+            return False
+    except IndexError:
+        return False
+
+
+def verify_modification(g, residue, location=None):
+    """
+    Verify if a given residue at the given location
+    has a reported modification. If location is not
+    given, we only check if there is any residue of the
+    given type that is modified.
+    """
+    # TODO: take into account the type of modification
+    # based on the comment in mods[1]
+    mods = get_modifications(g)
+    mod_locs = [m[0] for m in mods]
+    seq = get_sequence(g)
+    if location:
+        if not verify_location(g, residue, location):
+            return False
+        try:
+            mod_idx = mod_locs.index(location)
+        except ValueError:
+            return False
+        return True
+    else:
+        for ml in mod_locs:
+            if seq[ml - 1] == residue:
+                return True
+        return False
 
 if __name__ == '__main__':
     g = query_protein('Q02750')

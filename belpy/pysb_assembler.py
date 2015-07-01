@@ -1,8 +1,11 @@
 from pysb import *
 from pysb.core import SelfExporter
 from bel import bel_api
+from biopax import biopax_api
+from trips import trips_api
 
 SelfExporter.do_export = False
+
 
 def add_default_initial_conditions(model):
     try:
@@ -22,14 +25,15 @@ def add_default_initial_conditions(model):
         mp = m(**sites_dict)
         model.initial(mp, default_ic)
 
+
 class PysbAssembler(object):
     def __init__(self):
         self.statements = []
 
-    def add_statements(self,stmts):
+    def add_statements(self, stmts):
         self.statements.extend(stmts)
 
-    def make_model(self,initial_conditions=True):
+    def make_model(self, initial_conditions=True):
         model = Model()
         for stmt in self.statements:
             stmt.monomers(model)
@@ -40,11 +44,11 @@ class PysbAssembler(object):
         return model
 
 if __name__ == '__main__':
-  pa = PysbAssembler()
-  bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
-  pa.add_statements(bp.belpy_stmts)
-  #bp = bel_api.process_ndex_neighborhood("ARAF")
-  #pa.add_statements(bp.belpy_stmts)
-  #tp = trips_api.process_text("BRAF phosphorylates MEK1 at Ser222")
-  #pa.add_statements(tp.belpy_stmts)
-  model = pa.make_model()
+    pa = PysbAssembler()
+    bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
+    pa.add_statements(bp.belpy_stmts)
+    # bp = bel_api.process_ndex_neighborhood("ARAF")
+    # pa.add_statements(bp.belpy_stmts)
+    # tp = trips_api.process_text("BRAF phosphorylates MEK1 at Ser222")
+    # pa.add_statements(tp.belpy_stmts)
+    model = pa.make_model()
