@@ -20,6 +20,12 @@ class AgentSet(object):
             self.agents[name] = agent
         return agent
 
+    def iteritems(self):
+        return self.agents.iteritems()
+
+    def __getitem__(self, name):
+        return self.agents[name]
+
 class Agent(object):
     def __init__(self, name):
         self.name = name
@@ -73,18 +79,26 @@ def add_default_initial_conditions(model):
 class PysbAssembler(object):
     def __init__(self):
         self.statements = []
+        self.agent_set = None
 
     def add_statements(self, stmts):
         self.statements.extend(stmts)
 
     def make_model(self, initial_conditions=True):
         model = Model()
-        agents = AgentSet()
+        self.agent_set = AgentSet()
+        # Collect information about the monomers/self.agent_set from the
+        # statements
         for stmt in self.statements:
-            new_agent = stmt.monomers(agents)
-            
+            stmt.monomers(self.agent_set)
+        # Add the monomers to the model based on our AgentSet
+        for agent_name, agent in self.agent_set.iteritems():
+            m = Monomer(agent_name, agent.sites, agent.site_states)
+            model.add_component(m)
+        # Iterate over the statements to generate rules
         for stmt in self.statements:
-            stmt.assemble(model)
+            stmt.assemble(model, self.agent_set)
+        # Add initial conditions
         if initial_conditions:
             add_default_initial_conditions(model)
         return model

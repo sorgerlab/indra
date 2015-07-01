@@ -90,7 +90,7 @@ class Phosphorylation(Modification):
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         try:
             kf_phospho = model.parameters['kf_phospho']
         except KeyError:
@@ -104,11 +104,26 @@ class Phosphorylation(Modification):
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
         try:
-            r = Rule(rule_name,
-                     enz(Kinase='active') + sub(**{site: 'u'}) >>
-                     enz(Kinase='active') + sub(**{site: 'p'}),
-                     kf_phospho)
-            model.add_component(r)
+            # Iterate over all of the activating modification states of the
+            # kinase
+            enz_act_mods = agent_set[self.enz_name].activating_mods
+            if enz_act_mods:
+                for act_mod_pattern in enz_act_mods:
+                    r = Rule(rule_name,
+                             enz(**act_mod_pattern) + sub(**{site: 'u'}) >>
+                             enz(**act_mod_pattern) + sub(**{site: 'p'}),
+                             kf_phospho)
+                    model.add_component(r)
+            # If there are no known activity modifications, we take this
+            # statement as given and allow the enzyme to phosphorylate the
+            # substrate unconditionally
+            else:
+                r = Rule(rule_name,
+                         enz() + sub(**{site: 'u'}) >>
+                         enz() + sub(**{site: 'p'}),
+                         kf_phospho)
+                model.add_component(r)
+
         # If this rule is already in the model, issue a warning and continue
         except ComponentDuplicateNameError:
             msg = "Rule %s already in model! Skipping." % rule_name
@@ -245,8 +260,14 @@ class ActivityModification(Statement):
         # Add this activity modification explicitly to the agent's list
         # of activating modifications
         agent.add_activating_modification(activity_pattern)
+        # Inactivating modifications will require a different treatment
+        # of the resolution of when the agent is active
+        if self.relationship == 'DirectlyDecreases':
+            warnings.warn('Inactivating modifications not currently '
+                          'implemented!')
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
+        """
         try:
             kf_activation = model.parameters['kf_activation']
         except KeyError:
@@ -285,6 +306,8 @@ class ActivityModification(Statement):
         except ComponentDuplicateNameError:
             msg = "Rule %s already in model! Skipping." % rule_name
             warnings.warn(msg)
+        """
+        pass
 
     def __str__(self):
         return ("ActivityModification(%s, %s, %s, %s, %s)" %
