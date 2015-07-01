@@ -233,9 +233,18 @@ class ActivityModification(Statement):
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
 
+        activity_pattern = {}
         for i, s in enumerate(sites):
-            agent.create_site(s, states[self.mod[i]])
+            site_states = states[self.mod[i]]
+            active_state = site_states[1]
+            agent.create_site(s, site_states)
+            activity_pattern[s] = active_state
+        # Add the site/state for the activity itself FIXME FIXME FIXME
         agent.create_site(self.activity, ('inactive', 'active'))
+
+        # Add this activity modification explicitly to the agent's list
+        # of activating modifications
+        agent.add_activating_modification(activity_pattern)
 
     def assemble(self, model):
         try:
