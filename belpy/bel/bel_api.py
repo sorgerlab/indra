@@ -1,27 +1,26 @@
 import sys
 import re
 import rdflib
-from processor import BelProcessor
+import os
 import subprocess
+from processor import BelProcessor
 
 
 def process_ndex_neighborhood(gene_names):
     ndex = __import__('ndex-python-client')
     bel_script = ndex.query_to_belscript(gene_names)
-    fh = open('tmp.bel', 'wt')
-    fh.write(bel_script)
-    fh.close()
+    with open('tmp.bel', 'wt') as fh:
+        fh.write(bel_script)
     bel_to_rdf_cmd = "bel2rdf --bel tmp.bel > tmp.rdf"
-    subprocess.call(bel_to_rdf_cmd.split(' '))
-    fh = open('tmp.rdf', 'rt')
-    rdf = fh.read()
-    fh.close()
+    with open('tmp.rdf', 'wt') as fh:
+        subprocess.call(bel_to_rdf_cmd.split(' '), stdout=fh, stderr=subprocess.STDOUT)
+    with open('tmp.rdf', 'rt') as fh:
+        rdf = fh.read()
     res = re.findall(r'_:([^ ]+)', rdf)
     for r in res:
         rdf = rdf.replace(r, r.replace('-', ''))
-    fh = open('tmp2.rdf', 'wt')
-    fh.write(rdf)
-    fh.close()
+    with open('tmp2.rdf', 'w') as fh:
+        fh.write(rdf)
     bp = process_belrdf('tmp2.rdf')
     bp.print_statements()
     return bp
@@ -50,7 +49,7 @@ def process_belrdf(rdf_filename):
 if __name__ == '__main__':
     # Make sure the user passed in an RDF filename
     if len(sys.argv) < 2:
-        print "Usage: python rdf_to_pysb.py file.rdf"
+        print "Usage: python bel_api.py file.rdf"
         sys.exit()
     # We take the RDF filename as the argument
     rdf_filename = sys.argv[1]
