@@ -345,13 +345,13 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras_name = ras_name
 
-    def monomers(self, model):
-        gap = get_create_monomer(model, self.gap_name)
-        create_site(gap, self.gap_activity, ('inactive', 'active'))
-        ras = get_create_monomer(model, self.ras_name)
-        create_site(ras, 'GtpBound', ('inactive', 'active'))
+    def monomers(self, model, agent_set):
+        gap = agent_set.get_create_agent(self.gap_name)
+        gap.create_site(self.gap_activity, ('inactive', 'active'))
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         try:
             kf_gap = model.parameters['kf_gap']
         except KeyError:
