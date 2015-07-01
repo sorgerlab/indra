@@ -40,6 +40,7 @@ class TripsProcessor(object):
             if precond_event_ref is None:
                 warnings.warn('Skipping activation event with \
                               no precondition event.')
+                continue
             precond_id = precond_event_ref.find('eventID').text
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             mod, mod_pos = self._get_mod_site(precond_event)
@@ -125,11 +126,11 @@ class TripsProcessor(object):
                 up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
                 up_rdf = up_client.query_protein(up_id)
                 # First try to get HGNC name
-                hgnc_name = up_client._get_hgnc_name(up_rdf)
+                hgnc_name = up_client.get_hgnc_name(up_rdf)
                 if hgnc_name is not None:
                     return hgnc_name
                 # Next, try to get the gene name
-                gene_name = up_client._get_gene_name(up_rdf)
+                gene_name = up_client.get_gene_name(up_rdf)
                 if gene_name is not None:
                     return gene_name
         # By default, return the text of the name tag
