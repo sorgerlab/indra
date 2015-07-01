@@ -203,12 +203,12 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def monomers(self, model):
-        phos = get_create_monomer(model, self.phos_name)
-        sub = get_create_monomer(model, self.sub_name)
-        create_site(sub, site_name(self)[0], ('u', 'p'))
+    def monomers(self, agent_set):
+        phos = agent_set.get_create_agent(self.phos_name)
+        sub = agent_set.get_create_agent(self.sub_name)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         try:
             kf_dephospho = model.parameters['kf_dephospho']
         except KeyError:
