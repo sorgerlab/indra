@@ -60,10 +60,10 @@ class Statement(object):
         self.evidence = evidence
         self.annotations = annotations
 
-    def monomers(self, model):
+    def monomers(self, agent_set):
         warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
@@ -304,7 +304,7 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
-    def monomers(self, model, agent_set):
+    def monomers(self, agent_set):
         gef = agent_set.get_create_agent(self.gef_name)
         gef.create_site(self.gef_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
@@ -345,7 +345,7 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras_name = ras_name
 
-    def monomers(self, model, agent_set):
+    def monomers(self, agent_set):
         gap = agent_set.get_create_agent(self.gap_name)
         gap.create_site(self.gap_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
@@ -380,7 +380,7 @@ class Complex(Statement):
     def __init__(self, members):
         self.members = members
 
-    def monomers(self, model, agent_set):
+    def monomers(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
