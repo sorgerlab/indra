@@ -380,22 +380,22 @@ class Complex(Statement):
     def __init__(self, members):
         self.members = members
 
-    def monomers(self, model):
+    def monomers(self, model, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
         for gene_name in self.members:
-            gene_mono = get_create_monomer(model, gene_name)
+            gene_mono = agent_set.get_create_agent(gene_name)
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
             for bp_name in self.members:
                 # The protein doesn't bind to itself!
                 if gene_name == bp_name:
                     continue
-                create_site(gene_mono, bp_name)
+                gene_mono.create_site(bp_name)
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         # Get the rate parameter
         try:
             kf_bind = model.parameters['kf_bind']
