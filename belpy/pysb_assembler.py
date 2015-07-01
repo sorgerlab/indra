@@ -6,6 +6,23 @@ from trips import trips_api
 
 SelfExporter.do_export = False
 
+class AgentSet(object):
+    """A container for a set of Agents. Wraps a dict of Agent instances."""
+    def __init__(self):
+        self.agents = {}
+
+    def get_create_agent(self, name):
+        """Return agent with given name, creating it if needed."""
+        try:
+            agent = self.agents[name]
+        except KeyError:
+            agent = Agent(name)
+            self.agents[name] = agent
+        return agent
+
+class Agent(object):
+    def __init__(self, name):
+        self.name = name
 
 def add_default_initial_conditions(model):
     try:
@@ -35,8 +52,10 @@ class PysbAssembler(object):
 
     def make_model(self, initial_conditions=True):
         model = Model()
+        agents = AgentSet()
         for stmt in self.statements:
-            stmt.monomers(model)
+            new_agent = stmt.monomers(agents)
+            
         for stmt in self.statements:
             stmt.assemble(model)
         if initial_conditions:

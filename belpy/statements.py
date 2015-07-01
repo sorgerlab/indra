@@ -52,14 +52,6 @@ def site_name(stmt):
 
     return names
 
-def get_create_monomer(model, name):
-    """Return monomer with given name, creating it if needed."""
-    monomer = model.monomers.get(name)
-    if monomer is None:
-        monomer = Monomer(name)
-        model.add_component(monomer)
-    return monomer
-
 def create_site(monomer, site, states=None):
     """Create a new site on a monomer if it doesn't already exist"""
     if site not in monomer.sites:
@@ -110,10 +102,10 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
-    def monomers(self, model):
-        enz = get_create_monomer(model, self.enz_name)
+    def monomers(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz_name)
         create_site(enz, 'Kinase', ('inactive', 'active'))
-        sub = get_create_monomer(model, self.sub_name)
+        sub = agent_set.get_create_agent(self.sub_name)
         create_site(sub, site_name(self)[0], ('u', 'p'))
 
     def assemble(self, model):
