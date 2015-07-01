@@ -52,24 +52,6 @@ def site_name(stmt):
 
     return names
 
-def create_site(monomer, site, states=None):
-    """Create a new site on a monomer if it doesn't already exist"""
-    if site not in monomer.sites:
-        monomer.sites.append(site)
-    if states is not None:
-        monomer.site_states.setdefault(site, [])
-        try:
-            states = list(states)
-        except TypeError:
-            return
-        add_site_states(monomer, site, states)
-
-def add_site_states(monomer, site, states):
-    """Create new states on a monomer site if the side doesn't already exist"""
-    for state in states:
-        if state not in monomer.site_states[site]:
-            monomer.site_states[site].append(state)
-
 class Statement(object):
     """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
@@ -104,9 +86,9 @@ class Phosphorylation(Modification):
     """Phosphorylation modification"""
     def monomers(self, agent_set):
         enz = agent_set.get_create_agent(self.enz_name)
-        create_site(enz, 'Kinase', ('inactive', 'active'))
+        enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
-        create_site(sub, site_name(self)[0], ('u', 'p'))
+        sub.create_site(site_name(self)[0], ('u', 'p'))
 
     def assemble(self, model):
         try:

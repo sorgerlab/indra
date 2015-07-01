@@ -23,6 +23,26 @@ class AgentSet(object):
 class Agent(object):
     def __init__(self, name):
         self.name = name
+        self.sites = []
+        self.site_states = {}
+
+    def create_site(self, site, states=None):
+        """Create a new site on an agent if it doesn't already exist"""
+        if site not in self.sites:
+            self.sites.append(site)
+        if states is not None:
+            self.site_states.setdefault(site, [])
+            try:
+                states = list(states)
+            except TypeError:
+                return
+            self.add_site_states(site, states)
+
+    def add_site_states(self, site, states):
+        """Create new states on a agent site if the site doesn't exist"""
+        for state in states:
+            if state not in self.site_states[site]:
+                self.site_states[site].append(state)
 
 def add_default_initial_conditions(model):
     try:
