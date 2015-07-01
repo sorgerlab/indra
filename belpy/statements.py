@@ -304,13 +304,13 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
-    def monomers(self, model):
-        gef = get_create_monomer(model, self.gef_name)
-        create_site(gef, self.gef_activity, ('inactive', 'active'))
-        ras = get_create_monomer(model, self.ras_name)
-        create_site(ras, 'GtpBound', ('inactive', 'active'))
+    def monomers(self, model, agent_set):
+        gef = agent_set.get_create_agent(self.gef_name)
+        gef.create_site(self.gef_activity, ('inactive', 'active'))
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model):
+    def assemble(self, model, agent_set):
         try:
             kf_gef = model.parameters['kf_gef']
         except KeyError:
