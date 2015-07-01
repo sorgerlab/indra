@@ -267,46 +267,6 @@ class ActivityModification(Statement):
                           'implemented!')
 
     def assemble(self, model, agent_set):
-        """
-        try:
-            kf_activation = model.parameters['kf_activation']
-        except KeyError:
-            kf_activation = Parameter('kf_activation', 1e-6)
-            model.add_component(kf_activation)
-
-        m = model.monomers[self.monomer_name]
-
-        sites = site_name(self)
-        active_states = [states[mod][1]for mod in self.mod]
-
-        if self.relationship == 'DirectlyIncreases':
-            pre_activity_state = 'inactive'
-            post_activity_state = 'active'
-        elif self.relationship == 'DirectlyDecreases':
-            pre_activity_state = 'active'
-            post_activity_state = 'inactive'
-        else:
-            raise Exception("Invalid modification/activity relationship.")
-
-        rule_name = '%s_%s_%s_%s' % \
-                    (self.monomer_name, '_'.join([a+s for (a, s) in
-                     zip(sites, active_states)]), self.relationship,
-                     self.activity)
-        try:
-            pre = {key: value for (key, value) in zip(sites, active_states)}
-            pre[self.activity] = pre_activity_state
-            post = {key: value for (key, value) in zip(sites, active_states)}
-            post[self.activity] = post_activity_state
-            r = Rule(rule_name,
-                     m(**pre) >>
-                     m(**post),
-                     kf_activation)
-            model.add_component(r)
-        # If this rule is already in the model, issue a warning and continue
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
-        """
         pass
 
     def __str__(self):
