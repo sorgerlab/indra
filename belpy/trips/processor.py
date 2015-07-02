@@ -59,7 +59,7 @@ class TripsProcessor(object):
             arg1_name = self._get_name_by_id(arg1.attrib['id'])
             arg2 = event.find("arg2")
             arg2_name = self._get_name_by_id(arg2.attrib['id'])
-            self.belpy_stmts.append(Complex((arg1_name, arg2_name)))
+            self.belpy_stmts.append(Complex([arg1_name, arg2_name]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -102,8 +102,12 @@ class TripsProcessor(object):
         return hgnc_name
 
     def _get_name_by_id(self, entity_id):
+        ipdb.set_trace()
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
+        if name is None:
+            warnings.warn('Entity without a name')
+            return ''
         try:
             dbid = entity_term.attrib["dbid"]
         except:
@@ -112,29 +116,30 @@ class TripsProcessor(object):
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
         up_ids = [i for i in dbids if i.startswith('UP')]
-
+        #TODO: handle protein families like 14-3-3 with IDs like
+        # XFAM:PF00244.15, FA:00007
         if hgnc_ids:
             if len(hgnc_ids) > 1:
                 warnings.warn('%d HGNC IDs reported.' % len(hgnc_ids))
             hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return hgnc_name
-        else:
-            if up_ids:
-                if len(hgnc_ids) > 1:
-                    warnings.warn('%d UniProt IDs reported.' % len(up_ids))
-                up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
-                up_rdf = up_client.query_protein(up_id)
-                # First try to get HGNC name
-                hgnc_name = up_client.get_hgnc_name(up_rdf)
-                if hgnc_name is not None:
-                    return hgnc_name
-                # Next, try to get the gene name
-                gene_name = up_client.get_gene_name(up_rdf)
-                if gene_name is not None:
-                    return gene_name
+        elif up_ids:
+            if len(hgnc_ids) > 1:
+                warnings.warn('%d UniProt IDs reported.' % len(up_ids))
+            up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
+            up_rdf = up_client.query_protein(up_id)
+            # First try to get HGNC name
+            hgnc_name = up_client.get_hgnc_name(up_rdf)
+            if hgnc_name is not None:
+                return hgnc_name
+            # Next, try to get the gene name
+            gene_name = up_client.get_gene_name(up_rdf)
+            if gene_name is not None:
+                return gene_name
         # By default, return the text of the name tag
-        return name.text
+        name_txt = name.text.strip('|')
+        return name_txt
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
