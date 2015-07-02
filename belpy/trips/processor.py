@@ -38,8 +38,8 @@ class TripsProcessor(object):
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
-                warnings.warn('Skipping activation event with \
-                              no precondition event.')
+                msg = 'Skipping activation event with no precondition event.'
+                warnings.warn(msg)
                 continue
             precond_id = precond_event_ref.find('eventID').text
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
@@ -64,7 +64,6 @@ class TripsProcessor(object):
     def get_phosphorylation(self):
         phosphorylation_events = \
             self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
-        ipdb.set_trace()
         for event in phosphorylation_events:
             sentence = self._get_text(event)
             agent = event.find(".//*[@role=':AGENT']")
@@ -97,7 +96,8 @@ class TripsProcessor(object):
         try:
             hgnc_name = self.hgnc_cache[hgnc_id]
         except KeyError:
-            hgnc_name = hgnc_client._get_hgnc_name(hgnc_id)
+            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+
             self.hgnc_cache[hgnc_id] = hgnc_name
         return hgnc_name
 
