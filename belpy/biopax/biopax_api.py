@@ -14,28 +14,48 @@ def owl_to_model(fname):
         fileIS = autoclass('java.io.FileInputStream')(fname)
     except JavaException:
         print 'Could not open data file %s' % fname
-        sys.exit(0)
+        return
     try:
         biopax_model = io.convertFromOWL(fileIS)
     except JavaException:
         print 'Could not convert data file %s to BioPax model' % data_file
-        sys.exit(0)
+        return
 
     fileIS.close()
 
     return biopax_model
 
+def model_to_owl(model, fname):
+    io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
+    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
+
+    try:
+        fileOS = autoclass('java.io.FileOutputStream')(fname)
+    except JavaException:
+        print 'Could not open data file %s' % fname
+        return
+    l3_factory = autoclass('org.biopax.paxtools.model.BioPAXLevel').L3.getDefaultFactory()
+    model_out = l3_factory.createModel()
+    for r in model.getObjects().toArray():
+        model_out.add(r)
+    io.convertToOWL(model_out, fileOS)
+
+    fileOS.close()
+
+
 
 def process_pc_neighborhood(gene_names, neighbor_limit=1):
     query_type = autoclass('cpath.service.GraphType').NEIGHBORHOOD
     model = _run_pc_query(query_type, gene_names, neighbor_limit)
-    return process_model(model)
+    if model is not None:
+        return process_model(model)
 
 
 def process_pc_pathsbetween(gene_names, neighbor_limit=1):
     query_type = autoclass('cpath.service.GraphType').PATHSBETWEEN
     model = _run_pc_query(query_type, gene_names, neighbor_limit)
-    return process_model(model)
+    if model is not None:
+        return process_model(model)
 
 
 def process_owl(owl_filename):
@@ -62,11 +82,7 @@ def _run_pc_query(query_type, gene_names, neighbor_limit=1):
     query.limit(autoclass('java.lang.Integer')(neighbor_limit))
     # Execute query
     model = query.result()
-    if model is not None:
-        return process_model(model)
-    else:
-        return None
-
+    return model
 
 if __name__ == '__main__':
     # Make sure the user passed in an OWL filename
