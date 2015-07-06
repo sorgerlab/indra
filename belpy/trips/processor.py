@@ -56,8 +56,16 @@ class TripsProcessor(object):
         for event in bind_events:
             sentence = self._get_text(event)
             arg1 = event.find("arg1")
+            if arg1 is None:
+                msg = 'Skipping complex missing arg1.'
+                warnings.warn(msg)
+                continue
             arg1_name = self._get_name_by_id(arg1.attrib['id'])
             arg2 = event.find("arg2")
+            if arg2 is None:
+                msg = 'Skipping complex missing arg2.'
+                warnings.warn(msg)
+                continue
             arg2_name = self._get_name_by_id(arg2.attrib['id'])
             self.belpy_stmts.append(Complex([arg1_name, arg2_name]))
 
@@ -102,7 +110,6 @@ class TripsProcessor(object):
         return hgnc_name
 
     def _get_name_by_id(self, entity_id):
-        ipdb.set_trace()
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
         if name is None:
