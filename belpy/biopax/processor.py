@@ -58,7 +58,7 @@ class BiopaxProcessor(object):
         self.belpy_stmts = []
         self._hgnc_cache = self._load_hgnc_cache()
 
-    def get_complexes(self):
+    def get_complexes(self, force_contains=[]):
         pb = bpp('PatternBox')
         s = bpp('Searcher')
         p = pb.bindsTo()
@@ -69,7 +69,16 @@ class BiopaxProcessor(object):
             members = []
             # Extract first member
             members += self._get_entity_names(r[0])
+            # Extract second member
             members += self._get_entity_names(r[4])
+            # Skip elements where some pre-specified species
+            # are not in the complex for f in force_contains
+            skip = False
+            for f in force_contains:
+                if f not in members:
+                    skip = True
+            if skip:
+                continue
             # Modifications of first member
             feat_1 = r[1].getFeature().toArray()
             # Modifications of second member
