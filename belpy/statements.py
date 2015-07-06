@@ -398,18 +398,27 @@ class RasGap(Statement):
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members):
+    def __init__(self, members, bound=None):
         self.members = members
+        if bound is None:
+            self.bound = [None] * len(self.members)
+        else:
+            self.bound = bound
 
     def monomers(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for gene_name in self.members:
+        for gene_name, bound_name in zip(self.members, self.bound):
             gene_mono = agent_set.get_create_agent(gene_name)
+            if bound_name:
+                bound_mono = agent_set.get_create_agent(bound_name)
+                gene_mono.create_site(bound_name)
+                bound_mono.create_site(gene_name)
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
+            # TODO: handle dimers
             for bp_name in self.members:
                 # The protein doesn't bind to itself!
                 if gene_name == bp_name:
@@ -436,15 +445,16 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for gene_name in self.members:
+        for gene_name, bound_name in zip(self.members, self.bound):
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
             # (bp = abbreviation for "binding partner")
-            free_site_dict = {}
-            bound_site_dict = {}
+            left_site_dict = {}
+            right_site_dict = {}
             for bp_name in self.members:
                 # The protein doesn't bind to itself!
+                # TODO: handle dimers
                 if gene_name == bp_name:
                     continue
                 # Check to see if we've already created a bond index for these
@@ -459,14 +469,22 @@ class Complex(Statement):
                     bond_indices[bp_set] = bond_ix
                     bond_counter += 1
                 # Fill in the entries for the site dicts
-                free_site_dict[bp_name] = None
-                bound_site_dict[bp_name] = bond_ix
+                left_site_dict[bp_name] = None
+                right_site_dict[bp_name] = bond_ix
+            if bound_name:
+                bound = model.monomers[bound_name]
+                left_site_dict[bound_name] = bond_counter
+                right_site_dict[bound_name] = bond_counter
+                left_pattern = mono(**left_site_dict) % bound(**{gene_name:bond_counter})
+                right_pattern = mono(**right_site_dict) % bound(**{gene_name:bond_counter})
+                bond_counter += 1
+            else:
+                left_pattern = mono(**left_site_dict)
+                right_pattern = mono(**right_site_dict)
             # Build up the left- and right-hand sides of the rule from
             # monomer patterns with the appropriate site dicts
-            mp_free = mono(**free_site_dict)
-            mp_bound = mono(**bound_site_dict)
-            lhs = lhs + mp_free
-            rhs = rhs % mp_bound
+            lhs = lhs + left_pattern
+            rhs = rhs % right_pattern
         # Finally, create the rule and add it to the model
         try:
             rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
