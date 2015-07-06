@@ -69,13 +69,15 @@ class Statement(object):
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+                 citation, evidence, annotations, enz_bound=None, sub_bound=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz_name = enz_name
         self.sub_name = sub_name
         self.mod = mod
         self.mod_pos = mod_pos
+        self.enz_bound = enz_bound
+        self.sub_bound = sub_bound
 
     def __str__(self):
         return ("%s(%s, %s, %s, %s)" %
@@ -89,6 +91,15 @@ class Phosphorylation(Modification):
         enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
+
+        if self.enz_bound:
+            enz_bound = agent_set.get_create_agent(self.enz_bound)
+            enz_bound.create_site(self.enz_name)
+            enz.create_site(self.enz_bound)
+        if self.sub_bound:
+            sub_bound = agent_set.get_create_agent(self.sub_bound)
+            sub_bound.create_site(self.sub_name)
+            sub.create_site(self.sub_bound)
 
     def assemble(self, model, agent_set):
         try:
@@ -109,18 +120,28 @@ class Phosphorylation(Modification):
             enz_act_mods = agent_set[self.enz_name].activating_mods
             if enz_act_mods:
                 for act_mod_pattern in enz_act_mods:
+                    if self.enz_bound:
+                        act_mod_pattern[self.enz_bound] = 1
+                        enz_bound = model.monomers[self.enz_bound]
+                        enz_pattern = enz(**act_mod_pattern) % \
+                                        enz_bound(**{self.enz_name:1})
                     r = Rule(rule_name,
-                             enz(**act_mod_pattern) + sub(**{site: 'u'}) >>
-                             enz(**act_mod_pattern) + sub(**{site: 'p'}),
+                             enz_pattern + sub(**{site: 'u'}) >>
+                             enz_pattern + sub(**{site: 'p'}),
                              kf_phospho)
                     model.add_component(r)
             # If there are no known activity modifications, we take this
             # statement as given and allow the enzyme to phosphorylate the
             # substrate unconditionally
             else:
+                if self.enz_bound:
+                    enz_bound = model.monomers[self.enz_bound]
+                    enz_pattern = enz(**{self.enz_bound:1}) % \
+                                    enz_bound(**{self.enz_name:1})
+
                 r = Rule(rule_name,
-                         enz() + sub(**{site: 'u'}) >>
-                         enz() + sub(**{site: 'p'}),
+                         enz_pattern + sub(**{site: 'u'}) >>
+                         enz_pattern + sub(**{site: 'p'}),
                          kf_phospho)
                 model.add_component(r)
 
