@@ -26,37 +26,6 @@ class AgentSet(object):
     def __getitem__(self, name):
         return self.agents[name]
 
-class Agent(object):
-    def __init__(self, name):
-        self.name = name
-        self.sites = []
-        self.site_states = {}
-        # The list of site/state configurations that lead to this agent
-        # being active (where the agent is currently assumed to have only
-        # one type of activity)
-        self.activating_mods = []
-
-    def create_site(self, site, states=None):
-        """Create a new site on an agent if it doesn't already exist"""
-        if site not in self.sites:
-            self.sites.append(site)
-        if states is not None:
-            self.site_states.setdefault(site, [])
-            try:
-                states = list(states)
-            except TypeError:
-                return
-            self.add_site_states(site, states)
-
-    def add_site_states(self, site, states):
-        """Create new states on a agent site if the site doesn't exist"""
-        for state in states:
-            if state not in self.site_states[site]:
-                self.site_states[site].append(state)
-
-    def add_activating_modification(self, activity_pattern):
-        self.activating_mods.append(activity_pattern)
-
 def add_default_initial_conditions(model):
     try:
         default_ic = model.parameters['default_ic']
