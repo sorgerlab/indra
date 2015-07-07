@@ -251,7 +251,7 @@ class Dephosphorylation(Statement):
         model.add_component(r)
 
     def __str__(self):
-        return ("Dehosphorylation(%s, %s, %s, %s)" %
+        return ("Dephosphorylation(%s, %s, %s, %s)" %
                 (self.phos_name, self.sub_name, self.mod, self.mod_pos))
 
 class ActivityModification(Statement):
