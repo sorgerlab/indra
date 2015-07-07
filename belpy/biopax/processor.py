@@ -207,18 +207,19 @@ class BiopaxProcessor(object):
         print '%d results found' % res.size()
         stmts = []
         for r in res_array:
-            enz_name = self._get_entity_names(r[p.indexOf('controller ER')])
-            sub_name = self._get_entity_names(r[p.indexOf('changed generic ER')])
+            enz_name = self._get_entity_names(r[p.indexOf('controller ER')])[0]
+            sub_name = self._get_entity_names(r[p.indexOf('changed generic ER')])[0]
             stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
             annotations = ''
 
             # Get the modification (s)
+            # Should this be simple PE?
             if mod_gain:
-                modPE = r[p.indexOf('output PE')]
+                modPE = r[p.indexOf('output simple PE')]
             else:
-                modPE = r[p.indexOf('input PE')]
+                modPE = r[p.indexOf('input simple PE')]
 
             # TODO: handle case when
             # r[p.indexOf('output simple PE')].getRDFId()
