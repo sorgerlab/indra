@@ -558,26 +558,26 @@ class RasGef(Statement):
 class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
-    def __init__(self, gap_name, gap_activity, ras_name,
+    def __init__(self, gap, gap_activity, ras,
                  stmt, citation, evidence, annotations):
         super(RasGap, self).__init__(stmt, citation, evidence,
                                      annotations)
-        self.gap_name = gap_name
+        self.gap = gap
         self.gap_activity = gap_activity
-        self.ras_name = ras_name
+        self.ras = ras
 
     def monomers_interactions_only(self, agent_set):
-        gap = agent_set.get_create_agent(self.gap_name)
+        gap = agent_set.get_create_agent(self.gap.name)
         gap.create_site('gap_site')
-        ras = agent_set.get_create_agent(self.ras_name)
+        ras = agent_set.get_create_agent(self.ras.name)
         ras.create_site('gtp_site')
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.)
-        gap = model.monomers[self.gap_name]
-        ras = model.monomers[self.ras_name]
+        gap = model.monomers[self.gap.name]
+        ras = model.monomers[self.ras.name]
         r = Rule('%s_inactivates_%s' %
-                 (self.gap_name, self.ras_name),
+                 (self.gap.name, self.ras.name),
                  gap(**{'gap_site': None}) +
                  ras(**{'gtp_site': None}) >>
                  gap(**{'gap_site': 1}) +
@@ -586,19 +586,19 @@ class RasGap(Statement):
         model.add_component(r)
 
     def monomers_one_step(self, agent_set):
-        gap = agent_set.get_create_agent(self.gap_name)
+        gap = agent_set.get_create_agent(self.gap.name)
         gap.create_site(self.gap_activity, ('inactive', 'active'))
-        ras = agent_set.get_create_agent(self.ras_name)
+        ras = agent_set.get_create_agent(self.ras.name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
     def assemble_one_step(self, model, agent_set):
         kf_gap = get_create_parameter(model, 'kf_gap', 1e-6)
 
-        gap = model.monomers[self.gap_name]
-        ras = model.monomers[self.ras_name]
+        gap = model.monomers[self.gap.name]
+        ras = model.monomers[self.ras.name]
 
         r = Rule('%s_inactivates_%s' %
-                 (self.gap_name, self.ras_name),
+                 (self.gap.name, self.ras.name),
                  gap(**{self.gap_activity: 'active'}) +
                  ras(**{'GtpBound': 'active'}) >>
                  gap(**{self.gap_activity: 'active'}) +
@@ -608,17 +608,13 @@ class RasGap(Statement):
 
     def __str__(self):
         return ("RasGap(%s, %s, %s)" %
-                (self.gap_name, self.gap_activity, self.ras_name))
+                (self.gap.name, self.gap_activity, self.ras.name))
 
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members, bound=None):
+    def __init__(self, members):
         self.members = members
-        if bound is None:
-            self.bound = [None] * len(self.members)
-        else:
-            self.bound = bound
 
     def monomers_interactions_only(self, agent_set):
         return self.monomers_one_step(agent_set)
@@ -631,20 +627,21 @@ class Complex(Statement):
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for i, (gene_name, bound_name) in enumerate(zip(self.members,
-                                                        self.bound)):
+        for i, member in enumerate(self.members):
+            gene_name = member.name
             gene_mono = agent_set.get_create_agent(gene_name)
-            if bound_name:
+            if member.bound_to:
+                bound_name = member.bound_to
                 bound_mono = agent_set.get_create_agent(bound_name)
                 gene_mono.create_site(bound_name)
                 bound_mono.create_site(gene_name)
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
-            for j, bp_name in enumerate(self.members):
+            for j, bp in enumerate(self.members):
                 # The protein doesn't bind to itself!
                 if i == j:
                     continue
-                gene_mono.create_site(bp_name)
+                gene_mono.create_site(bp.name)
 
     def assemble_one_step(self, model, agent_set):
         # Get the rate parameter
@@ -662,15 +659,15 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for i, (gene_name, bound_name) in enumerate(zip(self.members,
-                                                        self.bound)):
+        for member in enumerate(self.members):
+            gene_name = member.name
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
             # (bp = abbreviation for "binding partner")
             left_site_dict = {}
             right_site_dict = {}
-            for j, bp_name in enumerate(self.members):
+            for j, bp in enumerate(self.members):
                 # The protein doesn't bind to itself!
                 if i == j:
                     continue
@@ -686,9 +683,10 @@ class Complex(Statement):
                     bond_indices[bp_set] = bond_ix
                     bond_counter += 1
                 # Fill in the entries for the site dicts
-                left_site_dict[bp_name] = None
-                right_site_dict[bp_name] = bond_ix
-            if bound_name:
+                left_site_dict[bp.name] = None
+                right_site_dict[bp.name] = bond_ix
+            if member.bound_to:
+                bound_name = member.bound_to
                 bound = model.monomers[bound_name]
                 left_site_dict[bound_name] = bond_counter
                 right_site_dict[bound_name] = bond_counter
@@ -713,4 +711,4 @@ class Complex(Statement):
             warnings.warn(msg)
 
     def __str__(self):
-        return ("Complex(%s)" % self.members)
+        return ("Complex(%s)" % [m.name for m in self.members])
