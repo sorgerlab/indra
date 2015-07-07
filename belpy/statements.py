@@ -1,7 +1,8 @@
 import warnings
+from sets import ImmutableSet
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
-from sets import ImmutableSet
+
 
 abbrevs = {
     'PhosphorylationSerine': 'S',
@@ -69,13 +70,15 @@ class Statement(object):
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+                 citation, evidence, annotations, enz_bound=None, sub_bound=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz_name = enz_name
         self.sub_name = sub_name
         self.mod = mod
         self.mod_pos = mod_pos
+        self.enz_bound = enz_bound
+        self.sub_bound = sub_bound
 
     def __str__(self):
         return ("%s(%s, %s, %s, %s)" %
@@ -90,6 +93,15 @@ class Phosphorylation(Modification):
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
+        if self.enz_bound:
+            enz_bound = agent_set.get_create_agent(self.enz_bound)
+            enz_bound.create_site(self.enz_name)
+            enz.create_site(self.enz_bound)
+        if self.sub_bound:
+            sub_bound = agent_set.get_create_agent(self.sub_bound)
+            sub_bound.create_site(self.sub_name)
+            sub.create_site(self.sub_bound)
+
     def assemble(self, model, agent_set):
         try:
             kf_phospho = model.parameters['kf_phospho']
@@ -99,7 +111,7 @@ class Phosphorylation(Modification):
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
-
+       
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
@@ -109,18 +121,33 @@ class Phosphorylation(Modification):
             enz_act_mods = agent_set[self.enz_name].activating_mods
             if enz_act_mods:
                 for act_mod_pattern in enz_act_mods:
+                    # Here we make the assumption that the binding site
+                    # is simply named after the binding partner
+                    if self.enz_bound:
+                        act_mod_pattern[self.enz_bound] = 1
+                        enz_bound = model.monomers[self.enz_bound]
+                        enz_pattern = enz(**act_mod_pattern) % \
+                                        enz_bound(**{self.enz_name:1})
+                    else:
+                        enz_pattern = enz(**act_mod_pattern)
                     r = Rule(rule_name,
-                             enz(**act_mod_pattern) + sub(**{site: 'u'}) >>
-                             enz(**act_mod_pattern) + sub(**{site: 'p'}),
+                             enz_pattern + sub(**{site: 'u'}) >>
+                             enz_pattern + sub(**{site: 'p'}),
                              kf_phospho)
                     model.add_component(r)
             # If there are no known activity modifications, we take this
             # statement as given and allow the enzyme to phosphorylate the
             # substrate unconditionally
             else:
+                if self.enz_bound:
+                    enz_bound = model.monomers[self.enz_bound]
+                    enz_pattern = enz(**{self.enz_bound:1}) % \
+                                    enz_bound(**{self.enz_name:1})
+                else:
+                    enz_pattern = enz()
                 r = Rule(rule_name,
-                         enz() + sub(**{site: 'u'}) >>
-                         enz() + sub(**{site: 'p'}),
+                         enz_pattern + sub(**{site: 'u'}) >>
+                         enz_pattern + sub(**{site: 'p'}),
                          kf_phospho)
                 model.add_component(r)
 
@@ -227,7 +254,7 @@ class Dephosphorylation(Statement):
         model.add_component(r)
 
     def __str__(self):
-        return ("Dehosphorylation(%s, %s, %s, %s)" %
+        return ("Dephosphorylation(%s, %s, %s, %s)" %
                 (self.phos_name, self.sub_name, self.mod, self.mod_pos))
 
 class ActivityModification(Statement):
@@ -377,21 +404,29 @@ class RasGap(Statement):
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members):
+    def __init__(self, members, bound=None):
         self.members = members
+        if bound is None:
+            self.bound = [None] * len(self.members)
+        else:
+            self.bound = bound
 
     def monomers(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for gene_name in self.members:
+        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
             gene_mono = agent_set.get_create_agent(gene_name)
+            if bound_name:
+                bound_mono = agent_set.get_create_agent(bound_name)
+                gene_mono.create_site(bound_name)
+                bound_mono.create_site(gene_name)
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
-            for bp_name in self.members:
+            for j, bp_name in enumerate(self.members):
                 # The protein doesn't bind to itself!
-                if gene_name == bp_name:
+                if i == j:
                     continue
                 gene_mono.create_site(bp_name)
 
@@ -415,20 +450,20 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for gene_name in self.members:
+        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
             # (bp = abbreviation for "binding partner")
-            free_site_dict = {}
-            bound_site_dict = {}
-            for bp_name in self.members:
+            left_site_dict = {}
+            right_site_dict = {}
+            for j, bp_name in enumerate(self.members):
                 # The protein doesn't bind to itself!
-                if gene_name == bp_name:
+                if i == j:
                     continue
                 # Check to see if we've already created a bond index for these
                 # two binding partners
-                bp_set = ImmutableSet([gene_name, bp_name])
+                bp_set = ImmutableSet([i, j])
                 if bp_set in bond_indices:
                     bond_ix = bond_indices[bp_set]
                 # If we haven't see this pair of proteins yet, add a new bond
@@ -438,14 +473,22 @@ class Complex(Statement):
                     bond_indices[bp_set] = bond_ix
                     bond_counter += 1
                 # Fill in the entries for the site dicts
-                free_site_dict[bp_name] = None
-                bound_site_dict[bp_name] = bond_ix
+                left_site_dict[bp_name] = None
+                right_site_dict[bp_name] = bond_ix
+            if bound_name:
+                bound = model.monomers[bound_name]
+                left_site_dict[bound_name] = bond_counter
+                right_site_dict[bound_name] = bond_counter
+                left_pattern = mono(**left_site_dict) % bound(**{gene_name:bond_counter})
+                right_pattern = mono(**right_site_dict) % bound(**{gene_name:bond_counter})
+                bond_counter += 1
+            else:
+                left_pattern = mono(**left_site_dict)
+                right_pattern = mono(**right_site_dict)
             # Build up the left- and right-hand sides of the rule from
             # monomer patterns with the appropriate site dicts
-            mp_free = mono(**free_site_dict)
-            mp_bound = mono(**bound_site_dict)
-            lhs = lhs + mp_free
-            rhs = rhs % mp_bound
+            lhs = lhs + left_pattern
+            rhs = rhs % right_pattern
         # Finally, create the rule and add it to the model
         try:
             rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)

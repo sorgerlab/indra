@@ -60,14 +60,38 @@ class TripsProcessor(object):
                 msg = 'Skipping complex missing arg1.'
                 warnings.warn(msg)
                 continue
-            arg1_name = self._get_name_by_id(arg1.attrib['id'])
+            if arg1.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+                complex_id = arg1.attrib['id']
+                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+                components = complex_term.find("components")
+                terms = components.findall("termID")
+                term_names = []
+                for t in terms:
+                    term_names.append(self._get_name_by_id(t.text))
+                arg1_name = term_names[0]
+                arg1_bound = term_names[1]
+            else:
+                arg1_name = self._get_name_by_id(arg1.attrib['id'])
+                arg1_bound = None
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
                 warnings.warn(msg)
                 continue
-            arg2_name = self._get_name_by_id(arg2.attrib['id'])
-            self.belpy_stmts.append(Complex([arg1_name, arg2_name]))
+            if arg2.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+                complex_id = arg2.attrib['id']
+                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+                components = complex_term.find("components")
+                terms = components.findall("termID")
+                term_names = []
+                for t in terms:
+                    term_names.append(self._get_name_by_id(t.text))
+                arg2_name = term_names[0]
+                arg2_bound = term_names[1]
+            else:
+                arg2_name = self._get_name_by_id(arg2.attrib['id'])
+                arg2_bound = None
+            self.belpy_stmts.append(Complex([arg1_name, arg2_name], bound=[arg1_bound, arg2_bound]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -78,7 +102,19 @@ class TripsProcessor(object):
             if agent is None:
                 warnings.warn('Skipping phosphorylation event with no agent.')
                 continue
-            agent_name = self._get_name_by_id(agent.attrib['id'])
+            if agent.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+                complex_id = agent.attrib['id']
+                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+                components = complex_term.find("components")
+                terms = components.findall("termID")
+                term_names = []
+                for t in terms:
+                    term_names.append(self._get_name_by_id(t.text))
+                agent_name = term_names[0]
+                agent_bound = term_names[1]
+            else:
+                agent_name = self._get_name_by_id(agent.attrib['id'])
+                agent_bound = None
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_name = self._get_name_by_id(affected.attrib['id'])
             mod, mod_pos = self._get_mod_site(event)
@@ -93,7 +129,7 @@ class TripsProcessor(object):
             for m, p in zip(mod, mod_pos):
                 self.belpy_stmts.append(Phosphorylation(agent_name,
                                         affected_name, m, p, sentence,
-                                        citation, evidence, annotations))
+                                        citation, evidence, annotations, enz_bound=agent_bound))
 
     def _get_text(self, element):
         text_tag = element.find("text")
@@ -118,7 +154,7 @@ class TripsProcessor(object):
         try:
             dbid = entity_term.attrib["dbid"]
         except:
-            warnings.warn('No grounding information for %s' % name)
+            warnings.warn('No grounding information for %s' % name.text)
             return name.text
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
