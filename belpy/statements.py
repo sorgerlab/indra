@@ -121,10 +121,23 @@ class Phosphorylation(Modification):
         else:
             raise UnknownPolicyException(policies)
 
-    def monomers_one_step(self, agent_set, policies=None):
+    def monomers_interactions_only(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz_name)
+        enz.create_site('kin_site')
+        sub = agent_set.get_create_agent(self.sub_name)
+        # See NOTE in monomers_one_step, below
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+    def monomers_one_step(self, agent_set):
         enz = agent_set.get_create_agent(self.enz_name)
         enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
+        # NOTE: This assumes that a Phosphorylation statement will only ever
+        # involve a single phosphorylation site on the substrate (typically
+        # if there is more than one site, they will be parsed into separate
+        # Phosphorylation statements, i.e., phosphorylation is assumed to be
+        # distributive. If this is not the case, this assumption will need to
+        # be revisited.
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
         if self.enz_bound:
@@ -136,12 +149,36 @@ class Phosphorylation(Modification):
             sub_bound.create_site(self.sub_name)
             sub.create_site(self.sub_bound)
 
-    def assemble_one_step(self, model, agent_set, policies=None):
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+
+        enz = model.monomers[self.enz_name]
+        sub = model.monomers[self.sub_name]
+
+        # See NOTE in monomers_one_step
+        site = site_name(self)[0]
+
+        rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
+        # Create a rule specifying that the substrate binds to the kinase at
+        # its active site
+        try:
+            r = Rule(rule_name,
+                     enz(kin_site=None) + sub(**{site:None}) <>
+                     enz(kin_site=1) + sub(**{site:1}),
+                     kf_bind, kf_bind)
+            model.add_component(r)
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
+
+    def assemble_one_step(self, model, agent_set):
         kf_phospho = get_create_parameter(model, 'kf_phospho', 1e-6)
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
 
+        # See NOTE in monomers_one_step
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
