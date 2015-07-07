@@ -1,7 +1,8 @@
 import warnings
+from sets import ImmutableSet
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
-from sets import ImmutableSet
+
 
 abbrevs = {
     'PhosphorylationSerine': 'S',
@@ -110,7 +111,7 @@ class Phosphorylation(Modification):
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
-
+       
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
@@ -120,6 +121,8 @@ class Phosphorylation(Modification):
             enz_act_mods = agent_set[self.enz_name].activating_mods
             if enz_act_mods:
                 for act_mod_pattern in enz_act_mods:
+                    # Here we make the assumption that the binding site
+                    # is simply named after the binding partner
                     if self.enz_bound:
                         act_mod_pattern[self.enz_bound] = 1
                         enz_bound = model.monomers[self.enz_bound]
