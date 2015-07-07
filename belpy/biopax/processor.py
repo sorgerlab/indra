@@ -225,8 +225,10 @@ class BiopaxProcessor(object):
             # r[p.indexOf('output simple PE')].getRDFId()
             # is not equal to r[p.indexOf('output PE')].getRDFId()
             mod, mod_pos = self._get_modification_site(modPE)
-            stmts.append((enz_name, sub_name, mod, mod_pos,
-                          stmt_str, citation, evidence, annotations))
+            for m, mp in zip(mod, mod_pos):
+                stmt = (enz_name, sub_name, m, mp,
+                        stmt_str, citation, evidence, annotations)
+                stmts.append(stmt)
         return stmts
 
     def print_statements(self):
