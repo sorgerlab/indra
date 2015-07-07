@@ -175,7 +175,7 @@ class Phosphorylation(Modification):
         if self.enz.bound_to:
             enz_bound = agent_set.get_create_agent(self.enz.bound_to)
             enz_bound.create_site(self.enz.name)
-            enz.create_site(self.enz_bound)
+            enz.create_site(self.enz.bound_to)
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.)
