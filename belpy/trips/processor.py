@@ -35,6 +35,7 @@ class TripsProcessor(object):
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
+            affected_agent = Agent(affected_name)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
@@ -47,7 +48,7 @@ class TripsProcessor(object):
             citation = ''
             evidence = sentence
             annotations = ''
-            self.belpy_stmts.append(ActivityModification(affected_name, mod,
+            self.belpy_stmts.append(ActivityModification(affected_agent, mod,
                                     mod_pos, 'DirectlyIncreases', 'Active',
                                     sentence, citation, evidence, annotations))
 
@@ -55,6 +56,7 @@ class TripsProcessor(object):
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
         for event in bind_events:
             sentence = self._get_text(event)
+            
             arg1 = event.find("arg1")
             if arg1 is None:
                 msg = 'Skipping complex missing arg1.'
@@ -70,9 +72,11 @@ class TripsProcessor(object):
                     term_names.append(self._get_name_by_id(t.text))
                 arg1_name = term_names[0]
                 arg1_bound = term_names[1]
+                arg1_agent = Agent(arg1_name, bound_to=arg1_bound)
             else:
                 arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                arg1_bound = None
+                arg1_agent = Agent(arg1_name)
+            
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
@@ -88,10 +92,12 @@ class TripsProcessor(object):
                     term_names.append(self._get_name_by_id(t.text))
                 arg2_name = term_names[0]
                 arg2_bound = term_names[1]
+                arg2_agent = Agent(arg2_name, bound_to=arg2_bound)
             else:
                 arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                arg2_bound = None
-            self.belpy_stmts.append(Complex([arg1_name, arg2_name], bound=[arg1_bound, arg2_bound]))
+                arg2_agent = Agent(arg2_name)
+
+            self.belpy_stmts.append(Complex([arg1_agent, arg2_agent]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -112,11 +118,13 @@ class TripsProcessor(object):
                     term_names.append(self._get_name_by_id(t.text))
                 agent_name = term_names[0]
                 agent_bound = term_names[1]
+                agent_agent = Agent(agent_name, bound_to=agent_bound)
             else:
                 agent_name = self._get_name_by_id(agent.attrib['id'])
-                agent_bound = None
+                agent_agent = Agent(agent_name)
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_name = self._get_name_by_id(affected.attrib['id'])
+            affected_agent = Agent(affected_name)
             mod, mod_pos = self._get_mod_site(event)
             # TODO: extract more information about text to use as evidence
             citation = ''
@@ -127,8 +135,8 @@ class TripsProcessor(object):
             # independently
 
             for m, p in zip(mod, mod_pos):
-                self.belpy_stmts.append(Phosphorylation(agent_name,
-                                        affected_name, m, p, sentence,
+                self.belpy_stmts.append(Phosphorylation(agent_agent,
+                                        affected_agent, m, p, sentence,
                                         citation, evidence, annotations, enz_bound=agent_bound))
 
     def _get_text(self, element):
