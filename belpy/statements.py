@@ -401,6 +401,25 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
+    def monomers_interactions_only(self, agent_set):
+        gef = agent_set.get_create_agent(self.gef_name)
+        gef.create_site('gef_site')
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('p_loop')
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        gef = model.monomers[self.gef_name]
+        ras = model.monomers[self.ras_name]
+        r = Rule('%s_activates_%s' %
+                 (self.gef_name, self.ras_name),
+                 gef(**{'gef_site':None}) +
+                 ras(**{'p_loop':None}) >>
+                 gef(**{'gef_site': 1}) +
+                 ras(**{'p_loop': 1}),
+                 kf_bind)
+        model.add_component(r)
+
     def monomers_one_step(self, agent_set):
         gef = agent_set.get_create_agent(self.gef_name)
         gef.create_site(self.gef_activity, ('inactive', 'active'))
@@ -437,6 +456,25 @@ class RasGap(Statement):
         self.gap_name = gap_name
         self.gap_activity = gap_activity
         self.ras_name = ras_name
+
+    def monomers_interactions_only(self, agent_set):
+        gap = agent_set.get_create_agent(self.gap_name)
+        gap.create_site('gap_site')
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('gtp_site')
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        gap = model.monomers[self.gap_name]
+        ras = model.monomers[self.ras_name]
+        r = Rule('%s_inactivates_%s' %
+                 (self.gap_name, self.ras_name),
+                 gap(**{'gap_site': None}) +
+                 ras(**{'gtp_site': None}) >>
+                 gap(**{'gap_site': 1}) +
+                 ras(**{'gtp_site': 1}),
+                 kf_bind)
+        model.add_component(r)
 
     def monomers_one_step(self, agent_set):
         gap = agent_set.get_create_agent(self.gap_name)
