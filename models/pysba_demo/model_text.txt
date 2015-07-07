@@ -1,10 +1,12 @@
 The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.
 The EGFR-EGF complex binds another EGFR-EGF complex.
 The EGFR-EGFR complex transphosphorylates EGFR at Tyr1068 and Tyr1148.
-The EGFR-EGFR complex binds HRAS.
-The EGFR-HRAS complex binds GTP.
+EGFR phosphorylated at Tyr1068 and Tyr1148 binds GRB2.
+The GRB2-EGFR complex binds SOS1.
+The SOS1-GRB complex binds HRAS.
+The HRAS-SOS1 complex binds GTP.
 The HRAS-GTP complex binds BRAF.
-The HRAS-BRAF complex phosphorylates BRAF at Thr598 and Thr601.
+The HRAS-BRAF complex transphosphorylates BRAF at Thr598 and Thr601.
 BRAF phosphorylated at Thr598 and Ser601 is activated.
 Active BRAF phosphorylates MEK1 at Ser218 and Ser222.
 MEK1 phosphorylated at Ser218 and Ser222 is activated.
