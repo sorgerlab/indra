@@ -53,6 +53,17 @@ def site_name(stmt):
 
     return names
 
+def get_create_parameter(model, name, value):
+    """Return parameter with given name, creating it if needed.
+
+    If the parameter exists, the value is not changed; if it does not exist,
+    the parameter value is set when it is created."""
+    parameter = model.parameters.get(name)
+    if parameter is None:
+        parameter = Parameter(name, value)
+        model.add_component(parameter)
+    return parameter
+
 class Statement(object):
     """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
@@ -70,7 +81,8 @@ class Statement(object):
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
-                 citation, evidence, annotations, enz_bound=None, sub_bound=None):
+                 citation, evidence, annotations, enz_bound=None,
+                 sub_bound=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz_name = enz_name
@@ -103,15 +115,11 @@ class Phosphorylation(Modification):
             sub.create_site(self.sub_bound)
 
     def assemble(self, model, agent_set, policies=None):
-        try:
-            kf_phospho = model.parameters['kf_phospho']
-        except KeyError:
-            kf_phospho = Parameter('kf_phospho', 1e-6)
-            model.add_component(kf_phospho)
+        kf_phospho = get_create_parameter(model, 'kf_phospho', 1e-6)
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
-       
+
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
@@ -193,11 +201,8 @@ class ActivityActivity(Statement):
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
     def assemble(self, model, policies=None):
-        try:
-            kf_one_step_activate = model.parameters['kf_one_step_activate']
-        except KeyError:
-            kf_one_step_activate = Parameter('kf_one_step_activate', 1e-6)
-            model.add_component(kf_one_step_activate)
+        kf_one_step_activate = \
+                       get_create_parameter(model, 'kf_one_step_activate', 1e-6)
 
         subj = model.monomers[self.subj_name]
         obj = model.monomers[self.obj_name]
@@ -236,11 +241,7 @@ class Dephosphorylation(Statement):
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
     def assemble(self, model, agent_set, policies=None):
-        try:
-            kf_dephospho = model.parameters['kf_dephospho']
-        except KeyError:
-            kf_dephospho = Parameter('kf_dephospho', 1e-6)
-            model.add_component(kf_dephospho)
+        kf_dephospho = get_create_parameter(model, 'kf_dephospho', 1e-6)
 
         phos = model.monomers[self.phos_name]
         sub = model.monomers[self.sub_name]
@@ -338,11 +339,7 @@ class RasGef(Statement):
         ras.create_site('GtpBound', ('inactive', 'active'))
 
     def assemble(self, model, agent_set, policies=None):
-        try:
-            kf_gef = model.parameters['kf_gef']
-        except KeyError:
-            kf_gef = Parameter('kf_gef', 1e-6)
-            model.add_component(kf_gef)
+        kf_gef = get_create_parameter(model, 'kf_gef', 1e-6)
 
         gef = model.monomers[self.gef_name]
         ras = model.monomers[self.ras_name]
@@ -379,11 +376,7 @@ class RasGap(Statement):
         ras.create_site('GtpBound', ('inactive', 'active'))
 
     def assemble(self, model, agent_set, policies=None):
-        try:
-            kf_gap = model.parameters['kf_gap']
-        except KeyError:
-            kf_gap = Parameter('kf_gap', 1e-6)
-            model.add_component(kf_gap)
+        kf_gap = get_create_parameter(model, 'kf_gap', 1e-6)
 
         gap = model.monomers[self.gap_name]
         ras = model.monomers[self.ras_name]
@@ -416,7 +409,8 @@ class Complex(Statement):
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members,
+                                                        self.bound)):
             gene_mono = agent_set.get_create_agent(gene_name)
             if bound_name:
                 bound_mono = agent_set.get_create_agent(bound_name)
@@ -432,11 +426,7 @@ class Complex(Statement):
 
     def assemble(self, model, agent_set, policies=None):
         # Get the rate parameter
-        try:
-            kf_bind = model.parameters['kf_bind']
-        except KeyError:
-            kf_bind = Parameter('kf_bind', 1e-6)
-            model.add_component(kf_bind)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
 
         # Make a rule name
         rule_name = '_'.join(self.members)
@@ -450,7 +440,8 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members,
+                                                        self.bound)):
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
@@ -479,8 +470,10 @@ class Complex(Statement):
                 bound = model.monomers[bound_name]
                 left_site_dict[bound_name] = bond_counter
                 right_site_dict[bound_name] = bond_counter
-                left_pattern = mono(**left_site_dict) % bound(**{gene_name:bond_counter})
-                right_pattern = mono(**right_site_dict) % bound(**{gene_name:bond_counter})
+                left_pattern = mono(**left_site_dict) % \
+                               bound(**{gene_name:bond_counter})
+                right_pattern = mono(**right_site_dict) % \
+                                bound(**{gene_name:bond_counter})
                 bond_counter += 1
             else:
                 left_pattern = mono(**left_site_dict)
