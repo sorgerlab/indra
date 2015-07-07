@@ -284,7 +284,7 @@ class ActivityActivity(Statement):
         subj = agent_set.get_create_agent(self.subj_name)
         subj.create_site(active_site_names[self.subj_activity])
         obj = agent_set.get_create_agent(self.obj_name)
-        obj.create_site(active_site_names[self.subj_activity])
+        obj.create_site(active_site_names[self.obj_activity])
         obj.create_site(default_mod_site_names[self.subj_activity])
 
     def assemble_interactions_only(self, model):
@@ -344,6 +344,26 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
+    def monomers_interactions_only(self, agent_set):
+        phos = agent_set.get_create_agent(self.phos_name)
+        phos.create_site(active_site_names['Phosphatase'])
+        sub = agent_set.get_create_agent(self.sub_name)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        phos = model.monomers[self.phos_name]
+        sub = model.monomers[self.sub_name]
+        phos_site = active_site_names['Phosphatase']
+        # See NOTE in Phosphorylation.monomers_one_step
+        site = site_name(self)[0]
+        r = Rule('%s_dephospho_%s_%s' %
+                 (self.phos_name, self.sub_name, site),
+                 phos(**{phos_site: None}) + sub(**{site: None}) >>
+                 phos(**{phos_site: 1}) + sub(**{site: 1}),
+                 kf_bind)
+        model.add_component(r)
+
     def monomers_one_step(self, agent_set):
         phos = agent_set.get_create_agent(self.phos_name)
         sub = agent_set.get_create_agent(self.sub_name)
@@ -379,6 +399,12 @@ class ActivityModification(Statement):
         self.mod_pos = mod_pos
         self.relationship = relationship
         self.activity = activity
+
+    def monomers_interactions_only(self, agent_set):
+        pass
+
+    def assemble_interactions_only(self, model, agent_set):
+        pass
 
     def monomers_one_step(self, agent_set):
         agent = agent_set.get_create_agent(self.monomer_name)
@@ -423,6 +449,12 @@ class ActivatingSubstitution(Statement):
         self.pos = pos
         self.sub_residue = sub_residue
         self.activity = activity
+
+    def monomers_interactions_only(self, agent_set):
+        pass
+
+    def assemble_interactions_only(self, model, agent_set):
+        pass
 
     def __str__(self):
         return ("ActivatingSubstitution(%s, %s, %s, %s, %s)" %
