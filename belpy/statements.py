@@ -85,7 +85,7 @@ class UnknownPolicyException(Exception):
 
 
 class Agent(object):
-    def __init__(self, mods=None, mod_sites=None, bound_to=None):
+    def __init__(self, name, mods=None, mod_sites=None, bound_to=None):
         self.name = name
         self.mods = mods
         self.mod_sites = mod_sites
@@ -172,14 +172,10 @@ class Phosphorylation(Modification):
         # be revisited.
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
-        if self.enz_bound:
-            enz_bound = agent_set.get_create_agent(self.enz_bound)
+        if self.enz.bound_to:
+            enz_bound = agent_set.get_create_agent(self.enz.bound_to)
             enz_bound.create_site(self.enz.name)
             enz.create_site(self.enz_bound)
-        if self.sub_bound:
-            sub_bound = agent_set.get_create_agent(self.sub_bound)
-            sub_bound.create_site(self.sub.name)
-            sub.create_site(self.sub_bound)
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.)
@@ -223,9 +219,9 @@ class Phosphorylation(Modification):
                 for act_mod_pattern in enz_act_mods:
                     # Here we make the assumption that the binding site
                     # is simply named after the binding partner
-                    if self.enz_bound:
-                        act_mod_pattern[self.enz_bound] = 1
-                        enz_bound = model.monomers[self.enz_bound]
+                    if self.enz.bound_to:
+                        act_mod_pattern[self.enz.bound_to] = 1
+                        enz_bound = model.monomers[self.enz.bound_to]
                         enz_pattern = enz(**act_mod_pattern) % \
                                         enz_bound(**{self.enz.name:1})
                     else:
@@ -239,9 +235,9 @@ class Phosphorylation(Modification):
             # statement as given and allow the enzyme to phosphorylate the
             # substrate unconditionally
             else:
-                if self.enz_bound:
-                    enz_bound = model.monomers[self.enz_bound]
-                    enz_pattern = enz(**{self.enz_bound:1}) % \
+                if self.enz.bound_to:
+                    enz_bound = model.monomers[self.enz.bound_to]
+                    enz_pattern = enz(**{self.enz.bound_to:1}) % \
                                     enz_bound(**{self.enz.name:1})
                 else:
                     enz_pattern = enz()
@@ -617,7 +613,7 @@ class Complex(Statement):
         kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
 
         # Make a rule name
-        rule_name = '_'.join(self.members)
+        rule_name = '_'.join([m.name for m in self.members])
         rule_name += '_bind'
         # Initialize the left and right-hand sides of the rule
         lhs = ReactionPattern([])
@@ -628,7 +624,7 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for member in enumerate(self.members):
+        for i, member in enumerate(self.members):
             gene_name = member.name
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of

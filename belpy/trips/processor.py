@@ -137,7 +137,7 @@ class TripsProcessor(object):
             for m, p in zip(mod, mod_pos):
                 self.belpy_stmts.append(Phosphorylation(agent_agent,
                                         affected_agent, m, p, sentence,
-                                        citation, evidence, annotations, enz_bound=agent_bound))
+                                        citation, evidence, annotations))
 
     def _get_text(self, element):
         text_tag = element.find("text")
