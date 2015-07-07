@@ -154,7 +154,7 @@ class TripsProcessor(object):
         try:
             dbid = entity_term.attrib["dbid"]
         except:
-            warnings.warn('No grounding information for %s' % name)
+            warnings.warn('No grounding information for %s' % name.text)
             return name.text
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
