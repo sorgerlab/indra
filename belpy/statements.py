@@ -36,6 +36,22 @@ states = {
 
 active_site_names = {
     'Kinase': 'kin_site',
+    'Phosphatase': 'phos_site',
+    'GtpBound': 'switch',
+    'Catalytic': 'cat_site',
+}
+
+# The following dict specifies the default modification/binding site names for
+# modifications resulting from a particular type of activity. For example, a
+# protein with Kinase activity makes a modification of type "phospho" on its
+# substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
+# "RBD" (Ras binding domain). This comes in handy for specifying
+# ActivityActivity rules, where the modification site mediating the activation
+# is not specified.
+default_mod_site_names = {
+    'Kinase': 'phospho',
+    'GtpBound': 'RBD',
+    'Phosphatase': 'phospho',
 }
 
 def site_name(stmt):
@@ -133,7 +149,7 @@ class Phosphorylation(Modification):
 
     def monomers_interactions_only(self, agent_set):
         enz = agent_set.get_create_agent(self.enz_name)
-        enz.create_site('kin_site')
+        enz.create_site(active_site_names['Kinase'])
         sub = agent_set.get_create_agent(self.sub_name)
         # See NOTE in monomers_one_step, below
         sub.create_site(site_name(self)[0], ('u', 'p'))
@@ -169,12 +185,13 @@ class Phosphorylation(Modification):
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
+        active_site = active_site_names['Kinase']
         # Create a rule specifying that the substrate binds to the kinase at
         # its active site
         try:
             r = Rule(rule_name,
-                     enz(kin_site=None) + sub(**{site:None}) <>
-                     enz(kin_site=1) + sub(**{site:1}),
+                     enz(**{active_site:None}) + sub(**{site:None}) <>
+                     enz(**{active_site:1}) + sub(**{site:1}),
                      kf_bind, kf_bind)
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
@@ -262,6 +279,29 @@ class ActivityActivity(Statement):
         self.obj_name = obj_name
         self.obj_activity = obj_activity
         self.relationship = relationship
+
+    def monomers_interactions_only(self, agent_set):
+        subj = agent_set.get_create_agent(self.subj_name)
+        subj.create_site(active_site_names[self.subj_activity])
+        obj = agent_set.get_create_agent(self.obj_name)
+        obj.create_site(active_site_names[self.subj_activity])
+        obj.create_site(default_mod_site_names[self.subj_activity])
+
+    def assemble_interactions_only(self, model):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        subj = model.monomers[self.subj_name]
+        obj = model.monomers[self.obj_name]
+        subj_active_site = active_site_names[self.subj_activity]
+        obj_mod_site = default_mod_site_names[self.subj_activity]
+        r = Rule('%s_%s_activates_%s_%s' %
+                 (self.subj_name, self.subj_activity, self.obj_name,
+                  self.obj_activity),
+                 subj(**{subj_active_site: None}) +
+                 obj(**{obj_mod_site: None}) >>
+                 subj(**{subj_active_site: 1}) +
+                 obj(**{obj_mod_site: 1}),
+                 kf_bind)
+        model.add_component(r)
 
     def monomers_one_step(self, model):
         subj = get_create_monomer(model, self.subj_name)
