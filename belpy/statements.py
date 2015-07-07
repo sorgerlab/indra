@@ -367,19 +367,19 @@ class Dephosphorylation(Statement):
         model.add_component(r)
 
     def monomers_one_step(self, agent_set):
-        phos = agent_set.get_create_agent(self.phos_name)
+        phos = agent_set.get_create_agent(self.phos.name)
         sub = agent_set.get_create_agent(self.sub.name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
     def assemble_one_step(self, model, agent_set):
         kf_dephospho = get_create_parameter(model, 'kf_dephospho', 1e-6)
 
-        phos = model.monomers[self.phos_name]
+        phos = model.monomers[self.phos.name]
         sub = model.monomers[self.sub.name]
 
         site = site_name(self)[0]
         r = Rule('%s_dephospho_%s_%s' %
-                 (self.phos_name, self.sub.name, site),
+                 (self.phos.name, self.sub.name, site),
                  phos() + sub(**{site: 'p'}) >>
                  phos() + sub(**{site: 'u'}),
                  kf_dephospho)
@@ -387,7 +387,7 @@ class Dephosphorylation(Statement):
 
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
-                (self.phos_name, self.sub.name, self.mod, self.mod_pos))
+                (self.phos.name, self.sub.name, self.mod, self.mod_pos))
 
 class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result

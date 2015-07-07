@@ -68,9 +68,9 @@ class BiopaxProcessor(object):
         for r in res_array:
             members = []
             # Extract first member
-            members += self._get_entity_names(r[p.indexOf('Protein 1')])
+            members += Agent(self._get_entity_names(r[p.indexOf('Protein 1')]))
             # Extract second member
-            members += self._get_entity_names(r[p.indexOf('Protein 2')])
+            members += Agent(self._get_entity_names(r[p.indexOf('Protein 2')]))
             # Skip elements where some pre-specified species
             # are not in the complex for f in force_contains
             skip = False
@@ -131,7 +131,7 @@ class BiopaxProcessor(object):
         res_array = [match_to_array(m) for m in res.toArray()]
         print '%d results found' % res.size()
         for r in res_array:
-            monomer_name = self._get_entity_names(r[p.indexOf('changed generic ER')])
+            monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
             stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
@@ -141,7 +141,7 @@ class BiopaxProcessor(object):
             relationship = 'DirectlyIncreases' 
             mod, mod_pos = self._get_modification_site(outPE)
             if mod:
-                stmt = ActivityModification(monomer_name, mod, mod_pos, 
+                stmt = ActivityModification(monomer, mod, mod_pos, 
                                             relationship, activity,
                                             stmt_str, citation, evidence, 
                                             annotations)
@@ -207,8 +207,8 @@ class BiopaxProcessor(object):
         print '%d results found' % res.size()
         stmts = []
         for r in res_array:
-            enz_name = self._get_entity_names(r[p.indexOf('controller ER')])[0]
-            sub_name = self._get_entity_names(r[p.indexOf('changed generic ER')])[0]
+            enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
+            sub = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')])[0])
             stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
@@ -226,7 +226,7 @@ class BiopaxProcessor(object):
             # is not equal to r[p.indexOf('output PE')].getRDFId()
             mod, mod_pos = self._get_modification_site(modPE)
             for m, mp in zip(mod, mod_pos):
-                stmt = (enz_name, sub_name, m, mp,
+                stmt = (enz, sub, m, mp,
                         stmt_str, citation, evidence, annotations)
                 stmts.append(stmt)
         return stmts
