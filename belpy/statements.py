@@ -36,6 +36,22 @@ states = {
 
 active_site_names = {
     'Kinase': 'kin_site',
+    'Phosphatase': 'phos_site',
+    'GtpBound': 'switch',
+    'Catalytic': 'cat_site',
+}
+
+# The following dict specifies the default modification/binding site names for
+# modifications resulting from a particular type of activity. For example, a
+# protein with Kinase activity makes a modification of type "phospho" on its
+# substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
+# "RBD" (Ras binding domain). This comes in handy for specifying
+# ActivityActivity rules, where the modification site mediating the activation
+# is not specified.
+default_mod_site_names = {
+    'Kinase': 'phospho',
+    'GtpBound': 'RBD',
+    'Phosphatase': 'phospho',
 }
 
 def site_name(stmt):
@@ -53,6 +69,20 @@ def site_name(stmt):
 
     return names
 
+def get_create_parameter(model, name, value):
+    """Return parameter with given name, creating it if needed.
+
+    If the parameter exists, the value is not changed; if it does not exist,
+    the parameter value is set when it is created."""
+    parameter = model.parameters.get(name)
+    if parameter is None:
+        parameter = Parameter(name, value)
+        model.add_component(parameter)
+    return parameter
+
+class UnknownPolicyException(Exception):
+    pass
+
 class Statement(object):
     """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
@@ -61,16 +91,45 @@ class Statement(object):
         self.evidence = evidence
         self.annotations = annotations
 
-    def monomers(self, agent_set):
-        warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
+    def monomers(self, agent_set, policies=None):
+        """Calls the appropriate monomers method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.monomers_one_step(agent_set)
+        elif policies == 'interactions_only':
+            self.monomers_interactions_only(agent_set)
+        else:
+            raise UnknownPolicyException(policies)
 
-    def assemble(self, model, agent_set):
-        warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
+    def assemble(self, model, agent_set, policies=None):
+        """Calls the appropriate assemble method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.assemble_one_step(model, agent_set)
+        elif policies == 'interactions_only':
+            self.assemble_interactions_only(model, agent_set)
+        else:
+            raise UnknownPolicyException(policies)
+
+    def monomers_one_step(self, agent_set):
+        warnings.warn("%s.monomers_one_step not implemented" %
+                      self.__class__.__name__)
+
+    def assemble_one_step(self, model, agent_set):
+        warnings.warn("%s.assemble_one_step not implemented" %
+                      self.__class__.__name__)
+
+    def monomers_interactions_only(self, agent_set):
+        warnings.warn("%s.monomers_interactions_only not implemented" %
+                      self.__class__.__name__)
+
+    def assemble_interactions_only(self, model, agent_set):
+        warnings.warn("%s.assemble_interactions_only not implemented" %
+                      self.__class__.__name__)
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
     def __init__(self, enz_name, sub_name, mod, mod_pos, stmt,
-                 citation, evidence, annotations, enz_bound=None, sub_bound=None):
+                 citation, evidence, annotations, enz_bound=None,
+                 sub_bound=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz_name = enz_name
@@ -87,10 +146,24 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
-    def monomers(self, agent_set):
+
+    def monomers_interactions_only(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz_name)
+        enz.create_site(active_site_names['Kinase'])
+        sub = agent_set.get_create_agent(self.sub_name)
+        # See NOTE in monomers_one_step, below
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+    def monomers_one_step(self, agent_set):
         enz = agent_set.get_create_agent(self.enz_name)
         enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
+        # NOTE: This assumes that a Phosphorylation statement will only ever
+        # involve a single phosphorylation site on the substrate (typically
+        # if there is more than one site, they will be parsed into separate
+        # Phosphorylation statements, i.e., phosphorylation is assumed to be
+        # distributive. If this is not the case, this assumption will need to
+        # be revisited.
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
         if self.enz_bound:
@@ -102,16 +175,37 @@ class Phosphorylation(Modification):
             sub_bound.create_site(self.sub_name)
             sub.create_site(self.sub_bound)
 
-    def assemble(self, model, agent_set):
-        try:
-            kf_phospho = model.parameters['kf_phospho']
-        except KeyError:
-            kf_phospho = Parameter('kf_phospho', 1e-6)
-            model.add_component(kf_phospho)
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
 
         enz = model.monomers[self.enz_name]
         sub = model.monomers[self.sub_name]
-       
+
+        # See NOTE in monomers_one_step
+        site = site_name(self)[0]
+
+        rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
+        active_site = active_site_names['Kinase']
+        # Create a rule specifying that the substrate binds to the kinase at
+        # its active site
+        try:
+            r = Rule(rule_name,
+                     enz(**{active_site:None}) + sub(**{site:None}) <>
+                     enz(**{active_site:1}) + sub(**{site:1}),
+                     kf_bind, kf_bind)
+            model.add_component(r)
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
+
+    def assemble_one_step(self, model, agent_set):
+        kf_phospho = get_create_parameter(model, 'kf_phospho', 1e-6)
+
+        enz = model.monomers[self.enz_name]
+        sub = model.monomers[self.sub_name]
+
+        # See NOTE in monomers_one_step
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz_name, self.sub_name, site)
@@ -186,18 +280,38 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def monomers(self, model):
+    def monomers_interactions_only(self, agent_set):
+        subj = agent_set.get_create_agent(self.subj_name)
+        subj.create_site(active_site_names[self.subj_activity])
+        obj = agent_set.get_create_agent(self.obj_name)
+        obj.create_site(active_site_names[self.obj_activity])
+        obj.create_site(default_mod_site_names[self.subj_activity])
+
+    def assemble_interactions_only(self, model):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        subj = model.monomers[self.subj_name]
+        obj = model.monomers[self.obj_name]
+        subj_active_site = active_site_names[self.subj_activity]
+        obj_mod_site = default_mod_site_names[self.subj_activity]
+        r = Rule('%s_%s_activates_%s_%s' %
+                 (self.subj_name, self.subj_activity, self.obj_name,
+                  self.obj_activity),
+                 subj(**{subj_active_site: None}) +
+                 obj(**{obj_mod_site: None}) >>
+                 subj(**{subj_active_site: 1}) +
+                 obj(**{obj_mod_site: 1}),
+                 kf_bind)
+        model.add_component(r)
+
+    def monomers_one_step(self, model):
         subj = get_create_monomer(model, self.subj_name)
         create_site(subj, self.subj_activity, ('inactive', 'active'))
         obj = get_create_monomer(model, self.obj_name)
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
-    def assemble(self, model):
-        try:
-            kf_one_step_activate = model.parameters['kf_one_step_activate']
-        except KeyError:
-            kf_one_step_activate = Parameter('kf_one_step_activate', 1e-6)
-            model.add_component(kf_one_step_activate)
+    def assemble_one_step(self, model, agent_set):
+        kf_one_step_activate = \
+                       get_create_parameter(model, 'kf_one_step_activate', 1e-6)
 
         subj = model.monomers[self.subj_name]
         obj = model.monomers[self.obj_name]
@@ -230,17 +344,33 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def monomers(self, agent_set):
+    def monomers_interactions_only(self, agent_set):
+        phos = agent_set.get_create_agent(self.phos_name)
+        phos.create_site(active_site_names['Phosphatase'])
+        sub = agent_set.get_create_agent(self.sub_name)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        phos = model.monomers[self.phos_name]
+        sub = model.monomers[self.sub_name]
+        phos_site = active_site_names['Phosphatase']
+        # See NOTE in Phosphorylation.monomers_one_step
+        site = site_name(self)[0]
+        r = Rule('%s_dephospho_%s_%s' %
+                 (self.phos_name, self.sub_name, site),
+                 phos(**{phos_site: None}) + sub(**{site: None}) >>
+                 phos(**{phos_site: 1}) + sub(**{site: 1}),
+                 kf_bind)
+        model.add_component(r)
+
+    def monomers_one_step(self, agent_set):
         phos = agent_set.get_create_agent(self.phos_name)
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
-    def assemble(self, model, agent_set):
-        try:
-            kf_dephospho = model.parameters['kf_dephospho']
-        except KeyError:
-            kf_dephospho = Parameter('kf_dephospho', 1e-6)
-            model.add_component(kf_dephospho)
+    def assemble_one_step(self, model, agent_set):
+        kf_dephospho = get_create_parameter(model, 'kf_dephospho', 1e-6)
 
         phos = model.monomers[self.phos_name]
         sub = model.monomers[self.sub_name]
@@ -270,7 +400,13 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def monomers(self, agent_set):
+    def monomers_interactions_only(self, agent_set):
+        pass
+
+    def assemble_interactions_only(self, model, agent_set):
+        pass
+
+    def monomers_one_step(self, agent_set):
         agent = agent_set.get_create_agent(self.monomer_name)
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
@@ -293,7 +429,7 @@ class ActivityModification(Statement):
             warnings.warn('Inactivating modifications not currently '
                           'implemented!')
 
-    def assemble(self, model, agent_set):
+    def assemble_one_step(self, model, agent_set):
         pass
 
     def __str__(self):
@@ -314,6 +450,12 @@ class ActivatingSubstitution(Statement):
         self.sub_residue = sub_residue
         self.activity = activity
 
+    def monomers_interactions_only(self, agent_set):
+        pass
+
+    def assemble_interactions_only(self, model, agent_set):
+        pass
+
     def __str__(self):
         return ("ActivatingSubstitution(%s, %s, %s, %s, %s)" %
                 (self.monomer_name, self.wt_residue, self.pos,
@@ -331,18 +473,33 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set):
+    def monomers_interactions_only(self, agent_set):
+        gef = agent_set.get_create_agent(self.gef_name)
+        gef.create_site('gef_site')
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('p_loop')
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        gef = model.monomers[self.gef_name]
+        ras = model.monomers[self.ras_name]
+        r = Rule('%s_activates_%s' %
+                 (self.gef_name, self.ras_name),
+                 gef(**{'gef_site':None}) +
+                 ras(**{'p_loop':None}) >>
+                 gef(**{'gef_site': 1}) +
+                 ras(**{'p_loop': 1}),
+                 kf_bind)
+        model.add_component(r)
+
+    def monomers_one_step(self, agent_set):
         gef = agent_set.get_create_agent(self.gef_name)
         gef.create_site(self.gef_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set):
-        try:
-            kf_gef = model.parameters['kf_gef']
-        except KeyError:
-            kf_gef = Parameter('kf_gef', 1e-6)
-            model.add_component(kf_gef)
+    def assemble_one_step(self, model, agent_set):
+        kf_gef = get_create_parameter(model, 'kf_gef', 1e-6)
 
         gef = model.monomers[self.gef_name]
         ras = model.monomers[self.ras_name]
@@ -372,18 +529,33 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set):
+    def monomers_interactions_only(self, agent_set):
+        gap = agent_set.get_create_agent(self.gap_name)
+        gap.create_site('gap_site')
+        ras = agent_set.get_create_agent(self.ras_name)
+        ras.create_site('gtp_site')
+
+    def assemble_interactions_only(self, model, agent_set):
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        gap = model.monomers[self.gap_name]
+        ras = model.monomers[self.ras_name]
+        r = Rule('%s_inactivates_%s' %
+                 (self.gap_name, self.ras_name),
+                 gap(**{'gap_site': None}) +
+                 ras(**{'gtp_site': None}) >>
+                 gap(**{'gap_site': 1}) +
+                 ras(**{'gtp_site': 1}),
+                 kf_bind)
+        model.add_component(r)
+
+    def monomers_one_step(self, agent_set):
         gap = agent_set.get_create_agent(self.gap_name)
         gap.create_site(self.gap_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set):
-        try:
-            kf_gap = model.parameters['kf_gap']
-        except KeyError:
-            kf_gap = Parameter('kf_gap', 1e-6)
-            model.add_component(kf_gap)
+    def assemble_one_step(self, model, agent_set):
+        kf_gap = get_create_parameter(model, 'kf_gap', 1e-6)
 
         gap = model.monomers[self.gap_name]
         ras = model.monomers[self.ras_name]
@@ -411,12 +583,19 @@ class Complex(Statement):
         else:
             self.bound = bound
 
-    def monomers(self, agent_set):
+    def monomers_interactions_only(self, agent_set):
+        return self.monomers_one_step(agent_set)
+
+    def assemble_interactions_only(self, model, agent_set):
+        return self.assemble_one_step(model, agent_set)
+
+    def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members,
+                                                        self.bound)):
             gene_mono = agent_set.get_create_agent(gene_name)
             if bound_name:
                 bound_mono = agent_set.get_create_agent(bound_name)
@@ -430,13 +609,9 @@ class Complex(Statement):
                     continue
                 gene_mono.create_site(bp_name)
 
-    def assemble(self, model, agent_set):
+    def assemble_one_step(self, model, agent_set):
         # Get the rate parameter
-        try:
-            kf_bind = model.parameters['kf_bind']
-        except KeyError:
-            kf_bind = Parameter('kf_bind', 1e-6)
-            model.add_component(kf_bind)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
 
         # Make a rule name
         rule_name = '_'.join(self.members)
@@ -450,7 +625,8 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members,
+                                                        self.bound)):
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
@@ -479,8 +655,10 @@ class Complex(Statement):
                 bound = model.monomers[bound_name]
                 left_site_dict[bound_name] = bond_counter
                 right_site_dict[bound_name] = bond_counter
-                left_pattern = mono(**left_site_dict) % bound(**{gene_name:bond_counter})
-                right_pattern = mono(**right_site_dict) % bound(**{gene_name:bond_counter})
+                left_pattern = mono(**left_site_dict) % \
+                               bound(**{gene_name:bond_counter})
+                right_pattern = mono(**right_site_dict) % \
+                                bound(**{gene_name:bond_counter})
                 bond_counter += 1
             else:
                 left_pattern = mono(**left_site_dict)

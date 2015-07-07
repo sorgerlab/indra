@@ -84,20 +84,22 @@ class PysbAssembler(object):
     def add_statements(self, stmts):
         self.statements.extend(stmts)
 
-    def make_model(self, initial_conditions=True):
+    def make_model(self, initial_conditions=True, policies=None):
         model = Model()
+        # Keep track of which policies we're using
+        self.policies = policies
         self.agent_set = AgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
         for stmt in self.statements:
-            stmt.monomers(self.agent_set)
+            stmt.monomers(self.agent_set, policies=policies)
         # Add the monomers to the model based on our AgentSet
         for agent_name, agent in self.agent_set.iteritems():
             m = Monomer(agent_name, agent.sites, agent.site_states)
             model.add_component(m)
         # Iterate over the statements to generate rules
         for stmt in self.statements:
-            stmt.assemble(model, self.agent_set)
+            stmt.assemble(model, self.agent_set, policies=policies)
         # Add initial conditions
         if initial_conditions:
             add_default_initial_conditions(model)
