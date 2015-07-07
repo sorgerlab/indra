@@ -263,13 +263,13 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def monomers(self, model, policies=None):
+    def monomers_one_step(self, model):
         subj = get_create_monomer(model, self.subj_name)
         create_site(subj, self.subj_activity, ('inactive', 'active'))
         obj = get_create_monomer(model, self.obj_name)
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
-    def assemble(self, model, policies=None):
+    def assemble_one_step(self, model, agent_set):
         kf_one_step_activate = \
                        get_create_parameter(model, 'kf_one_step_activate', 1e-6)
 
@@ -304,12 +304,12 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def monomers(self, agent_set, policies=None):
+    def monomers_one_step(self, agent_set):
         phos = agent_set.get_create_agent(self.phos_name)
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set):
         kf_dephospho = get_create_parameter(model, 'kf_dephospho', 1e-6)
 
         phos = model.monomers[self.phos_name]
@@ -340,7 +340,7 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def monomers(self, agent_set, policies=None):
+    def monomers_one_step(self, agent_set):
         agent = agent_set.get_create_agent(self.monomer_name)
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
@@ -363,7 +363,7 @@ class ActivityModification(Statement):
             warnings.warn('Inactivating modifications not currently '
                           'implemented!')
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set):
         pass
 
     def __str__(self):
@@ -401,13 +401,13 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set, policies=None):
+    def monomers_one_step(self, agent_set):
         gef = agent_set.get_create_agent(self.gef_name)
         gef.create_site(self.gef_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set):
         kf_gef = get_create_parameter(model, 'kf_gef', 1e-6)
 
         gef = model.monomers[self.gef_name]
@@ -438,13 +438,13 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set, policies=None):
+    def monomers_one_step(self, agent_set):
         gap = agent_set.get_create_agent(self.gap_name)
         gap.create_site(self.gap_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set):
         kf_gap = get_create_parameter(model, 'kf_gap', 1e-6)
 
         gap = model.monomers[self.gap_name]
@@ -473,7 +473,7 @@ class Complex(Statement):
         else:
             self.bound = bound
 
-    def monomers(self, agent_set, policies=None):
+    def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
@@ -493,7 +493,7 @@ class Complex(Statement):
                     continue
                 gene_mono.create_site(bp_name)
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set):
         # Get the rate parameter
         kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
 
