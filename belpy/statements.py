@@ -64,6 +64,9 @@ def get_create_parameter(model, name, value):
         model.add_component(parameter)
     return parameter
 
+class UnknownPolicyException(Exception):
+    pass
+
 class Statement(object):
     """The parent class of all statements"""
     def __init__(self, stmt, citation, evidence, annotations):
@@ -99,7 +102,26 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
+
     def monomers(self, agent_set, policies=None):
+        """Calls the appropriate monomers method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.monomers_one_step(agent_set)
+        elif policies == 'interactions_only':
+            self.monomers_interactions_only(agent_set)
+        else:
+            raise UnknownPolicyException(policies)
+
+    def assemble(self, model, agent_set, policies=None):
+        """Calls the appropriate assemble method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.assemble_one_step(model, agent_set)
+        elif policies == 'interactions_only':
+            self.assemble_interactions_only(model, agent_set)
+        else:
+            raise UnknownPolicyException(policies)
+
+    def monomers_one_step(self, agent_set, policies=None):
         enz = agent_set.get_create_agent(self.enz_name)
         enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
@@ -114,7 +136,7 @@ class Phosphorylation(Modification):
             sub_bound.create_site(self.sub_name)
             sub.create_site(self.sub_bound)
 
-    def assemble(self, model, agent_set, policies=None):
+    def assemble_one_step(self, model, agent_set, policies=None):
         kf_phospho = get_create_parameter(model, 'kf_phospho', 1e-6)
 
         enz = model.monomers[self.enz_name]
