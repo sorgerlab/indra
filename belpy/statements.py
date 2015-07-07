@@ -61,10 +61,10 @@ class Statement(object):
         self.evidence = evidence
         self.annotations = annotations
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
 
 class Modification(Statement):
@@ -87,7 +87,7 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         enz = agent_set.get_create_agent(self.enz_name)
         enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub_name)
@@ -102,7 +102,7 @@ class Phosphorylation(Modification):
             sub_bound.create_site(self.sub_name)
             sub.create_site(self.sub_bound)
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         try:
             kf_phospho = model.parameters['kf_phospho']
         except KeyError:
@@ -186,13 +186,13 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def monomers(self, model):
+    def monomers(self, model, policies=None):
         subj = get_create_monomer(model, self.subj_name)
         create_site(subj, self.subj_activity, ('inactive', 'active'))
         obj = get_create_monomer(model, self.obj_name)
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
-    def assemble(self, model):
+    def assemble(self, model, policies=None):
         try:
             kf_one_step_activate = model.parameters['kf_one_step_activate']
         except KeyError:
@@ -230,12 +230,12 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         phos = agent_set.get_create_agent(self.phos_name)
         sub = agent_set.get_create_agent(self.sub_name)
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         try:
             kf_dephospho = model.parameters['kf_dephospho']
         except KeyError:
@@ -270,7 +270,7 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         agent = agent_set.get_create_agent(self.monomer_name)
         sites = site_name(self)
         active_states = [states[m][1] for m in self.mod]
@@ -293,7 +293,7 @@ class ActivityModification(Statement):
             warnings.warn('Inactivating modifications not currently '
                           'implemented!')
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         pass
 
     def __str__(self):
@@ -331,13 +331,13 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         gef = agent_set.get_create_agent(self.gef_name)
         gef.create_site(self.gef_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         try:
             kf_gef = model.parameters['kf_gef']
         except KeyError:
@@ -372,13 +372,13 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras_name = ras_name
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         gap = agent_set.get_create_agent(self.gap_name)
         gap.create_site(self.gap_activity, ('inactive', 'active'))
         ras = agent_set.get_create_agent(self.ras_name)
         ras.create_site('GtpBound', ('inactive', 'active'))
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         try:
             kf_gap = model.parameters['kf_gap']
         except KeyError:
@@ -411,7 +411,7 @@ class Complex(Statement):
         else:
             self.bound = bound
 
-    def monomers(self, agent_set):
+    def monomers(self, agent_set, policies=None):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
@@ -430,7 +430,7 @@ class Complex(Statement):
                     continue
                 gene_mono.create_site(bp_name)
 
-    def assemble(self, model, agent_set):
+    def assemble(self, model, agent_set, policies=None):
         # Get the rate parameter
         try:
             kf_bind = model.parameters['kf_bind']
