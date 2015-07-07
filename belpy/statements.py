@@ -410,7 +410,7 @@ class Complex(Statement):
         each given site names corresponding to each of the other members
         of the complex. So the resulting complex is "fully connected" in
         that each is specified as bound to all the others."""
-        for gene_name, bound_name in zip(self.members, self.bound):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
             gene_mono = agent_set.get_create_agent(gene_name)
             if bound_name:
                 bound_mono = agent_set.get_create_agent(bound_name)
@@ -418,10 +418,9 @@ class Complex(Statement):
                 bound_mono.create_site(gene_name)
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
-            # TODO: handle dimers
-            for bp_name in self.members:
+            for j, bp_name in enumerate(self.members):
                 # The protein doesn't bind to itself!
-                if gene_name == bp_name:
+                if i == j:
                     continue
                 gene_mono.create_site(bp_name)
 
@@ -445,21 +444,20 @@ class Complex(Statement):
         # which maps each unique pair of members to a bond index.
         bond_indices = {}
         bond_counter = 1
-        for gene_name, bound_name in zip(self.members, self.bound):
+        for i, (gene_name, bound_name) in enumerate(zip(self.members, self.bound)):
             mono = model.monomers[gene_name]
             # Specify free and bound states for binding sites for each of
             # the other complex members
             # (bp = abbreviation for "binding partner")
             left_site_dict = {}
             right_site_dict = {}
-            for bp_name in self.members:
+            for j, bp_name in enumerate(self.members):
                 # The protein doesn't bind to itself!
-                # TODO: handle dimers
-                if gene_name == bp_name:
+                if i == j:
                     continue
                 # Check to see if we've already created a bond index for these
                 # two binding partners
-                bp_set = ImmutableSet([gene_name, bp_name])
+                bp_set = ImmutableSet([i, j])
                 if bp_set in bond_indices:
                     bond_ix = bond_indices[bp_set]
                 # If we haven't see this pair of proteins yet, add a new bond
