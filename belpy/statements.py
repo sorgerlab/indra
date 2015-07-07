@@ -583,6 +583,12 @@ class Complex(Statement):
         else:
             self.bound = bound
 
+    def monomers_interactions_only(self, agent_set):
+        return self.monomers_one_step(agent_set)
+
+    def assemble_interactions_only(self, model, agent_set):
+        return self.assemble_one_step(model, agent_set)
+
     def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
