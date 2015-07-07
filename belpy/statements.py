@@ -125,6 +125,8 @@ class Phosphorylation(Modification):
                         enz_bound = model.monomers[self.enz_bound]
                         enz_pattern = enz(**act_mod_pattern) % \
                                         enz_bound(**{self.enz_name:1})
+                    else:
+                        enz_pattern = enz(**act_mod_pattern)
                     r = Rule(rule_name,
                              enz_pattern + sub(**{site: 'u'}) >>
                              enz_pattern + sub(**{site: 'p'}),
@@ -138,7 +140,8 @@ class Phosphorylation(Modification):
                     enz_bound = model.monomers[self.enz_bound]
                     enz_pattern = enz(**{self.enz_bound:1}) % \
                                     enz_bound(**{self.enz_name:1})
-
+                else:
+                    enz_pattern = enz()
                 r = Rule(rule_name,
                          enz_pattern + sub(**{site: 'u'}) >>
                          enz_pattern + sub(**{site: 'p'}),
