@@ -76,10 +76,38 @@ class Statement(object):
         self.annotations = annotations
 
     def monomers(self, agent_set, policies=None):
-        warnings.warn("%s.monomers not implemented" % self.__class__.__name__)
+        """Calls the appropriate monomers method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.monomers_one_step(agent_set)
+        elif policies == 'interactions_only':
+            self.monomers_interactions_only(agent_set)
+        else:
+            raise UnknownPolicyException(policies)
 
     def assemble(self, model, agent_set, policies=None):
-        warnings.warn("%s.assemble not implemented" % self.__class__.__name__)
+        """Calls the appropriate assemble method based on policies."""
+        if policies is None or policies == 'one_step':
+            self.assemble_one_step(model, agent_set)
+        elif policies == 'interactions_only':
+            self.assemble_interactions_only(model, agent_set)
+        else:
+            raise UnknownPolicyException(policies)
+
+    def monomers_one_step(self, agent_set):
+        warnings.warn("%s.monomers_one_step not implemented" %
+                      self.__class__.__name__)
+
+    def assemble_one_step(self, model, agent_set):
+        warnings.warn("%s.assemble_one_step not implemented" %
+                      self.__class__.__name__)
+
+    def monomers_interactions_only(self, agent_set):
+        warnings.warn("%s.monomers_interactions_only not implemented" %
+                      self.__class__.__name__)
+
+    def assemble_interactions_only(self, model, agent_set):
+        warnings.warn("%s.assemble_interactions_only not implemented" %
+                      self.__class__.__name__)
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -102,24 +130,6 @@ class Modification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
-
-    def monomers(self, agent_set, policies=None):
-        """Calls the appropriate monomers method based on policies."""
-        if policies is None or policies == 'one_step':
-            self.monomers_one_step(agent_set)
-        elif policies == 'interactions_only':
-            self.monomers_interactions_only(agent_set)
-        else:
-            raise UnknownPolicyException(policies)
-
-    def assemble(self, model, agent_set, policies=None):
-        """Calls the appropriate assemble method based on policies."""
-        if policies is None or policies == 'one_step':
-            self.assemble_one_step(model, agent_set)
-        elif policies == 'interactions_only':
-            self.assemble_interactions_only(model, agent_set)
-        else:
-            raise UnknownPolicyException(policies)
 
     def monomers_interactions_only(self, agent_set):
         enz = agent_set.get_create_agent(self.enz_name)
