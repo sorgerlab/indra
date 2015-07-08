@@ -7,9 +7,9 @@ from belpy.pysb_assembler import *
 
 if __name__ == '__main__':
     pa = PysbAssembler()
-    use_pickle = False
-    if use_pickle:
-        tp = pickle.load(open('model_text_tp.pkl'))
+    use_xml = True
+    if use_xml:
+        tp = trips_api.process_xml(open('test.xml').read())
     else:
         tstart = time.time()
         tp = trips_api.process_text(open('model_text.txt').read())
@@ -21,6 +21,6 @@ if __name__ == '__main__':
     pa.add_statements(bp.belpy_stmts)
     model = pa.make_model()
     
-    ts = numpy.linspace(0,10,10)
-    solver = Solver(model, ts)
-    solver.run()
+    #ts = numpy.linspace(0,10,10)
+    #solver = Solver(model, ts)
+    #solver.run()
