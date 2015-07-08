@@ -27,14 +27,18 @@ class TripsProcessor(object):
         self.tree = ET.fromstring(xml_string)
         self.belpy_stmts = []
         self.hgnc_cache = {}
+        self._static_events = self._find_static_events()
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
+            if event.attrib['id'] in self._static_events:
+                continue
             sentence = self._get_text(event)
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
+            affected_agent = Agent(affected_name)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
@@ -47,56 +51,44 @@ class TripsProcessor(object):
             citation = ''
             evidence = sentence
             annotations = ''
-            self.belpy_stmts.append(ActivityModification(affected_name, mod,
+            self.belpy_stmts.append(ActivityModification(affected_agent, mod,
                                     mod_pos, 'DirectlyIncreases', 'Active',
                                     sentence, citation, evidence, annotations))
 
     def get_complexes(self):
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
         for event in bind_events:
+            if event.attrib['id'] in self._static_events:
+                continue
+
             sentence = self._get_text(event)
+            
             arg1 = event.find("arg1")
             if arg1 is None:
                 msg = 'Skipping complex missing arg1.'
                 warnings.warn(msg)
                 continue
-            if arg1.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-                complex_id = arg1.attrib['id']
-                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
-                components = complex_term.find("components")
-                terms = components.findall("termID")
-                term_names = []
-                for t in terms:
-                    term_names.append(self._get_name_by_id(t.text))
-                arg1_name = term_names[0]
-                arg1_bound = term_names[1]
-            else:
-                arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                arg1_bound = None
+            agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
+            
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
                 warnings.warn(msg)
                 continue
-            if arg2.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-                complex_id = arg2.attrib['id']
-                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
-                components = complex_term.find("components")
-                terms = components.findall("termID")
-                term_names = []
-                for t in terms:
-                    term_names.append(self._get_name_by_id(t.text))
-                arg2_name = term_names[0]
-                arg2_bound = term_names[1]
-            else:
-                arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                arg2_bound = None
-            self.belpy_stmts.append(Complex([arg1_name, arg2_name], bound=[arg1_bound, arg2_bound]))
+            agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
+          
+            if agent1 is None or agent2 is None:
+                warnings.warn('Complex with missing members')
+                continue
+            self.belpy_stmts.append(Complex([agent1, agent2]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
             self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
         for event in phosphorylation_events:
+            if event.attrib['id'] in self._static_events:
+                continue
+
             sentence = self._get_text(event)
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -104,7 +96,7 @@ class TripsProcessor(object):
                 continue
             if agent.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
                 complex_id = agent.attrib['id']
-                complex_term = entity_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+                complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
                 components = complex_term.find("components")
                 terms = components.findall("termID")
                 term_names = []
@@ -112,11 +104,13 @@ class TripsProcessor(object):
                     term_names.append(self._get_name_by_id(t.text))
                 agent_name = term_names[0]
                 agent_bound = term_names[1]
+                agent_agent = Agent(agent_name, bound_to=agent_bound)
             else:
-                agent_name = self._get_name_by_id(agent.attrib['id'])
-                agent_bound = None
+                agent_agent = self._get_agent_by_id(agent.attrib['id'], 
+                                                    event.attrib['id'])
             affected = event.find(".//*[@role=':AFFECTED']")
-            affected_name = self._get_name_by_id(affected.attrib['id'])
+            affected_agent = self._get_agent_by_id(affected.attrib['id'], 
+                                                   event.attrib['id'])
             mod, mod_pos = self._get_mod_site(event)
             # TODO: extract more information about text to use as evidence
             citation = ''
@@ -127,9 +121,52 @@ class TripsProcessor(object):
             # independently
 
             for m, p in zip(mod, mod_pos):
-                self.belpy_stmts.append(Phosphorylation(agent_name,
-                                        affected_name, m, p, sentence,
-                                        citation, evidence, annotations, enz_bound=agent_bound))
+                self.belpy_stmts.append(Phosphorylation(agent_agent,
+                                        affected_agent, m, p, sentence,
+                                        citation, evidence, annotations))
+
+    def _get_agent_by_id(self, entity_id, event_id):
+        term = self.tree.find("TERM/[@id='%s']" % entity_id)
+        if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+            complex_id = entity_id
+            complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+            components = complex_term.find("components")
+            if components is None:
+                warnings.warn('Complex without components')
+                return None
+            terms = components.findall("termID")
+            term_names = []
+            for t in terms:
+                term_names.append(self._get_name_by_id(t.text))
+            agent_name = term_names[0]
+            agent_bound = term_names[1]
+            agent = Agent(agent_name, bound_to=agent_bound)
+        else:
+            agent_name = self._get_name_by_id(entity_id)
+            agent = Agent(agent_name)
+            precond_event_ref = \
+                self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
+            if precond_event_ref is not None:
+                precond_id = precond_event_ref.find('eventID').text
+                precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
+                if precond_id == event_id:
+                    warnings.warn('Circular reference to event %s.' % precond_id)
+                else:
+                    precond_event_type = precond_event.find('type').text
+                    if precond_event_type == 'ONT::BIND':
+                        arg1_name = self._get_name_by_id(precond_event.find('arg1').attrib['id'])
+                        arg2_name = self._get_name_by_id(precond_event.find('arg2').attrib['id'])
+                        if arg1_name == agent_name:
+                            agent.bound_to = arg2_name
+                        else:
+                            agent.bound_to = arg1_name
+                    elif precond_event_type == 'ONT::PHOSPHORYLATION':
+                        mod, mod_pos = self._get_mod_site(precond_event)
+                        for m, mp in zip(mod, mod_pos):
+                            agent.mods.append(m)
+                            agent.mod_sites.append(mp)
+           
+        return agent
 
     def _get_text(self, element):
         text_tag = element.find("text")
@@ -214,8 +251,16 @@ class TripsProcessor(object):
         mod = [mod_type_name+residue_names[r] for r in residues]
         return mod, mod_pos
 
+    def _find_static_events(self):
+        inevent_tags = self.tree.findall("TERM/features/inevent/eventID")
+        static_events = []
+        for ie in inevent_tags:
+            static_events.append(ie.text)
+        return static_events
+
 if __name__ == '__main__':
     tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
+    tp._find_static_events()
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()

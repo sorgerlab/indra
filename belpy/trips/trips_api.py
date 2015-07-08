@@ -8,11 +8,16 @@ def process_text(text):
     xml = trips_client.get_xml(html)
     with open('test.xml','w') as f:
         f.write(xml)
-    tp = TripsProcessor(xml)
+    return process_xml(xml)
+
+
+def process_xml(xml_string):
+    tp = TripsProcessor(xml_string)
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()
     return tp
+   
 
 if __name__ == '__main__':
     input_fname = 'phosphorylate.xml'

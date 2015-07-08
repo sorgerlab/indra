@@ -151,8 +151,10 @@ class BelProcessor(object):
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
+            enz = Agent(enz_name)
             act_type = name_from_uri(stmt[1])
             sub_name = gene_name_from_uri(stmt[2])
+            sub = Agent(sub_name)
             mod = term_from_uri(stmt[3])
             mod_pos = term_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
@@ -161,29 +163,24 @@ class BelProcessor(object):
 
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.belpy_stmts.append(
-                        Phosphorylation(enz_name, sub_name, mod, mod_pos,
-                                        stmt_str,
+                        Phosphorylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.belpy_stmts.append(
-                            Hydroxylation(enz_name, sub_name, mod, mod_pos,
-                                          stmt_str,
+                            Hydroxylation(enz, sub, mod, mod_pos, stmt_str,
                                           citation, evidence, annotations))
                 elif mod == 'Sumoylation':
                     self.belpy_stmts.append(
-                            Sumoylation(enz_name, sub_name, mod, mod_pos,
-                                        stmt_str,
+                            Sumoylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Acetylation':
                     self.belpy_stmts.append(
-                            Acetylation(enz_name, sub_name, mod, mod_pos,
-                                        stmt_str,
+                            Acetylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Ubiquitination':
                     self.belpy_stmts.append(
-                            Ubiquitination(enz_name, sub_name, mod, mod_pos,
-                                           stmt_str,
+                            Ubiquitination(enz, sub, mod, mod_pos, stmt_str,
                                            citation, evidence, annotations))
                 else:
                     print "Warning: Unknown modification type!"
@@ -221,14 +218,16 @@ class BelProcessor(object):
             (citation, evidence, annotations) = self.get_evidence(stmt[4])
             # Parse out the elements of the query
             phos_name = gene_name_from_uri(stmt[0])
+            phos = Agent(phos_name)
             sub_name = gene_name_from_uri(stmt[1])
+            sub = Agent(sub_name)
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    Dephosphorylation(phos_name, sub_name, mod, mod_pos,
+                    Dephosphorylation(phos, sub, mod, mod_pos,
                                       stmt_str, citation,
                                       evidence, annotations))
 
@@ -271,6 +270,7 @@ class BelProcessor(object):
             (citation, evidence, annotations) = self.get_evidence(stmt[7])
             # Parse out the elements of the query
             species_name = gene_name_from_uri(stmt[0])
+            species = Agent(species_name)
             act_type = term_from_uri(stmt[1])
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
@@ -281,7 +281,7 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(species_name, (mod1, mod2),
+                    ActivityModification(species, (mod1, mod2),
                                          (mod_pos1, mod_pos2),
                                          rel, act_type, stmt_str,
                                          citation, evidence, annotations))
@@ -314,6 +314,7 @@ class BelProcessor(object):
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             species_name = gene_name_from_uri(stmt[0])
+            species = Agent(species_name)
             act_type = term_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
@@ -322,7 +323,7 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivityModification(species_name, (mod,), (mod_pos,), rel,
+                    ActivityModification(species, (mod,), (mod_pos,), rel,
                                          act_type, stmt_str,
                                          citation, evidence, annotations))
 
@@ -346,7 +347,8 @@ class BelProcessor(object):
         for stmt in res_cmplx:
             cmplx_name = term_from_uri(stmt[0])
             child_name = gene_name_from_uri(stmt[1])
-            cmplx_dict[cmplx_name].append(child_name)
+            child = Agent(child_name)
+            cmplx_dict[cmplx_name].append(child)
         # Now iterate over the stored complex information and create binding
         # statements
         for cmplx_name, cmplx_list in cmplx_dict.iteritems():
@@ -389,6 +391,7 @@ class BelProcessor(object):
             (citation, evidence, annotations) = self.get_evidence(stmt[3])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
+            enz = Agent(enz_name)
             sub_expr = term_from_uri(stmt[1])
             act_type = term_from_uri(stmt[2])
             # Parse the WT and substituted residues from the node label.
@@ -412,7 +415,7 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.belpy_stmts.append(
-                    ActivatingSubstitution(enz_name, wt_residue, position,
+                    ActivatingSubstitution(enz, wt_residue, position,
                                            sub_residue, act_type,
                                            stmt_str,
                                            citation, evidence, annotations))
@@ -444,9 +447,11 @@ class BelProcessor(object):
         for stmt in res_stmts:
             (citation, evidence, annotations) = self.get_evidence(stmt[5])
             subj_name = gene_name_from_uri(stmt[0])
+            subj = Agent(subj_name)
             subj_activity = name_from_uri(stmt[1])
             rel = term_from_uri(stmt[2])
             obj_name = gene_name_from_uri(stmt[3])
+            obj = Agent(obj_name)
             obj_activity = name_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
@@ -456,8 +461,8 @@ class BelProcessor(object):
             # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'GtpBound':
                 self.belpy_stmts.append(
-                     RasGtpActivityActivity(subj_name, subj_activity,
-                                            rel, obj_name, obj_activity,
+                     RasGtpActivityActivity(subj, subj_activity,
+                                            rel, obj, obj_activity,
                                             stmt_str,
                                             citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *increases*
@@ -465,20 +470,20 @@ class BelProcessor(object):
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyIncreases':
                 self.belpy_stmts.append(
-                        RasGef(subj_name, subj_activity, obj_name,
+                        RasGef(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyDecreases':
                 self.belpy_stmts.append(
-                        RasGap(subj_name, subj_activity, obj_name,
+                        RasGap(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.belpy_stmts.append(
-                     ActivityActivity(subj_name, subj_activity,
-                                      rel, obj_name, obj_activity,
+                     ActivityActivity(subj, subj_activity,
+                                      rel, obj, obj_activity,
                                       stmt_str,
                                       citation, evidence, annotations))
 

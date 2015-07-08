@@ -6,8 +6,8 @@ from trips import trips_api
 
 SelfExporter.do_export = False
 
-class AgentSet(object):
-    """A container for a set of Agents. Wraps a dict of Agent instances."""
+class BaseAgentSet(object):
+    """A container for a set of BaseAgents. Wraps a dict of BaseAgent instances."""
     def __init__(self):
         self.agents = {}
 
@@ -16,7 +16,7 @@ class AgentSet(object):
         try:
             agent = self.agents[name]
         except KeyError:
-            agent = Agent(name)
+            agent = BaseAgent(name)
             self.agents[name] = agent
         return agent
 
@@ -26,7 +26,7 @@ class AgentSet(object):
     def __getitem__(self, name):
         return self.agents[name]
 
-class Agent(object):
+class BaseAgent(object):
     def __init__(self, name):
         self.name = name
         self.sites = []
@@ -88,12 +88,12 @@ class PysbAssembler(object):
         model = Model()
         # Keep track of which policies we're using
         self.policies = policies
-        self.agent_set = AgentSet()
+        self.agent_set = BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
         for stmt in self.statements:
             stmt.monomers(self.agent_set, policies=policies)
-        # Add the monomers to the model based on our AgentSet
+        # Add the monomers to the model based on our BaseAgentSet
         for agent_name, agent in self.agent_set.iteritems():
             m = Monomer(agent_name, agent.sites, agent.site_states)
             model.add_component(m)
