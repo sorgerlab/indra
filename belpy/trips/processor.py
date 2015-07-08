@@ -27,10 +27,13 @@ class TripsProcessor(object):
         self.tree = ET.fromstring(xml_string)
         self.belpy_stmts = []
         self.hgnc_cache = {}
+        self._static_events = self._find_static_events()
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
+            if event.attrib['id'] in self._static_events:
+                continue
             sentence = self._get_text(event)
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_id = affected.attrib['id']
@@ -55,6 +58,9 @@ class TripsProcessor(object):
     def get_complexes(self):
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
         for event in bind_events:
+            if event.attrib['id'] in self._static_events:
+                continue
+
             sentence = self._get_text(event)
             
             arg1 = event.find("arg1")
@@ -80,6 +86,9 @@ class TripsProcessor(object):
         phosphorylation_events = \
             self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
         for event in phosphorylation_events:
+            if event.attrib['id'] in self._static_events:
+                continue
+
             sentence = self._get_text(event)
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -238,8 +247,16 @@ class TripsProcessor(object):
         mod = [mod_type_name+residue_names[r] for r in residues]
         return mod, mod_pos
 
+    def _find_static_events(self):
+        inevent_tags = self.tree.findall("TERM/features/inevent/eventID")
+        static_events = []
+        for ie in inevent_tags:
+            static_events.append(ie.text)
+        return static_events
+
 if __name__ == '__main__':
     tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
+    tp._find_static_events()
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()
