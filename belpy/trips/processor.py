@@ -62,16 +62,19 @@ class TripsProcessor(object):
                 msg = 'Skipping complex missing arg1.'
                 warnings.warn(msg)
                 continue
-            arg1_agent = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
+            agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
             
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
                 warnings.warn(msg)
                 continue
-            arg2_agent = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
-           
-            self.belpy_stmts.append(Complex([arg1_agent, arg2_agent]))
+            agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
+          
+            if agent1 is None or agent2 is None:
+                warnings.warn('Complex with missing members')
+                continue
+            self.belpy_stmts.append(Complex([agent1, agent2]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -119,6 +122,9 @@ class TripsProcessor(object):
             complex_id = entity_id
             complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
             components = complex_term.find("components")
+            if components is None:
+                warnings.warn('Complex without components')
+                return None
             terms = components.findall("termID")
             term_names = []
             for t in terms:
