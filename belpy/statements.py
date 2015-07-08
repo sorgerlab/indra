@@ -87,8 +87,14 @@ class UnknownPolicyException(Exception):
 class Agent(object):
     def __init__(self, name, mods=None, mod_sites=None, bound_to=None):
         self.name = name
-        self.mods = mods
-        self.mod_sites = mod_sites
+        if mods is None:
+            self.mods = []
+        else:
+            self.mods = mods
+        if mod_sites is None:
+            self.mod_sites = []
+        else:
+            self.mod_sites = mod_sites
         self.bound_to = bound_to
 
 
@@ -595,11 +601,22 @@ class Complex(Statement):
         for i, member in enumerate(self.members):
             gene_name = member.name
             gene_mono = agent_set.get_create_agent(gene_name)
+            # Add sites for agent modifications
+            # TODO: This assumes phosphorylation, but in principle
+            # it could be some other modification
+            for m, mp in zip(member.mods, member.mod_sites):
+                mod = abbrevs[m]
+                mod_pos = mp if mp is not None else ''
+                mod_site = ('%s%s' % (mod, mod_pos))
+                gene_mono.create_site(mod_site, ['u', 'p'])
+            # Add binding sites when agent is bound to something
+            # This assumes that there is only one binding partner
             if member.bound_to:
                 bound_name = member.bound_to
                 bound_mono = agent_set.get_create_agent(bound_name)
                 gene_mono.create_site(bound_name)
                 bound_mono.create_site(gene_name)
+            
             # Specify a binding site for each of the other complex members
             # bp = abbreviation for "binding partner"
             for j, bp in enumerate(self.members):
@@ -650,6 +667,18 @@ class Complex(Statement):
                 # Fill in the entries for the site dicts
                 left_site_dict[bp.name] = None
                 right_site_dict[bp.name] = bond_ix
+            
+            # Add the pattern for the modifications of the member
+            # TODO: This is specific to phosphorylation but we should be 
+            # able to support other types as well
+            for m, mp in zip(member.mods, member.mod_sites):
+                mod = abbrevs[m]
+                mod_pos = mp if mp is not None else ''
+                mod_site = ('%s%s' % (mod, mod_pos)) 
+                left_site_dict[mod_site] = 'p'
+                right_site_dict[mod_site] = 'p'
+
+            # Add the pattern for the member being bound
             if member.bound_to:
                 bound_name = member.bound_to
                 bound = model.monomers[bound_name]
@@ -659,7 +688,7 @@ class Complex(Statement):
                                bound(**{gene_name:bond_counter})
                 right_pattern = mono(**right_site_dict) % \
                                 bound(**{gene_name:bond_counter})
-                bond_counter += 1
+                bond_counter += 1 
             else:
                 left_pattern = mono(**left_site_dict)
                 right_pattern = mono(**right_site_dict)
