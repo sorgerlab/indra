@@ -152,8 +152,6 @@ class TripsProcessor(object):
                 if precond_id == event_id:
                     warnings.warn('Circular reference to event %s.' % precond_id)
                 else:
-                    #import ipdb; ipdb.set_trace()
-                    
                     precond_event_type = precond_event.find('type').text
                     if precond_event_type == 'ONT::BIND':
                         arg1_name = self._get_name_by_id(precond_event.find('arg1').attrib['id'])
@@ -162,6 +160,12 @@ class TripsProcessor(object):
                             agent.bound_to = arg2_name
                         else:
                             agent.bound_to = arg1_name
+                    elif precond_event_type == 'ONT::PHOSPHORYLATION':
+                        mod, mod_pos = self._get_mod_site(precond_event)
+                        for m, mp in zip(mod, mod_pos):
+                            agent.mods.append(m)
+                            agent.mod_sites.append(mp)
+           
         return agent
 
     def _get_text(self, element):
