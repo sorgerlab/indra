@@ -222,7 +222,7 @@ class Phosphorylation(Modification):
             # kinase
             enz_act_mods = agent_set[self.enz.name].activating_mods
             if enz_act_mods:
-                for act_mod_pattern in enz_act_mods:
+                for act_mod_pattern in [a.copy() for a in enz_act_mods]:
                     # Here we make the assumption that the binding site
                     # is simply named after the binding partner
                     if self.enz.bound_to:
