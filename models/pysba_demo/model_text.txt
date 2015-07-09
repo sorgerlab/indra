@@ -5,9 +5,9 @@ EGFR phosphorylated at Tyr1068 and Tyr1148 binds GRB2.
 EGFR-bound GRB2 binds SOS1. 
 The SOS1-GRB complex binds HRAS.
 HRAS, bound to SOS1, binds GTP.
-HRAS, bound to GTP, binds BRAF.
-BRAF, bound to HRAS, transphosphorylates itself at Thr598 and Thr601.
-BRAF phosphorylated at Thr598 and Ser601 is activated.
-Active BRAF phosphorylates MEK1 at Ser218 and Ser222.
+HRAS, bound to GTP, binds RAF1.
+RAF1, bound to HRAS, transphosphorylates itself at Thr491 and Ser494.
+RAF1 phosphorylated at Thr491 and Ser494 is activated.
+Active RAF1 phosphorylates MEK1 at Ser218 and Ser222.
 MEK1 phosphorylated at Ser218 and Ser222 is activated.
-Active MEK1 phosphorylates ERK2 at Thr202 and Thr185.
+Active MEK1 phosphorylates ERK2 at Tyr187 and Thr185.
