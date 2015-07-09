@@ -65,15 +65,18 @@ def add_default_initial_conditions(model):
         model.add_component(default_ic)
     # Iterate over all monomers
     for m in model.monomers:
-        # Build up monomer pattern dict
-        sites_dict = {}
-        for site in m.sites:
-            if site in m.site_states:
-                sites_dict[site] = m.site_states[site][0]
-            else:
-                sites_dict[site] = None
-        mp = m(**sites_dict)
-        model.initial(mp, default_ic)
+        set_base_initial_condition(model, m, default_ic)
+
+def set_base_initial_condition(model, monomer, ic_param):
+    # Build up monomer pattern dict
+    sites_dict = {}
+    for site in monomer.sites:
+        if site in monomer.site_states:
+            sites_dict[site] = monomer.site_states[site][0]
+        else:
+            sites_dict[site] = None
+    mp = monomer(**sites_dict)
+    model.initial(mp, ic_param)
 
 
 class PysbAssembler(object):
