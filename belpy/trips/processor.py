@@ -13,7 +13,10 @@ import belpy.databases.uniprot_client as up_client
 residue_names = {
     'SER': 'Serine',
     'THR': 'Threonine',
-    'TYR': 'Tyrosine'
+    'TYR': 'Tyrosine',
+    'SERINE': 'Serine',
+    'THREONINE': 'Threonine',
+    'TYROSINE': 'Tyrosine'
     }
 
 
@@ -233,9 +236,15 @@ class TripsProcessor(object):
                 all_residues.extend(residue)
                 all_pos.extend(pos)
         else:
-            site_name = site_term.find("name")
-            # Example name: SER-222
-            residue, pos = site_name.text.split('-')
+            site_type = site_term.find("type").text
+            site_name = site_term.find("name").text
+            if site_type == 'ONT::MOLECULAR-SITE':
+                # Example name: SER-222
+                residue, pos = site_name.split('-')
+            elif site_type == 'ONT::RESIDUE':
+                # Example name: TYROSINE-RESIDUE
+                residue = site_name.split('-')[0]
+                pos = None
             return (residue, ), (pos, )
         return all_residues, all_pos
 
