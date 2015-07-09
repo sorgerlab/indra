@@ -17,7 +17,7 @@ def send_query(text, query_args={}):
 
 
 def get_xml(html):
-    ekb = re.findall(r'<ekb .*?>(.*?)</ekb>', html, re.MULTILINE | re.DOTALL)
+    ekb = re.findall(r'<ekb.*?>(.*?)</ekb>', html, re.MULTILINE | re.DOTALL)
     if ekb:
         events_terms = ekb[0]
     else:
