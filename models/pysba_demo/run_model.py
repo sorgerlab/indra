@@ -2,6 +2,7 @@ import pickle
 import numpy
 import time
 import argparse
+import matplotlib.pyplot as plt
 from pysb.integrate import Solver
 import pysb.tools.render_reactions as rr
 import pysb.tools.render_species as rs
@@ -13,16 +14,17 @@ if __name__ == '__main__':
     pa = PysbAssembler()
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--offline', action="store_true")
+    parser.add_argument('--online', action="store_true")
     parser.add_argument('--render', action="store_true")
+    parser.add_argument('--simulate', action="store_true")
     args = parser.parse_args()
 
-    if args.offline:
-        use_xml = True
-        use_owl = True
-    else:
+    if args.online:
         use_xml = False
         use_owl = False
+    else:
+        use_xml = True
+        use_owl = True
 
 
     # TRIPS processing   
@@ -88,6 +90,7 @@ if __name__ == '__main__':
       
 
     # Set parameters
+    print 'Setting model parameters...'
     model.add_component(Parameter("kp1", 1.667e-06))  # ligand-monomer binding (scaled), units: /molecule/s
     model.add_component(Parameter("km1", 0.06))       # ligand-monomer dissociation, units: /s
     model.add_component(Parameter("kp2", 5.556e-06))  # aggregation of bound monomers (scaled), units: /molecule/s
@@ -130,9 +133,11 @@ if __name__ == '__main__':
     model.add_component(Parameter("kc_sos_ras", 1e-1)) # guess
     model.add_component(Parameter("kf_ras_hyd", 1e1))  # guess
     # Generic rates for MAPK cascade kinase/phosphatase binding, unbinding and catalysis.
+    model.add_component(Parameter('kfc_raf_mek', 1e-6))
+    model.add_component(Parameter('kfc_mek_erk', 1e-6))
     model.add_component(Parameter('kr_bind', 1e-1))
     model.add_component(Parameter('kcat_phos', 1e-1))
-    model.add_component(Parameter('kcat_dephos', 3e-3))
+    model.add_component(Parameter('kfc_dephos', 1e-6))
 
     model.rules['Egfr_EGF_bind'].rate_forward = model.parameters['kp1']
     model.rules['Egfr_EGF_bind'].rate_reverse = model.parameters['km1']
@@ -150,22 +155,23 @@ if __name__ == '__main__':
     model.rules['HRAS_RAF1_bind'].rate_reverse = model.parameters['kr_bind']
     model.rules['RAF1_phospho_RAF1_T491'].rate_forward = model.parameters['kcat_phos']
     model.rules['RAF1_phospho_RAF1_S494'].rate_forward = model.parameters['kcat_phos']
-    model.rules['RAF1_phospho_MAP2K1_S218'].rate_forward = model.parameters['kf_bind']
-    model.rules['RAF1_phospho_MAP2K1_S222'].rate_forward = model.parameters['kf_bind']
-    model.rules['MAP2K1_phospho_MAPK1_Y187'].rate_forward = model.parameters['kf_bind']
-    model.rules['MAP2K1_phospho_MAPK1_T185'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP3_dephospho_MAPK1_T185'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP4_dephospho_MAPK1_T185'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP6_dephospho_MAPK1_T185'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP7_dephospho_MAPK1_T185'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP3_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP4_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP6_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kf_bind']
-    model.rules['DUSP7_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kf_bind']
+    model.rules['RAF1_phospho_MAP2K1_S218'].rate_forward = model.parameters['kfc_raf_mek']
+    model.rules['RAF1_phospho_MAP2K1_S222'].rate_forward = model.parameters['kfc_raf_mek']
+    model.rules['MAP2K1_phospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_mek_erk']
+    model.rules['MAP2K1_phospho_MAPK1_T185'].rate_forward = model.parameters['kfc_mek_erk']
+    model.rules['DUSP3_dephospho_MAPK1_T185'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP4_dephospho_MAPK1_T185'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP6_dephospho_MAPK1_T185'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP7_dephospho_MAPK1_T185'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP3_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP4_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP6_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
+    model.rules['DUSP7_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
      
 
     # Set initial conditions
     cell_line = 'BT20'
+    print 'Setting initial conditions for cell line %s...' % cell_line
     x0 = numpy.recfromcsv('total_prots.csv')
     x0_names = x0['proteins']
     x0_values = x0[cell_line.lower()]
@@ -187,16 +193,24 @@ if __name__ == '__main__':
     model.initial(EGF(Egfr=None), p)
 
     # Set observables
+    print 'Setting observables...'
+    RAF1 = model.monomers['RAF1']
     MAP2K1 = model.monomers['MAP2K1']
     MAPK1 = model.monomers['MAPK1']
+    model.add_component(Observable('RAFPP', RAF1(T491='p', S494='p')))
     model.add_component(Observable('MEKPP', MAP2K1(S218='p', S222='p')))
     model.add_component(Observable('ERKPP', MAPK1(T185='p', Y187='p')))
 
     # Set EGF dose
     model.parameters['EGF_0'].value = 1e6
 
-    # Run model simulation
-    # TODO: save figure as file
-    #ts = numpy.linspace(0,10,10)
-    #solver = Solver(model, ts)
-    #solver.run()
+    if args.simulate:
+        # Run model simulation
+        # TODO: save figure as file
+        ts = numpy.linspace(0, 1e4, 1000)
+        print 'Constructing ODE solver...'
+        solver = Solver(model, ts)
+        print 'Running simulation...'
+        solver.run()
+        plt.plot(ts, solver.yobs['MEKPP'] / model.parameters['MAP2K1_0'].value)
+        plt.plot(ts, solver.yobs['ERKPP'] / model.parameters['MAPK1_0'].value)
