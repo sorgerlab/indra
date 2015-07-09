@@ -3,7 +3,7 @@ The EGFR-EGF complex binds another EGFR-EGF complex.
 EGFR, bound to EGFR, transphosphorylates itself at Tyr1068 and Tyr1148.
 EGFR phosphorylated at Tyr1068 and Tyr1148 binds GRB2.
 EGFR-bound GRB2 binds SOS1. 
-The SOS1-GRB complex binds HRAS.
+The SOS1-GRB2 complex binds HRAS.
 HRAS, bound to SOS1, binds GTP.
 HRAS, bound to GTP, binds RAF1.
 RAF1, bound to HRAS, transphosphorylates itself at Thr491 and Ser494.
