@@ -37,13 +37,13 @@ if __name__ == '__main__':
         tstart = time.time()
         tp = trips_api.process_text(open('model_text.txt').read())
         tend = time.time()
-        print 'TRIPS parser took %d seconds.' % (tend - tstart)
+        print '> TRIPS parser took %d seconds.' % (tend - tstart)
     pa.add_statements(tp.belpy_stmts)
 
     # BioPAX processing
     if use_owl:
         fname = 'DUSP.owl'
-        print 'Processing OWL file %s' % fname
+        print 'Processing OWL file %s...' % fname
         bp = biopax_api.process_owl('DUSP.owl')
     else:
         print 'Processing output from PathwayCommons query'
@@ -131,12 +131,11 @@ if __name__ == '__main__':
     model.add_component(Parameter("kf_sos_ras", 1e-7)) # guess
     model.add_component(Parameter("kr_sos_ras", 1e-1)) # guess
     model.add_component(Parameter("kc_sos_ras", 1e-1)) # guess
-    model.add_component(Parameter("kf_ras_hyd", 1e1))  # guess
     # Generic rates for MAPK cascade kinase/phosphatase binding, unbinding and catalysis.
     model.add_component(Parameter('kfc_raf_mek', 1e-6))
-    model.add_component(Parameter('kfc_mek_erk', 1e-6))
+    model.add_component(Parameter('kfc_mek_erk', 1e-7))
     model.add_component(Parameter('kr_bind', 1e-1))
-    model.add_component(Parameter('kcat_phos', 1e-1))
+    model.add_component(Parameter('kcat_phos', 5.0))
     model.add_component(Parameter('kfc_dephos', 1e-6))
 
     model.rules['Egfr_EGF_bind'].rate_forward = model.parameters['kp1']
@@ -194,9 +193,13 @@ if __name__ == '__main__':
 
     # Set observables
     print 'Setting observables...'
+    SOS1 = model.monomers['SOS1']
+    HRAS = model.monomers['HRAS']
     RAF1 = model.monomers['RAF1']
     MAP2K1 = model.monomers['MAP2K1']
     MAPK1 = model.monomers['MAPK1']
+    model.add_component(Observable('SOSbound', SOS1(GRB2=ANY)))
+    model.add_component(Observable('RASGTP', HRAS(GTP=ANY)))
     model.add_component(Observable('RAFPP', RAF1(T491='p', S494='p')))
     model.add_component(Observable('MEKPP', MAP2K1(S218='p', S222='p')))
     model.add_component(Observable('ERKPP', MAPK1(T185='p', Y187='p')))
@@ -207,10 +210,24 @@ if __name__ == '__main__':
     if args.simulate:
         # Run model simulation
         # TODO: save figure as file
-        ts = numpy.linspace(0, 1e4, 1000)
+        ts = numpy.linspace(0, 120*60, 1000)
         print 'Constructing ODE solver...'
+        tstart = time.time()
         solver = Solver(model, ts)
+        tend = time.time()
+        print '> Solver construction took %ds' % (tend - tstart)
+
         print 'Running simulation...'
+        tstart = time.time()
         solver.run()
-        plt.plot(ts, solver.yobs['MEKPP'] / model.parameters['MAP2K1_0'].value)
-        plt.plot(ts, solver.yobs['ERKPP'] / model.parameters['MAPK1_0'].value)
+        tend = time.time()
+        print '> Simulation took %ds' % (tend - tstart)
+        plt.ion()
+        plt.plot(ts, solver.yobs['SOS1bound'] / model.parameters['SOS1_0'].value, label='SOS-bound')
+        plt.plot(ts, solver.yobs['RASGTP'] / model.parameters['HRAS_0'].value, label='HRAS-GTP')
+        plt.plot(ts, solver.yobs['RAFPP'] / model.parameters['RAF1_0'].value, label='RAF1-pTpS')
+        plt.plot(ts, solver.yobs['MEKPP'] / model.parameters['MAP2K1_0'].value, label='MEK1-pSpS')
+        plt.plot(ts, solver.yobs['ERKPP'] / model.parameters['MAPK1_0'].value, label='ERK2-pTpY')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Normalized amount')
+        plt.legend(loc='upper left')
