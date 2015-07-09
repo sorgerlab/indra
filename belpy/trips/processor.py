@@ -245,6 +245,9 @@ class TripsProcessor(object):
                 # Example name: TYROSINE-RESIDUE
                 residue = site_name.split('-')[0]
                 pos = None
+            elif site_type == 'ONT::AMINO-ACID':
+                residue = site_name
+                pos = None
             return (residue, ), (pos, )
         return all_residues, all_pos
 
