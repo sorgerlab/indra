@@ -72,53 +72,54 @@ class BiopaxProcessor(object):
             # Extract second member
             members += Agent(self._get_entity_names(r[p.indexOf('Protein 2')]))
             # Skip elements where some pre-specified species
-            # are not in the complex for f in force_contains
-            skip = False
+            # are not in the complex
+            member_names = [m.name for m in members]
             for f in force_contains:
-                if f not in members:
-                    skip = True
-            if skip:
-                continue
+                if f not in member_names:
+                    continue
 
             cplx = r[p.indexOf('Complex')]
             print cplx.getRDFId()
 
-
-
-            # TODO: we can't handle modification features in 
-            # BelPy Complexes yet
+            # TODO: we should handle modification features in 
+            # Complexes
             # Modifications of first member
             # feat_1 = r[1].getFeature().toArray()
             # Modifications of second member
             # feat_2 = r[3].getFeature().toArray()
             self.belpy_stmts.append(Complex(members))
 
-    def get_phosphorylation(self):
-        stmts = self._get_generic_modification('phospho')
+    def get_phosphorylation(self, force_contains=None):
+        stmts = self._get_generic_modification('phospho', 
+                                               force_contains=force_contains)
         for s in stmts:
             self.belpy_stmts.append(Phosphorylation(*s))
 
-    def get_dephosphorylation(self):
-        stmts = self._get_generic_modification('phospho', mod_gain=False)
+    def get_dephosphorylation(self, force_contains=None):
+        stmts = self._get_generic_modification('phospho', mod_gain=False, 
+                                               force_contains=force_contains)
         for s in stmts:
             self.belpy_stmts.append(Dephosphorylation(*s))
 
-    def get_acetylation(self):
-        stmts = self._get_generic_modification('acetyl')
+    def get_acetylation(self, force_contains=None):
+        stmts = self._get_generic_modification('acetyl', 
+                                               force_contains=force_contains)
         for s in stmts:
             self.belpy_stmts.append(Acetylation(*s))
 
-    def get_glycosylation(self):
-        stmts = self._get_generic_modification('glycosyl')
+    def get_glycosylation(self, force_contains=None):
+        stmts = self._get_generic_modification('glycosyl', 
+                                               force_contains=force_contains)
         for s in stmts:
             self.belpy_stmts.append(Glycosylation(*s))
 
-    def get_palmitoylation(self):
-        stmts = self._get_generic_modification('palmitoyl')
+    def get_palmitoylation(self, force_contains=None):
+        stmts = self._get_generic_modification('palmitoyl', 
+                                               force_contains=force_contains)
         for s in stmts:
             self.belpy_stmts.append(Palmitoylation(*s))
 
-    def get_activity_modification(self):
+    def get_activity_modification(self, force_contains=None):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
         p = self._construct_modification_pattern()
@@ -132,6 +133,9 @@ class BiopaxProcessor(object):
         print '%d results found' % res.size()
         for r in res_array:
             monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
+            if force_contains:
+                if momomer not in force_contains:
+                    continue
             stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
@@ -187,7 +191,8 @@ class BiopaxProcessor(object):
         return mod, mod_pos
 
 
-    def _get_generic_modification(self, mod_filter=None, mod_gain=True):
+    def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
+                                  force_contains=None):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
         # Start with a generic modification pattern
@@ -209,6 +214,11 @@ class BiopaxProcessor(object):
         for r in res_array:
             enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
             sub = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')])[0])
+            # If neither the enzyme nor the substrate is contained then skip
+            if force_contains:
+                if (enz.name not in force_contains) and \
+                    (sub.name not in force_contains):
+                    continue
             stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
