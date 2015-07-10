@@ -67,25 +67,6 @@ if __name__ == '__main__':
     # Assemble model
     model = pa.make_model(initial_conditions=True)
 
-    # Model rule updates
-    EGFR = model.monomers['EGFR']
-    r = model.rules[u'EGFR_phospho_EGFR_Y']
-    r.rule_expression = (EGFR(EGFR=1) % EGFR(EGFR=1, Y='u') >> EGFR(EGFR=1) % EGFR(EGFR=1, Y='p'))
-    r.reactant_pattern = r.rule_expression.reactant_pattern
-    r.product_pattern = r.rule_expression.product_pattern
-
-    RAF1 = model.monomers['RAF1']
-    HRAS = model.monomers['HRAS']
-
-    r1 = model.rules['RAF1_phospho_RAF1_T491']
-    r1.rule_expression = (RAF1(HRAS=1, T491='u') % HRAS(RAF1=1) >> RAF1(HRAS=1, T491='p') % HRAS(RAF1=1))
-    r2 = model.rules['RAF1_phospho_RAF1_S494']
-    r2.rule_expression = (RAF1(HRAS=1, S494='u') % HRAS(RAF1=1) >> RAF1(HRAS=1, S494='p') % HRAS(RAF1=1))
-
-    for r in (r1, r2):
-        r.reactant_pattern = r.rule_expression.reactant_pattern
-        r.product_pattern = r.rule_expression.product_pattern
-
     # Rendering reactions and species
     if args.render:
         print 'Rendering reactions...'
