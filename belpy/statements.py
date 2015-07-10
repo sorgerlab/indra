@@ -168,7 +168,6 @@ class Phosphorylation(Modification):
 
     def monomers_one_step(self, agent_set):
         enz = agent_set.get_create_agent(self.enz.name)
-        enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub.name)
         # NOTE: This assumes that a Phosphorylation statement will only ever
         # involve a single phosphorylation site on the substrate (typically
