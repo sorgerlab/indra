@@ -27,5 +27,6 @@ install:
   # bel.rb/bel2rdf dependencies
   # gem install bel
   # belpy-specific dependencies
+  - pip install rdflib
   - pip install BeautifulSoup
 script: nosetests
