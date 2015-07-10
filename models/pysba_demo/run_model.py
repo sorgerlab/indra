@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # TRIPS processing   
     if use_xml:
-        fname = 'test.xml'
+        fname = 'egfr_model_v3.xml'
         print 'Processing parser output from XML file %s...' % fname
         tp = trips_api.process_xml(open(fname).read())
     else:
@@ -55,14 +55,11 @@ if __name__ == '__main__':
     model = pa.make_model(initial_conditions=False)
 
     # Model rule updates
-    Egfr = model.monomers['Egfr']
-    r1 = model.rules[u'Egfr_phospho_Egfr_Y1068']
-    r1.rule_expression = (Egfr(Egfr=1) % Egfr(Egfr=1, Y1068='u') >> Egfr(Egfr=1) % Egfr(Egfr=1, Y1068='p'))
-    r2 = model.rules[u'Egfr_phospho_Egfr_Y1148']
-    r2.rule_expression = (Egfr(Egfr=1) % Egfr(Egfr=1, Y1148='u') >> Egfr(Egfr=1) % Egfr(Egfr=1, Y1148='p'))
-    for r in (r1, r2):
-        r.reactant_pattern = r.rule_expression.reactant_pattern
-        r.product_pattern = r.rule_expression.product_pattern
+    EGFR = model.monomers['EGFR']
+    r = model.rules[u'EGFR_phospho_EGFR_Y']
+    r.rule_expression = (EGFR(EGFR=1) % EGFR(EGFR=1, Y='u') >> EGFR(EGFR=1) % EGFR(EGFR=1, Y='p'))
+    r.reactant_pattern = r.rule_expression.reactant_pattern
+    r.product_pattern = r.rule_expression.product_pattern
 
     RAF1 = model.monomers['RAF1']
     HRAS = model.monomers['HRAS']
@@ -138,12 +135,12 @@ if __name__ == '__main__':
     model.add_component(Parameter('kcat_phos', 5.0))
     model.add_component(Parameter('kfc_dephos', 1e-6))
 
-    model.rules['Egfr_EGF_bind'].rate_forward = model.parameters['kp1']
-    model.rules['Egfr_EGF_bind'].rate_reverse = model.parameters['km1']
-    model.rules['Egfr_Egfr_bind'].rate_forward = model.parameters['kp2']
-    model.rules['Egfr_Egfr_bind'].rate_reverse = model.parameters['km2']
-    model.rules['Egfr_GRB2_bind'].rate_forward = model.parameters['kp9']
-    model.rules['Egfr_GRB2_bind'].rate_reverse = model.parameters['km9']
+    model.rules['EGFR_EGF_bind'].rate_forward = model.parameters['kp1']
+    model.rules['EGFR_EGF_bind'].rate_reverse = model.parameters['km1']
+    model.rules['EGFR_EGFR_bind'].rate_forward = model.parameters['kp2']
+    model.rules['EGFR_EGFR_bind'].rate_reverse = model.parameters['km2']
+    model.rules['GRB2_EGFR_bind'].rate_forward = model.parameters['kp9']
+    model.rules['GRB2_EGFR_bind'].rate_reverse = model.parameters['km9']
     model.rules['GRB2_SOS1_bind'].rate_forward = model.parameters['kp12']
     model.rules['GRB2_SOS1_bind'].rate_reverse = model.parameters['km12']
     model.rules['SOS1_HRAS_bind'].rate_forward = model.parameters['kf_sos_ras']
@@ -189,7 +186,7 @@ if __name__ == '__main__':
         p = Parameter('EGF_0', 1e6)
         model.add_component(p)
     EGF = model.monomers['EGF']
-    model.initial(EGF(Egfr=None), p)
+    model.initial(EGF(EGFR=None), p)
 
     # Set observables
     print 'Setting observables...'
@@ -210,7 +207,7 @@ if __name__ == '__main__':
     if args.simulate:
         # Run model simulation
         # TODO: save figure as file
-        ts = numpy.linspace(0, 120*60, 1000)
+        ts = numpy.linspace(0, 60*60, 1000)
         print 'Constructing ODE solver...'
         tstart = time.time()
         solver = Solver(model, ts)
@@ -223,11 +220,25 @@ if __name__ == '__main__':
         tend = time.time()
         print '> Simulation took %ds' % (tend - tstart)
         plt.ion()
-        plt.plot(ts, solver.yobs['SOS1bound'] / model.parameters['SOS1_0'].value, label='SOS-bound')
-        plt.plot(ts, solver.yobs['RASGTP'] / model.parameters['HRAS_0'].value, label='HRAS-GTP')
+        # plt.plot(ts, solver.yobs['SOSbound'] / model.parameters['SOS1_0'].value, label='SOS-bound')
+        # plt.plot(ts, solver.yobs['RASGTP'] / model.parameters['HRAS_0'].value, label='HRAS-GTP')
         plt.plot(ts, solver.yobs['RAFPP'] / model.parameters['RAF1_0'].value, label='RAF1-pTpS')
         plt.plot(ts, solver.yobs['MEKPP'] / model.parameters['MAP2K1_0'].value, label='MEK1-pSpS')
         plt.plot(ts, solver.yobs['ERKPP'] / model.parameters['MAPK1_0'].value, label='ERK2-pTpY')
         plt.xlabel('Time (s)')
         plt.ylabel('Normalized amount')
-        plt.legend(loc='upper left')
+        plt.xlim([0, ts[-1]])
+        plt.legend(loc='lower left')
+
+        print 'Running dose-response simulation...'
+        plt.figure()
+        egf_dose = numpy.logspace(3, 9, 100)
+        erk_response = []
+        for ed in egf_dose:
+            model.parameters['EGF_0'].value = ed
+            solver.run()
+            erk_response.append(solver.yobs['ERKPP'][500])
+        plt.plot(egf_dose, erk_response)
+        plt.xscale('log')
+
+
