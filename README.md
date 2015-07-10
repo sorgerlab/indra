@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/johnbachman/belpy.svg?branch=travis_ci)](https://travis-ci.org/johnbachman/belpy)
+[![Build Status](https://travis-ci.org/sorgerlab/belpy.svg?branch=travis_ci)](https://travis-ci.org/sorgerlab/belpy)
 
 belpy
 =====
