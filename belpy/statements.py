@@ -424,8 +424,6 @@ class ActivityModification(Statement):
             active_state = site_states[1]
             agent.create_site(s, site_states)
             activity_pattern[s] = active_state
-        # Add the site/state for the activity itself FIXME FIXME FIXME
-        agent.create_site(self.activity, ('inactive', 'active'))
 
         # Add this activity modification explicitly to the agent's list
         # of activating modifications
