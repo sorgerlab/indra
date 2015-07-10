@@ -58,16 +58,11 @@ class BaseAgent(object):
         self.activating_mods.append(activity_pattern)
 
 def add_default_initial_conditions(model):
-    try:
-        default_ic = model.parameters['default_ic']
-    except KeyError:
-        default_ic = Parameter('default_ic', 100.)
-        model.add_component(default_ic)
     # Iterate over all monomers
     for m in model.monomers:
-        set_base_initial_condition(model, m, default_ic)
+        set_base_initial_condition(model, m, 100.0)
 
-def set_base_initial_condition(model, monomer, ic_param):
+def set_base_initial_condition(model, monomer, value):
     # Build up monomer pattern dict
     sites_dict = {}
     for site in monomer.sites:
@@ -76,7 +71,15 @@ def set_base_initial_condition(model, monomer, ic_param):
         else:
             sites_dict[site] = None
     mp = monomer(**sites_dict)
-    model.initial(mp, ic_param)
+    pname = monomer.name + '_0'
+    try:
+        p = model.parameters[pname]
+        p.value = value
+    except KeyError:
+        p = Parameter(pname, value)
+        model.add_component(p)
+        model.initial(mp, p)
+    
 
 
 class PysbAssembler(object):
