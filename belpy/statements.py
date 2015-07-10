@@ -168,7 +168,6 @@ class Phosphorylation(Modification):
 
     def monomers_one_step(self, agent_set):
         enz = agent_set.get_create_agent(self.enz.name)
-        enz.create_site('Kinase', ('inactive', 'active'))
         sub = agent_set.get_create_agent(self.sub.name)
         # NOTE: This assumes that a Phosphorylation statement will only ever
         # involve a single phosphorylation site on the substrate (typically
@@ -425,8 +424,6 @@ class ActivityModification(Statement):
             active_state = site_states[1]
             agent.create_site(s, site_states)
             activity_pattern[s] = active_state
-        # Add the site/state for the activity itself FIXME FIXME FIXME
-        agent.create_site(self.activity, ('inactive', 'active'))
 
         # Add this activity modification explicitly to the agent's list
         # of activating modifications
