@@ -123,7 +123,6 @@ class TripsProcessor(object):
             # independently
 
             mod_types = event.findall('predicate/mods/mod/type')
-            import ipdb; ipdb.set_trace()
             # Transphosphorylation
             if 'ONT::ACROSS' in [mt.text for mt in mod_types] and \
                 agent_agent.bound_to:
