@@ -129,6 +129,8 @@ class TripsProcessor(object):
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
+        if term is None:
+            return None
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
             complex_id = entity_id
             complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
@@ -156,12 +158,17 @@ class TripsProcessor(object):
                 else:
                     precond_event_type = precond_event.find('type').text
                     if precond_event_type == 'ONT::BIND':
-                        arg1_name = self._get_name_by_id(precond_event.find('arg1').attrib['id'])
-                        arg2_name = self._get_name_by_id(precond_event.find('arg2').attrib['id'])
-                        if arg1_name == agent_name:
-                            agent.bound_to = arg2_name
+                        arg1 = precond_event.find('arg1')
+                        arg2 = precond_event.find('arg2')
+                        if arg1 is None or arg2 is None:
+                            warnings.warn('Precondition binding event missing argument.')
                         else:
-                            agent.bound_to = arg1_name
+                            arg1_name = self._get_name_by_id(arg1.attrib['id'])
+                            arg2_name = self._get_name_by_id(arg2.attrib['id'])
+                            if arg1_name == agent_name:
+                                agent.bound_to = arg2_name
+                            else:
+                                agent.bound_to = arg1_name
                     elif precond_event_type == 'ONT::PHOSPHORYLATION':
                         mod, mod_pos = self._get_mod_site(precond_event)
                         for m, mp in zip(mod, mod_pos):
