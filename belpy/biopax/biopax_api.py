@@ -1,5 +1,4 @@
 import sys
-import ipdb
 
 from processor import BiopaxProcessor
 
