@@ -1,6 +1,5 @@
 import re
 import warnings
-import ipdb
 
 import xml.etree.ElementTree as ET
 from BeautifulSoup import BeautifulSoup
