@@ -156,6 +156,20 @@ class Modification(Statement):
                 (type(self).__name__, self.enz.name, self.sub.name, self.mod,
                  self.mod_pos))
 
+class SelfModification(Statement):
+    """Generic statement representing the self modification of a protein"""
+    def __init__(self, enz, mod, mod_pos, stmt,
+                 citation, evidence, annotations):
+        super(SelfModification, self).__init__(stmt, citation, evidence,
+                                           annotations)
+        self.enz = enz
+        self.mod = mod
+        self.mod_pos = mod_pos
+
+    def __str__(self):
+        return ("%s(%s, %s, %s)" %
+                (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
+
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
 
@@ -256,6 +270,175 @@ class Phosphorylation(Modification):
         except ComponentDuplicateNameError:
             msg = "Rule %s already in model! Skipping." % rule_name
             warnings.warn(msg)
+
+# Autophosphorylation happens when a protein phosphorylates itself.
+# A more precise name for this is cis-autophosphorylation.
+class Autophosphorylation(SelfModification):
+    def monomers_interactions_only(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz.name)
+        enz.create_site(site_name(self)[0], ('u', 'p'))
+
+    def monomers_one_step(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz.name)
+        # NOTE: This assumes that a Phosphorylation statement will only ever
+        # involve a single phosphorylation site on the substrate (typically
+        # if there is more than one site, they will be parsed into separate
+        # Phosphorylation statements, i.e., phosphorylation is assumed to be
+        # distributive. If this is not the case, this assumption will need to
+        # be revisited.
+        enz.create_site(site_name(self)[0], ('u', 'p'))
+
+        if self.enz.bound_to:
+            enz_bound = agent_set.get_create_agent(self.enz.bound_to)
+            enz_bound.create_site(self.enz.name)
+            enz.create_site(self.enz.bound_to)
+
+    def assemble_interactions_only(self, model, agent_set):
+        self.assemble_one_step(self, model, agent_set)
+
+    def assemble_one_step(self, model, agent_set):
+        kf_phospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
+
+        enz = model.monomers[self.enz.name]
+
+        # See NOTE in monomers_one_step
+        site = site_name(self)[0]
+
+        rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
+        try:
+            # Iterate over all of the activating modification states of the
+            # kinase
+            enz_act_mods = agent_set[self.enz.name].activating_mods
+            if enz_act_mods:
+                for mod_pattern in [a.copy() for a in enz_act_mods]:
+                    # Here we make the assumption that the binding site
+                    # is simply named after the binding partner
+                    left_pattern = mod_pattern.copy()
+                    right_pattern = mod_pattern.copy()
+                    left_pattern[site] = 'u'
+                    right_pattern[site] = 'p'
+                    if self.enz.bound_to:
+                        left_pattern[self.enz.bound_to] = 1
+                        right_pattern[self.enz.bound_to] = 1
+                        enz_bound = model.monomers[self.enz.bound_to]
+                        left_enz = enz(**left_pattern) % \
+                                        enz_bound(**{self.enz.name:1})
+                        right_enz = enz(**right_pattern) % \
+                                        enz_bound(**{self.enz.name:1})
+                    else:
+                        left_enz = enz(**left_pattern)
+                        right_enz = enz(**right_pattern)
+
+                    r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
+                    model.add_component(r)
+            # If there are no known activity modifications, we take this
+            # statement as given and allow the enzyme to phosphorylate itself
+            # unconditionally
+            else:
+                left_pattern = {site: 'u'}
+                right_pattern = {site: 'p'}
+                if self.enz.bound_to:
+                    enz_bound = model.monomers[self.enz.bound_to]
+                    left_pattern[self.enz.bound_to] = 1
+                    right_pattern[self.enz.bound_to] = 1
+                    left_enz = enz(**left_pattern) % \
+                                enz_bound(**{self.enz.name:1})
+                    right_enz = enz(**right_pattern) % \
+                                enz_bound(**{self.enz.name:1})
+                else:
+                    left_enz = enz(**left_pattern)
+                    right_enz = enz(**right_pattern)
+                r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
+                model.add_component(r)
+
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
+
+# Transphosphorylation assumes that a kinase is already bound to 
+# a substrate (usually of the same molecular species), and phosphorylates 
+# it in an intra-molecular fashion. The enz property of the statement must 
+# have exactly one bound_to property, and we assume that enz phosphorylates 
+# this bound_to molecule
+class Transphosphorylation(SelfModification):
+    def monomers_interactions_only(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz.name)
+        # Assume there is exactly one bound_to species
+        sub = agent_set.get_create_agent(self.enz.bound_to)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+    def monomers_one_step(self, agent_set):
+        enz = agent_set.get_create_agent(self.enz.name)
+        # NOTE: This assumes that a Phosphorylation statement will only ever
+        # involve a single phosphorylation site on the substrate (typically
+        # if there is more than one site, they will be parsed into separate
+        # Phosphorylation statements, i.e., phosphorylation is assumed to be
+        # distributive. If this is not the case, this assumption will need to
+        # be revisited. 
+        # Assume there is exactly one bound_to species
+        sub = agent_set.get_create_agent(self.enz.bound_to)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+        if self.enz.bound_to:
+            enz_bound = agent_set.get_create_agent(self.enz.bound_to)
+            enz_bound.create_site(self.enz.name)
+            enz.create_site(self.enz.bound_to)
+
+    def assemble_interactions_only(self, model, agent_set):
+        self.assemble_one_step(self, model, agent_set)
+
+    def assemble_one_step(self, model, agent_set):
+        kf_phospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
+
+        enz = model.monomers[self.enz.name]
+        sub = model.monomers[self.enz.bound_to]
+
+        # See NOTE in monomers_one_step
+        site = site_name(self)[0]
+
+        rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)
+        try:
+            # Iterate over all of the activating modification states of the
+            # kinase
+            enz_act_mods = agent_set[self.enz.name].activating_mods
+            if enz_act_mods:
+                for mod_pattern in [a.copy() for a in enz_act_mods]:
+                    # Here we make the assumption that the binding site
+                    # is simply named after the binding partner
+                    left_pattern = mod_pattern.copy()
+                    right_pattern = mod_pattern.copy()
+                    left_pattern[self.enz.bound_to] = 1
+                    right_pattern[self.enz.bound_to] = 1
+                    enz_bound = model.monomers[self.enz.bound_to]
+                    left_enz = enz(**left_pattern) % \
+                                enz_bound(**{self.enz.name: 1, site: 'u'})
+                    right_enz = enz(**right_pattern) % \
+                                enz_bound(**{self.enz.name: 1, site: 'p'})
+
+                    r = Rule(rule_name, left_enz >> right_enz, kf_phospho)
+                    model.add_component(r)
+            # If there are no known activity modifications, we take this
+            # statement as given and allow the enzyme to phosphorylate itself
+            # unconditionally
+            else:
+                left_pattern = {}
+                right_pattern = {}
+                enz_bound = model.monomers[self.enz.bound_to]
+                left_pattern[self.enz.bound_to] = 1
+                right_pattern[self.enz.bound_to] = 1
+                left_enz = enz(**left_pattern) % \
+                            enz_bound(**{self.enz.name: 1, site: 'u'})
+                right_enz = enz(**right_pattern) % \
+                            enz_bound(**{self.enz.name: 1, site: 'p'})
+                r = Rule(rule_name, left_enz >> right_enz, kf_phospho)
+                model.add_component(r)
+
+        # If this rule is already in the model, issue a warning and continue
+        except ComponentDuplicateNameError:
+            msg = "Rule %s already in model! Skipping." % rule_name
+            warnings.warn(msg)
+
 
 class Hydroxylation(Modification):
     """Hydroxylation modification"""
