@@ -6,11 +6,12 @@ virtualenv:
 #before_install:
 #  - sudo apt-get install python-scipy
 install:
-  # PySB dependencies
+  # PySB and dependencies
   - pip install sympy
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip BioNetGen-2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
+  - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
   #- pip install cython
   #- pip install git+https://github.com/kivy/pyjnius.git@master
