@@ -122,10 +122,27 @@ class TripsProcessor(object):
             # distinct steps, we add a statement for each modification
             # independently
 
-            for m, p in zip(mod, mod_pos):
-                self.belpy_stmts.append(Phosphorylation(agent_agent,
-                                        affected_agent, m, p, sentence,
+            mod_types = event.findall('predicate/mods/mod/type')
+            import ipdb; ipdb.set_trace()
+            # Transphosphorylation
+            if 'ONT::ACROSS' in [mt.text for mt in mod_types] and \
+                agent_agent.bound_to:
+                for m, p in zip(mod, mod_pos):
+                    self.belpy_stmts.append(Transphosphorylation(agent_agent,
+                                        m, p, sentence,
                                         citation, evidence, annotations))
+            # Autophosphorylation
+            elif agent.attrib['id'] == affected.attrib['id']:
+                for m, p in zip(mod, mod_pos):
+                    self.belpy_stmts.append(Autophosphorylation(agent_agent,
+                                        m, p, sentence,
+                                        citation, evidence, annotations))
+            # Regular phosphorylation
+            else:                
+                for m, p in zip(mod, mod_pos):
+                    self.belpy_stmts.append(Phosphorylation(agent_agent,
+                                            affected_agent, m, p, sentence,
+                                            citation, evidence, annotations))
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
