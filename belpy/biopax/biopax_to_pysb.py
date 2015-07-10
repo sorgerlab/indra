@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import ipdb
 import warnings
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
