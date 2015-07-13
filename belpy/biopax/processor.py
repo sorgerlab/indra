@@ -54,7 +54,7 @@ def match_to_array(m):
 class BiopaxProcessor(object):
     def __init__(self, model):
         self.model = model
-        self.belpy_stmts = []
+        self.statements = []
         self._hgnc_cache = self._load_hgnc_cache()
 
     def get_complexes(self, force_contains=[]):
@@ -86,37 +86,37 @@ class BiopaxProcessor(object):
             # feat_1 = r[1].getFeature().toArray()
             # Modifications of second member
             # feat_2 = r[3].getFeature().toArray()
-            self.belpy_stmts.append(Complex(members))
+            self.statements.append(Complex(members))
 
     def get_phosphorylation(self, force_contains=None):
         stmts = self._get_generic_modification('phospho', 
                                                force_contains=force_contains)
         for s in stmts:
-            self.belpy_stmts.append(Phosphorylation(*s))
+            self.statements.append(Phosphorylation(*s))
 
     def get_dephosphorylation(self, force_contains=None):
         stmts = self._get_generic_modification('phospho', mod_gain=False, 
                                                force_contains=force_contains)
         for s in stmts:
-            self.belpy_stmts.append(Dephosphorylation(*s))
+            self.statements.append(Dephosphorylation(*s))
 
     def get_acetylation(self, force_contains=None):
         stmts = self._get_generic_modification('acetyl', 
                                                force_contains=force_contains)
         for s in stmts:
-            self.belpy_stmts.append(Acetylation(*s))
+            self.statements.append(Acetylation(*s))
 
     def get_glycosylation(self, force_contains=None):
         stmts = self._get_generic_modification('glycosyl', 
                                                force_contains=force_contains)
         for s in stmts:
-            self.belpy_stmts.append(Glycosylation(*s))
+            self.statements.append(Glycosylation(*s))
 
     def get_palmitoylation(self, force_contains=None):
         stmts = self._get_generic_modification('palmitoyl', 
                                                force_contains=force_contains)
         for s in stmts:
-            self.belpy_stmts.append(Palmitoylation(*s))
+            self.statements.append(Palmitoylation(*s))
 
     def get_activity_modification(self, force_contains=None):
         mcc = bpp('constraint.ModificationChangeConstraint')
@@ -148,7 +148,7 @@ class BiopaxProcessor(object):
                                             relationship, activity,
                                             stmt_str, citation, evidence, 
                                             annotations)
-                self.belpy_stmts.append(stmt)
+                self.statements.append(stmt)
 
     def _get_modification_site(self, modPE):
         # Do we need to look at EntityFeatures?
@@ -241,7 +241,7 @@ class BiopaxProcessor(object):
         return stmts
 
     def print_statements(self):
-        for i, stmt in enumerate(self.belpy_stmts):
+        for i, stmt in enumerate(self.statements):
             print "%s: %s" % (i, stmt)
 
     def _get_citation(self, bpe):

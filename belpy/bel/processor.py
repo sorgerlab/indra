@@ -80,7 +80,7 @@ def strip_statement(uri):
 class BelProcessor(object):
     def __init__(self, g):
         self.g = g
-        self.belpy_stmts = []
+        self.statements = []
         self.all_stmts = []
         self.converted_stmts = []
         self.degenerate_stmts = []
@@ -162,24 +162,24 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
 
             if act_type == 'Kinase' and mod in phospho_mods:
-                self.belpy_stmts.append(
+                self.statements.append(
                         Phosphorylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
-                    self.belpy_stmts.append(
+                    self.statements.append(
                             Hydroxylation(enz, sub, mod, mod_pos, stmt_str,
                                           citation, evidence, annotations))
                 elif mod == 'Sumoylation':
-                    self.belpy_stmts.append(
+                    self.statements.append(
                             Sumoylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Acetylation':
-                    self.belpy_stmts.append(
+                    self.statements.append(
                             Acetylation(enz, sub, mod, mod_pos, stmt_str,
                                         citation, evidence, annotations))
                 elif mod == 'Ubiquitination':
-                    self.belpy_stmts.append(
+                    self.statements.append(
                             Ubiquitination(enz, sub, mod, mod_pos, stmt_str,
                                            citation, evidence, annotations))
                 else:
@@ -226,7 +226,7 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
+            self.statements.append(
                     Dephosphorylation(phos, sub, mod, mod_pos,
                                       stmt_str, citation,
                                       evidence, annotations))
@@ -280,7 +280,7 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
+            self.statements.append(
                     ActivityModification(species, (mod1, mod2),
                                          (mod_pos1, mod_pos2),
                                          rel, act_type, stmt_str,
@@ -322,7 +322,7 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
+            self.statements.append(
                     ActivityModification(species, (mod,), (mod_pos,), rel,
                                          act_type, stmt_str,
                                          citation, evidence, annotations))
@@ -357,7 +357,7 @@ class BelProcessor(object):
                        cmplx_name
                 warnings.warn(msg)
             else:
-                self.belpy_stmts.append(Complex(cmplx_list))
+                self.statements.append(Complex(cmplx_list))
 
     def get_activating_subs(self):
         """
@@ -414,7 +414,7 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[3])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.belpy_stmts.append(
+            self.statements.append(
                     ActivatingSubstitution(enz, wt_residue, position,
                                            sub_residue, act_type,
                                            stmt_str,
@@ -460,7 +460,7 @@ class BelProcessor(object):
             # Distinguish the case when the activator is a RasGTPase
             # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'GtpBound':
-                self.belpy_stmts.append(
+                self.statements.append(
                      RasGtpActivityActivity(subj, subj_activity,
                                             rel, obj, obj_activity,
                                             stmt_str,
@@ -469,19 +469,19 @@ class BelProcessor(object):
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyIncreases':
-                self.belpy_stmts.append(
+                self.statements.append(
                         RasGef(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'DirectlyDecreases':
-                self.belpy_stmts.append(
+                self.statements.append(
                         RasGap(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
             # Otherwise, create a generic Activity->Activity statement
             else:
-                self.belpy_stmts.append(
+                self.statements.append(
                      ActivityActivity(subj, subj_activity,
                                       rel, obj, obj_activity,
                                       stmt_str,
@@ -495,7 +495,7 @@ class BelProcessor(object):
                   (subj_name, obj_name))
             print "It doesn't specify the site."
             act_mods = []
-            for bps in self.belpy_stmts:
+            for bps in self.statements:
                 if type(bps) == ActivatingModification and \
                    bps.monomer_name == obj_name:
                     act_mods.append(bps)
@@ -654,5 +654,5 @@ class BelProcessor(object):
                 print stmt
 
     def print_statements(self):
-        for i, stmt in enumerate(self.belpy_stmts):
+        for i, stmt in enumerate(self.statements):
             print "%s: %s" % (i, stmt)
