@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # TRIPS processing   
     if use_xml:
-        fname = 'egfr_model_v3.xml'
+        fname = 'egfr_model_v4.xml'
         print 'Processing parser output from XML file %s...' % fname
         tp = trips_api.process_xml(open(fname).read())
     else:
@@ -128,6 +128,7 @@ if __name__ == '__main__':
         model.add_component(Parameter('kfc_mek_erk', 1e-7))
         model.add_component(Parameter('kr_bind', 1e-1))
         model.add_component(Parameter('kcat_phos', 5.0))
+        model.add_component(Parameter('kf_autophospho', 5.0))
         model.add_component(Parameter('kfc_dephos', 1e-6))
 
         model.rules['EGFR_EGF_bind'].rate_forward = model.parameters['kp1']
