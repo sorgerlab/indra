@@ -6,5 +6,5 @@ def test_trips_processor():
     check for correctness of parse or of assembled model."""
     pa = PysbAssembler()
     tp = trips_api.process_text('BRAF phosphorylates MEK1 at Ser222')
-    pa.add_statements(tp.belpy_stmts)
+    pa.add_statements(tp.statements)
     model = pa.make_model()

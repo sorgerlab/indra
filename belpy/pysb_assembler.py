@@ -114,9 +114,9 @@ class PysbAssembler(object):
 if __name__ == '__main__':
     pa = PysbAssembler()
     bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
-    pa.add_statements(bp.belpy_stmts)
+    pa.add_statements(bp.statements)
     # bp = bel_api.process_ndex_neighborhood("ARAF")
-    # pa.add_statements(bp.belpy_stmts)
+    # pa.add_statements(bp.statements)
     # tp = trips_api.process_text("BRAF phosphorylates MEK1 at Ser222")
-    # pa.add_statements(tp.belpy_stmts)
+    # pa.add_statements(tp.statements)
     model = pa.make_model()

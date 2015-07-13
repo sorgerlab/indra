@@ -27,7 +27,7 @@ mod_names = {
 class TripsProcessor(object):
     def __init__(self, xml_string):
         self.tree = ET.fromstring(xml_string)
-        self.belpy_stmts = []
+        self.statements = []
         self.hgnc_cache = {}
         self._static_events = self._find_static_events()
 
@@ -53,8 +53,8 @@ class TripsProcessor(object):
             citation = ''
             evidence = sentence
             annotations = ''
-            self.belpy_stmts.append(ActivityModification(affected_agent, mod,
-                                    mod_pos, 'DirectlyIncreases', 'Active',
+            self.statements.append(ActivityModification(affected_agent, mod,
+                                    mod_pos, 'increases', 'Active',
                                     sentence, citation, evidence, annotations))
 
     def get_complexes(self):
@@ -82,7 +82,7 @@ class TripsProcessor(object):
             if agent1 is None or agent2 is None:
                 warnings.warn('Complex with missing members')
                 continue
-            self.belpy_stmts.append(Complex([agent1, agent2]))
+            self.statements.append(Complex([agent1, agent2]))
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -127,19 +127,19 @@ class TripsProcessor(object):
             if 'ONT::ACROSS' in [mt.text for mt in mod_types] and \
                 agent_agent.bound_to:
                 for m, p in zip(mod, mod_pos):
-                    self.belpy_stmts.append(Transphosphorylation(agent_agent,
+                    self.statements.append(Transphosphorylation(agent_agent,
                                         m, p, sentence,
                                         citation, evidence, annotations))
             # Autophosphorylation
             elif agent.attrib['id'] == affected.attrib['id']:
                 for m, p in zip(mod, mod_pos):
-                    self.belpy_stmts.append(Autophosphorylation(agent_agent,
+                    self.statements.append(Autophosphorylation(agent_agent,
                                         m, p, sentence,
                                         citation, evidence, annotations))
             # Regular phosphorylation
             else:                
                 for m, p in zip(mod, mod_pos):
-                    self.belpy_stmts.append(Phosphorylation(agent_agent,
+                    self.statements.append(Phosphorylation(agent_agent,
                                             affected_agent, m, p, sentence,
                                             citation, evidence, annotations))
 
