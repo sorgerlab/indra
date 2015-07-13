@@ -54,7 +54,7 @@ class TripsProcessor(object):
             evidence = sentence
             annotations = ''
             self.statements.append(ActivityModification(affected_agent, mod,
-                                    mod_pos, 'DirectlyIncreases', 'Active',
+                                    mod_pos, 'increases', 'Active',
                                     sentence, citation, evidence, annotations))
 
     def get_complexes(self):

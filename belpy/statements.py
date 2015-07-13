@@ -613,7 +613,7 @@ class ActivityModification(Statement):
         agent.add_activating_modification(activity_pattern)
         # Inactivating modifications will require a different treatment
         # of the resolution of when the agent is active
-        if self.relationship == 'DirectlyDecreases':
+        if self.relationship == 'decreases':
             warnings.warn('Inactivating modifications not currently '
                           'implemented!')
 

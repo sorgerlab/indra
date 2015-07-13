@@ -141,7 +141,7 @@ class BiopaxProcessor(object):
             annotations = ''
             outPE = r[p.indexOf('output PE')]
             activity = 'Activity'
-            relationship = 'DirectlyIncreases' 
+            relationship = 'increases' 
             mod, mod_pos = self._get_modification_site(outPE)
             if mod:
                 stmt = ActivityModification(monomer, mod, mod_pos, 

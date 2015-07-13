@@ -277,6 +277,10 @@ class BelProcessor(object):
             mod2 = term_from_uri(stmt[4])
             mod_pos2 = term_from_uri(stmt[5])
             rel = term_from_uri(stmt[6])
+            if rel == 'DirectlyDecreases':
+                rel = 'decreases'
+            else:
+                rel = 'increases'
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -319,6 +323,10 @@ class BelProcessor(object):
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
             rel = term_from_uri(stmt[4])
+            if rel == 'DirectlyDecreases':
+                rel = 'decreases'
+            else:
+                rel = 'increases'
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -450,6 +458,10 @@ class BelProcessor(object):
             subj = Agent(subj_name)
             subj_activity = name_from_uri(stmt[1])
             rel = term_from_uri(stmt[2])
+            if rel == 'DirectlyDecreases':
+                rel = 'decreases'
+            else:
+                rel = 'increases'
             obj_name = gene_name_from_uri(stmt[3])
             obj = Agent(obj_name)
             obj_activity = name_from_uri(stmt[4])
