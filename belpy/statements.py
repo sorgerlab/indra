@@ -297,7 +297,7 @@ class Autophosphorylation(SelfModification):
         self.assemble_one_step(self, model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
-        kf_phospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
+        kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
 
         enz = model.monomers[self.enz.name]
 
@@ -389,7 +389,7 @@ class Transphosphorylation(SelfModification):
         self.assemble_one_step(self, model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
-        kf_phospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
+        kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
 
         enz = model.monomers[self.enz.name]
         sub = model.monomers[self.enz.bound_to]
@@ -416,7 +416,7 @@ class Transphosphorylation(SelfModification):
                     right_enz = enz(**right_pattern) % \
                                 enz_bound(**{self.enz.name: 1, site: 'p'})
 
-                    r = Rule(rule_name, left_enz >> right_enz, kf_phospho)
+                    r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
                     model.add_component(r)
             # If there are no known activity modifications, we take this
             # statement as given and allow the enzyme to phosphorylate itself
@@ -431,7 +431,7 @@ class Transphosphorylation(SelfModification):
                             enz_bound(**{self.enz.name: 1, site: 'u'})
                 right_enz = enz(**right_pattern) % \
                             enz_bound(**{self.enz.name: 1, site: 'p'})
-                r = Rule(rule_name, left_enz >> right_enz, kf_phospho)
+                r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
                 model.add_component(r)
 
         # If this rule is already in the model, issue a warning and continue
