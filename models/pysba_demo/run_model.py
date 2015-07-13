@@ -51,7 +51,7 @@ if __name__ == '__main__':
         tp = trips_api.process_text(open('model_text.txt').read())
         tend = time.time()
         print '> TRIPS parser took %d seconds.' % (tend - tstart)
-    pa.add_statements(tp.belpy_stmts)
+    pa.add_statements(tp.statements)
 
     # BioPAX processing
     if use_owl:
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         print 'Processing output from PathwayCommons query'
         bp = biopax_api.process_pc_neighborhood(['DUSP4'])
     bp.get_dephosphorylation(force_contains=['MAPK1'])
-    pa.add_statements(bp.belpy_stmts)
+    pa.add_statements(bp.statements)
     
     # Assemble model
     model = pa.make_model(initial_conditions=True)
