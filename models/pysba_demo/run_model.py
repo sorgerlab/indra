@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--online', action="store_true")
     parser.add_argument('--render', action="store_true")
     parser.add_argument('--simulate', action="store_true")
+    parser.add_argument('--loadmodel', action="store_true")
     args = parser.parse_args()
 
     if args.online:
@@ -66,6 +67,19 @@ if __name__ == '__main__':
     
     # Assemble model
     model = pa.make_model(initial_conditions=True)
+
+
+    RAF1 = model.monomers['RAF1']
+    HRAS = model.monomers['HRAS']
+
+    r1 = model.rules['RAF1_autophospho_RAF1_T491']
+    r1.rule_expression = (RAF1(HRAS=1, T491='u') % HRAS(RAF1=1) >> RAF1(HRAS=1, T491='p') % HRAS(RAF1=1))
+    r2 = model.rules['RAF1_autophospho_RAF1_S494']
+    r2.rule_expression = (RAF1(HRAS=1, S494='u') % HRAS(RAF1=1) >> RAF1(HRAS=1, S494='p') % HRAS(RAF1=1))
+    for r in (r1, r2):
+        r.reactant_pattern = r.rule_expression.reactant_pattern
+        r.product_pattern = r.rule_expression.product_pattern
+
 
     # Rendering reactions and species
     if args.render:
@@ -128,7 +142,6 @@ if __name__ == '__main__':
         model.add_component(Parameter('kfc_mek_erk', 1e-7))
         model.add_component(Parameter('kr_bind', 1e-1))
         model.add_component(Parameter('kcat_phos', 5.0))
-        model.add_component(Parameter('kf_autophospho', 5.0))
         model.add_component(Parameter('kfc_dephos', 1e-6))
 
         model.rules['EGFR_EGF_bind'].rate_forward = model.parameters['kp1']
@@ -145,8 +158,8 @@ if __name__ == '__main__':
         model.rules['HRAS_GTP_bind'].rate_reverse = model.parameters['kr_bind']
         model.rules['HRAS_RAF1_bind'].rate_forward = model.parameters['kf_bind']
         model.rules['HRAS_RAF1_bind'].rate_reverse = model.parameters['kr_bind']
-        model.rules['RAF1_phospho_RAF1_T491'].rate_forward = model.parameters['kcat_phos']
-        model.rules['RAF1_phospho_RAF1_S494'].rate_forward = model.parameters['kcat_phos']
+        model.rules['RAF1_autophospho_RAF1_T491'].rate_forward = model.parameters['kf_autophospho']
+        model.rules['RAF1_autophospho_RAF1_S494'].rate_forward = model.parameters['kf_autophospho']
         model.rules['RAF1_phospho_MAP2K1_S218'].rate_forward = model.parameters['kfc_raf_mek']
         model.rules['RAF1_phospho_MAP2K1_S222'].rate_forward = model.parameters['kfc_raf_mek']
         model.rules['MAP2K1_phospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_mek_erk']
@@ -183,12 +196,22 @@ if __name__ == '__main__':
 
         # Run model simulation
         # TODO: save figure as file
-        ts = numpy.linspace(0, 60*60, 1000)
-        print 'Constructing ODE solver...'
-        tstart = time.time()
-        solver = Solver(model, ts)
-        tend = time.time()
-        print '> Solver construction took %ds' % (tend - tstart)
+        ts = numpy.linspace(0, 120*60, 1000)
+                
+        import pickle
+        if args.loadmodel:
+            print 'Loading ODE solver...'
+            with open('model_odes.pkl', 'rb') as fh:
+                model = pickle.load(fh)
+            solver = Solver(model, ts)
+        else:
+            print 'Constructing ODE solver...'
+            tstart = time.time()
+            solver = Solver(model, ts)
+            tend = time.time()
+            print '> Solver construction took %ds' % (tend - tstart)
+            with open('model_odes.pkl', 'wb') as fh:
+                pickle.dump(model, fh)
 
         print 'Running simulation...'
         tstart = time.time()
@@ -201,22 +224,25 @@ if __name__ == '__main__':
         plt.plot(ts, solver.yobs['RAFPP'] / model.parameters['RAF1_0'].value, label='RAF1-pTpS')
         plt.plot(ts, solver.yobs['MEKPP'] / model.parameters['MAP2K1_0'].value, label='MEK1-pSpS')
         plt.plot(ts, solver.yobs['ERKPP'] / model.parameters['MAPK1_0'].value, label='ERK2-pTpY')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Normalized amount')
+        plt.xlabel('Time (s)', fontsize=18)
+        plt.ylabel('Normalized amount', fontsize=18)
         plt.xlim([0, ts[-1]])
-        plt.legend(loc='lower left')
+        plt.legend(loc='lower left', fontsize=14)
+        plt.show()
 
         print 'Running dose-response simulation...'
+        egf_dose = numpy.logspace(3, 9, 50)
+        erk_response = []
+        tstart = time.time()
+        for ed in egf_dose:
+            model.parameters['EGF_0'].value = ed
+            solver.run()
+            erk_response.append(solver.yobs['ERKPP'][500])
+        tend = time.time()
+        print '> Dose response simulation took %ds' % (tend - tstart)
         plt.figure()
-        for cell_line in ['BT20', 'HMEC']:
-            set_initial(model, cell_line)
-            egf_dose = numpy.logspace(3, 9, 100)
-            erk_response = []
-            for ed in egf_dose:
-                model.parameters['EGF_0'].value = ed
-                solver.run()
-                erk_response.append(solver.yobs['ERKPP'][500])
-            plt.plot(egf_dose, erk_response, label=cell_line)
-            plt.xscale('log')
-            plt.legend()
-
+        plt.plot(egf_dose, erk_response, label='ERK-pTpY response')
+        plt.xscale('log')
+        plt.xlabel('EGF dose', fontsize=18)
+        plt.ylabel('ERK2-pTpY amount at 1hr', fontsize=18)
+        plt.legend(loc='lower right', fontsize=14)
