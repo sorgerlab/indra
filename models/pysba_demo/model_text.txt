@@ -1,0 +1,12 @@
+The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.
+The EGFR-EGF complex binds another EGFR-EGF complex.
+EGFR, bound to EGFR, transphosphorylates itself on a tyrosine residue.
+The adaptor protein GRB2 can bind EGFR that is phosphorylated on tyrosine.
+EGFR-bound GRB2 binds SOS1 and the SOS1-GRB2 complex binds HRAS.
+HRAS, bound to SOS1, binds GTP.
+HRAS, bound to GTP, binds RAF1.
+RAF1, bound to HRAS, phosphorylates itself at Thr491 and Ser494.
+RAF1 phosphorylated at Thr491 and Ser494 is activated.
+Active RAF1 phosphorylates MEK1 at Ser218 and Ser222.
+MEK1 phosphorylated at Ser218 and Ser222 is activated.
+Active MEK1 phosphorylates ERK2 at Tyr187 and Thr185.
