@@ -294,7 +294,7 @@ class Autophosphorylation(SelfModification):
             enz.create_site(self.enz.bound_to)
 
     def assemble_interactions_only(self, model, agent_set):
-        self.assemble_one_step(self, model, agent_set)
+        self.assemble_one_step(model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
         kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
@@ -386,7 +386,7 @@ class Transphosphorylation(SelfModification):
             enz.create_site(self.enz.bound_to)
 
     def assemble_interactions_only(self, model, agent_set):
-        self.assemble_one_step(self, model, agent_set)
+        self.assemble_one_step(model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
         kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
