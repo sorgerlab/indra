@@ -11,16 +11,18 @@ from belpy.pysb_assembler import *
 
 def set_initial(model, cell_line):
     print 'Setting initial conditions for cell line %s...' % cell_line
-    x0 = numpy.recfromcsv('total_prots.csv')
-    x0_names = x0['proteins']
-    x0_values = x0[cell_line.lower()]
-    for n, v in zip(x0_names, x0_values):
-        try:
-            monomer = model.monomers[n]
-        except KeyError:
-            continue
-        set_base_initial_condition(model, monomer, v)
-
+    try:
+        x0 = numpy.recfromcsv('total_prots.csv') 
+        x0_names = x0['proteins']
+        x0_values = x0[cell_line.lower()]
+        for n, v in zip(x0_names, x0_values):
+            try:
+                monomer = model.monomers[n]
+            except KeyError:
+                continue
+            set_base_initial_condition(model, monomer, v)
+    except IOError:
+        print 'Could not open total proteins file.'
 
 if __name__ == '__main__':
     # Instantiate the assembler
