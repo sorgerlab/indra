@@ -1,5 +1,6 @@
 import re
 import warnings
+import pickle
 
 import xml.etree.ElementTree as ET
 from BeautifulSoup import BeautifulSoup
@@ -28,7 +29,7 @@ class TripsProcessor(object):
     def __init__(self, xml_string):
         self.tree = ET.fromstring(xml_string)
         self.statements = []
-        self.hgnc_cache = {}
+        self._hgnc_cache = self._load_hgnc_cache()
         self._static_events = self._find_static_events()
 
     def get_activating_mods(self):
@@ -200,11 +201,11 @@ class TripsProcessor(object):
 
     def _get_hgnc_name(self, hgnc_id):
         try:
-            hgnc_name = self.hgnc_cache[hgnc_id]
+            hgnc_name = self._hgnc_cache[hgnc_id]
         except KeyError:
             hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
 
-            self.hgnc_cache[hgnc_id] = hgnc_name
+            self._hgnc_cache[hgnc_id] = hgnc_name
         return hgnc_name
 
     def _get_name_by_id(self, entity_id):
@@ -291,6 +292,18 @@ class TripsProcessor(object):
         for ie in inevent_tags:
             static_events.append(ie.text)
         return static_events
+
+    def _load_hgnc_cache(self):
+        try:
+            fh = open('hgnc_cache.pkl', 'rb')
+        except IOError:
+            return {}
+        return pickle.load(fh)
+
+    def _dump_hgnc_cache(self):
+        fh = open('hgnc_cache.pkl', 'wb')
+        pickle.dump(self._hgnc_cache, fh)
+        fh.close()
 
 if __name__ == '__main__':
     tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
