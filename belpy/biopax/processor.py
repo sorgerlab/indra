@@ -63,7 +63,6 @@ class BiopaxProcessor(object):
         p = pb.inComplexWith()
         res = s.searchPlain(self.model, p)
         res_array = [match_to_array(m) for m in res.toArray()]
-        print '%d results found' % res.size()
         for r in res_array:
             members = []
             # Extract first member
@@ -129,7 +128,6 @@ class BiopaxProcessor(object):
         s = bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [match_to_array(m) for m in res.toArray()]
-        print '%d results found' % res.size()
         for r in res_array:
             monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
             if force_contains:
@@ -208,7 +206,6 @@ class BiopaxProcessor(object):
         s = bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [match_to_array(m) for m in res.toArray()]
-        print '%d results found' % res.size()
         stmts = []
         for r in res_array:
             enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
