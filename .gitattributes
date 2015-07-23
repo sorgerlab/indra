@@ -1,0 +1,4 @@
+*.xml linguist-vendored
+*.owl linguist-vendored
+*.rdf linguist-vendored
+*.bel linguist-vendored
