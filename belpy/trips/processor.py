@@ -11,6 +11,9 @@ import belpy.databases.uniprot_client as up_client
 
 
 residue_names = {
+    'S': 'Serine',
+    'T': 'Threonine',
+    'Y': 'Tyrosine',
     'SER': 'Serine',
     'THR': 'Threonine',
     'TYR': 'Tyrosine',
