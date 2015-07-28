@@ -206,6 +206,7 @@ class Phosphorylation(Modification):
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz.name, self.sub.name, site)
+        rule_name = rule_name.replace('-', '_')
         active_site = active_site_names['Kinase']
         # Create a rule specifying that the substrate binds to the kinase at
         # its active site
@@ -230,6 +231,7 @@ class Phosphorylation(Modification):
         site = site_name(self)[0]
 
         rule_name = '%s_phospho_%s_%s' % (self.enz.name, self.sub.name, site)
+        rule_name = rule_name.replace('-', '_')
         try:
             # Iterate over all of the activating modification states of the
             # kinase
@@ -305,6 +307,7 @@ class Autophosphorylation(SelfModification):
         site = site_name(self)[0]
 
         rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
+        rule_name = rule_name.replace('-', '_')
         try:
             # Iterate over all of the activating modification states of the
             # kinase
@@ -398,6 +401,7 @@ class Transphosphorylation(SelfModification):
         site = site_name(self)[0]
 
         rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)
+        rule_name = rule_name.replace('-', '_')
         try:
             # Iterate over all of the activating modification states of the
             # kinase
@@ -812,6 +816,7 @@ class Complex(Statement):
         # Make a rule name
         rule_name = '_'.join([m.name for m in self.members])
         rule_name += '_bind'
+        rule_name = rule_name.replace('-', '_')
         # Initialize the left and right-hand sides of the rule
         lhs = ReactionPattern([])
         rhs = ComplexPattern([], None)
