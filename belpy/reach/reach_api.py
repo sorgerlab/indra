@@ -1,6 +1,6 @@
 import json
 
-from reach_processor import ReachProcessor
+from processor import ReachProcessor
 
 
 def process_json_file(file_name):

@@ -1,6 +1,19 @@
+import re
 import objectpath
 
 from belpy.statements import *
+
+residue_names = {
+    'S': 'Serine',
+    'T': 'Threonine',
+    'Y': 'Tyrosine',
+    'SER': 'Serine',
+    'THR': 'Threonine',
+    'TYR': 'Tyrosine',
+    'SERINE': 'Serine',
+    'THREONINE': 'Threonine',
+    'TYROSINE': 'Tyrosine'
+    }
 
 
 class ReachProcessor:
@@ -36,6 +49,8 @@ class ReachProcessor:
             controller_agent = Agent(controller)
             theme_agent = Agent(theme)
             mod = 'Phosphorylation'
+            residue, site = self._parse_site_text(site)
+            mod = mod + residue
             pos = site
             sentence = r['verbose-text']
             evidence = sentence
@@ -46,3 +61,23 @@ class ReachProcessor:
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, sentence,
                                    citation, evidence, annotations))
+    def _parse_site_text(self, s):
+        m = re.match(r'([TYS])[-]?([0-9]+)', s)
+        if m is not None:
+            residue = residue_names[m.groups()[0]]
+            site = m.groups()[1]
+            return residue, site
+
+        m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())    
+        if m is not None:
+            residue = residue_names[m.groups()[0]]
+            site = m.groups()[1]
+            return residue, site
+
+        m = re.match(r'(THREONINE|TYROSINE|SERINE)[^0-9]*([0-9]+)', s.upper())
+        if m is not None:
+            residue = residue_names[m.groups()[0]]
+            site = m.groups()[1]
+            return residue, site
+
+        return '', None
