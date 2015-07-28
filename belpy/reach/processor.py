@@ -80,4 +80,10 @@ class ReachProcessor:
             site = m.groups()[1]
             return residue, site
 
+        m = re.match(r'.*(THREONINE|TYROSINE|SERINE).*', s.upper())
+        if m is not None:
+            residue = residue_names[m.groups()[0]]
+            site = None
+            return residue, site
+       
         return '', None
