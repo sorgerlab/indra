@@ -62,6 +62,17 @@ large_corpus.rdf
 *.rdf
 *.owl
 *.xml
+*.bel
+
+# Documents, graphs, images
+*.pdf
+*.dot
+*.bngl
+*.jpg
+*.png
+
+# Pickle
+*.pkl
 
 # JARs
 *.jar
