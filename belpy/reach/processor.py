@@ -61,6 +61,20 @@ class ReachProcessor:
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, sentence,
                                    citation, evidence, annotations))
+    
+    def get_complexes(self):
+        citation = self.tree.execute("$.frames.object-meta.doc-id")
+        qstr = "$.frames[@.type is 'complex-assembly']"
+        res = self.tree.execute(qstr)
+        for r in res:
+            frame_id = r['frame-id']
+            args = r['arguments']
+            members = []
+            for a in args:
+                agent = Agent(a['text'])
+                members.append(agent)
+            self.statements.append(Complex(members))
+    
     def _parse_site_text(self, s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)
         if m is not None:

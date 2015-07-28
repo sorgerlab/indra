@@ -16,6 +16,7 @@ def process_json_str(json_str):
     json_dict = json.loads(json_str)
     rp = ReachProcessor(json_dict)
     rp.get_phosphorylation()
+    rp.get_complexes()
     return rp
 
 if __name__ == '__main__':
