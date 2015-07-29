@@ -15,9 +15,10 @@ install:
   # Biopax/Paxtools dependencies
   - pip install cython
   - pip install git+https://github.com/kivy/pyjnius.git@master
-  #- wget http://sorger.med.harvard.edu/data/bachman/jars/paxtools-4.3.0.jar
-  #- wget http://sorger.med.harvard.edu/data/bachman/jars/biopax-pattern-04801fb13eea.jar
-  #- wget http://sorger.med.harvard.edu/data/bachman/jars/cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
+  - wget http://sorger.med.harvard.edu/data/bachman/jars/paxtools-4.3.1-beta2-no-jena.jar
+  - wget http://sorger.med.harvard.edu/data/bachman/jars/biopax-pattern-04801fb13eea.jar
+  - wget http://sorger.med.harvard.edu/data/bachman/jars/cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
+
   # ndex-python-client dependencies
   #- git clone https://github.com/bgyori/ndex-python-client.git
   #- export PYTHONPATH=$PYTHONPATH:`pwd`/ndex-python-client
@@ -27,6 +28,6 @@ install:
   # bel.rb/bel2rdf dependencies
   # gem install bel
   # belpy-specific dependencies
-  - pip install rdflib
+  # - pip install rdflib
   - pip install BeautifulSoup
 script: nosetests
