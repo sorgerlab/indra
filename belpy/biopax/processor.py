@@ -1,14 +1,12 @@
+import re
 import sys
 import pickle
+import warnings
 
-import jnius_config
-jnius_config.add_options('-Xmx4g')
-from jnius import autoclass, JavaException
-from jnius import cast
+from belpy.java_vm import autoclass, JavaException, cast
 
 from belpy.databases import hgnc_client
 from belpy.statements import *
-
 
 # Functions for accessing frequently used java classes with shortened path
 def bp(path):
@@ -329,6 +327,11 @@ class BiopaxProcessor(object):
                 isinstance(bp_ent, bp('SmallMolecule')):
             ref = bp_ent.getEntityReference()
             names += self._get_entity_names(ref)
+        
+        for i, name in enumerate(names):
+            names[i] = re.sub(r'[^\w]', '_', names[i])
+            if re.match('[0-9]', names[i]) is not None:
+                names[i] = 'p' + names[i]
 
         return names
 
