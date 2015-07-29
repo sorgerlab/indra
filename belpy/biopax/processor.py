@@ -1,3 +1,4 @@
+import re
 import sys
 import pickle
 
@@ -329,6 +330,11 @@ class BiopaxProcessor(object):
                 isinstance(bp_ent, bp('SmallMolecule')):
             ref = bp_ent.getEntityReference()
             names += self._get_entity_names(ref)
+        
+        for i, name in enumerate(names):
+            names[i] = re.sub(r'[^\w]', '_', names[i])
+            if re.match('[0-9]', names[i]) is not None:
+                names[i] = 'p' + names[i]
 
         return names
 
