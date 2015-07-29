@@ -1,3 +1,4 @@
+from jnius import autoclass
 from belpy.biopax import biopax_api
 from belpy.pysb_assembler import PysbAssembler
 
@@ -10,3 +11,12 @@ def test_hyphenated_agent_names():
     pa = PysbAssembler()
     pa.add_statements(bp.statements)
     pa.make_model()
+
+def test_paxtools_autoclass():
+    autoclass('org.biopax.paxtools.impl.level3.ProteinImpl')
+
+def test_biopaxpattern_autoclass():
+    autoclass('org.biopax.paxtools.pattern.PatternBox')
+
+def test_cpath_autoclass():
+    autoclass('cpath.client.CPathClient')
