@@ -1,4 +1,4 @@
-from jnius import autoclass
+from belpy.java_vm import autoclass
 from belpy.biopax import biopax_api
 from belpy.pysb_assembler import PysbAssembler
 

@@ -1,15 +1,12 @@
 import re
 import sys
 import pickle
+import warnings
 
-import jnius_config
-jnius_config.add_options('-Xmx4g')
-from jnius import autoclass, JavaException
-from jnius import cast
+from belpy.java_vm import autoclass, JavaException, cast
 
 from belpy.databases import hgnc_client
 from belpy.statements import *
-
 
 # Functions for accessing frequently used java classes with shortened path
 def bp(path):
