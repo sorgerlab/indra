@@ -55,7 +55,7 @@ class BiopaxProcessor(object):
         self.statements = []
         self._hgnc_cache = self._load_hgnc_cache()
 
-    def get_complexes(self, force_contains=[]):
+    def get_complexes(self, force_contains=None):
         pb = bpp('PatternBox')
         s = bpp('Searcher')
         p = pb.inComplexWith()
@@ -64,18 +64,18 @@ class BiopaxProcessor(object):
         for r in res_array:
             members = []
             # Extract first member
-            members += Agent(self._get_entity_names(r[p.indexOf('Protein 1')]))
+            members.append(Agent(self._get_entity_names(r[p.indexOf('Protein 1')])[0]))
             # Extract second member
-            members += Agent(self._get_entity_names(r[p.indexOf('Protein 2')]))
+            members.append(Agent(self._get_entity_names(r[p.indexOf('Protein 2')])[0]))
             # Skip elements where some pre-specified species
             # are not in the complex
             member_names = [m.name for m in members]
-            for f in force_contains:
-                if f not in member_names:
-                    continue
+            if force_contains is not None:
+                for f in force_contains:
+                    if f not in member_names:
+                        continue
 
             cplx = r[p.indexOf('Complex')]
-            print cplx.getRDFId()
 
             # TODO: we should handle modification features in 
             # Complexes
@@ -128,7 +128,7 @@ class BiopaxProcessor(object):
         res_array = [match_to_array(m) for m in res.toArray()]
         for r in res_array:
             monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
-            if force_contains:
+            if force_contains is not None:
                 if momomer not in force_contains:
                     continue
             stmt_str = ''
@@ -209,7 +209,7 @@ class BiopaxProcessor(object):
             enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
             sub = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')])[0])
             # If neither the enzyme nor the substrate is contained then skip
-            if force_contains:
+            if force_contains is not None:
                 if (enz.name not in force_contains) and \
                     (sub.name not in force_contains):
                     continue
@@ -309,9 +309,11 @@ class BiopaxProcessor(object):
 
     def _get_entity_names(self, bp_ent):
         names = []
+        # If entity is a complex
         if isinstance(bp_ent, bp('Complex')):
             names += [self._get_entity_names(m) for
                       m in bp_ent.getComponent().toArray()]
+        # If entity is not a complex
         elif isinstance(bp_ent, bp('ProteinReference')) or \
                 isinstance(bp_ent, bp('SmallMoleculeReference')) or \
                 isinstance(bp_ent, bp('EntityReference')):
@@ -321,13 +323,8 @@ class BiopaxProcessor(object):
             else:
                 hgnc_name = self._get_hgnc_name(hgnc_id)
             names += [hgnc_name]
-        elif isinstance(bp_ent, bpimpl('Protein')) or \
-                isinstance(bp_ent, bpimpl('SmallMolecule')) or \
-                isinstance(bp_ent, bp('Protein')) or \
-                isinstance(bp_ent, bp('SmallMolecule')):
-            ref = bp_ent.getEntityReference()
-            names += self._get_entity_names(ref)
         
+        # Canonicalize names
         for i, name in enumerate(names):
             names[i] = re.sub(r'[^\w]', '_', names[i])
             if re.match('[0-9]', names[i]) is not None:
