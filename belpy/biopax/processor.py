@@ -332,6 +332,12 @@ class BiopaxProcessor(object):
 
         return names
 
+    def _get_uniprot_id(self, bp_entref):
+        xrefs = bp_entref.getXref().toArray()
+        uniprot_refs = [x for x in xrefs if x.getDb() == 'UniProt Knowledgebase']
+        uniprot_ids = [r.getId() for r in uniprot_refs]
+        return uniprot_ids
+
     def _get_hgnc_id(self, bp_entref):
         xrefs = bp_entref.getXref().toArray()
         hgnc_refs = [x for x in xrefs if x.getDb() == 'HGNC']
