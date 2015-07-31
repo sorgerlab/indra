@@ -64,9 +64,9 @@ class BiopaxProcessor(object):
         for r in res_array:
             members = []
             # Extract first member
-            members.append(Agent(self._get_entity_names(r[p.indexOf('Protein 1')])[0]))
+            members.append(self._get_agent_from_er(r[p.indexOf('Protein 1')]))
             # Extract second member
-            members.append(Agent(self._get_entity_names(r[p.indexOf('Protein 2')])[0]))
+            members.append(self._get_agent_from_er(r[p.indexOf('Protein 2')]))
             # Skip elements where some pre-specified species
             # are not in the complex
             member_names = [m.name for m in members]
@@ -127,7 +127,7 @@ class BiopaxProcessor(object):
         res = s.searchPlain(self.model, p)
         res_array = [match_to_array(m) for m in res.toArray()]
         for r in res_array:
-            monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
+            monomer = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
             if force_contains is not None:
                 if momomer not in force_contains:
                     continue
@@ -206,8 +206,8 @@ class BiopaxProcessor(object):
         res_array = [match_to_array(m) for m in res.toArray()]
         stmts = []
         for r in res_array:
-            enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
-            sub = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')])[0])
+            enz = self._get_agent_from_er(r[p.indexOf('controller ER')])
+            sub = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
             # If neither the enzyme nor the substrate is contained then skip
             if force_contains is not None:
                 if (enz.name not in force_contains) and \
@@ -307,6 +307,13 @@ class BiopaxProcessor(object):
               "output PE", "input simple PE")
         return p
 
+    def _get_agent_from_er(self, bp_entref):
+        name = self._get_entity_names(bp_entref)[0]
+        hgnc_id = self._get_hgnc_id(bp_entref)
+        uniprot_id = self._get_uniprot_id(bp_entref)
+        agent = Agent(name, db_refs={'HGNC': hgnc_id, 'UP': uniprot_id})
+        return agent
+    
     def _get_entity_names(self, bp_ent):
         names = []
         # If entity is a complex
@@ -331,7 +338,7 @@ class BiopaxProcessor(object):
                 names[i] = 'p' + names[i]
 
         return names
-
+    
     def _get_uniprot_id(self, bp_entref):
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if x.getDb() == 'UniProt Knowledgebase']
