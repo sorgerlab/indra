@@ -49,9 +49,12 @@ class ReachProcessor:
             controller_agent = Agent(controller)
             theme_agent = Agent(theme)
             mod = 'Phosphorylation'
-            residue, site = self._parse_site_text(site)
+            if site is not None:
+                residue, pos = self._parse_site_text(site)
+            else:
+                residue = ''
+                pos = ''
             mod = mod + residue
-            pos = site
             sentence = r['verbose-text']
             evidence = sentence
             # TODO: read $.object-meta.doc-id as citation
