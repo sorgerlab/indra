@@ -2,7 +2,7 @@ import sys
 
 from processor import BiopaxProcessor
 
-from belpy.java_vm import autoclass
+from belpy.java_vm import autoclass, JavaException
 
 def owl_to_model(fname):
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')

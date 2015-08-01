@@ -85,7 +85,8 @@ class UnknownPolicyException(Exception):
 
 
 class Agent(object):
-    def __init__(self, name, mods=None, mod_sites=None, bound_to=None):
+    def __init__(self, name, mods=None, mod_sites=None, bound_to=None, 
+                 db_refs=None):
         self.name = name
         if mods is None:
             self.mods = []
@@ -95,6 +96,10 @@ class Agent(object):
             self.mod_sites = []
         else:
             self.mod_sites = mod_sites
+        if db_refs is None:
+            self.db_refs = {}
+        else:
+            self.db_refs = db_refs
         self.bound_to = bound_to
 
 

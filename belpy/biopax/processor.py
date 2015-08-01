@@ -55,7 +55,7 @@ class BiopaxProcessor(object):
         self.statements = []
         self._hgnc_cache = self._load_hgnc_cache()
 
-    def get_complexes(self, force_contains=[]):
+    def get_complexes(self, force_contains=None):
         pb = bpp('PatternBox')
         s = bpp('Searcher')
         p = pb.inComplexWith()
@@ -64,18 +64,18 @@ class BiopaxProcessor(object):
         for r in res_array:
             members = []
             # Extract first member
-            members += Agent(self._get_entity_names(r[p.indexOf('Protein 1')]))
+            members.append(self._get_agent_from_er(r[p.indexOf('Protein 1')]))
             # Extract second member
-            members += Agent(self._get_entity_names(r[p.indexOf('Protein 2')]))
+            members.append(self._get_agent_from_er(r[p.indexOf('Protein 2')]))
             # Skip elements where some pre-specified species
             # are not in the complex
             member_names = [m.name for m in members]
-            for f in force_contains:
-                if f not in member_names:
-                    continue
+            if force_contains is not None:
+                for f in force_contains:
+                    if f not in member_names:
+                        continue
 
             cplx = r[p.indexOf('Complex')]
-            print cplx.getRDFId()
 
             # TODO: we should handle modification features in 
             # Complexes
@@ -127,8 +127,8 @@ class BiopaxProcessor(object):
         res = s.searchPlain(self.model, p)
         res_array = [match_to_array(m) for m in res.toArray()]
         for r in res_array:
-            monomer = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')]))
-            if force_contains:
+            monomer = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
+            if force_contains is not None:
                 if momomer not in force_contains:
                     continue
             stmt_str = ''
@@ -206,10 +206,10 @@ class BiopaxProcessor(object):
         res_array = [match_to_array(m) for m in res.toArray()]
         stmts = []
         for r in res_array:
-            enz = Agent(self._get_entity_names(r[p.indexOf('controller ER')])[0])
-            sub = Agent(self._get_entity_names(r[p.indexOf('changed generic ER')])[0])
+            enz = self._get_agent_from_er(r[p.indexOf('controller ER')])
+            sub = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
             # If neither the enzyme nor the substrate is contained then skip
-            if force_contains:
+            if force_contains is not None:
                 if (enz.name not in force_contains) and \
                     (sub.name not in force_contains):
                     continue
@@ -307,11 +307,20 @@ class BiopaxProcessor(object):
               "output PE", "input simple PE")
         return p
 
+    def _get_agent_from_er(self, bp_entref):
+        name = self._get_entity_names(bp_entref)[0]
+        hgnc_id = self._get_hgnc_id(bp_entref)
+        uniprot_id = self._get_uniprot_id(bp_entref)
+        agent = Agent(name, db_refs={'HGNC': hgnc_id, 'UP': uniprot_id})
+        return agent
+    
     def _get_entity_names(self, bp_ent):
         names = []
+        # If entity is a complex
         if isinstance(bp_ent, bp('Complex')):
             names += [self._get_entity_names(m) for
                       m in bp_ent.getComponent().toArray()]
+        # If entity is not a complex
         elif isinstance(bp_ent, bp('ProteinReference')) or \
                 isinstance(bp_ent, bp('SmallMoleculeReference')) or \
                 isinstance(bp_ent, bp('EntityReference')):
@@ -321,19 +330,20 @@ class BiopaxProcessor(object):
             else:
                 hgnc_name = self._get_hgnc_name(hgnc_id)
             names += [hgnc_name]
-        elif isinstance(bp_ent, bpimpl('Protein')) or \
-                isinstance(bp_ent, bpimpl('SmallMolecule')) or \
-                isinstance(bp_ent, bp('Protein')) or \
-                isinstance(bp_ent, bp('SmallMolecule')):
-            ref = bp_ent.getEntityReference()
-            names += self._get_entity_names(ref)
         
+        # Canonicalize names
         for i, name in enumerate(names):
             names[i] = re.sub(r'[^\w]', '_', names[i])
             if re.match('[0-9]', names[i]) is not None:
                 names[i] = 'p' + names[i]
 
         return names
+    
+    def _get_uniprot_id(self, bp_entref):
+        xrefs = bp_entref.getXref().toArray()
+        uniprot_refs = [x for x in xrefs if x.getDb() == 'UniProt Knowledgebase']
+        uniprot_ids = [r.getId() for r in uniprot_refs]
+        return uniprot_ids
 
     def _get_hgnc_id(self, bp_entref):
         xrefs = bp_entref.getXref().toArray()

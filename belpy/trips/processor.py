@@ -151,6 +151,13 @@ class TripsProcessor(object):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if term is None:
             return None
+
+        # Extract database references
+        dbid = term.attrib["dbid"]
+        dbids = dbid.split('|')
+        db_refs_dict = dict([d.split(':') for d in dbids])
+
+        # If the entity is a complex
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
             complex_id = entity_id
             complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
@@ -164,10 +171,11 @@ class TripsProcessor(object):
                 term_names.append(self._get_name_by_id(t.text))
             agent_name = term_names[0]
             agent_bound = term_names[1]
-            agent = Agent(agent_name, bound_to=agent_bound)
+            agent = Agent(agent_name, bound_to=agent_bound, db_refs=db_refs_dict)
+        # If the entity is not a complex
         else:
             agent_name = self._get_name_by_id(entity_id)
-            agent = Agent(agent_name)
+            agent = Agent(agent_name, db_refs=db_refs_dict)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
             if precond_event_ref is not None:

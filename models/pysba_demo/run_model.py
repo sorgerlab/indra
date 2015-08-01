@@ -10,11 +10,11 @@ from belpy.pysb_assembler import *
 
 
 def set_initial(model, cell_line):
-    print 'Setting initial conditions for cell line %s...' % cell_line
     try:
         x0 = numpy.recfromcsv('total_prots.csv') 
         x0_names = x0['proteins']
         x0_values = x0[cell_line.lower()]
+        print 'Setting initial conditions for cell line %s...' % cell_line
         for n, v in zip(x0_names, x0_values):
             try:
                 monomer = model.monomers[n]
