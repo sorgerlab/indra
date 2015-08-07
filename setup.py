@@ -14,7 +14,7 @@ def main():
               'systems from natural language and pathway databases.'
           author='Benjamin Gyori',
           author_email='benjamin_gyori@hms.harvard.edu',
-          url='http://github.com/indra',
+          url='http://github.com/sorgerlab/indra',
           packages=['indra', 'indra.bel', 'indra.biopax', 
                     'indra.reach', 'indra.trips', 'indra.databases'],
           requires=['pysb', 'objectpath', 'BeautifulSoup', 'rdflib'],
