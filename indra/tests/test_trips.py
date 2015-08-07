@@ -1,5 +1,5 @@
-from belpy.pysb_assembler import PysbAssembler
-from belpy.trips import trips_api
+from indra.pysb_assembler import PysbAssembler
+from indra.trips import trips_api
 from os.path import dirname, join
 
 test_small_file = join(dirname(__file__), 'test_small.xml')

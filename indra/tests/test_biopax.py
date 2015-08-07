@@ -1,6 +1,6 @@
-from belpy.java_vm import autoclass
-from belpy.biopax import biopax_api
-from belpy.pysb_assembler import PysbAssembler
+from indra.java_vm import autoclass
+from indra.biopax import biopax_api
+from indra.pysb_assembler import PysbAssembler
 
 def test_hyphenated_agent_names():
     """This query should contain reactions with agent names RAF1-BRAF,
