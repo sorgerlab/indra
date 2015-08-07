@@ -62,7 +62,10 @@ large_corpus.rdf
 *.rdf
 *.owl
 *.xml
+*.nxml
 *.bel
+*.json
+*.bson
 
 # Documents, graphs, images
 *.pdf
