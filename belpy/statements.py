@@ -111,6 +111,9 @@ class Statement(object):
         self.evidence = evidence
         self.annotations = annotations
 
+    def __repr__(self):
+        return self.__str__()
+
     def monomers(self, agent_set, policies=None):
         """Calls the appropriate monomers method based on policies."""
         if policies is None or policies == 'one_step':
