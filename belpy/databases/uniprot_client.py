@@ -32,7 +32,7 @@ def get_hgnc_name(g):
             }
         """
     res = g.query(query)
-    if len(res) > 0:
+    if res:
         hgnc_name = [r for r in res][0][0].toPython()
         return hgnc_name
     else:
@@ -51,7 +51,7 @@ def get_gene_name(g):
             }
         """
     res = g.query(query)
-    if len(res) > 0:
+    if res:
         gene_name = [r for r in res][0][0].toPython()
         return gene_name
     else:

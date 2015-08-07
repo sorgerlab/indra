@@ -9,17 +9,17 @@ def owl_to_model(fname):
     io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
 
     try:
-        fileIS = autoclass('java.io.FileInputStream')(fname)
+        file_is = autoclass('java.io.FileInputStream')(fname)
     except JavaException:
         print 'Could not open data file %s' % fname
         return
     try:
-        biopax_model = io.convertFromOWL(fileIS)
+        biopax_model = io.convertFromOWL(file_is)
     except JavaException:
         print 'Could not convert data file %s to BioPax model' % data_file
         return
 
-    fileIS.close()
+    file_is.close()
 
     return biopax_model
 

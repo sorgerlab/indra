@@ -17,10 +17,13 @@ def process_pmc(pmc_id):
     return rp
         
 
-def process_nxml(file_name):
+def process_nxml(file_name, use_tempdir=False):
     base = os.path.basename(file_name)
     file_id = os.path.splitext(base)[0]
-    tmp_dir = tempfile.mkdtemp()
+    if use_tempdir:
+        tmp_dir = tempfile.mkdtemp()
+    else:
+        tmp_dir = '.'
     try:
         paper_reader = autoclass('edu.arizona.sista.bionlp.ReadPaper')
         paper_reader.main([file_name, tmp_dir, _nxml_fries_path])

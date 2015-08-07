@@ -1,4 +1,4 @@
-from pysb import *
+from pysb import Model, Monomer, Parameter
 from pysb.core import SelfExporter
 from bel import bel_api
 from biopax import biopax_api

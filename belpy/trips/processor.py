@@ -312,9 +312,8 @@ class TripsProcessor(object):
         return pickle.load(fh)
 
     def _dump_hgnc_cache(self):
-        fh = open('hgnc_cache.pkl', 'wb')
-        pickle.dump(self._hgnc_cache, fh)
-        fh.close()
+        with open('hgnc_cache.pkl', 'wb') as fh:
+            pickle.dump(self._hgnc_cache, fh)
 
 if __name__ == '__main__':
     tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())

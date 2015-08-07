@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 import sys
-from pysb import *
+from pysb import Parameter, Observable
 from pysb.integrate import Solver
 import pysb.core
 
@@ -12,7 +12,7 @@ from belpy import rdf_to_pysb
 def get_base_state(mon):
     sdict = {}
     for s in mon.sites:
-        if mon.site_states.has_key(s):
+        if s in mon.site_states:
             sdict[s]=mon.site_states[s][0]
         else:
             sdict[s]=None

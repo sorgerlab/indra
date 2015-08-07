@@ -7,9 +7,11 @@ import sys
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
 
-def send_query(text, query_args={}):
-    query_args['input'] = text
-    data = urllib.urlencode(query_args)
+def send_query(text, query_args=None):
+    if query_args is None:
+        qa = {}
+    qa['input'] = text
+    data = urllib.urlencode(qa)
     req = urllib2.Request(trips_url, data)
     res = urllib2.urlopen(req)
     html = res.read()

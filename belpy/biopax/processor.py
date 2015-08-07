@@ -135,10 +135,10 @@ class BiopaxProcessor(object):
             citation = self._get_citation(r[p.indexOf('Conversion')])
             evidence = ''
             annotations = ''
-            outPE = r[p.indexOf('output PE')]
+            out_pe = r[p.indexOf('output PE')]
             activity = 'Activity'
             relationship = 'increases' 
-            mod, mod_pos = self._get_modification_site(outPE)
+            mod, mod_pos = self._get_modification_site(out_pe)
             if mod:
                 stmt = ActivityModification(monomer, mod, mod_pos, 
                                             relationship, activity,
@@ -372,9 +372,8 @@ class BiopaxProcessor(object):
         return pickle.load(fh)
 
     def _dump_hgnc_cache(self):
-        fh = open('hgnc_cache.pkl', 'wb')
-        pickle.dump(self._hgnc_cache, fh)
-        fh.close()
+        with open('hgnc_cache.pkl', 'wb') as fh:
+            pickle.dump(self._hgnc_cache, fh)
 
     _mftype_dict = {
         'phosphorylated residue': 'Phosphorylation',
