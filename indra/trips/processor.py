@@ -5,9 +5,9 @@ import pickle
 import xml.etree.ElementTree as ET
 from BeautifulSoup import BeautifulSoup
 
-from belpy.statements import *
-import belpy.databases.hgnc_client as hgnc_client
-import belpy.databases.uniprot_client as up_client
+from indra.statements import *
+import indra.databases.hgnc_client as hgnc_client
+import indra.databases.uniprot_client as up_client
 
 
 residue_names = {

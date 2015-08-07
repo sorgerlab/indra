@@ -1,8 +1,8 @@
 import os
 import json
 import tempfile
-from belpy.java_vm import autoclass, JavaException
-import belpy.databases.pmc_client as pmc_client
+from indra.java_vm import autoclass, JavaException
+import indra.databases.pmc_client as pmc_client
 from processor import ReachProcessor
 
 _nxml_fries_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
