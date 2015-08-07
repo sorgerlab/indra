@@ -5,9 +5,7 @@ from pysb import Parameter, Observable
 from pysb.integrate import Solver
 import pysb.core
 
-# Allows import of belpy in case it is not already on PYTHONPATH
-sys.path.append('../../')
-from belpy import rdf_to_pysb
+from indra.pysb_assembler import *
 
 def get_base_state(mon):
     sdict = {}
@@ -28,8 +26,11 @@ def add_initial(model, pattern, value):
             model.initial_conditions.remove((other_cp, other_value))
     model.initial(complex_pattern, value)
 
-# Generate model rules via belpy
-_, model = rdf_to_pysb.rdf_to_pysb('../../data/RAS_combined.rdf')
+# Generate model rules via indra
+pa = PysbAssembler()
+bp = bel_api.process_belrdf('../../data/RAS_combined.rdf')
+pa.add_statements(bp.statements)
+model = pa.make_model()
 
 # Useful shortcuts to access model components
 m = model.monomers
