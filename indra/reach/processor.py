@@ -1,7 +1,7 @@
 import re
 import objectpath
 
-from belpy.statements import *
+from indra.statements import *
 
 residue_names = {
     'S': 'Serine',

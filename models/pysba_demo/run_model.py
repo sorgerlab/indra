@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from pysb.integrate import Solver
 import pysb.tools.render_reactions as rr
 import pysb.tools.render_species as rs
-from belpy.pysb_assembler import *
+from indra.pysb_assembler import *
 
 
 def set_initial(model, cell_line):

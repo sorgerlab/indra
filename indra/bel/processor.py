@@ -1,4 +1,4 @@
-from belpy.statements import *
+from indra.statements import *
 
 from rdflib import URIRef, Namespace
 from rdflib.namespace import RDF

@@ -3,10 +3,10 @@ import sys
 import pickle
 import warnings
 
-from belpy.java_vm import autoclass, JavaException, cast
+from indra.java_vm import autoclass, JavaException, cast
 
-from belpy.databases import hgnc_client
-from belpy.statements import *
+from indra.databases import hgnc_client
+from indra.statements import *
 
 # Functions for accessing frequently used java classes with shortened path
 def bp(path):
