@@ -25,7 +25,7 @@ def process_nxml(file_name, use_tempdir=False):
     else:
         tmp_dir = '.'
     try:
-        paper_reader = autoclass('edu.arizona.sista.bionlp.ReadPaper')
+        paper_reader = autoclass('edu.arizona.sista.reach.ReadPaper')
         paper_reader.main([file_name, tmp_dir, _nxml_fries_path])
     except JavaException:
         print 'Could not process file %s.' % file_name
