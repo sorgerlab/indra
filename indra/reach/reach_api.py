@@ -13,7 +13,13 @@ def process_pmc(pmc_id):
         fh.flush()
         rp = process_nxml(fh.name)
     return rp
-        
+
+def process_text(txt, use_tempdir=False):
+    nxml_txt = '<article><body><sec><p>%s</p></sec></body></article>' % txt
+    tmp_file = tempfile.NamedTemporaryFile()
+    tmp_file.file.write(nxml_txt)
+    tmp_file.file.flush()
+    return process_nxml(tmp_file.name)
 
 def process_nxml(file_name, use_tempdir=False):
     base = os.path.basename(file_name)
