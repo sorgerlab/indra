@@ -5,8 +5,6 @@ from indra.java_vm import autoclass, JavaException
 import indra.databases.pmc_client as pmc_client
 from processor import ReachProcessor
 
-_nxml_fries_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                   '../../../../groups/surdeanu/nxml2fries/nxml2fries')
 
 def process_pmc(pmc_id):
     xml_str = pmc_client.get_xml(pmc_id)
@@ -26,7 +24,7 @@ def process_nxml(file_name, use_tempdir=False):
         tmp_dir = '.'
     try:
         paper_reader = autoclass('edu.arizona.sista.reach.ReadPaper')
-        paper_reader.main([file_name, tmp_dir, _nxml_fries_path])
+        paper_reader.main([file_name, tmp_dir])
     except JavaException:
         print 'Could not process file %s.' % file_name
         return None
