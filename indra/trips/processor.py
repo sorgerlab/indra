@@ -153,9 +153,12 @@ class TripsProcessor(object):
             return None
 
         # Extract database references
-        dbid = term.attrib["dbid"]
-        dbids = dbid.split('|')
-        db_refs_dict = dict([d.split(':') for d in dbids])
+        try:
+            dbid = term.attrib["dbid"]
+            dbids = dbid.split('|')
+            db_refs_dict = dict([d.split(':') for d in dbids])
+        except KeyError:
+            db_refs_dict = {} 
 
         # If the entity is a complex
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':

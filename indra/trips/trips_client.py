@@ -13,7 +13,7 @@ def send_query(text, query_args=None):
     qa['input'] = text
     data = urllib.urlencode(qa)
     req = urllib2.Request(trips_url, data)
-    res = urllib2.urlopen(req)
+    res = urllib2.urlopen(req, timeout=3600)
     html = res.read()
     return html
 
