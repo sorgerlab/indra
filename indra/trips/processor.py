@@ -104,10 +104,10 @@ class TripsProcessor(object):
                 complex_id = agent.attrib['id']
                 complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
                 components = complex_term.find("components")
-                terms = components.findall("termID")
+                terms = components.findall("term")
                 term_names = []
                 for t in terms:
-                    term_names.append(self._get_name_by_id(t.text))
+                    term_names.append(self._get_name_by_id(t.attrib['id']))
                 agent_name = term_names[0]
                 agent_bound = term_names[1]
                 agent_agent = Agent(agent_name, bound_to=agent_bound)
@@ -115,6 +115,9 @@ class TripsProcessor(object):
                 agent_agent = self._get_agent_by_id(agent.attrib['id'], 
                                                     event.attrib['id'])
             affected = event.find(".//*[@role=':AFFECTED']")
+            if affected is None:
+                warnings.warn('Skipping phosphorylation event with no affected term.')
+                continue
             affected_agent = self._get_agent_by_id(affected.attrib['id'], 
                                                    event.attrib['id'])
             mod, mod_pos = self._get_mod_site(event)
@@ -168,10 +171,10 @@ class TripsProcessor(object):
             if components is None:
                 warnings.warn('Complex without components')
                 return None
-            terms = components.findall("termID")
+            terms = components.findall("term")
             term_names = []
             for t in terms:
-                term_names.append(self._get_name_by_id(t.text))
+                term_names.append(self._get_name_by_id(t.attrib['id']))
             agent_name = term_names[0]
             agent_bound = term_names[1]
             agent = Agent(agent_name, bound_to=agent_bound, db_refs=db_refs_dict)
