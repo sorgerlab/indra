@@ -9,6 +9,7 @@ before_install:
   # - sudo apt-get install scala sbt
 install:
   # PySB and dependencies
+  - easy_install -U setuptools
   - pip install sympy
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip
