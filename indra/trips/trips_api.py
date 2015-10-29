@@ -6,8 +6,7 @@ from processor import TripsProcessor
 def process_text(text):
     html = trips_client.send_query(text)
     xml = trips_client.get_xml(html)
-    with open('test.xml','w') as f:
-        f.write(xml)
+    trips_client.save_xml(xml, 'test.xml')
     return process_xml(xml)
 
 

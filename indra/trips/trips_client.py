@@ -3,6 +3,7 @@ import urllib2
 import re
 import getopt
 import sys
+import xml.dom.minidom
 
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
@@ -29,13 +30,15 @@ def get_xml(html):
     return header + events_terms + footer
 
 
-def save_xml(xml, file_name):
+def save_xml(xml_str, file_name):
     try:
         fh = open(file_name, 'wt')
+        xmld = xml.dom.minidom.parseString(xml_str)
+        xml_str_pretty = xmld.toprettyxml()
     except IOError:
         print 'Could not open %s for writing.' % file_name
         return
-    fh.write(xml)
+    fh.write(xml_str_pretty)
     fh.close()
 
 if __name__ == '__main__':
