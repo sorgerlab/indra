@@ -42,6 +42,11 @@ class TripsProcessor(object):
                 continue
             sentence = self._get_text(event)
             affected = event.find(".//*[@role=':AFFECTED']")
+            if affected is None:
+                msg = 'Skipping activation event with no affected term.'
+                warnings.warn(msg)
+                continue
+
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
             affected_agent = Agent(affected_name)
@@ -184,18 +189,26 @@ class TripsProcessor(object):
             agent = Agent(agent_name, db_refs=db_refs_dict)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
+            # Extract preconditions of the agent
             if precond_event_ref is not None:
+                # Find the event describing the precondition
                 precond_id = precond_event_ref.find('eventID').text
                 precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
                     warnings.warn('Circular reference to event %s.' % precond_id)
                 else:
                     precond_event_type = precond_event.find('type').text
+                    # Binding precondition
                     if precond_event_type == 'ONT::BIND':
                         arg1 = precond_event.find('arg1')
                         arg2 = precond_event.find('arg2')
-                        if arg1 is None or arg2 is None:
-                            warnings.warn('Precondition binding event missing argument.')
+                        mod = precond_event.findall('mods/mod')
+                        if arg1 is None:
+                            arg2_name = self._get_name_by_id(arg2.attrib['id'])
+                            agent.bound_to = arg2_name
+                        elif arg2 is None:
+                            arg1_name = self._get_name_by_id(arg1.attrib['id'])
+                            agent.bound_to = arg1_name
                         else:
                             arg1_name = self._get_name_by_id(arg1.attrib['id'])
                             arg2_name = self._get_name_by_id(arg2.attrib['id'])
@@ -203,6 +216,11 @@ class TripsProcessor(object):
                                 agent.bound_to = arg2_name
                             else:
                                 agent.bound_to = arg1_name
+                        neg_flag = precond_event.find('predicate/mods/mod[type="ONT::NEG"]')
+                        if neg_flag is not None:
+                            agent.bound_neg = True
+
+                    # Phosphorylation precondition
                     elif precond_event_type == 'ONT::PHOSPHORYLATION':
                         mod, mod_pos = self._get_mod_site(precond_event)
                         for m, mp in zip(mod, mod_pos):

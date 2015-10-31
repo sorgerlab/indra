@@ -85,8 +85,8 @@ class UnknownPolicyException(Exception):
 
 
 class Agent(object):
-    def __init__(self, name, mods=None, mod_sites=None, bound_to=None, 
-                 db_refs=None):
+    def __init__(self, name, mods=None, mod_sites=None, 
+                 bound_to=None, bound_neg=None, db_refs=None):
         self.name = name
         if mods is None:
             self.mods = []
@@ -101,6 +101,7 @@ class Agent(object):
         else:
             self.db_refs = db_refs
         self.bound_to = bound_to
+        self.bound_neg = bound_neg
 
 
 class Statement(object):
@@ -206,6 +207,7 @@ class Phosphorylation(Modification):
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        kr_bind = get_create_parameter(model, 'kr_bind', 1.)
 
         enz = model.monomers[self.enz.name]
         sub = model.monomers[self.sub.name]
@@ -221,7 +223,7 @@ class Phosphorylation(Modification):
             r = Rule(rule_name,
                      enz(**{active_site:None}) + sub(**{site:None}) <>
                      enz(**{active_site:1}) + sub(**{site:1}),
-                     kf_bind, kf_bind)
+                     kf_bind, kr_bind)
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
         except ComponentDuplicateNameError:
@@ -247,10 +249,14 @@ class Phosphorylation(Modification):
                     # Here we make the assumption that the binding site
                     # is simply named after the binding partner
                     if self.enz.bound_to:
-                        act_mod_pattern[self.enz.bound_to] = 1
-                        enz_bound = model.monomers[self.enz.bound_to]
-                        enz_pattern = enz(**act_mod_pattern) % \
-                                        enz_bound(**{self.enz.name:1})
+                        if self.enz.bound_neg:
+                            act_mod_pattern[self.enz.bound_to] = None
+                            enz_pattern = enz(**act_mod_pattern)
+                        else:
+                            act_mod_pattern[self.enz.bound_to] = 1
+                            enz_bound = model.monomers[self.enz.bound_to]
+                            enz_pattern = enz(**act_mod_pattern) % \
+                                            enz_bound(**{self.enz.name:1})
                     else:
                         enz_pattern = enz(**act_mod_pattern)
                     r = Rule(rule_name,
@@ -263,9 +269,12 @@ class Phosphorylation(Modification):
             # substrate unconditionally
             else:
                 if self.enz.bound_to:
-                    enz_bound = model.monomers[self.enz.bound_to]
-                    enz_pattern = enz(**{self.enz.bound_to:1}) % \
-                                    enz_bound(**{self.enz.name:1})
+                    if self.enz.bound_neg:
+                        enz_pattern = enz(**{self.enz.bound_to:None})
+                    else:
+                        enz_bound = model.monomers[self.enz.bound_to]
+                        enz_pattern = enz(**{self.enz.bound_to:1}) % \
+                                        enz_bound(**{self.enz.name:1})
                 else:
                     enz_pattern = enz()
                 r = Rule(rule_name,
@@ -326,13 +335,19 @@ class Autophosphorylation(SelfModification):
                     left_pattern[site] = 'u'
                     right_pattern[site] = 'p'
                     if self.enz.bound_to:
-                        left_pattern[self.enz.bound_to] = 1
-                        right_pattern[self.enz.bound_to] = 1
-                        enz_bound = model.monomers[self.enz.bound_to]
-                        left_enz = enz(**left_pattern) % \
-                                        enz_bound(**{self.enz.name:1})
-                        right_enz = enz(**right_pattern) % \
-                                        enz_bound(**{self.enz.name:1})
+                        if self.enz.bound_neg:
+                            left_pattern[self.enz.bound_to] = None
+                            right_pattern[self.enz.bound_to] = None
+                            left_enz = enz(**left_pattern)
+                            right_enz = enz(**right_pattern)
+                        else:
+                            left_pattern[self.enz.bound_to] = 1
+                            right_pattern[self.enz.bound_to] = 1
+                            enz_bound = model.monomers[self.enz.bound_to]
+                            left_enz = enz(**left_pattern) % \
+                                           enz_bound(**{self.enz.name:1})
+                            right_enz = enz(**right_pattern) % \
+                                            enz_bound(**{self.enz.name:1})
                     else:
                         left_enz = enz(**left_pattern)
                         right_enz = enz(**right_pattern)
@@ -346,13 +361,20 @@ class Autophosphorylation(SelfModification):
                 left_pattern = {site: 'u'}
                 right_pattern = {site: 'p'}
                 if self.enz.bound_to:
-                    enz_bound = model.monomers[self.enz.bound_to]
-                    left_pattern[self.enz.bound_to] = 1
-                    right_pattern[self.enz.bound_to] = 1
-                    left_enz = enz(**left_pattern) % \
-                                enz_bound(**{self.enz.name:1})
-                    right_enz = enz(**right_pattern) % \
-                                enz_bound(**{self.enz.name:1})
+                    if self.enz.bound_neg:
+                        enz_bound = model.monomers[self.enz.bound_to]
+                        left_pattern[self.enz.bound_to] = None
+                        right_pattern[self.enz.bound_to] = None
+                        left_enz = enz(**left_pattern)
+                        right_enz = enz(**right_pattern)
+                    else:
+                        enz_bound = model.monomers[self.enz.bound_to]
+                        left_pattern[self.enz.bound_to] = 1
+                        right_pattern[self.enz.bound_to] = 1
+                        left_enz = enz(**left_pattern) % \
+                                    enz_bound(**{self.enz.name:1})
+                        right_enz = enz(**right_pattern) % \
+                                    enz_bound(**{self.enz.name:1})
                 else:
                     left_enz = enz(**left_pattern)
                     right_enz = enz(**right_pattern)
@@ -368,7 +390,7 @@ class Autophosphorylation(SelfModification):
 # a substrate (usually of the same molecular species), and phosphorylates 
 # it in an intra-molecular fashion. The enz property of the statement must 
 # have exactly one bound_to property, and we assume that enz phosphorylates 
-# this bound_to molecule
+# this bound_to molecule. The bound_neg property is ignored here.
 class Transphosphorylation(SelfModification):
     def monomers_interactions_only(self, agent_set):
         enz = agent_set.get_create_agent(self.enz.name)
@@ -496,7 +518,7 @@ class ActivityActivity(Statement):
                   self.obj_activity),
                  subj(**{subj_active_site: None}) +
                  obj(**{obj_mod_site: None}) >>
-                 subj(**{subj_active_site: 1}) +
+                 subj(**{subj_active_site: 1}) %
                  obj(**{obj_mod_site: 1}),
                  kf_bind)
         model.add_component(r)
@@ -816,6 +838,7 @@ class Complex(Statement):
     def assemble_one_step(self, model, agent_set):
         # Get the rate parameter
         kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
+        kr_bind = get_create_parameter(model, 'kr_bind', 1e-6)
 
         # Make a rule name
         rule_name = '_'.join([m.name for m in self.members])
@@ -868,15 +891,22 @@ class Complex(Statement):
 
             # Add the pattern for the member being bound
             if member.bound_to:
-                bound_name = member.bound_to
-                bound = model.monomers[bound_name]
-                left_site_dict[bound_name] = bond_counter
-                right_site_dict[bound_name] = bond_counter
-                left_pattern = mono(**left_site_dict) % \
-                               bound(**{gene_name:bond_counter})
-                right_pattern = mono(**right_site_dict) % \
-                                bound(**{gene_name:bond_counter})
-                bond_counter += 1 
+                if member.bound_neg:
+                    bound_name = member.bound_to
+                    left_site_dict[bound_name] = None
+                    right_site_dict[bound_name] = None
+                    left_pattern = mono(**left_site_dict)
+                    right_pattern = mono(**right_site_dict)
+                else:
+                    bound_name = member.bound_to
+                    bound = model.monomers[bound_name]
+                    left_site_dict[bound_name] = bond_counter
+                    right_site_dict[bound_name] = bond_counter
+                    left_pattern = mono(**left_site_dict) % \
+                                    bound(**{gene_name:bond_counter})
+                    right_pattern = mono(**right_site_dict) % \
+                                    bound(**{gene_name:bond_counter})
+                    bond_counter += 1 
             else:
                 left_pattern = mono(**left_site_dict)
                 right_pattern = mono(**right_site_dict)
@@ -886,7 +916,7 @@ class Complex(Statement):
             rhs = rhs % right_pattern
         # Finally, create the rule and add it to the model
         try:
-            rule = Rule(rule_name, lhs <> rhs, kf_bind, kf_bind)
+            rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
             model.add_component(rule)
         except ComponentDuplicateNameError:
             msg = "Rule %s already in model! Skipping." % rule_name

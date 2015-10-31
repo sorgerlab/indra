@@ -38,7 +38,7 @@ def save_xml(xml_str, file_name):
     except IOError:
         print 'Could not open %s for writing.' % file_name
         return
-    fh.write(xml_str_pretty)
+    fh.write(xml_str_pretty.encode('utf8'))
     fh.close()
 
 if __name__ == '__main__':
