@@ -28,6 +28,9 @@ install:
   - pip install networkx
   # BEL dependencies
   - gem install bel
+  - gem install rdf
+  - gem install uuid
+  - gem install addressable
   # REACH dependencies
   - pip install objectpath
   - mvn dependency:get -DgroupId=commons-io -DartifactId=commons-io -Dversion=2.4 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
