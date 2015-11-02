@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 import urllib, urllib2
+import requests
 from indra.java_vm import autoclass, JavaException
 import indra.databases.pmc_client as pmc_client
 from processor import ReachProcessor
@@ -34,22 +35,30 @@ def process_text(txt, use_tempdir=False, offline=False):
             fh.write(json_str)
         return process_json_str(events_json_str)
 
-def process_nxml(file_name, use_tempdir=False):
-    base = os.path.basename(file_name)
-    file_id = os.path.splitext(base)[0]
-    if use_tempdir:
-        tmp_dir = tempfile.mkdtemp()
+def process_nxml(file_name, use_tempdir=False, offline=False):
+    if offline:
+        base = os.path.basename(file_name)
+        file_id = os.path.splitext(base)[0]
+        if use_tempdir:
+            tmp_dir = tempfile.mkdtemp()
+        else:
+            tmp_dir = '.'
+        try:
+            paper_reader = autoclass('edu.arizona.sista.reach.ReadPaper')
+            paper_reader.main([file_name, tmp_dir])
+        except JavaException:
+            print 'Could not process file %s.' % file_name
+            return None
+        json_file_name = os.path.join(tmp_dir, file_id + '.uaz.events.json')
+        return process_json_file(json_file_name)
     else:
-        tmp_dir = '.'
-    try:
-        paper_reader = autoclass('edu.arizona.sista.reach.ReadPaper')
-        paper_reader.main([file_name, tmp_dir])
-    except JavaException:
-        print 'Could not process file %s.' % file_name
-        return None
-    
-    json_file_name = os.path.join(tmp_dir, file_id + '.uaz.events.json')
-    return process_json_file(json_file_name)
+        url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
+        txt = open(file_name, 'rt').read()
+        req = urllib2.Request(url, data=urllib.urlencode({'nxml': txt}))
+        res = urllib2.urlopen(req)
+        json_str = res.read()
+        json_dict = json.loads(json_str)
+        return process_json_str(json_str, events_only=False)
 
 def process_json_file(file_name):
     try:
