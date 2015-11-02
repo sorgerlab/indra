@@ -15,6 +15,7 @@ def main():
           packages=['indra', 'indra.bel', 'indra.bel.ndex', 'indra.biopax', 
                     'indra.reach', 'indra.trips', 'indra.databases'],
           install_requires=['pysb', 'objectpath', 'BeautifulSoup', 'rdflib'],
+          include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp', 
                     'mechanism', 'biochemistry'],
           classifiers=[

@@ -3,17 +3,20 @@ import re
 import rdflib
 import os
 import subprocess
+import pkg_resources
 from processor import BelProcessor
 from . import ndex
+
 
 
 def process_ndex_neighborhood(gene_names):
     bel_script = ndex.query_to_belscript(gene_names)
     with open('tmp.bel', 'wt') as fh:
         fh.write(bel_script)
-    bel_to_rdf_cmd = "bel2rdf --bel tmp.bel > tmp.rdf"
+    bel2rdf_path = pkg_resources.resource_filename('indra.bel', 'bel2rdf.rb')
+    bel2rdf_cmd = "ruby %s --bel tmp.bel > tmp.rdf" % bel2rdf_path
     with open('tmp.rdf', 'wt') as fh:
-        subprocess.call(bel_to_rdf_cmd.split(' '), stdout=fh, stderr=subprocess.STDOUT)
+        subprocess.call(bel2rdf_cmd.split(' '), stdout=fh, stderr=subprocess.STDOUT)
     with open('tmp.rdf', 'rt') as fh:
         rdf = fh.read()
     res = re.findall(r'_:([^ ]+)', rdf)
