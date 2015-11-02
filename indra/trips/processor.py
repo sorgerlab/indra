@@ -216,7 +216,11 @@ class TripsProcessor(object):
                                 agent.bound_to = arg2_name
                             else:
                                 agent.bound_to = arg1_name
+                        # Look for negative flag either in precondition event
+                        # predicate tag or in the term itself
                         neg_flag = precond_event.find('predicate/mods/mod[type="ONT::NEG"]')
+                        if neg_flag is None:
+                            neg_flag = term.find('mods/mod[type="ONT::NEG"]')
                         if neg_flag is not None:
                             agent.bound_neg = True
 
