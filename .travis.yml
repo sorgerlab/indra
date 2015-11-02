@@ -27,7 +27,14 @@ install:
   - pip install functools32
   - pip install networkx
   # BEL dependencies
-  - gem install bel
+  - sudo apt-get install software-properties-common python-software-properties
+  - sudo apt-add-repository -y ppa:brightbox/ruby-ng
+  - sudo apt-get update
+  - sudo apt-get install ruby2.2 ruby-switch
+  - sudo ruby-switch --set ruby2.2
+  - which ruby
+  - which gem
+  - gem2.2 install bel
   - gem install rdf
   - gem install uuid
   - gem install addressable
