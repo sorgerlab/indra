@@ -22,14 +22,12 @@ install:
   - wget http://sorger.med.harvard.edu/data/bachman/jars/biopax-pattern-04801fb13eea.jar
   - wget http://sorger.med.harvard.edu/data/bachman/jars/cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
   - export CLASSPATH=$CLASSPATH:./paxtools-4.3.1-beta2-no-jena.jar:./biopax-pattern-04801fb13eea.jar:./cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
-  # ndex-python-client dependencies
-  #- git clone https://github.com/bgyori/ndex-python-client.git
-  #- export PYTHONPATH=$PYTHONPATH:`pwd`/ndex-python-client
-  #- pip install jsonschema
-  #- pip install functools32
-  #- pip install networkx
-  # bel.rb/bel2rdf dependencies
-  # gem install bel
+  # NDEx dependencies
+  - pip install jsonschema
+  - pip install functools32
+  - pip install networkx
+  # BEL dependencies
+  - gem install bel
   # REACH dependencies
   - pip install objectpath
   - mvn dependency:get -DgroupId=commons-io -DartifactId=commons-io -Dversion=2.4 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null

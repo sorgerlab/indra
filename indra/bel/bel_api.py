@@ -4,12 +4,11 @@ import rdflib
 import os
 import subprocess
 from processor import BelProcessor
-import ndex_client
+from . import ndex
 
 
 def process_ndex_neighborhood(gene_names):
-    #ndex = __import__('ndex-python-client')
-    bel_script = ndex_client.query_to_belscript(gene_names)
+    bel_script = ndex.query_to_belscript(gene_names)
     with open('tmp.bel', 'wt') as fh:
         fh.write(bel_script)
     bel_to_rdf_cmd = "bel2rdf --bel tmp.bel > tmp.rdf"
