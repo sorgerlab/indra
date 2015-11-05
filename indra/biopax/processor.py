@@ -71,9 +71,12 @@ class BiopaxProcessor(object):
             # are not in the complex
             member_names = [m.name for m in members]
             if force_contains is not None:
-                for f in force_contains:
-                    if f not in member_names:
-                        continue
+                keep = False
+                for m in member_names:
+                    if m in force_contains:
+                        keep = True
+                if not keep:
+                    continue
 
             cplx = r[p.indexOf('Complex')]
 
