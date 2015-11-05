@@ -103,6 +103,8 @@ class Agent(object):
         self.bound_to = bound_to
         self.bound_neg = bound_neg
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 class Statement(object):
     """The parent class of all statements"""
@@ -114,6 +116,15 @@ class Statement(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        if self.citation == other.citation and\
+            self.evidence == other.evidence and\
+            self.annotations == other.annotations and\
+            self.stmt == other.stmt:
+            return True
+        else:
+            return False
 
     def monomers(self, agent_set, policies=None):
         """Calls the appropriate monomers method based on policies."""
@@ -164,6 +175,15 @@ class Modification(Statement):
         return ("%s(%s, %s, %s, %s)" %
                 (type(self).__name__, self.enz.name, self.sub.name, self.mod,
                  self.mod_pos))
+    
+    def __eq__(self, other):
+        if self.enz == other.enz and\
+            self.sub == other.sub and\
+            self.mod == other.mod and\
+            self.mod_pos == other.mod_pos:
+            return True
+        else:
+            return False
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
@@ -178,6 +198,14 @@ class SelfModification(Statement):
     def __str__(self):
         return ("%s(%s, %s, %s)" %
                 (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
+
+    def __eq__(self, other):
+        if self.enz == other.enz and\
+            self.mod == other.mod and\
+            self.mod_pos == other.mod_pos:
+            return True
+        else:
+            return False
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
@@ -500,6 +528,15 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
+    def __eq__(self, other):
+        if self.subj == other.subj and\
+            self.subj_activity == other.subj_activity and\
+            self.obj == other.obj and\
+            self.obj_activity == other.obj_activity:
+            return True
+        else:
+            return False
+
     def monomers_interactions_only(self, agent_set):
         subj = agent_set.get_create_agent(self.subj.name)
         subj.create_site(active_site_names[self.subj_activity])
@@ -563,6 +600,15 @@ class Dephosphorylation(Statement):
         self.sub = sub
         self.mod = mod
         self.mod_pos = mod_pos
+    
+    def __eq__(self, other):
+        if self.phos == other.phos and\
+            self.sub == other.sub and\
+            self.mod == other.mod and\
+            self.mod_pos == other.mod_pos:
+            return True
+        else:
+            return False
 
     def monomers_interactions_only(self, agent_set):
         phos = agent_set.get_create_agent(self.phos.name)
@@ -619,6 +665,16 @@ class ActivityModification(Statement):
         self.mod_pos = mod_pos
         self.relationship = relationship
         self.activity = activity
+    
+    def __eq__(self, other):
+        if self.monomer == other.monomer and\
+            self.mod == other.mod and\
+            self.mod_pos == other.mod_pos and\
+            self.relationship == other.relationship and\
+            self.activity == other.activity:
+            return True
+        else:
+            return False
 
     def monomers_interactions_only(self, agent_set):
         pass
@@ -667,6 +723,16 @@ class ActivatingSubstitution(Statement):
         self.pos = pos
         self.sub_residue = sub_residue
         self.activity = activity
+    
+    def __eq__(self, other):
+        if self.monomer == other.monomer and\
+            self.wt_residue == other.wt_residue and\
+            self.pos == other.pos and\
+            self.sub_residue == other.sub_residue and\
+            self.activity == other.activity:
+            return True
+        else:
+            return False
 
     def monomers_interactions_only(self, agent_set):
         pass
@@ -690,6 +756,14 @@ class RasGef(Statement):
         self.gef = gef
         self.gef_activity = gef_activity
         self.ras = ras
+
+    def __eq__(self, other):
+        if self.gef == other.gef and\
+            self.gef_activity == other.gef_activity and\
+            self.ras == other.ras:
+            return True
+        else:
+            return False
 
     def monomers_interactions_only(self, agent_set):
         gef = agent_set.get_create_agent(self.gef.name)
@@ -746,6 +820,14 @@ class RasGap(Statement):
         self.gap = gap
         self.gap_activity = gap_activity
         self.ras = ras
+    
+    def __eq__(self, other):
+        if self.gap == other.gap and\
+            self.gap_activity == other.gap_activity and\
+            self.ras == other.ras:
+            return True
+        else:
+            return False
 
     def monomers_interactions_only(self, agent_set):
         gap = agent_set.get_create_agent(self.gap.name)
@@ -796,6 +878,13 @@ class Complex(Statement):
     """Statement representing complex formation between a set of members"""
     def __init__(self, members):
         self.members = members
+
+    def __eq__(self, other):
+        # TODO: find equality for different orders of members too
+        for (m1, m2) in zip(self.members, other.members):
+            if not m1 == m2:
+                return False
+        return True
 
     def monomers_interactions_only(self, agent_set):
         return self.monomers_one_step(agent_set)

@@ -81,14 +81,21 @@ def set_base_initial_condition(model, monomer, value):
         model.initial(mp, p)
     
 
-
 class PysbAssembler(object):
     def __init__(self):
         self.statements = []
         self.agent_set = None
 
+    def statement_exists(self, stmt):
+        for s in self.statements:
+            if stmt == s:
+                return True
+        return False
+
     def add_statements(self, stmts):
-        self.statements.extend(stmts)
+        for stmt in stmts:
+            if not self.statement_exists(stmt):
+                self.statements.append(stmt)
 
     def make_model(self, initial_conditions=True, policies=None):
         model = Model()
