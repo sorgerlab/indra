@@ -577,11 +577,11 @@ class ActivityActivity(Statement):
                  kf_bind)
         model.add_component(r)
 
-    def monomers_one_step(self, model):
-        subj = get_create_monomer(model, self.subj.name)
-        create_site(subj, self.subj_activity, ('inactive', 'active'))
-        obj = get_create_monomer(model, self.obj.name)
-        create_site(obj, self.obj_activity, ('inactive', 'active'))
+    def monomers_one_step(self, agent_set):
+        subj = agent_set.get_create_agent(self.subj.name)
+        subj.create_site(self.subj_activity, ('inactive', 'active'))
+        obj = agent_set.get_create_agent(self.obj.name)
+        obj.create_site(self.obj_activity, ('inactive', 'active'))
 
     def assemble_one_step(self, model, agent_set):
         subj = model.monomers[self.subj.name]
