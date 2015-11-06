@@ -69,15 +69,30 @@ def site_name(stmt):
 
     return names
 
-def get_create_parameter(model, name, value):
+def get_create_parameter(model, name, value, unique=True):
     """Return parameter with given name, creating it if needed.
 
-    If the parameter exists, the value is not changed; if it does not exist,
-    the parameter value is set when it is created."""
+    If unique is false and the parameter exists, the value is not changed; 
+    if it does not exist, it will be created. If unique is true then upon conflic 
+    a number is added to the end of the parameter name.  
+    """
     parameter = model.parameters.get(name)
-    if parameter is None:
-        parameter = Parameter(name, value)
-        model.add_component(parameter)
+
+    if not unique and parameter is not None:
+        return parameter
+    
+    if unique:
+        pnum = 1
+        while True:
+            pname = name + '_%d' % pnum
+            if model.parameters.get(pname) is None:
+                break
+            pnum += 1
+    else:
+        pname = name
+
+    parameter = Parameter(pname, value)
+    model.add_component(parameter)
     return parameter
 
 class UnknownPolicyException(Exception):
@@ -234,8 +249,8 @@ class Phosphorylation(Modification):
             enz.create_site(self.enz.bound_to)
 
     def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
-        kr_bind = get_create_parameter(model, 'kr_bind', 1.)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+        kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
 
         enz = model.monomers[self.enz.name]
         sub = model.monomers[self.sub.name]
@@ -259,10 +274,11 @@ class Phosphorylation(Modification):
             warnings.warn(msg)
 
     def assemble_one_step(self, model, agent_set):
-        kf_phospho = get_create_parameter(model, 'kf_phospho', 1e-6)
-
         enz = model.monomers[self.enz.name]
         sub = model.monomers[self.sub.name]
+
+        param_name = 'kf_' + enz.name[0].lower() + sub.name[0].lower() + '_phos'
+        kf_phospho = get_create_parameter(model, param_name, 1.0)
 
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
@@ -342,9 +358,10 @@ class Autophosphorylation(SelfModification):
         self.assemble_one_step(model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
-        kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
-
         enz = model.monomers[self.enz.name]
+        param_name = 'kf_' + enz.name[0].lower() + '_autophos'
+        kf_autophospho = get_create_parameter(model, param_name, 1e-3)
+
 
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
@@ -447,11 +464,11 @@ class Transphosphorylation(SelfModification):
         self.assemble_one_step(model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
-        kf_autophospho = get_create_parameter(model, 'kf_autophospho', 1e-3)
-
         enz = model.monomers[self.enz.name]
         sub = model.monomers[self.enz.bound_to]
-
+        param_name = 'kf_' + enz.name[0].lower() + sub.name[0].lower() + '_transphos'
+        kf  = get_create_parameter(model, param_name, 1e-3)
+        
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
 
@@ -545,7 +562,7 @@ class ActivityActivity(Statement):
         obj.create_site(default_mod_site_names[self.subj_activity])
 
     def assemble_interactions_only(self, model):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
         subj = model.monomers[self.subj.name]
         obj = model.monomers[self.obj.name]
         subj_active_site = active_site_names[self.subj_activity]
@@ -567,11 +584,12 @@ class ActivityActivity(Statement):
         create_site(obj, self.obj_activity, ('inactive', 'active'))
 
     def assemble_one_step(self, model, agent_set):
-        kf_one_step_activate = \
-                       get_create_parameter(model, 'kf_one_step_activate', 1e-6)
-
         subj = model.monomers[self.subj.name]
         obj = model.monomers[self.obj.name]
+
+        param_name = 'kf_' + subj.name[0].lower() + obj.name[0].lower() + '_act'
+        kf_one_step_activate = \
+                       get_create_parameter(model, param_name, 1e-6)
 
         r = Rule('%s_%s_activates_%s_%s' %
                  (self.subj.name, self.subj_activity, self.obj.name,
@@ -617,7 +635,7 @@ class Dephosphorylation(Statement):
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
     def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
         phos = model.monomers[self.phos.name]
         sub = model.monomers[self.sub.name]
         phos_site = active_site_names['Phosphatase']
@@ -636,11 +654,12 @@ class Dephosphorylation(Statement):
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
     def assemble_one_step(self, model, agent_set):
-        kf_dephospho = get_create_parameter(model, 'kf_dephospho', 1e-6)
-
         phos = model.monomers[self.phos.name]
         sub = model.monomers[self.sub.name]
 
+        param_name = 'kf_' + phos.name[0].lower() + sub.name[0].lower() + '_dephos'
+        kf_dephospho = get_create_parameter(model, param_name, 1e-6)
+        
         site = site_name(self)[0]
         r = Rule('%s_dephospho_%s_%s' %
                  (self.phos.name, self.sub.name, site),
@@ -772,7 +791,7 @@ class RasGef(Statement):
         ras.create_site('p_loop')
 
     def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
         gef = model.monomers[self.gef.name]
         ras = model.monomers[self.ras.name]
         r = Rule('%s_activates_%s' %
@@ -791,10 +810,11 @@ class RasGef(Statement):
         ras.create_site('GtpBound', ('inactive', 'active'))
 
     def assemble_one_step(self, model, agent_set):
-        kf_gef = get_create_parameter(model, 'kf_gef', 1e-6)
-
         gef = model.monomers[self.gef.name]
         ras = model.monomers[self.ras.name]
+
+        param_name = 'kf_' + gef.name[0].lower() + ras.name[0].lower() + '_gef'
+        kf_gef = get_create_parameter(model, param_name, 1e-6)
 
         r = Rule('%s_activates_%s' %
                  (self.gef.name, self.ras.name),
@@ -836,7 +856,7 @@ class RasGap(Statement):
         ras.create_site('gtp_site')
 
     def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.)
+        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
         gap = model.monomers[self.gap.name]
         ras = model.monomers[self.ras.name]
         r = Rule('%s_inactivates_%s' %
@@ -855,10 +875,11 @@ class RasGap(Statement):
         ras.create_site('GtpBound', ('inactive', 'active'))
 
     def assemble_one_step(self, model, agent_set):
-        kf_gap = get_create_parameter(model, 'kf_gap', 1e-6)
-
         gap = model.monomers[self.gap.name]
         ras = model.monomers[self.ras.name]
+        
+        param_name = 'kf_' + gap.name[0].lower() + ras.name[0].lower() + '_gap'
+        kf_gap = get_create_parameter(model, param_name, 1e-6)
 
         r = Rule('%s_inactivates_%s' %
                  (self.gap.name, self.ras.name),
@@ -925,9 +946,11 @@ class Complex(Statement):
                 gene_mono.create_site(bp.name)
 
     def assemble_one_step(self, model, agent_set):
+
         # Get the rate parameter
-        kf_bind = get_create_parameter(model, 'kf_bind', 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_bind', 1e-6)
+        abbr_name = ''.join([m.name[0].lower() for m in self.members])
+        kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
+        kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-6)
 
         # Make a rule name
         name_components = []
