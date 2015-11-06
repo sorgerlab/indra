@@ -930,8 +930,16 @@ class Complex(Statement):
         kr_bind = get_create_parameter(model, 'kr_bind', 1e-6)
 
         # Make a rule name
-        rule_name = '_'.join([m.name for m in self.members])
-        rule_name += '_bind'
+        name_components = []
+        for m in self.members:
+            if m.bound_to:
+                if m.bound_neg:
+                    name_components.append(m.name + '_n' + m.bound_to)
+                else:
+                    name_components.append(m.name + '_' + m.bound_to)
+            else:
+                name_components.append(m.name)
+        rule_name = '_'.join(name_components) + '_bind'
         # Initialize the left and right-hand sides of the rule
         lhs = ReactionPattern([])
         rhs = ComplexPattern([], None)
