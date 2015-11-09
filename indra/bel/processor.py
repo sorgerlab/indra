@@ -374,10 +374,10 @@ class BelProcessor(object):
         p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
         """
         q_mods = prefixes + """
-            SELECT ?enzyme_name ?sub_label ?act_type ?stmt
+            SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
                 ?subject a belvoc:ProteinAbundance .
@@ -396,7 +396,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[3])
+            (citation, evidence, annotations) = self.get_evidence(stmt[4])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
             enz = Agent(enz_name)
@@ -418,13 +418,20 @@ class BelProcessor(object):
                 print("Warning: Could not parse substitution expression %s" %
                       sub_expr)
                 continue
+            
+            rel = strip_statement(stmt[3])
+            print rel
+            if rel == 'DirectlyDecreases':
+                rel = 'decreases'
+            else:
+                rel = 'increases'
 
-            stmt_str = strip_statement(stmt[3])
+            stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
                     ActivatingSubstitution(enz, wt_residue, position,
-                                           sub_residue, act_type,
+                                           sub_residue, act_type, rel,
                                            stmt_str,
                                            citation, evidence, annotations))
 

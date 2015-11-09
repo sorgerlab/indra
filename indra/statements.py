@@ -733,15 +733,16 @@ class ActivityModification(Statement):
 class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
-    def __init__(self, monomer, wt_residue, pos, sub_residue, activity,
+    def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
                  stmt, citation, evidence, annotations):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
                                                      evidence, annotations)
-        self.monomer.name = monomer.name
+        self.monomer = monomer
         self.wt_residue = wt_residue
         self.pos = pos
         self.sub_residue = sub_residue
         self.activity = activity
+        self.rel = rel
     
     def __eq__(self, other):
         if self.monomer == other.monomer and\
@@ -760,9 +761,9 @@ class ActivatingSubstitution(Statement):
         pass
 
     def __str__(self):
-        return ("ActivatingSubstitution(%s, %s, %s, %s, %s)" %
+        return ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
-                 self.sub_residue, self.activity))
+                 self.sub_residue, self.activity, self.rel))
 
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
