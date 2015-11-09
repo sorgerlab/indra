@@ -17,11 +17,9 @@ install:
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
   - pip install cython
-  - pip install git+https://github.com/kivy/pyjnius.git@master
-  - wget http://sorger.med.harvard.edu/data/bachman/jars/paxtools-4.3.1-beta2-no-jena.jar
-  - wget http://sorger.med.harvard.edu/data/bachman/jars/biopax-pattern-04801fb13eea.jar
-  - wget http://sorger.med.harvard.edu/data/bachman/jars/cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
-  - export CLASSPATH=$CLASSPATH:./paxtools-4.3.1-beta2-no-jena.jar:./biopax-pattern-04801fb13eea.jar:./cpath-client-4.2.0-SNAPSHOT-fat-jar.jar
+  - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
+  - wget http://sorger.med.harvard.edu/data/bgyori/indra/paxtools.jar
+  - export CLASSPATH=$CLASSPATH:./paxtools.jar
   # NDEx dependencies
   - pip install jsonschema
   - pip install functools32
@@ -34,7 +32,7 @@ install:
   - sudo ruby-switch --set ruby2.2
   - which ruby
   - which gem
-  - gem2.2 install bel
+  #- gem install bel
   - gem install rdf
   - gem install uuid
   - gem install addressable
