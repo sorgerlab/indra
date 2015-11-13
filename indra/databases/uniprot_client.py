@@ -1,5 +1,5 @@
 import rdflib
-import urllib2
+import urllib, urllib2
 
 uniprot_url = 'http://www.uniprot.org/uniprot/'
 
@@ -9,7 +9,6 @@ rdf_prefixes = """
     PREFIX faldo: <http://biohackathon.org/resource/faldo#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
-
 
 def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
@@ -21,6 +20,24 @@ def query_protein(protein_id):
         return None
     return g
 
+def get_family_members(family_name, human_only=True):
+    data = {'query': 'family:%s' % family_name, 
+            'format': 'list'}
+    if human_only:
+        data['fil'] = 'organism:human'
+    req = urllib2.Request(uniprot_url, urllib.urlencode(data))
+    res = urllib2.urlopen(req)
+    html = res.read()
+    if html:
+        protein_list = html.strip().split('\n')
+        gene_names = []
+        for p in protein_list:
+            g  = query_protein(p)
+            hgnc_name = get_hgnc_name(g)
+            gene_names.append(hgnc_name)
+        return gene_names
+    else:
+        return None
 
 def get_hgnc_name(g):
     query = rdf_prefixes + """
