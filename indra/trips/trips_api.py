@@ -15,6 +15,7 @@ def process_xml(xml_string):
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()
+    tp.get_activations()
     return tp
    
 

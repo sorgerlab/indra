@@ -35,6 +35,30 @@ class TripsProcessor(object):
         self._hgnc_cache = self._load_hgnc_cache()
         self._static_events = self._find_static_events()
 
+    def get_activations(self):
+        act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
+        for event in act_events: 
+            sentence = self._get_text(event)
+            
+            # Get the activating agent in the event
+            agent = event.find(".//*[@role=':AGENT']")
+            agent_id = agent.attrib['id']
+            agent_name = self._get_name_by_id(agent_id)
+            agent_agent = Agent(agent_name)
+            
+            # Get the activated agent in the event
+            affected = event.find(".//*[@role=':AFFECTED']")
+            affected_id = affected.attrib['id']
+            affected_name = self._get_name_by_id(affected_id)
+            affected_agent = Agent(affected_name)
+
+            citation = ''
+            evidence = ''
+            annotations = ''
+            self.statements.append(ActivityActivity(agent_agent, 'act',
+                                    '', affected_agent, 'act',
+                                    sentence, citation, evidence, annotations))
+             
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
@@ -53,8 +77,7 @@ class TripsProcessor(object):
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
-                msg = 'Skipping activation event with no precondition event.'
-                warnings.warn(msg)
+                # This measn that it is not an activating modification 
                 continue
             precond_id = precond_event_ref.find('eventID').text
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
