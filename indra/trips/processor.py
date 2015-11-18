@@ -215,6 +215,7 @@ class TripsProcessor(object):
             # Extract preconditions of the agent
             if precond_event_ref is not None:
                 # Find the event describing the precondition
+                import ipdb; ipdb.set_trace()
                 precond_id = precond_event_ref.find('eventID').text
                 precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
@@ -242,8 +243,12 @@ class TripsProcessor(object):
                         # Look for negative flag either in precondition event
                         # predicate tag or in the term itself
                         neg_flag = precond_event.find('predicate/mods/mod[type="ONT::NEG"]')
-                        if neg_flag is None:
-                            neg_flag = term.find('mods/mod[type="ONT::NEG"]')
+                        neg_flag = neg_flag or term.find('mods/mod[type="ONT::NEG"]')
+                        negation_sign = precond_event.find('predicate/negation')
+                        if negation_sign is not None:
+                            if negation_sign.text == '+':
+                                neg_flag = True
+
                         if neg_flag is not None:
                             agent.bound_neg = True
 
