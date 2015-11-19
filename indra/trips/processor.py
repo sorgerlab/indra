@@ -165,6 +165,12 @@ class TripsProcessor(object):
                     self.statements.append(Transphosphorylation(agent_agent,
                                         m, p, sentence,
                                         citation, evidence, annotations))
+            # Dephosphorylation
+            elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
+                for m, p in zip(mod, mod_pos):
+                    self.statements.append(Dephosphorylation(agent_agent,
+                                        affected_agent, m, p, sentence,
+                                        citation, evidence, annotations))
             # Autophosphorylation
             elif agent.attrib['id'] == affected.attrib['id']:
                 for m, p in zip(mod, mod_pos):
