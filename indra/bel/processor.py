@@ -420,7 +420,6 @@ class BelProcessor(object):
                 continue
             
             rel = strip_statement(stmt[3])
-            print rel
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'
             else:

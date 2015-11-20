@@ -221,7 +221,6 @@ class TripsProcessor(object):
             # Extract preconditions of the agent
             if precond_event_ref is not None:
                 # Find the event describing the precondition
-                import ipdb; ipdb.set_trace()
                 precond_id = precond_event_ref.find('eventID').text
                 precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
