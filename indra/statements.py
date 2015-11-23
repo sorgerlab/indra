@@ -216,7 +216,8 @@ class SelfModification(Statement):
                 (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
 
     def __eq__(self, other):
-        if self.enz == other.enz and\
+        if isinstance(other, SelfModification) and\
+            self.enz == other.enz and\
             self.mod == other.mod and\
             self.mod_pos == other.mod_pos:
             return True
@@ -279,7 +280,7 @@ class Phosphorylation(Modification):
         sub = model.monomers[self.sub.name]
 
         param_name = 'kf_' + enz.name[0].lower() + sub.name[0].lower() + '_phos'
-        kf_phospho = get_create_parameter(model, param_name, 1.0)
+        kf_phospho = get_create_parameter(model, param_name, 1e-6)
 
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
@@ -492,7 +493,7 @@ class Transphosphorylation(SelfModification):
                     right_enz = enz(**right_pattern) % \
                                 enz_bound(**{self.enz.name: 1, site: 'p'})
 
-                    r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
+                    r = Rule(rule_name, left_enz >> right_enz, kf)
                     model.add_component(r)
             # If there are no known activity modifications, we take this
             # statement as given and allow the enzyme to phosphorylate itself
@@ -507,7 +508,7 @@ class Transphosphorylation(SelfModification):
                             enz_bound(**{self.enz.name: 1, site: 'u'})
                 right_enz = enz(**right_pattern) % \
                             enz_bound(**{self.enz.name: 1, site: 'p'})
-                r = Rule(rule_name, left_enz >> right_enz, kf_autophospho)
+                r = Rule(rule_name, left_enz >> right_enz, kf)
                 model.add_component(r)
 
         # If this rule is already in the model, issue a warning and continue
@@ -783,7 +784,8 @@ class RasGef(Statement):
         self.ras = ras
 
     def __eq__(self, other):
-        if self.gef == other.gef and\
+        if isinstance(other, RasGef) and\
+            self.gef == other.gef and\
             self.gef_activity == other.gef_activity and\
             self.ras == other.ras:
             return True
