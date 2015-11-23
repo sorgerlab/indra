@@ -192,7 +192,8 @@ class Modification(Statement):
                  self.mod_pos))
     
     def __eq__(self, other):
-        if self.enz == other.enz and\
+        if isinstance(other, Modification) and\
+            self.enz == other.enz and\
             self.sub == other.sub and\
             self.mod == other.mod and\
             self.mod_pos == other.mod_pos:
@@ -546,7 +547,8 @@ class ActivityActivity(Statement):
         self.relationship = relationship
 
     def __eq__(self, other):
-        if self.subj == other.subj and\
+        if isinstance(other, ActivityActivity) and\
+            self.subj == other.subj and\
             self.subj_activity == other.subj_activity and\
             self.obj == other.obj and\
             self.obj_activity == other.obj_activity:
@@ -620,7 +622,8 @@ class Dephosphorylation(Statement):
         self.mod_pos = mod_pos
     
     def __eq__(self, other):
-        if self.phos == other.phos and\
+        if isinstance(other, Dephosphorylation) and\
+            self.phos == other.phos and\
             self.sub == other.sub and\
             self.mod == other.mod and\
             self.mod_pos == other.mod_pos:
@@ -686,7 +689,8 @@ class ActivityModification(Statement):
         self.activity = activity
     
     def __eq__(self, other):
-        if self.monomer == other.monomer and\
+        if isinstance(other, ActivityModification) and\
+            self.monomer == other.monomer and\
             self.mod == other.mod and\
             self.mod_pos == other.mod_pos and\
             self.relationship == other.relationship and\
@@ -745,7 +749,8 @@ class ActivatingSubstitution(Statement):
         self.rel = rel
     
     def __eq__(self, other):
-        if self.monomer == other.monomer and\
+        if isinstance(other, ActivatingSubstitution) and\
+            self.monomer == other.monomer and\
             self.wt_residue == other.wt_residue and\
             self.pos == other.pos and\
             self.sub_residue == other.sub_residue and\
@@ -843,7 +848,8 @@ class RasGap(Statement):
         self.ras = ras
     
     def __eq__(self, other):
-        if self.gap == other.gap and\
+        if isinstance(other, RasGap) and\
+            self.gap == other.gap and\
             self.gap_activity == other.gap_activity and\
             self.ras == other.ras:
             return True
@@ -903,6 +909,8 @@ class Complex(Statement):
 
     def __eq__(self, other):
         # TODO: find equality for different orders of members too
+        if not isinstance(other, Complex):
+            return False
         for (m1, m2) in zip(self.members, other.members):
             if not m1 == m2:
                 return False
