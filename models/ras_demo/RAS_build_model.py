@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 import sys
-from pysb import Parameter, Observable
+from pysb import Parameter, Observable, Rule
 from pysb.integrate import Solver
 import pysb.core
 
@@ -30,7 +30,7 @@ def add_initial(model, pattern, value):
 pa = PysbAssembler()
 bp = bel_api.process_belrdf('../../data/RAS_combined.rdf')
 pa.add_statements(bp.statements)
-model = pa.make_model()
+model = pa.make_model(initial_conditions=False)
 
 # Useful shortcuts to access model components
 m = model.monomers
@@ -38,11 +38,12 @@ p = model.parameters
 
 # Add ligand to the model
 model.add_component(Monomer('EGF'))
+model.add_component(Parameter('kf_ee_act', 1e-6))
 model.add_component(
     Rule('EGF_activates_EGFR',
          m['EGF']() + m['EGFR']({'Kinase':'inactive'}) >>
          m['EGF']() + m['EGFR']({'Kinase':'active'}),
-         p['kf_one_step_activate']))
+         p['kf_ee_act']))
 
 # Add initial conditions
 # Values taken from Chen et al. (2009) Mol. Syst. Biol.

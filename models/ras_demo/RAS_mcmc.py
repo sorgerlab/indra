@@ -90,8 +90,8 @@ opts.likelihood_fn = likelihood
 opts.prior_fn = prior
 opts.step_fn = step
 opts.estimate_params = map(model.parameters.get,
-                           ['kf_phospho', 'kf_gef', 'kf_gap',
-                            'kf_one_step_activate'])
+                           ['kf_ee_act', 'kf_bh_bind_1', 'kf_sn_act_1',
+                            'kf_ha_act_1'])
 opts.prior_mean = [np.log10(p.value) for p in opts.estimate_params]
 opts.prior_var = np.empty_like(opts.prior_mean)
 opts.prior_var.fill(1.0)
