@@ -8,7 +8,7 @@ def test_trips_processor_online():
     """Smoke test to see if imports and executes without error. Doesn't
     check for correctness of parse or of assembled model."""
     pa = PysbAssembler()
-    tp = trips_api.process_text('BRAF phosphorylates MEK1 at Ser222')
+    tp = trips_api.process_text('BRAF phosphorylates MEK1 at Ser222.')
     pa.add_statements(tp.statements)
 
 def test_trips_processor_offline():

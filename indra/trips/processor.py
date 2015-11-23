@@ -42,6 +42,8 @@ class TripsProcessor(object):
             
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
+            if agent is None:
+                continue
             agent_id = agent.attrib['id']
             agent_name = self._get_name_by_id(agent_id)
             agent_agent = Agent(agent_name)
@@ -327,15 +329,15 @@ class TripsProcessor(object):
         subterms = site_term.find("subterms")
         if subterms is not None:
             for s in subterms.getchildren():
-                residue, pos = self._get_site_by_id(s.text)
+                residue, pos = self._get_site_by_id(s.attrib['id'])
                 all_residues.extend(residue)
                 all_pos.extend(pos)
         else:
             site_type = site_term.find("type").text
             site_name = site_term.find("name").text
             if site_type == 'ONT::MOLECULAR-SITE':
-                # Example name: SER-222
-                residue, pos = site_name.split('-')
+                residue = site_term.find('features/site/name').text.upper()
+                pos = site_term.find('features/site/pos').text.upper()
             elif site_type == 'ONT::RESIDUE':
                 # Example name: TYROSINE-RESIDUE
                 residue = site_name.split('-')[0]
