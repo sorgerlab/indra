@@ -3,10 +3,11 @@ import trips_client
 from processor import TripsProcessor
 
 
-def process_text(text):
+def process_text(text, save_xml_name='trips_output.xml'):
     html = trips_client.send_query(text)
     xml = trips_client.get_xml(html)
-    trips_client.save_xml(xml, 'test.xml')
+    if save_xml_name:
+        trips_client.save_xml(xml, save_xml_name)
     return process_xml(xml)
 
 
