@@ -59,7 +59,7 @@ def add_rule_to_model(model, rule):
         model.add_component(rule)
     # If this rule is already in the model, issue a warning and continue
     except ComponentDuplicateNameError:
-        msg = "Rule %s already in model! Skipping." % rule_name
+        msg = "Rule %s already in model! Skipping." % rule.name
         warnings.warn(msg)
 
 def site_name(stmt):
@@ -322,16 +322,11 @@ class Phosphorylation(Modification):
         active_site = active_site_names['Kinase']
         # Create a rule specifying that the substrate binds to the kinase at
         # its active site
-        try:
-            r = Rule(rule_name,
-                     enz(**{active_site:None}) + sub(**{site:None}) <>
-                     enz(**{active_site:1}) + sub(**{site:1}),
-                     kf_bind, kr_bind)
-            model.add_component(r)
-        # If this rule is already in the model, issue a warning and continue
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
+        r = Rule(rule_name,
+                    enz(**{active_site:None}) + sub(**{site:None}) <>
+                    enz(**{active_site:1}) + sub(**{site:1}),
+                    kf_bind, kr_bind)
+        add_rule_to_model(model, r)
 
     def assemble_one_step(self, model, agent_set):
         
@@ -356,12 +351,7 @@ class Phosphorylation(Modification):
                     enz_pattern(am) + sub_unphos >>
                     enz_pattern(am) + sub_phos,
                     kf_phospho)
-            try:
-                model.add_component(r)
-            # If this rule is already in the model, issue a warning and continue
-            except ComponentDuplicateNameError:
-                msg = "Rule %s already in model! Skipping." % rule_name
-                warnings.warn(msg)
+            add_rule_to_model(model, r)
     
 
     def assemble_two_step(self, model, agent_set): 
@@ -433,12 +423,7 @@ class Autophosphorylation(SelfModification):
 
         rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
         r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-        try:
-            model.add_component(r)
-        # If this rule is already in the model, issue a warning and continue
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
+        add_rule_to_model(model, r)
 
 # Transphosphorylation assumes that a kinase is already bound to 
 # a substrate (usually of the same molecular species), and phosphorylates 
@@ -480,13 +465,7 @@ class Transphosphorylation(SelfModification):
         rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)    
         r = Rule(rule_name, enz_pattern % sub_unphos >>\
                         enz_pattern % sub_phos, kf)
-        try:
-            model.add_component(r)
-        # If this rule is already in the model, issue a warning and continue
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
-
+        add_rule_to_model(model, r)
 
 class Hydroxylation(Modification):
     """Hydroxylation modification"""
@@ -549,7 +528,7 @@ class ActivityActivity(Statement):
                  subj(**{subj_active_site: 1}) %
                  obj(**{obj_mod_site: 1}),
                  kf_bind)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def monomers_one_step(self, agent_set):
         subj = agent_set.get_create_base_agent(self.subj)
@@ -581,7 +560,7 @@ class ActivityActivity(Statement):
                 subj_pattern + obj_active >> subj_pattern + obj_inactive,
                 kf_one_step_activate)
 
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("%s(%s, %s, %s, %s, %s)" %
@@ -629,7 +608,7 @@ class Dephosphorylation(Statement):
                  phos(**{phos_site: None}) + sub(**{site: None}) >>
                  phos(**{phos_site: 1}) + sub(**{site: 1}),
                  kf_bind)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def monomers_one_step(self, agent_set):
         phos = agent_set.get_create_base_agent(self.phos)
@@ -653,7 +632,7 @@ class Dephosphorylation(Statement):
                  phos_pattern + sub_phos >>
                  phos_pattern + sub_unphos,
                  kf_dephospho)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
@@ -792,7 +771,7 @@ class RasGef(Statement):
                  gef(**{'gef_site': 1}) +
                  ras(**{'p_loop': 1}),
                  kf_bind)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def monomers_one_step(self, agent_set):
         gef = agent_set.get_create_base_agent(self.gef)
@@ -817,7 +796,7 @@ class RasGef(Statement):
                  gef_pattern + ras_inactive >>
                  gef_pattern + ras_active,
                  kf_gef)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("RasGef(%s, %s, %s)" %
@@ -861,7 +840,7 @@ class RasGap(Statement):
                  gap(**{'gap_site': 1}) +
                  ras(**{'gtp_site': 1}),
                  kf_bind)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def monomers_one_step(self, agent_set):
         gap = agent_set.get_create_base_agent(self.gap)
@@ -886,7 +865,7 @@ class RasGap(Statement):
                  gap_pattern + ras_active >>
                  gap_pattern + ras_inactive,
                  kf_gap)
-        model.add_component(r)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("RasGap(%s, %s, %s)" %
@@ -1027,12 +1006,8 @@ class Complex(Statement):
             lhs = lhs + left_pattern
             rhs = rhs % right_pattern
         # Finally, create the rule and add it to the model
-        try:
-            rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
-            model.add_component(rule)
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
+        rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
+        add_rule_to_model(model, rule)
 
     def __str__(self):
         return ("Complex(%s)" % [m.name for m in self.members])
