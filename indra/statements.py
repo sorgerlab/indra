@@ -54,6 +54,14 @@ default_mod_site_names = {
     'Phosphatase': 'phospho',
 }
 
+def add_rule_to_model(model, rule):
+    try:
+        model.add_component(rule)
+    # If this rule is already in the model, issue a warning and continue
+    except ComponentDuplicateNameError:
+        msg = "Rule %s already in model! Skipping." % rule_name
+        warnings.warn(msg)
+
 def site_name(stmt):
     """Return all site names for a modification-type statement."""
     names = []
@@ -180,6 +188,8 @@ class Statement(object):
             self.monomers_one_step(agent_set)
         elif policies == 'interactions_only':
             self.monomers_interactions_only(agent_set)
+        elif policies == 'two_step':
+            self.monomers_two_step(agent_set)
         else:
             raise UnknownPolicyException(policies)
 
@@ -189,6 +199,8 @@ class Statement(object):
             self.assemble_one_step(model, agent_set)
         elif policies == 'interactions_only':
             self.assemble_interactions_only(model, agent_set)
+        elif policies == 'two_step':
+            self.assemble_two_step(model, agent_set)
         else:
             raise UnknownPolicyException(policies)
 
@@ -198,6 +210,14 @@ class Statement(object):
 
     def assemble_one_step(self, model, agent_set):
         warnings.warn("%s.assemble_one_step not implemented" %
+                      self.__class__.__name__)
+    
+    def monomers_two_step(self, agent_set):
+        warnings.warn("%s.monomers_two_step not implemented" %
+                      self.__class__.__name__)
+    
+    def assemble_two_step(self, agent_set):
+        warnings.warn("%s.assemble_two_step not implemented" %
                       self.__class__.__name__)
 
     def monomers_interactions_only(self, agent_set):
@@ -278,6 +298,15 @@ class Phosphorylation(Modification):
         # distributive. If this is not the case, this assumption will need to
         # be revisited.
         sub.create_site(site_name(self)[0], ('u', 'p'))
+    
+    def monomers_two_step(self, agent_set):
+        enz = agent_set.get_create_base_agent(self.enz)
+        sub = agent_set.get_create_base_agent(self.sub)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+        # Create site for binding the substrate
+        enz.create_site(sub.name)
+        sub.create_site(enz.name)
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
@@ -334,6 +363,43 @@ class Phosphorylation(Modification):
                 msg = "Rule %s already in model! Skipping." % rule_name
                 warnings.warn(msg)
     
+
+    def assemble_two_step(self, model, agent_set): 
+        enz_bound = get_complex_pattern(model, self.enz, agent_set,
+            extra_fields = {self.sub.name: 1})
+        enz_unbound = get_complex_pattern(model, self.enz, agent_set,
+            extra_fields = {self.sub.name: None})
+        sub_pattern = get_complex_pattern(model, self.sub, agent_set)
+        
+        param_name = 'kf_' + self.enz.name[0].lower() + self.sub.name[0].lower() + '_bind'
+        kf_bind = get_create_parameter(model, param_name, 1e-6)
+        param_name = 'kr_' + self.enz.name[0].lower() + self.sub.name[0].lower() + '_bind'
+        kr_bind = get_create_parameter(model, param_name, 1e-3)
+        param_name = 'kc_' + self.enz.name[0].lower() + self.sub.name[0].lower() + '_phos'
+        kf_phospho = get_create_parameter(model, param_name, 1e-3)
+        
+        site = site_name(self)[0]
+
+        enz_act_mods = get_activating_mods(self.enz, agent_set)
+        for i, am in enumerate(enz_act_mods):
+            rule_name = '%s_phospho_bind_%s_%d' % (self.enz.name, self.sub.name, i+1)
+            r = Rule(rule_name,
+                enz_unbound(am) +\
+                sub_pattern(**{site: 'u', self.enz.name: None}) <>
+                enz_bound(am) %\
+                sub_pattern(**{site: 'u', self.enz.name: 1}),
+                kf_bind, kr_bind)
+            add_rule_to_model(model, r)
+        
+            rule_name = '%s_phospho_%s_%s_%d' % (self.enz.name, self.sub.name, site, i+1)
+            r = Rule(rule_name,
+                enz_bound(am) %\
+                    sub_pattern(**{site: 'u', self.enz.name: 1}) >>
+                enz_unbound(am) +\
+                    sub_pattern(**{site: 'p', self.enz.name: None}),
+                kf_phospho)
+            add_rule_to_model(model, r)
+
 
 # Autophosphorylation happens when a protein phosphorylates itself.
 # A more precise name for this is cis-autophosphorylation.
