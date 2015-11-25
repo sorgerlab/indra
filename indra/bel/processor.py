@@ -486,14 +486,14 @@ class BelProcessor(object):
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
-                 rel == 'DirectlyIncreases':
+                 rel == 'increases':
                 self.statements.append(
                         RasGef(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
-                 rel == 'DirectlyDecreases':
+                 rel == 'decreases':
                 self.statements.append(
                         RasGap(subj, subj_activity, obj,
                                stmt_str, citation, evidence, annotations))
