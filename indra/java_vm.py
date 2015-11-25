@@ -1,6 +1,7 @@
 """Handles all imports from jnius to prevent conflicts resulting from attempts
 to set JVM options while the VM is already running."""
 
+import os
 import jnius_config
 
 if '-Xmx4g' not in jnius_config.get_options():
@@ -9,6 +10,10 @@ if '-Xmx4g' not in jnius_config.get_options():
     else:
         warnings.warn("Couldn't set memory limit for Java VM because the VM "
                       "is already running.")
+
+path_here = os.path.dirname(os.path.realpath(__file__))
+cp = path_here + '/biopax/jars/paxtools.jar'
+os.environ['CLASSPATH'] = cp
 
 from jnius import autoclass, JavaException, cast
 
