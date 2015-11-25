@@ -3,6 +3,7 @@ from pysb.core import SelfExporter
 from bel import bel_api
 from biopax import biopax_api
 from trips import trips_api
+from indra.statements import Agent
 
 SelfExporter.do_export = False
 
@@ -11,14 +12,20 @@ class BaseAgentSet(object):
     def __init__(self):
         self.agents = {}
 
-    def get_create_agent(self, name):
+    def get_create_base_agent(self, agent):
         """Return agent with given name, creating it if needed."""
         try:
-            agent = self.agents[name]
+            base_agent = self.agents[agent.name]
         except KeyError:
-            agent = BaseAgent(name)
-            self.agents[name] = agent
-        return agent
+            base_agent = BaseAgent(agent.name)
+            self.agents[agent.name] = base_agent
+        
+        if agent.bound_to:
+            bound_to = self.get_create_base_agent(Agent(agent.bound_to))
+            bound_to.create_site(agent.name)
+            base_agent.create_site(agent.bound_to)
+        
+        return base_agent
 
     def iteritems(self):
         return self.agents.iteritems()
