@@ -134,3 +134,37 @@ def test_pysb_assembler_rasgap1():
     print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
+
+def test_pysb_assembler_actmod1():
+    mek = Agent('MEK')
+    erk = Agent('ERK')
+    stmts = []
+    stmts.append(ActivityModification(mek, ['PhosphorylationSerine', 
+        'PhosphorylationSerine'], [218,222], 'increases', 'act', '', '', '', ''))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185', '', '', '', ''))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187', '', '', '', ''))
+    
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==2)
+    assert(len(model.monomers)==2)
+
+def test_pysb_assembler_actmod2():
+    mek = Agent('MEK')
+    erk = Agent('ERK')
+    stmts = []
+    stmts.append(ActivityModification(mek, ['PhosphorylationSerine'], 
+        [218], 'increases', 'act', '', '', '', ''))
+    stmts.append(ActivityModification(mek, ['PhosphorylationSerine'], 
+        [222], 'increases', 'act', '', '', '', ''))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185', '', '', '', ''))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187', '', '', '', ''))
+    
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==4)
+    assert(len(model.monomers)==2)

@@ -95,32 +95,36 @@ def get_create_parameter(model, name, value, unique=True):
     model.add_component(parameter)
     return parameter
 
+def get_activating_mods(agent, agent_set):
+    act_mods = agent_set[agent.name].activating_mods
+    if not act_mods:
+        act_mods = [{}]
+    return act_mods
+
 def get_complex_pattern(model, agent, agent_set, extra_fields=None):
     '''
     Constructs a PySB ComplexPattern from an Agent
     '''
     monomer = model.monomers[agent.name]
-     
-    act_mods = agent_set[agent.name].activating_mods
-    if not act_mods:
-        act_mods = [{}]
-    for pattern in [a.copy() for a in act_mods]:
-        if extra_fields is not None:
-            for k,v in extra_fields.iteritems():
-                pattern[k] = v
-        if agent.bound_to:
-            if agent.bound_neg:
-                pattern[agent.bound_to] = None
-                complex_pattern = monomer(**pattern)
-            else:
-                # Here we make the assumption that the binding site
-                # is simply named after the binding partner
-                pattern[agent.bound_to] = 1
-                bound_to = model.monomers[agent.bound_to]
-                complex_pattern = monomer(**pattern) % \
-                                    bound_to(**{agent.name:1})
-        else:
+    
+    pattern = {}
+
+    if extra_fields is not None:
+        for k,v in extra_fields.iteritems():
+            pattern[k] = v
+    if agent.bound_to:
+        if agent.bound_neg:
+            pattern[agent.bound_to] = None
             complex_pattern = monomer(**pattern)
+        else:
+            # Here we make the assumption that the binding site
+            # is simply named after the binding partner
+            pattern[agent.bound_to] = 1
+            bound_to = model.monomers[agent.bound_to]
+            complex_pattern = monomer(**pattern) % \
+                                bound_to(**{agent.name:1})
+    else:
+        complex_pattern = monomer(**pattern)
     return complex_pattern
 
 class UnknownPolicyException(Exception):
@@ -301,8 +305,6 @@ class Phosphorylation(Modification):
             warnings.warn(msg)
 
     def assemble_one_step(self, model, agent_set):
-        enz_pattern = get_complex_pattern(model, self.enz, agent_set)
-        sub_pattern = get_complex_pattern(model, self.sub, agent_set)
         
         param_name = 'kf_' + self.enz.name[0].lower() +\
                         self.sub.name[0].lower() + '_phos'
@@ -311,17 +313,26 @@ class Phosphorylation(Modification):
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
 
-        rule_name = '%s_phospho_%s_%s' % (self.enz.name, self.sub.name, site)
-        r = Rule(rule_name,
-                enz_pattern + sub_pattern(**{site: 'u'}) >>
-                enz_pattern + sub_pattern(**{site: 'p'}),
-                kf_phospho)
-        try:
-            model.add_component(r)
-        # If this rule is already in the model, issue a warning and continue
-        except ComponentDuplicateNameError:
-            msg = "Rule %s already in model! Skipping." % rule_name
-            warnings.warn(msg)
+        enz_pattern = get_complex_pattern(model, self.enz, agent_set)
+        sub_unphos = get_complex_pattern(model, self.sub, agent_set, 
+            extra_fields={site: 'u'})
+        sub_phos = get_complex_pattern(model, self.sub, agent_set, 
+            extra_fields={site: 'p'})
+        
+        enz_act_mods = get_activating_mods(self.enz, agent_set)
+        for i, am in enumerate(enz_act_mods):
+            rule_name = '%s_phospho_%s_%s_%d' %\
+                (self.enz.name, self.sub.name, site, i+1)
+            r = Rule(rule_name,
+                    enz_pattern(am) + sub_unphos >>
+                    enz_pattern(am) + sub_phos,
+                    kf_phospho)
+            try:
+                model.add_component(r)
+            # If this rule is already in the model, issue a warning and continue
+            except ComponentDuplicateNameError:
+                msg = "Rule %s already in model! Skipping." % rule_name
+                warnings.warn(msg)
     
 
 # Autophosphorylation happens when a protein phosphorylates itself.
@@ -351,11 +362,11 @@ class Autophosphorylation(SelfModification):
 
         # See NOTE in monomers_one_step
         site = site_name(self)[0]
-        left_pattern = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'u'})
-        right_pattern = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'p'})
+        pattern_unphos = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'u'})
+        pattern_phos = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'p'})
 
         rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
-        r = Rule(rule_name, left_pattern >> right_pattern, kf_autophospho)
+        r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
         try:
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
@@ -390,17 +401,19 @@ class Transphosphorylation(SelfModification):
         self.assemble_one_step(model, agent_set)
 
     def assemble_one_step(self, model, agent_set):
-        enz_pattern = get_complex_pattern(model, self.enz, agent_set).monomer_patterns[0]
-        sub_pattern = get_complex_pattern(model, Agent(self.enz.bound_to), agent_set)
         param_name = 'kf_' + self.enz.name[0].lower() + self.enz.bound_to[0].lower() + '_transphos'
         kf  = get_create_parameter(model, param_name, 1e-3)
         
         site = site_name(self)[0]
-
-        rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)
-            
-        r = Rule(rule_name, enz_pattern % sub_pattern(**{site: 'u'}) >>\
-                        enz_pattern % sub_pattern(**{site: 'p'}), kf)
+        enz_pattern = get_complex_pattern(model, self.enz, agent_set).monomer_patterns[0]
+        sub_unphos = get_complex_pattern(model, Agent(self.enz.bound_to), 
+            agent_set, extra_fields = {site: 'u'})
+        sub_phos = get_complex_pattern(model, Agent(self.enz.bound_to), 
+            agent_set, extra_fields = {site: 'p'})
+        
+        rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)    
+        r = Rule(rule_name, enz_pattern % sub_unphos >>\
+                        enz_pattern % sub_phos, kf)
         try:
             model.add_component(r)
         # If this rule is already in the model, issue a warning and continue
@@ -564,15 +577,15 @@ class Dephosphorylation(Statement):
         
         site = site_name(self)[0]
         phos_pattern = get_complex_pattern(model, self.phos, agent_set)
-        sub_left = get_complex_pattern(model, self.sub, agent_set, 
+        sub_phos = get_complex_pattern(model, self.sub, agent_set, 
             extra_fields={site: 'p'})
-        sub_right = get_complex_pattern(model, self.sub, agent_set, 
+        sub_unphos = get_complex_pattern(model, self.sub, agent_set, 
             extra_fields={site: 'u'})
 
         r = Rule('%s_dephospho_%s_%s' %
                  (self.phos.name, self.sub.name, site),
-                 phos_pattern + sub_left >>
-                 phos_pattern + sub_right,
+                 phos_pattern + sub_phos >>
+                 phos_pattern + sub_unphos,
                  kf_dephospho)
         model.add_component(r)
 
