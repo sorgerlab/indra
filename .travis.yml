@@ -18,9 +18,6 @@ install:
   # Biopax/Paxtools dependencies
   - pip install cython
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
-  - wget http://sorger.med.harvard.edu/data/bgyori/indra/paxtools.jar
-  - mv paxtools.jar bgyori/indra/indra/biopax/jars/
-  - export CLASSPATH=$CLASSPATH:./paxtools.jar
   # NDEx dependencies
   - pip install jsonschema
   - pip install functools32
