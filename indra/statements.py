@@ -481,9 +481,9 @@ class ActivityActivity(Statement):
     def assemble_one_step(self, model, agent_set):
         subj_pattern = get_complex_pattern(model, self.subj, agent_set, 
             extra_fields={self.subj_activity: 'active'})
-        obj_left = get_complex_pattern(model, self.obj, agent_set, 
-            extra_fields={self.obj_activity: 'inctive'})
-        obj_right = get_complex_pattern(model, self.obj, agent_set, 
+        obj_inactive = get_complex_pattern(model, self.obj, agent_set, 
+            extra_fields={self.obj_activity: 'inactive'})
+        obj_active = get_complex_pattern(model, self.obj, agent_set, 
             extra_fields={self.obj_activity: 'active'})
         
         param_name = 'kf_' + self.subj.name[0].lower() +\
@@ -493,10 +493,15 @@ class ActivityActivity(Statement):
 
         rule_name = '%s_%s_activates_%s_%s' %\
             (self.subj.name, self.subj_activity, self.obj.name, self.obj_activity)
-
-        r = Rule(rule_name,                
-                subj_pattern + obj_left >> subj_pattern + obj_right,
+        if self.relationship == 'increases':
+           r = Rule(rule_name,                
+                subj_pattern + obj_inactive >> subj_pattern + obj_active,
                 kf_one_step_activate)
+        else:
+           r = Rule(rule_name,                
+                subj_pattern + obj_active >> subj_pattern + obj_inactive,
+                kf_one_step_activate)
+
         model.add_component(r)
 
     def __str__(self):
