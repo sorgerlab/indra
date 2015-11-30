@@ -55,10 +55,10 @@ class TripsProcessor(object):
             affected_agent = Agent(affected_name)
 
             citation = ''
-            evidence = ''
+            evidence = sentence
             annotations = ''
             self.statements.append(ActivityActivity(agent_agent, 'act',
-                                    '', affected_agent, 'act',
+                                    'increases', affected_agent, 'act',
                                     sentence, citation, evidence, annotations))
              
     def get_activating_mods(self):
@@ -79,7 +79,7 @@ class TripsProcessor(object):
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
-                # This measn that it is not an activating modification 
+                # This means that it is not an activating modification 
                 continue
             precond_id = precond_event_ref.find('eventID').text
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
