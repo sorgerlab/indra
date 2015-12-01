@@ -121,18 +121,13 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
         for k,v in extra_fields.iteritems():
             pattern[k] = v
     if agent.bound_to:
+        # Here we make the assumption that the binding site
+        # is simply named after the binding partner
         if agent.bound_neg:
             pattern[agent.bound_to] = None
-            complex_pattern = monomer(**pattern)
         else:
-            # Here we make the assumption that the binding site
-            # is simply named after the binding partner
-            pattern[agent.bound_to] = 1
-            bound_to = model.monomers[agent.bound_to]
-            complex_pattern = monomer(**pattern) % \
-                                bound_to(**{agent.name:1})
-    else:
-        complex_pattern = monomer(**pattern)
+            pattern[agent.bound_to] = ANY
+    complex_pattern = monomer(**pattern)
     return complex_pattern
 
 class UnknownPolicyException(Exception):
@@ -456,7 +451,7 @@ class Transphosphorylation(SelfModification):
         kf  = get_create_parameter(model, param_name, 1e-3)
         
         site = site_name(self)[0]
-        enz_pattern = get_complex_pattern(model, self.enz, agent_set).monomer_patterns[0]
+        enz_pattern = get_complex_pattern(model, self.enz, agent_set)
         sub_unphos = get_complex_pattern(model, Agent(self.enz.bound_to), 
             agent_set, extra_fields = {site: 'u'})
         sub_phos = get_complex_pattern(model, Agent(self.enz.bound_to), 
