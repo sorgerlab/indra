@@ -211,7 +211,7 @@ class Statement(object):
         warnings.warn("%s.monomers_two_step not implemented" %
                       self.__class__.__name__)
     
-    def assemble_two_step(self, agent_set):
+    def assemble_two_step(self, model, agent_set):
         warnings.warn("%s.assemble_two_step not implemented" %
                       self.__class__.__name__)
 
