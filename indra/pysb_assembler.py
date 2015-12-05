@@ -1,4 +1,4 @@
-from pysb import Model, Monomer, Parameter
+from pysb import Model, Monomer, Parameter, Annotation
 from pysb.core import SelfExporter
 from bel import bel_api
 from biopax import biopax_api
@@ -24,7 +24,11 @@ class BaseAgentSet(object):
             bound_to = self.get_create_base_agent(Agent(agent.bound_to))
             bound_to.create_site(agent.name)
             base_agent.create_site(agent.bound_to)
-        
+       
+        # There might be overwrites here
+        for db_name, db_ref in agent.db_refs.iteritems():
+            base_agent.db_refs[db_name] = db_ref
+
         return base_agent
 
     def iteritems(self):
@@ -42,6 +46,7 @@ class BaseAgent(object):
         # being active (where the agent is currently assumed to have only
         # one type of activity)
         self.activating_mods = []
+        self.db_refs = {}
 
     def create_site(self, site, states=None):
         """Create a new site on an agent if it doesn't already exist"""
@@ -87,6 +92,22 @@ def set_base_initial_condition(model, monomer, value):
         model.add_component(p)
         model.initial(mp, p)
     
+def get_annotation(component, db_name, db_ref):
+    '''
+    Construct Annotation following format guidelines 
+    given at http://identifiers.org/.
+    '''
+    url = 'http://identifiers.org/'
+    subj = component
+    if db_name == 'UP':
+        obj = url + 'uniprot/%s' % db_ref
+        pred = 'is'
+    elif db_name == 'HGNC':
+        obj = url + 'hgnc/HGNC:%s' % db_ref
+        pred = 'is'
+    else:
+        return None
+    return Annotation(subj, obj, pred)
 
 class PysbAssembler(object):
     def __init__(self):
@@ -117,6 +138,10 @@ class PysbAssembler(object):
         for agent_name, agent in self.agent_set.iteritems():
             m = Monomer(agent_name, agent.sites, agent.site_states)
             model.add_component(m)
+            for db_name, db_ref in agent.db_refs.iteritems():
+                a = get_annotation(m, db_name, db_ref)
+                if a is not None:
+                    model.add_annotation(a)
         # Iterate over the statements to generate rules
         for stmt in self.statements:
             stmt.assemble(model, self.agent_set, policies=policies)
