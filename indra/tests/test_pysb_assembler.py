@@ -179,3 +179,14 @@ def test_pysb_assembler_phos_twostep1():
     print model.rules
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
+
+def test_pysb_assembler_dephos_twostep1():
+    phos = Agent('PP2A')
+    sub = Agent('MEK1')
+    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222', '', '', '', '')
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model(policies='two_step')
+    print model.rules
+    assert(len(model.rules)==2)
+    assert(len(model.monomers)==2)

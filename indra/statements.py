@@ -631,6 +631,51 @@ class Dephosphorylation(Statement):
                  kf_dephospho)
         add_rule_to_model(model, r)
 
+    def monomers_two_step(self, agent_set):
+        phos = agent_set.get_create_base_agent(self.phos)
+        sub = agent_set.get_create_base_agent(self.sub)
+        sub.create_site(site_name(self)[0], ('u', 'p'))
+
+        # Create site for binding the substrate
+        phos.create_site(sub.name)
+        sub.create_site(phos.name)
+
+    def assemble_two_step(self, model, agent_set): 
+        phos_bound = get_complex_pattern(model, self.phos, agent_set,
+            extra_fields = {self.sub.name: 1})
+        phos_unbound = get_complex_pattern(model, self.phos, agent_set,
+            extra_fields = {self.sub.name: None})
+        sub_pattern = get_complex_pattern(model, self.sub, agent_set)
+        
+        param_name = 'kf_' + self.phos.name[0].lower() + self.sub.name[0].lower() + '_bind'
+        kf_bind = get_create_parameter(model, param_name, 1e-6)
+        param_name = 'kr_' + self.phos.name[0].lower() + self.sub.name[0].lower() + '_bind'
+        kr_bind = get_create_parameter(model, param_name, 1e-3)
+        param_name = 'kc_' + self.phos.name[0].lower() + self.sub.name[0].lower() + '_phos'
+        kf_phospho = get_create_parameter(model, param_name, 1e-3)
+        
+        site = site_name(self)[0]
+
+        phos_act_mods = get_activating_mods(self.phos, agent_set)
+        for i, am in enumerate(phos_act_mods):
+            rule_name = '%s_dephos_bind_%s_%d' % (self.phos.name, self.sub.name, i+1)
+            r = Rule(rule_name,
+                phos_unbound(am) +\
+                sub_pattern(**{site: 'p', self.phos.name: None}) <>
+                phos_bound(am) %\
+                sub_pattern(**{site: 'p', self.phos.name: 1}),
+                kf_bind, kr_bind)
+            add_rule_to_model(model, r)
+        
+            rule_name = '%s_dephos_%s_%s_%d' % (self.phos.name, self.sub.name, site, i+1)
+            r = Rule(rule_name,
+                phos_bound(am) %\
+                    sub_pattern(**{site: 'p', self.phos.name: 1}) >>
+                phos_unbound(am) +\
+                    sub_pattern(**{site: 'u', self.phos.name: None}),
+                kf_phospho)
+            add_rule_to_model(model, r)
+
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
                 (self.phos.name, self.sub.name, self.mod, self.mod_pos))
