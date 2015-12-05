@@ -209,11 +209,11 @@ class TripsProcessor(object):
                 return None
             terms = components.findall("term")
             term_names = []
+            agents = []
             for t in terms:
-                term_names.append(self._get_name_by_id(t.attrib['id']))
-            agent_name = term_names[0]
-            agent_bound = term_names[1]
-            agent = Agent(agent_name, bound_to=agent_bound, db_refs=db_refs_dict)
+                agents.append(self._get_agent_by_id(t.attrib['id'], None))
+            agent = agents[0]
+            agent.bound_to = agents[1].name
         # If the entity is not a complex
         else:
             agent_name = self._get_name_by_id(entity_id)
@@ -265,7 +265,6 @@ class TripsProcessor(object):
                         for m, mp in zip(mod, mod_pos):
                             agent.mods.append(m)
                             agent.mod_sites.append(mp)
-           
         return agent
 
     def _get_text(self, element):
