@@ -208,12 +208,14 @@ class Statement(object):
                       self.__class__.__name__)
     
     def monomers_two_step(self, agent_set):
-        warnings.warn("%s.monomers_two_step not implemented" %
+        warnings.warn("%s.monomers_two_step not implemented, reverting to one-step" %
                       self.__class__.__name__)
+        self.monomers_one_step(agent_set)
     
     def assemble_two_step(self, model, agent_set):
-        warnings.warn("%s.assemble_two_step not implemented" %
+        warnings.warn("%s.assemble_two_step not implemented, reverting to one-step" %
                       self.__class__.__name__)
+        self.assemble_one_step(model, agent_set)
 
     def monomers_interactions_only(self, agent_set):
         warnings.warn("%s.monomers_interactions_only not implemented" %
