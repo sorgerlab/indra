@@ -113,6 +113,7 @@ class PysbAssembler(object):
     def __init__(self):
         self.statements = []
         self.agent_set = None
+        self.model = None
 
     def statement_exists(self, stmt):
         for s in self.statements:
@@ -148,7 +149,8 @@ class PysbAssembler(object):
         # Add initial conditions
         if initial_conditions:
             add_default_initial_conditions(model)
-        return model
+        self.model = model
+        return self.model
 
 if __name__ == '__main__':
     pa = PysbAssembler()
