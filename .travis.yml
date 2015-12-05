@@ -4,13 +4,14 @@ python:
 virtualenv:
   system_site_packages: true
 before_install:
-  - sudo apt-get install python-scipy
+  # - sudo apt-get install python-scipy
   # - sudo apt-get install maven
   # - sudo apt-get install scala sbt
 install:
   # PySB and dependencies
   - easy_install -U setuptools
   - pip install sympy
+  - pip install scipy
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
