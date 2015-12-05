@@ -1,5 +1,6 @@
 from pysb import Model, Monomer, Parameter, Annotation
 from pysb.core import SelfExporter
+import pysb.export
 from bel import bel_api
 from biopax import biopax_api
 from trips import trips_api
@@ -151,6 +152,11 @@ class PysbAssembler(object):
             add_default_initial_conditions(model)
         self.model = model
         return self.model
+    
+    def print_model(self, fname='pysb_model.py'):
+        if self.model is not None:
+            with open(fname, 'wt') as fh:
+                fh.write(pysb.export.export(self.model, 'pysb_flat'))
 
 if __name__ == '__main__':
     pa = PysbAssembler()
