@@ -369,7 +369,8 @@ class Phosphorylation(Modification):
 
         enz_act_mods = get_activating_mods(self.enz, agent_set)
         for i, am in enumerate(enz_act_mods):
-            rule_name = '%s_phospho_bind_%s_%d' % (self.enz.name, self.sub.name, i+1)
+            rule_name = '%s_phospho_bind_%s_%s_%d' %\
+                (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_unbound(am) +\
                 sub_pattern(**{site: 'u', self.enz.name: None}) <>
@@ -378,7 +379,8 @@ class Phosphorylation(Modification):
                 kf_bind, kr_bind)
             add_rule_to_model(model, r)
         
-            rule_name = '%s_phospho_%s_%s_%d' % (self.enz.name, self.sub.name, site, i+1)
+            rule_name = '%s_phospho_%s_%s_%d' %\
+                (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_bound(am) %\
                     sub_pattern(**{site: 'u', self.enz.name: 1}) >>
@@ -661,7 +663,8 @@ class Dephosphorylation(Statement):
 
         phos_act_mods = get_activating_mods(self.phos, agent_set)
         for i, am in enumerate(phos_act_mods):
-            rule_name = '%s_dephos_bind_%s_%d' % (self.phos.name, self.sub.name, i+1)
+            rule_name = '%s_dephos_bind_%s_%s_%d' %\
+                (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_unbound(am) +\
                 sub_pattern(**{site: 'p', self.phos.name: None}) <>
@@ -670,7 +673,8 @@ class Dephosphorylation(Statement):
                 kf_bind, kr_bind)
             add_rule_to_model(model, r)
         
-            rule_name = '%s_dephos_%s_%s_%d' % (self.phos.name, self.sub.name, site, i+1)
+            rule_name = '%s_dephos_%s_%s_%d' %\
+                (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_bound(am) %\
                     sub_pattern(**{site: 'p', self.phos.name: 1}) >>
