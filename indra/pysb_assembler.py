@@ -163,6 +163,17 @@ class PysbAssembler(object):
         if self.model is not None:
             with open(fname, 'wt') as fh:
                 fh.write(pysb.export.export(self.model, 'pysb_flat'))
+    
+    def print_rst(self, fname='pysb_model.rst', module_name='pysb_module'):
+        if self.model is not None:
+            with open(fname, 'wt') as fh:
+                fh.write('.. _%s:\n\n' % module_name)
+                fh.write('Module\n======\n\n')
+                fh.write('INDRA-assembled model\n---------------------\n\n')
+                fh.write('::\n\n')
+                model_str = pysb.export.export(self.model, 'pysb_flat')
+                model_str = '\t' + model_str.replace('\n', '\n\t')
+                fh.write(model_str)
 
 if __name__ == '__main__':
     pa = PysbAssembler()
