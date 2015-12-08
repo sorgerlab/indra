@@ -972,7 +972,6 @@ class Complex(Statement):
                 # The protein doesn't bind to itself!
                 if i == j:
                     continue
-                print get_binding_site_name(bp.name)
                 gene_mono.create_site(get_binding_site_name(bp.name))
 
     def assemble_one_step(self, model, agent_set):
