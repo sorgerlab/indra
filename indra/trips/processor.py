@@ -37,9 +37,9 @@ class TripsProcessor(object):
 
     def get_activations(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
-        for event in act_events: 
+        for event in act_events:
             sentence = self._get_text(event)
-            
+
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -47,7 +47,7 @@ class TripsProcessor(object):
             agent_id = agent.attrib['id']
             agent_name = self._get_name_by_id(agent_id)
             agent_agent = Agent(agent_name)
-            
+
             # Get the activated agent in the event
             affected = event.find(".//*[@role=':AFFECTED']")
             affected_id = affected.attrib['id']
@@ -60,7 +60,7 @@ class TripsProcessor(object):
             self.statements.append(ActivityActivity(agent_agent, 'act',
                                     'increases', affected_agent, 'act',
                                     sentence, citation, evidence, annotations))
-             
+
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
@@ -79,7 +79,7 @@ class TripsProcessor(object):
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
             if precond_event_ref is None:
-                # This means that it is not an activating modification 
+                # This means that it is not an activating modification
                 continue
             precond_id = precond_event_ref.find('eventID').text
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
@@ -98,21 +98,21 @@ class TripsProcessor(object):
                 continue
 
             sentence = self._get_text(event)
-            
+
             arg1 = event.find("arg1")
             if arg1 is None:
                 msg = 'Skipping complex missing arg1.'
                 warnings.warn(msg)
                 continue
             agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
-            
+
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
                 warnings.warn(msg)
                 continue
             agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
-          
+
             if agent1 is None or agent2 is None:
                 warnings.warn('Complex with missing members')
                 continue
@@ -142,13 +142,13 @@ class TripsProcessor(object):
                 agent_bound = term_names[1]
                 agent_agent = Agent(agent_name, bound_to=agent_bound)
             else:
-                agent_agent = self._get_agent_by_id(agent.attrib['id'], 
+                agent_agent = self._get_agent_by_id(agent.attrib['id'],
                                                     event.attrib['id'])
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 warnings.warn('Skipping phosphorylation event with no affected term.')
                 continue
-            affected_agent = self._get_agent_by_id(affected.attrib['id'], 
+            affected_agent = self._get_agent_by_id(affected.attrib['id'],
                                                    event.attrib['id'])
             mod, mod_pos = self._get_mod_site(event)
             # TODO: extract more information about text to use as evidence
@@ -161,8 +161,8 @@ class TripsProcessor(object):
 
             mod_types = event.findall('predicate/mods/mod/type')
             # Transphosphorylation
-            if 'ONT::ACROSS' in [mt.text for mt in mod_types] and \
-                agent_agent.bound_to:
+            if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
+                agent_agent.bound_to = affected_agent.name
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Transphosphorylation(agent_agent,
                                         m, p, sentence,
@@ -180,7 +180,7 @@ class TripsProcessor(object):
                                         m, p, sentence,
                                         citation, evidence, annotations))
             # Regular phosphorylation
-            else:                
+            else:
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Phosphorylation(agent_agent,
                                             affected_agent, m, p, sentence,
@@ -197,7 +197,7 @@ class TripsProcessor(object):
             dbids = dbid.split('|')
             db_refs_dict = dict([d.split(':') for d in dbids])
         except KeyError:
-            db_refs_dict = {} 
+            db_refs_dict = {}
 
         # If the entity is a complex
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
@@ -281,6 +281,10 @@ class TripsProcessor(object):
             self._hgnc_cache[hgnc_id] = hgnc_name
         return hgnc_name
 
+    def _get_valid_component_name(self, name):
+        name = name.replace('-', '_')
+        return name
+
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         name = entity_term.find("name")
@@ -291,7 +295,7 @@ class TripsProcessor(object):
             dbid = entity_term.attrib["dbid"]
         except:
             warnings.warn('No grounding information for %s' % name.text)
-            return name.text
+            return self._get_valid_component_name(name.text)
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
         up_ids = [i for i in dbids if i.startswith('UP')]
@@ -302,7 +306,7 @@ class TripsProcessor(object):
                 warnings.warn('%d HGNC IDs reported.' % len(hgnc_ids))
             hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
-            return hgnc_name
+            return self._get_valid_component_name(hgnc_name)
         elif up_ids:
             if len(hgnc_ids) > 1:
                 warnings.warn('%d UniProt IDs reported.' % len(up_ids))
@@ -311,14 +315,14 @@ class TripsProcessor(object):
             # First try to get HGNC name
             hgnc_name = up_client.get_hgnc_name(up_rdf)
             if hgnc_name is not None:
-                return hgnc_name
+                return self._get_valid_component_name(hgnc_name)
             # Next, try to get the gene name
             gene_name = up_client.get_gene_name(up_rdf)
             if gene_name is not None:
-                return gene_name
+                return self._get_valid_component_name(gene_name)
         # By default, return the text of the name tag
         name_txt = name.text.strip('|')
-        return name_txt
+        return self._get_valid_component_name(name_txt)
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
