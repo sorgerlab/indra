@@ -1,6 +1,26 @@
 from indra.pysb_assembler import PysbAssembler
 from indra.statements import *
 
+def test_pysb_assembler_complex1():
+    member1 = Agent('BRAF')
+    member2 = Agent('MEK1')
+    stmt = Complex([member1, member2])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+def test_pysb_assembler_complex2():
+    member1 = Agent('BRAF', bound_to='HRAS')
+    member2 = Agent('MEK1')
+    stmt = Complex([member1, member2])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==3)
+
 def test_pysb_assembler_phos1():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
