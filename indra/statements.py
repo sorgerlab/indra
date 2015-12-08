@@ -109,6 +109,10 @@ def get_activating_mods(agent, agent_set):
         act_mods = [{}]
     return act_mods
 
+def get_binding_site_name(name):
+    binding_site = name.lower()
+    return binding_site
+
 def get_complex_pattern(model, agent, agent_set, extra_fields=None):
     '''
     Constructs a PySB ComplexPattern from an Agent
@@ -124,9 +128,9 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
         # Here we make the assumption that the binding site
         # is simply named after the binding partner
         if agent.bound_neg:
-            pattern[agent.bound_to] = None
+            pattern[get_binding_site_name(agent.bound_to)] = None
         else:
-            pattern[agent.bound_to] = ANY
+            pattern[get_binding_site_name(agent.bound_to)] = ANY
     complex_pattern = monomer(**pattern)
     return complex_pattern
 
@@ -302,8 +306,8 @@ class Phosphorylation(Modification):
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
         # Create site for binding the substrate
-        enz.create_site(sub.name)
-        sub.create_site(enz.name)
+        enz.create_site(get_binding_site_name(sub.name))
+        sub.create_site(get_binding_site_name(enz.name))
 
     def assemble_interactions_only(self, model, agent_set):
         kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
@@ -351,11 +355,12 @@ class Phosphorylation(Modification):
             add_rule_to_model(model, r)
     
 
-    def assemble_two_step(self, model, agent_set): 
+    def assemble_two_step(self, model, agent_set):
+        sub_bs = get_binding_site_name(self.sub.name)
         enz_bound = get_complex_pattern(model, self.enz, agent_set,
-            extra_fields = {self.sub.name: 1})
+            extra_fields = {sub_bs: 1})
         enz_unbound = get_complex_pattern(model, self.enz, agent_set,
-            extra_fields = {self.sub.name: None})
+            extra_fields = {sub_bs: None})
         sub_pattern = get_complex_pattern(model, self.sub, agent_set)
         
         param_name = 'kf_' + self.enz.name[0].lower() + self.sub.name[0].lower() + '_bind'
@@ -368,14 +373,15 @@ class Phosphorylation(Modification):
         site = site_name(self)[0]
 
         enz_act_mods = get_activating_mods(self.enz, agent_set)
+        enz_bs = get_binding_site_name(self.enz.name)
         for i, am in enumerate(enz_act_mods):
             rule_name = '%s_phospho_bind_%s_%s_%d' %\
                 (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_unbound(am) +\
-                sub_pattern(**{site: 'u', self.enz.name: None}) <>
+                sub_pattern(**{site: 'u', enz_bs: None}) <>
                 enz_bound(am) %\
-                sub_pattern(**{site: 'u', self.enz.name: 1}),
+                sub_pattern(**{site: 'u', enz_bs: 1}),
                 kf_bind, kr_bind)
             add_rule_to_model(model, r)
         
@@ -383,9 +389,9 @@ class Phosphorylation(Modification):
                 (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_bound(am) %\
-                    sub_pattern(**{site: 'u', self.enz.name: 1}) >>
+                    sub_pattern(**{site: 'u', enz_bs: 1}) >>
                 enz_unbound(am) +\
-                    sub_pattern(**{site: 'p', self.enz.name: None}),
+                    sub_pattern(**{site: 'p', enz_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
 
@@ -639,14 +645,16 @@ class Dephosphorylation(Statement):
         sub.create_site(site_name(self)[0], ('u', 'p'))
 
         # Create site for binding the substrate
-        phos.create_site(sub.name)
-        sub.create_site(phos.name)
+        phos.create_site(get_binding_site_name(sub.name))
+        sub.create_site(get_binding_site_name(phos.name))
 
-    def assemble_two_step(self, model, agent_set): 
+    def assemble_two_step(self, model, agent_set):
+        sub_bs = get_binding_site_name(self.sub.name)
+        phos_bs = get_binding_site_name(self.phos.name)
         phos_bound = get_complex_pattern(model, self.phos, agent_set,
-            extra_fields = {self.sub.name: 1})
+            extra_fields = {sub_bs: 1})
         phos_unbound = get_complex_pattern(model, self.phos, agent_set,
-            extra_fields = {self.sub.name: None})
+            extra_fields = {sub_bs: None})
         sub_pattern = get_complex_pattern(model, self.sub, agent_set)
         
         param_name = 'kf_' + self.phos.name[0].lower() +\
@@ -667,9 +675,9 @@ class Dephosphorylation(Statement):
                 (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_unbound(am) +\
-                sub_pattern(**{site: 'p', self.phos.name: None}) <>
+                sub_pattern(**{site: 'p', phos_bs: None}) <>
                 phos_bound(am) %\
-                sub_pattern(**{site: 'p', self.phos.name: 1}),
+                sub_pattern(**{site: 'p', phos_bs: 1}),
                 kf_bind, kr_bind)
             add_rule_to_model(model, r)
         
@@ -677,9 +685,9 @@ class Dephosphorylation(Statement):
                 (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_bound(am) %\
-                    sub_pattern(**{site: 'p', self.phos.name: 1}) >>
+                    sub_pattern(**{site: 'p', phos_bs: 1}) >>
                 phos_unbound(am) +\
-                    sub_pattern(**{site: 'u', self.phos.name: None}),
+                    sub_pattern(**{site: 'u', phos_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
 
@@ -944,8 +952,9 @@ class Complex(Statement):
     def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
-        of the complex. So the resulting complex is "fully connected" in
-        that each is specified as bound to all the others."""
+        of the complex (lower case). So the resulting complex is 
+        "fully connected" in that each is specified as bound to 
+        all the others."""
         for i, member in enumerate(self.members):
             gene_mono = agent_set.get_create_base_agent(member)
             # Add sites for agent modifications
@@ -963,7 +972,8 @@ class Complex(Statement):
                 # The protein doesn't bind to itself!
                 if i == j:
                     continue
-                gene_mono.create_site(bp.name)
+                print get_binding_site_name(bp.name)
+                gene_mono.create_site(get_binding_site_name(bp.name))
 
     def assemble_one_step(self, model, agent_set):
 
@@ -1001,6 +1011,7 @@ class Complex(Statement):
             left_site_dict = {}
             right_site_dict = {}
             for j, bp in enumerate(self.members):
+                bp_bs = get_binding_site_name(bp.name)
                 # The protein doesn't bind to itself!
                 if i == j:
                     continue
@@ -1016,8 +1027,8 @@ class Complex(Statement):
                     bond_indices[bp_set] = bond_ix
                     bond_counter += 1
                 # Fill in the entries for the site dicts
-                left_site_dict[bp.name] = None
-                right_site_dict[bp.name] = bond_ix
+                left_site_dict[bp_bs] = None
+                right_site_dict[bp_bs] = bond_ix
             
             # Add the pattern for the modifications of the member
             # TODO: This is specific to phosphorylation but we should be 
@@ -1031,21 +1042,24 @@ class Complex(Statement):
 
             # Add the pattern for the member being bound
             if member.bound_to:
+                bound_name = member.bound_to
+                bound_bs = get_binding_site_name(bound_name)
+                gene_bs = get_binding_site_name(gene_name)
                 if member.bound_neg:
-                    bound_name = member.bound_to
-                    left_site_dict[bound_name] = None
-                    right_site_dict[bound_name] = None
+                    left_site_dict[bound_bs] = None
+                    right_site_dict[bound_bs] = None
                     left_pattern = mono(**left_site_dict)
                     right_pattern = mono(**right_site_dict)
                 else:
-                    bound_name = member.bound_to
                     bound = model.monomers[bound_name]
-                    left_site_dict[bound_name] = bond_counter
-                    right_site_dict[bound_name] = bond_counter
+                    left_site_dict[bound_bs] =\
+                        bond_counter
+                    right_site_dict[bound_bs] =\
+                        bond_counter
                     left_pattern = mono(**left_site_dict) % \
-                                    bound(**{gene_name:bond_counter})
+                                    bound(**{gene_bs:bond_counter})
                     right_pattern = mono(**right_site_dict) % \
-                                    bound(**{gene_name:bond_counter})
+                                    bound(**{gene_bs:bond_counter})
                     bond_counter += 1 
             else:
                 left_pattern = mono(**left_site_dict)

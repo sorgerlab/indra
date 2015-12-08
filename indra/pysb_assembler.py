@@ -23,8 +23,8 @@ class BaseAgentSet(object):
         
         if agent.bound_to:
             bound_to = self.get_create_base_agent(Agent(agent.bound_to))
-            bound_to.create_site(agent.name)
-            base_agent.create_site(agent.bound_to)
+            bound_to.create_site(get_binding_site_name(agent.name))
+            base_agent.create_site(get_binding_site_name(agent.bound_to))
        
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.iteritems():
@@ -69,6 +69,10 @@ class BaseAgent(object):
 
     def add_activating_modification(self, activity_pattern):
         self.activating_mods.append(activity_pattern)
+
+def get_binding_site_name(name):
+    binding_site = name.lower()
+    return binding_site
 
 def add_default_initial_conditions(model):
     # Iterate over all monomers
