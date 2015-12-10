@@ -1,4 +1,5 @@
 import warnings
+import itertools
 from sets import ImmutableSet
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
@@ -955,8 +956,8 @@ class Complex(Statement):
     def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
-        of the complex (lower case). So the resulting complex is 
-        "fully connected" in that each is specified as bound to 
+        of the complex (lower case). So the resulting complex can be
+        "fully connected" in that each member can be bound to 
         all the others."""
         for i, member in enumerate(self.members):
             gene_mono = agent_set.get_create_base_agent(member)
@@ -976,9 +977,39 @@ class Complex(Statement):
                 if i == j:
                     continue
                 gene_mono.create_site(get_binding_site_name(bp.name))
-
+    
     def assemble_one_step(self, model, agent_set):
+        pairs = itertools.combinations(self.members, 2)
+        for pair in pairs:
+            agent1 = pair[0]
+            agent2 = pair[1]
+            param_name = agent1.name[0].lower() + agent2.name[1] + '_bind'
+            kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
+            kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-6)
 
+            # Make a rule name
+            name_components = []
+            for m in pair:
+                if m.bound_to:
+                    if m.bound_neg:
+                        name_components.append(m.name + '_n' + m.bound_to)
+                    else:
+                        name_components.append(m.name + '_' + m.bound_to)
+                else:
+                    name_components.append(m.name)
+            rule_name = '_'.join(name_components) + '_bind'
+            
+            agent1_pattern = get_complex_pattern(model, agent1, agent_set)
+            agent2_pattern = get_complex_pattern(model, agent2, agent_set)
+            agent1_bs = get_binding_site_name(agent2.name)
+            agent2_bs = get_binding_site_name(agent1.name)
+            r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) +\
+                                agent2_pattern(**{agent2_bs: None}) <>
+                                agent1_pattern(**{agent1_bs: 1}) %\
+                                agent2_pattern(**{agent2_bs: 1}), kf_bind, kr_bind)
+            model.add_component(r)
+
+    def assemble_multi_way(self, model, agent_set):
         # Get the rate parameter
         abbr_name = ''.join([m.name[0].lower() for m in self.members])
         kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
