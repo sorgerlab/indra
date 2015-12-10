@@ -983,7 +983,8 @@ class Complex(Statement):
         for pair in pairs:
             agent1 = pair[0]
             agent2 = pair[1]
-            param_name = agent1.name[0].lower() + agent2.name[1] + '_bind'
+            param_name = agent1.name[0].lower() +\
+                         agent2.name[0].lower() + '_bind'
             kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
             kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-6)
 
@@ -997,16 +998,29 @@ class Complex(Statement):
                         name_components.append(m.name + '_' + m.bound_to)
                 else:
                     name_components.append(m.name)
-            rule_name = '_'.join(name_components) + '_bind'
             
+            # Construct full patterns of each agent with conditions
+            rule_name = '_'.join(name_components) + '_bind'
             agent1_pattern = get_complex_pattern(model, agent1, agent_set)
             agent2_pattern = get_complex_pattern(model, agent2, agent_set)
             agent1_bs = get_binding_site_name(agent2.name)
             agent2_bs = get_binding_site_name(agent1.name)
             r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) +\
-                                agent2_pattern(**{agent2_bs: None}) <>
+                                agent2_pattern(**{agent2_bs: None}) >>
                                 agent1_pattern(**{agent1_bs: 1}) %\
-                                agent2_pattern(**{agent2_bs: 1}), kf_bind, kr_bind)
+                                agent2_pattern(**{agent2_bs: 1}), 
+                                kf_bind)
+            model.add_component(r)
+
+            # In reverse reaction, assume that dissocition is unconditional
+            rule_name = '_'.join(name_components) + '_dissociate'
+            agent1_uncond = get_complex_pattern(model, Agent(agent1.name), agent_set)
+            agent2_uncond = get_complex_pattern(model, Agent(agent2.name), agent_set)
+            r = Rule(rule_name, agent1_uncond(**{agent1_bs: 1}) %\
+                                agent2_uncond(**{agent2_bs: 1}) >>
+                                agent1_uncond(**{agent1_bs: None}) +\
+                                agent2_uncond(**{agent2_bs: None}), 
+                                kr_bind)
             model.add_component(r)
 
     def assemble_multi_way(self, model, agent_set):
