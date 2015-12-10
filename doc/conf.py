@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# belpy documentation build configuration file, created by
+# INDRA documentation build configuration file, created by
 # sphinx-quickstart on Tue Jun 23 16:42:17 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -51,9 +51,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'belpy'
-copyright = u'2015, J. A. Bachman, B. M. Gyori, J. L. Muhlich'
-author = u'J. A. Bachman, B. M. Gyori, J. L. Muhlich'
+project = u'indra'
+copyright = u'2015, B. M. Gyori, J. A. Bachman, J. L. Muhlich'
+author = u'B. M. Gyori, J. A. Bachman, J. L. Muhlich'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -205,7 +205,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'belpydoc'
+htmlhelp_basename = 'indradoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -227,8 +227,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'belpy.tex', u'belpy Documentation',
-   u'J. A. Bachman, B. M. Gyori, J. L. Muhlich', 'manual'),
+  (master_doc, 'indra.tex', u'INDRA Documentation',
+   u'B. M. Gyori, J. A. Bachman, J. L. Muhlich', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -257,7 +257,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'belpy', u'belpy Documentation',
+    (master_doc, 'indra', u'INDRA Documentation',
      [author], 1)
 ]
 
@@ -271,8 +271,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'belpy', u'belpy Documentation',
-   author, 'belpy', 'One line description of project.',
+  (master_doc, 'indra', u'INDRA Documentation',
+   author, 'indra', 'One line description of project.',
    'Miscellaneous'),
 ]
 

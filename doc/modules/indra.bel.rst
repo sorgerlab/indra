@@ -1,21 +1,21 @@
-belpy.bel package
+indra.bel package
 =================
 
 Submodules
 ----------
 
-belpy.bel.bel_api module
+indra.bel.bel_api module
 ------------------------
 
-.. automodule:: belpy.bel.bel_api
+.. automodule:: indra.bel.bel_api
     :members:
     :undoc-members:
     :show-inheritance:
 
-belpy.bel.processor module
+indra.bel.processor module
 --------------------------
 
-.. automodule:: belpy.bel.processor
+.. automodule:: indra.bel.processor
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ belpy.bel.processor module
 Module contents
 ---------------
 
-.. automodule:: belpy.bel
+.. automodule:: indra.bel
     :members:
     :undoc-members:
     :show-inheritance:

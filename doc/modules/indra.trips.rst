@@ -1,29 +1,29 @@
-belpy.trips package
+indra.trips package
 ===================
 
 Submodules
 ----------
 
-belpy.trips.processor module
+indra.trips.processor module
 ----------------------------
 
-.. automodule:: belpy.trips.processor
+.. automodule:: indra.trips.processor
     :members:
     :undoc-members:
     :show-inheritance:
 
-belpy.trips.trips_api module
+indra.trips.trips_api module
 ----------------------------
 
-.. automodule:: belpy.trips.trips_api
+.. automodule:: indra.trips.trips_api
     :members:
     :undoc-members:
     :show-inheritance:
 
-belpy.trips.trips_client module
+indra.trips.trips_client module
 -------------------------------
 
-.. automodule:: belpy.trips.trips_client
+.. automodule:: indra.trips.trips_client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ belpy.trips.trips_client module
 Module contents
 ---------------
 
-.. automodule:: belpy.trips
+.. automodule:: indra.trips
     :members:
     :undoc-members:
     :show-inheritance:

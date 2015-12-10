@@ -1,21 +1,21 @@
-belpy.databases package
+indra.databases package
 =======================
 
 Submodules
 ----------
 
-belpy.databases.hgnc_client module
+indra.databases.hgnc_client module
 ----------------------------------
 
-.. automodule:: belpy.databases.hgnc_client
+.. automodule:: indra.databases.hgnc_client
     :members:
     :undoc-members:
     :show-inheritance:
 
-belpy.databases.uniprot_client module
+indra.databases.uniprot_client module
 -------------------------------------
 
-.. automodule:: belpy.databases.uniprot_client
+.. automodule:: indra.databases.uniprot_client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ belpy.databases.uniprot_client module
 Module contents
 ---------------
 
-.. automodule:: belpy.databases
+.. automodule:: indra.databases
     :members:
     :undoc-members:
     :show-inheritance:
