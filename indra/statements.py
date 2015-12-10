@@ -132,6 +132,16 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
             pattern[get_binding_site_name(agent.bound_to)] = None
         else:
             pattern[get_binding_site_name(agent.bound_to)] = ANY
+    
+    # Add the pattern for the modifications of the agent
+    # TODO: This is specific to phosphorylation but we should be 
+    # able to support other types as well
+    for m, mp in zip(agent.mods, agent.mod_sites):
+        mod = abbrevs[m]
+        mod_pos = mp if mp is not None else ''
+        mod_site = ('%s%s' % (mod, mod_pos))
+        pattern[mod_site] = 'p'
+    
     complex_pattern = monomer(**pattern)
     return complex_pattern
 
