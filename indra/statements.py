@@ -381,10 +381,10 @@ class Phosphorylation(Modification):
                 (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_unbound(am) +\
-                sub_pattern(**{site: 'u', enz_bs: None}) <>
+                sub_pattern(**{site: 'u', enz_bs: None}) >>
                 enz_bound(am) %\
                 sub_pattern(**{site: 'u', enz_bs: 1}),
-                kf_bind, kr_bind)
+                kf_bind)
             add_rule_to_model(model, r)
         
             rule_name = '%s_phospho_%s_%s_%d' %\
@@ -396,6 +396,15 @@ class Phosphorylation(Modification):
                     sub_pattern(**{site: 'p', enz_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
+        
+        rule_name = '%s_dissoc_%s' % (self.enz.name, self.sub.name)
+        r = Rule(rule_name, model.monomers[self.enz.name](**{sub_bs: 1}) %\
+                 model.monomers[self.sub.name](**{enz_bs: 1}) >>
+                 model.monomers[self.enz.name](**{sub_bs: None}) +\
+                 model.monomers[self.sub.name](**{enz_bs: None}), kr_bind)
+        add_rule_to_model(model, r)
+        
+
 
 
 # Autophosphorylation happens when a protein phosphorylates itself.
@@ -1010,7 +1019,7 @@ class Complex(Statement):
                                 agent1_pattern(**{agent1_bs: 1}) %\
                                 agent2_pattern(**{agent2_bs: 1}), 
                                 kf_bind)
-            model.add_component(r)
+            add_rule_to_model(model, r)
 
             # In reverse reaction, assume that dissocition is unconditional
             rule_name = '_'.join(name_components) + '_dissociate'
@@ -1021,7 +1030,7 @@ class Complex(Statement):
                                 agent1_uncond(**{agent1_bs: None}) +\
                                 agent2_uncond(**{agent2_bs: None}), 
                                 kr_bind)
-            model.add_component(r)
+            add_rule_to_model(model, r)
 
     def assemble_multi_way(self, model, agent_set):
         # Get the rate parameter
