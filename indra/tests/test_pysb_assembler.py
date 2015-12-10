@@ -8,8 +8,19 @@ def test_pysb_assembler_complex1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
+    assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
+
+def test_pysb_assembler_complex2():
+    member1 = Agent('BRAF')
+    member2 = Agent('MEK1')
+    member3 = Agent('ERK1')
+    stmt = Complex([member1, member2, member3])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    assert(len(model.rules)==6)
+    assert(len(model.monomers)==3)
 
 def test_pysb_assembler_complex2():
     member1 = Agent('BRAF', bound_to='HRAS')
@@ -18,7 +29,8 @@ def test_pysb_assembler_complex2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
+    print model.rules
+    assert(len(model.rules)==2)
     assert(len(model.monomers)==3)
 
 def test_pysb_assembler_phos1():
@@ -197,7 +209,7 @@ def test_pysb_assembler_phos_twostep1():
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
     print model.rules
-    assert(len(model.rules)==2)
+    assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
 def test_pysb_assembler_dephos_twostep1():
@@ -208,5 +220,5 @@ def test_pysb_assembler_dephos_twostep1():
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
     print model.rules
-    assert(len(model.rules)==2)
+    assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
