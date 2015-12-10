@@ -686,7 +686,7 @@ class Dephosphorylation(Statement):
                 (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_unbound(am) +\
-                sub_pattern(**{site: 'p', phos_bs: None}) <>
+                sub_pattern(**{site: 'p', phos_bs: None}) >>
                 phos_bound(am) %\
                 sub_pattern(**{site: 'p', phos_bs: 1}),
                 kf_bind, kr_bind)
@@ -701,6 +701,13 @@ class Dephosphorylation(Statement):
                     sub_pattern(**{site: 'u', phos_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
+        
+        rule_name = '%s_dissoc_%s' % (self.phos.name, self.sub.name)
+        r = Rule(rule_name, model.monomers[self.phos.name](**{sub_bs: 1}) %\
+                 model.monomers[self.sub.name](**{phos_bs: 1}) >>
+                 model.monomers[self.phos.name](**{sub_bs: None}) +\
+                 model.monomers[self.sub.name](**{phos_bs: None}), kr_bind)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
