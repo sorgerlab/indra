@@ -163,7 +163,8 @@ class Agent(object):
 
 class Statement(object):
     """The parent class of all statements"""
-    def __init__(self, stmt, citation, evidence, annotations):
+    def __init__(self, stmt=None, citation=None, evidence=None, 
+                 annotations=None):
         self.stmt = stmt
         self.citation = citation
         self.evidence = evidence
@@ -231,8 +232,8 @@ class Statement(object):
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
-    def __init__(self, enz, sub, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, enz, sub, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz = enz
@@ -257,8 +258,8 @@ class Modification(Statement):
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
-    def __init__(self, enz, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, enz, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(SelfModification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz = enz
@@ -492,8 +493,8 @@ class ActivityActivity(Statement):
     """Statement representing the activation of a protein as a result of the
     activity of another protein."""
     def __init__(self, subj, subj_activity, relationship, obj,
-                 obj_activity, stmt, citation, evidence,
-                 annotations):
+                 obj_activity, stmt=None, citation=None, evidence=None,
+                 annotations=None):
         super(ActivityActivity, self).__init__(stmt,
                                                citation, evidence, annotations)
         self.subj = subj
@@ -576,8 +577,8 @@ class RasGtpActivityActivity(ActivityActivity):
     pass
 
 class Dephosphorylation(Statement):
-    def __init__(self, phos, sub, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, phos, sub, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(Dephosphorylation, self).__init__(stmt, citation,
                                                 evidence, annotations)
         self.phos = phos
@@ -699,7 +700,7 @@ class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result
     of a residue modification"""
     def __init__(self, monomer, mod, mod_pos, relationship, activity,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivityModification, self).__init__(stmt, citation,
                                                    evidence, annotations)
         self.monomer = monomer
@@ -758,7 +759,7 @@ class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
     def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
                                                      evidence, annotations)
         self.monomer = monomer
@@ -795,7 +796,7 @@ class RasGef(Statement):
     upon Gef activity."""
 
     def __init__(self, gef, gef_activity, ras,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(RasGef, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gef = gef
@@ -864,7 +865,7 @@ class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
     def __init__(self, gap, gap_activity, ras,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(RasGap, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gap = gap
@@ -931,7 +932,9 @@ class RasGap(Statement):
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members):
+    def __init__(self, members, stmt=None, citation=None, 
+                 evidence=None, annotations=None):
+        super(Complex, self).__init__(stmt, citation, evidence, annotations)
         self.members = members
 
     def __eq__(self, other):
