@@ -1,4 +1,5 @@
 import warnings
+import itertools
 from sets import ImmutableSet
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
@@ -163,7 +164,8 @@ class Agent(object):
 
 class Statement(object):
     """The parent class of all statements"""
-    def __init__(self, stmt, citation, evidence, annotations):
+    def __init__(self, stmt=None, citation=None, evidence=None, 
+                 annotations=None):
         self.stmt = stmt
         self.citation = citation
         self.evidence = evidence
@@ -231,8 +233,8 @@ class Statement(object):
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
-    def __init__(self, enz, sub, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, enz, sub, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(Modification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz = enz
@@ -257,8 +259,8 @@ class Modification(Statement):
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
-    def __init__(self, enz, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, enz, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(SelfModification, self).__init__(stmt, citation, evidence,
                                            annotations)
         self.enz = enz
@@ -379,10 +381,10 @@ class Phosphorylation(Modification):
                 (self.enz.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 enz_unbound(am) +\
-                sub_pattern(**{site: 'u', enz_bs: None}) <>
+                sub_pattern(**{site: 'u', enz_bs: None}) >>
                 enz_bound(am) %\
                 sub_pattern(**{site: 'u', enz_bs: 1}),
-                kf_bind, kr_bind)
+                kf_bind)
             add_rule_to_model(model, r)
         
             rule_name = '%s_phospho_%s_%s_%d' %\
@@ -394,6 +396,15 @@ class Phosphorylation(Modification):
                     sub_pattern(**{site: 'p', enz_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
+        
+        rule_name = '%s_dissoc_%s' % (self.enz.name, self.sub.name)
+        r = Rule(rule_name, model.monomers[self.enz.name](**{sub_bs: 1}) %\
+                 model.monomers[self.sub.name](**{enz_bs: 1}) >>
+                 model.monomers[self.enz.name](**{sub_bs: None}) +\
+                 model.monomers[self.sub.name](**{enz_bs: None}), kr_bind)
+        add_rule_to_model(model, r)
+        
+
 
 
 # Autophosphorylation happens when a protein phosphorylates itself.
@@ -492,8 +503,8 @@ class ActivityActivity(Statement):
     """Statement representing the activation of a protein as a result of the
     activity of another protein."""
     def __init__(self, subj, subj_activity, relationship, obj,
-                 obj_activity, stmt, citation, evidence,
-                 annotations):
+                 obj_activity, stmt=None, citation=None, evidence=None,
+                 annotations=None):
         super(ActivityActivity, self).__init__(stmt,
                                                citation, evidence, annotations)
         self.subj = subj
@@ -576,8 +587,8 @@ class RasGtpActivityActivity(ActivityActivity):
     pass
 
 class Dephosphorylation(Statement):
-    def __init__(self, phos, sub, mod, mod_pos, stmt,
-                 citation, evidence, annotations):
+    def __init__(self, phos, sub, mod, mod_pos, stmt=None,
+                 citation=None, evidence=None, annotations=None):
         super(Dephosphorylation, self).__init__(stmt, citation,
                                                 evidence, annotations)
         self.phos = phos
@@ -675,7 +686,7 @@ class Dephosphorylation(Statement):
                 (self.phos.name, self.sub.name, site, i+1)
             r = Rule(rule_name,
                 phos_unbound(am) +\
-                sub_pattern(**{site: 'p', phos_bs: None}) <>
+                sub_pattern(**{site: 'p', phos_bs: None}) >>
                 phos_bound(am) %\
                 sub_pattern(**{site: 'p', phos_bs: 1}),
                 kf_bind, kr_bind)
@@ -690,6 +701,13 @@ class Dephosphorylation(Statement):
                     sub_pattern(**{site: 'u', phos_bs: None}),
                 kf_phospho)
             add_rule_to_model(model, r)
+        
+        rule_name = '%s_dissoc_%s' % (self.phos.name, self.sub.name)
+        r = Rule(rule_name, model.monomers[self.phos.name](**{sub_bs: 1}) %\
+                 model.monomers[self.sub.name](**{phos_bs: 1}) >>
+                 model.monomers[self.phos.name](**{sub_bs: None}) +\
+                 model.monomers[self.sub.name](**{phos_bs: None}), kr_bind)
+        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
@@ -699,7 +717,7 @@ class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result
     of a residue modification"""
     def __init__(self, monomer, mod, mod_pos, relationship, activity,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivityModification, self).__init__(stmt, citation,
                                                    evidence, annotations)
         self.monomer = monomer
@@ -758,7 +776,7 @@ class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
     def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
                                                      evidence, annotations)
         self.monomer = monomer
@@ -795,7 +813,7 @@ class RasGef(Statement):
     upon Gef activity."""
 
     def __init__(self, gef, gef_activity, ras,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(RasGef, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gef = gef
@@ -864,7 +882,7 @@ class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
     def __init__(self, gap, gap_activity, ras,
-                 stmt, citation, evidence, annotations):
+                 stmt=None, citation=None, evidence=None, annotations=None):
         super(RasGap, self).__init__(stmt, citation, evidence,
                                      annotations)
         self.gap = gap
@@ -931,7 +949,9 @@ class RasGap(Statement):
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members):
+    def __init__(self, members, stmt=None, citation=None, 
+                 evidence=None, annotations=None):
+        super(Complex, self).__init__(stmt, citation, evidence, annotations)
         self.members = members
 
     def __eq__(self, other):
@@ -952,8 +972,8 @@ class Complex(Statement):
     def monomers_one_step(self, agent_set):
         """In this (very simple) implementation, proteins in a complex are
         each given site names corresponding to each of the other members
-        of the complex (lower case). So the resulting complex is 
-        "fully connected" in that each is specified as bound to 
+        of the complex (lower case). So the resulting complex can be
+        "fully connected" in that each member can be bound to 
         all the others."""
         for i, member in enumerate(self.members):
             gene_mono = agent_set.get_create_base_agent(member)
@@ -973,9 +993,53 @@ class Complex(Statement):
                 if i == j:
                     continue
                 gene_mono.create_site(get_binding_site_name(bp.name))
-
+    
     def assemble_one_step(self, model, agent_set):
+        pairs = itertools.combinations(self.members, 2)
+        for pair in pairs:
+            agent1 = pair[0]
+            agent2 = pair[1]
+            param_name = agent1.name[0].lower() +\
+                         agent2.name[0].lower() + '_bind'
+            kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
+            kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-6)
 
+            # Make a rule name
+            name_components = []
+            for m in pair:
+                if m.bound_to:
+                    if m.bound_neg:
+                        name_components.append(m.name + '_n' + m.bound_to)
+                    else:
+                        name_components.append(m.name + '_' + m.bound_to)
+                else:
+                    name_components.append(m.name)
+            
+            # Construct full patterns of each agent with conditions
+            rule_name = '_'.join(name_components) + '_bind'
+            agent1_pattern = get_complex_pattern(model, agent1, agent_set)
+            agent2_pattern = get_complex_pattern(model, agent2, agent_set)
+            agent1_bs = get_binding_site_name(agent2.name)
+            agent2_bs = get_binding_site_name(agent1.name)
+            r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) +\
+                                agent2_pattern(**{agent2_bs: None}) >>
+                                agent1_pattern(**{agent1_bs: 1}) %\
+                                agent2_pattern(**{agent2_bs: 1}), 
+                                kf_bind)
+            add_rule_to_model(model, r)
+
+            # In reverse reaction, assume that dissocition is unconditional
+            rule_name = '_'.join(name_components) + '_dissociate'
+            agent1_uncond = get_complex_pattern(model, Agent(agent1.name), agent_set)
+            agent2_uncond = get_complex_pattern(model, Agent(agent2.name), agent_set)
+            r = Rule(rule_name, agent1_uncond(**{agent1_bs: 1}) %\
+                                agent2_uncond(**{agent2_bs: 1}) >>
+                                agent1_uncond(**{agent1_bs: None}) +\
+                                agent2_uncond(**{agent2_bs: None}), 
+                                kr_bind)
+            add_rule_to_model(model, r)
+
+    def assemble_multi_way(self, model, agent_set):
         # Get the rate parameter
         abbr_name = ''.join([m.name[0].lower() for m in self.members])
         kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
