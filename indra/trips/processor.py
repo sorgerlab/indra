@@ -329,10 +329,10 @@ class TripsProcessor(object):
         all_residues = []
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
-        subterms = site_term.find("subterms")
-        if subterms is not None:
-            for s in subterms.getchildren():
-                residue, pos = self._get_site_by_id(s.attrib['id'])
+        aggregate = site_term.find('aggregate')
+        if aggregate is not None:
+            for member in aggregate.getchildren():
+                residue, pos = self._get_site_by_id(member.attrib['id'])
                 all_residues.extend(residue)
                 all_pos.extend(pos)
         else:
