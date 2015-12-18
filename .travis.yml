@@ -18,24 +18,6 @@ install:
   # Biopax/Paxtools dependencies
   - pip install cython
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
-  # NDEx dependencies
-  - pip install jsonschema
-  - pip install functools32
-  - pip install networkx
-  - pip install requests
-  - pip install pandas
-  # BEL dependencies
-  - sudo apt-get install software-properties-common python-software-properties
-  - sudo apt-add-repository -y ppa:brightbox/ruby-ng
-  - sudo apt-get update
-  - sudo apt-get install ruby2.2 ruby-switch
-  - sudo ruby-switch --set ruby2.2
-  - which ruby
-  - which gem
-  #- gem install bel
-  - gem install rdf
-  - gem install uuid
-  - gem install addressable
   # REACH dependencies
   - pip install objectpath
   - mvn dependency:get -DgroupId=commons-io -DartifactId=commons-io -Dversion=2.4 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null

@@ -1,38 +1,26 @@
 import sys
-import re
 import rdflib
-import os
-import subprocess
-import pkg_resources
+import json
+import urllib2
 from processor import BelProcessor
-from . import ndex
-
-
 
 def process_ndex_neighborhood(gene_names):
-    bel_script = ndex.query_to_belscript(gene_names)
-    with open('tmp.bel', 'wt') as fh:
-        fh.write(bel_script)
-    bel2rdf_path = pkg_resources.resource_filename('indra.bel', 'bel2rdf.rb')
-    bel2rdf_cmd = "ruby %s --bel tmp.bel > tmp.rdf" % bel2rdf_path
-    with open('tmp.rdf', 'wt') as fh:
-        subprocess.call(bel2rdf_cmd.split(' '), stdout=fh, stderr=subprocess.STDOUT)
-    with open('tmp.rdf', 'rt') as fh:
-        rdf = fh.read()
-    res = re.findall(r'_:([^ ]+)', rdf)
-    for r in res:
-        rdf = rdf.replace(r, r.replace('-', ''))
-    with open('tmp2.rdf', 'w') as fh:
-        fh.write(rdf)
-    bp = process_belrdf('tmp2.rdf')
+    network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
+    url = 'http://54.218.49.73/network/%s/asBELRDF/query' % network_id
+    params = {'searchString': ' '.join(gene_names)}
+    req = urllib2.Request(url)
+    req.add_header('Content-Type', 'application/json')
+    res = urllib2.urlopen(req, json.dumps(params))
+    rdf = res.read()
+    bp = process_belrdf(rdf)
     bp.print_statements()
     return bp
 
 
-def process_belrdf(rdf_filename):
+def process_belrdf(rdf_str):
     # Parse the RDF
     g = rdflib.Graph()
-    g.parse(rdf_filename, format='nt')
+    g.parse(data=rdf_str, format='nt')
     # Build BelPy statements from RDF
     bp = BelProcessor(g)
     bp.get_complexes()
@@ -56,4 +44,4 @@ if __name__ == '__main__':
         sys.exit()
     # We take the RDF filename as the argument
     rdf_filename = sys.argv[1]
-    bp = process_belrdf(rdf_filename)
+    bp = process_belrdf(open(rdf_filename).read())
