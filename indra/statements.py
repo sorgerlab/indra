@@ -172,6 +172,23 @@ class Agent(object):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def __repr__(self):
+        attr_strs = []
+        if self.mods:
+            attr_strs.append('mods: %s' % self.mods)
+        if self.mod_sites:
+            attr_strs.append('mod_sites: %s' % self.mod_sites)
+        if self.active:
+            attr_strs.append('active: %s' % self.active)
+        if self.bound_to:
+            attr_strs.append('bound_to: %s' % self.bound_to)
+        if self.bound_neg:
+            attr_strs.append('bound_neg: %s' % self.bound_neg)
+        if self.db_refs:
+            attr_strs.append('db_refs: %s' % self.db_refs)
+        attr_str = ', '.join(attr_strs)
+        return '%s(%s)' % (self.name, attr_str)
+
 class Statement(object):
     """The parent class of all statements"""
     def __init__(self, stmt=None, citation=None, evidence=None, 
