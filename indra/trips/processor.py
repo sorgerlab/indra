@@ -81,7 +81,7 @@ class TripsProcessor(object):
             if precond_event_ref is None:
                 # This means that it is not an activating modification
                 continue
-            precond_id = precond_event_ref.find('eventID').text
+            precond_id = precond_event_ref.find('event').attrib['id']
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             mod, mod_pos = self._get_mod_site(precond_event)
             citation = ''
@@ -207,7 +207,7 @@ class TripsProcessor(object):
             if components is None:
                 warnings.warn('Complex without components')
                 return None
-            terms = components.findall("term")
+            terms = components.findall('component')
             term_names = []
             agents = []
             for t in terms:
@@ -223,7 +223,7 @@ class TripsProcessor(object):
             # Extract preconditions of the agent
             if precond_event_ref is not None:
                 # Find the event describing the precondition
-                precond_id = precond_event_ref.find('eventID').text
+                precond_id = precond_event_ref.find('event').attrib['id']
                 precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
                     warnings.warn('Circular reference to event %s.' % precond_id)
@@ -364,10 +364,10 @@ class TripsProcessor(object):
         return mod, mod_pos
 
     def _find_static_events(self):
-        inevent_tags = self.tree.findall("TERM/features/inevent/eventID")
+        inevent_tags = self.tree.findall("TERM/features/inevent/event")
         static_events = []
         for ie in inevent_tags:
-            static_events.append(ie.text)
+            static_events.append(ie.attrib['id'])
         return static_events
 
     def _load_hgnc_cache(self):
