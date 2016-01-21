@@ -9,7 +9,11 @@ from processor import ReachProcessor
 
 
 def process_pmc(pmc_id):
+    if pmc_id.upper().startswith('PMC'):
+        pmc_id = pmc_id[3:]
     xml_str = pmc_client.get_xml(pmc_id)
+    if xml_str is None:
+        return None
     with tempfile.NamedTemporaryFile() as fh:
         fh.write(xml_str)
         fh.flush()
@@ -57,6 +61,8 @@ def process_nxml(file_name, use_tempdir=False, offline=False):
         req = urllib2.Request(url, data=urllib.urlencode({'nxml': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
+        with open('reach_output.json', 'wt') as fh:
+            fh.write(json_str)
         json_dict = json.loads(json_str)
         return process_json_str(json_str, events_only=False)
 

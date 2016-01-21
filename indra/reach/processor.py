@@ -16,10 +16,18 @@ residue_names = {
     }
 
 
-class ReachProcessor:
+class ReachProcessor(object):
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
+    
+    def _get_agent_name(self, txt):
+        '''
+        Produce valid agent name from string.
+        '''
+        name = txt.replace('-', '_')
+        name = name.replace(' ', '_')
+        return name
 
     def get_phosphorylation(self):
         citation = self.tree.execute("$.frames.object_meta.doc_id")
@@ -51,8 +59,8 @@ class ReachProcessor:
                 warnings.warn('Skipping phosphorylation with missing controller.')
                 continue
 
-            controller_agent = Agent(controller)
-            theme_agent = Agent(theme)
+            controller_agent = Agent(self._get_agent_name(controller))
+            theme_agent = Agent(self._get_agent_name(theme))
             mod = 'Phosphorylation'
             if site is not None:
                 residue, pos = self._parse_site_text(site)
@@ -79,7 +87,7 @@ class ReachProcessor:
             args = r['arguments']
             members = []
             for a in args:
-                agent = Agent(a['text'])
+                agent = Agent(self._get_agent_name(a['text']))
                 members.append(agent)
             self.statements.append(Complex(members))
     
