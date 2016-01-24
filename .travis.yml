@@ -1,40 +1,29 @@
 language: python
+virtualenv:
+  - system_site_packages: true
 python:
   - "2.7"
-virtualenv:
-  system_site_packages: true
 before_install:
-  - sudo apt-get install python-scipy
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="/home/travis/miniconda/bin:$PATH"
+  - conda update --yes conda
+  - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython nose
+  # - sudo apt-get install python-scipy
   # - sudo apt-get install maven
   # - sudo apt-get install scala sbt
 install:
   # PySB and dependencies
-  - easy_install -U setuptools
-  - pip install sympy
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
-  - pip install cython
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
   # REACH dependencies
   - pip install objectpath
-  - mvn dependency:get -DgroupId=commons-io -DartifactId=commons-io -Dversion=2.4 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - mvn dependency:get -DgroupId=edu.stanford.nlp -DartifactId=stanford-corenlp -Dversion=3.5.2 -DrepoUrl="http://mvnrepository.com/artifact/"  > /dev/null
-  - mvn dependency:get -DgroupId=edu.stanford.nlp -DartifactId=stanford-corenlp -Dversion=3.5.2 -DrepoUrl="http://mvnrepository.com/artifact/" -Dclassifier=models > /dev/null
-  - mvn dependency:get -DgroupId=org.slf4j -DartifactId=slf4j-api -Dversion=1.7.12 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - export CLASSPATH=$CLASSPATH:~/.m2/repository/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar > /dev/null
-  - mvn dependency:get -DgroupId=org.slf4j -DartifactId=slf4j-simple -Dversion=1.7.12 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - export CLASSPATH=$CLASSPATH:~/.m2/repository/org/slf4j/slf4j-simple/1.7.12/slf4j-simple-1.7.12.jar > /dev/null
-  - mvn dependency:get -DgroupId=org.yaml -DartifactId=snakeyaml -Dversion=1.15 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - mvn dependency:get -DgroupId=org.scala-lang.modules -DartifactId=scala-parser-combinators_2.11 -Dversion=1.0.4 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - mvn dependency:get -DgroupId=org.json4s -DartifactId=json4s-core_2.11 -Dversion=3.2.11 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - mvn dependency:get -DgroupId=org.json4s -DartifactId=json4s-ast_2.11 -Dversion=3.2.11 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  - mvn dependency:get -DgroupId=org.json4s -DartifactId=json4s-native_2.11 -Dversion=3.2.11 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  # - mvn dependency:get -DgroupId=com.typesafe -DartifactId=config -Dversion=1.2.1 -DrepoUrl="http://mvnrepository.com/artifact/"
-  - mvn dependency:get -DgroupId=edu.arizona.sista -DartifactId=processors_2.11 -Dversion=5.3 -DrepoUrl="http://mvnrepository.com/artifact/" > /dev/null
-  # belpy-specific dependencies
+  # BEL dependencies
   - pip install rdflib
-  - pip install BeautifulSoup
-script: nosetests
+script:
+  - nosetests
