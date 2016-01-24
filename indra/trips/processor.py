@@ -3,7 +3,6 @@ import warnings
 import pickle
 
 import xml.etree.ElementTree as ET
-from BeautifulSoup import BeautifulSoup
 
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
