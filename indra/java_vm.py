@@ -2,6 +2,7 @@
 to set JVM options while the VM is already running."""
 
 import os
+import warnings
 import jnius_config
 
 if '-Xmx4g' not in jnius_config.get_options():
