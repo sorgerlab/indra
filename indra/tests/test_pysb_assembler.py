@@ -22,7 +22,7 @@ def test_pysb_assembler_complex2():
     assert(len(model.rules)==6)
     assert(len(model.monomers)==3)
 
-def test_pysb_assembler_complex2():
+def test_pysb_assembler_complex3():
     member1 = Agent('BRAF', bound_to='HRAS')
     member2 = Agent('MEK1')
     stmt = Complex([member1, member2])
