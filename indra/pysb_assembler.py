@@ -12,6 +12,8 @@ from indra import statements as ist
 
 SelfExporter.do_export = False
 
+# BaseAgent classes ####################################################
+
 class BaseAgentSet(object):
     """Container for a set of BaseAgents.
 
@@ -78,9 +80,84 @@ class BaseAgent(object):
     def add_activating_modification(self, activity_pattern):
         self.activating_mods.append(activity_pattern)
 
+# Site/state information ###############################################
+
+abbrevs = {
+    'PhosphorylationSerine': 'S',
+    'PhosphorylationThreonine': 'T',
+    'PhosphorylationTyrosine': 'Y',
+    'Phosphorylation': 'phospho',
+    'Ubiquitination': 'ub',
+    'Farnesylation': 'farnesyl',
+    'Hydroxylation': 'hydroxyl',
+    'Acetylation': 'acetyl',
+    'Sumoylation': 'sumo',
+    'Glycosylation': 'glycosyl',
+    'Methylation': 'methyl',
+    'Modification': 'mod',
+}
+
+active_site_names = {
+    'Kinase': 'kin_site',
+    'Phosphatase': 'phos_site',
+    'GtpBound': 'switch',
+    'Catalytic': 'cat_site',
+}
+
+states = {
+    'PhosphorylationSerine': ['u', 'p'],
+    'PhosphorylationThreonine': ['u', 'p'],
+    'PhosphorylationTyrosine': ['u', 'p'],
+    'Phosphorylation': ['u', 'p'],
+    'Ubiquitination': ['n', 'y'],
+    'Farnesylation': ['n', 'y'],
+    'Hydroxylation': ['n', 'y'],
+    'Acetylation': ['n', 'y'],
+    'Sumoylation': ['n', 'y'],
+    'Glycosylation': ['n', 'y'],
+    'Methylation': ['n', 'y'],
+    'Modification': ['n', 'y'],
+}
+
+# The following dict specifies the default modification/binding site names for
+# modifications resulting from a particular type of activity. For example, a
+# protein with Kinase activity makes a modification of type "phospho" on its
+# substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
+# "RBD" (Ras binding domain). This comes in handy for specifying
+# ActivityActivity rules, where the modification site mediating the activation
+# is not specified.
+default_mod_site_names = {
+    'Kinase': 'phospho',
+    'GtpBound': 'RBD',
+    'Phosphatase': 'phospho',
+}
+
 def get_binding_site_name(name):
     binding_site = name.lower()
     return binding_site
+
+def site_name(stmt):
+    """Return all site names for a modification-type statement."""
+    names = []
+    if isinstance(stmt.mod, (list, tuple)):
+        for m, mp in zip(stmt.mod, stmt.mod_pos):
+            mod = abbrevs[m]
+            mod_pos = mp if mp is not None else ''
+            names.append('%s%s' % (mod, mod_pos))
+    else:
+        mod = abbrevs[stmt.mod]
+        mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
+        names.append('%s%s' % (mod, mod_pos))
+
+    return names
+
+def get_activating_mods(agent, agent_set):
+    act_mods = agent_set[agent.name].activating_mods
+    if not act_mods:
+        act_mods = [{}]
+    return act_mods
+
+# PySB model elements ##################################################
 
 def add_rule_to_model(model, rule):
     try:
@@ -194,6 +271,8 @@ def get_annotation(component, db_name, db_ref):
         return None
     return Annotation(subj, obj, pred)
 
+# PysbAssembler #######################################################
+
 class UnknownPolicyError(Exception):
     pass
 
@@ -274,8 +353,7 @@ class PysbAssembler(object):
                 model_str = '\t' + model_str.replace('\n', '\n\t')
                 fh.write(model_str)
 
-
-# COMPLEX ##############################################
+# COMPLEX ############################################################
 
 def complex_monomers_one_step(stmt, agent_set):
     """In this (very simple) implementation, proteins in a complex are
@@ -450,6 +528,135 @@ def complex_assemble_multi_way(stmt, model, agent_set):
 
 complex_assemble_interactions_only = complex_assemble_one_step
 complex_assemble_default = complex_assemble_one_step
+
+# PHOSPHORYLATION ###################################################
+
+def phosphorylation_monomers_interactions_only(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    enz.create_site(active_site_names['Kinase'])
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    # See NOTE in monomers_one_step, below
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+def phosphorylation_monomers_one_step(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    # NOTE: This assumes that a Phosphorylation statement will only ever
+    # involve a single phosphorylation site on the substrate (typically
+    # if there is more than one site, they will be parsed into separate
+    # Phosphorylation statements, i.e., phosphorylation is assumed to be
+    # distributive. If this is not the case, this assumption will need to
+    # be revisited.
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+def phosphorylation_monomers_two_step(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+    # Create site for binding the substrate
+    enz.create_site(get_binding_site_name(sub.name))
+    sub.create_site(get_binding_site_name(enz.name))
+
+phosphorylation_monomers_default = phosphorylation_monomers_one_step
+
+def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
+
+    enz = model.monomers[stmt.enz.name]
+    sub = model.monomers[stmt.sub.name]
+
+    # See NOTE in monomers_one_step
+    site = site_name(stmt)[0]
+
+    rule_name = '%s_phospho_%s_%s' % (stmt.enz.name, stmt.sub.name, site)
+    active_site = active_site_names['Kinase']
+    # Create a rule specifying that the substrate binds to the kinase at
+    # its active site
+    r = Rule(rule_name,
+                enz(**{active_site:None}) + sub(**{site:None}) <>
+                enz(**{active_site:1}) + sub(**{site:1}),
+                kf_bind, kr_bind)
+    add_rule_to_model(model, r)
+
+def phosphorylation_assemble_one_step(stmt, model, agent_set):
+    param_name = 'kf_' + stmt.enz.name[0].lower() +\
+                    stmt.sub.name[0].lower() + '_phos'
+    kf_phospho = get_create_parameter(model, param_name, 1e-6)
+
+    # See NOTE in monomers_one_step
+    site = site_name(stmt)[0]
+
+    enz_pattern = get_complex_pattern(model, stmt.enz, agent_set)
+    sub_unphos = get_complex_pattern(model, stmt.sub, agent_set, 
+        extra_fields={site: 'u'})
+    sub_phos = get_complex_pattern(model, stmt.sub, agent_set, 
+        extra_fields={site: 'p'})
+
+    enz_act_mods = get_activating_mods(stmt.enz, agent_set)
+    for i, am in enumerate(enz_act_mods):
+        rule_name = '%s_phospho_%s_%s_%d' %\
+            (stmt.enz.name, stmt.sub.name, site, i+1)
+        r = Rule(rule_name,
+                enz_pattern(am) + sub_unphos >>
+                enz_pattern(am) + sub_phos,
+                kf_phospho)
+        add_rule_to_model(model, r)
+
+def phosphorylation_assemble_two_step(stmt, model, agent_set):
+    sub_bs = get_binding_site_name(stmt.sub.name)
+    enz_bound = get_complex_pattern(model, stmt.enz, agent_set,
+        extra_fields = {sub_bs: 1})
+    enz_unbound = get_complex_pattern(model, stmt.enz, agent_set,
+        extra_fields = {sub_bs: None})
+    sub_pattern = get_complex_pattern(model, stmt.sub, agent_set)
+
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_phos')
+    kf_phospho = get_create_parameter(model, param_name, 1e-3)
+
+    site = site_name(stmt)[0]
+
+    enz_act_mods = get_activating_mods(stmt.enz, agent_set)
+    enz_bs = get_binding_site_name(stmt.enz.name)
+    for i, am in enumerate(enz_act_mods):
+        rule_name = '%s_phospho_bind_%s_%s_%d' %\
+            (stmt.enz.name, stmt.sub.name, site, i+1)
+        r = Rule(rule_name,
+            enz_unbound(am) +\
+            sub_pattern(**{site: 'u', enz_bs: None}) >>
+            enz_bound(am) %\
+            sub_pattern(**{site: 'u', enz_bs: 1}),
+            kf_bind)
+        add_rule_to_model(model, r)
+
+        rule_name = '%s_phospho_%s_%s_%d' %\
+            (stmt.enz.name, stmt.sub.name, site, i+1)
+        r = Rule(rule_name,
+            enz_bound(am) %\
+                sub_pattern(**{site: 'u', enz_bs: 1}) >>
+            enz_unbound(am) +\
+                sub_pattern(**{site: 'p', enz_bs: None}),
+            kf_phospho)
+        add_rule_to_model(model, r)
+
+    rule_name = '%s_dissoc_%s' % (stmt.enz.name, stmt.sub.name)
+    r = Rule(rule_name, model.monomers[stmt.enz.name](**{sub_bs: 1}) %\
+             model.monomers[stmt.sub.name](**{enz_bs: 1}) >>
+             model.monomers[stmt.enz.name](**{sub_bs: None}) +\
+             model.monomers[stmt.sub.name](**{enz_bs: None}), kr_bind)
+    add_rule_to_model(model, r)
+
+phosphorylation_assemble_default = phosphorylation_assemble_one_step
+
+
 
 if __name__ == '__main__':
     pa = PysbAssembler()
