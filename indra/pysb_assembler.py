@@ -656,7 +656,42 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
 
 phosphorylation_assemble_default = phosphorylation_assemble_one_step
 
+# CIS-AUTOPHOSPHORYLATION ###################################################
 
+def autophosphorylation_monomers_interactions_only(self, agent_set):
+    enz = agent_set.get_create_base_agent(self.enz)
+    enz.create_site(site_name(self)[0], ('u', 'p'))
+
+def autophosphorylation_monomers_one_step(self, agent_set):
+    enz = agent_set.get_create_base_agent(self.enz)
+    # NOTE: This assumes that a Phosphorylation statement will only ever
+    # involve a single phosphorylation site on the substrate (typically
+    # if there is more than one site, they will be parsed into separate
+    # Phosphorylation statements, i.e., phosphorylation is assumed to be
+    # distributive. If this is not the case, this assumption will need to
+    # be revisited.
+    enz.create_site(site_name(self)[0], ('u', 'p'))
+
+autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
+
+def autophosphorylation_assemble_interactions_only(self, model, agent_set):
+    self.assemble_one_step(model, agent_set)
+
+def autophosphorylation_assemble_one_step(self, model, agent_set):
+    param_name = 'kf_' + self.enz.name[0].lower() + '_autophos'
+    kf_autophospho = get_create_parameter(model, param_name, 1e-3)
+
+    # See NOTE in monomers_one_step
+    site = site_name(self)[0]
+    pattern_unphos = get_complex_pattern(model, self.enz, agent_set,
+                                         extra_fields={site: 'u'})
+    pattern_phos = get_complex_pattern(model, self.enz, agent_set,
+                                       extra_fields={site: 'p'})
+    rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
+    r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
+    add_rule_to_model(model, r)
+
+autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
 
 if __name__ == '__main__':
     pa = PysbAssembler()

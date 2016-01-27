@@ -3,60 +3,6 @@ from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
 
 
-states = {
-    'PhosphorylationSerine': ['u', 'p'],
-    'PhosphorylationThreonine': ['u', 'p'],
-    'PhosphorylationTyrosine': ['u', 'p'],
-    'Phosphorylation': ['u', 'p'],
-    'Ubiquitination': ['n', 'y'],
-    'Farnesylation': ['n', 'y'],
-    'Hydroxylation': ['n', 'y'],
-    'Acetylation': ['n', 'y'],
-    'Sumoylation': ['n', 'y'],
-    'Glycosylation': ['n', 'y'],
-    'Methylation': ['n', 'y'],
-    'Modification': ['n', 'y'],
-}
-
-active_site_names = {
-    'Kinase': 'kin_site',
-    'Phosphatase': 'phos_site',
-    'GtpBound': 'switch',
-    'Catalytic': 'cat_site',
-}
-
-# The following dict specifies the default modification/binding site names for
-# modifications resulting from a particular type of activity. For example, a
-# protein with Kinase activity makes a modification of type "phospho" on its
-# substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
-# "RBD" (Ras binding domain). This comes in handy for specifying
-# ActivityActivity rules, where the modification site mediating the activation
-# is not specified.
-default_mod_site_names = {
-    'Kinase': 'phospho',
-    'GtpBound': 'RBD',
-    'Phosphatase': 'phospho',
-}
-
-def add_rule_to_model(model, rule):
-    try:
-        model.add_component(rule)
-    # If this rule is already in the model, issue a warning and continue
-    except ComponentDuplicateNameError:
-        msg = "Rule %s already in model! Skipping." % rule.name
-        warnings.warn(msg)
-
-def get_activating_mods(agent, agent_set):
-    act_mods = agent_set[agent.name].activating_mods
-    if not act_mods:
-        act_mods = [{}]
-    return act_mods
-
-def get_binding_site_name(name):
-    binding_site = name.lower()
-    return binding_site
-
-
 class Agent(object):
     def __init__(self, name, mods=None, mod_sites=None, active=None,
                  bound_to=None, bound_neg=None, db_refs=None):
@@ -96,6 +42,7 @@ class Agent(object):
             attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
         return '%s(%s)' % (self.name, attr_str)
+
 
 class Statement(object):
     """The parent class of all statements"""
@@ -145,6 +92,7 @@ class Modification(Statement):
         else:
             return False
 
+
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
     def __init__(self, enz, mod, mod_pos, stmt=None,
@@ -171,40 +119,15 @@ class SelfModification(Statement):
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
+    pass
 
-# Autophosphorylation happens when a protein phosphorylates itself.
-# A more precise name for this is cis-autophosphorylation.
+
 class Autophosphorylation(SelfModification):
-    def monomers_interactions_only(self, agent_set):
-        enz = agent_set.get_create_base_agent(self.enz)
-        enz.create_site(site_name(self)[0], ('u', 'p'))
+    """Autophosphorylation happens when a protein phosphorylates itself.
 
-    def monomers_one_step(self, agent_set):
-        enz = agent_set.get_create_base_agent(self.enz)
-        # NOTE: This assumes that a Phosphorylation statement will only ever
-        # involve a single phosphorylation site on the substrate (typically
-        # if there is more than one site, they will be parsed into separate
-        # Phosphorylation statements, i.e., phosphorylation is assumed to be
-        # distributive. If this is not the case, this assumption will need to
-        # be revisited.
-        enz.create_site(site_name(self)[0], ('u', 'p'))
-
-    def assemble_interactions_only(self, model, agent_set):
-        self.assemble_one_step(model, agent_set)
-
-    def assemble_one_step(self, model, agent_set):
-        param_name = 'kf_' + self.enz.name[0].lower() + '_autophos'
-        kf_autophospho = get_create_parameter(model, param_name, 1e-3)
-
-
-        # See NOTE in monomers_one_step
-        site = site_name(self)[0]
-        pattern_unphos = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'u'})
-        pattern_phos = get_complex_pattern(model, self.enz, agent_set, extra_fields={site: 'p'})
-
-        rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
-        r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-        add_rule_to_model(model, r)
+    A more precise name for this is cis-autophosphorylation.
+    """
+    pass
 
 # Transphosphorylation assumes that a kinase is already bound to 
 # a substrate (usually of the same molecular species), and phosphorylates 
@@ -727,8 +650,6 @@ class Complex(Statement):
             if not m1 == m2:
                 return False
         return True
-
-
 
     def __str__(self):
         return ("Complex(%s)" % [m.name for m in self.members])
