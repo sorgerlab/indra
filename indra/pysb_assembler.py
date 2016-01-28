@@ -658,40 +658,147 @@ phosphorylation_assemble_default = phosphorylation_assemble_one_step
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
-def autophosphorylation_monomers_interactions_only(self, agent_set):
-    enz = agent_set.get_create_base_agent(self.enz)
-    enz.create_site(site_name(self)[0], ('u', 'p'))
+def autophosphorylation_monomers_interactions_only(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    enz.create_site(site_name(stmt)[0], ('u', 'p'))
 
-def autophosphorylation_monomers_one_step(self, agent_set):
-    enz = agent_set.get_create_base_agent(self.enz)
+def autophosphorylation_monomers_one_step(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
     # NOTE: This assumes that a Phosphorylation statement will only ever
     # involve a single phosphorylation site on the substrate (typically
     # if there is more than one site, they will be parsed into separate
     # Phosphorylation statements, i.e., phosphorylation is assumed to be
     # distributive. If this is not the case, this assumption will need to
     # be revisited.
-    enz.create_site(site_name(self)[0], ('u', 'p'))
+    enz.create_site(site_name(stmt)[0], ('u', 'p'))
 
 autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
 
-def autophosphorylation_assemble_interactions_only(self, model, agent_set):
-    self.assemble_one_step(model, agent_set)
+def autophosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    stmt.assemble_one_step(model, agent_set)
 
-def autophosphorylation_assemble_one_step(self, model, agent_set):
-    param_name = 'kf_' + self.enz.name[0].lower() + '_autophos'
+def autophosphorylation_assemble_one_step(stmt, model, agent_set):
+    param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
     kf_autophospho = get_create_parameter(model, param_name, 1e-3)
 
     # See NOTE in monomers_one_step
-    site = site_name(self)[0]
-    pattern_unphos = get_complex_pattern(model, self.enz, agent_set,
+    site = site_name(stmt)[0]
+    pattern_unphos = get_complex_pattern(model, stmt.enz, agent_set,
                                          extra_fields={site: 'u'})
-    pattern_phos = get_complex_pattern(model, self.enz, agent_set,
+    pattern_phos = get_complex_pattern(model, stmt.enz, agent_set,
                                        extra_fields={site: 'p'})
-    rule_name = '%s_autophospho_%s_%s' % (self.enz.name, self.enz.name, site)
+    rule_name = '%s_autophospho_%s_%s' % (stmt.enz.name, stmt.enz.name, site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
     add_rule_to_model(model, r)
 
 autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
+
+# TRANSPHOSPHORYLATION ###################################################
+
+def transphosphorylation_monomers_interactions_only(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    # Assume there is exactly one bound_to species
+    sub = agent_set.get_create_base_agent(stmt.enz)
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+def transphosphorylation_monomers_one_step(stmt, agent_set):
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    # NOTE: This assumes that a Phosphorylation statement will only ever
+    # involve a single phosphorylation site on the substrate (typically
+    # if there is more than one site, they will be parsed into separate
+    # Phosphorylation statements, i.e., phosphorylation is assumed to be
+    # distributive. If this is not the case, this assumption will need to
+    # be revisited. 
+    sub = agent_set.get_create_base_agent(ist.Agent(stmt.enz.bound_to))
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
+
+def transphosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    stmt.assemble_one_step(model, agent_set)
+
+def transphosphorylation_assemble_one_step(stmt, model, agent_set):
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
+                  stmt.enz.bound_to[0].lower() + '_transphos')
+    kf  = get_create_parameter(model, param_name, 1e-3)
+
+    site = site_name(stmt)[0]
+    enz_pattern = get_complex_pattern(model, stmt.enz, agent_set)
+    sub_unphos = get_complex_pattern(model, ist.Agent(stmt.enz.bound_to),
+        agent_set, extra_fields = {site: 'u'})
+    sub_phos = get_complex_pattern(model, ist.Agent(stmt.enz.bound_to),
+        agent_set, extra_fields = {site: 'p'})
+
+    rule_name = '%s_transphospho_%s_%s' % (stmt.enz.name,
+                                           stmt.enz.bound_to, site)
+    r = Rule(rule_name, enz_pattern % sub_unphos >>\
+                    enz_pattern % sub_phos, kf)
+    add_rule_to_model(model, r)
+
+transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
+
+# ACTIVITYACTIVITY ###################################################### 
+
+def activityactivity_monomers_interactions_only(self, agent_set):
+    subj = agent_set.get_create_base_agent(self.subj)
+    subj.create_site(active_site_names[self.subj_activity])
+    obj = agent_set.get_create_base_agent(self.obj)
+    obj.create_site(active_site_names[self.obj_activity])
+    obj.create_site(default_mod_site_names[self.subj_activity])
+
+def activityactivity_monomers_one_step(self, agent_set):
+    subj = agent_set.get_create_base_agent(self.subj)
+    subj.create_site(self.subj_activity, ('inactive', 'active'))
+    obj = agent_set.get_create_base_agent(self.obj)
+    obj.create_site(self.obj_activity, ('inactive', 'active'))
+
+activityactivity_monomers_default = activityactivity_monomers_one_step
+
+def activityactivity_assemble_interactions_only(self, model):
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    subj = model.monomers[self.subj.name]
+    obj = model.monomers[self.obj.name]
+    subj_active_site = active_site_names[self.subj_activity]
+    obj_mod_site = default_mod_site_names[self.subj_activity]
+    r = Rule('%s_%s_activates_%s_%s' %
+             (self.subj.name, self.subj_activity, self.obj.name,
+              self.obj_activity),
+             subj(**{subj_active_site: None}) +
+             obj(**{obj_mod_site: None}) >>
+             subj(**{subj_active_site: 1}) %
+             obj(**{obj_mod_site: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
+
+def activityactivity_assemble_one_step(self, model, agent_set):
+    subj_pattern = get_complex_pattern(model, self.subj, agent_set, 
+        extra_fields={self.subj_activity: 'active'})
+    obj_inactive = get_complex_pattern(model, self.obj, agent_set, 
+        extra_fields={self.obj_activity: 'inactive'})
+    obj_active = get_complex_pattern(model, self.obj, agent_set, 
+        extra_fields={self.obj_activity: 'active'})
+
+    param_name = 'kf_' + self.subj.name[0].lower() +\
+                        self.obj.name[0].lower() + '_act'
+    kf_one_step_activate = \
+                   get_create_parameter(model, param_name, 1e-6)
+
+    rule_name = '%s_%s_activates_%s_%s' %\
+        (self.subj.name, self.subj_activity, self.obj.name,
+         self.obj_activity)
+
+    if self.relationship == 'increases':
+       r = Rule(rule_name,
+            subj_pattern + obj_inactive >> subj_pattern + obj_active,
+            kf_one_step_activate)
+    else:
+       r = Rule(rule_name,
+            subj_pattern + obj_active >> subj_pattern + obj_inactive,
+            kf_one_step_activate)
+
+    add_rule_to_model(model, r)
+
+activityactivity_assemble_default = activityactivity_assemble_one_step
 
 if __name__ == '__main__':
     pa = PysbAssembler()

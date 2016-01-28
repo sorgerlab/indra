@@ -129,63 +129,36 @@ class Autophosphorylation(SelfModification):
     """
     pass
 
-# Transphosphorylation assumes that a kinase is already bound to 
-# a substrate (usually of the same molecular species), and phosphorylates 
-# it in an intra-molecular fashion. The enz property of the statement must 
-# have exactly one bound_to property, and we assume that enz phosphorylates 
-# this bound_to molecule. The bound_neg property is ignored here.
+
 class Transphosphorylation(SelfModification):
-    def monomers_interactions_only(self, agent_set):
-        enz = agent_set.get_create_base_agent(self.enz)
-        # Assume there is exactly one bound_to species
-        sub = agent_set.get_create_base_agent(self.enz)
-        sub.create_site(site_name(self)[0], ('u', 'p'))
+    """Transphosphorylation assumes that a kinase is already bound to 
+    a substrate (usually of the same molecular species), and phosphorylates 
+    it in an intra-molecular fashion. The enz property of the statement must 
+    have exactly one bound_to property, and we assume that enz phosphorylates 
+    this bound_to molecule. The bound_neg property is ignored here.
+    """
+    pass
 
-    def monomers_one_step(self, agent_set):
-        enz = agent_set.get_create_base_agent(self.enz)
-        # NOTE: This assumes that a Phosphorylation statement will only ever
-        # involve a single phosphorylation site on the substrate (typically
-        # if there is more than one site, they will be parsed into separate
-        # Phosphorylation statements, i.e., phosphorylation is assumed to be
-        # distributive. If this is not the case, this assumption will need to
-        # be revisited. 
-        sub = agent_set.get_create_base_agent(Agent(self.enz.bound_to))
-        sub.create_site(site_name(self)[0], ('u', 'p'))
-
-    def assemble_interactions_only(self, model, agent_set):
-        self.assemble_one_step(model, agent_set)
-
-    def assemble_one_step(self, model, agent_set):
-        param_name = 'kf_' + self.enz.name[0].lower() + self.enz.bound_to[0].lower() + '_transphos'
-        kf  = get_create_parameter(model, param_name, 1e-3)
-        
-        site = site_name(self)[0]
-        enz_pattern = get_complex_pattern(model, self.enz, agent_set)
-        sub_unphos = get_complex_pattern(model, Agent(self.enz.bound_to), 
-            agent_set, extra_fields = {site: 'u'})
-        sub_phos = get_complex_pattern(model, Agent(self.enz.bound_to), 
-            agent_set, extra_fields = {site: 'p'})
-        
-        rule_name = '%s_transphospho_%s_%s' % (self.enz.name, self.enz.bound_to, site)    
-        r = Rule(rule_name, enz_pattern % sub_unphos >>\
-                        enz_pattern % sub_phos, kf)
-        add_rule_to_model(model, r)
 
 class Hydroxylation(Modification):
     """Hydroxylation modification"""
     pass
 
+
 class Sumoylation(Modification):
     """Sumoylation modification"""
     pass
+
 
 class Acetylation(Modification):
     """Acetylation modification"""
     pass
 
+
 class Ubiquitination(Modification):
     """Ubiquitination modification"""
     pass
+
 
 class ActivityActivity(Statement):
     """Statement representing the activation of a protein as a result of the
@@ -211,68 +184,15 @@ class ActivityActivity(Statement):
         else:
             return False
 
-    def monomers_interactions_only(self, agent_set):
-        subj = agent_set.get_create_base_agent(self.subj)
-        subj.create_site(active_site_names[self.subj_activity])
-        obj = agent_set.get_create_base_agent(self.obj)
-        obj.create_site(active_site_names[self.obj_activity])
-        obj.create_site(default_mod_site_names[self.subj_activity])
-
-    def assemble_interactions_only(self, model):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-        subj = model.monomers[self.subj.name]
-        obj = model.monomers[self.obj.name]
-        subj_active_site = active_site_names[self.subj_activity]
-        obj_mod_site = default_mod_site_names[self.subj_activity]
-        r = Rule('%s_%s_activates_%s_%s' %
-                 (self.subj.name, self.subj_activity, self.obj.name,
-                  self.obj_activity),
-                 subj(**{subj_active_site: None}) +
-                 obj(**{obj_mod_site: None}) >>
-                 subj(**{subj_active_site: 1}) %
-                 obj(**{obj_mod_site: 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
-
-    def monomers_one_step(self, agent_set):
-        subj = agent_set.get_create_base_agent(self.subj)
-        subj.create_site(self.subj_activity, ('inactive', 'active'))
-        obj = agent_set.get_create_base_agent(self.obj)
-        obj.create_site(self.obj_activity, ('inactive', 'active'))
-
-    def assemble_one_step(self, model, agent_set):
-        subj_pattern = get_complex_pattern(model, self.subj, agent_set, 
-            extra_fields={self.subj_activity: 'active'})
-        obj_inactive = get_complex_pattern(model, self.obj, agent_set, 
-            extra_fields={self.obj_activity: 'inactive'})
-        obj_active = get_complex_pattern(model, self.obj, agent_set, 
-            extra_fields={self.obj_activity: 'active'})
-        
-        param_name = 'kf_' + self.subj.name[0].lower() +\
-                            self.obj.name[0].lower() + '_act'
-        kf_one_step_activate = \
-                       get_create_parameter(model, param_name, 1e-6)
-
-        rule_name = '%s_%s_activates_%s_%s' %\
-            (self.subj.name, self.subj_activity, self.obj.name, self.obj_activity)
-        if self.relationship == 'increases':
-           r = Rule(rule_name,                
-                subj_pattern + obj_inactive >> subj_pattern + obj_active,
-                kf_one_step_activate)
-        else:
-           r = Rule(rule_name,                
-                subj_pattern + obj_active >> subj_pattern + obj_inactive,
-                kf_one_step_activate)
-
-        add_rule_to_model(model, r)
-
     def __str__(self):
         return ("%s(%s, %s, %s, %s, %s)" %
                 (type(self).__name__, self.subj.name, self.subj_activity,
                  self.relationship, self.obj.name, self.obj_activity))
 
+
 class RasGtpActivityActivity(ActivityActivity):
     pass
+
 
 class Dephosphorylation(Statement):
     def __init__(self, phos, sub, mod, mod_pos, stmt=None,
@@ -283,7 +203,7 @@ class Dephosphorylation(Statement):
         self.sub = sub
         self.mod = mod
         self.mod_pos = mod_pos
-    
+
     def __eq__(self, other):
         if isinstance(other, Dephosphorylation) and\
             self.phos == other.phos and\
@@ -576,7 +496,7 @@ class RasGap(Statement):
         self.gap = gap
         self.gap_activity = gap_activity
         self.ras = ras
-    
+
     def __eq__(self, other):
         if isinstance(other, RasGap) and\
             self.gap == other.gap and\
