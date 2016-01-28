@@ -909,6 +909,55 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
 
 dephosphorylation_assemble_default = dephosphorylation_assemble_one_step
 
+# RASGEF #####################################################
+
+def rasgef_monomers_interactions_only(stmt, agent_set):
+    gef = agent_set.get_create_base_agent(stmt.gef)
+    gef.create_site('gef_site')
+    ras = agent_set.get_create_base_agent(stmt.ras)
+    ras.create_site('p_loop')
+
+def rasgef_monomers_one_step(stmt, agent_set):
+    gef = agent_set.get_create_base_agent(stmt.gef)
+    gef.create_site(stmt.gef_activity, ('inactive', 'active'))
+    ras = agent_set.get_create_base_agent(stmt.ras)
+    ras.create_site('GtpBound', ('inactive', 'active'))
+
+rasgef_monomers_default = rasgef_monomers_one_step
+
+def rasgef_assemble_interactions_only(stmt, model, agent_set):
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    gef = model.monomers[stmt.gef.name]
+    ras = model.monomers[stmt.ras.name]
+    r = Rule('%s_activates_%s' %
+             (stmt.gef.name, stmt.ras.name),
+             gef(**{'gef_site':None}) +
+             ras(**{'p_loop':None}) >>
+             gef(**{'gef_site': 1}) +
+             ras(**{'p_loop': 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
+
+def rasgef_assemble_one_step(stmt, model, agent_set):
+    gef_pattern = get_complex_pattern(model, stmt.gef, agent_set, 
+        extra_fields={stmt.gef_activity: 'active'})
+    ras_inactive = get_complex_pattern(model, stmt.ras, agent_set,
+        extra_fields={'GtpBound': 'inactive'})
+    ras_active = get_complex_pattern(model, stmt.ras, agent_set,
+        extra_fields={'GtpBound': 'active'})
+
+    param_name = 'kf_' + stmt.gef.name[0].lower() +\
+                    stmt.ras.name[0].lower() + '_gef'
+    kf_gef = get_create_parameter(model, param_name, 1e-6)
+
+    r = Rule('%s_activates_%s' %
+             (stmt.gef.name, stmt.ras.name),
+             gef_pattern + ras_inactive >>
+             gef_pattern + ras_active,
+             kf_gef)
+    add_rule_to_model(model, r)
+
+rasgef_assemble_default = rasgef_assemble_one_step
 
 if __name__ == '__main__':
     pa = PysbAssembler()

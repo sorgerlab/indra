@@ -214,112 +214,10 @@ class Dephosphorylation(Statement):
         else:
             return False
 
-    def monomers_interactions_only(self, agent_set):
-        phos = agent_set.get_create_base_agent(self.phos)
-        phos.create_site(active_site_names['Phosphatase'])
-        sub = agent_set.get_create_base_agent(self.sub)
-        sub.create_site(site_name(self)[0], ('u', 'p'))
-
-    def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-        phos = model.monomers[self.phos.name]
-        sub = model.monomers[self.sub.name]
-        phos_site = active_site_names['Phosphatase']
-        # See NOTE in Phosphorylation.monomers_one_step
-        site = site_name(self)[0]
-        r = Rule('%s_dephospho_%s_%s' %
-                 (self.phos.name, self.sub.name, site),
-                 phos(**{phos_site: None}) + sub(**{site: None}) >>
-                 phos(**{phos_site: 1}) + sub(**{site: 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
-
-    def monomers_one_step(self, agent_set):
-        phos = agent_set.get_create_base_agent(self.phos)
-        sub = agent_set.get_create_base_agent(self.sub)
-        sub.create_site(site_name(self)[0], ('u', 'p'))
-
-    def assemble_one_step(self, model, agent_set):
-        param_name = 'kf_' + self.phos.name[0].lower() +\
-                    self.sub.name[0].lower() + '_dephos'
-        kf_dephospho = get_create_parameter(model, param_name, 1e-6)
-        
-        site = site_name(self)[0]
-        phos_pattern = get_complex_pattern(model, self.phos, agent_set)
-        sub_phos = get_complex_pattern(model, self.sub, agent_set, 
-            extra_fields={site: 'p'})
-        sub_unphos = get_complex_pattern(model, self.sub, agent_set, 
-            extra_fields={site: 'u'})
-
-        r = Rule('%s_dephospho_%s_%s' %
-                 (self.phos.name, self.sub.name, site),
-                 phos_pattern + sub_phos >>
-                 phos_pattern + sub_unphos,
-                 kf_dephospho)
-        add_rule_to_model(model, r)
-
-    def monomers_two_step(self, agent_set):
-        phos = agent_set.get_create_base_agent(self.phos)
-        sub = agent_set.get_create_base_agent(self.sub)
-        sub.create_site(site_name(self)[0], ('u', 'p'))
-
-        # Create site for binding the substrate
-        phos.create_site(get_binding_site_name(sub.name))
-        sub.create_site(get_binding_site_name(phos.name))
-
-    def assemble_two_step(self, model, agent_set):
-        sub_bs = get_binding_site_name(self.sub.name)
-        phos_bs = get_binding_site_name(self.phos.name)
-        phos_bound = get_complex_pattern(model, self.phos, agent_set,
-            extra_fields = {sub_bs: 1})
-        phos_unbound = get_complex_pattern(model, self.phos, agent_set,
-            extra_fields = {sub_bs: None})
-        sub_pattern = get_complex_pattern(model, self.sub, agent_set)
-
-        param_name = 'kf_' + self.phos.name[0].lower() +\
-            self.sub.name[0].lower() + '_bind'
-        kf_bind = get_create_parameter(model, param_name, 1e-6)
-        param_name = 'kr_' + self.phos.name[0].lower() +\
-            self.sub.name[0].lower() + '_bind'
-        kr_bind = get_create_parameter(model, param_name, 1e-3)
-        param_name = 'kc_' + self.phos.name[0].lower() +\
-            self.sub.name[0].lower() + '_dephos'
-        kf_phospho = get_create_parameter(model, param_name, 1e-3)
-
-        site = site_name(self)[0]
-
-        phos_act_mods = get_activating_mods(self.phos, agent_set)
-        for i, am in enumerate(phos_act_mods):
-            rule_name = '%s_dephos_bind_%s_%s_%d' %\
-                (self.phos.name, self.sub.name, site, i+1)
-            r = Rule(rule_name,
-                phos_unbound(am) +\
-                sub_pattern(**{site: 'p', phos_bs: None}) >>
-                phos_bound(am) %\
-                sub_pattern(**{site: 'p', phos_bs: 1}),
-                kf_bind, kr_bind)
-            add_rule_to_model(model, r)
-        
-            rule_name = '%s_dephos_%s_%s_%d' %\
-                (self.phos.name, self.sub.name, site, i+1)
-            r = Rule(rule_name,
-                phos_bound(am) %\
-                    sub_pattern(**{site: 'p', phos_bs: 1}) >>
-                phos_unbound(am) +\
-                    sub_pattern(**{site: 'u', phos_bs: None}),
-                kf_phospho)
-            add_rule_to_model(model, r)
-        
-        rule_name = '%s_dissoc_%s' % (self.phos.name, self.sub.name)
-        r = Rule(rule_name, model.monomers[self.phos.name](**{sub_bs: 1}) %\
-                 model.monomers[self.sub.name](**{phos_bs: 1}) >>
-                 model.monomers[self.phos.name](**{sub_bs: None}) +\
-                 model.monomers[self.sub.name](**{phos_bs: None}), kr_bind)
-        add_rule_to_model(model, r)
-
     def __str__(self):
         return ("Dephosphorylation(%s, %s, %s, %s)" %
                 (self.phos.name, self.sub.name, self.mod, self.mod_pos))
+
 
 class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result
@@ -436,50 +334,6 @@ class RasGef(Statement):
             return True
         else:
             return False
-
-    def monomers_interactions_only(self, agent_set):
-        gef = agent_set.get_create_base_agent(self.gef)
-        gef.create_site('gef_site')
-        ras = agent_set.get_create_base_agent(self.ras)
-        ras.create_site('p_loop')
-
-    def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-        gef = model.monomers[self.gef.name]
-        ras = model.monomers[self.ras.name]
-        r = Rule('%s_activates_%s' %
-                 (self.gef.name, self.ras.name),
-                 gef(**{'gef_site':None}) +
-                 ras(**{'p_loop':None}) >>
-                 gef(**{'gef_site': 1}) +
-                 ras(**{'p_loop': 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
-
-    def monomers_one_step(self, agent_set):
-        gef = agent_set.get_create_base_agent(self.gef)
-        gef.create_site(self.gef_activity, ('inactive', 'active'))
-        ras = agent_set.get_create_base_agent(self.ras)
-        ras.create_site('GtpBound', ('inactive', 'active'))
-
-    def assemble_one_step(self, model, agent_set):
-        gef_pattern = get_complex_pattern(model, self.gef, agent_set, 
-            extra_fields={self.gef_activity: 'active'})
-        ras_inactive = get_complex_pattern(model, self.ras, agent_set,
-            extra_fields={'GtpBound': 'inactive'})
-        ras_active = get_complex_pattern(model, self.ras, agent_set,
-            extra_fields={'GtpBound': 'active'})
-
-        param_name = 'kf_' + self.gef.name[0].lower() +\
-                        self.ras.name[0].lower() + '_gef'
-        kf_gef = get_create_parameter(model, param_name, 1e-6)
-
-        r = Rule('%s_activates_%s' %
-                 (self.gef.name, self.ras.name),
-                 gef_pattern + ras_inactive >>
-                 gef_pattern + ras_active,
-                 kf_gef)
-        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("RasGef(%s, %s, %s)" %
