@@ -275,7 +275,7 @@ class Dephosphorylation(Statement):
         phos_unbound = get_complex_pattern(model, self.phos, agent_set,
             extra_fields = {sub_bs: None})
         sub_pattern = get_complex_pattern(model, self.sub, agent_set)
-        
+
         param_name = 'kf_' + self.phos.name[0].lower() +\
             self.sub.name[0].lower() + '_bind'
         kf_bind = get_create_parameter(model, param_name, 1e-6)
@@ -285,7 +285,7 @@ class Dephosphorylation(Statement):
         param_name = 'kc_' + self.phos.name[0].lower() +\
             self.sub.name[0].lower() + '_dephos'
         kf_phospho = get_create_parameter(model, param_name, 1e-3)
-        
+
         site = site_name(self)[0]
 
         phos_act_mods = get_activating_mods(self.phos, agent_set)

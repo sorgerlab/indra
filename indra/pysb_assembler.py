@@ -737,32 +737,32 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
 
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
-# ACTIVITYACTIVITY ###################################################### 
+# ACTIVITYACTIVITY ######################################################
 
-def activityactivity_monomers_interactions_only(self, agent_set):
-    subj = agent_set.get_create_base_agent(self.subj)
-    subj.create_site(active_site_names[self.subj_activity])
-    obj = agent_set.get_create_base_agent(self.obj)
-    obj.create_site(active_site_names[self.obj_activity])
-    obj.create_site(default_mod_site_names[self.subj_activity])
+def activityactivity_monomers_interactions_only(stmt, agent_set):
+    subj = agent_set.get_create_base_agent(stmt.subj)
+    subj.create_site(active_site_names[stmt.subj_activity])
+    obj = agent_set.get_create_base_agent(stmt.obj)
+    obj.create_site(active_site_names[stmt.obj_activity])
+    obj.create_site(default_mod_site_names[stmt.subj_activity])
 
-def activityactivity_monomers_one_step(self, agent_set):
-    subj = agent_set.get_create_base_agent(self.subj)
-    subj.create_site(self.subj_activity, ('inactive', 'active'))
-    obj = agent_set.get_create_base_agent(self.obj)
-    obj.create_site(self.obj_activity, ('inactive', 'active'))
+def activityactivity_monomers_one_step(stmt, agent_set):
+    subj = agent_set.get_create_base_agent(stmt.subj)
+    subj.create_site(stmt.subj_activity, ('inactive', 'active'))
+    obj = agent_set.get_create_base_agent(stmt.obj)
+    obj.create_site(stmt.obj_activity, ('inactive', 'active'))
 
 activityactivity_monomers_default = activityactivity_monomers_one_step
 
-def activityactivity_assemble_interactions_only(self, model):
+def activityactivity_assemble_interactions_only(stmt, model):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    subj = model.monomers[self.subj.name]
-    obj = model.monomers[self.obj.name]
-    subj_active_site = active_site_names[self.subj_activity]
-    obj_mod_site = default_mod_site_names[self.subj_activity]
+    subj = model.monomers[stmt.subj.name]
+    obj = model.monomers[stmt.obj.name]
+    subj_active_site = active_site_names[stmt.subj_activity]
+    obj_mod_site = default_mod_site_names[stmt.subj_activity]
     r = Rule('%s_%s_activates_%s_%s' %
-             (self.subj.name, self.subj_activity, self.obj.name,
-              self.obj_activity),
+             (stmt.subj.name, stmt.subj_activity, stmt.obj.name,
+              stmt.obj_activity),
              subj(**{subj_active_site: None}) +
              obj(**{obj_mod_site: None}) >>
              subj(**{subj_active_site: 1}) %
@@ -770,24 +770,24 @@ def activityactivity_assemble_interactions_only(self, model):
              kf_bind)
     add_rule_to_model(model, r)
 
-def activityactivity_assemble_one_step(self, model, agent_set):
-    subj_pattern = get_complex_pattern(model, self.subj, agent_set, 
-        extra_fields={self.subj_activity: 'active'})
-    obj_inactive = get_complex_pattern(model, self.obj, agent_set, 
-        extra_fields={self.obj_activity: 'inactive'})
-    obj_active = get_complex_pattern(model, self.obj, agent_set, 
-        extra_fields={self.obj_activity: 'active'})
+def activityactivity_assemble_one_step(stmt, model, agent_set):
+    subj_pattern = get_complex_pattern(model, stmt.subj, agent_set, 
+        extra_fields={stmt.subj_activity: 'active'})
+    obj_inactive = get_complex_pattern(model, stmt.obj, agent_set, 
+        extra_fields={stmt.obj_activity: 'inactive'})
+    obj_active = get_complex_pattern(model, stmt.obj, agent_set, 
+        extra_fields={stmt.obj_activity: 'active'})
 
-    param_name = 'kf_' + self.subj.name[0].lower() +\
-                        self.obj.name[0].lower() + '_act'
+    param_name = 'kf_' + stmt.subj.name[0].lower() +\
+                        stmt.obj.name[0].lower() + '_act'
     kf_one_step_activate = \
                    get_create_parameter(model, param_name, 1e-6)
 
     rule_name = '%s_%s_activates_%s_%s' %\
-        (self.subj.name, self.subj_activity, self.obj.name,
-         self.obj_activity)
+        (stmt.subj.name, stmt.subj_activity, stmt.obj.name,
+         stmt.obj_activity)
 
-    if self.relationship == 'increases':
+    if stmt.relationship == 'increases':
        r = Rule(rule_name,
             subj_pattern + obj_inactive >> subj_pattern + obj_active,
             kf_one_step_activate)
@@ -799,6 +799,116 @@ def activityactivity_assemble_one_step(self, model, agent_set):
     add_rule_to_model(model, r)
 
 activityactivity_assemble_default = activityactivity_assemble_one_step
+
+# DEPHOSPHORYLATION #####################################################
+
+def dephosphorylation_monomers_interactions_only(stmt, agent_set):
+    phos = agent_set.get_create_base_agent(stmt.phos)
+    phos.create_site(active_site_names['Phosphatase'])
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+def dephosphorylation_monomers_one_step(stmt, agent_set):
+    phos = agent_set.get_create_base_agent(stmt.phos)
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+def dephosphorylation_monomers_two_step(stmt, agent_set):
+    phos = agent_set.get_create_base_agent(stmt.phos)
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    sub.create_site(site_name(stmt)[0], ('u', 'p'))
+
+    # Create site for binding the substrate
+    phos.create_site(get_binding_site_name(sub.name))
+    sub.create_site(get_binding_site_name(phos.name))
+
+dephosphorylation_monomers_default = dephosphorylation_monomers_one_step
+
+def dephosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    phos = model.monomers[stmt.phos.name]
+    sub = model.monomers[stmt.sub.name]
+    phos_site = active_site_names['Phosphatase']
+    # See NOTE in Phosphorylation.monomers_one_step
+    site = site_name(stmt)[0]
+    r = Rule('%s_dephospho_%s_%s' %
+             (stmt.phos.name, stmt.sub.name, site),
+             phos(**{phos_site: None}) + sub(**{site: None}) >>
+             phos(**{phos_site: 1}) + sub(**{site: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
+
+def dephosphorylation_assemble_one_step(stmt, model, agent_set):
+    param_name = 'kf_' + stmt.phos.name[0].lower() +\
+                stmt.sub.name[0].lower() + '_dephos'
+    kf_dephospho = get_create_parameter(model, param_name, 1e-6)
+
+    site = site_name(stmt)[0]
+    phos_pattern = get_complex_pattern(model, stmt.phos, agent_set)
+    sub_phos = get_complex_pattern(model, stmt.sub, agent_set, 
+        extra_fields={site: 'p'})
+    sub_unphos = get_complex_pattern(model, stmt.sub, agent_set, 
+        extra_fields={site: 'u'})
+
+    r = Rule('%s_dephospho_%s_%s' %
+             (stmt.phos.name, stmt.sub.name, site),
+             phos_pattern + sub_phos >>
+             phos_pattern + sub_unphos,
+             kf_dephospho)
+    add_rule_to_model(model, r)
+
+def dephosphorylation_assemble_two_step(stmt, model, agent_set):
+    sub_bs = get_binding_site_name(stmt.sub.name)
+    phos_bs = get_binding_site_name(stmt.phos.name)
+    phos_bound = get_complex_pattern(model, stmt.phos, agent_set,
+        extra_fields = {sub_bs: 1})
+    phos_unbound = get_complex_pattern(model, stmt.phos, agent_set,
+        extra_fields = {sub_bs: None})
+    sub_pattern = get_complex_pattern(model, stmt.sub, agent_set)
+
+    param_name = 'kf_' + stmt.phos.name[0].lower() +\
+        stmt.sub.name[0].lower() + '_bind'
+    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    param_name = 'kr_' + stmt.phos.name[0].lower() +\
+        stmt.sub.name[0].lower() + '_bind'
+    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    param_name = 'kc_' + stmt.phos.name[0].lower() +\
+        stmt.sub.name[0].lower() + '_dephos'
+    kf_phospho = get_create_parameter(model, param_name, 1e-3)
+
+    site = site_name(stmt)[0]
+
+    phos_act_mods = get_activating_mods(stmt.phos, agent_set)
+    for i, am in enumerate(phos_act_mods):
+        rule_name = '%s_dephos_bind_%s_%s_%d' %\
+            (stmt.phos.name, stmt.sub.name, site, i+1)
+        r = Rule(rule_name,
+            phos_unbound(am) +\
+            sub_pattern(**{site: 'p', phos_bs: None}) >>
+            phos_bound(am) %\
+            sub_pattern(**{site: 'p', phos_bs: 1}),
+            kf_bind, kr_bind)
+        add_rule_to_model(model, r)
+    
+        rule_name = '%s_dephos_%s_%s_%d' %\
+            (stmt.phos.name, stmt.sub.name, site, i+1)
+        r = Rule(rule_name,
+            phos_bound(am) %\
+                sub_pattern(**{site: 'p', phos_bs: 1}) >>
+            phos_unbound(am) +\
+                sub_pattern(**{site: 'u', phos_bs: None}),
+            kf_phospho)
+        add_rule_to_model(model, r)
+    
+    rule_name = '%s_dissoc_%s' % (stmt.phos.name, stmt.sub.name)
+    r = Rule(rule_name, model.monomers[stmt.phos.name](**{sub_bs: 1}) %\
+             model.monomers[stmt.sub.name](**{phos_bs: 1}) >>
+             model.monomers[stmt.phos.name](**{sub_bs: None}) +\
+             model.monomers[stmt.sub.name](**{phos_bs: None}), kr_bind)
+    add_rule_to_model(model, r)
+
+dephosphorylation_assemble_default = dephosphorylation_assemble_one_step
+
 
 if __name__ == '__main__':
     pa = PysbAssembler()
