@@ -1,7 +1,9 @@
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
 
+
 class Agent(object):
+
     def __init__(self, name, mods=None, mod_sites=None, active=None,
                  bound_to=None, bound_neg=None, db_refs=None):
         self.name = name
@@ -44,7 +46,8 @@ class Agent(object):
 
 class Statement(object):
     """The parent class of all statements"""
-    def __init__(self, stmt=None, citation=None, evidence=None, 
+
+    def __init__(self, stmt=None, citation=None, evidence=None,
                  annotations=None):
         self.stmt = stmt
         self.citation = citation
@@ -55,9 +58,9 @@ class Statement(object):
         return self.__str__()
 
     def __eq__(self, other):
-        if self.citation == other.citation and\
-            self.evidence == other.evidence and\
-            self.annotations == other.annotations and\
+        if self.citation == other.citation and \
+            self.evidence == other.evidence and \
+            self.annotations == other.annotations and \
             self.stmt == other.stmt:
             return True
         else:
@@ -66,6 +69,7 @@ class Statement(object):
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
+
     def __init__(self, enz, sub, mod, mod_pos, stmt=None,
                  citation=None, evidence=None, annotations=None):
         super(Modification, self).__init__(stmt, citation, evidence,
@@ -81,10 +85,10 @@ class Modification(Statement):
                  self.mod_pos))
 
     def __eq__(self, other):
-        if isinstance(other, Modification) and\
-            self.enz == other.enz and\
-            self.sub == other.sub and\
-            self.mod == other.mod and\
+        if isinstance(other, Modification) and \
+            self.enz == other.enz and \
+            self.sub == other.sub and \
+            self.mod == other.mod and \
             self.mod_pos == other.mod_pos:
             return True
         else:
@@ -93,6 +97,7 @@ class Modification(Statement):
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
+
     def __init__(self, enz, mod, mod_pos, stmt=None,
                  citation=None, evidence=None, annotations=None):
         super(SelfModification, self).__init__(stmt, citation, evidence,
@@ -106,9 +111,9 @@ class SelfModification(Statement):
                 (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
 
     def __eq__(self, other):
-        if isinstance(other, SelfModification) and\
-            self.enz == other.enz and\
-            self.mod == other.mod and\
+        if isinstance(other, SelfModification) and \
+            self.enz == other.enz and \
+            self.mod == other.mod and \
             self.mod_pos == other.mod_pos:
             return True
         else:
@@ -161,6 +166,7 @@ class Ubiquitination(Modification):
 class ActivityActivity(Statement):
     """Statement representing the activation of a protein as a result of the
     activity of another protein."""
+
     def __init__(self, subj, subj_activity, relationship, obj,
                  obj_activity, stmt=None, citation=None, evidence=None,
                  annotations=None):
@@ -173,10 +179,10 @@ class ActivityActivity(Statement):
         self.relationship = relationship
 
     def __eq__(self, other):
-        if isinstance(other, ActivityActivity) and\
-            self.subj == other.subj and\
-            self.subj_activity == other.subj_activity and\
-            self.obj == other.obj and\
+        if isinstance(other, ActivityActivity) and \
+            self.subj == other.subj and \
+            self.subj_activity == other.subj_activity and \
+            self.obj == other.obj and \
             self.obj_activity == other.obj_activity:
             return True
         else:
@@ -193,6 +199,7 @@ class RasGtpActivityActivity(ActivityActivity):
 
 
 class Dephosphorylation(Statement):
+
     def __init__(self, phos, sub, mod, mod_pos, stmt=None,
                  citation=None, evidence=None, annotations=None):
         super(Dephosphorylation, self).__init__(stmt, citation,
@@ -203,10 +210,10 @@ class Dephosphorylation(Statement):
         self.mod_pos = mod_pos
 
     def __eq__(self, other):
-        if isinstance(other, Dephosphorylation) and\
-            self.phos == other.phos and\
-            self.sub == other.sub and\
-            self.mod == other.mod and\
+        if isinstance(other, Dephosphorylation) and \
+            self.phos == other.phos and \
+            self.sub == other.sub and \
+            self.mod == other.mod and \
             self.mod_pos == other.mod_pos:
             return True
         else:
@@ -220,6 +227,7 @@ class Dephosphorylation(Statement):
 class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result
     of a residue modification"""
+
     def __init__(self, monomer, mod, mod_pos, relationship, activity,
                  stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivityModification, self).__init__(stmt, citation,
@@ -231,11 +239,11 @@ class ActivityModification(Statement):
         self.activity = activity
 
     def __eq__(self, other):
-        if isinstance(other, ActivityModification) and\
-            self.monomer == other.monomer and\
-            self.mod == other.mod and\
-            self.mod_pos == other.mod_pos and\
-            self.relationship == other.relationship and\
+        if isinstance(other, ActivityModification) and \
+            self.monomer == other.monomer and \
+            self.mod == other.mod and \
+            self.mod_pos == other.mod_pos and \
+            self.relationship == other.relationship and \
             self.activity == other.activity:
             return True
         else:
@@ -250,6 +258,7 @@ class ActivityModification(Statement):
 class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
+
     def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
                  stmt=None, citation=None, evidence=None, annotations=None):
         super(ActivatingSubstitution, self).__init__(stmt, citation,
@@ -262,11 +271,11 @@ class ActivatingSubstitution(Statement):
         self.rel = rel
 
     def __eq__(self, other):
-        if isinstance(other, ActivatingSubstitution) and\
-            self.monomer == other.monomer and\
-            self.wt_residue == other.wt_residue and\
-            self.pos == other.pos and\
-            self.sub_residue == other.sub_residue and\
+        if isinstance(other, ActivatingSubstitution) and \
+            self.monomer == other.monomer and \
+            self.wt_residue == other.wt_residue and \
+            self.pos == other.pos and \
+            self.sub_residue == other.sub_residue and \
             self.activity == other.activity:
             return True
         else:
@@ -297,9 +306,9 @@ class RasGef(Statement):
         self.ras = ras
 
     def __eq__(self, other):
-        if isinstance(other, RasGef) and\
-            self.gef == other.gef and\
-            self.gef_activity == other.gef_activity and\
+        if isinstance(other, RasGef) and \
+            self.gef == other.gef and \
+            self.gef_activity == other.gef_activity and \
             self.ras == other.ras:
             return True
         else:
@@ -313,6 +322,7 @@ class RasGef(Statement):
 class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
+
     def __init__(self, gap, gap_activity, ras,
                  stmt=None, citation=None, evidence=None, annotations=None):
         super(RasGap, self).__init__(stmt, citation, evidence,
@@ -322,9 +332,9 @@ class RasGap(Statement):
         self.ras = ras
 
     def __eq__(self, other):
-        if isinstance(other, RasGap) and\
-            self.gap == other.gap and\
-            self.gap_activity == other.gap_activity and\
+        if isinstance(other, RasGap) and \
+            self.gap == other.gap and \
+            self.gap_activity == other.gap_activity and \
             self.ras == other.ras:
             return True
         else:
@@ -337,7 +347,8 @@ class RasGap(Statement):
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
-    def __init__(self, members, stmt=None, citation=None, 
+
+    def __init__(self, members, stmt=None, citation=None,
                  evidence=None, annotations=None):
         super(Complex, self).__init__(stmt, citation, evidence, annotations)
         self.members = members
