@@ -1009,6 +1009,42 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
 
 rasgap_assemble_default = rasgap_assemble_one_step
 
+# ACTIVITYMODIFICATION ######################################
+
+def activitymodification_monomers_interactions_only(stmt, agent_set):
+    pass
+
+def activitymodification_monomers_one_step(stmt, agent_set):
+    agent = agent_set.get_create_base_agent(stmt.monomer)
+    sites = site_name(stmt)
+    active_states = [states[m][1] for m in stmt.mod]
+
+    activity_pattern = {}
+    for i, s in enumerate(sites):
+        site_states = states[stmt.mod[i]]
+        active_state = site_states[1]
+        agent.create_site(s, site_states)
+        activity_pattern[s] = active_state
+
+    # Add this activity modification explicitly to the agent's list
+    # of activating modifications
+    agent.add_activating_modification(activity_pattern)
+    # Inactivating modifications will require a different treatment
+    # of the resolution of when the agent is active
+    if stmt.relationship == 'decreases':
+        warnings.warn('Inactivating modifications not currently '
+                      'implemented!')
+
+activitymodification_monomers_default = activitymodification_monomers_one_step
+
+def activitymodification_assemble_interactions_only(stmt, model, agent_set):
+    pass
+
+def activitymodification_assemble_one_step(stmt, model, agent_set):
+    pass
+
+activitymodification_assemble_default = activitymodification_assemble_one_step
+
 
 if __name__ == '__main__':
     pa = PysbAssembler()

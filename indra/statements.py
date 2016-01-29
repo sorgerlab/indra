@@ -292,7 +292,7 @@ class ActivatingSubstitution(Statement):
         self.sub_residue = sub_residue
         self.activity = activity
         self.rel = rel
-    
+
     def __eq__(self, other):
         if isinstance(other, ActivatingSubstitution) and\
             self.monomer == other.monomer and\
