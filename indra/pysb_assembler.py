@@ -9,6 +9,7 @@ from bel import bel_api
 from biopax import biopax_api
 from trips import trips_api
 from indra import statements as ist
+import warnings
 
 SelfExporter.do_export = False
 

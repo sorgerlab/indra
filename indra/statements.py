@@ -1,7 +1,5 @@
-import warnings
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
-
 
 class Agent(object):
     def __init__(self, name, mods=None, mod_sites=None, active=None,
