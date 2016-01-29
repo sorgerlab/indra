@@ -220,9 +220,9 @@ def test_pysb_assembler_phos_twostep1():
     sub = Agent('MEK1')
     stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
                            '', '', '', '')
-    pa = PysbAssembler()
+    pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
-    model = pa.make_model(policies='two_step')
+    model = pa.make_model()
     print model.rules
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
@@ -232,10 +232,14 @@ def test_pysb_assembler_dephos_twostep1():
     sub = Agent('MEK1')
     stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222',
                              '', '', '', '')
-    pa = PysbAssembler()
+    pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
-    model = pa.make_model(policies='two_step')
+    model = pa.make_model()
     print model.rules
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
+
+# TODO: Test for one or more statement-specific policies
+# TODO: Test for setting of default policy using a dict
+# TODO: Test for setting of both statement-specific and default policies
 

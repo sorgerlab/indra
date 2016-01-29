@@ -231,7 +231,7 @@ class ActivityModification(Statement):
         self.mod_pos = mod_pos
         self.relationship = relationship
         self.activity = activity
-    
+
     def __eq__(self, other):
         if isinstance(other, ActivityModification) and\
             self.monomer == other.monomer and\
@@ -242,36 +242,6 @@ class ActivityModification(Statement):
             return True
         else:
             return False
-
-    def monomers_interactions_only(self, agent_set):
-        pass
-
-    def assemble_interactions_only(self, model, agent_set):
-        pass
-
-    def monomers_one_step(self, agent_set):
-        agent = agent_set.get_create_base_agent(self.monomer)
-        sites = site_name(self)
-        active_states = [states[m][1] for m in self.mod]
-
-        activity_pattern = {}
-        for i, s in enumerate(sites):
-            site_states = states[self.mod[i]]
-            active_state = site_states[1]
-            agent.create_site(s, site_states)
-            activity_pattern[s] = active_state
-
-        # Add this activity modification explicitly to the agent's list
-        # of activating modifications
-        agent.add_activating_modification(activity_pattern)
-        # Inactivating modifications will require a different treatment
-        # of the resolution of when the agent is active
-        if self.relationship == 'decreases':
-            warnings.warn('Inactivating modifications not currently '
-                          'implemented!')
-
-    def assemble_one_step(self, model, agent_set):
-        pass
 
     def __str__(self):
         return ("ActivityModification(%s, %s, %s, %s, %s)" %

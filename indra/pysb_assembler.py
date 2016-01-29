@@ -281,7 +281,13 @@ class PysbAssembler(object):
         self.statements = []
         self.agent_set = None
         self.model = None
-        self.policies = policies
+        if policies is None:
+            self.policies = {'other': 'default'}
+        elif isinstance(policies, basestring):
+            self.policies = {'other': policies}
+        else:
+            self.policies = {'other': 'default'}
+            self.policies.update(policies)
 
     def statement_exists(self, stmt):
         for s in self.statements:
@@ -296,10 +302,10 @@ class PysbAssembler(object):
 
     def dispatch(self, stmt, stage, *args):
         class_name = stmt.__class__.__name__
-        if not self.policies:
-            policy = 'default'
-        else:
-            policy = policies.get(class_name, 'default')
+        try:
+            policy = self.policies[class_name]
+        except KeyError:
+            policy = self.policies['other']
         func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
         func = globals().get(func_name)
         if func is None:
