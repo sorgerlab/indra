@@ -959,6 +959,57 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
 
 rasgef_assemble_default = rasgef_assemble_one_step
 
+# RASGAP ####################################################
+
+def rasgap_monomers_interactions_only(stmt, agent_set):
+    gap = agent_set.get_create_base_agent(stmt.gap)
+    gap.create_site('gap_site')
+    ras = agent_set.get_create_base_agent(stmt.ras)
+    ras.create_site('gtp_site')
+
+def rasgap_monomers_one_step(stmt, agent_set):
+    gap = agent_set.get_create_base_agent(stmt.gap)
+    gap.create_site(stmt.gap_activity, ('inactive', 'active'))
+    ras = agent_set.get_create_base_agent(stmt.ras)
+    ras.create_site('GtpBound', ('inactive', 'active'))
+
+rasgap_monomers_default = rasgap_monomers_one_step
+
+def rasgap_assemble_interactions_only(stmt, model, agent_set):
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    gap = model.monomers[stmt.gap.name]
+    ras = model.monomers[stmt.ras.name]
+    r = Rule('%s_inactivates_%s' %
+             (stmt.gap.name, stmt.ras.name),
+             gap(**{'gap_site': None}) +
+             ras(**{'gtp_site': None}) >>
+             gap(**{'gap_site': 1}) +
+             ras(**{'gtp_site': 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
+
+def rasgap_assemble_one_step(stmt, model, agent_set):
+    gap_pattern = get_complex_pattern(model, stmt.gap, agent_set, 
+        extra_fields={stmt.gap_activity: 'active'})
+    ras_inactive = get_complex_pattern(model, stmt.ras, agent_set,
+        extra_fields={'GtpBound': 'inactive'})
+    ras_active = get_complex_pattern(model, stmt.ras, agent_set,
+        extra_fields={'GtpBound': 'active'})
+
+    param_name = 'kf_' + stmt.gap.name[0].lower() +\
+                    stmt.ras.name[0].lower() + '_gap'
+    kf_gap = get_create_parameter(model, param_name, 1e-6)
+
+    r = Rule('%s_deactivates_%s' %
+             (stmt.gap.name, stmt.ras.name),
+             gap_pattern + ras_active >>
+             gap_pattern + ras_inactive,
+             kf_gap)
+    add_rule_to_model(model, r)
+
+rasgap_assemble_default = rasgap_assemble_one_step
+
+
 if __name__ == '__main__':
     pa = PysbAssembler()
     bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')

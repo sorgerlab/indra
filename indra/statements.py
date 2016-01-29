@@ -278,6 +278,7 @@ class ActivityModification(Statement):
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
                  self.activity))
 
+
 class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
@@ -313,6 +314,7 @@ class ActivatingSubstitution(Statement):
         return ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
                  self.sub_residue, self.activity, self.rel))
+
 
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
@@ -359,50 +361,6 @@ class RasGap(Statement):
             return True
         else:
             return False
-
-    def monomers_interactions_only(self, agent_set):
-        gap = agent_set.get_create_base_agent(self.gap)
-        gap.create_site('gap_site')
-        ras = agent_set.get_create_base_agent(self.ras)
-        ras.create_site('gtp_site')
-
-    def assemble_interactions_only(self, model, agent_set):
-        kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-        gap = model.monomers[self.gap.name]
-        ras = model.monomers[self.ras.name]
-        r = Rule('%s_inactivates_%s' %
-                 (self.gap.name, self.ras.name),
-                 gap(**{'gap_site': None}) +
-                 ras(**{'gtp_site': None}) >>
-                 gap(**{'gap_site': 1}) +
-                 ras(**{'gtp_site': 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
-
-    def monomers_one_step(self, agent_set):
-        gap = agent_set.get_create_base_agent(self.gap)
-        gap.create_site(self.gap_activity, ('inactive', 'active'))
-        ras = agent_set.get_create_base_agent(self.ras)
-        ras.create_site('GtpBound', ('inactive', 'active'))
-
-    def assemble_one_step(self, model, agent_set):
-        gap_pattern = get_complex_pattern(model, self.gap, agent_set, 
-            extra_fields={self.gap_activity: 'active'})
-        ras_inactive = get_complex_pattern(model, self.ras, agent_set,
-            extra_fields={'GtpBound': 'inactive'})
-        ras_active = get_complex_pattern(model, self.ras, agent_set,
-            extra_fields={'GtpBound': 'active'})
-
-        param_name = 'kf_' + self.gap.name[0].lower() +\
-                        self.ras.name[0].lower() + '_gap'
-        kf_gap = get_create_parameter(model, param_name, 1e-6)
-
-        r = Rule('%s_deactivates_%s' %
-                 (self.gap.name, self.ras.name),
-                 gap_pattern + ras_active >>
-                 gap_pattern + ras_inactive,
-                 kf_gap)
-        add_rule_to_model(model, r)
 
     def __str__(self):
         return ("RasGap(%s, %s, %s)" %
