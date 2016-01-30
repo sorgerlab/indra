@@ -239,6 +239,22 @@ def test_pysb_assembler_dephos_twostep1():
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
+def test_statement_specific_policies():
+    enz = Agent('BRAF')
+    sub = Agent('MEK1')
+    phos = Agent('PP2A')
+    stmt1 = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
+                            '', '', '', '')
+    stmt2 = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
+    policies = {'Phosphorylation': 'two_step',
+                'Dephosphorylation': 'interactions_only'}
+    pa = PysbAssembler(policies=policies)
+    pa.add_statements([stmt1, stmt2])
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==4)
+    assert(len(model.monomers)==3)
+
 # TODO: Test for one or more statement-specific policies
 # TODO: Test for setting of default policy using a dict
 # TODO: Test for setting of both statement-specific and default policies
