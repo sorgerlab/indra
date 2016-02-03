@@ -112,6 +112,24 @@ class TripsProcessor(object):
                 continue
             agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
 
+            # Information on binding site is either attached to the agent term
+            # in a features/site tag or attached to the event itself in 
+            # a site tag
+            site_feature = self._find_in_term(arg1.attrib['id'], 'features/site')
+            if site_feature is not None:
+                sites, positions = self._get_site_by_id(site_id)
+                print sites, positions
+
+            site_feature = self._find_in_term(arg2.attrib['id'], 'features/site')
+            if site_feature is not None:
+                sites, positions = self._get_site_by_id(site_id)
+                print sites, positions
+            
+            site = event.find("site")
+            if site is not None:
+                sites, positions = self._get_site_by_id(site.attrib['id'])
+                print sites, positions
+            
             if agent1 is None or agent2 is None:
                 warnings.warn('Complex with missing members')
                 continue
@@ -264,8 +282,13 @@ class TripsProcessor(object):
                         for m, mp in zip(mod, mod_pos):
                             agent.mods.append(m)
                             agent.mod_sites.append(mp)
+            
         return agent
 
+    def _find_in_term(self, term_id, path):
+        tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
+        return tag
+    
     def _get_text(self, element):
         text_tag = element.find("text")
         text = text_tag.text
