@@ -14,7 +14,7 @@ def main():
           url='http://github.com/sorgerlab/indra',
           packages=['indra', 'indra.bel', 'indra.biopax', 
                     'indra.reach', 'indra.trips', 'indra.databases'],
-          install_requires=['pysb', 'objectpath', 'rdflib', 'jnius-indra'],
+          install_requires=['pysb', 'objectpath', 'rdflib', 'jnius-indra', 'requests'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp', 
                     'mechanism', 'biochemistry'],
