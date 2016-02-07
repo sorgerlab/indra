@@ -3,15 +3,13 @@ import rdflib
 import json
 import urllib2
 from processor import BelProcessor
+import ndex_client
 
 def process_ndex_neighborhood(gene_names):
     network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
-    url = 'http://54.218.49.73/network/%s/asBELRDF/query' % network_id
+    url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
-    req = urllib2.Request(url)
-    req.add_header('Content-Type', 'application/json')
-    res = urllib2.urlopen(req, json.dumps(params))
-    rdf = res.read()
+    rdf = ndex_client.send_request(url_suffix, params)
     bp = process_belrdf(rdf)
     bp.print_statements()
     return bp
