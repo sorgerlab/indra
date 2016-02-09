@@ -267,6 +267,10 @@ class TripsProcessor(object):
                         # Look for negative flag either in precondition event
                         # predicate tag or in the term itself
                         neg_flag = precond_event.find('predicate/mods/mod[type="ONT::NEG"]')
+                        negation_sign = precond_event.find('negation')
+                        if negation_sign is not None:
+                            if negation_sign.text == '+':
+                                neg_flag = True
                         neg_flag = neg_flag or term.find('mods/mod[type="ONT::NEG"]')
                         negation_sign = precond_event.find('predicate/negation')
                         if negation_sign is not None:
