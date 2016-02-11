@@ -1,23 +1,32 @@
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
+from collections import namedtuple
 
+BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
 
 class Agent(object):
 
     def __init__(self, name, mods=None, mod_sites=None, active=None,
-                 bound_to=None, bound_neg=None, db_refs=None):
+                 bound_conditions=None, db_refs=None):
         self.name = name
+
         if mods is None:
             self.mods = []
         else:
             self.mods = mods
+
         if mod_sites is None:
             self.mod_sites = []
         else:
             self.mod_sites = mod_sites
-        self.bound_to = bound_to
-        self.bound_neg = bound_neg
+
+        if bound_conditions is None:
+            self.bound_conditions = []
+        else:
+            self.bound_conditions = bound_conditions
+
         self.active = active
+
         if db_refs is None:
             self.db_refs = {}
         else:
@@ -34,10 +43,9 @@ class Agent(object):
             attr_strs.append('mod_sites: %s' % self.mod_sites)
         if self.active:
             attr_strs.append('active: %s' % self.active)
-        if self.bound_to:
-            attr_strs.append('bound_to: %s' % self.bound_to)
-        if self.bound_neg:
-            attr_strs.append('bound_neg: %s' % self.bound_neg)
+        if self.bound_conditions:
+            attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
+                          for b in self.bound_conditions]
         if self.db_refs:
             attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
@@ -134,12 +142,11 @@ class Autophosphorylation(SelfModification):
 
 
 class Transphosphorylation(SelfModification):
-    """Transphosphorylation assumes that a kinase is already bound to 
-    a substrate (usually of the same molecular species), and phosphorylates 
-    it in an intra-molecular fashion. The enz property of the statement must 
-    have exactly one bound_to property, and we assume that enz phosphorylates 
-    this bound_to molecule. The bound_neg property is ignored here.
-    """
+    """Transphosphorylation assumes that a kinase is already bound to a
+    substrate (usually of the same molecular species), and phosphorylates it in
+    an intra-molecular fashion. The enz property of the statement must have
+    exactly one bound_conditions entry, and we assume that enz phosphorylates
+    this molecule. The bound_neg property is ignored here.  """
     pass
 
 
