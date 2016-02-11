@@ -156,14 +156,16 @@ class TripsProcessor(object):
                 for t in terms:
                     term_names.append(self._get_name_by_id(t.attrib['id']))
                 agent_name = term_names[0]
-                agent_bound = term_names[1]
-                agent_agent = Agent(agent_name, bound_to=agent_bound)
+                agent_bound = Agent(term_names[1])
+                agent_agent = Agent(agent_name,
+                            bound_conditions=[BoundCondition(agent_bound,True)])
             else:
                 agent_agent = self._get_agent_by_id(agent.attrib['id'],
                                                     event.attrib['id'])
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                warnings.warn('Skipping phosphorylation event with no affected term.')
+                warnings.warn('Skipping phosphorylation event with no '
+                              'affected term.')
                 continue
             affected_agent = self._get_agent_by_id(affected.attrib['id'],
                                                    event.attrib['id'])
@@ -179,7 +181,9 @@ class TripsProcessor(object):
             mod_types = event.findall('predicate/mods/mod/type')
             # Transphosphorylation
             if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
-                agent_agent.bound_to = affected_agent.name
+                agent_bound = Agent(affected_agent.name)
+                agent_agent.bound_conditions = \
+                                           [BoundCondition(agent_bound, True)]
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Transphosphorylation(agent_agent,
                                         m, p, sentence,
@@ -229,8 +233,11 @@ class TripsProcessor(object):
             agents = []
             for t in terms:
                 agents.append(self._get_agent_by_id(t.attrib['id'], None))
+            # We assume that the first agent mentioned in the description of
+            # the complex is the one that mediates binding
             agent = agents[0]
-            agent.bound_to = agents[1].name
+            agent.bound_conditions = \
+                            [BoundCondition(ag, True) for ag in agents[1:]]
         # If the entity is not a complex
         else:
             agent_name = self._get_name_by_id(entity_id)
@@ -243,7 +250,8 @@ class TripsProcessor(object):
                 precond_id = precond_event_ref.find('event').attrib['id']
                 precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
-                    warnings.warn('Circular reference to event %s.' % precond_id)
+                    warnings.warn('Circular reference to event %s.' %
+                                  precond_id)
                 else:
                     precond_event_type = precond_event.find('type').text
                     # Binding precondition
@@ -253,32 +261,39 @@ class TripsProcessor(object):
                         mod = precond_event.findall('mods/mod')
                         if arg1 is None:
                             arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                            agent.bound_to = arg2_name
+                            bound_agent = Agent(arg2_name)
                         elif arg2 is None:
                             arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                            agent.bound_to = arg1_name
+                            bound_agent = Agent(arg1_name)
                         else:
                             arg1_name = self._get_name_by_id(arg1.attrib['id'])
                             arg2_name = self._get_name_by_id(arg2.attrib['id'])
                             if arg1_name == agent_name:
-                                agent.bound_to = arg2_name
+                                bound_agent = Agent(arg2_name)
                             else:
-                                agent.bound_to = arg1_name
+                                bound_agent = Agent(arg1_name)
                         # Look for negative flag either in precondition event
                         # predicate tag or in the term itself
-                        neg_flag = precond_event.find('predicate/mods/mod[type="ONT::NEG"]')
+                        # (after below, neg_flag will be an object, or None)
+                        neg_flag = precond_event.find(
+                                        'predicate/mods/mod[type="ONT::NEG"]')
                         negation_sign = precond_event.find('negation')
                         if negation_sign is not None:
                             if negation_sign.text == '+':
                                 neg_flag = True
-                        neg_flag = neg_flag or term.find('mods/mod[type="ONT::NEG"]')
+                        # (after this, neg_flag will be a boolean value)
+                        neg_flag = neg_flag or \
+                                   term.find('mods/mod[type="ONT::NEG"]')
                         negation_sign = precond_event.find('predicate/negation')
                         if negation_sign is not None:
                             if negation_sign.text == '+':
                                 neg_flag = True
 
-                        if neg_flag is not None:
-                            agent.bound_neg = True
+                        if neg_flag:
+                            bc = BoundCondition(bound_agent, False)
+                        else:
+                            bc = BoundCondition(bound_agent, True)
+                        agent.bound_conditions = [bc]
 
                     # Phosphorylation precondition
                     elif precond_event_type == 'ONT::PHOSPHORYLATION':

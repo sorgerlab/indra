@@ -32,10 +32,10 @@ class BaseAgentSet(object):
             base_agent = BaseAgent(agent.name)
             self.agents[agent.name] = base_agent
 
-        if agent.bound_to:
-            bound_to = self.get_create_base_agent(ist.Agent(agent.bound_to))
-            bound_to.create_site(get_binding_site_name(agent.name))
-            base_agent.create_site(get_binding_site_name(agent.bound_to))
+        for bc in agent.bound_conditions:
+            bound_base_agent = self.get_create_base_agent(bc.agent)
+            bound_base_agent.create_site(get_binding_site_name(agent.name))
+            base_agent.create_site(get_binding_site_name(bc.agent.name))
 
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.iteritems():
@@ -210,13 +210,14 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
     if extra_fields is not None:
         for k, v in extra_fields.iteritems():
             pattern[k] = v
-    if agent.bound_to:
+
+    for bc in agent.bound_conditions:
         # Here we make the assumption that the binding site
         # is simply named after the binding partner
-        if agent.bound_neg:
-            pattern[get_binding_site_name(agent.bound_to)] = None
+        if bc.is_bound:
+            pattern[get_binding_site_name(bc.agent.name)] = ANY
         else:
-            pattern[get_binding_site_name(agent.bound_to)] = ANY
+            pattern[get_binding_site_name(bc.agent.name)] = None
 
     # Add the pattern for the modifications of the agent
     # TODO: This is specific to phosphorylation but we should be
@@ -412,11 +413,11 @@ def complex_assemble_one_step(stmt, model, agent_set):
         # Make a rule name
         name_components = []
         for m in pair:
-            if m.bound_to:
-                if m.bound_neg:
-                    name_components.append(m.name + '_n' + m.bound_to)
+            for bc in m.bound_conditions:
+                if bc.is_bound:
+                    name_components.append(m.name + '_' + bc.agent.name)
                 else:
-                    name_components.append(m.name + '_' + m.bound_to)
+                    name_components.append(m.name + '_n' + bc.agent.name)
             else:
                 name_components.append(m.name)
 
@@ -456,11 +457,11 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     # Make a rule name
     name_components = []
     for m in stmt.members:
-        if m.bound_to:
-            if m.bound_neg:
-                name_components.append(m.name + '_n' + m.bound_to)
+        for bc in m.bound_conditions:
+            if bc.is_bound:
+                name_components.append(m.name + '_' + bc.agent.name)
             else:
-                name_components.append(m.name + '_' + m.bound_to)
+                name_components.append(m.name + '_n' + bc.agent.name)
         else:
             name_components.append(m.name)
     rule_name = '_'.join(name_components) + '_bind'
@@ -512,16 +513,11 @@ def complex_assemble_multi_way(stmt, model, agent_set):
             right_site_dict[mod_site] = 'p'
 
         # Add the pattern for the member being bound
-        if member.bound_to:
-            bound_name = member.bound_to
+        for bc in member.bound_conditions:
+            bound_name = bc.agent.name
             bound_bs = get_binding_site_name(bound_name)
             gene_bs = get_binding_site_name(gene_name)
-            if member.bound_neg:
-                left_site_dict[bound_bs] = None
-                right_site_dict[bound_bs] = None
-                left_pattern = mono(**left_site_dict)
-                right_pattern = mono(**right_site_dict)
-            else:
+            if bc.is_bound:
                 bound = model.monomers[bound_name]
                 left_site_dict[bound_bs] = \
                     bond_counter
@@ -532,6 +528,11 @@ def complex_assemble_multi_way(stmt, model, agent_set):
                 right_pattern = mono(**right_site_dict) % \
                                 bound(**{gene_bs: bond_counter})
                 bond_counter += 1
+            else:
+                left_site_dict[bound_bs] = None
+                right_site_dict[bound_bs] = None
+                left_pattern = mono(**left_site_dict)
+                right_pattern = mono(**right_site_dict)
         else:
             left_pattern = mono(**left_site_dict)
             right_pattern = mono(**right_site_dict)
@@ -735,7 +736,7 @@ def transphosphorylation_monomers_one_step(stmt, agent_set):
     # Phosphorylation statements, i.e., phosphorylation is assumed to be
     # distributive. If this is not the case, this assumption will need to
     # be revisited.
-    sub = agent_set.get_create_base_agent(ist.Agent(stmt.enz.bound_to))
+    sub = agent_set.get_create_base_agent(stmt.enz.bound_conditions[0].agent)
     sub.create_site(site_name(stmt)[0], ('u', 'p'))
 
 transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
@@ -747,18 +748,20 @@ def transphosphorylation_assemble_interactions_only(stmt, model, agent_set):
 
 def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
-                  stmt.enz.bound_to[0].lower() + '_transphos')
+                  stmt.enz.bound_conditions[0].agent.name[0].lower() +
+                  '_transphos')
     kf = get_create_parameter(model, param_name, 1e-3)
 
     site = site_name(stmt)[0]
     enz_pattern = get_complex_pattern(model, stmt.enz, agent_set)
-    sub_unphos = get_complex_pattern(model, ist.Agent(stmt.enz.bound_to),
+    bound_agent = stmt.enz.bound_conditions[0].agent
+    sub_unphos = get_complex_pattern(model, bound_agent,
         agent_set, extra_fields={site: 'u'})
-    sub_phos = get_complex_pattern(model, ist.Agent(stmt.enz.bound_to),
+    sub_phos = get_complex_pattern(model, bound_agent,
         agent_set, extra_fields={site: 'p'})
 
     rule_name = '%s_transphospho_%s_%s' % (stmt.enz.name,
-                                           stmt.enz.bound_to, site)
+                                           bound_agent.name, site)
     r = Rule(rule_name, enz_pattern % sub_unphos >> \
                     enz_pattern % sub_phos, kf)
     add_rule_to_model(model, r)

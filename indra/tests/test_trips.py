@@ -44,8 +44,8 @@ def test_complex_bind():
     assert(len(st.members) == 2)
     assert(has_hgnc_ref(st.members[0]))
     assert(has_hgnc_ref(st.members[1]))
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[1].bound_to is not None)
+    assert(st.members[0].bound_conditions)
+    assert(st.members[1].bound_conditions)
     os.remove(fname)
 
 def test_complex_bind2():
@@ -58,8 +58,8 @@ def test_complex_bind2():
     assert(len(st.members) == 2)
     assert(st.members[0].name == 'RAF')
     assert(st.members[1].name == 'RAS')
-    assert(st.members[1].bound_to is not None)
-    assert(st.members[1].bound_to == 'GTP')
+    assert(len(st.members[1].bound_conditions) == 1)
+    assert(st.members[1].bound_conditions[0].agent.name == 'GTP')
     os.remove(fname)
 
 def test_complex_bind3():
@@ -72,10 +72,10 @@ def test_complex_bind3():
     assert(len(st.members) == 2)
     assert(st.members[0].name == 'RAF')
     assert(st.members[1].name == 'RAF')
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to == 'RAS')
-    assert(st.members[1].bound_to is not None)
-    assert(st.members[1].bound_to == 'RAS')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'RAS')
+    assert(len(st.members[1].bound_conditions) == 1)
+    assert(st.members[1].bound_conditions[0].agent.name == 'RAS')
     os.remove(fname)
 
 def test_bound_mod():
@@ -104,9 +104,9 @@ def test_not_bound_to():
     assert(has_hgnc_ref(st.members[0]))
     assert(st.members[1].name == 'MAP2K1')
     assert(has_hgnc_ref(st.members[1]))
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to.lower() == 'vemurafenib')
-    assert(st.members[0].bound_neg is True)
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name.lower() == 'vemurafenib')
+    assert(st.members[0].bound_conditions[0].is_bound == False)
     os.remove(fname)
 
 def test_not_bound_to2():
@@ -122,9 +122,9 @@ def test_not_bound_to2():
     assert(has_hgnc_ref(st.enz))
     assert(st.sub.name == 'MAP2K1')
     assert(has_hgnc_ref(st.sub))
-    assert(st.enz.bound_to is not None)
-    assert(st.enz.bound_to.lower() == 'vemurafenib')
-    assert(st.enz.bound_neg is True)
+    assert(len(st.enz.bound_conditions) == 1)
+    assert(st.enz.bound_conditions[0].agent.name.lower() == 'vemurafenib')
+    assert(st.enz.bound_conditions[0].is_bound == False)
     os.remove(fname)
 
 def test_bound_to():
@@ -139,8 +139,8 @@ def test_bound_to():
     assert(has_hgnc_ref(st.members[0]))
     assert(st.members[1].name == 'BRAF')
     assert(has_hgnc_ref(st.members[1]))
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to == 'GTP')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'GTP')
     os.remove(fname)
 
 def test_bound_to2():
@@ -155,8 +155,8 @@ def test_bound_to2():
     assert(has_hgnc_ref(st.members[0]))
     assert(st.members[1].name == 'SOS1')
     assert(has_hgnc_ref(st.members[1]))
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to == 'EGFR')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
 
 def test_bound_to3():
@@ -170,10 +170,10 @@ def test_bound_to3():
     assert(st.members[0].name == 'SOS1')
     assert(has_hgnc_ref(st.members[0]))
     assert(st.members[1].name == 'RAS')
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to == 'GRB2')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'GRB2')
     os.remove(fname)
-    
+
 def test_bound_to4(): 
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'RAS, bound to SOS1, binds GTP.'
@@ -184,8 +184,8 @@ def test_bound_to4():
     assert(len(st.members) == 2)
     assert(st.members[0].name == 'RAS')
     assert(st.members[1].name == 'GTP')
-    assert(st.members[0].bound_to is not None)
-    assert(st.members[0].bound_to == 'SOS1')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'SOS1')
     os.remove(fname)
 
 def test_transphosphorylate():
@@ -199,8 +199,8 @@ def test_transphosphorylate():
     assert(st.enz.name == 'EGFR')
     assert(has_hgnc_ref(st.enz))
     assert(st.mod == 'Phosphorylation')
-    assert(st.enz.bound_to is not None)
-    assert(st.enz.bound_to == 'EGFR')
+    assert(len(st.enz.bound_conditions) == 1)
+    assert(st.enz.bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
 
 def test_transphosphorylate2():
@@ -214,8 +214,8 @@ def test_transphosphorylate2():
     assert(st.enz.name == 'EGFR')
     assert(has_hgnc_ref(st.enz))
     assert(st.mod == 'PhosphorylationTyrosine')
-    assert(st.enz.bound_to is not None)
-    assert(st.enz.bound_to == 'EGFR')
+    assert(len(st.enz.bound_conditions) == 1)
+    assert(st.enz.bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
 
 def test_act_mod():
