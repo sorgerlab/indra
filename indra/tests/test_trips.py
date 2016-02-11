@@ -155,7 +155,7 @@ def test_bound_to2():
     assert(has_hgnc_ref(st.members[0]))
     assert(st.members[1].name == 'SOS1')
     assert(has_hgnc_ref(st.members[1]))
-    assert(len(st.members[0].bound_conditions == 1)
+    assert(len(st.members[0].bound_conditions) == 1)
     assert(st.members[0].bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
 
