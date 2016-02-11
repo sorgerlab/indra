@@ -23,7 +23,8 @@ def test_pysb_assembler_complex2():
     assert(len(model.monomers)==3)
 
 def test_pysb_assembler_complex3():
-    member1 = Agent('BRAF', bound_to='HRAS')
+    hras = Agent('HRAS')
+    member1 = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
     member2 = Agent('MEK1')
     stmt = Complex([member1, member2])
     pa = PysbAssembler()
@@ -45,7 +46,8 @@ def test_pysb_assembler_phos1():
     assert(len(model.monomers)==2)
 
 def test_pysb_assembler_phos2():
-    enz = Agent('BRAF', bound_to='HRAS')
+    hras = Agent('HRAS')
+    enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
     sub = Agent('MEK1')
     stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
                            '', '', '', '')
@@ -56,8 +58,10 @@ def test_pysb_assembler_phos2():
     assert(len(model.monomers)==3)
 
 def test_pysb_assembler_phos3():
-    enz = Agent('BRAF', bound_to='HRAS')
-    sub = Agent('MEK1', bound_to='ERK1')
+    hras = Agent('HRAS')
+    erk1 = Agent('ERK1')
+    enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
+    sub = Agent('MEK1', bound_conditions=[BoundCondition(erk1, True)])
     stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
                            '', '', '', '')
     pa = PysbAssembler()
@@ -67,8 +71,10 @@ def test_pysb_assembler_phos3():
     assert(len(model.monomers)==4)
 
 def test_pysb_assembler_phos4():
-    enz = Agent('BRAF', bound_to='HRAS')
-    sub = Agent('MEK1', bound_to='ERK1', bound_neg=True)
+    hras = Agent('HRAS')
+    erk1 = Agent('ERK1')
+    enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
+    sub = Agent('MEK1', bound_conditions=[BoundCondition(erk1, False)])
     stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
                            '', '', '', '')
     pa = PysbAssembler()
@@ -88,7 +94,8 @@ def test_pysb_assembler_autophos1():
     assert(len(model.monomers)==1)
 
 def test_pysb_assembler_autophos2():
-    enz = Agent('MEK1', bound_to='RAF1')
+    raf1 = Agent('RAF1')
+    enz = Agent('MEK1', bound_conditions=[BoundCondition(raf1, True)])
     stmt = Autophosphorylation(enz, 'PhosphorylationSerine', '222',
                                '', '', '', '')
     pa = PysbAssembler()
@@ -99,7 +106,8 @@ def test_pysb_assembler_autophos2():
     assert(len(model.monomers)==2)
 
 def test_pysb_assembler_autophos3():
-    enz = Agent('EGFR', bound_to='EGFR')
+    egfr = Agent('EGFR')
+    enz = Agent('EGFR', bound_conditions=[BoundCondition(egfr, True)])
     stmt = Autophosphorylation(enz, 'PhosphorylationTyrosine', None,
                                '', '', '', '')
     pa = PysbAssembler()
@@ -110,7 +118,8 @@ def test_pysb_assembler_autophos3():
     assert(len(model.monomers)==1)
 
 def test_pysb_assembler_transphos1():
-    enz = Agent('EGFR', bound_to='EGFR')
+    egfr = Agent('EGFR')
+    enz = Agent('EGFR', bound_conditions=[BoundCondition(egfr, True)])
     stmt = Transphosphorylation(enz, 'PhosphorylationTyrosine', None,
                                 '', '', '', '')
     pa = PysbAssembler()
@@ -121,7 +130,8 @@ def test_pysb_assembler_transphos1():
     assert(len(model.monomers)==1)
 
 def test_pysb_assembler_actact1():
-    subj = Agent('GRB2', bound_to='EGFR')
+    egfr = Agent('EGFR')
+    subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
     stmt = ActivityActivity(subj, 'act', 'increase', obj, 'act',
                             '', '', '', '')
@@ -146,7 +156,8 @@ def test_pysb_assembler_dephos1():
 
 def test_pysb_assembler_dephos2():
     phos = Agent('PP2A')
-    sub = Agent('MEK1', bound_to='RAF1')
+    raf1 = Agent('RAF1')
+    sub = Agent('MEK1', bound_conditions=[BoundCondition(raf1, True)])
     stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222',
                              '', '', '', '')
     pa = PysbAssembler()
