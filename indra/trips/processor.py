@@ -298,7 +298,7 @@ class TripsProcessor(object):
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
-    
+
     def _get_text(self, element):
         text_tag = element.find("text")
         text = text_tag.text

@@ -225,6 +225,11 @@ class Transphosphorylation(SelfModification):
     pass
 
 
+class Dephosphorylation(Modification):
+    """Dephosphorylation modification"""
+    pass
+
+
 class Hydroxylation(Modification):
     """Hydroxylation modification"""
     pass
@@ -280,34 +285,6 @@ class ActivityActivity(Statement):
 
 class RasGtpActivityActivity(ActivityActivity):
     pass
-
-
-class Dephosphorylation(Statement):
-
-    def __init__(self, phos, sub, mod, mod_pos, evidence=None):
-        super(Dephosphorylation, self).__init__(evidence)
-        self.phos = phos
-        self.sub = sub
-        self.mod = mod
-        self.mod_pos = mod_pos
-
-    def matches(self, other):
-        if isinstance(other, Dephosphorylation) and \
-            self.phos == other.phos and \
-            self.sub == other.sub and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos:
-            return True
-        else:
-            return False
-
-    def __str__(self):
-        s = ("Dephosphorylation(%s, %s, %s, %s)" %
-                (self.phos.name, self.sub.name, self.mod, self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
-        return s
 
 
 class ActivityModification(Statement):
