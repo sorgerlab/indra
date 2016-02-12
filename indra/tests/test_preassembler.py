@@ -1,6 +1,7 @@
 from indra.preassembler import Preassembler
 from indra.trips import trips_api
-from indra.statements import Agent, Phosphorylation, BoundCondition
+from indra.statements import Agent, Phosphorylation, BoundCondition, \
+                             Dephosphorylation, Evidence
 
 def test_from_text():
     sentences = ['Src phosphorylates Ras, bound to GTP, at Tyr32.', 
@@ -39,3 +40,35 @@ def test_src_phos_nras():
     assert(stmts[0].sub.name == 'NRAS')
     assert(stmts[0].mod == 'PhosphorylationTyrosine')
     assert(stmts[0].mod_pos == '32')
+
+def test_combine_duplicates():
+    raf = Agent('RAF1')
+    mek = Agent('MEK1')
+    erk = Agent('ERK2')
+    p1 = Phosphorylation(raf, mek, 'Phosphorylation', None,
+            evidence=Evidence(text='foo'))
+    p2 = Phosphorylation(raf, mek, 'Phosphorylation', None,
+            evidence=Evidence(text='bar'))
+    p3 = Phosphorylation(raf, mek, 'Phosphorylation', None,
+            evidence=Evidence(text='baz'))
+    p4 = Phosphorylation(raf, mek, 'Phosphorylation', None,
+            evidence=Evidence(text='beep'))
+    p5 = Phosphorylation(mek, erk, 'Phosphorylation', None,
+            evidence=Evidence(text='foo'))
+    p6 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
+            evidence=Evidence(text='bar'))
+    p7 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
+            evidence=Evidence(text='baz'))
+    p8 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
+            evidence=Evidence(text='beep'))
+    p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
+                         'Phosphorylation', None, evidence=Evidence(text='beep'))
+    stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
+    pa = Preassembler(stmts)
+    pa.assemble()
+    assert(len(pa.unique_stmts) == 4)
+    assert(len(pa.unique_stmts[0].evidence) == 4)
+    assert(len(pa.unique_stmts[1].evidence) == 1)
+    assert(len(pa.unique_stmts[2].evidence) == 3)
+    assert(len(pa.unique_stmts[3].evidence) == 1)
+
