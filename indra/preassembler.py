@@ -82,36 +82,6 @@ if __name__ == '__main__':
     #import pickle
     #with open('example_kami.pck') as f:
     #    stmts = pickle.load(f)
-    raf = Agent('RAF1')
-    mek = Agent('MEK1')
-    erk = Agent('ERK2')
-    p1 = Phosphorylation(raf, mek, 'Phosphorylation', None,
-            evidence=Evidence(text='foo'))
-    p2 = Phosphorylation(raf, mek, 'Phosphorylation', None,
-            evidence=Evidence(text='bar'))
-    p3 = Phosphorylation(raf, mek, 'Phosphorylation', None,
-            evidence=Evidence(text='baz'))
-    p4 = Phosphorylation(raf, mek, 'Phosphorylation', None,
-            evidence=Evidence(text='beep'))
-    p5 = Phosphorylation(mek, erk, 'Phosphorylation', None,
-            evidence=Evidence(text='foo'))
-    p6 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
-            evidence=Evidence(text='bar'))
-    p7 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
-            evidence=Evidence(text='baz'))
-    p8 = Dephosphorylation(mek, erk, 'Phosphorylation', None,
-            evidence=Evidence(text='beep'))
-    p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
-                         'Phosphorylation', None, evidence=Evidence(text='beep'))
-    stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
-    """
-    for group in itertools.groupby(stmts, key=lambda s: type(s).__name__):
-        print '----', group[0], '------'
-        for thing in group[1]:
-            print thing
-    """
-    pa = Preassembler(stmts)
-    pa.assemble()
 
     """
     for s in stmts:
