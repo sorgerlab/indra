@@ -121,13 +121,12 @@ class Evidence(object):
         self.epistemics = epistemics
 
     def __str__(self):
-        ev_str = 'Evidence(%s, %s, %s)' % \
-                 (self.source_api, self.pmid, self.annotations)
-        if self.text:
-            ev_str += ':\n'
-            ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
-                                    subsequent_indent='    ', width=80)
+        ev_str = 'Evidence(%s, %s, %s, %s)' % \
+                 (self.source_api, self.pmid, self.annotations, self.text)
         return ev_str
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Statement(object):
@@ -182,12 +181,9 @@ class Modification(Statement):
         self.mod_pos = mod_pos
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s, %s, %s)" %
                   (type(self).__name__, self.enz.name, self.sub.name, self.mod,
-                   self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+                   self.mod_pos, self.evidence))
         return s
 
     def matches(self, other):
@@ -218,11 +214,9 @@ class SelfModification(Statement):
         self.mod_pos = mod_pos
 
     def __str__(self):
-        s = ("%s(%s, %s, %s)" %
-             (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+        s = ("%s(%s, %s, %s, %s)" %
+             (type(self).__name__, self.enz.name, self.mod, self.mod_pos,
+              self.evidence))
         return s
 
     def matches(self, other):
@@ -306,12 +300,10 @@ class ActivityActivity(Statement):
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj.name, self.subj_activity,
-              self.relationship, self.obj.name, self.obj_activity))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+              self.relationship, self.obj.name, self.obj_activity,
+              self.evidence))
         return s
 
 
@@ -344,12 +336,9 @@ class ActivityModification(Statement):
             return False
 
     def __str__(self):
-        s = ("ActivityModification(%s, %s, %s, %s, %s)" %
+        s = ("ActivityModification(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
-                 self.activity))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+                 self.activity, self.evidence))
         return s
 
 
@@ -385,12 +374,9 @@ class ActivatingSubstitution(Statement):
         pass
 
     def __str__(self):
-        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
+        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
-                 self.sub_residue, self.activity, self.rel))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+                 self.sub_residue, self.activity, self.rel, self.evidence))
         return s
 
 
@@ -414,11 +400,8 @@ class RasGef(Statement):
             return False
 
     def __str__(self):
-        s = ("RasGef(%s, %s, %s)" %
-                (self.gef.name, self.gef_activity, self.ras.name))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+        s = ("RasGef(%s, %s, %s, %s)" %
+                (self.gef.name, self.gef_activity, self.ras.name, self.evidence))
         return s
 
 
@@ -442,11 +425,8 @@ class RasGap(Statement):
             return False
 
     def __str__(self):
-        s = ("RasGap(%s, %s, %s)" %
-                (self.gap.name, self.gap_activity, self.ras.name))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+        s = ("RasGap(%s, %s, %s, %s)" %
+                (self.gap.name, self.gap_activity, self.ras.name, self.evidence))
         return s
 
 
@@ -472,10 +452,8 @@ class Complex(Statement):
         return key
 
     def __str__(self):
-        s = ("Complex(%s)" % [m.name for m in self.members])
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+        s = ("Complex(%s, %s)" % ([m.name for m in self.members],
+                                  self.evidence))
         return s
 
 
