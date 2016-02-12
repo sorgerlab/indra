@@ -301,7 +301,7 @@ class PysbAssembler(object):
 
     def statement_exists(self, stmt):
         for s in self.statements:
-            if stmt == s:
+            if stmt.matches(s):
                 return True
         return False
 

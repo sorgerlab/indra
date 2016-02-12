@@ -33,8 +33,28 @@ class Agent(object):
         else:
             self.db_refs = db_refs
 
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+    def matches(self, other):
+        # FIXME: Check db_refs!!!
+        if not (self.name == other.name and \
+                set(self.mods) == set(other.mods) and \
+                set(self.mod_sites) == set(other.mod_sites) and \
+                self.active == other.active and \
+                len(self.bound_conditions) == len(other.bound_conditions)):
+            return False
+
+        # Check for corresponding bound_condition in the other Agent
+        sorted_other_bcs = sorted(other.bound_conditions,
+                                  key=lambda x: x.agent.name)
+        # Check the state of all the Agents that the Agents are bound to
+        for bc_ix, bc in enumerate(sorted(self.bound_conditions,
+                                          key=lambda x: x.agent.name)):
+            if not (bc.agent.matches(sorted_other_bcs[bc_ix].agent) and \
+                    bc.is_bound == sorted_other_bcs[bc_ix].is_bound):
+                # A mismatch!
+                return False
+
+        # Everything checks out, the two Agents match
+        return True
 
     def __repr__(self):
         attr_strs = []
@@ -98,6 +118,7 @@ class Evidence(object):
                                     subsequent_indent='    ', width=80)
         return ev_str
 
+
 class Statement(object):
     """The parent class of all statements.
 
@@ -124,6 +145,7 @@ class Statement(object):
     def __repr__(self):
         return self.__str__()
 
+
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
@@ -143,10 +165,10 @@ class Modification(Statement):
             s += '\n'.join([str(e) for e in self.evidence])
         return s
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, Modification) and \
-            self.enz == other.enz and \
-            self.sub == other.sub and \
+            self.enz.matches(other.enz) and \
+            self.sub.matches(other.sub) and \
             self.mod == other.mod and \
             self.mod_pos == other.mod_pos:
             return True
@@ -171,9 +193,9 @@ class SelfModification(Statement):
             s += '\n'.join([str(e) for e in self.evidence])
         return s
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, SelfModification) and \
-            self.enz == other.enz and \
+            self.enz.matches(other.enz) and \
             self.mod == other.mod and \
             self.mod_pos == other.mod_pos:
             return True
@@ -236,11 +258,11 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, ActivityActivity) and \
-            self.subj == other.subj and \
+            self.subj.matches(other.subj) and \
             self.subj_activity == other.subj_activity and \
-            self.obj == other.obj and \
+            self.obj.matches(other.obj) and \
             self.obj_activity == other.obj_activity:
             return True
         else:
@@ -269,7 +291,7 @@ class Dephosphorylation(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, Dephosphorylation) and \
             self.phos == other.phos and \
             self.sub == other.sub and \
@@ -301,9 +323,9 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, ActivityModification) and \
-            self.monomer == other.monomer and \
+            self.monomer.matches(other.monomer) and \
             self.mod == other.mod and \
             self.mod_pos == other.mod_pos and \
             self.relationship == other.relationship and \
@@ -336,9 +358,9 @@ class ActivatingSubstitution(Statement):
         self.activity = activity
         self.rel = rel
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, ActivatingSubstitution) and \
-            self.monomer == other.monomer and \
+            self.monomer.matches(other.monomer) and \
             self.wt_residue == other.wt_residue and \
             self.pos == other.pos and \
             self.sub_residue == other.sub_residue and \
@@ -373,11 +395,11 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras = ras
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, RasGef) and \
-            self.gef == other.gef and \
+            self.gef.matches(other.gef) and \
             self.gef_activity == other.gef_activity and \
-            self.ras == other.ras:
+            self.ras.matches(other.ras):
             return True
         else:
             return False
@@ -401,11 +423,11 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras = ras
 
-    def __eq__(self, other):
+    def matches(self, other):
         if isinstance(other, RasGap) and \
-            self.gap == other.gap and \
+            self.gap.matches(other.gap) and \
             self.gap_activity == other.gap_activity and \
-            self.ras == other.ras:
+            self.ras.matches(other.ras):
             return True
         else:
             return False
@@ -426,12 +448,12 @@ class Complex(Statement):
         super(Complex, self).__init__(evidence)
         self.members = members
 
-    def __eq__(self, other):
+    def matches(self, other):
         # TODO: find equality for different orders of members too
         if not isinstance(other, Complex):
             return False
         for (m1, m2) in zip(self.members, other.members):
-            if not m1 == m2:
+            if not m1.matches(m2):
                 return False
         return True
 
