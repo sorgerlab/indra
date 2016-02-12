@@ -68,8 +68,8 @@ class Evidence(object):
         String indicating the Pubmed ID of the source of the statement.
     text : string
         Natural language text supporting the statement.
-    annotations : dict
-        Dict containing additional information on the context of the statement,
+    annotations : list
+        List containing additional information on the context of the statement,
         e.g., species, cell line, tissue type, etc. The entries may vary
         depending on the source of the information.
     epistemics : string
@@ -85,7 +85,7 @@ class Evidence(object):
         if annotations:
             self.annotations = annotations
         else:
-            self.annotations = {}
+            self.annotations = []
         self.epistemics = epistemics
 
     def __str__(self):
@@ -93,48 +93,52 @@ class Evidence(object):
                  (self.source_api, self.pmid, self.annotations)
         ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
                                 subsequent_indent='    ', width=80)
-        ev_str += '\n'
         return ev_str
 
 class Statement(object):
-    """The parent class of all statements"""
+    """The parent class of all statements.
 
-    def __init__(self, stmt=None, citation=None, evidence=None,
-                 annotations=None):
-        self.stmt = stmt
-        self.citation = citation
-        self.evidence = evidence
-        self.annotations = annotations
+    Attributes
+    ----------
+    evidence : list of Evidence objects.
+        If a list of Evidence objects is passed to the constructor, the
+        value is set to this list. If a bare Evidence object is passed,
+        it is enclosed in a list. If no evidence is passed (the default),
+        the value is set to an empty list.
+    """
+
+    def __init__(self, evidence=None):
+        if evidence is None:
+            self.evidence = evidence
+        elif isinstance(evidence, Evidence):
+            self.evidence = [evidence]
+        elif isinstance(evidence, list):
+            self.evidence = evidence
+        else:
+            raise ValueError('evidence must be an Evidence object, a list '
+                             '(of Evidence objects), or None.')
 
     def __repr__(self):
         return self.__str__()
 
-    def __eq__(self, other):
-        if self.citation == other.citation and \
-            self.evidence == other.evidence and \
-            self.annotations == other.annotations and \
-            self.stmt == other.stmt:
-            return True
-        else:
-            return False
-
-
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
-    def __init__(self, enz, sub, mod, mod_pos, stmt=None,
-                 citation=None, evidence=None, annotations=None):
-        super(Modification, self).__init__(stmt, citation, evidence,
-                                           annotations)
+    def __init__(self, enz, sub, mod, mod_pos, evidence=None):
+        super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
         self.mod = mod
         self.mod_pos = mod_pos
 
     def __str__(self):
-        return ("%s(%s, %s, %s, %s)" %
-                (type(self).__name__, self.enz.name, self.sub.name, self.mod,
-                 self.mod_pos))
+        s = ("%s(%s, %s, %s, %s)" %
+                  (type(self).__name__, self.enz.name, self.sub.name, self.mod,
+                   self.mod_pos))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
     def __eq__(self, other):
         if isinstance(other, Modification) and \
@@ -150,17 +154,19 @@ class Modification(Statement):
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
 
-    def __init__(self, enz, mod, mod_pos, stmt=None,
-                 citation=None, evidence=None, annotations=None):
-        super(SelfModification, self).__init__(stmt, citation, evidence,
-                                           annotations)
+    def __init__(self, enz, mod, mod_pos, evidence=None):
+        super(SelfModification, self).__init__(evidence)
         self.enz = enz
         self.mod = mod
         self.mod_pos = mod_pos
 
     def __str__(self):
-        return ("%s(%s, %s, %s)" %
-                (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
+        s = ("%s(%s, %s, %s)" %
+             (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
     def __eq__(self, other):
         if isinstance(other, SelfModification) and \
@@ -219,10 +225,8 @@ class ActivityActivity(Statement):
     activity of another protein."""
 
     def __init__(self, subj, subj_activity, relationship, obj,
-                 obj_activity, stmt=None, citation=None, evidence=None,
-                 annotations=None):
-        super(ActivityActivity, self).__init__(stmt,
-                                               citation, evidence, annotations)
+                 obj_activity, evidence=None):
+        super(ActivityActivity, self).__init__(evidence)
         self.subj = subj
         self.subj_activity = subj_activity
         self.obj = obj
@@ -240,9 +244,13 @@ class ActivityActivity(Statement):
             return False
 
     def __str__(self):
-        return ("%s(%s, %s, %s, %s, %s)" %
-                (type(self).__name__, self.subj.name, self.subj_activity,
-                 self.relationship, self.obj.name, self.obj_activity))
+        s = ("%s(%s, %s, %s, %s, %s)" %
+             (type(self).__name__, self.subj.name, self.subj_activity,
+              self.relationship, self.obj.name, self.obj_activity))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class RasGtpActivityActivity(ActivityActivity):
@@ -251,10 +259,8 @@ class RasGtpActivityActivity(ActivityActivity):
 
 class Dephosphorylation(Statement):
 
-    def __init__(self, phos, sub, mod, mod_pos, stmt=None,
-                 citation=None, evidence=None, annotations=None):
-        super(Dephosphorylation, self).__init__(stmt, citation,
-                                                evidence, annotations)
+    def __init__(self, phos, sub, mod, mod_pos, evidence=None):
+        super(Dephosphorylation, self).__init__(evidence)
         self.phos = phos
         self.sub = sub
         self.mod = mod
@@ -271,8 +277,12 @@ class Dephosphorylation(Statement):
             return False
 
     def __str__(self):
-        return ("Dephosphorylation(%s, %s, %s, %s)" %
+        s = ("Dephosphorylation(%s, %s, %s, %s)" %
                 (self.phos.name, self.sub.name, self.mod, self.mod_pos))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class ActivityModification(Statement):
@@ -280,9 +290,8 @@ class ActivityModification(Statement):
     of a residue modification"""
 
     def __init__(self, monomer, mod, mod_pos, relationship, activity,
-                 stmt=None, citation=None, evidence=None, annotations=None):
-        super(ActivityModification, self).__init__(stmt, citation,
-                                                   evidence, annotations)
+                 evidence=None):
+        super(ActivityModification, self).__init__(evidence)
         self.monomer = monomer
         self.mod = mod
         self.mod_pos = mod_pos
@@ -301,9 +310,13 @@ class ActivityModification(Statement):
             return False
 
     def __str__(self):
-        return ("ActivityModification(%s, %s, %s, %s, %s)" %
+        s = ("ActivityModification(%s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
                  self.activity))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class ActivatingSubstitution(Statement):
@@ -311,9 +324,8 @@ class ActivatingSubstitution(Statement):
     of a residue substitution"""
 
     def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
-                 stmt=None, citation=None, evidence=None, annotations=None):
-        super(ActivatingSubstitution, self).__init__(stmt, citation,
-                                                     evidence, annotations)
+                 evidence=None):
+        super(ActivatingSubstitution, self).__init__(evidence)
         self.monomer = monomer
         self.wt_residue = wt_residue
         self.pos = pos
@@ -339,19 +351,21 @@ class ActivatingSubstitution(Statement):
         pass
 
     def __str__(self):
-        return ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
+        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
                  self.sub_residue, self.activity, self.rel))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
     upon Gef activity."""
 
-    def __init__(self, gef, gef_activity, ras,
-                 stmt=None, citation=None, evidence=None, annotations=None):
-        super(RasGef, self).__init__(stmt, citation, evidence,
-                                     annotations)
+    def __init__(self, gef, gef_activity, ras, evidence=None):
+        super(RasGef, self).__init__(evidence)
         self.gef = gef
         self.gef_activity = gef_activity
         self.ras = ras
@@ -366,18 +380,20 @@ class RasGef(Statement):
             return False
 
     def __str__(self):
-        return ("RasGef(%s, %s, %s)" %
+        s = ("RasGef(%s, %s, %s)" %
                 (self.gef.name, self.gef_activity, self.ras.name))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
 
-    def __init__(self, gap, gap_activity, ras,
-                 stmt=None, citation=None, evidence=None, annotations=None):
-        super(RasGap, self).__init__(stmt, citation, evidence,
-                                     annotations)
+    def __init__(self, gap, gap_activity, ras, evidence=None):
+        super(RasGap, self).__init__(evidence)
         self.gap = gap
         self.gap_activity = gap_activity
         self.ras = ras
@@ -392,16 +408,19 @@ class RasGap(Statement):
             return False
 
     def __str__(self):
-        return ("RasGap(%s, %s, %s)" %
+        s = ("RasGap(%s, %s, %s)" %
                 (self.gap.name, self.gap_activity, self.ras.name))
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
 
 class Complex(Statement):
     """Statement representing complex formation between a set of members"""
 
-    def __init__(self, members, stmt=None, citation=None,
-                 evidence=None, annotations=None):
-        super(Complex, self).__init__(stmt, citation, evidence, annotations)
+    def __init__(self, members, evidence=None):
+        super(Complex, self).__init__(evidence)
         self.members = members
 
     def __eq__(self, other):
@@ -414,9 +433,10 @@ class Complex(Statement):
         return True
 
     def __str__(self):
-        return ("Complex(%s)" % [m.name for m in self.members])
+        s = ("Complex(%s)" % [m.name for m in self.members])
+        if self.evidence:
+            s += '\n'
+            s += '\n'.join([str(e) for e in self.evidence])
+        return s
 
-if __name__ == '__main__':
-    ev = Evidence(pmid='asdf', text="""
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.""")
-    print ev
+
