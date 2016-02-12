@@ -3,12 +3,13 @@ from rdflib import Graph, Namespace, Literal
 import csv
 
 if __name__ == '__main__':
+    indra_ns = 'http://sorger.med.harvard.edu/indra/'
     if len(sys.argv) > 1:
         proteins_file = sys.argv[1]
     else:
         proteins_file = '../../data/ras_pathway_proteins.csv'
-    rn = Namespace('indra/relations/')
-    en = Namespace('indra/entities/')
+    rn = Namespace(indra_ns + 'relations/')
+    en = Namespace(indra_ns + 'entities/')
     g = Graph()
 
     has_name = rn.term('hasName')
