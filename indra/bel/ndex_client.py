@@ -14,7 +14,7 @@ def get_result(res):
     if status == 200:
         return res.text
     task_id = res.json()['task_id']
-    print 'NDEx services task submitted...' % task_id
+    print 'NDEx task submitted...'
     time_used = 0
     try:
         while status != 200:
@@ -26,5 +26,5 @@ def get_result(res):
     except KeyError:
         next
         return None
-    print 'NDEx services task complete.' % task_id
+    print 'NDEx task complete.'
     return res.text
