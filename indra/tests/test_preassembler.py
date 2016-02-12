@@ -10,7 +10,7 @@ def test_from_text():
         tp = trips_api.process_text(s)
         pa.add_statements(tp.statements)
 
-def test_duplciates():
+def test_duplicates():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     st1 = Phosphorylation(src, ras, 'Phosphorylation', None)
@@ -35,7 +35,7 @@ def test_src_phos_nras():
     stmts = pa.assemble()
 
     assert(len(stmts) == 1)
-    assert(stmts[0].enz.name == 'Src')
+    assert(stmts[0].enz.name == 'SRC')
     assert(stmts[0].sub.name == 'NRAS')
-    assert(stmts[0].mod = 'PhosphorylationTyrosine')
-    assert(stmts[0].mod_pos = '32')
+    assert(stmts[0].mod == 'PhosphorylationTyrosine')
+    assert(stmts[0].mod_pos == '32')

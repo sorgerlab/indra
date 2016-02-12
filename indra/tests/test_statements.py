@@ -52,7 +52,7 @@ def test_matches_bound_multiple():
         bound_conditions=[BoundCondition(Agent('BRAF'), True),
         BoundCondition(Agent('RAF1', True))])
     hras2 = Agent('HRAS', 
-        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+        bound_conditions=[BoundCondition(Agent('BRAF'), True),
         BoundCondition(Agent('RAF1', True))])
     assert(hras1.matches(hras2))
 
@@ -61,6 +61,6 @@ def test_matches_bound_multiple_order():
         bound_conditions=[BoundCondition(Agent('RAF1'), True),
         BoundCondition(Agent('BRAF', True))])
     hras2 = Agent('HRAS', 
-        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+        bound_conditions=[BoundCondition(Agent('BRAF'), True),
         BoundCondition(Agent('RAF1', True))])
     assert(hras1 == hras2)
