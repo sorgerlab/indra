@@ -7,6 +7,14 @@ def test_matches():
     st2 = Complex([ras, raf])
     assert(st1.matches(st2))
 
+def test_matches_key():
+    ras = Agent('Ras')
+    raf = Agent('Raf')
+    st1 = Complex([ras, raf])
+    st2 = Complex([ras, raf])
+    assert(st1.matches_key() == st2.matches_key())
+
+
 def test_matches2():
     raf = Agent('Raf')
     mek = Agent('Mek')

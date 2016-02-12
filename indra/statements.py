@@ -56,6 +56,16 @@ class Agent(object):
         # Everything checks out, the two Agents match
         return True
 
+    def matches_key(self):
+        key = self.name
+        key += str(set(self.mods))
+        key += str(set(self.mod_sites))
+        key += str(self.active)
+        key += str(len(self.bound_conditions))
+        key += ''.join(['%s%s' % (bc.agent.name, bc.is_bound)
+                        for bc in self.bound_conditions])
+        return key
+
     def __repr__(self):
         attr_strs = []
         if self.mods:
@@ -447,6 +457,11 @@ class Complex(Statement):
             if not m1.matches(m2):
                 return False
         return True
+
+    def matches_key(self):
+        key = type(self).__name__
+        key += ''.join([m.matches_key() for m in self.members])
+        return key
 
     def __str__(self):
         s = ("Complex(%s)" % [m.name for m in self.members])
