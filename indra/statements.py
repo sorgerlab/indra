@@ -129,9 +129,13 @@ class Statement(object):
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
         the value is set to an empty list.
+    supports : list of Statements
+        Statements that this Statement supports.
+    supported_by : list of Statements
+        Statements supported by this statement.
     """
 
-    def __init__(self, evidence=None):
+    def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
             self.evidence = evidence
         elif isinstance(evidence, Evidence):
@@ -142,9 +146,19 @@ class Statement(object):
             raise ValueError('evidence must be an Evidence object, a list '
                              '(of Evidence objects), or None.')
 
+        # Initialize supports/supported_by fields, which should be lists
+        self.supports = supports if supports else []
+        self.supported_by = supported_by if supported_by else []
+
     def __repr__(self):
         return self.__str__()
 
+    def print_supports(self):
+        print '%s supported_by:' % self.__str__()
+        if self.supported_by:
+            print '-->'
+            for s in self.supported_by:
+                s.print_supports()
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
