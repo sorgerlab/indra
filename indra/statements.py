@@ -1,6 +1,7 @@
 from pysb import *
 from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
 from collections import namedtuple
+import textwrap
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
 
@@ -51,6 +52,49 @@ class Agent(object):
         attr_str = ', '.join(attr_strs)
         return '%s(%s)' % (self.name, attr_str)
 
+
+class Evidence(object):
+    """Container for evidence supporting a given statement.
+
+    Attributes
+    ----------
+    source_api : string or None
+        String identifying the INDRA API used to capture the statement,
+        e.g., 'trips', 'biopax', 'bel'.
+    source_id : string or None
+        For statements drawn from databases, ID of the database entity
+        corresponding to the statement.
+    pmid : string or None
+        String indicating the Pubmed ID of the source of the statement.
+    text : string
+        Natural language text supporting the statement.
+    annotations : dict
+        Dict containing additional information on the context of the statement,
+        e.g., species, cell line, tissue type, etc. The entries may vary
+        depending on the source of the information.
+    epistemics : string
+        An identifier describing the epistemic certainty associated with the
+        statement.
+    """
+
+    def __init__(self, source_api=None, pmid=None, text=None,
+                 annotations=None, epistemics=None):
+        self.source_api = source_api
+        self.pmid = pmid
+        self.text =text
+        if annotations:
+            self.annotations = annotations
+        else:
+            self.annotations = {}
+        self.epistemics = epistemics
+
+    def __str__(self):
+        ev_str = 'Evidence(%s, %s, %s):\n' % \
+                 (self.source_api, self.pmid, self.annotations)
+        ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
+                                subsequent_indent='    ', width=80)
+        ev_str += '\n'
+        return ev_str
 
 class Statement(object):
     """The parent class of all statements"""
@@ -371,3 +415,8 @@ class Complex(Statement):
 
     def __str__(self):
         return ("Complex(%s)" % [m.name for m in self.members])
+
+if __name__ == '__main__':
+    ev = Evidence(pmid='asdf', text="""
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.""")
+    print ev
