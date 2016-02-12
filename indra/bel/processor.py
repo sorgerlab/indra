@@ -120,7 +120,9 @@ class BelProcessor(object):
         for stmt in res_annotations:
             annotations.append(stmt[0].format())
 
-        return (citation, evidence, annotations)
+        ev = Evidence(source_api='bel', source_id=statement, pmid=citation,
+                      text=evidence, annotations=annotations)
+        return ev
 
     def get_modifications(self):
         q_phospho = prefixes + """
@@ -148,7 +150,7 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
+            evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
             enz = Agent(enz_name)
@@ -163,25 +165,20 @@ class BelProcessor(object):
 
             if act_type == 'Kinase' and mod in phospho_mods:
                 self.statements.append(
-                        Phosphorylation(enz, sub, mod, mod_pos, stmt_str,
-                                        citation, evidence, annotations))
+                        Phosphorylation(enz, sub, mod, mod_pos, evidence))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.statements.append(
-                            Hydroxylation(enz, sub, mod, mod_pos, stmt_str,
-                                          citation, evidence, annotations))
+                            Hydroxylation(enz, sub, mod, mod_pos, evidence))
                 elif mod == 'Sumoylation':
                     self.statements.append(
-                            Sumoylation(enz, sub, mod, mod_pos, stmt_str,
-                                        citation, evidence, annotations))
+                            Sumoylation(enz, sub, mod, mod_pos, evidence))
                 elif mod == 'Acetylation':
                     self.statements.append(
-                            Acetylation(enz, sub, mod, mod_pos, stmt_str,
-                                        citation, evidence, annotations))
+                            Acetylation(enz, sub, mod, mod_pos, evidence))
                 elif mod == 'Ubiquitination':
                     self.statements.append(
-                            Ubiquitination(enz, sub, mod, mod_pos, stmt_str,
-                                           citation, evidence, annotations))
+                            Ubiquitination(enz, sub, mod, mod_pos, evidence))
                 else:
                     print "Warning: Unknown modification type!"
                     print("Activity: %s, Mod: %s, Mod_Pos: %s" %
