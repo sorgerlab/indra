@@ -89,10 +89,12 @@ class Evidence(object):
         self.epistemics = epistemics
 
     def __str__(self):
-        ev_str = 'Evidence(%s, %s, %s):\n' % \
+        ev_str = 'Evidence(%s, %s, %s)' % \
                  (self.source_api, self.pmid, self.annotations)
-        ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
-                                subsequent_indent='    ', width=80)
+        if self.text:
+            ev_str += ':\n'
+            ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
+                                    subsequent_indent='    ', width=80)
         return ev_str
 
 class Statement(object):
