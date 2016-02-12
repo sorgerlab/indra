@@ -53,12 +53,10 @@ class TripsProcessor(object):
             affected_name = self._get_name_by_id(affected_id)
             affected_agent = Agent(affected_name)
 
-            citation = ''
-            evidence = sentence
-            annotations = ''
+            ev = Evidence(source_api='trips', text=sentence)
             self.statements.append(ActivityActivity(agent_agent, 'act',
                                     'increases', affected_agent, 'act',
-                                    sentence, citation, evidence, annotations))
+                                    evidence=ev))
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
@@ -83,12 +81,11 @@ class TripsProcessor(object):
             precond_id = precond_event_ref.find('event').attrib['id']
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             mod, mod_pos = self._get_mod_site(precond_event)
-            citation = ''
-            evidence = sentence
-            annotations = ''
+
+            ev = Evidence(source_api='trips', text=sentence)
             self.statements.append(ActivityModification(affected_agent, mod,
                                     mod_pos, 'increases', 'Active',
-                                    sentence, citation, evidence, annotations))
+                                    evidence=ev))
 
     def get_complexes(self):
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
@@ -171,9 +168,7 @@ class TripsProcessor(object):
                                                    event.attrib['id'])
             mod, mod_pos = self._get_mod_site(event)
             # TODO: extract more information about text to use as evidence
-            citation = ''
-            evidence = sentence
-            annotations = ''
+            ev = Evidence(source_api='trips', text=sentence)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
             # independently
@@ -186,26 +181,22 @@ class TripsProcessor(object):
                                            [BoundCondition(agent_bound, True)]
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Transphosphorylation(agent_agent,
-                                        m, p, sentence,
-                                        citation, evidence, annotations))
+                                        m, p, evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Dephosphorylation(agent_agent,
-                                        affected_agent, m, p, sentence,
-                                        citation, evidence, annotations))
+                                        affected_agent, m, p, evidence=ev))
             # Autophosphorylation
             elif agent.attrib['id'] == affected.attrib['id']:
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Autophosphorylation(agent_agent,
-                                        m, p, sentence,
-                                        citation, evidence, annotations))
+                                        m, p, evidence=ev))
             # Regular phosphorylation
             else:
                 for m, p in zip(mod, mod_pos):
                     self.statements.append(Phosphorylation(agent_agent,
-                                            affected_agent, m, p, sentence,
-                                            citation, evidence, annotations))
+                                            affected_agent, m, p, evidence=ev))
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
