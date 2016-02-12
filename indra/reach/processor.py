@@ -30,8 +30,8 @@ class ReachProcessor(object):
         return name
 
     def get_phosphorylation(self):
-        citation = self.tree.execute("$.frames.object_meta.doc_id")
-        qstr = "$.frames[(@.type is 'protein-modification') " + \
+        citation = self.tree.execute("$.events.frames.object_meta.doc_id")
+        qstr = "$.events.frames[(@.type is 'protein-modification') " + \
                "and (@.subtype is 'phosphorylation')]"
         res = self.tree.execute(qstr)
         for r in res:
@@ -46,7 +46,7 @@ class ReachProcessor(object):
                     theme = a['text']
                 elif a['argument_label'] == 'site':
                     site = a['text']
-            qstr = "$.frames[(@.type is 'regulation') and " + \
+            qstr = "$.events.frames[(@.type is 'regulation') and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
             reg_res = self.tree.execute(qstr)
             controller = None
@@ -69,27 +69,26 @@ class ReachProcessor(object):
                 pos = ''
             mod = mod + residue
             sentence = r['verbose-text']
-            evidence = sentence
+            ev = Evidence(source_api='reach', text=sentence, pmid=citation)
             # TODO: read $.object-meta.doc-id as citation
             # but dashes don't work with objectpath!
-            citation = ''
-            annotations = None
             self.statements.append(Phosphorylation(controller_agent,
-                                   theme_agent, mod, pos, sentence,
-                                   citation, evidence, annotations))
+                                   theme_agent, mod, pos, ev))
     
     def get_complexes(self):
-        citation = self.tree.execute("$.frames.object_meta.doc_id")
-        qstr = "$.frames[@.type is 'complex-assembly']"
+        citation = self.tree.execute("$.events.frames.object_meta.doc_id")
+        qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
         for r in res:
             frame_id = r['frame_id']
             args = r['arguments']
+            sentence = r['verbose-text']
             members = []
             for a in args:
                 agent = Agent(self._get_agent_name(a['text']))
                 members.append(agent)
-            self.statements.append(Complex(members))
+            ev = Evidence(source_api='reach', text=sentence, pmid=citation)
+            self.statements.append(Complex(members, ev))
     
     def _parse_site_text(self, s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)

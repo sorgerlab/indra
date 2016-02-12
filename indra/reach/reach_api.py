@@ -32,39 +32,32 @@ def process_text(txt, use_tempdir=False, offline=False):
         req = urllib2.Request(url, data=urllib.urlencode({'text': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
-        json_dict = json.loads(json_str)
-        events_dict = json_dict['events']
-        events_json_str = json.dumps(events_dict, indent=1)
+        #json_dict = json.loads(json_str)
+        #events_dict = json_dict['events']
+        #events_json_str = json.dumps(events_dict, indent=1)
         with open('reach_output.json', 'wt') as fh:
             fh.write(json_str)
-        return process_json_str(events_json_str)
+        return process_json_str(json_str)
 
 def process_nxml(file_name, use_tempdir=False, offline=False):
     if offline:
-        base = os.path.basename(file_name)
-        file_id = os.path.splitext(base)[0]
-        if use_tempdir:
-            tmp_dir = tempfile.mkdtemp()
-        else:
-            tmp_dir = '.'
         try:
-            paper_reader = autoclass('edu.arizona.sista.reach.ReadPaper')
-            paper_reader.main([file_name, tmp_dir])
+            api_ruler = autoclass('edu.arizona.sista.reach.apis.ApiRuler')
+            result_map = api_ruler.annotateNxml(file_name, 'fries')
         except JavaException:
             print 'Could not process file %s.' % file_name
             return None
-        json_file_name = os.path.join(tmp_dir, file_id + '.uaz.events.json')
-        return process_json_file(json_file_name)
+        json_str = result_map.get('resultJson')
     else:
         url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
         txt = open(file_name, 'rt').read()
         req = urllib2.Request(url, data=urllib.urlencode({'nxml': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
-        with open('reach_output.json', 'wt') as fh:
-            fh.write(json_str)
-        json_dict = json.loads(json_str)
-        return process_json_str(json_str, events_only=False)
+    with open('reach_output.json', 'wt') as fh:
+        fh.write(json_str)
+    return process_json_str(json_str)
+
 
 def process_json_file(file_name):
     try:
@@ -75,18 +68,12 @@ def process_json_file(file_name):
         print 'Could not read file %s.' % file_name
 
 
-def process_json_str(json_str, events_only=True):
-    if not events_only:
-        json_dict = json.loads(json_str)
-        events_dict = json_dict['events']
-        events_json_str = json.dumps(events_dict, indent=1)
-    else:
-        events_json_str = json_str
-    events_json_str = events_json_str.replace('frame-id','frame_id')
-    events_json_str = events_json_str.replace('argument-label','argument_label')
-    events_json_str = events_json_str.replace('object-meta','object_meta')
-    events_json_str = events_json_str.replace('doc-id','doc_id')
-    json_dict = json.loads(events_json_str)
+def process_json_str(json_str):
+    json_str = json_str.replace('frame-id','frame_id')
+    json_str = json_str.replace('argument-label','argument_label')
+    json_str = json_str.replace('object-meta','object_meta')
+    json_str = json_str.replace('doc-id','doc_id')
+    json_dict = json.loads(json_str)
     rp = ReachProcessor(json_dict)
     rp.get_phosphorylation()
     rp.get_complexes()
