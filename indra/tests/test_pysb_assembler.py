@@ -37,8 +37,7 @@ def test_pysb_assembler_complex3():
 def test_pysb_assembler_phos1():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
-    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine',
-                           '222', '', '', '', '')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -49,8 +48,7 @@ def test_pysb_assembler_phos2():
     hras = Agent('HRAS')
     enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
     sub = Agent('MEK1')
-    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                           '', '', '', '')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -62,8 +60,7 @@ def test_pysb_assembler_phos3():
     erk1 = Agent('ERK1')
     enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
     sub = Agent('MEK1', bound_conditions=[BoundCondition(erk1, True)])
-    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                           '', '', '', '')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -75,8 +72,7 @@ def test_pysb_assembler_phos4():
     erk1 = Agent('ERK1')
     enz = Agent('BRAF', bound_conditions=[BoundCondition(hras, True)])
     sub = Agent('MEK1', bound_conditions=[BoundCondition(erk1, False)])
-    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                           '', '', '', '')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -85,8 +81,7 @@ def test_pysb_assembler_phos4():
 
 def test_pysb_assembler_autophos1():
     enz = Agent('MEK1')
-    stmt = Autophosphorylation(enz, 'PhosphorylationSerine', '222',
-                               '', '', '', '')
+    stmt = Autophosphorylation(enz, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -96,8 +91,7 @@ def test_pysb_assembler_autophos1():
 def test_pysb_assembler_autophos2():
     raf1 = Agent('RAF1')
     enz = Agent('MEK1', bound_conditions=[BoundCondition(raf1, True)])
-    stmt = Autophosphorylation(enz, 'PhosphorylationSerine', '222',
-                               '', '', '', '')
+    stmt = Autophosphorylation(enz, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -108,8 +102,7 @@ def test_pysb_assembler_autophos2():
 def test_pysb_assembler_autophos3():
     egfr = Agent('EGFR')
     enz = Agent('EGFR', bound_conditions=[BoundCondition(egfr, True)])
-    stmt = Autophosphorylation(enz, 'PhosphorylationTyrosine', None,
-                               '', '', '', '')
+    stmt = Autophosphorylation(enz, 'PhosphorylationTyrosine', None)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -120,8 +113,7 @@ def test_pysb_assembler_autophos3():
 def test_pysb_assembler_transphos1():
     egfr = Agent('EGFR')
     enz = Agent('EGFR', bound_conditions=[BoundCondition(egfr, True)])
-    stmt = Transphosphorylation(enz, 'PhosphorylationTyrosine', None,
-                                '', '', '', '')
+    stmt = Transphosphorylation(enz, 'PhosphorylationTyrosine', None)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -133,8 +125,7 @@ def test_pysb_assembler_actact1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = ActivityActivity(subj, 'act', 'increase', obj, 'act',
-                            '', '', '', '')
+    stmt = ActivityActivity(subj, 'act', 'increase', obj, 'act')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -145,8 +136,7 @@ def test_pysb_assembler_actact1():
 def test_pysb_assembler_dephos1():
     phos = Agent('PP2A')
     sub = Agent('MEK1')
-    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222',
-                             '', '', '', '')
+    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -158,8 +148,7 @@ def test_pysb_assembler_dephos2():
     phos = Agent('PP2A')
     raf1 = Agent('RAF1')
     sub = Agent('MEK1', bound_conditions=[BoundCondition(raf1, True)])
-    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222',
-                             '', '', '', '')
+    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -170,7 +159,7 @@ def test_pysb_assembler_dephos2():
 def test_pysb_assembler_rasgef1():
     gef = Agent('SOS1')
     ras = Agent('HRAS')
-    stmt = RasGef(gef, 'catalytic', ras, '', '', '', '')
+    stmt = RasGef(gef, 'catalytic', ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -181,7 +170,7 @@ def test_pysb_assembler_rasgef1():
 def test_pysb_assembler_rasgap1():
     gap = Agent('NF1')
     ras = Agent('HRAS')
-    stmt = RasGap(gap, 'catalytic', ras, '', '', '', '')
+    stmt = RasGap(gap, 'catalytic', ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -195,11 +184,9 @@ def test_pysb_assembler_actmod1():
     stmts = []
     stmts.append(ActivityModification(mek, ['PhosphorylationSerine', 
                                       'PhosphorylationSerine'], [218,222],
-                                      'increases', 'act', '', '', '', ''))
-    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185',
-                                 '', '', '', ''))
-    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187',
-                                 '', '', '', ''))
+                                      'increases', 'act'))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185'))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187'))
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
@@ -212,13 +199,11 @@ def test_pysb_assembler_actmod2():
     erk = Agent('ERK')
     stmts = []
     stmts.append(ActivityModification(mek, ['PhosphorylationSerine'], 
-        [218], 'increases', 'act', '', '', '', ''))
+        [218], 'increases', 'act'))
     stmts.append(ActivityModification(mek, ['PhosphorylationSerine'], 
-        [222], 'increases', 'act', '', '', '', ''))
-    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185',
-                                 '', '', '', ''))
-    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187',
-                                 '', '', '', ''))
+        [222], 'increases', 'act'))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationThreonine', '185'))
+    stmts.append(Phosphorylation(mek, erk, 'PhosphorylationTyrosine', '187'))
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
@@ -229,8 +214,7 @@ def test_pysb_assembler_actmod2():
 def test_pysb_assembler_phos_twostep1():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
-    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                           '', '', '', '')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -241,8 +225,7 @@ def test_pysb_assembler_phos_twostep1():
 def test_pysb_assembler_dephos_twostep1():
     phos = Agent('PP2A')
     sub = Agent('MEK1')
-    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222',
-                             '', '', '', '')
+    stmt = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -254,8 +237,7 @@ def test_statement_specific_policies():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
     phos = Agent('PP2A')
-    stmt1 = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                            '', '', '', '')
+    stmt1 = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     stmt2 = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
     policies = {'Phosphorylation': 'two_step',
                 'Dephosphorylation': 'interactions_only'}
@@ -270,8 +252,7 @@ def test_unspecified_statement_policies():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
     phos = Agent('PP2A')
-    stmt1 = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222',
-                            '', '', '', '')
+    stmt1 = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
     stmt2 = Dephosphorylation(phos, sub, 'PhosphorylationSerine', '222')
     policies = {'Phosphorylation': 'two_step',
                 'other': 'interactions_only'}
