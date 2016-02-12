@@ -48,12 +48,24 @@ def test_matches_dbrefs():
     hras2 = Agent('HRAS', db_refs={'hgnc': 9999})
     assert(hras1.matches(hras2))
 
+def test_matches_key_dbrefs():
+    hras1 = Agent('HRAS', db_refs={'hgnc': 1111})
+    hras2 = Agent('HRAS', db_refs={'hgnc': 9999})
+    assert(hras1.matches_key() == hras2.matches_key())
+
 def test_matches_bound():
     hras1 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), True)])
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), True)])
     assert(hras1.matches(hras2))
+
+def test_matches_key_bound():
+    hras1 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+    hras2 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+    assert(hras1.matches_key() == hras2.matches_key())
 
 def test_not_matches_bound():
     hras1 = Agent('HRAS',
@@ -62,12 +74,26 @@ def test_not_matches_bound():
         bound_conditions=[BoundCondition(Agent('RAF1'), True)])
     assert(not hras1.matches(hras2))
 
+def test_not_matches_key_bound():
+    hras1 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+    hras2 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('RAF1'), True)])
+    assert(hras1.matches_key() != hras2.matches_key())
+
 def test_not_matches_bound2():
     hras1 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), True)])
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), False)])
     assert(not hras1.matches(hras2))
+
+def test_not_matches_key_bound2():
+    hras1 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('BRAF'), True)])
+    hras2 = Agent('HRAS',
+        bound_conditions=[BoundCondition(Agent('BRAF'), False)])
+    assert(hras1.matches_key() != hras2.matches_key())
 
 def test_matches_bound_multiple():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
@@ -76,9 +102,24 @@ def test_matches_bound_multiple():
                                             BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches(hras2))
 
+def test_matches_key_bound_multiple():
+    hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
+                                            BoundCondition(Agent('RAF1'), True)])
+    hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
+                                            BoundCondition(Agent('RAF1'), True)])
+    assert(hras1.matches_key() == hras2.matches_key())
+
 def test_matches_bound_multiple_order():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('RAF1'), True),
                                             BoundCondition(Agent('BRAF'), True)])
     hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
                                             BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches(hras2))
+
+def test_matches_key_bound_multiple_order():
+    hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('RAF1'), True),
+                                            BoundCondition(Agent('BRAF'), True)])
+    hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
+                                            BoundCondition(Agent('RAF1'), True)])
+    assert(hras1.matches_key() == hras2.matches_key())
+

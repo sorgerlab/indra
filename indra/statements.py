@@ -63,7 +63,8 @@ class Agent(object):
         key += str(self.active)
         key += str(len(self.bound_conditions))
         key += ''.join(['%s%s' % (bc.agent.name, bc.is_bound)
-                        for bc in self.bound_conditions])
+                        for bc in sorted(self.bound_conditions,
+                                         key=lambda x: x.agent.name)])
         return key
 
     def __repr__(self):
