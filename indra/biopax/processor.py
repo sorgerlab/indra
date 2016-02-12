@@ -134,10 +134,8 @@ class BiopaxProcessor(object):
             if force_contains is not None:
                 if momomer not in force_contains:
                     continue
-            stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
-            evidence = ''
-            annotations = ''
+            ev = Evidence(source_api='biopax', pmid=citation)
             out_pe = r[p.indexOf('output PE')]
             activity = 'Activity'
             relationship = 'increases' 
@@ -145,8 +143,7 @@ class BiopaxProcessor(object):
             if mod:
                 stmt = ActivityModification(monomer, mod, mod_pos, 
                                             relationship, activity,
-                                            stmt_str, citation, evidence, 
-                                            annotations)
+                                            evidence=ev)
                 self.statements.append(stmt)
 
     def _get_modification_site(self, modPE):
@@ -216,10 +213,8 @@ class BiopaxProcessor(object):
                 if (enz.name not in force_contains) and \
                     (sub.name not in force_contains):
                     continue
-            stmt_str = ''
             citation = self._get_citation(r[p.indexOf('Conversion')])
-            evidence = ''
-            annotations = ''
+            ev = Evidence(source_api='biopax', pmid=citation)
 
             # Get the modification (s)
             # Should this be simple PE?
@@ -233,8 +228,7 @@ class BiopaxProcessor(object):
             # is not equal to r[p.indexOf('output PE')].getRDFId()
             mod, mod_pos = self._get_modification_site(modPE)
             for m, mp in zip(mod, mod_pos):
-                stmt = (enz, sub, m, mp,
-                        stmt_str, citation, evidence, annotations)
+                stmt = (enz, sub, m, mp, ev)
                 stmts.append(stmt)
         return stmts
 
