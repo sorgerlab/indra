@@ -22,6 +22,13 @@ def test_matches2():
     st2 = Phosphorylation(raf, mek, 'Phosphorylation', None)
     assert(st1.matches(st2))
 
+def test_matches_key2():
+    raf = Agent('Raf')
+    mek = Agent('Mek')
+    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
+    st2 = Phosphorylation(raf, mek, 'Phosphorylation', None)
+    assert(st1.matches_key() == st2.matches_key())
+
 def test_not_matches():
     raf = Agent('Raf')
     mek = Agent('Mek')

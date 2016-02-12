@@ -199,6 +199,13 @@ class Modification(Statement):
         else:
             return False
 
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.enz.matches_key()
+        key += self.sub.matches_key()
+        key += str(self.mod)
+        key += str(self.mod_pos)
+        return key
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
