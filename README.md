@@ -34,9 +34,11 @@ Next, we look at an example of querying the [Pathway Commons database](http://pa
 ```python
 from indra.biopax import biopax_api
 # Process the neighborhood of BRAF and MAP2K1
-biopax_processor = biopax_api.process_pc_pathsbetween(['BRAF', 'RAF1'], ['MAP2K1', 'MAP2K2'])
-# At this point, biopax_processor.statements contains a list of INDRA statements
-# extracted from the paths-between query.
+biopax_processor = biopax_api.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'MAP2K2'])
+# Query the resulting BioPAX object model for phosphorylation
+biopax_processor.get_phosphorylation()
+# At this point, biopax_processor.statements contains a list of INDRA 
+# Phosphorylation statements extracted from the paths-from-to query.
 ```
 
 INDRA also provides an interface for the [REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language parser. In this example, a full paper from [PubMed Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). 
