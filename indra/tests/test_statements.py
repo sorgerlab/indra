@@ -36,6 +36,13 @@ def test_not_matches():
     st2 = Phosphorylation(raf, mek, 'PhosphorylationTyrosine', None)
     assert(not st1.matches(st2))
 
+def test_not_matches_key():
+    raf = Agent('Raf')
+    mek = Agent('Mek')
+    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
+    st2 = Phosphorylation(raf, mek, 'PhosphorylationTyrosine', None)
+    assert(st1.matches_key() != st2.matches_key())
+
 def test_matches_dbrefs():
     hras1 = Agent('HRAS', db_refs={'hgnc': 1111})
     hras2 = Agent('HRAS', db_refs={'hgnc': 9999})
