@@ -7,6 +7,7 @@ def test_from_text():
     sentences = ['Src phosphorylates Ras, bound to GTP, at Tyr32.', 
                 'Src phosphorylates NRAS at Tyr32.',
                 'Src phosphorylates NRAS that is bound to GTP.']
+    pa = Preassembler()
     for s in sentences:
         tp = trips_api.process_text(s)
         pa.add_statements(tp.statements)
