@@ -123,3 +123,20 @@ def test_matches_key_bound_multiple_order():
                                             BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches_key() == hras2.matches_key())
 
+def test_agent_name_match():
+    """Agents match only on name."""
+    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    assert(nras1.entity_matches(nras2))
+
+def test_agents_match_phos():
+    """Test matching of agents only, agents match only on name."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    st1 = Phosphorylation(src, nras1, 'PhosphorylationTyrosine', '32',
+                          evidence=Evidence(text='foo'))
+    st2 = Phosphorylation(src, nras2, 'Phosphorylation', None,
+                          evidence=Evidence(text='bar'))
+    assert(st1.agents_match(st2))
+

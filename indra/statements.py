@@ -67,6 +67,13 @@ class Agent(object):
                                          key=lambda x: x.agent.name)])
         return key
 
+    def entity_matches_key(self):
+        key = self.name
+        return key
+
+    def entity_matches(self, other):
+        return self.entity_matches_key() == other.entity_matches_key()
+
     def __repr__(self):
         attr_strs = []
         if self.mods:
@@ -170,6 +177,13 @@ class Statement(object):
             for s in self.supported_by:
                 s.print_supports()
 
+    def agents_match(self, other):
+        if self.agents_match_key() == other.agents_match_key():
+            return True
+        else:
+            return False
+
+
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
@@ -203,6 +217,7 @@ class Modification(Statement):
         key += str(self.mod)
         key += str(self.mod_pos)
         return key
+
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
