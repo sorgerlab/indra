@@ -22,7 +22,7 @@ class ReachProcessor(object):
         self.statements = []
     
     def get_phosphorylation(self):
-        citation = self.tree.execute("$.events.frames.object_meta.doc_id")
+        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[(@.type is 'protein-modification') " + \
                "and (@.subtype is 'phosphorylation')]"
         res = self.tree.execute(qstr)
@@ -68,7 +68,7 @@ class ReachProcessor(object):
                                    theme_agent, mod, pos, ev))
     
     def get_complexes(self):
-        citation = self.tree.execute("$.events.frames.object_meta.doc_id")
+        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
         for r in res:
@@ -83,7 +83,7 @@ class ReachProcessor(object):
             self.statements.append(Complex(members, ev))
    
     def get_activation(self):
-        citation = self.tree.execute("$.events.frames.object_meta.doc_id")
+        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
         for r in res:

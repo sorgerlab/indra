@@ -77,6 +77,7 @@ def process_json_str(json_str):
     rp = ReachProcessor(json_dict)
     rp.get_phosphorylation()
     rp.get_complexes()
+    rp.get_activation()
     return rp
 
 if __name__ == '__main__':

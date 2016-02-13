@@ -17,6 +17,14 @@ def test_parse_site_residue_only():
         assert(residue == 'Serine')
         assert(site is None)
 
-def test_read_sentence_online():
+def test_phosphorylate():
     rp = reach_api.process_text('MEK1 phosphorylates ERK2.')
+    assert(len(rp.statements) == 1)
+
+def test_bind():
+    rp = reach_api.process_text('MEK1 binds ERK2.')
+    assert(len(rp.statements) == 1)
+
+def test_activity():
+    rp = reach_api.process_text('MEK1 activates ERK2.')
     assert(len(rp.statements) == 1)
