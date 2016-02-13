@@ -18,8 +18,8 @@ def test_duplicates():
     st1 = Phosphorylation(src, ras, 'Phosphorylation', None)
     st2 = Phosphorylation(src, ras, 'Phosphorylation', None)
     pa = Preassembler([st1, st2])
-    stmts = pa.assemble()
-    assert(len(stmts) == 1)
+    pa.assemble()
+    assert(len(pa.unique_stmts) == 1)
 
 def test_src_phos_nras():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})

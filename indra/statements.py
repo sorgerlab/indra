@@ -147,7 +147,7 @@ class Statement(object):
 
     def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
-            self.evidence = evidence
+            self.evidence = []
         elif isinstance(evidence, Evidence):
             self.evidence = [evidence]
         elif isinstance(evidence, list):
