@@ -34,8 +34,8 @@ def test_src_phos_nras():
     st2 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
     st3 = Phosphorylation(src, nrasgtp, 'Phosphorylation', None)
     pa = Preassembler([st1, st2, st3])
-    stmts = pa.assemble()
-
+    pa.assemble()
+    stmts = pa.unique_stmts
     assert(len(stmts) == 1)
     assert(stmts[0].enz.name == 'SRC')
     assert(stmts[0].sub.name == 'NRAS')
