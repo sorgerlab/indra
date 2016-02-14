@@ -155,10 +155,12 @@ def test_entities_match_activityactivity():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityActivity(src, 'Kinase1', nras1, 'GtpBoundActivity1',
-                           'increases1', evidence=Evidence(text='foo'))
-    st2 = ActivityActivity(src, 'Kinase2', nras2, 'GtpBoundActivity2',
-                           'increases2', evidence=Evidence(text='bar'))
+    st1 = ActivityActivity(src, 'Kinase1', 'increases1',
+                           nras1, 'GtpBoundActivity1',
+                           evidence=Evidence(text='foo'))
+    st2 = ActivityActivity(src, 'Kinase2', 'increases2',
+                           nras2, 'GtpBoundActivity2', 
+                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
 def test_entities_match_activitymod():
@@ -168,7 +170,7 @@ def test_entities_match_activitymod():
     st1 = ActivityModification(nras1, 'PhosphorylationTyrosine', '32',
                                'increases1', 'GtpBoundActivity1',
                                evidence=Evidence(text='foo'))
-    st1 = ActivityModification(nras2, 'Phosphorylation', None,
+    st2 = ActivityModification(nras2, 'Phosphorylation', None,
                                'increases2', 'GtpBoundActivity2',
                                evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
@@ -179,7 +181,7 @@ def test_entities_match_activatingsub():
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = ActivatingSubstitution(nras1, 'G', '12', 'D', 'GtpBoundActivity1',
                                  'increases1', evidence=Evidence(text='foo'))
-    st1 = ActivatingSubstitution(nras2, 'Q', '61', 'L', 'GtpBoundActivity2',
+    st2 = ActivatingSubstitution(nras2, 'Q', '61', 'L', 'GtpBoundActivity2',
                                  'increases2', evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 

@@ -177,12 +177,8 @@ class Statement(object):
             for s in self.supported_by:
                 s.print_supports()
 
-    def agents_match(self, other):
-        if self.agents_match_key() == other.agents_match_key():
-            return True
-        else:
-            return False
-
+    def entities_match(self, other):
+        return self.entities_match_key() == other.entities_match_key()
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -218,6 +214,11 @@ class Modification(Statement):
         key += str(self.mod_pos)
         return key
 
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.enz.entity_matches_key()
+        key += self.sub.entity_matches_key()
+        return key
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
@@ -243,6 +244,10 @@ class SelfModification(Statement):
         else:
             return False
 
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.enz.entity_matches_key()
+        return key
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
@@ -314,6 +319,12 @@ class ActivityActivity(Statement):
         else:
             return False
 
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.subj.entity_matches_key()
+        key += self.obj.entity_matches_key()
+        return key
+
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj.name, self.subj_activity,
@@ -350,6 +361,11 @@ class ActivityModification(Statement):
         else:
             return False
 
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.monomer.entity_matches_key()
+        return key
+
     def __str__(self):
         s = ("ActivityModification(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
@@ -381,6 +397,11 @@ class ActivatingSubstitution(Statement):
             return True
         else:
             return False
+
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.monomer.entity_matches_key()
+        return key
 
     def monomers_interactions_only(self, agent_set):
         pass
@@ -414,6 +435,12 @@ class RasGef(Statement):
         else:
             return False
 
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.gef.entity_matches_key()
+        key += self.ras.entity_matches_key()
+        return key
+
     def __str__(self):
         s = ("RasGef(%s, %s, %s, %s)" %
                 (self.gef.name, self.gef_activity, self.ras.name, self.evidence))
@@ -438,6 +465,12 @@ class RasGap(Statement):
             return True
         else:
             return False
+
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += self.gap.entity_matches_key()
+        key += self.ras.entity_matches_key()
+        return key
 
     def __str__(self):
         s = ("RasGap(%s, %s, %s, %s)" %
@@ -464,6 +497,11 @@ class Complex(Statement):
     def matches_key(self):
         key = type(self).__name__
         key += ''.join([m.matches_key() for m in self.members])
+        return key
+
+    def entities_match_key(self):
+        key = type(self).__name__
+        key += ''.join([m.entity_matches_key() for m in self.members])
         return key
 
     def __str__(self):
