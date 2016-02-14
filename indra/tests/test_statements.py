@@ -200,7 +200,6 @@ def test_matches_rasgef():
     assert(not st1.matches(st3))
 
 def test_matches_rasgap():
-    """Test matching of entities only, entities match only on name."""
     rasa1 = Agent('RASA1', db_refs = {'HGNC': 'rasa1'})
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
@@ -215,7 +214,6 @@ def test_matches_rasgap():
     assert(not st1.matches(st3))
 
 def test_matches_complex():
-    """Test matching of entities only, entities match only on name."""
     ksr1 = Agent('KSR1', db_refs = {'HGNC': 'ksr1'})
     ksr2 = Agent('KSR1', db_refs = {'HGNC': 'ksr2'})
     braf1 = Agent('BRAF', db_refs = {'HGNC': 'braf1'})

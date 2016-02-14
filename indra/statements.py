@@ -167,8 +167,11 @@ class Statement(object):
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
 
-    def __repr__(self):
-        return self.__str__()
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def entities_match(self, other):
+        return self.entities_match_key() == other.entities_match_key()
 
     def print_supports(self):
         print '%s supported_by:' % self.__str__()
@@ -177,8 +180,9 @@ class Statement(object):
             for s in self.supported_by:
                 s.print_supports()
 
-    def entities_match(self, other):
-        return self.entities_match_key() == other.entities_match_key()
+    def __repr__(self):
+        return self.__str__()
+
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -189,22 +193,6 @@ class Modification(Statement):
         self.sub = sub
         self.mod = mod
         self.mod_pos = mod_pos
-
-    def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s)" %
-                  (type(self).__name__, self.enz.name, self.sub.name, self.mod,
-                   self.mod_pos, self.evidence))
-        return s
-
-    def matches(self, other):
-        if isinstance(other, Modification) and \
-            self.enz.matches(other.enz) and \
-            self.sub.matches(other.sub) and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos:
-            return True
-        else:
-            return False
 
     def matches_key(self):
         key = type(self).__name__
@@ -219,6 +207,13 @@ class Modification(Statement):
         key += self.enz.entity_matches_key()
         key += self.sub.entity_matches_key()
         return key
+
+    def __str__(self):
+        s = ("%s(%s, %s, %s, %s, %s)" %
+                  (type(self).__name__, self.enz.name, self.sub.name, self.mod,
+                   self.mod_pos, self.evidence))
+        return s
+
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
@@ -248,6 +243,7 @@ class SelfModification(Statement):
         key = type(self).__name__
         key += self.enz.entity_matches_key()
         return key
+
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
@@ -309,15 +305,13 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def matches(self, other):
-        if isinstance(other, ActivityActivity) and \
-            self.subj.matches(other.subj) and \
-            self.subj_activity == other.subj_activity and \
-            self.obj.matches(other.obj) and \
-            self.obj_activity == other.obj_activity:
-            return True
-        else:
-            return False
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.subj.matches_key()
+        key += str(self.subj_activity)
+        key += self.obj.matches_key()
+        key += str(self.obj_activity)
+        return key
 
     def entities_match_key(self):
         key = type(self).__name__
@@ -350,16 +344,14 @@ class ActivityModification(Statement):
         self.relationship = relationship
         self.activity = activity
 
-    def matches(self, other):
-        if isinstance(other, ActivityModification) and \
-            self.monomer.matches(other.monomer) and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos and \
-            self.relationship == other.relationship and \
-            self.activity == other.activity:
-            return True
-        else:
-            return False
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.monomer.matches_key()
+        key += str(self.mod)
+        key += str(self.mod_pos)
+        key += str(self.relationship)
+        key += str(self.activity)
+        return key
 
     def entities_match_key(self):
         key = type(self).__name__
@@ -387,16 +379,14 @@ class ActivatingSubstitution(Statement):
         self.activity = activity
         self.rel = rel
 
-    def matches(self, other):
-        if isinstance(other, ActivatingSubstitution) and \
-            self.monomer.matches(other.monomer) and \
-            self.wt_residue == other.wt_residue and \
-            self.pos == other.pos and \
-            self.sub_residue == other.sub_residue and \
-            self.activity == other.activity:
-            return True
-        else:
-            return False
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.monomer.matches_key()
+        key += str(self.wt_residue)
+        key += str(self.pos)
+        key += str(self.sub_residue)
+        key += str(self.activity)
+        return key
 
     def entities_match_key(self):
         key = type(self).__name__
@@ -426,14 +416,12 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras = ras
 
-    def matches(self, other):
-        if isinstance(other, RasGef) and \
-            self.gef.matches(other.gef) and \
-            self.gef_activity == other.gef_activity and \
-            self.ras.matches(other.ras):
-            return True
-        else:
-            return False
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.gef.matches_key()
+        key += self.gef_activity
+        key += self.ras.matches_key()
+        return key
 
     def entities_match_key(self):
         key = type(self).__name__
@@ -457,14 +445,12 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras = ras
 
-    def matches(self, other):
-        if isinstance(other, RasGap) and \
-            self.gap.matches(other.gap) and \
-            self.gap_activity == other.gap_activity and \
-            self.ras.matches(other.ras):
-            return True
-        else:
-            return False
+    def matches_key(self):
+        key = type(self).__name__
+        key += self.gap.matches_key()
+        key += self.gap_activity
+        key += self.ras.matches_key()
+        return key
 
     def entities_match_key(self):
         key = type(self).__name__
@@ -484,15 +470,6 @@ class Complex(Statement):
     def __init__(self, members, evidence=None):
         super(Complex, self).__init__(evidence)
         self.members = members
-
-    def matches(self, other):
-        # TODO: find equality for different orders of members too
-        if not isinstance(other, Complex):
-            return False
-        for (m1, m2) in zip(self.members, other.members):
-            if not m1.matches(m2):
-                return False
-        return True
 
     def matches_key(self):
         key = type(self).__name__
