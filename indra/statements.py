@@ -208,6 +208,9 @@ class Modification(Statement):
         key += self.sub.entity_matches_key()
         return key
 
+    def agent_list(self):
+        return [self.enz, self.sub]
+
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s)" %
                   (type(self).__name__, self.enz.name, self.sub.name, self.mod,

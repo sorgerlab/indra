@@ -54,8 +54,8 @@ def test_combine_duplicates():
     assert(len(pa.unique_stmts[2].evidence) == 3)
     assert(len(pa.unique_stmts[3].evidence) == 1)
 
-"""
-def test_src_phos_nras():
+if __name__ == '__main__':
+
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     gtp = Agent('GTP', db_refs = {'CHEBI': '15996'})
@@ -69,20 +69,12 @@ def test_src_phos_nras():
     st3 = Phosphorylation(src, nrasgtp, 'Phosphorylation', None)
     pa = Preassembler([st1, st2, st3])
     pa.assemble()
+    """
     stmts = pa.unique_stmts
     assert(len(stmts) == 1)
     assert(stmts[0].enz.name == 'SRC')
     assert(stmts[0].sub.name == 'NRAS')
     assert(stmts[0].mod == 'PhosphorylationTyrosine')
     assert(stmts[0].mod_pos == '32')
-"""
+    """
 
-def test_related_to():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    st1 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
-    st2 = Phosphorylation(src, nras, 'Phosphorylation', None)
-    pa = Preassembler([st1, st2])
-    pa.assemble()
-    assert(len(pa.unique_stmts) == 2)
-    assert(len(pa.related_stmts) == 1)
