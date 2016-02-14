@@ -121,30 +121,35 @@ class BiopaxProcessor(object):
     def get_activity_modification(self, force_contains=None):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
-        p = self._construct_modification_pattern()
         mod_filter = 'residue modification, active'
-        p.add(mcc(mcct.GAIN, mod_filter),
-              "input simple PE", "output simple PE")
+        for relationship in ['increases', 'decreases']:
+            p = self._construct_modification_pattern()
+            if relationship == 'increases':
+                rel = mcct.GAIN
+            else:
+                rel = mcct.LOSS
+            p.add(mcc(rel, mod_filter),
+                  "input simple PE", "output simple PE")
 
-        s = bpp('Searcher')
-        res = s.searchPlain(self.model, p)
-        res_array = [match_to_array(m) for m in res.toArray()]
-        for r in res_array:
-            monomer = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
-            if force_contains is not None:
-                if momomer not in force_contains:
-                    continue
-            citation = self._get_citation(r[p.indexOf('Conversion')])
-            ev = Evidence(source_api='biopax', pmid=citation)
-            out_pe = r[p.indexOf('output PE')]
-            activity = 'Activity'
-            relationship = 'increases' 
-            mod, mod_pos = self._get_modification_site(out_pe)
-            if mod:
-                stmt = ActivityModification(monomer, mod, mod_pos, 
+            s = bpp('Searcher')
+            res = s.searchPlain(self.model, p)
+            res_array = [match_to_array(m) for m in res.toArray()]
+        
+            for r in res_array:
+                monomer = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
+                if force_contains is not None:
+                    if momomer not in force_contains:
+                        continue
+                citation = self._get_citation(r[p.indexOf('Conversion')])
+                ev = Evidence(source_api='biopax', pmid=citation)
+                out_pe = r[p.indexOf('output PE')]
+                activity = 'Activity'
+                mod, mod_pos = self._get_modification_site(out_pe)
+                if mod:
+                    stmt = ActivityModification(monomer, mod, mod_pos, 
                                             relationship, activity,
                                             evidence=ev)
-                self.statements.append(stmt)
+                    self.statements.append(stmt)
 
     def _get_modification_site(self, modPE):
         # Do we need to look at EntityFeatures?
