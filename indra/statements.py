@@ -77,11 +77,12 @@ class Evidence(object):
         statement.
     """
 
-    def __init__(self, source_api=None, pmid=None, text=None,
+    def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None):
         self.source_api = source_api
+        self.source_id = source_id
         self.pmid = pmid
-        self.text =text
+        self.text = text
         if annotations:
             self.annotations = annotations
         else:
