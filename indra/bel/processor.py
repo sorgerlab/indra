@@ -157,6 +157,7 @@ class BelProcessor(object):
             act_type = name_from_uri(stmt[1])
             sub_name = gene_name_from_uri(stmt[2])
             sub = Agent(sub_name)
+            print stmt[3]
             mod = term_from_uri(stmt[3])
             mod_pos = term_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
@@ -212,7 +213,7 @@ class BelProcessor(object):
         res_phospho = self.g.query(q_phospho)
 
         for stmt in res_phospho:
-            (citation, evidence, annotations) = self.get_evidence(stmt[4])
+            evidence = self.get_evidence(stmt[4])
             # Parse out the elements of the query
             phos_name = gene_name_from_uri(stmt[0])
             phos = Agent(phos_name)
@@ -224,9 +225,7 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    Dephosphorylation(phos, sub, mod, mod_pos,
-                                      stmt_str, citation,
-                                      evidence, annotations))
+                    Dephosphorylation(phos, sub, mod, mod_pos, evidence))
 
     def get_composite_activating_mods(self):
         # To eliminate multiple matches, we use pos1 < pos2 but this will
@@ -264,7 +263,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[7])
+            evidence = self.get_evidence(stmt[7])
             # Parse out the elements of the query
             species_name = gene_name_from_uri(stmt[0])
             species = Agent(species_name)
@@ -284,8 +283,7 @@ class BelProcessor(object):
             self.statements.append(
                     ActivityModification(species, (mod1, mod2),
                                          (mod_pos1, mod_pos2),
-                                         rel, act_type, stmt_str,
-                                         citation, evidence, annotations))
+                                         rel, act_type, evidence))
 
     def get_activating_mods(self):
         q_mods = prefixes + """
@@ -312,7 +310,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
+            evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             species_name = gene_name_from_uri(stmt[0])
             species = Agent(species_name)
@@ -329,8 +327,7 @@ class BelProcessor(object):
             self.converted_stmts.append(stmt_str)
             self.statements.append(
                     ActivityModification(species, (mod,), (mod_pos,), rel,
-                                         act_type, stmt_str,
-                                         citation, evidence, annotations))
+                                         act_type, evidence))
 
     def get_complexes(self):
         # Find all complexes described in the corpus
@@ -393,7 +390,7 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            (citation, evidence, annotations) = self.get_evidence(stmt[4])
+            evidence = self.get_evidence(stmt[4])
             # Parse out the elements of the query
             enz_name = gene_name_from_uri(stmt[0])
             enz = Agent(enz_name)
@@ -428,8 +425,7 @@ class BelProcessor(object):
             self.statements.append(
                     ActivatingSubstitution(enz, wt_residue, position,
                                            sub_residue, act_type, rel,
-                                           stmt_str,
-                                           citation, evidence, annotations))
+                                           evidence))
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
@@ -456,7 +452,7 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
-            (citation, evidence, annotations) = self.get_evidence(stmt[5])
+            evidence = self.get_evidence(stmt[5])
             subj_name = gene_name_from_uri(stmt[0])
             subj = Agent(subj_name)
             subj_activity = name_from_uri(stmt[1])
@@ -478,29 +474,24 @@ class BelProcessor(object):
                 self.statements.append(
                      RasGtpActivityActivity(subj, subj_activity,
                                             rel, obj, obj_activity,
-                                            stmt_str,
-                                            citation, evidence, annotations))
+                                            evidence))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'GtpBound' and \
                  rel == 'increases':
                 self.statements.append(
-                        RasGef(subj, subj_activity, obj,
-                               stmt_str, citation, evidence, annotations))
+                        RasGef(subj, subj_activity, obj, evidence))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
             elif obj_activity == 'GtpBound' and \
                  rel == 'decreases':
                 self.statements.append(
-                        RasGap(subj, subj_activity, obj,
-                               stmt_str, citation, evidence, annotations))
+                        RasGap(subj, subj_activity, obj, evidence))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.statements.append(
                      ActivityActivity(subj, subj_activity,
-                                      rel, obj, obj_activity,
-                                      stmt_str,
-                                      citation, evidence, annotations))
+                                      rel, obj, obj_activity, evidence))
 
             """
             #print "--------------------------------"
