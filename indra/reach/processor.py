@@ -1,5 +1,6 @@
 import re
 import objectpath
+import warnings
 
 from indra.statements import *
 
@@ -88,7 +89,9 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             sentence = r['verbose-text']
-            ev = Evidence(source_api='reach', text=sentence, pmid=citation)
+            context = self._get_context(r)
+            ev = Evidence(source_api='reach', text=sentence, pmid=citation, 
+                          annotations=context)
             frame_id = r['frame_id']
             args = r['arguments']
             for a in args:
@@ -105,7 +108,20 @@ class ReachProcessor(object):
             st = ActivityActivity(controller_agent, 'Activity', rel,
                 controlled_agent, 'Activity', ev)
             self.statements.append(st)
-    
+   
+    def _get_context(self, frame_term):
+        try:
+            context_term = frame_term['context']
+        except KeyError:
+            return {}
+
+        species = context_term.get('Species')
+        cell_type = context_term.get('CellType')
+        context = {}
+        context['species'] = species
+        context['cell_type'] = cell_type
+        return context
+
     def _get_agent_from_entity(self, entity_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
         res = self.tree.execute(qstr)
@@ -119,7 +135,7 @@ class ReachProcessor(object):
                 db_refs['UP'] = xr['id']
         agent = Agent(name, db_refs=db_refs)
         return agent
-    
+   
     def _get_agent_name(self, txt):
         '''
         Produce valid agent name from string.
@@ -127,7 +143,6 @@ class ReachProcessor(object):
         name = txt.replace('-', '_')
         name = name.replace(' ', '_')
         return name
-
 
     def _parse_site_text(self, s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)
