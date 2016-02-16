@@ -74,6 +74,10 @@ class Agent(object):
     def entity_matches(self, other):
         return self.entity_matches_key() == other.entity_matches_key()
 
+    def refinement_of(self, other, hierarchy_manager):
+        val = hierarchy_manager.isa(self.name, other.name)
+        return val
+
     def __repr__(self):
         attr_strs = []
         if self.mods:

@@ -1,6 +1,16 @@
 from indra.statements import *
+import pkg_resources
+import os
+from indra.preassembler.hierarchy_manager import HierarchyManager
+
+# Load the hierarchy manager data
+
+rdf_path = os.path.join('preassembler', 'entity_hierarchy.rdf')
+rdf_file = pkg_resources.resource_filename('indra', rdf_path)
+hm = HierarchyManager(rdf_file)
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
+
 
 def test_matches():
     ras = Agent('Ras')
@@ -323,6 +333,16 @@ def test_entities_match_complex():
     st1 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='foo'))
     st2 = Complex([ksr2, braf2, map2k2], evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+
+def test_agent_superfamily_refinement():
+    """A gene-level statement should be supported by a family-level
+    statement."""
+    ras = Agent('RAS', db_refs = {'FA': '03663'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    assert nras.refinement_of(ras, hm)
+    assert not ras.refinement_of(nras, hm)
+    # The top-level list should contain only one statement, the gene-level
+    # one, supported by the family one.
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
