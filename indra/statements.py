@@ -128,11 +128,10 @@ class Evidence(object):
         self.epistemics = epistemics
 
     def __str__(self):
-        print_text = '' if self.text is None else self.text.encode('utf-8')
-        ev_str = 'Evidence(%s, %s, %s, %s)' % \
+        ev_str = u'Evidence(%s, %s, %s, %s)' % \
                  (self.source_api, self.pmid, self.annotations,
-                  print_text)
-        return ev_str
+                  self.text)
+        return ev_str.encode('utf-8')
 
     def __repr__(self):
         return self.__str__()
