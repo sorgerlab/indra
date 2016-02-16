@@ -1,8 +1,11 @@
 import itertools
+import os
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
-hm = HierarchyManager('../preassembler/entity_hierarchy.rdf')
+rdf_file_path = os.path.join(os.path.dirname(__file__),
+                    'entity_hierarchy.rdf')
+hm = HierarchyManager(rdf_file_path)
 
 class Preassembler(object):
 
