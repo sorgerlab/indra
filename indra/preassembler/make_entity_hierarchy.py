@@ -33,14 +33,17 @@ if __name__ == '__main__':
     family_names = set([])
     with open(proteins_file) as tsv:
         for line in csv.reader(tsv, dialect="excel-tab"):
+            print line
             symbol, name, synonyms_str, family = line
-            g.add((en.term(symbol), has_long_name, Literal(name)))
+            g.add((en.term(symbol), has_long_name, Literal(name.strip())))
             g.add((en.term(symbol), has_name, Literal(symbol)))
             synonyms = synonyms_str.split(', ')
             for s in synonyms:
-                g.add((en.term(symbol), has_synonym, Literal(s)))
+                if s != '':
+                    g.add((en.term(symbol), has_synonym, Literal(s)))
             family_name = family.strip()
             if family_name != '':
+                print family_name
                 g.add((en.term(symbol), isa, en.term(family_name)))
                 g.add((en.term(family), has_name, Literal(family_name)))
                 family_names.add(family_name)
@@ -49,6 +52,9 @@ if __name__ == '__main__':
                         if bn.find(fn) != -1]
         for b in bel_synonyms:
             g.add((en.term(fn), has_synonym, Literal(b.upper())))
+
+    # Further BEL family names added manually
+    g.add((en.term('ERK'), has_synonym, Literal('MAPK_ERK1_2_FAMILY')))
 
     with open('entity_hierarchy.rdf', 'wt') as out_file:
         out_file.write(g.serialize(format='xml'))
