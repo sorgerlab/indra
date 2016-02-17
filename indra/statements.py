@@ -75,11 +75,14 @@ class Agent(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def refinement_of(self, other, hierarchy_manager):
+        # ENTITIES
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         if not (self.entity_matches(other) or \
                 hierarchy_manager.isa(self.name, other.name)):
             return False
+
+        # BOUND CONDITIONS
         # Now check the bound conditions. For self to be a refinement of
         # other in terms of the bound conditions, it has to include all of the
         # bound conditions in the other agent, and add additional context.
@@ -89,20 +92,46 @@ class Agent(object):
         # relationships among the bound conditions (this is to avoid the
         # confusion of relationships that might go in different directions
         # between the two statements).
-
+        # FIXME: This matching procedure will get confused if the same
+        # entity is included more than once in one of the sets--this will
+        # be picked up as a match
         # Iterate over the bound conditions in the other agent, and make sure
         # they are all matched in self.
         for bc_other in other.bound_conditions:
             # Iterate over the bound conditions in self to find a match
-            found = False
+            bc_found = False
             for bc_self in self.bound_conditions:
                 if bc_self.agent.entity_matches(bc_other.agent) and \
                    bc_self.is_bound == bc_other.is_bound:
-                    found = True
+                    bc_found = True
             # If we didn't find a match for this bound condition in other, then
             # no refinement
-            if not found:
+            if not bc_found:
                 return False
+        # If we've gotten this far, then everything in other has been matched
+        # in self.
+        # For self to be a refinement, however, it must have additional
+        # context. So now we just check to see if self has more
+        # bound_conditions:
+
+        #if self.bound_conditions and \
+        #        (len(self.bound_conditions) <= len(other.bound_conditions)):
+        #    print self.bound_conditions
+        #    print len(self.bound_conditions)
+        #    print len(other.bound_conditions)
+        #    return False
+
+        # MODIFICATIONS
+        # Similar to the above, we check that self has all of the modifications
+        # of other.
+        assert len(self.mods) == len(self.mod_sites), \
+               "Mods and mod_sites must match."
+        assert len(other.mods) == len(other.mod_sites), \
+               "Mods and mod_sites must match."
+        for other_mod_ix in range(len(other.mods)):
+            mod_found = False
+            for self_mod_ix in range(len(self.mods)):
+                pass
 
         # Everything checks out
         return True

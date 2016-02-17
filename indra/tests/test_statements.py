@@ -356,6 +356,11 @@ def test_agent_boundcondition_refinement():
     nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     assert nras1.refinement_of(nras3, hm)
     assert nras2.refinement_of(nras3, hm)
+    # A statement with identical bound conditions counts as a refinement of itself
+    # at least for now
+    assert nras1.refinement_of(nras1, hm)
+    assert nras3.refinement_of(nras3, hm)
+
     assert not nras1.refinement_of(nras2, hm)
     assert not nras2.refinement_of(nras1, hm)
     assert not nras3.refinement_of(nras1, hm)
