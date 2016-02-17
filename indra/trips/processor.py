@@ -392,7 +392,13 @@ class TripsProcessor(object):
             return [mod_type_name], ['']
         site_id = site_tag.attrib['id']
         residues, mod_pos = self._get_site_by_id(site_id)
-        mod = [mod_type_name+residue_names[r] for r in residues]
+        mod = []
+        for r in residues:
+            residue_name = residue_names.get(r)
+            if residue_name is None:
+                warnings.warn('Residue name %s unknown. ' % r)
+                residue_name = ''
+            mod.append(mod_type_name + residue_name)
         return mod, mod_pos
 
     def _find_static_events(self):
