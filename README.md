@@ -2,11 +2,37 @@
 
 INDRA
 =====
-INDRA (Integrated Dynamical Reasoning Assembler) generates executable models of pathway dynamics from natural language (using the TRIPS parser), BioPAX and BEL sources (including the PathwayCommons database and NDEx).
+INDRA (Integrated Dynamical Reasoning Assembler) generates executable models of 
+pathway dynamics from natural language (using the TRIPS parser), BioPAX and BEL 
+sources (including the PathwayCommons database and NDEx).
+
+Installing INDRA
+----------------
+INDRA works with Python 2.7.x (tested with 2.7.3 and higher). Python 3 is 
+currently not supported. When installing INDRA and its dependencies, make 
+sure that the correct version of Python is used.
+
+You can install INDRA by cloning this repository and 
+running setup.py from the terminal as
+
+    $ git clone https://github.com/sorgerlab/indra.git
+    $ cd indra
+    $ python setup.py install
+
+INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
+also PySB (for more information on PySB, see https://github.com/pysb/pysb). 
+These packages are installed by setup.py.
+
+INDRA also uses a package called pyjnius
+(https://github.com/kivy/pyjnius) to allow using Java classes from Python. 
+This is used only in the BioPAX API and the rest of INDRA will work without 
+pyjnius. Pyjnius requires cython and needs JRE and JDK 1.8 to be 
+installed.
 
 Using INDRA
 -----------
-In this example INDRA assembles a PySB model from the natural language description of a mechanism via the [TRIPS parser web service](http://trips.ihmc.us/parser/cgi/drum). 
+In this example INDRA assembles a PySB model from the natural language description 
+of a mechanism via the [TRIPS parser web service](http://trips.ihmc.us/parser/cgi/drum). 
 
 ```python
 from indra.pysb_assembler import PysbAssembler
