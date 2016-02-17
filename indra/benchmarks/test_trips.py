@@ -9,7 +9,7 @@ import os
 def test_bind():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -21,7 +21,7 @@ def test_bind():
 def test_complex_bind():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The EGFR-EGF complex binds another EGFR-EGF complex.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -35,7 +35,7 @@ def test_complex_bind():
 def test_complex_bind2():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'RAF binds to the RAS-GTP complex.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -49,7 +49,7 @@ def test_complex_bind2():
 def test_complex_bind3():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The RAF-RAS complex binds another RAF-RAS complex.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -65,7 +65,7 @@ def test_complex_bind3():
 def test_bound_mod():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The adaptor protein GRB2 can bind EGFR that is phosphorylated on tyrosine.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -79,7 +79,7 @@ def test_bound_mod():
 def test_not_bound_to():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'BRAF that is not bound to Vemurafenib binds MEK1.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -96,7 +96,7 @@ def test_not_bound_to():
 def test_not_bound_to2():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'BRAF, not bound to Vemurafenib, phosphorylates MEK1.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_phosphorylation(st))
@@ -114,7 +114,7 @@ def test_not_bound_to2():
 def test_bound_to():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'NRAS, bound to GTP, binds BRAF.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -130,7 +130,7 @@ def test_bound_to():
 def test_bound_to2():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'EGFR-bound GRB2 binds SOS1.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -146,7 +146,7 @@ def test_bound_to2():
 def test_bound_to3():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'SOS1, bound to GRB2 binds RAS.' 
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -161,7 +161,7 @@ def test_bound_to3():
 def test_bound_to4(): 
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'RAS, bound to SOS1, binds GTP.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_complex(st))
@@ -175,7 +175,7 @@ def test_bound_to4():
 def test_transphosphorylate():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'EGFR, bound to EGFR, transphosphorylates itself.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_transphosphorylation(st))
@@ -190,7 +190,7 @@ def test_transphosphorylate():
 def test_transphosphorylate2():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'EGFR, bound to EGFR, transphosphorylates itself on a tyrosine residue.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_transphosphorylation(st))
@@ -205,7 +205,7 @@ def test_transphosphorylate2():
 def test_act_mod():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'MEK1, phosphorylated at Ser218 and Ser222, is activated.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_actmod(st))
@@ -219,7 +219,7 @@ def test_act_mod():
 def test_bound_phosphorylate():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'RAF, bound to RAF, phosphorylates MEK1.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_phosphorylation(st))
@@ -234,7 +234,7 @@ def test_bound_phosphorylate():
 def test_bound_not_bound_phosphorylate():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'BRAF-bound BRAF that is not bound to Vemurafenib phosphorylates MEK1.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_phosphorylation(st))
@@ -249,7 +249,7 @@ def test_bound_not_bound_phosphorylate():
 def test_act_phosphorylate():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'Active MEK1 phosphorylates ERK2 at Tyr187.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_phosphorylation(st))
@@ -264,7 +264,7 @@ def test_act_phosphorylate():
 def test_dephosphorylate():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'DUSP6 dephosphorylates ERK2 at Tyr187.'
-    tp = trips_api.process_text(txt, fname)
+    tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_dephosphorylation(st))

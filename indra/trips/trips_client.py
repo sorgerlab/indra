@@ -25,20 +25,23 @@ def get_xml(html):
         events_terms = ekb[0]
     else:
         events_terms = ''
-    header = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><extractions>'
-    footer = '</extractions>'
+    header = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><ekb>'
+    footer = '</ekb>'
     return header + events_terms + footer
 
 
-def save_xml(xml_str, file_name):
+def save_xml(xml_str, file_name, pretty=True):
     try:
         fh = open(file_name, 'wt')
-        xmld = xml.dom.minidom.parseString(xml_str)
-        xml_str_pretty = xmld.toprettyxml()
     except IOError:
         print 'Could not open %s for writing.' % file_name
         return
-    fh.write(xml_str_pretty.encode('utf8'))
+    if pretty:
+        xmld = xml.dom.minidom.parseString(xml_str)
+        xml_str_pretty = xmld.toprettyxml()
+        fh.write(xml_str_pretty.encode('utf8'))
+    else:
+        fh.write(xml_str)
     fh.close()
 
 if __name__ == '__main__':
