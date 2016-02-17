@@ -75,8 +75,37 @@ class Agent(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def refinement_of(self, other, hierarchy_manager):
-        val = hierarchy_manager.isa(self.name, other.name)
-        return val
+        # Check that the basic entity of the agent either matches or is related
+        # to the entity of the other agent. If not, no match.
+        if not (self.entity_matches(other) or \
+                hierarchy_manager.isa(self.name, other.name)):
+            return False
+        # Now check the bound conditions. For self to be a refinement of
+        # other in terms of the bound conditions, it has to include all of the
+        # bound conditions in the other agent, and add additional context.
+        # TODO: For now, we do not check the bound conditions of the bound
+        # conditions.
+        # TODO: For now, we only look at exact agent matches, not at family
+        # relationships among the bound conditions (this is to avoid the
+        # confusion of relationships that might go in different directions
+        # between the two statements).
+
+        # Iterate over the bound conditions in the other agent, and make sure
+        # they are all matched in self.
+        for bc_other in other.bound_conditions:
+            # Iterate over the bound conditions in self to find a match
+            found = False
+            for bc_self in self.bound_conditions:
+                if bc_self.agent.entity_matches(bc_other.agent) and \
+                   bc_self.is_bound == bc_other.is_bound:
+                    found = True
+            # If we didn't find a match for this bound condition in other, then
+            # no refinement
+            if not found:
+                return False
+
+        # Everything checks out
+        return True
 
     def __repr__(self):
         attr_strs = []

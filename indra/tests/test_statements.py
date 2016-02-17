@@ -344,6 +344,27 @@ def test_agent_superfamily_refinement():
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
 
+def test_agent_boundcondition_refinement():
+    """A gene-level statement should be supported by a family-level
+    statement."""
+    bc1 = BoundCondition(Agent('RASA1', db_refs = {'HGNC': 'rasa1'}), True)
+    bc2 = BoundCondition(Agent('RASA2', db_refs = {'HGNC': 'rasa2'}), True)
+    bc3 = BoundCondition(Agent('RASA2', db_refs = {'HGNC': 'rasa2'}), False)
+    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc1])
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc2])
+    nras2b = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc3])
+    nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    assert nras1.refinement_of(nras3, hm)
+    assert nras2.refinement_of(nras3, hm)
+    assert not nras1.refinement_of(nras2, hm)
+    assert not nras2.refinement_of(nras1, hm)
+    assert not nras3.refinement_of(nras1, hm)
+    assert not nras3.refinement_of(nras2, hm)
+    assert not nras2.refinement_of(nras2b, hm)
+
+    # The top-level list should contain only one statement, the gene-level
+    # one, supported by the family one.
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 
