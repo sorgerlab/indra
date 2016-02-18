@@ -475,6 +475,54 @@ def test_agent_modification_refinement():
     assert not mek6.refinement_of(mek8, eh, mh)
     assert not mek7.refinement_of(mek8, eh, mh)
 
+def test_phosphorylation_modification_refinement():
+    braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
+    mek1 = Agent('MAP2K1', db_refs = {'HGNC': 'map2k1'})
+    p1 = Phosphorylation(braf, mek1, 'Phosphorylation', None)
+    p2 = Phosphorylation(braf, mek1, 'Phosphorylation', '218')
+    p3 = Phosphorylation(braf, mek1, 'Phosphorylation', '222')
+    p4 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', None)
+    p5 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '218')
+    p6 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '222')
+
+    # p1
+    assert p2.refinement_of(p1, eh, mh)
+    assert p3.refinement_of(p1, eh, mh)
+    assert p4.refinement_of(p1, eh, mh)
+    assert p5.refinement_of(p1, eh, mh)
+    assert p6.refinement_of(p1, eh, mh)
+    # p2
+    assert not p1.refinement_of(p2, eh, mh)
+    assert not p3.refinement_of(p2, eh, mh)
+    assert not p4.refinement_of(p2, eh, mh)
+    assert p5.refinement_of(p2, eh, mh)
+    assert not p6.refinement_of(p2, eh, mh)
+    # p3
+    assert not p1.refinement_of(p3, eh, mh)
+    assert not p2.refinement_of(p3, eh, mh)
+    assert not p4.refinement_of(p3, eh, mh)
+    assert not p5.refinement_of(p3, eh, mh)
+    assert p6.refinement_of(p3, eh, mh)
+    # p4
+    assert not p1.refinement_of(p4, eh, mh)
+    assert not p2.refinement_of(p4, eh, mh)
+    assert not p3.refinement_of(p4, eh, mh)
+    assert not p5.refinement_of(p4, eh, mh)
+    assert p6.refinement_of(p4, eh, mh)
+    # p5
+    assert not p1.refinement_of(p5, eh, mh)
+    assert not p2.refinement_of(p5, eh, mh)
+    assert not p3.refinement_of(p5, eh, mh)
+    assert not p5.refinement_of(p5, eh, mh)
+    assert p6.refinement_of(p5, eh, mh)
+    # p6
+    assert not p1.refinement_of(p6, eh, mh)
+    assert not p2.refinement_of(p6, eh, mh)
+    assert not p3.refinement_of(p6, eh, mh)
+    assert not p4.refinement_of(p6, eh, mh)
+    assert not p5.refinement_of(p6, eh, mh)
+
+
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
