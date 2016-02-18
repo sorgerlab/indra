@@ -101,7 +101,9 @@ class Agent(object):
             # Iterate over the bound conditions in self to find a match
             bc_found = False
             for bc_self in self.bound_conditions:
-                if bc_self.agent.entity_matches(bc_other.agent) and \
+                if (bc_self.agent.entity_matches(bc_other.agent) or
+                    entity_hierarchy.isa(bc_self.agent.name,
+                                         bc_other.agent.name)) and \
                    bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then

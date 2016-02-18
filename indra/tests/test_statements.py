@@ -350,25 +350,43 @@ def test_agent_superfamily_refinement():
 def test_agent_boundcondition_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    bc1 = BoundCondition(Agent('RASA1', db_refs = {'HGNC': 'rasa1'}), True)
-    bc2 = BoundCondition(Agent('RASA2', db_refs = {'HGNC': 'rasa2'}), True)
-    bc3 = BoundCondition(Agent('RASA2', db_refs = {'HGNC': 'rasa2'}), False)
+    bc1 = BoundCondition(Agent('BRAF', db_refs = {'HGNC': 'braf1'}), True)
+    bc2 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'braf2'}), True)
+    bc3 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'braf2'}), False)
+    bc4 = BoundCondition(Agent('RAF', db_refs = {'HGNC': 'raf'}), True)
+
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc1])
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc2])
-    nras2b = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc3])
-    nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    assert nras1.refinement_of(nras3, eh, mh)
-    assert nras2.refinement_of(nras3, eh, mh)
-    # A statement with identical bound conditions counts as a refinement of itself
-    # at least for now
-    assert nras1.refinement_of(nras1, eh, mh)
-    assert nras3.refinement_of(nras3, eh, mh)
+    nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc3])
+    nras4 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras5 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+                  bound_conditions=[bc4])
 
-    assert not nras1.refinement_of(nras2, eh, mh)
+    # nras1 (bound to BRAF)
     assert not nras2.refinement_of(nras1, eh, mh)
     assert not nras3.refinement_of(nras1, eh, mh)
-    assert not nras3.refinement_of(nras2, eh, mh)
-    assert not nras2.refinement_of(nras2b, eh, mh)
+    assert not nras4.refinement_of(nras1, eh, mh)
+    assert not nras5.refinement_of(nras1, eh, mh)
+    # nras2 (bound to CRAF)
+    assert not nras1.refinement_of(nras2, eh, mh)
+    assert not nras3.refinement_of(nras2, eh, mh) # Not bound condition
+    assert not nras4.refinement_of(nras2, eh, mh)
+    assert not nras5.refinement_of(nras2, eh, mh)
+    # nras3 (not bound to CRAF)
+    assert not nras1.refinement_of(nras3, eh, mh)
+    assert not nras2.refinement_of(nras3, eh, mh) # Not bound condition
+    assert not nras4.refinement_of(nras3, eh, mh)
+    assert not nras5.refinement_of(nras3, eh, mh)
+    # nras4 (no bound condition)
+    assert nras1.refinement_of(nras4, eh, mh)
+    assert nras2.refinement_of(nras4, eh, mh)
+    assert nras3.refinement_of(nras4, eh, mh)
+    assert nras5.refinement_of(nras4, eh, mh)
+    # nras5 (RAF family bound condition)
+    assert nras1.refinement_of(nras5, eh, mh)
+    assert nras2.refinement_of(nras5, eh, mh)
+    assert not nras3.refinement_of(nras5, eh, mh)
+    assert not nras4.refinement_of(nras5, eh, mh)
 
 def test_agent_modification_refinement():
     """A gene-level statement should be supported by a family-level
