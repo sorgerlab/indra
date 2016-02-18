@@ -124,8 +124,12 @@ class Agent(object):
             for self_mod_ix in range(len(self.mods)):
                 self_mod = self.mods[self_mod_ix]
                 self_mod_site = self.mod_sites[self_mod_ix]
+                # 
                 # Or has an isa relationship...
-                if self_mod == other_mod and self_mod_site == other_mod_site:
+                if (self_mod == other_mod or \
+                        mod_hierarchy.isa(self_mod, other_mod)) and \
+                   (self_mod_site == other_mod_site or \
+                        (self_mod_site is not None and other_mod_site is None)):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
