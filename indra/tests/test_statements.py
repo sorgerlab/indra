@@ -4,10 +4,13 @@ import os
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 # Load the hierarchy manager data
+ent_path = os.path.join('preassembler', 'entity_hierarchy.rdf')
+ent_file = pkg_resources.resource_filename('indra', ent_path)
+eh = HierarchyManager(ent_file)
 
-rdf_path = os.path.join('preassembler', 'entity_hierarchy.rdf')
-rdf_file = pkg_resources.resource_filename('indra', rdf_path)
-hm = HierarchyManager(rdf_file)
+mod_path = os.path.join('preassembler', 'modification_hierarchy.rdf')
+mod_file = pkg_resources.resource_filename('indra', mod_path)
+mh = HierarchyManager(mod_file)
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
@@ -339,8 +342,8 @@ def test_agent_superfamily_refinement():
     statement."""
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    assert nras.refinement_of(ras, hm)
-    assert not ras.refinement_of(nras, hm)
+    assert nras.refinement_of(ras, eh, mh)
+    assert not ras.refinement_of(nras, eh, mh)
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
 
@@ -354,21 +357,106 @@ def test_agent_boundcondition_refinement():
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc2])
     nras2b = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc3])
     nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    assert nras1.refinement_of(nras3, hm)
-    assert nras2.refinement_of(nras3, hm)
+    assert nras1.refinement_of(nras3, eh, mh)
+    assert nras2.refinement_of(nras3, eh, mh)
     # A statement with identical bound conditions counts as a refinement of itself
     # at least for now
-    assert nras1.refinement_of(nras1, hm)
-    assert nras3.refinement_of(nras3, hm)
+    assert nras1.refinement_of(nras1, eh, mh)
+    assert nras3.refinement_of(nras3, eh, mh)
 
-    assert not nras1.refinement_of(nras2, hm)
-    assert not nras2.refinement_of(nras1, hm)
-    assert not nras3.refinement_of(nras1, hm)
-    assert not nras3.refinement_of(nras2, hm)
-    assert not nras2.refinement_of(nras2b, hm)
+    assert not nras1.refinement_of(nras2, eh, mh)
+    assert not nras2.refinement_of(nras1, eh, mh)
+    assert not nras3.refinement_of(nras1, eh, mh)
+    assert not nras3.refinement_of(nras2, eh, mh)
+    assert not nras2.refinement_of(nras2b, eh, mh)
 
-    # The top-level list should contain only one statement, the gene-level
-    # one, supported by the family one.
+def test_agent_modification_refinement():
+    """A gene-level statement should be supported by a family-level
+    statement."""
+    mek1 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['Phosphorylation'], mod_sites=[None])
+    mek2 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['Phosphorylation'], mod_sites=['218'])
+    mek3 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['Phosphorylation'], mod_sites=['222'])
+    mek4 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['Phosphorylation', 'Phosphorylation'],
+                mod_sites=['218', '222'])
+    mek5 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['PhosphorylationSerine'], mod_sites=[None])
+    mek6 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['PhosphorylationSerine'], mod_sites=['218'])
+    mek7 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['PhosphorylationSerine'], mod_sites=['222'])
+    mek8 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
+                mods=['PhosphorylationSerine', 'PhosphorylationSerine'],
+                mod_sites=['218', '222'])
+
+    # mek1 agent is refined by all others
+    assert mek2.refinement_of(mek1, eh, mh)
+    assert mek3.refinement_of(mek1, eh, mh)
+    assert mek4.refinement_of(mek1, eh, mh)
+    assert mek5.refinement_of(mek1, eh, mh)
+    assert mek6.refinement_of(mek1, eh, mh)
+    assert mek7.refinement_of(mek1, eh, mh)
+    assert mek8.refinement_of(mek1, eh, mh)
+    # mek2
+    assert not mek1.refinement_of(mek2, eh, mh)
+    assert not mek3.refinement_of(mek2, eh, mh) # Different site
+    assert mek4.refinement_of(mek2, eh, mh)
+    assert not mek5.refinement_of(mek2, eh, mh) # Cross-relationship
+    assert mek6.refinement_of(mek2, eh, mh)
+    assert not mek7.refinement_of(mek2, eh, mh) # Different site
+    assert mek8.refinement_of(mek2, eh, mh)
+    # mek3
+    assert not mek1.refinement_of(mek3, eh, mh)
+    assert not mek2.refinement_of(mek3, eh, mh)
+    assert mek4.refinement_of(mek3, eh, mh)
+    assert not mek5.refinement_of(mek3, eh, mh)
+    assert not mek6.refinement_of(mek3, eh, mh)
+    assert mek7.refinement_of(mek3, eh, mh)
+    assert mek8.refinement_of(mek3, eh, mh)
+    # mek4
+    assert not mek1.refinement_of(mek4, eh, mh)
+    assert not mek2.refinement_of(mek4, eh, mh)
+    assert not mek3.refinement_of(mek4, eh, mh)
+    assert not mek5.refinement_of(mek4, eh, mh)
+    assert not mek6.refinement_of(mek4, eh, mh)
+    assert not mek7.refinement_of(mek4, eh, mh)
+    assert mek8.refinement_of(mek4, eh, mh)
+    # mek5
+    assert not mek1.refinement_of(mek5, eh, mh)
+    assert not mek2.refinement_of(mek5, eh, mh)
+    assert not mek3.refinement_of(mek5, eh, mh)
+    assert not mek4.refinement_of(mek5, eh, mh)
+    assert mek6.refinement_of(mek5, eh, mh)
+    assert mek7.refinement_of(mek5, eh, mh)
+    assert mek8.refinement_of(mek5, eh, mh)
+    # mek6
+    assert not mek1.refinement_of(mek6, eh, mh)
+    assert not mek2.refinement_of(mek6, eh, mh)
+    assert not mek3.refinement_of(mek6, eh, mh)
+    assert not mek4.refinement_of(mek6, eh, mh)
+    assert not mek5.refinement_of(mek6, eh, mh)
+    assert not mek7.refinement_of(mek6, eh, mh)
+    assert mek8.refinement_of(mek6, eh, mh)
+    # mek7
+    assert not mek1.refinement_of(mek7, eh, mh)
+    assert not mek2.refinement_of(mek7, eh, mh)
+    assert not mek3.refinement_of(mek7, eh, mh)
+    assert not mek4.refinement_of(mek7, eh, mh)
+    assert not mek5.refinement_of(mek7, eh, mh)
+    assert not mek6.refinement_of(mek7, eh, mh)
+    assert mek8.refinement_of(mek7, eh, mh)
+    # mek8
+    assert not mek1.refinement_of(mek8, eh, mh)
+    assert not mek2.refinement_of(mek8, eh, mh)
+    assert not mek3.refinement_of(mek8, eh, mh)
+    assert not mek4.refinement_of(mek8, eh, mh)
+    assert not mek5.refinement_of(mek8, eh, mh)
+    assert not mek6.refinement_of(mek8, eh, mh)
+    assert not mek7.refinement_of(mek8, eh, mh)
+
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

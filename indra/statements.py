@@ -74,12 +74,12 @@ class Agent(object):
     def entity_matches(self, other):
         return self.entity_matches_key() == other.entity_matches_key()
 
-    def refinement_of(self, other, hierarchy_manager):
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
         # ENTITIES
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         if not (self.entity_matches(other) or \
-                hierarchy_manager.isa(self.name, other.name)):
+                entity_hierarchy.isa(self.name, other.name)):
             return False
 
         # BOUND CONDITIONS
@@ -104,22 +104,10 @@ class Agent(object):
                 if bc_self.agent.entity_matches(bc_other.agent) and \
                    bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
-            # If we didn't find a match for this bound condition in other, then
+            # If we didn't find a match for this bound condition in self, then
             # no refinement
             if not bc_found:
                 return False
-        # If we've gotten this far, then everything in other has been matched
-        # in self.
-        # For self to be a refinement, however, it must have additional
-        # context. So now we just check to see if self has more
-        # bound_conditions:
-
-        #if self.bound_conditions and \
-        #        (len(self.bound_conditions) <= len(other.bound_conditions)):
-        #    print self.bound_conditions
-        #    print len(self.bound_conditions)
-        #    print len(other.bound_conditions)
-        #    return False
 
         # MODIFICATIONS
         # Similar to the above, we check that self has all of the modifications
@@ -128,10 +116,21 @@ class Agent(object):
                "Mods and mod_sites must match."
         assert len(other.mods) == len(other.mod_sites), \
                "Mods and mod_sites must match."
+        # Make sure they have the same modifications
         for other_mod_ix in range(len(other.mods)):
             mod_found = False
+            other_mod = other.mods[other_mod_ix]
+            other_mod_site = other.mod_sites[other_mod_ix]
             for self_mod_ix in range(len(self.mods)):
-                pass
+                self_mod = self.mods[self_mod_ix]
+                self_mod_site = self.mod_sites[self_mod_ix]
+                # Or has an isa relationship...
+                if self_mod == other_mod and self_mod_site == other_mod_site:
+                    mod_found = True
+            # If we didn't find an exact match for this mod in other, then
+            # no refinement
+            if not mod_found:
+                return False
 
         # Everything checks out
         return True
