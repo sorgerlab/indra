@@ -11,8 +11,14 @@ def send_request(url_suffix, params):
 
 def get_result(res):
     status = res.status_code
+    # If response is immediate, we get 200 
     if status == 200:
         return res.text
+    # If there is a continuation of the message
+    # we get status 300, handled below. 
+    # Otherwise we return None.
+    elif status != 300:
+        return None
     task_id = res.json()['task_id']
     print 'NDEx task submitted...'
     time_used = 0

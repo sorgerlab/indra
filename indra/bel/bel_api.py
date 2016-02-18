@@ -10,6 +10,9 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
     url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
     rdf = ndex_client.send_request(url_suffix, params)
+    if rdf is None:
+        print 'No response for NDEx neighborhood query.'
+        return None
     with open(rdf_out, 'wt') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf)
