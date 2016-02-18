@@ -29,7 +29,7 @@ if __name__ == '__main__':
         if l.endswith(' Family|P'):
             family_name = l[:-2].replace(' ', '_').replace('/', '_')
             bel_family_names.append(family_name)
-    
+
     family_names = set([])
     with open(proteins_file) as tsv:
         for line in csv.reader(tsv, dialect="excel-tab"):
@@ -58,4 +58,4 @@ if __name__ == '__main__':
 
     with open('entity_hierarchy.rdf', 'wt') as out_file:
         out_file.write(g.serialize(format='xml'))
-    
+

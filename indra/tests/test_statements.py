@@ -507,14 +507,14 @@ def test_phosphorylation_modification_refinement():
     assert not p1.refinement_of(p4, eh, mh)
     assert not p2.refinement_of(p4, eh, mh)
     assert not p3.refinement_of(p4, eh, mh)
-    assert not p5.refinement_of(p4, eh, mh)
+    assert p5.refinement_of(p4, eh, mh)
     assert p6.refinement_of(p4, eh, mh)
     # p5
     assert not p1.refinement_of(p5, eh, mh)
     assert not p2.refinement_of(p5, eh, mh)
     assert not p3.refinement_of(p5, eh, mh)
-    assert not p5.refinement_of(p5, eh, mh)
-    assert p6.refinement_of(p5, eh, mh)
+    assert not p4.refinement_of(p5, eh, mh)
+    assert not p6.refinement_of(p5, eh, mh)
     # p6
     assert not p1.refinement_of(p6, eh, mh)
     assert not p2.refinement_of(p6, eh, mh)

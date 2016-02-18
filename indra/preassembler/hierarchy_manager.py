@@ -27,7 +27,7 @@ class HierarchyManager(object):
             return en
         else:
             return None
-        
+
     def isa(self, t1, t2):
         """Both t1 and t2 are entities and we determine whether there is a
         series of "isa" edges from t1 to t2.
