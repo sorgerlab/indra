@@ -69,6 +69,7 @@ def test_superfamily_refinement():
     assert (stmts[0] == st2)
     assert (stmts[0].supported_by == [st1])
 
+
 def test_modification_refinement():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
