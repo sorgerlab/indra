@@ -21,4 +21,4 @@ install:
   # BEL dependencies
   - pip install rdflib
 script:
-  - nosetests
+  - nosetests --with-doctest
