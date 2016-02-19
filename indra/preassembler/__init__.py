@@ -52,7 +52,9 @@ class Preassembler(object):
         """
         unique_stmts = []
         # Group statements according to whether they are matches (differing
-        # only in their evidence)
+        # only in their evidence).
+        # Sort the statements in place by matches_key()
+        stmts.sort(key=lambda x: x.matches_key())
         for key, duplicates in itertools.groupby(stmts,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
@@ -133,16 +135,18 @@ class Preassembler(object):
             >>> st2 = Phosphorylation(braf, map2k1, 'Phosphorylation', '218')
             >>> combined_stmts = Preassembler.combine_related([st1, st2])
             >>> combined_stmts
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218, [])]
+            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
             >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, None, [])]
+            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, None)]
             >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218, [])]
+            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
         """
 
         # Group statements according to whether they have matching entities,
         # and store the resulting lists in a dict, indexed by the key defined
         # by the statement type and its entities:
+        # Sort the statements in place by entities_match_key():
+        stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
                   for grouper in itertools.groupby(stmts,
                                           key=lambda x: x.entities_match_key())}

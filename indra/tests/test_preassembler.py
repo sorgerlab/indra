@@ -48,11 +48,17 @@ def test_combine_duplicates():
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
     pa = Preassembler(stmts)
     pa.assemble()
+    # The statements come out sorted by their matches_key, so the
+    # Dephosphorylations are first
     assert(len(pa.unique_stmts) == 4)
-    assert(len(pa.unique_stmts[0].evidence) == 4)
+    assert(pa.unique_stmts[0] == p6)
+    assert(len(pa.unique_stmts[0].evidence) == 3)
+    assert(pa.unique_stmts[1] == p9)
     assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(len(pa.unique_stmts[2].evidence) == 3)
-    assert(len(pa.unique_stmts[3].evidence) == 1)
+    assert(pa.unique_stmts[2] == p5)
+    assert(len(pa.unique_stmts[2].evidence) == 1)
+    assert(pa.unique_stmts[3] == p1)
+    assert(len(pa.unique_stmts[3].evidence) == 4)
 
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
