@@ -299,9 +299,9 @@ class Modification(Statement):
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s, %s)" %
                   (type(self).__name__, self.enz.name, self.sub.name, self.mod,
-                   self.mod_pos, self.evidence))
+                   self.mod_pos))
         return s
 
 
@@ -315,9 +315,8 @@ class SelfModification(Statement):
         self.mod_pos = mod_pos
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
-             (type(self).__name__, self.enz.name, self.mod, self.mod_pos,
-              self.evidence))
+        s = ("%s(%s, %s, %s)" %
+             (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
         return s
 
     def matches(self, other):
@@ -410,10 +409,9 @@ class ActivityActivity(Statement):
         return key
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj.name, self.subj_activity,
-              self.relationship, self.obj.name, self.obj_activity,
-              self.evidence))
+              self.relationship, self.obj.name, self.obj_activity))
         return s
 
 
@@ -449,9 +447,9 @@ class ActivityModification(Statement):
         return key
 
     def __str__(self):
-        s = ("ActivityModification(%s, %s, %s, %s, %s, %s)" %
+        s = ("ActivityModification(%s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
-                 self.activity, self.evidence))
+                 self.activity))
         return s
 
 
@@ -490,9 +488,9 @@ class ActivatingSubstitution(Statement):
         pass
 
     def __str__(self):
-        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s, %s)" %
+        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
-                 self.sub_residue, self.activity, self.rel, self.evidence))
+                 self.sub_residue, self.activity, self.rel))
         return s
 
 
@@ -520,8 +518,8 @@ class RasGef(Statement):
         return key
 
     def __str__(self):
-        s = ("RasGef(%s, %s, %s, %s)" %
-                (self.gef.name, self.gef_activity, self.ras.name, self.evidence))
+        s = ("RasGef(%s, %s, %s)" %
+                (self.gef.name, self.gef_activity, self.ras.name))
         return s
 
 
@@ -549,8 +547,8 @@ class RasGap(Statement):
         return key
 
     def __str__(self):
-        s = ("RasGap(%s, %s, %s, %s)" %
-                (self.gap.name, self.gap_activity, self.ras.name, self.evidence))
+        s = ("RasGap(%s, %s, %s)" %
+                (self.gap.name, self.gap_activity, self.ras.name))
         return s
 
 
@@ -572,8 +570,7 @@ class Complex(Statement):
         return key
 
     def __str__(self):
-        s = ("Complex(%s, %s)" % ([m.name for m in self.members],
-                                  self.evidence))
+        s = ("Complex(%s)" % ([m.name for m in self.members]))
         return s
 
 
