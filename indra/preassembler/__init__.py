@@ -68,12 +68,17 @@ class Preassembler(object):
     def combine_related(stmts):
         """Merge related statements into a supports tree structure."""
         # Group statements according to whether they have matching entities:
-        group_list = [list(grouper[1])
-                      for grouper in itertools.groupby(stmts,
-                                          key=lambda x: x.entities_match_key())]
+        groups = {grouper[0]: list(grouper[1])
+                  for grouper in itertools.groupby(stmts,
+                                          key=lambda x: x.entities_match_key())}
+        # This is where we'll store the extended groups, those statements which
+        # involve either the same entities or entities with family
+        # relationships.
+        ext_groups = {}
         # Now, make pairs of groups:
-        for g1, g2 in itertools.combinations(group_list, 2):
-
+        for g1_key, g2_key in itertools.combinations(groups.keys(), 2):
+            g1 = groups[g1_key]
+            g2 = groups[g2_key]
             # Now we compare groups. If we have two groups G1 and G2, each
             # containing Statements with some number of Agent arguments, e.g.
             # G1_Stmt(Ag1, Ag2, Ag3) and G2_Stmt(Ag4, Ag5, Ag6), we need to
@@ -124,15 +129,26 @@ class Preassembler(object):
             # Now we see what we have. If g1_first_checks is all True values,
             # that means everything in the group1 statements isa thing in
             # the group2 statements.
+
+            # The extended G1 and G2 lists (if we haven't put them in the
+            # ext_groups dict yet, just get the base list by default:
+            g1_ext_list = ext_groups.get(g1_key, g1)
+            g2_ext_list = ext_groups.get(g2_key, g2)
             print g1_stmt
             print g2_stmt
+            # TODO: If ext_groups dict doesn't contain either one of these,
+            # we add them to the dict
             if all(g1_first_checks):
-                print "G1 primary, merge g2 into g1"
+                ext_groups[g1_key] = g1_ext_list + g2
+                ext_groups[g2_key] = g2_ext_list
             elif all(g2_first_checks):
-                print "G2 primary, merge g1 into g2"
+                ext_groups[g1_key] = g1_ext_list
+                ext_groups[g2_key] = g2_ext_list + g1
             else:
-                print "Elements do not match, do nothing."
-                continue
+                ext_groups[g1_key] = g1_ext_list
+                ext_groups[g2_key] = g2_ext_list
+            print ext_groups
+            continue
             # After this, we end up with a list of groups, but now the groups
             # contain not only statements with matching entities, but also
             # entities related by isa relationships.
