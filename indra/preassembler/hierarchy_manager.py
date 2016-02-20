@@ -1,3 +1,4 @@
+import os
 import rdflib
 import functools32
 
@@ -52,3 +53,12 @@ class HierarchyManager(object):
             return True
         else:
             return False
+
+# Load the default entity and modification hierarchies
+entity_file_path = os.path.join(os.path.dirname(__file__),
+                    'entity_hierarchy.rdf')
+mod_file_path = os.path.join(os.path.dirname(__file__),
+                    'modification_hierarchy.rdf')
+entity_hierarchy = HierarchyManager(entity_file_path)
+modification_hierarchy = HierarchyManager(mod_file_path)
+
