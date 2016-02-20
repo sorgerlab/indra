@@ -572,8 +572,74 @@ def test_autophosphorylation_modification_refinement():
 def test_activityactivity_modification_refinement():
     pass
 
-def test_activitymod_family_refinement():
-    pass
+def test_activitymod_refinement():
+    mek_fam = Agent('MEK')
+    mek1 = Agent('MAP2K1')
+    p1 = ActivityModification(mek_fam, 'Phosphorylation', None, 'increases',
+                              'KinaseActivity')
+    p2 = ActivityModification(mek_fam, 'PhosphorylationSerine', '218',
+                              'increases', 'KinaseActivity')
+    p3 = ActivityModification(mek1, 'Phosphorylation', None, 'increases',
+                              'KinaseActivity')
+    p4 = ActivityModification(mek1, 'PhosphorylationSerine', None, 'increases',
+                              'KinaseActivity')
+    p5 = ActivityModification(mek1, 'PhosphorylationSerine', '218', 'increases',
+                              'KinaseActivity')
+    p6 = ActivityModification(mek1, 'PhosphorylationSerine', '222', 'increases',
+                              'KinaseActivity')
+    p7 = ActivityModification(mek1,
+                            ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                            ['218', '222'], 'increases', 'KinaseActivity')
+    # p1
+    assert p2.refinement_of(p1, eh, mh)
+    assert p3.refinement_of(p1, eh, mh)
+    assert p4.refinement_of(p1, eh, mh)
+    assert p5.refinement_of(p1, eh, mh)
+    assert p6.refinement_of(p1, eh, mh)
+    assert p7.refinement_of(p1, eh, mh)
+    # p2
+    assert not p1.refinement_of(p2, eh, mh)
+    assert not p3.refinement_of(p2, eh, mh)
+    assert not p4.refinement_of(p2, eh, mh)
+    assert p5.refinement_of(p2, eh, mh)
+    assert not p6.refinement_of(p2, eh, mh)
+    assert p7.refinement_of(p2, eh, mh)
+    # p3
+    assert not p1.refinement_of(p3, eh, mh)
+    assert not p2.refinement_of(p3, eh, mh)
+    assert p4.refinement_of(p3, eh, mh)
+    assert p5.refinement_of(p3, eh, mh)
+    assert p6.refinement_of(p3, eh, mh)
+    assert p7.refinement_of(p3, eh, mh)
+    # p4
+    assert not p1.refinement_of(p4, eh, mh)
+    assert not p2.refinement_of(p4, eh, mh)
+    assert not p3.refinement_of(p4, eh, mh)
+    assert p5.refinement_of(p4, eh, mh)
+    assert p6.refinement_of(p4, eh, mh)
+    assert p7.refinement_of(p4, eh, mh)
+    # p5
+    assert not p1.refinement_of(p5, eh, mh)
+    assert not p2.refinement_of(p5, eh, mh)
+    assert not p3.refinement_of(p5, eh, mh)
+    assert not p4.refinement_of(p5, eh, mh)
+    assert not p6.refinement_of(p5, eh, mh)
+    assert p7.refinement_of(p5, eh, mh)
+    # p6
+    assert not p1.refinement_of(p6, eh, mh)
+    assert not p2.refinement_of(p6, eh, mh)
+    assert not p3.refinement_of(p6, eh, mh)
+    assert not p4.refinement_of(p6, eh, mh)
+    assert not p5.refinement_of(p6, eh, mh)
+    assert p7.refinement_of(p6, eh, mh)
+    # p7
+    assert not p1.refinement_of(p7, eh, mh)
+    assert not p2.refinement_of(p7, eh, mh)
+    assert not p3.refinement_of(p7, eh, mh)
+    assert not p4.refinement_of(p7, eh, mh)
+    assert not p5.refinement_of(p7, eh, mh)
+    assert not p6.refinement_of(p7, eh, mh)
+
 
 def test_activatingsub_family_refinement():
     pass
