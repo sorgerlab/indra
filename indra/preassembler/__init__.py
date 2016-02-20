@@ -88,7 +88,7 @@ class Preassembler(object):
            BRAF and MAP2K1).
         2. The groups of statements are then further compared to see if one
            group involves superfamily entities of another group. If so, the
-           statements involving the superfamily are added into group of
+           statements involving the superfamily are added into the group of
            statements involving the more concrete entities to create an
            "extended group."
         3. The statements within each extended group are then compared; if one
@@ -178,7 +178,7 @@ class Preassembler(object):
             g1_stmt = g1[0]
             g2_stmt = g2[0]
             # Check that the statements are of the same type; if not, no merge.
-            if type(g1_stmt) != type(g2_stmt):
+            if type(g1_stmt) is not type(g2_stmt):
                 continue
             # Check that all of the agents match or have an isa relationship.
             # Because the statements are of the same type, they should have the
@@ -194,11 +194,9 @@ class Preassembler(object):
                      for ag1, ag2 in agent_pairs]
             # If g1_is_refinement is all True values, that means everything in
             # the group1 statements isa thing in the group2 statements.
-            g1_ext_list = ext_groups[g1_key]
-            g2_ext_list = ext_groups[g2_key]
             if all(g1_is_refinement):
+                g1_ext_list = ext_groups[g1_key]
                 ext_groups[g1_key] = g1_ext_list + g2
-                ext_groups[g2_key] = g2_ext_list
             continue
         # At this point we have, in ext_groups, a dict of lists of Statements
         # indexed by their entity_matches key, but now the groups contain not
@@ -216,11 +214,8 @@ class Preassembler(object):
                     stmt2.supports.append(stmt1)
         # Now that the groups have been processed, we need to find the
         # non-subsumed statements, those that have no supports relationships.
-        combined_stmts = []
-        for stmt_key, ext_group in ext_groups.iteritems():
-            for stmt in ext_group:
-                if not stmt.supports:
-                    combined_stmts.append(stmt)
-
+        combined_stmts = [stmt for ext_group in ext_groups.values()
+                               for stmt in ext_group
+                               if not stmt.supports]
         return combined_stmts
 
