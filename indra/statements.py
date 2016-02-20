@@ -298,6 +298,22 @@ class SelfModification(Statement):
     def agent_list(self):
         return [self.enz]
 
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Check agent arguments
+        if not self.enz.refinement_of(other.enz, entity_hierarchy,
+                                      mod_hierarchy):
+            return False
+        # For this to be a refinement of the other, the modifications either
+        # have to match or have this one be a subtype of the other; in
+        # addition, the sites have to match, or this one has to have site
+        # information and the other one not.
+        if (self.mod == other.mod or \
+                mod_hierarchy.isa(self.mod, other.mod)) and \
+           (self.mod_pos == other.mod_pos or \
+                (self.mod_pos is not None and other.mod_pos is None)):
+            return True
+        else:
+            return False
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""

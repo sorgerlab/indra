@@ -522,7 +522,70 @@ def test_phosphorylation_modification_refinement():
     assert not p4.refinement_of(p6, eh, mh)
     assert not p5.refinement_of(p6, eh, mh)
 
+# TODO: Fill in tests below!
+def test_autophosphorylation_modification_refinement():
+    braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
+    p1 = Autophosphorylation(braf, 'Phosphorylation', None)
+    p2 = Autophosphorylation(braf, 'Phosphorylation', '218')
+    p3 = Autophosphorylation(braf, 'Phosphorylation', '222')
+    p4 = Autophosphorylation(braf, 'PhosphorylationSerine', None)
+    p5 = Autophosphorylation(braf, 'PhosphorylationSerine', '218')
+    p6 = Autophosphorylation(braf, 'PhosphorylationSerine', '222')
 
+    # p1
+    assert p2.refinement_of(p1, eh, mh)
+    assert p3.refinement_of(p1, eh, mh)
+    assert p4.refinement_of(p1, eh, mh)
+    assert p5.refinement_of(p1, eh, mh)
+    assert p6.refinement_of(p1, eh, mh)
+    # p2
+    assert not p1.refinement_of(p2, eh, mh)
+    assert not p3.refinement_of(p2, eh, mh)
+    assert not p4.refinement_of(p2, eh, mh)
+    assert p5.refinement_of(p2, eh, mh)
+    assert not p6.refinement_of(p2, eh, mh)
+    # p3
+    assert not p1.refinement_of(p3, eh, mh)
+    assert not p2.refinement_of(p3, eh, mh)
+    assert not p4.refinement_of(p3, eh, mh)
+    assert not p5.refinement_of(p3, eh, mh)
+    assert p6.refinement_of(p3, eh, mh)
+    # p4
+    assert not p1.refinement_of(p4, eh, mh)
+    assert not p2.refinement_of(p4, eh, mh)
+    assert not p3.refinement_of(p4, eh, mh)
+    assert p5.refinement_of(p4, eh, mh)
+    assert p6.refinement_of(p4, eh, mh)
+    # p5
+    assert not p1.refinement_of(p5, eh, mh)
+    assert not p2.refinement_of(p5, eh, mh)
+    assert not p3.refinement_of(p5, eh, mh)
+    assert not p4.refinement_of(p5, eh, mh)
+    assert not p6.refinement_of(p5, eh, mh)
+    # p6
+    assert not p1.refinement_of(p6, eh, mh)
+    assert not p2.refinement_of(p6, eh, mh)
+    assert not p3.refinement_of(p6, eh, mh)
+    assert not p4.refinement_of(p6, eh, mh)
+    assert not p5.refinement_of(p6, eh, mh)
+
+def test_activityactivity_modification_refinement():
+    pass
+
+def test_activitymod_family_refinement():
+    pass
+
+def test_activatingsub_family_refinement():
+    pass
+
+def test_rasgef_family_refinement():
+    pass
+
+def test_rasgap_family_refinement():
+    pass
+
+def test_complex_family_refinement():
+    pass
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
