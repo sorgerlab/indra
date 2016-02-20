@@ -57,14 +57,14 @@ class Agent(object):
         return True
 
     def matches_key(self):
-        key = self.name
-        key += str(set(self.mods))
-        key += str(set(self.mod_sites))
-        key += str(self.active)
-        key += str(len(self.bound_conditions))
-        key += ''.join(['%s%s' % (bc.agent.name, bc.is_bound)
-                        for bc in sorted(self.bound_conditions,
-                                         key=lambda x: x.agent.name)])
+        key = (self.name,
+               set(self.mods),
+               set(self.mod_sites),
+               self.active,
+               len(self.bound_conditions),
+               tuple((bc.agent.name, bc.is_bound)
+                     for bc in sorted(self.bound_conditions,
+                                      key=lambda x: x.agent.name)))
         return key
 
     def entity_matches_key(self):
@@ -263,11 +263,8 @@ class Modification(Statement):
         self.mod_pos = mod_pos
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.enz.matches_key()
-        key += self.sub.matches_key()
-        key += str(self.mod)
-        key += str(self.mod_pos)
+        key = (type(self), self.enz.matches_key(), self.sub.matches_key(),
+               self.mod, self.mod_pos)
         return key
 
     def entities_match_key(self):
@@ -395,17 +392,13 @@ class ActivityActivity(Statement):
         self.relationship = relationship
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.subj.matches_key()
-        key += str(self.subj_activity)
-        key += self.obj.matches_key()
-        key += str(self.obj_activity)
+        key = (type(self), self.subj.matches_key(), self.subj_activity,
+               self.obj.matches_key(), self.obj_activity)
         return key
 
     def entities_match_key(self):
-        key = type(self).__name__
-        key += self.subj.entity_matches_key()
-        key += self.obj.entity_matches_key()
+        key = (type(self), self.subj.entity_matches_key(),
+               self.obj.entity_matches_key())
         return key
 
     def __str__(self):
@@ -433,12 +426,8 @@ class ActivityModification(Statement):
         self.activity = activity
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.monomer.matches_key()
-        key += str(self.mod)
-        key += str(self.mod_pos)
-        key += str(self.relationship)
-        key += str(self.activity)
+        key = (type(self), self.monomer.matches_key(), self.mod, self.mod_pos,
+               self.relationship, self.activity)
         return key
 
     def entities_match_key(self):
@@ -468,12 +457,8 @@ class ActivatingSubstitution(Statement):
         self.rel = rel
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.monomer.matches_key()
-        key += str(self.wt_residue)
-        key += str(self.pos)
-        key += str(self.sub_residue)
-        key += str(self.activity)
+        key = (type(self), self.monomer.matches_key(), self.wt_residue,
+               self.pos, self.sub_residue, self.activity)
         return key
 
     def entities_match_key(self):
@@ -505,10 +490,8 @@ class RasGef(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.gef.matches_key()
-        key += self.gef_activity
-        key += self.ras.matches_key()
+        key = (type(self), self.gef.matches_key(), self.gef_activity,
+               self.ras.matches_key())
         return key
 
     def entities_match_key(self):
@@ -534,10 +517,8 @@ class RasGap(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = type(self).__name__
-        key += self.gap.matches_key()
-        key += self.gap_activity
-        key += self.ras.matches_key()
+        key = (type(self), self.gap.matches_key(), self.gap_activity,
+               self.ras.matches_key())
         return key
 
     def entities_match_key(self):
@@ -560,8 +541,7 @@ class Complex(Statement):
         self.members = members
 
     def matches_key(self):
-        key = type(self).__name__
-        key += ''.join([m.matches_key() for m in self.members])
+        key = (type(self), tuple(m.matches_key() for m in self.members))
         return key
 
     def entities_match_key(self):
