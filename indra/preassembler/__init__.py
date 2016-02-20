@@ -1,44 +1,24 @@
 import itertools
-import os
 from copy import copy
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import HierarchyManager
-
-entity_file_path = os.path.join(os.path.dirname(__file__),
-                    'entity_hierarchy.rdf')
-mod_file_path = os.path.join(os.path.dirname(__file__),
-                    'modification_hierarchy.rdf')
-eh = HierarchyManager(entity_file_path)
-mh = HierarchyManager(mod_file_path)
 
 class Preassembler(object):
 
-    def __init__(self, stmts=None):
+    def __init__(self, entity_hierarchy, mod_hierarchy, stmts=None):
+        self.entity_hierarchy = entity_hierarchy
+        self.mod_hierarchy = mod_hierarchy
         if stmts:
             self.stmts = stmts
         else:
             self.stmts = []
+        self.unique_stmts = []
+        self.related_stmts = []
 
     def add_statements(self, stmts):
         """Add to the current list of statements."""
         self.stmts += stmts
 
-    def assemble(self):
-        self.unique_stmts = Preassembler.combine_duplicates(self.stmts)
-        self.related_stmts = Preassembler.combine_related(self.unique_stmts)
-
-        # Next, refinement/subsumption relationships are considered.
-        # Note that since a given statement could potentially support multiple
-        # parent statements (e.g., RAF phosphorylates MEK), statements can't
-        # be thrown away after the first relationship is found.
-        # A list of groups of statements. Each entry is a group (a list of
-        # statements of the same type, involving the same Agents).
-        # If the two statements are of the same type and deal with the same
-        # Agents (as determined by name or grounding), then we check
-        # refinement relationships.
-
-    @staticmethod
-    def combine_duplicates(stmts):
+    def combine_duplicates(self):
         """Combine evidence from duplicate Statements.
 
         Statements are deemed to be duplicates if they have the same key
@@ -48,14 +28,16 @@ class Preassembler(object):
         statements and merges the evidence lists from all of the other
         statements.
 
-        Returns a list of unique Statements.
+        Returns a list of unique Statements and stores it in
+        self.unique_stmts.
         """
-        unique_stmts = []
+
+        self.unique_stmts = []
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        stmts.sort(key=lambda x: x.matches_key())
-        for key, duplicates in itertools.groupby(stmts,
+        self.stmts.sort(key=lambda x: x.matches_key())
+        for key, duplicates in itertools.groupby(self.stmts,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
@@ -66,19 +48,21 @@ class Preassembler(object):
                     first_stmt.evidence += stmt.evidence
             # This should never be None or anything else
             assert isinstance(first_stmt, Statement)
-            unique_stmts.append(first_stmt)
-        return unique_stmts
+            self.unique_stmts.append(first_stmt)
+        return self.unique_stmts
 
-    @staticmethod
-    def combine_related(stmts):
+    def combine_related(self):
         """Connect related statements based on their refinement relationships.
 
-        This function takes a flat list of statements and returns a modified
-        flat list of statements containing only those statements which do not
-        represent a refinement of other existing statements. In other words,
-        the more general versions of a given statement do not appear at the
-        top level, but instead are listed in the supports field of the
-        top-level statements.
+        This function takes as a starting point the unique statements (with
+        duplicates removed) and returns a modified flat list of statements
+        containing only those statements which do not represent a refinement of
+        other existing statements. In other words, the more general versions of
+        a given statement do not appear at the top level, but instead are
+        listed in the supports field of the top-level statements.
+
+        If self.unique_stmts has not been initialized with the de-duplicated
+        statements, self.combine_duplicates is called.
 
         The procedure for combining statements in this way involves a series
         of steps:
@@ -112,11 +96,6 @@ class Preassembler(object):
             RAF_family, but MEK_family is not a MEK1. In the future this
             restriction could be revisited.
 
-        Parameters
-        ----------
-        stmts : a list of Statements.
-            The statements to be combined, preferably with duplicates removed.
-
         Returns
         -------
         list of Statements.
@@ -142,13 +121,16 @@ class Preassembler(object):
             [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
         """
 
+        # If unique_stmts is not initialized, call combine_duplicates.
+        if not self.unique_stmts:
+            self.combine_duplicates()
         # Group statements according to whether they have matching entities,
         # and store the resulting lists in a dict, indexed by the key defined
         # by the statement type and its entities:
         # Sort the statements in place by entities_match_key():
-        stmts.sort(key=lambda x: x.entities_match_key())
+        self.unique_stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
-                  for grouper in itertools.groupby(stmts,
+                  for grouper in itertools.groupby(self.unique_stmts,
                                           key=lambda x: x.entities_match_key())}
         # The ext_groups dict is where we store the extended groups, those
         # statements which involve either the same entities or entities with
@@ -189,9 +171,9 @@ class Preassembler(object):
             # that the arguments at that position imply that g1 is the primary
             # group.
             agent_pairs = zip(g1_stmt.agent_list(), g2_stmt.agent_list())
-            g1_is_refinement = \
-                    [ag1.entity_matches(ag2) or eh.isa(ag1.name, ag2.name)
-                     for ag1, ag2 in agent_pairs]
+            g1_is_refinement = [ag1.entity_matches(ag2) or
+                                self.entity_hierarchy.isa(ag1.name, ag2.name)
+                                for ag1, ag2 in agent_pairs]
             # If g1_is_refinement is all True values, that means everything in
             # the group1 statements isa thing in the group2 statements.
             if all(g1_is_refinement):
@@ -209,13 +191,14 @@ class Preassembler(object):
         for ext_group in ext_groups.values():
             # Iterate over pairs of statements in the group:
             for stmt1, stmt2 in itertools.permutations(ext_group, 2):
-                if stmt1.refinement_of(stmt2, eh, mh):
+                if stmt1.refinement_of(stmt2, self.entity_hierarchy,
+                                       self.mod_hierarchy):
                     stmt1.supported_by.append(stmt2)
                     stmt2.supports.append(stmt1)
         # Now that the groups have been processed, we need to find the
         # non-subsumed statements, those that have no supports relationships.
-        combined_stmts = [stmt for ext_group in ext_groups.values()
+        self.related_stmts = [stmt for ext_group in ext_groups.values()
                                for stmt in ext_group
                                if not stmt.supports]
-        return combined_stmts
+        return self.related_stmts
 

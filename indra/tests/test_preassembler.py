@@ -1,7 +1,16 @@
+import os
 from indra.preassembler import Preassembler
 from indra.trips import trips_api
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence
+from indra.preassembler.hierarchy_manager import HierarchyManager
+
+entity_file_path = os.path.join(os.path.dirname(__file__),
+                    '..', 'preassembler', 'entity_hierarchy.rdf')
+mod_file_path = os.path.join(os.path.dirname(__file__),
+                    '..', 'preassembler', 'modification_hierarchy.rdf')
+eh = HierarchyManager(entity_file_path)
+mh = HierarchyManager(mod_file_path)
 
 """
 def test_from_text():
@@ -19,8 +28,8 @@ def test_duplicates():
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     st1 = Phosphorylation(src, ras, 'Phosphorylation', None)
     st2 = Phosphorylation(src, ras, 'Phosphorylation', None)
-    pa = Preassembler([st1, st2])
-    pa.assemble()
+    pa = Preassembler(eh, mh, [st1, st2])
+    pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
 
 def test_combine_duplicates():
@@ -46,19 +55,18 @@ def test_combine_duplicates():
     p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
                          'Phosphorylation', None, evidence=Evidence(text='beep'))
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
-    pa = Preassembler(stmts)
-    pa.assemble()
-    # The statements come out sorted by their matches_key, so the
-    # Dephosphorylations are first
+    pa = Preassembler(eh, mh, stmts)
+    pa.combine_duplicates()
+    # The statements come out sorted by their matches_key
     assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0] == p6)
-    assert(len(pa.unique_stmts[0].evidence) == 3)
-    assert(pa.unique_stmts[1] == p9)
-    assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(pa.unique_stmts[2] == p5)
-    assert(len(pa.unique_stmts[2].evidence) == 1)
-    assert(pa.unique_stmts[3] == p1)
-    assert(len(pa.unique_stmts[3].evidence) == 4)
+    assert(pa.unique_stmts[0] == p5) # MEK phos ERK
+    assert(len(pa.unique_stmts[0].evidence) == 1)
+    assert(pa.unique_stmts[1] == p1) # RAF phos MEK
+    assert(len(pa.unique_stmts[1].evidence) == 4)
+    assert(pa.unique_stmts[2] == p6) # MEK dephos ERK
+    assert(len(pa.unique_stmts[2].evidence) == 3)
+    assert(pa.unique_stmts[3] == p9) # SRC dephos KRAS
+    assert(len(pa.unique_stmts[3].evidence) == 1)
 
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
@@ -68,7 +76,8 @@ def test_superfamily_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, ras, 'PhosphorylationTyrosine', '32')
     st2 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
-    stmts = Preassembler.combine_related([st1, st2])
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
     assert(len(stmts) == 1)
@@ -83,7 +92,8 @@ def test_modification_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
     st2 = Phosphorylation(src, nras, 'Phosphorylation', None)
-    stmts = Preassembler.combine_related([st1, st2])
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
@@ -102,7 +112,8 @@ def test_bound_condition_refinement():
     st2 = Phosphorylation(src, nrasgtp, 'PhosphorylationTyrosine', '32')
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    stmts = Preassembler.combine_related([st1, st2])
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
     assert(len(stmts) == 1)
     assert (stmts[0] == st2)
     assert (stmts[0].supported_by == [st1])
