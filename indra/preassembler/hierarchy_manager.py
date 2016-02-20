@@ -1,4 +1,5 @@
 import rdflib
+import functools32
 
 class HierarchyManager(object):
     prefixes = """
@@ -11,6 +12,7 @@ class HierarchyManager(object):
         self.graph = rdflib.Graph()
         self.graph.parse(rdf_file)
 
+    @functools32.lru_cache(maxsize=1000)
     def find_entity(self, x):
         qstr = self.prefixes + """
             SELECT ?x WHERE {{
