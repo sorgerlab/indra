@@ -6,6 +6,7 @@ import collections
 import urllib
 import re
 import keyword
+import warnings
 
 BEL = Namespace("http://www.openbel.org/")
 
