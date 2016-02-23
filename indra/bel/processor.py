@@ -66,9 +66,10 @@ def term_from_uri(uri):
     term = uri.rsplit('/')[-1]
     # Decode URL to handle spaces, special characters
     term = urllib.unquote(term)
-    # Replace any spaces, hyphens, or periods with underscores
+    # Replace any spaces, hyphens, commas, or periods with underscores
     term = term.replace(' ', '_')
     term = term.replace('-', '_')
+    term = term.replace(',', '_')
     term = term.replace('.', '_')
     term = term.encode('ascii', 'ignore')
     return term
