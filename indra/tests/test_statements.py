@@ -13,7 +13,7 @@ mod_path = os.path.join('preassembler', 'modification_hierarchy.rdf')
 mod_file = pkg_resources.resource_filename('indra', mod_path)
 mh = HierarchyManager(mod_file)
 
-# Basic checks
+# Argument checking for ActivityModifications ----------------------------
 
 @raises(ValueError)
 def test_activitymod_list_and_string():
@@ -44,15 +44,42 @@ def test_activitymod_sitelist_of_ints():
     st = ActivityModification(Agent('MAP2K1'),
                         ['PhosphorylationSerine', 'PhosphorylationSerine'],
                         [218, 222], 'increases', 'KinaseActivity')
+    assert isinstance(st.mod, list)
+    assert isinstance(st.mod_pos, list)
     assert len(st.mod_pos) == 2
     assert isinstance(st.mod_pos[0], basestring)
     assert isinstance(st.mod_pos[1], basestring)
 
 def testactivitymod_string_string():
-    pass
+    """Check that string mod and mod_pos get promoted to lists"""
+    st = ActivityModification(Agent('MAP2K1'), 'PhosphorylationSerine', '218',
+                              'increases', 'KinaseActivity')
+    assert isinstance(st.mod, list)
+    assert isinstance(st.mod_pos, list)
+    assert len(st.mod) == 1
+    assert len(st.mod_pos) == 1
+    assert isinstance(st.mod_pos[0], basestring)
 
 def testactivitymod_string_int():
-    pass
+    """Check that string mod and int mod_pos get promoted to lists of strings"""
+    st = ActivityModification(Agent('MAP2K1'), 'PhosphorylationSerine', 218,
+                              'increases', 'KinaseActivity')
+    assert isinstance(st.mod, list)
+    assert isinstance(st.mod_pos, list)
+    assert len(st.mod) == 1
+    assert len(st.mod_pos) == 1
+    assert isinstance(st.mod_pos[0], basestring)
+
+@raises(ValueError)
+def testactivitymod_none_int():
+    """Check that None for mod triggers ValueError"""
+    st = ActivityModification(Agent('MAP2K1'), None, 218,
+                              'increases', 'KinaseActivity')
+
+def testactivitymod_string_none():
+    """Make sure None for mod_pos is permissible (doesn't error)"""
+    st = ActivityModification(Agent('MAP2K1'), 'Phosphorylation', None,
+                              'increases', 'KinaseActivity')
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
