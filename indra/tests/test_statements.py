@@ -40,7 +40,13 @@ def test_activitymod_mismatched_lists():
                         ['218'], 'increases', 'KinaseActivity')
 
 def test_activitymod_sitelist_of_ints():
-    pass
+    """Check that mod positions specified as ints get promoted to strings."""
+    st = ActivityModification(Agent('MAP2K1'),
+                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                        [218, 222], 'increases', 'KinaseActivity')
+    assert len(st.mod_pos) == 2
+    assert isinstance(st.mod_pos[0], basestring)
+    assert isinstance(st.mod_pos[1], basestring)
 
 def testactivitymod_string_string():
     pass

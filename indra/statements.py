@@ -412,11 +412,19 @@ class ActivityModification(Statement):
             raise ValueError('If mod or mod_pos are provided as lists they '
                              'must be matched.')
         # We now know that if mod is a list then mod_pos is also a list
-        if isinstance(mod, list) and len(mod) != len(mod_pos):
+        if isinstance(mod, list) and isinstance(mod_pos, list) and \
+                len(mod) != len(mod_pos):
             raise ValueError('If mod and mod_pos are lists, then they must be '
                              'the same length.')
-        self.mod = mod
-        self.mod_pos = mod_pos
+        # We now know that if mod is a list then mod_pos is also a list and
+        # is of the same length as mod_pos
+        if isinstance(mod, list) and isinstance(mod_pos, list) and \
+                len(mod) == len(mod_pos):
+            # Set the fields to be the lists, but make sure to stringify
+            # any entries in the mod_pos list that might be ints
+            self.mod = mod
+            self.mod_pos = [str(mp) for mp in mod_pos]
+
         self.relationship = relationship
         self.activity = activity
 
