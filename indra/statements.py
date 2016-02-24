@@ -315,6 +315,7 @@ class SelfModification(Statement):
         else:
             return False
 
+
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
     pass
@@ -401,6 +402,18 @@ class ActivityModification(Statement):
                  evidence=None):
         super(ActivityModification, self).__init__(evidence)
         self.monomer = monomer
+        # This means that one of mod and mod_pos are a list, but not both,
+        # which should raise a ValueError
+        if isinstance(mod, list) and len(mod) > 1 and mod_pos is None:
+            raise ValueError('If more than one modification is specified then '
+                             'mod_pos must also be specified and cannot be '
+                             'None.')
+        if isinstance(mod, list) != isinstance(mod_pos, list):
+            raise ValueError('If mod or mod_pos are provided as lists they '
+                             'must be matched.')
+        #if isinstance(mod, list) and \
+        #    : # This means that mod_pos is also a list
+        #    if
         self.mod = mod
         self.mod_pos = mod_pos
         self.relationship = relationship
@@ -412,6 +425,52 @@ class ActivityModification(Statement):
 
     def agent_list(self):
         return [self.monomer]
+
+    """
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Check agent arguments
+        if not self.monomer.refinement_of(other.monomer, entity_hierarchy,
+                                          mod_hierarchy):
+            return False
+        # Make sure that every instance of a modification in other is also found
+        # (or refined) in self. To facilitate comparisons, we first zip
+        # the two lists together in a list of tuples that can be sorted to
+        # canonicalize the ordering.
+        # First, assert that if either mod or mod_site are lists, then they are
+        # both lists and they are of the same length.
+        for stmt in self, other:
+            if isinstance(stmt.mod, list) or isinstance(stmt.mod_site):
+                assert isinstance(stmt.mod, list)
+                assert isinstance(stmt.mod_site, list)
+                assert len(stmt.mod) == len(stmt.mod_site)
+        # Next, initialize the list of self_mod_tuples. If mod and mod_site are
+        # only strings (or integers, in the case of mod_site), then create a list
+        # containing a single tuple.
+        if (isinstance(self.mod, basestring) and
+            (isinstance(self.mod_site, basestring) or
+             isinstance(self.mod_site, int))):
+            self_mods = [(self.mod, self.mod_site)]
+        if (isinstance(other.mod, basestring) and
+            (isinstance(other.mod_site, basestring) or
+             isinstance(other.mod_site, int))):
+            other_mods = [(other.mod, other.mod_site)]
+        # Because of the above, this guarantees that mod_site is also a list,
+        # and they are of the same length
+        elif isinstance(self.mod, list):
+            for
+            self.mods = sorted([self.mod_
+
+        self_mod_tuples = sorted([(mod, mod_site) for
+        if isinstance(mod, basestring):
+
+        if (self.mod == other.mod or \
+                mod_hierarchy.isa(self.mod, other.mod)) and \
+           (self.mod_pos == other.mod_pos or \
+                (self.mod_pos is not None and other.mod_pos is None)):
+            return True
+        else:
+            return False
+    """
 
     def __str__(self):
         s = ("ActivityModification(%s, %s, %s, %s, %s)" %

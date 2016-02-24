@@ -2,6 +2,7 @@ from indra.statements import *
 import pkg_resources
 import os
 from indra.preassembler.hierarchy_manager import HierarchyManager
+from nose.tools import raises
 
 # Load the hierarchy manager data
 ent_path = os.path.join('preassembler', 'entity_hierarchy.rdf')
@@ -11,6 +12,38 @@ eh = HierarchyManager(ent_file)
 mod_path = os.path.join('preassembler', 'modification_hierarchy.rdf')
 mod_file = pkg_resources.resource_filename('indra', mod_path)
 mh = HierarchyManager(mod_file)
+
+# Basic checks
+
+@raises(ValueError)
+def test_activitymod_list_and_string():
+    st = ActivityModification(Agent('MAP2K1'),
+                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                        '218', 'increases', 'KinaseActivity')
+
+@raises(ValueError)
+def test_activitymod_list_and_int():
+    st = ActivityModification(Agent('MAP2K1'),
+                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                        218, 'increases', 'KinaseActivity')
+
+@raises(ValueError)
+def test_activitymod_list_and_none():
+    st = ActivityModification(Agent('MAP2K1'),
+                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                        None, 'increases', 'KinaseActivity')
+
+def test_activitymod_mismatched_lists():
+    pass
+
+def test_activitymod_sitelist_of_ints():
+    pass
+
+def testactivitymod_string_string():
+    pass
+
+def testactivitymod_string_int():
+    pass
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
