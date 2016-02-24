@@ -411,9 +411,10 @@ class ActivityModification(Statement):
         if isinstance(mod, list) != isinstance(mod_pos, list):
             raise ValueError('If mod or mod_pos are provided as lists they '
                              'must be matched.')
-        #if isinstance(mod, list) and \
-        #    : # This means that mod_pos is also a list
-        #    if
+        # We now know that if mod is a list then mod_pos is also a list
+        if isinstance(mod, list) and len(mod) != len(mod_pos):
+            raise ValueError('If mod and mod_pos are lists, then they must be '
+                             'the same length.')
         self.mod = mod
         self.mod_pos = mod_pos
         self.relationship = relationship

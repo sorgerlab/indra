@@ -33,8 +33,11 @@ def test_activitymod_list_and_none():
                         ['PhosphorylationSerine', 'PhosphorylationSerine'],
                         None, 'increases', 'KinaseActivity')
 
+@raises(ValueError)
 def test_activitymod_mismatched_lists():
-    pass
+    st = ActivityModification(Agent('MAP2K1'),
+                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
+                        ['218'], 'increases', 'KinaseActivity')
 
 def test_activitymod_sitelist_of_ints():
     pass
