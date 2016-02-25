@@ -394,6 +394,19 @@ class ActivityActivity(Statement):
     def agent_list(self):
         return [self.subj, self.obj]
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        if self.subj.refinement_of(other.subj, eh, mh) and \
+           self.obj.refinement_of(other.obj, eh, mh) and \
+           self.subj_activity == other.subj_activity and \
+           self.obj_activity == other.obj_activity and \
+           self.relationship == other.relationship:
+            return True
+        else:
+            return False
+
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj.name, self.subj_activity,

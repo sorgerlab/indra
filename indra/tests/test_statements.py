@@ -86,7 +86,6 @@ def testactivitymod_string_none():
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
-
 def test_matches():
     ras = Agent('Ras')
     raf = Agent('Raf')
@@ -641,7 +640,46 @@ def test_autophosphorylation_modification_refinement():
     assert not p5.refinement_of(p6, eh, mh)
 
 def test_activityactivity_modification_refinement():
-    pass
+    raf = Agent('RAF')
+    braf = Agent('BRAF')
+    mek = Agent('MEK')
+    mek1 = Agent('MAP2K1')
+
+    st1 = ActivityActivity(raf, 'KinaseActivity', 'increases',
+                           mek, 'KinaseActivity')
+    st2 = ActivityActivity(braf, 'KinaseActivity', 'increases',
+                           mek, 'KinaseActivity')
+    st3 = ActivityActivity(raf, 'KinaseActivity', 'increases',
+                           mek1, 'KinaseActivity')
+    st4 = ActivityActivity(braf, 'KinaseActivity', 'increases',
+                           mek1, 'KinaseActivity')
+    st5 = ActivityActivity(braf, 'KinaseActivity', 'increasesX',
+                           mek1, 'KinaseActivity')
+    # st1
+    assert st2.refinement_of(st1, eh, mh)
+    assert st3.refinement_of(st1, eh, mh)
+    assert st4.refinement_of(st1, eh, mh)
+    assert not st5.refinement_of(st1, eh, mh)
+    # st2
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st3.refinement_of(st2, eh, mh)
+    assert st4.refinement_of(st2, eh, mh)
+    assert not st5.refinement_of(st2, eh, mh)
+    # st3
+    assert not st1.refinement_of(st3, eh, mh)
+    assert not st2.refinement_of(st3, eh, mh)
+    assert st4.refinement_of(st3, eh, mh)
+    assert not st5.refinement_of(st3, eh, mh)
+    # st4
+    assert not st1.refinement_of(st4, eh, mh)
+    assert not st2.refinement_of(st4, eh, mh)
+    assert not st3.refinement_of(st4, eh, mh)
+    assert not st5.refinement_of(st4, eh, mh)
+    # st5
+    assert not st1.refinement_of(st5, eh, mh)
+    assert not st2.refinement_of(st5, eh, mh)
+    assert not st3.refinement_of(st5, eh, mh)
+    assert not st4.refinement_of(st5, eh, mh)
 
 def test_activitymod_refinement():
     mek_fam = Agent('MEK')
