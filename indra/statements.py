@@ -54,6 +54,10 @@ class Agent(object):
         return self.name
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the Agent types match
+        if type(self) != type(other):
+            return False
+
         # ENTITIES
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
@@ -105,7 +109,6 @@ class Agent(object):
             for self_mod_ix in range(len(self.mods)):
                 self_mod = self.mods[self_mod_ix]
                 self_mod_site = self.mod_sites[self_mod_ix]
-                # 
                 # Or has an isa relationship...
                 if (self_mod == other_mod or \
                         mod_hierarchy.isa(self_mod, other_mod)) and \
@@ -253,6 +256,10 @@ class Modification(Statement):
         return [self.enz, self.sub]
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
         # Check agent arguments
         if not (self.enz.refinement_of(other.enz, entity_hierarchy,
                                   mod_hierarchy) and \
@@ -299,6 +306,10 @@ class SelfModification(Statement):
         return [self.enz]
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
         # Check agent arguments
         if not self.enz.refinement_of(other.enz, entity_hierarchy,
                                       mod_hierarchy):
@@ -427,7 +438,7 @@ class ActivityModification(Statement):
             self.mod_pos = [str(mod_pos)]
         elif isinstance(mod, basestring) and mod_pos is None:
             self.mod = [mod]
-            self.mod_pos = mod_pos
+            self.mod_pos = [None]
         else:
             raise ValueError('Invalid values for mod and/or mod_pos')
 
@@ -441,51 +452,53 @@ class ActivityModification(Statement):
     def agent_list(self):
         return [self.monomer]
 
-    """
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
         # Check agent arguments
         if not self.monomer.refinement_of(other.monomer, entity_hierarchy,
                                           mod_hierarchy):
             return False
-        # Make sure that every instance of a modification in other is also found
-        # (or refined) in self. To facilitate comparisons, we first zip
+
+        # Mod and mod_pos should always be lists of the same length; mod_pos
+        # can also be None
+        assert isinstance(self.mod, list)
+        assert isinstance(self.mod_pos, list) or mod_pos is None
+        assert isinstance(other.mod, list)
+        assert isinstance(other.mod_pos, list) or mod_pos is None
+        # Make sure that every instance of a modification in other is also
+        # found (or refined) in self. To facilitate comparisons, we first zip
         # the two lists together in a list of tuples that can be sorted to
         # canonicalize the ordering.
-        # First, assert that if either mod or mod_site are lists, then they are
-        # both lists and they are of the same length.
-        for stmt in self, other:
-            if isinstance(stmt.mod, list) or isinstance(stmt.mod_site):
-                assert isinstance(stmt.mod, list)
-                assert isinstance(stmt.mod_site, list)
-                assert len(stmt.mod) == len(stmt.mod_site)
-        # Next, initialize the list of self_mod_tuples. If mod and mod_site are
-        # only strings (or integers, in the case of mod_site), then create a list
-        # containing a single tuple.
-        if (isinstance(self.mod, basestring) and
-            (isinstance(self.mod_site, basestring) or
-             isinstance(self.mod_site, int))):
-            self_mods = [(self.mod, self.mod_site)]
-        if (isinstance(other.mod, basestring) and
-            (isinstance(other.mod_site, basestring) or
-             isinstance(other.mod_site, int))):
-            other_mods = [(other.mod, other.mod_site)]
-        # Because of the above, this guarantees that mod_site is also a list,
-        # and they are of the same length
-        elif isinstance(self.mod, list):
-            for
-            self.mods = sorted([self.mod_
 
-        self_mod_tuples = sorted([(mod, mod_site) for
-        if isinstance(mod, basestring):
-
-        if (self.mod == other.mod or \
-                mod_hierarchy.isa(self.mod, other.mod)) and \
-           (self.mod_pos == other.mod_pos or \
-                (self.mod_pos is not None and other.mod_pos is None)):
-            return True
+        # Make sure they have the same modifications
+        for other_mod_ix in range(len(other.mod)):
+            mod_found = False
+            other_mod = other.mod[other_mod_ix]
+            other_mod_pos = other.mod_pos[other_mod_ix]
+            for self_mod_ix in range(len(self.mod)):
+                self_mod = self.mod[self_mod_ix]
+                self_mod_pos = self.mod_pos[self_mod_ix]
+                # Or has an isa relationship...
+                if (self_mod == other_mod or \
+                        mod_hierarchy.isa(self_mod, other_mod)) and \
+                   (self_mod_pos == other_mod_pos or \
+                        (self_mod_pos is not None and other_mod_pos is None)):
+                    mod_found = True
+            # If we didn't find an exact match for this mod in other, then
+            # no refinement
+            if not mod_found:
+                return False
+        # Make sure that the relationships and activities match
+        # TODO: Develop an activity hierarchy? In which kinaseactivity is a
+        # refinement of activity, for example.
+        if self.activity == other.activity and \
+           self.relationship == other.relationship:
+               return True
         else:
             return False
-    """
 
     def __str__(self):
         s = ("ActivityModification(%s, %s, %s, %s, %s)" %

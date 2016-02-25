@@ -80,6 +80,9 @@ def testactivitymod_string_none():
     """Make sure None for mod_pos is permissible (doesn't error)"""
     st = ActivityModification(Agent('MAP2K1'), 'Phosphorylation', None,
                               'increases', 'KinaseActivity')
+    assert isinstance(st.mod, list)
+    assert isinstance(st.mod_pos, list)
+    assert st.mod_pos[0] is None
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
@@ -591,7 +594,6 @@ def test_phosphorylation_modification_refinement():
     assert not p4.refinement_of(p6, eh, mh)
     assert not p5.refinement_of(p6, eh, mh)
 
-# TODO: Fill in tests below!
 def test_autophosphorylation_modification_refinement():
     braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
     p1 = Autophosphorylation(braf, 'Phosphorylation', None)
