@@ -750,7 +750,29 @@ def test_activitymod_refinement():
     assert not p6.refinement_of(p7, eh, mh)
 
 def test_activatingsub_family_refinement():
-    pass
+    ras = Agent('RAS')
+    kras = Agent('KRAS')
+    nras = Agent('NRAS')
+    st1 = ActivatingSubstitution(ras, 'G', '12', 'D', 'activity', 'increases')
+    st2 = ActivatingSubstitution(kras, 'G', '12', 'D', 'activity', 'increases')
+    st3 = ActivatingSubstitution(nras, 'G', '12', 'D', 'activity', 'increases')
+    st4 = ActivatingSubstitution(kras, 'G', '12', 'D', 'activity', 'increasesX')
+    # st1
+    assert st2.refinement_of(st1, eh, mh)
+    assert st3.refinement_of(st1, eh, mh)
+    assert not st4.refinement_of(st1, eh, mh)
+    # st2
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st3.refinement_of(st2, eh, mh)
+    assert not st4.refinement_of(st2, eh, mh)
+    # st3
+    assert not st1.refinement_of(st3, eh, mh)
+    assert not st2.refinement_of(st3, eh, mh)
+    assert not st4.refinement_of(st3, eh, mh)
+    # st4
+    assert not st1.refinement_of(st4, eh, mh)
+    assert not st2.refinement_of(st4, eh, mh)
+    assert not st3.refinement_of(st4, eh, mh)
 
 def test_rasgef_family_refinement():
     sos = Agent('SOS')

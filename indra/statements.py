@@ -547,6 +547,20 @@ class ActivatingSubstitution(Statement):
     def assemble_interactions_only(self, model, agent_set):
         pass
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        if self.monomer.refinement_of(other.monomer, eh, mh) and \
+           self.wt_residue == other.wt_residue and \
+           self.pos == other.pos and \
+           self.sub_residue == other.sub_residue and \
+           self.activity == other.activity and \
+           self.rel == other.rel:
+            return True
+        else:
+            return False
+
     def __str__(self):
         s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
