@@ -575,6 +575,7 @@ class RasGef(Statement):
         else:
             return False
 
+
 class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
     upon Gap activity."""
@@ -591,6 +592,18 @@ class RasGap(Statement):
 
     def agent_list(self):
         return [self.gap, self.ras]
+
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check the GAP
+        if self.gap.refinement_of(other.gap, eh, mh) and \
+           self.ras.refinement_of(other.ras, eh, mh) and \
+           self.gap_activity == other.gap_activity:
+            return True
+        else:
+            return False
 
     def __str__(self):
         s = ("RasGap(%s, %s, %s)" %
