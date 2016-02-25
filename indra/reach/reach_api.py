@@ -5,8 +5,11 @@ import urllib, urllib2
 import requests
 from indra.java_vm import autoclass, JavaException
 import indra.databases.pmc_client as pmc_client
+import indra.databases.pubmed_client as pubmed_client
 from processor import ReachProcessor
 
+reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
+reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 
 def process_pmc(pmc_id):
     if pmc_id.upper().startswith('PMC'):
@@ -20,7 +23,16 @@ def process_pmc(pmc_id):
         rp = process_nxml(fh.name)
     return rp
 
-def process_text(txt, use_tempdir=False, offline=False):
+def process_pubmed_abstract(pubmed_id, offline=False):
+    if pubmed_id.upper().startswith('PMID'):
+        pubmed_id = pubmed_id[4:]
+    abs_txt = pubmed_client.get_abstract(pubmed_id)
+    if abs_txt is None:
+        return None
+    rp = process_text(abs_txt, offline)
+    return rp
+
+def process_text(txt, offline=False):
     if offline:
         nxml_txt = '<article><body><sec><p>%s</p></sec></body></article>' % txt
         tmp_file = tempfile.NamedTemporaryFile()
@@ -28,8 +40,7 @@ def process_text(txt, use_tempdir=False, offline=False):
         tmp_file.file.flush()
         return process_nxml(tmp_file.name)
     else:
-        url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
-        req = urllib2.Request(url, data=urllib.urlencode({'text': txt}))
+        req = urllib2.Request(reach_text_url, data=urllib.urlencode({'text': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
         #json_dict = json.loads(json_str)
@@ -39,7 +50,7 @@ def process_text(txt, use_tempdir=False, offline=False):
             fh.write(json_str)
         return process_json_str(json_str)
 
-def process_nxml(file_name, use_tempdir=False, offline=False):
+def process_nxml(file_name, offline=False):
     if offline:
         try:
             api_ruler = autoclass('edu.arizona.sista.reach.apis.ApiRuler')
@@ -49,9 +60,8 @@ def process_nxml(file_name, use_tempdir=False, offline=False):
             return None
         json_str = result_map.get('resultJson')
     else:
-        url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
         txt = open(file_name, 'rt').read()
-        req = urllib2.Request(url, data=urllib.urlencode({'nxml': txt}))
+        req = urllib2.Request(reach_nxml_url, data=urllib.urlencode({'nxml': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
