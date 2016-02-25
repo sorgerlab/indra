@@ -179,10 +179,13 @@ class BiopaxProcessor(object):
             if mf_pos is not None:
                 mf_site = cast(bp('SequenceSite'), mf_pos)
                 mf_pos_status = mf_site.getPositionStatus()
-                if mf_pos_status and mf_pos_status.toString() != 'EQUAL':
+                if mf_pos_status is None:
+                    mod_pos.append(None)
+                elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
                     warnings.warn('Modification site position is %s' %
                                   mf_pos_status.toString())
-                mod_pos.append(mf_site.getSequencePosition())
+                else:
+                    mod_pos.append(mf_site.getSequencePosition())
             else:
                 mod_pos.append(None)
             # Do we need to look at mf.getFeatureLocationType()?
