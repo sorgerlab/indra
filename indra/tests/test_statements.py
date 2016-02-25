@@ -722,7 +722,43 @@ def test_rasgap_family_refinement():
     pass
 
 def test_complex_family_refinement():
-    pass
+    raf = Agent('RAF')
+    braf = Agent('BRAF')
+    raf1 = Agent('RAF1')
+    mek = Agent('MEK')
+    mek1 = Agent('MAP2K1')
+
+    st1 = Complex([raf, mek])
+    st2 = Complex([braf, mek])
+    st3 = Complex([raf, mek1])
+    st4 = Complex([braf, mek1])
+    st5 = Complex([braf, raf1])
+
+    # st1
+    assert st2.refinement_of(st1, eh, mh)
+    assert st3.refinement_of(st1, eh, mh)
+    assert st4.refinement_of(st1, eh, mh)
+    assert not st5.refinement_of(st1, eh, mh)
+    # st2
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st3.refinement_of(st2, eh, mh)
+    assert st4.refinement_of(st2, eh, mh)
+    assert not st5.refinement_of(st2, eh, mh)
+    # st3
+    assert not st1.refinement_of(st3, eh, mh)
+    assert not st2.refinement_of(st3, eh, mh)
+    assert st4.refinement_of(st3, eh, mh)
+    assert not st5.refinement_of(st3, eh, mh)
+    # st4
+    assert not st1.refinement_of(st4, eh, mh)
+    assert not st2.refinement_of(st4, eh, mh)
+    assert not st3.refinement_of(st4, eh, mh)
+    assert not st5.refinement_of(st4, eh, mh)
+    # st5
+    assert not st1.refinement_of(st5, eh, mh)
+    assert not st2.refinement_of(st5, eh, mh)
+    assert not st3.refinement_of(st5, eh, mh)
+    assert not st4.refinement_of(st5, eh, mh)
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

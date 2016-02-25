@@ -604,4 +604,24 @@ class Complex(Statement):
         s = ("Complex(%s)" % ([m.name for m in self.members]))
         return s
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Make sure the length of the members list is the same. Note that this
+        # treats Complex([A, B, C]) as distinct from Complex([A, B]), rather
+        # than as a refinement.
+        if len(self.members) != len(other.members):
+            return False
+        # Check that every member in other is refined in self, but only once!
+        self_match_indices = set([])
+        for other_agent in other.members:
+            for self_agent_ix, self_agent in enumerate(self.members):
+                if self_agent.refinement_of(other_agent, eh, mh):
+                    self_match_indices.add(self_agent_ix)
+                    break
+        if len(self_match_indices) != len(other.members):
+            return False
+        else:
+            return True
 
