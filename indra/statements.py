@@ -33,8 +33,95 @@ class Agent(object):
         else:
             self.db_refs = db_refs
 
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def matches_key(self):
+        key = (self.name,
+               set(self.mods),
+               set(self.mod_sites),
+               self.active,
+               len(self.bound_conditions),
+               tuple((bc.agent.matches_key(), bc.is_bound)
+                     for bc in sorted(self.bound_conditions,
+                                      key=lambda x: x.agent.name)))
+        return key
+
+    def entity_matches(self, other):
+        return self.entity_matches_key() == other.entity_matches_key()
+
+    def entity_matches_key(self):
+        return self.name
+
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the Agent types match
+        if type(self) != type(other):
+            return False
+
+        # ENTITIES
+        # Check that the basic entity of the agent either matches or is related
+        # to the entity of the other agent. If not, no match.
+        if not (self.entity_matches(other) or \
+                entity_hierarchy.isa(self.name, other.name)):
+            return False
+
+        # BOUND CONDITIONS
+        # Now check the bound conditions. For self to be a refinement of
+        # other in terms of the bound conditions, it has to include all of the
+        # bound conditions in the other agent, and add additional context.
+        # TODO: For now, we do not check the bound conditions of the bound
+        # conditions.
+        # TODO: For now, we only look at exact agent matches, not at family
+        # relationships among the bound conditions (this is to avoid the
+        # confusion of relationships that might go in different directions
+        # between the two statements).
+        # FIXME: This matching procedure will get confused if the same
+        # entity is included more than once in one of the sets--this will
+        # be picked up as a match
+        # Iterate over the bound conditions in the other agent, and make sure
+        # they are all matched in self.
+        for bc_other in other.bound_conditions:
+            # Iterate over the bound conditions in self to find a match
+            bc_found = False
+            for bc_self in self.bound_conditions:
+                if (bc_self.agent.entity_matches(bc_other.agent) or
+                    entity_hierarchy.isa(bc_self.agent.name,
+                                         bc_other.agent.name)) and \
+                   bc_self.is_bound == bc_other.is_bound:
+                    bc_found = True
+            # If we didn't find a match for this bound condition in self, then
+            # no refinement
+            if not bc_found:
+                return False
+
+        # MODIFICATIONS
+        # Similar to the above, we check that self has all of the modifications
+        # of other.
+        assert len(self.mods) == len(self.mod_sites), \
+               "Mods and mod_sites must match."
+        assert len(other.mods) == len(other.mod_sites), \
+               "Mods and mod_sites must match."
+        # Make sure they have the same modifications
+        for other_mod_ix in range(len(other.mods)):
+            mod_found = False
+            other_mod = other.mods[other_mod_ix]
+            other_mod_site = other.mod_sites[other_mod_ix]
+            for self_mod_ix in range(len(self.mods)):
+                self_mod = self.mods[self_mod_ix]
+                self_mod_site = self.mod_sites[self_mod_ix]
+                # Or has an isa relationship...
+                if (self_mod == other_mod or \
+                        mod_hierarchy.isa(self_mod, other_mod)) and \
+                   (self_mod_site == other_mod_site or \
+                        (self_mod_site is not None and other_mod_site is None)):
+                    mod_found = True
+            # If we didn't find an exact match for this mod in other, then
+            # no refinement
+            if not mod_found:
+                return False
+
+        # Everything checks out
+        return True
 
     def __repr__(self):
         attr_strs = []
@@ -90,13 +177,14 @@ class Evidence(object):
         self.epistemics = epistemics
 
     def __str__(self):
-        ev_str = 'Evidence(%s, %s, %s)' % \
-                 (self.source_api, self.pmid, self.annotations)
-        if self.text:
-            ev_str += ':\n'
-            ev_str += textwrap.fill(self.text.strip(), initial_indent='    ',
-                                    subsequent_indent='    ', width=80)
-        return ev_str
+        ev_str = u'Evidence(%s, %s, %s, %s)' % \
+                 (self.source_api, self.pmid, self.annotations,
+                  self.text)
+        return ev_str.encode('utf-8')
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class Statement(object):
     """The parent class of all statements.
@@ -108,11 +196,15 @@ class Statement(object):
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
         the value is set to an empty list.
+    supports : list of Statements
+        Statements that this Statement supports.
+    supported_by : list of Statements
+        Statements supported by this statement.
     """
 
-    def __init__(self, evidence=None):
+    def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
-            self.evidence = evidence
+            self.evidence = []
         elif isinstance(evidence, Evidence):
             self.evidence = [evidence]
         elif isinstance(evidence, list):
@@ -121,8 +213,30 @@ class Statement(object):
             raise ValueError('evidence must be an Evidence object, a list '
                              '(of Evidence objects), or None.')
 
+        # Initialize supports/supported_by fields, which should be lists
+        self.supports = supports if supports else []
+        self.supported_by = supported_by if supported_by else []
+
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def entities_match(self, other):
+        return self.entities_match_key() == other.entities_match_key()
+
+    def entities_match_key(self):
+        return (type(self), tuple(a.entity_matches_key()
+                                  for a in self.agent_list()))
+
+    def print_supports(self):
+        print '%s supported_by:' % self.__str__()
+        if self.supported_by:
+            print '-->'
+            for s in self.supported_by:
+                s.print_supports()
+
     def __repr__(self):
         return self.__str__()
+
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -134,24 +248,41 @@ class Modification(Statement):
         self.mod = mod
         self.mod_pos = mod_pos
 
+    def matches_key(self):
+        return (type(self), self.enz.matches_key(), self.sub.matches_key(),
+                self.mod, self.mod_pos)
+
+    def agent_list(self):
+        return [self.enz, self.sub]
+
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        if not (self.enz.refinement_of(other.enz, entity_hierarchy,
+                                  mod_hierarchy) and \
+                self.sub.refinement_of(other.sub, entity_hierarchy,
+                                  mod_hierarchy)):
+            return False
+        # For this to be a refinement of the other, the modifications either
+        # have to match or have this one be a subtype of the other; in
+        # addition, the sites have to match, or this one has to have site
+        # information and the other one not.
+        if (self.mod == other.mod or \
+                mod_hierarchy.isa(self.mod, other.mod)) and \
+           (self.mod_pos == other.mod_pos or \
+                (self.mod_pos is not None and other.mod_pos is None)):
+            return True
+        else:
+            return False
+
     def __str__(self):
         s = ("%s(%s, %s, %s, %s)" %
                   (type(self).__name__, self.enz.name, self.sub.name, self.mod,
                    self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
-
-    def __eq__(self, other):
-        if isinstance(other, Modification) and \
-            self.enz == other.enz and \
-            self.sub == other.sub and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos:
-            return True
-        else:
-            return False
 
 
 class SelfModification(Statement):
@@ -166,16 +297,31 @@ class SelfModification(Statement):
     def __str__(self):
         s = ("%s(%s, %s, %s)" %
              (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
 
-    def __eq__(self, other):
-        if isinstance(other, SelfModification) and \
-            self.enz == other.enz and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos:
+    def matches_key(self):
+        return (type(self), self.enz.matches_key(), self.mod, self.mod_pos)
+
+    def agent_list(self):
+        return [self.enz]
+
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        if not self.enz.refinement_of(other.enz, entity_hierarchy,
+                                      mod_hierarchy):
+            return False
+        # For this to be a refinement of the other, the modifications either
+        # have to match or have this one be a subtype of the other; in
+        # addition, the sites have to match, or this one has to have site
+        # information and the other one not.
+        if (self.mod == other.mod or \
+                mod_hierarchy.isa(self.mod, other.mod)) and \
+           (self.mod_pos == other.mod_pos or \
+                (self.mod_pos is not None and other.mod_pos is None)):
             return True
         else:
             return False
@@ -200,6 +346,11 @@ class Transphosphorylation(SelfModification):
     an intra-molecular fashion. The enz property of the statement must have
     exactly one bound_conditions entry, and we assume that enz phosphorylates
     this molecule. The bound_neg property is ignored here.  """
+    pass
+
+
+class Dephosphorylation(Modification):
+    """Dephosphorylation modification"""
     pass
 
 
@@ -236,12 +387,22 @@ class ActivityActivity(Statement):
         self.obj_activity = obj_activity
         self.relationship = relationship
 
-    def __eq__(self, other):
-        if isinstance(other, ActivityActivity) and \
-            self.subj == other.subj and \
-            self.subj_activity == other.subj_activity and \
-            self.obj == other.obj and \
-            self.obj_activity == other.obj_activity:
+    def matches_key(self):
+        return (type(self), self.subj.matches_key(), self.subj_activity,
+                self.obj.matches_key(), self.obj_activity)
+
+    def agent_list(self):
+        return [self.subj, self.obj]
+
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        if self.subj.refinement_of(other.subj, eh, mh) and \
+           self.obj.refinement_of(other.obj, eh, mh) and \
+           self.subj_activity == other.subj_activity and \
+           self.obj_activity == other.obj_activity and \
+           self.relationship == other.relationship:
             return True
         else:
             return False
@@ -250,42 +411,11 @@ class ActivityActivity(Statement):
         s = ("%s(%s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj.name, self.subj_activity,
               self.relationship, self.obj.name, self.obj_activity))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
 
 
 class RasGtpActivityActivity(ActivityActivity):
     pass
-
-
-class Dephosphorylation(Statement):
-
-    def __init__(self, phos, sub, mod, mod_pos, evidence=None):
-        super(Dephosphorylation, self).__init__(evidence)
-        self.phos = phos
-        self.sub = sub
-        self.mod = mod
-        self.mod_pos = mod_pos
-
-    def __eq__(self, other):
-        if isinstance(other, Dephosphorylation) and \
-            self.phos == other.phos and \
-            self.sub == other.sub and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos:
-            return True
-        else:
-            return False
-
-    def __str__(self):
-        s = ("Dephosphorylation(%s, %s, %s, %s)" %
-                (self.phos.name, self.sub.name, self.mod, self.mod_pos))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
-        return s
 
 
 class ActivityModification(Statement):
@@ -296,19 +426,90 @@ class ActivityModification(Statement):
                  evidence=None):
         super(ActivityModification, self).__init__(evidence)
         self.monomer = monomer
-        self.mod = mod
-        self.mod_pos = mod_pos
+        # This means that one of mod and mod_pos are a list, but not both,
+        # which should raise a ValueError
+        if isinstance(mod, list) and len(mod) > 1 and mod_pos is None:
+            raise ValueError('If more than one modification is specified then '
+                             'mod_pos must also be specified and cannot be '
+                             'None.')
+        elif isinstance(mod, list) != isinstance(mod_pos, list):
+            raise ValueError('If mod or mod_pos are provided as lists they '
+                             'must be matched.')
+        elif isinstance(mod, list) and isinstance(mod_pos, list) and \
+                len(mod) != len(mod_pos):
+            raise ValueError('If mod and mod_pos are lists, then they must be '
+                             'the same length.')
+        elif isinstance(mod, list) and isinstance(mod_pos, list) and \
+                len(mod) == len(mod_pos):
+            # Set the fields to be the lists, but make sure to stringify
+            # any entries in the mod_pos list that might be ints
+            self.mod = mod
+            self.mod_pos = [str(mp) for mp in mod_pos]
+        elif isinstance(mod, basestring) and \
+                (isinstance(mod_pos, int) or isinstance(mod_pos, basestring)):
+            self.mod = [mod]
+            self.mod_pos = [str(mod_pos)]
+        elif isinstance(mod, basestring) and mod_pos is None:
+            self.mod = [mod]
+            self.mod_pos = [None]
+        else:
+            raise ValueError('Invalid values for mod and/or mod_pos')
+
         self.relationship = relationship
         self.activity = activity
 
-    def __eq__(self, other):
-        if isinstance(other, ActivityModification) and \
-            self.monomer == other.monomer and \
-            self.mod == other.mod and \
-            self.mod_pos == other.mod_pos and \
-            self.relationship == other.relationship and \
-            self.activity == other.activity:
-            return True
+    def matches_key(self):
+        return (type(self), self.monomer.matches_key(), self.mod, self.mod_pos,
+                self.relationship, self.activity)
+
+    def agent_list(self):
+        return [self.monomer]
+
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        if not self.monomer.refinement_of(other.monomer, entity_hierarchy,
+                                          mod_hierarchy):
+            return False
+
+        # Mod and mod_pos should always be lists of the same length; mod_pos
+        # can also be None
+        assert isinstance(self.mod, list)
+        assert isinstance(self.mod_pos, list) or mod_pos is None
+        assert isinstance(other.mod, list)
+        assert isinstance(other.mod_pos, list) or mod_pos is None
+        # Make sure that every instance of a modification in other is also
+        # found (or refined) in self. To facilitate comparisons, we first zip
+        # the two lists together in a list of tuples that can be sorted to
+        # canonicalize the ordering.
+
+        # Make sure they have the same modifications
+        for other_mod_ix in range(len(other.mod)):
+            mod_found = False
+            other_mod = other.mod[other_mod_ix]
+            other_mod_pos = other.mod_pos[other_mod_ix]
+            for self_mod_ix in range(len(self.mod)):
+                self_mod = self.mod[self_mod_ix]
+                self_mod_pos = self.mod_pos[self_mod_ix]
+                # Or has an isa relationship...
+                if (self_mod == other_mod or \
+                        mod_hierarchy.isa(self_mod, other_mod)) and \
+                   (self_mod_pos == other_mod_pos or \
+                        (self_mod_pos is not None and other_mod_pos is None)):
+                    mod_found = True
+            # If we didn't find an exact match for this mod in other, then
+            # no refinement
+            if not mod_found:
+                return False
+        # Make sure that the relationships and activities match
+        # TODO: Develop an activity hierarchy? In which kinaseactivity is a
+        # refinement of activity, for example.
+        if self.activity == other.activity and \
+           self.relationship == other.relationship:
+               return True
         else:
             return False
 
@@ -316,9 +517,6 @@ class ActivityModification(Statement):
         s = ("ActivityModification(%s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.mod, self.mod_pos, self.relationship,
                  self.activity))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
 
 
@@ -336,16 +534,12 @@ class ActivatingSubstitution(Statement):
         self.activity = activity
         self.rel = rel
 
-    def __eq__(self, other):
-        if isinstance(other, ActivatingSubstitution) and \
-            self.monomer == other.monomer and \
-            self.wt_residue == other.wt_residue and \
-            self.pos == other.pos and \
-            self.sub_residue == other.sub_residue and \
-            self.activity == other.activity:
-            return True
-        else:
-            return False
+    def matches_key(self):
+        return (type(self), self.monomer.matches_key(), self.wt_residue,
+                self.pos, self.sub_residue, self.activity)
+
+    def agent_list(self):
+        return [self.monomer]
 
     def monomers_interactions_only(self, agent_set):
         pass
@@ -353,13 +547,24 @@ class ActivatingSubstitution(Statement):
     def assemble_interactions_only(self, model, agent_set):
         pass
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        if self.monomer.refinement_of(other.monomer, eh, mh) and \
+           self.wt_residue == other.wt_residue and \
+           self.pos == other.pos and \
+           self.sub_residue == other.sub_residue and \
+           self.activity == other.activity and \
+           self.rel == other.rel:
+            return True
+        else:
+            return False
+
     def __str__(self):
         s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
                 (self.monomer.name, self.wt_residue, self.pos,
                  self.sub_residue, self.activity, self.rel))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
 
 
@@ -373,22 +578,29 @@ class RasGef(Statement):
         self.gef_activity = gef_activity
         self.ras = ras
 
-    def __eq__(self, other):
-        if isinstance(other, RasGef) and \
-            self.gef == other.gef and \
-            self.gef_activity == other.gef_activity and \
-            self.ras == other.ras:
-            return True
-        else:
-            return False
+    def matches_key(self):
+        return (type(self), self.gef.matches_key(), self.gef_activity,
+                self.ras.matches_key())
+
+    def agent_list(self):
+        return [self.gef, self.ras]
 
     def __str__(self):
         s = ("RasGef(%s, %s, %s)" %
                 (self.gef.name, self.gef_activity, self.ras.name))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
+
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check the GEF
+        if self.gef.refinement_of(other.gef, eh, mh) and \
+           self.ras.refinement_of(other.ras, eh, mh) and \
+           self.gef_activity == other.gef_activity:
+            return True
+        else:
+            return False
 
 
 class RasGap(Statement):
@@ -401,11 +613,21 @@ class RasGap(Statement):
         self.gap_activity = gap_activity
         self.ras = ras
 
-    def __eq__(self, other):
-        if isinstance(other, RasGap) and \
-            self.gap == other.gap and \
-            self.gap_activity == other.gap_activity and \
-            self.ras == other.ras:
+    def matches_key(self):
+        return (type(self), self.gap.matches_key(), self.gap_activity,
+                self.ras.matches_key())
+
+    def agent_list(self):
+        return [self.gap, self.ras]
+
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check the GAP
+        if self.gap.refinement_of(other.gap, eh, mh) and \
+           self.ras.refinement_of(other.ras, eh, mh) and \
+           self.gap_activity == other.gap_activity:
             return True
         else:
             return False
@@ -413,9 +635,6 @@ class RasGap(Statement):
     def __str__(self):
         s = ("RasGap(%s, %s, %s)" %
                 (self.gap.name, self.gap_activity, self.ras.name))
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
         return s
 
 
@@ -426,20 +645,34 @@ class Complex(Statement):
         super(Complex, self).__init__(evidence)
         self.members = members
 
-    def __eq__(self, other):
-        # TODO: find equality for different orders of members too
-        if not isinstance(other, Complex):
-            return False
-        for (m1, m2) in zip(self.members, other.members):
-            if not m1 == m2:
-                return False
-        return True
+    def matches_key(self):
+        return (type(self), tuple(m.matches_key() for m in self.members))
+
+    def agent_list(self):
+        return self.members
 
     def __str__(self):
-        s = ("Complex(%s)" % [m.name for m in self.members])
-        if self.evidence:
-            s += '\n'
-            s += '\n'.join([str(e) for e in self.evidence])
+        s = ("Complex(%s)" % ([m.name for m in self.members]))
         return s
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Make sure the length of the members list is the same. Note that this
+        # treats Complex([A, B, C]) as distinct from Complex([A, B]), rather
+        # than as a refinement.
+        if len(self.members) != len(other.members):
+            return False
+        # Check that every member in other is refined in self, but only once!
+        self_match_indices = set([])
+        for other_agent in other.members:
+            for self_agent_ix, self_agent in enumerate(self.members):
+                if self_agent.refinement_of(other_agent, eh, mh):
+                    self_match_indices.add(self_agent_ix)
+                    break
+        if len(self_match_indices) != len(other.members):
+            return False
+        else:
+            return True
 

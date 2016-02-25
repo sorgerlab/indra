@@ -1,0 +1,2032 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:ns1="http://sorger.med.harvard.edu/indra/relations/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KB1">
+    <ns1:hasName>RPS6KB1</ns1:hasName>
+    <ns1:hasSynonym>PS6K</ns1:hasSynonym>
+    <ns1:hasSynonym>STK14A</ns1:hasSynonym>
+    <ns1:hasSynonym>p70(S6K)-alpha</ns1:hasSynonym>
+    <ns1:hasSynonym>p70-alpha</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K</ns1:hasSynonym>
+    <ns1:hasSynonym>p70 S6KA</ns1:hasSynonym>
+    <ns1:hasSynonym>p70-S6K</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+    <ns1:hasLongName>ribosomal protein S6 kinase, 70kDa, polypeptide 1</ns1:hasLongName>
+    <ns1:hasSynonym>S6K-beta-1</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IRS">
+    <ns1:hasSynonym>IRS_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>IRS</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHC2">
+    <ns1:hasSynonym>SHCB</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+    <ns1:hasSynonym>SCK</ns1:hasSynonym>
+    <ns1:hasName>SHC2</ns1:hasName>
+    <ns1:hasLongName>SHC (Src homology 2 domain containing) transforming protein 2</ns1:hasLongName>
+    <ns1:hasSynonym>SLI</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PDGFRB">
+    <ns1:hasLongName>platelet-derived growth factor receptor beta</ns1:hasLongName>
+    <ns1:hasSynonym>JTK12</ns1:hasSynonym>
+    <ns1:hasSynonym>IBGC4</ns1:hasSynonym>
+    <ns1:hasSynonym>CD140B</ns1:hasSynonym>
+    <ns1:hasName>PDGFRB</ns1:hasName>
+    <ns1:hasSynonym>IMF1</ns1:hasSynonym>
+    <ns1:hasSynonym>PDGFR-1</ns1:hasSynonym>
+    <ns1:hasSynonym>PDGFR</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR"/>
+    <ns1:hasSynonym>PDGFR1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RHOB">
+    <ns1:hasSynonym>ARH6</ns1:hasSynonym>
+    <ns1:hasSynonym>ARHB</ns1:hasSynonym>
+    <ns1:hasSynonym>MSTP081</ns1:hasSynonym>
+    <ns1:hasSynonym>MST081</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
+    <ns1:hasName>RHOB</ns1:hasName>
+    <ns1:hasLongName>Ras homolog family member B</ns1:hasLongName>
+    <ns1:hasSynonym>RHOH6</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRY3">
+    <ns1:hasName>SPRY3</ns1:hasName>
+    <ns1:hasSynonym>HSPRY3</ns1:hasSynonym>
+    <ns1:hasSynonym>spry-3</ns1:hasSynonym>
+    <ns1:hasLongName>protein sprouty homolog 3</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KA2">
+    <ns1:hasSynonym>MAPKAPK1C</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K-alpha</ns1:hasSynonym>
+    <ns1:hasSynonym>p90-RSK3</ns1:hasSynonym>
+    <ns1:hasName>RPS6KA2</ns1:hasName>
+    <ns1:hasLongName>ribosomal protein S6 kinase alpha-2  </ns1:hasLongName>
+    <ns1:hasSynonym>RSK3</ns1:hasSynonym>
+    <ns1:hasSynonym>RSK</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+    <ns1:hasSynonym>HU-2</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K-alpha2</ns1:hasSynonym>
+    <ns1:hasSynonym>pp90RSK3</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/GRB2">
+    <ns1:hasName>GRB2</ns1:hasName>
+    <ns1:hasSynonym>MST084</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GRB"/>
+    <ns1:hasLongName>growth factor receptor-bound protein 2 </ns1:hasLongName>
+    <ns1:hasSynonym>EGFRBP-GRB2</ns1:hasSynonym>
+    <ns1:hasSynonym>Grb3-3</ns1:hasSynonym>
+    <ns1:hasSynonym>ASH</ns1:hasSynonym>
+    <ns1:hasSynonym>NCKAP2</ns1:hasSynonym>
+    <ns1:hasSynonym>MSTP084</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/KSR1">
+    <ns1:hasLongName>kinase suppressor of Ras 1 </ns1:hasLongName>
+    <ns1:hasName>KSR1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/KSR"/>
+    <ns1:hasSynonym>RSU2</ns1:hasSynonym>
+    <ns1:hasSynonym>KSR</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PDGFR">
+    <ns1:hasSynonym>PDGFR_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>PDGFR</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CASP8">
+    <ns1:hasSynonym>MACH</ns1:hasSynonym>
+    <ns1:hasName>CASP8</ns1:hasName>
+    <ns1:hasSynonym>MCH5</ns1:hasSynonym>
+    <ns1:hasSynonym>ALPS2B</ns1:hasSynonym>
+    <ns1:hasLongName>caspase 8, apoptosis-related cysteine peptidase</ns1:hasLongName>
+    <ns1:hasSynonym>FLICE</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+    <ns1:hasSynonym>Casp-8</ns1:hasSynonym>
+    <ns1:hasSynonym>CAP4</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALGAPA1">
+    <ns1:hasName>RALGAPA1</ns1:hasName>
+    <ns1:hasSynonym>RalGAPalpha1</ns1:hasSynonym>
+    <ns1:hasSynonym>TULIP1</ns1:hasSynonym>
+    <ns1:hasSynonym>p240 </ns1:hasSynonym>
+    <ns1:hasSynonym>GARNL1</ns1:hasSynonym>
+    <ns1:hasLongName>Ral GTPase activating protein, alpha subunit 1 (catalytic)</ns1:hasLongName>
+    <ns1:hasSynonym>GRIPE</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RALGAP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3R5">
+    <ns1:hasName>PIK3R5</ns1:hasName>
+    <ns1:hasSynonym>F730038I15Rik</ns1:hasSynonym>
+    <ns1:hasSynonym>FOAP-2</ns1:hasSynonym>
+    <ns1:hasLongName>phosphoinositide 3-kinase regulatory subunit 5</ns1:hasLongName>
+    <ns1:hasSynonym>p101</ns1:hasSynonym>
+    <ns1:hasSynonym>P101-PI3K</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KB2">
+    <ns1:hasSynonym>p70(S6K)-beta</ns1:hasSynonym>
+    <ns1:hasSynonym>KLS</ns1:hasSynonym>
+    <ns1:hasSynonym>P70-beta</ns1:hasSynonym>
+    <ns1:hasSynonym>SRK</ns1:hasSynonym>
+    <ns1:hasSynonym>P70-beta-1</ns1:hasSynonym>
+    <ns1:hasSynonym>p70S6Kb</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K2</ns1:hasSynonym>
+    <ns1:hasSynonym>P70-beta-2</ns1:hasSynonym>
+    <ns1:hasName>RPS6KB2</ns1:hasName>
+    <ns1:hasLongName>ribosomal protein S6 kinase, 70kDa, polypeptide 2</ns1:hasLongName>
+    <ns1:hasSynonym>STK14B</ns1:hasSynonym>
+    <ns1:hasSynonym>S6K-beta2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3CG">
+    <ns1:hasSynonym>PIK3</ns1:hasSynonym>
+    <ns1:hasSynonym>p120-PI3K</ns1:hasSynonym>
+    <ns1:hasSynonym>p110gamma</ns1:hasSynonym>
+    <ns1:hasName>PIK3CG</ns1:hasName>
+    <ns1:hasLongName>phosphatidylinositol-4,5-bisphosphate 3-kinase, catalytic subunit gamma</ns1:hasLongName>
+    <ns1:hasSynonym>PI3K</ns1:hasSynonym>
+    <ns1:hasSynonym>PI3CG</ns1:hasSynonym>
+    <ns1:hasSynonym>PI3Kgamma</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PI3K"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAF1">
+    <ns1:hasSynonym>Raf-1</ns1:hasSynonym>
+    <ns1:hasName>RAF1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+    <ns1:hasSynonym>CMD1NN, CRAF</ns1:hasSynonym>
+    <ns1:hasLongName>RAF proto-oncogene serine/threonine-protein kinase</ns1:hasLongName>
+    <ns1:hasSynonym>NS5</ns1:hasSynonym>
+    <ns1:hasSynonym>c-Raf</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CYTH2">
+    <ns1:hasLongName>cytohesin 2</ns1:hasLongName>
+    <ns1:hasSynonym>SEC7L</ns1:hasSynonym>
+    <ns1:hasSynonym>CTS18</ns1:hasSynonym>
+    <ns1:hasSynonym>PSCD2</ns1:hasSynonym>
+    <ns1:hasSynonym>PSCD2L</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec7p-like</ns1:hasSynonym>
+    <ns1:hasSynonym>ARNO</ns1:hasSynonym>
+    <ns1:hasName>CYTH2</ns1:hasName>
+    <ns1:hasSynonym>CTS18.1</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec7p-L</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PEBP1">
+    <ns1:hasSynonym>PBP</ns1:hasSynonym>
+    <ns1:hasSynonym>HCNPpp</ns1:hasSynonym>
+    <ns1:hasSynonym>HEL-S-34</ns1:hasSynonym>
+    <ns1:hasSynonym>PEBP</ns1:hasSynonym>
+    <ns1:hasSynonym>HEL-210</ns1:hasSynonym>
+    <ns1:hasName>PEBP1</ns1:hasName>
+    <ns1:hasSynonym>HCNP</ns1:hasSynonym>
+    <ns1:hasSynonym>RKIP</ns1:hasSynonym>
+    <ns1:hasLongName>phosphatidylethanolamine binding protein 1</ns1:hasLongName>
+    <ns1:hasSynonym>PEBP-1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MAPK1">
+    <ns1:hasSynonym>ERT1</ns1:hasSynonym>
+    <ns1:hasName>MAPK1</ns1:hasName>
+    <ns1:hasSynonym>p41</ns1:hasSynonym>
+    <ns1:hasSynonym>p42-MAPK</ns1:hasSynonym>
+    <ns1:hasSynonym>P42MAPK</ns1:hasSynonym>
+    <ns1:hasSynonym>p38</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKM1</ns1:hasSynonym>
+    <ns1:hasLongName>mitogen-activated protein kinase 1 </ns1:hasLongName>
+    <ns1:hasSynonym>PRKM2</ns1:hasSynonym>
+    <ns1:hasSynonym>MAPK2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
+    <ns1:hasSynonym>p40</ns1:hasSynonym>
+    <ns1:hasSynonym>ERK</ns1:hasSynonym>
+    <ns1:hasSynonym>p41mapk</ns1:hasSynonym>
+    <ns1:hasSynonym>ERK-2, ERK2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TFDP1">
+    <ns1:hasLongName>transcription factor Dp-1</ns1:hasLongName>
+    <ns1:hasSynonym>DP1</ns1:hasSynonym>
+    <ns1:hasName>TFDP1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
+    <ns1:hasSynonym>Dp-1</ns1:hasSynonym>
+    <ns1:hasSynonym>DRTF1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CCND1">
+    <ns1:hasLongName>cyclin D1</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+    <ns1:hasSynonym>D11S287E</ns1:hasSynonym>
+    <ns1:hasSynonym>U21B31</ns1:hasSynonym>
+    <ns1:hasName>CCND1</ns1:hasName>
+    <ns1:hasSynonym>PRAD1</ns1:hasSynonym>
+    <ns1:hasSynonym>BCL1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/E2F1">
+    <ns1:hasName>E2F1</ns1:hasName>
+    <ns1:hasLongName>E2F transcription factor 1</ns1:hasLongName>
+    <ns1:hasSynonym>RBAP1</ns1:hasSynonym>
+    <ns1:hasSynonym>RBBP3</ns1:hasSynonym>
+    <ns1:hasSynonym>RBP3</ns1:hasSynonym>
+    <ns1:hasSynonym>E2F-1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PAK2">
+    <ns1:hasLongName>p21 protein (Cdc42/Rac)-activated kinase 2</ns1:hasLongName>
+    <ns1:hasSynonym>PAKgamma</ns1:hasSynonym>
+    <ns1:hasName>PAK2</ns1:hasName>
+    <ns1:hasSynonym>PAK65</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FNTB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
+    <ns1:hasName>FNTB</ns1:hasName>
+    <ns1:hasLongName>farnesyltransferase, CAAX box, beta</ns1:hasLongName>
+    <ns1:hasSynonym>FPTB</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRY1">
+    <ns1:hasLongName>protein sprouty homolog 1 </ns1:hasLongName>
+    <ns1:hasName>SPRY1</ns1:hasName>
+    <ns1:hasSynonym>hSPRY1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CBLB">
+    <ns1:hasLongName>Cbl proto-oncogene B, E3 ubiquitin protein ligase</ns1:hasLongName>
+    <ns1:hasSynonym>Cbl-b</ns1:hasSynonym>
+    <ns1:hasName>CBLB</ns1:hasName>
+    <ns1:hasSynonym>RNF56</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RHO">
+    <ns1:hasSynonym>RHO_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>RHO</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAPGEF1">
+    <ns1:hasName>RAPGEF1</ns1:hasName>
+    <ns1:hasSynonym>GRF2</ns1:hasSynonym>
+    <ns1:hasLongName>Rap guanine nucleotide exchange factor (GEF) 1</ns1:hasLongName>
+    <ns1:hasSynonym>C3G</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHOC2">
+    <ns1:hasSynonym>SIAA0862</ns1:hasSynonym>
+    <ns1:hasSynonym>SOC2</ns1:hasSynonym>
+    <ns1:hasSynonym>SUR8</ns1:hasSynonym>
+    <ns1:hasLongName>Soc-2 suppressor of clear homolog (C. elegans)</ns1:hasLongName>
+    <ns1:hasName>SHOC2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TIAM2">
+    <ns1:hasName>TIAM2</ns1:hasName>
+    <ns1:hasSynonym>STEF</ns1:hasSynonym>
+    <ns1:hasLongName>T-lymphoma invasion and metastasis-inducing protein 2</ns1:hasLongName>
+    <ns1:hasSynonym>TIAM-2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FGFR2">
+    <ns1:hasLongName>fibroblast growth factor receptor 2</ns1:hasLongName>
+    <ns1:hasSynonym>BEK</ns1:hasSynonym>
+    <ns1:hasSynonym>CEK3</ns1:hasSynonym>
+    <ns1:hasSynonym>TK14</ns1:hasSynonym>
+    <ns1:hasSynonym>CFD1</ns1:hasSynonym>
+    <ns1:hasSynonym>KGFR</ns1:hasSynonym>
+    <ns1:hasSynonym>BBDS</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+    <ns1:hasSynonym>CD332</ns1:hasSynonym>
+    <ns1:hasSynonym>ECT1</ns1:hasSynonym>
+    <ns1:hasSynonym>K-SAM</ns1:hasSynonym>
+    <ns1:hasSynonym>TK25</ns1:hasSynonym>
+    <ns1:hasSynonym>JWS</ns1:hasSynonym>
+    <ns1:hasSynonym>BFR-1</ns1:hasSynonym>
+    <ns1:hasName>FGFR2</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/KRAS">
+    <ns1:hasSynonym>K-RAS2A</ns1:hasSynonym>
+    <ns1:hasSynonym>KRAS1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+    <ns1:hasLongName>GTPase KRas</ns1:hasLongName>
+    <ns1:hasSynonym>K-RAS4B</ns1:hasSynonym>
+    <ns1:hasSynonym>K-RAS4A</ns1:hasSynonym>
+    <ns1:hasSynonym>KRAS2</ns1:hasSynonym>
+    <ns1:hasSynonym>NS</ns1:hasSynonym>
+    <ns1:hasSynonym>K-RAS2B</ns1:hasSynonym>
+    <ns1:hasSynonym>CFC2</ns1:hasSynonym>
+    <ns1:hasSynonym>KI-RAS</ns1:hasSynonym>
+    <ns1:hasSynonym>RASK2</ns1:hasSynonym>
+    <ns1:hasSynonym>C-K-RAS</ns1:hasSynonym>
+    <ns1:hasSynonym>NS3</ns1:hasSynonym>
+    <ns1:hasName>KRAS</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM3">
+    <ns1:hasSynonym>RLFB</ns1:hasSynonym>
+    <ns1:hasSynonym>HCC5</ns1:hasSynonym>
+    <ns1:hasName>MCM3</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+    <ns1:hasLongName>minichromosome maintenance complex component 3</ns1:hasLongName>
+    <ns1:hasSynonym>P1-MCM3</ns1:hasSynonym>
+    <ns1:hasSynonym>P1.h</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CCND2">
+    <ns1:hasSynonym>KIAK0002</ns1:hasSynonym>
+    <ns1:hasSynonym>MPPH3</ns1:hasSynonym>
+    <ns1:hasLongName>cyclin D2</ns1:hasLongName>
+    <ns1:hasName>CCND2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPTOR">
+    <ns1:hasLongName>regulatory associated protein of MTOR, complex 1</ns1:hasLongName>
+    <ns1:hasSynonym>KOG1</ns1:hasSynonym>
+    <ns1:hasSynonym>Mip1</ns1:hasSynonym>
+    <ns1:hasName>RPTOR</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASAL1">
+    <ns1:hasSynonym>RASAL</ns1:hasSynonym>
+    <ns1:hasLongName>RasGAP-activating-like protein 1 </ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+    <ns1:hasName>RASAL1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CASP7">
+    <ns1:hasLongName>caspase 7, apoptosis-related cysteine peptidase</ns1:hasLongName>
+    <ns1:hasSynonym>ICE-LAP3</ns1:hasSynonym>
+    <ns1:hasSynonym>MCH3</ns1:hasSynonym>
+    <ns1:hasSynonym>CMH-1</ns1:hasSynonym>
+    <ns1:hasSynonym>LICE2</ns1:hasSynonym>
+    <ns1:hasSynonym>CASP-7</ns1:hasSynonym>
+    <ns1:hasName>CASP7</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASA2">
+    <ns1:hasName>RASA2</ns1:hasName>
+    <ns1:hasLongName>Ras GTPase-activating protein 2</ns1:hasLongName>
+    <ns1:hasSynonym>GAP1M</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CNKSR2">
+    <ns1:hasSynonym>MAGUIN</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CNKSR"/>
+    <ns1:hasSynonym>CNK2</ns1:hasSynonym>
+    <ns1:hasName>CNKSR2</ns1:hasName>
+    <ns1:hasSynonym>KSR2</ns1:hasSynonym>
+    <ns1:hasLongName>connector enhancer of kinase suppressor of Ras 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAPGEF2">
+    <ns1:hasSynonym>PDZGEF1</ns1:hasSynonym>
+    <ns1:hasName>RAPGEF2</ns1:hasName>
+    <ns1:hasSynonym>CNrasGEF</ns1:hasSynonym>
+    <ns1:hasSynonym>RA-GEF</ns1:hasSynonym>
+    <ns1:hasSynonym>NRAPGEP</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
+    <ns1:hasSynonym>PDZ-GEF1</ns1:hasSynonym>
+    <ns1:hasSynonym>Rap-GEP</ns1:hasSynonym>
+    <ns1:hasLongName>Rap guanine nucleotide exchange factor (GEF) 2</ns1:hasLongName>
+    <ns1:hasSynonym>RA-GEF-1</ns1:hasSynonym>
+    <ns1:hasSynonym>nRap GEP</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FGFR1">
+    <ns1:hasSynonym>bFGF-R-1 </ns1:hasSynonym>
+    <ns1:hasSynonym>FLT-2</ns1:hasSynonym>
+    <ns1:hasSynonym>N-SAM</ns1:hasSynonym>
+    <ns1:hasSynonym>FGFBR</ns1:hasSynonym>
+    <ns1:hasSynonym>BFGFR</ns1:hasSynonym>
+    <ns1:hasSynonym>CD331</ns1:hasSynonym>
+    <ns1:hasLongName>fibroblast growth factor receptor 1</ns1:hasLongName>
+    <ns1:hasSynonym>FGFR-1</ns1:hasSynonym>
+    <ns1:hasSynonym>FLG</ns1:hasSynonym>
+    <ns1:hasSynonym>FLT2</ns1:hasSynonym>
+    <ns1:hasSynonym>HH2</ns1:hasSynonym>
+    <ns1:hasSynonym>CEK</ns1:hasSynonym>
+    <ns1:hasSynonym>HRTFDS</ns1:hasSynonym>
+    <ns1:hasSynonym>HBGFR</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+    <ns1:hasSynonym>OGD</ns1:hasSynonym>
+    <ns1:hasSynonym>KAL2</ns1:hasSynonym>
+    <ns1:hasName>FGFR1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAC2">
+    <ns1:hasSynonym>Gx</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+    <ns1:hasSynonym>HSPC022</ns1:hasSynonym>
+    <ns1:hasSynonym>EN-7</ns1:hasSynonym>
+    <ns1:hasName>RAC2</ns1:hasName>
+    <ns1:hasSynonym>p21-Rac2</ns1:hasSynonym>
+    <ns1:hasLongName>Ras-related C3 botulinum toxin substrate 2 (rho family, small GTP binding protein Rac2)</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HRAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+    <ns1:hasSynonym>C-H-RAS</ns1:hasSynonym>
+    <ns1:hasSynonym>C-HA-RAS1</ns1:hasSynonym>
+    <ns1:hasLongName>GTPase HRas</ns1:hasLongName>
+    <ns1:hasSynonym>RASH1</ns1:hasSynonym>
+    <ns1:hasSynonym>HRAS1</ns1:hasSynonym>
+    <ns1:hasSynonym>H-RASIDX</ns1:hasSynonym>
+    <ns1:hasSynonym>p21ras</ns1:hasSynonym>
+    <ns1:hasSynonym>HAMSV</ns1:hasSynonym>
+    <ns1:hasSynonym>C-BAS/HAS</ns1:hasSynonym>
+    <ns1:hasSynonym>CTLO</ns1:hasSynonym>
+    <ns1:hasName>HRAS</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERBB2">
+    <ns1:hasSynonym>NEU</ns1:hasSynonym>
+    <ns1:hasSynonym>HER-2</ns1:hasSynonym>
+    <ns1:hasSynonym>NGL</ns1:hasSynonym>
+    <ns1:hasLongName>receptor tyrosine-protein kinase erbB-2</ns1:hasLongName>
+    <ns1:hasName>ERBB2</ns1:hasName>
+    <ns1:hasSynonym>HER2</ns1:hasSynonym>
+    <ns1:hasSynonym>CD340</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+    <ns1:hasSynonym>MLN 19</ns1:hasSynonym>
+    <ns1:hasSynonym>TKR1</ns1:hasSynonym>
+    <ns1:hasSynonym>HER-2/neu</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDK2">
+    <ns1:hasName>CDK2</ns1:hasName>
+    <ns1:hasLongName>cyclin-dependent kinase 2</ns1:hasLongName>
+    <ns1:hasSynonym>CDKN2</ns1:hasSynonym>
+    <ns1:hasSynonym>p33(CDK2)</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KA6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+    <ns1:hasLongName>ribosomal protein S6 kinase alpha-6</ns1:hasLongName>
+    <ns1:hasSynonym>RSK4</ns1:hasSynonym>
+    <ns1:hasSynonym>PP90RSK4</ns1:hasSynonym>
+    <ns1:hasName>RPS6KA6</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP1">
+    <ns1:hasSynonym>HVH1</ns1:hasSynonym>
+    <ns1:hasSynonym>CL100</ns1:hasSynonym>
+    <ns1:hasLongName>dual specificity phosphatase 1</ns1:hasLongName>
+    <ns1:hasSynonym>MKP1</ns1:hasSynonym>
+    <ns1:hasSynonym>PTPN10</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+    <ns1:hasName>DUSP1</ns1:hasName>
+    <ns1:hasSynonym>MKP-1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PAK">
+    <ns1:hasSynonym>PAK_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>PAK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasName>RASSF1</ns1:hasName>
+    <ns1:hasSynonym>RASSF1A</ns1:hasSynonym>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 1</ns1:hasLongName>
+    <ns1:hasSynonym>RDA32</ns1:hasSynonym>
+    <ns1:hasSynonym>NORE2A</ns1:hasSynonym>
+    <ns1:hasSynonym>123F2</ns1:hasSynonym>
+    <ns1:hasSynonym>REH3P21</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RHOA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
+    <ns1:hasLongName>Ras homolog family member A</ns1:hasLongName>
+    <ns1:hasSynonym>ARHA</ns1:hasSynonym>
+    <ns1:hasSynonym>RHOH12</ns1:hasSynonym>
+    <ns1:hasName>RHOA</ns1:hasName>
+    <ns1:hasSynonym>ARH12</ns1:hasSynonym>
+    <ns1:hasSynonym>RHO12</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CBL">
+    <ns1:hasSynonym>NSLL</ns1:hasSynonym>
+    <ns1:hasLongName>Cbl proto-oncogene, E3 ubiquitin protein ligase</ns1:hasLongName>
+    <ns1:hasSynonym>FRA11B</ns1:hasSynonym>
+    <ns1:hasSynonym>CBL2</ns1:hasSynonym>
+    <ns1:hasSynonym>RNF55</ns1:hasSynonym>
+    <ns1:hasName>CBL</ns1:hasName>
+    <ns1:hasSynonym>C-CBL</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP6">
+    <ns1:hasSynonym>PYST1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+    <ns1:hasLongName>dual specificity phosphatase 6</ns1:hasLongName>
+    <ns1:hasName>DUSP6</ns1:hasName>
+    <ns1:hasSynonym>HH19</ns1:hasSynonym>
+    <ns1:hasSynonym>MKP3</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MDM2">
+    <ns1:hasSynonym>hdm2</ns1:hasSynonym>
+    <ns1:hasSynonym>HDMX</ns1:hasSynonym>
+    <ns1:hasName>MDM2</ns1:hasName>
+    <ns1:hasLongName>MDM2 proto-oncogene, E3 ubiquitin protein ligase</ns1:hasLongName>
+    <ns1:hasSynonym>ACTFS</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AKT">
+    <ns1:hasName>AKT</ns1:hasName>
+    <ns1:hasSynonym>AKT_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KA3">
+    <ns1:hasSynonym>HU-3</ns1:hasSynonym>
+    <ns1:hasSynonym>p90-RSK2</ns1:hasSynonym>
+    <ns1:hasSynonym>RSK2</ns1:hasSynonym>
+    <ns1:hasSynonym>CLS</ns1:hasSynonym>
+    <ns1:hasSynonym>ISPK-1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+    <ns1:hasSynonym>S6K-alpha3</ns1:hasSynonym>
+    <ns1:hasName>RPS6KA3</ns1:hasName>
+    <ns1:hasSynonym>MAPKAPK1B</ns1:hasSynonym>
+    <ns1:hasSynonym>MRX19</ns1:hasSynonym>
+    <ns1:hasSynonym>pp90RSK2</ns1:hasSynonym>
+    <ns1:hasLongName>ribosomal protein S6 kinase alpha-3  </ns1:hasLongName>
+    <ns1:hasSynonym>RSK</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAA1">
+    <ns1:hasLongName>5'-AMP-activated protein kinase catalytic subunit alpha-1</ns1:hasLongName>
+    <ns1:hasSynonym>AMPK</ns1:hasSynonym>
+    <ns1:hasSynonym>AMPKa1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+    <ns1:hasName>PRKAA1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PREX2">
+    <ns1:hasSynonym>P-REX2</ns1:hasSynonym>
+    <ns1:hasSynonym>DEPDC2</ns1:hasSynonym>
+    <ns1:hasSynonym>6230420N16Rik</ns1:hasSynonym>
+    <ns1:hasSynonym>DEP.2</ns1:hasSynonym>
+    <ns1:hasLongName>phosphatidylinositol-3,4,5-trisphosphate-dependent Rac exchange factor 2</ns1:hasLongName>
+    <ns1:hasSynonym>PPP1R129</ns1:hasSynonym>
+    <ns1:hasName>PREX2</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3R6">
+    <ns1:hasSynonym>p87PIKAP</ns1:hasSynonym>
+    <ns1:hasSynonym>HsT41028</ns1:hasSynonym>
+    <ns1:hasName>PIK3R6</ns1:hasName>
+    <ns1:hasSynonym>p84 PIKAP</ns1:hasSynonym>
+    <ns1:hasSynonym>C17orf38</ns1:hasSynonym>
+    <ns1:hasLongName>phosphoinositide 3-kinase regulatory subunit 6  </ns1:hasLongName>
+    <ns1:hasSynonym>p87(PIKAP)</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EIF4EBP2">
+    <ns1:hasLongName>eukaryotic translation initiation factor 4E binding protein 2</ns1:hasLongName>
+    <ns1:hasSynonym>4EBP2</ns1:hasSynonym>
+    <ns1:hasName>EIF4EBP2</ns1:hasName>
+    <ns1:hasSynonym>PHASII</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RSK">
+    <ns1:hasName>RSK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FGFR3">
+    <ns1:hasSynonym>CH</ns1:hasSynonym>
+    <ns1:hasSynonym>CEK2</ns1:hasSynonym>
+    <ns1:hasName>FGFR3</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+    <ns1:hasSynonym>HSFGFR3EX</ns1:hasSynonym>
+    <ns1:hasSynonym>CD333</ns1:hasSynonym>
+    <ns1:hasSynonym>JTK4</ns1:hasSynonym>
+    <ns1:hasLongName>fibroblast growth factor receptor 3</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM5">
+    <ns1:hasSynonym>CDC46</ns1:hasSynonym>
+    <ns1:hasLongName>minichromosome maintenance complex component 5</ns1:hasLongName>
+    <ns1:hasName>MCM5</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+    <ns1:hasSynonym>P1-CDC46</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TSC1">
+    <ns1:hasLongName>Tuberous Sclerosis 1, Hamartin</ns1:hasLongName>
+    <ns1:hasSynonym>LAM</ns1:hasSynonym>
+    <ns1:hasName>TSC1</ns1:hasName>
+    <ns1:hasSynonym>TSC</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3R2">
+    <ns1:hasSynonym>p85-BETA</ns1:hasSynonym>
+    <ns1:hasName>PIK3R2</ns1:hasName>
+    <ns1:hasSynonym>MPPH1</ns1:hasSynonym>
+    <ns1:hasSynonym>p85</ns1:hasSynonym>
+    <ns1:hasLongName>phosphatidylinositol 3-kinase regulatory subunit beta</ns1:hasLongName>
+    <ns1:hasSynonym>P85B</ns1:hasSynonym>
+    <ns1:hasSynonym>MPPH</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ALK">
+    <ns1:hasSynonym>NBLST3 </ns1:hasSynonym>
+    <ns1:hasSynonym>CD246</ns1:hasSynonym>
+    <ns1:hasName>ALK</ns1:hasName>
+    <ns1:hasLongName>anaplastic lymphoma receptor tyrosine kinase; ALK tyrosine kinase receptor</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PDGFRA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR"/>
+    <ns1:hasSynonym>PDGFR2</ns1:hasSynonym>
+    <ns1:hasSynonym>RHEPDGFRA</ns1:hasSynonym>
+    <ns1:hasLongName>platelet-derived growth factor receptor alpha</ns1:hasLongName>
+    <ns1:hasName>PDGFRA</ns1:hasName>
+    <ns1:hasSynonym>PDGFR-2</ns1:hasSynonym>
+    <ns1:hasSynonym>CD140A</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ICMT">
+    <ns1:hasName>ICMT</ns1:hasName>
+    <ns1:hasLongName>isoprenylcysteine carboxyl methyltransferase</ns1:hasLongName>
+    <ns1:hasSynonym>MSTP098</ns1:hasSynonym>
+    <ns1:hasSynonym>PPMT</ns1:hasSynonym>
+    <ns1:hasSynonym>PCMT</ns1:hasSynonym>
+    <ns1:hasSynonym>HSTE14</ns1:hasSynonym>
+    <ns1:hasSynonym>PCCMT</ns1:hasSynonym>
+    <ns1:hasSynonym>MST098</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDKN1A">
+    <ns1:hasSynonym>P21</ns1:hasSynonym>
+    <ns1:hasSynonym>SDI1</ns1:hasSynonym>
+    <ns1:hasSynonym>p21CIP1</ns1:hasSynonym>
+    <ns1:hasLongName>cyclin-dependent kinase inhibitor 1A (p21, Cip1)</ns1:hasLongName>
+    <ns1:hasName>CDKN1A</ns1:hasName>
+    <ns1:hasSynonym>CDKN1</ns1:hasSynonym>
+    <ns1:hasSynonym>CIP1</ns1:hasSynonym>
+    <ns1:hasSynonym>CAP20</ns1:hasSynonym>
+    <ns1:hasSynonym>MDA-6</ns1:hasSynonym>
+    <ns1:hasSynonym>WAF1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MTOR">
+    <ns1:hasSynonym>FRAP</ns1:hasSynonym>
+    <ns1:hasSynonym>FRAP1</ns1:hasSynonym>
+    <ns1:hasSynonym>RAPT1</ns1:hasSynonym>
+    <ns1:hasSynonym>FRAP2</ns1:hasSynonym>
+    <ns1:hasSynonym>RAFT1</ns1:hasSynonym>
+    <ns1:hasName>MTOR</ns1:hasName>
+    <ns1:hasLongName>mechanistic target of rapamycin (serine/threonine kinase)</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/GRB10">
+    <ns1:hasLongName>growth factor receptor-bound protein 10</ns1:hasLongName>
+    <ns1:hasSynonym>Grb-10</ns1:hasSynonym>
+    <ns1:hasSynonym>IRBP</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GRB"/>
+    <ns1:hasName>GRB10</ns1:hasName>
+    <ns1:hasSynonym>MEG1</ns1:hasSynonym>
+    <ns1:hasSynonym>GRB-IR</ns1:hasSynonym>
+    <ns1:hasSynonym>RSS</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP2">
+    <ns1:hasName>DUSP2</ns1:hasName>
+    <ns1:hasSynonym>PAC-1</ns1:hasSynonym>
+    <ns1:hasSynonym>PAC1</ns1:hasSynonym>
+    <ns1:hasLongName>dual specificity phosphatase 2</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM6">
+    <ns1:hasSynonym>MCG40308</ns1:hasSynonym>
+    <ns1:hasSynonym>P105MCM</ns1:hasSynonym>
+    <ns1:hasLongName>minichromosome maintenance complex component 6</ns1:hasLongName>
+    <ns1:hasSynonym>Mis5</ns1:hasSynonym>
+    <ns1:hasName>MCM6</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CNKSR1">
+    <ns1:hasLongName>connector enhancer of kinase suppressor of Ras 1</ns1:hasLongName>
+    <ns1:hasSynonym>CNK1</ns1:hasSynonym>
+    <ns1:hasSynonym>CNK</ns1:hasSynonym>
+    <ns1:hasName>CNKSR1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CNKSR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP5">
+    <ns1:hasLongName>dual specificity phosphatase 5</ns1:hasLongName>
+    <ns1:hasName>DUSP5</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+    <ns1:hasSynonym>HVH3</ns1:hasSynonym>
+    <ns1:hasSynonym>DUSP</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFKB1">
+    <ns1:hasSynonym>KBF1</ns1:hasSynonym>
+    <ns1:hasName>NFKB1</ns1:hasName>
+    <ns1:hasSynonym>NF-kB1</ns1:hasSynonym>
+    <ns1:hasSynonym>NFKB-p50</ns1:hasSynonym>
+    <ns1:hasSynonym>NF-kappaB</ns1:hasSynonym>
+    <ns1:hasSynonym>p105</ns1:hasSynonym>
+    <ns1:hasLongName>nuclear factor of kappa light polypeptide gene enhancer in B-cells 1</ns1:hasLongName>
+    <ns1:hasSynonym>NFKB-p105</ns1:hasSynonym>
+    <ns1:hasSynonym>NF-kappa-B</ns1:hasSynonym>
+    <ns1:hasSynonym>p50</ns1:hasSynonym>
+    <ns1:hasSynonym>NFkappaB</ns1:hasSynonym>
+    <ns1:hasSynonym>EBP-1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASAL3">
+    <ns1:hasName>RASAL3</ns1:hasName>
+    <ns1:hasLongName>RAS protein activator like-3 </ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF4">
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 4</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasSynonym>AD037</ns1:hasSynonym>
+    <ns1:hasName>RASSF4</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3R3">
+    <ns1:hasLongName>phosphatidylinositol 3-kinase regulatory subunit gamma</ns1:hasLongName>
+    <ns1:hasSynonym>p55</ns1:hasSynonym>
+    <ns1:hasName>PIK3R3</ns1:hasName>
+    <ns1:hasSynonym>p55-GAMMA</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAF">
+    <ns1:hasSynonym>RAF_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>RAF</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM7">
+    <ns1:hasSynonym>P1CDC47</ns1:hasSynonym>
+    <ns1:hasSynonym>P85MCM</ns1:hasSynonym>
+    <ns1:hasSynonym>CDC47</ns1:hasSynonym>
+    <ns1:hasSynonym>PNAS146</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+    <ns1:hasSynonym>MCM2</ns1:hasSynonym>
+    <ns1:hasSynonym>P1.1-MCM3</ns1:hasSynonym>
+    <ns1:hasName>MCM7</ns1:hasName>
+    <ns1:hasLongName>minichromosome maintenance complex component 7</ns1:hasLongName>
+    <ns1:hasSynonym>PPP1R104 </ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALBP1">
+    <ns1:hasLongName>RalA binding protein 1</ns1:hasLongName>
+    <ns1:hasSynonym>RIP1</ns1:hasSynonym>
+    <ns1:hasName>RALBP1</ns1:hasName>
+    <ns1:hasSynonym>RLIP76</ns1:hasSynonym>
+    <ns1:hasSynonym>RLIP1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EIF4EBP1">
+    <ns1:hasName>EIF4EBP1</ns1:hasName>
+    <ns1:hasSynonym>BP-1</ns1:hasSynonym>
+    <ns1:hasSynonym>4E-BP1</ns1:hasSynonym>
+    <ns1:hasSynonym>PHAS-I</ns1:hasSynonym>
+    <ns1:hasLongName>eukaryotic translation initiation factor 4E-binding protein 1 </ns1:hasLongName>
+    <ns1:hasSynonym>4EBP1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF5">
+    <ns1:hasSynonym>NORE1</ns1:hasSynonym>
+    <ns1:hasSynonym>RAPL</ns1:hasSynonym>
+    <ns1:hasSynonym>NORE1A</ns1:hasSynonym>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 5</ns1:hasLongName>
+    <ns1:hasSynonym>NORE1B</ns1:hasSynonym>
+    <ns1:hasName>RASSF5</ns1:hasName>
+    <ns1:hasSynonym>RASSF3</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasSynonym>Maxp1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MAP2K2">
+    <ns1:hasSynonym>MAPKK2, MEK2</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKMK2</ns1:hasSynonym>
+    <ns1:hasLongName>dual specificity mitogen-activated protein kinase kinase 2</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
+    <ns1:hasSynonym>MKK2</ns1:hasSynonym>
+    <ns1:hasName>MAP2K2</ns1:hasName>
+    <ns1:hasSynonym>CFC4</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MAPK3">
+    <ns1:hasName>MAPK3</ns1:hasName>
+    <ns1:hasSynonym>HUMKER1A</ns1:hasSynonym>
+    <ns1:hasSynonym>P44ERK1</ns1:hasSynonym>
+    <ns1:hasSynonym>HS44KDAP</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
+    <ns1:hasSynonym>PRKM3</ns1:hasSynonym>
+    <ns1:hasSynonym>P44MAPK</ns1:hasSynonym>
+    <ns1:hasSynonym>p44-ERK1</ns1:hasSynonym>
+    <ns1:hasSynonym>p44-MAPK</ns1:hasSynonym>
+    <ns1:hasSynonym>ERK-1, ERK1</ns1:hasSynonym>
+    <ns1:hasLongName>mitogen-activated protein kinase 3</ns1:hasLongName>
+    <ns1:hasSynonym>ERT2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF7">
+    <ns1:hasName>RASSF7</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family (N-terminal) member 7</ns1:hasLongName>
+    <ns1:hasSynonym>HRC1</ns1:hasSynonym>
+    <ns1:hasSynonym>C11orf13</ns1:hasSynonym>
+    <ns1:hasSynonym>HRAS1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC6">
+    <ns1:hasSynonym>SEC15L</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec15p</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC15L1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+    <ns1:hasLongName>exocyst complex component 6</ns1:hasLongName>
+    <ns1:hasSynonym>SEC15</ns1:hasSynonym>
+    <ns1:hasSynonym>EXOC6A</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC15L3</ns1:hasSynonym>
+    <ns1:hasName>EXOC6</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BRCA1">
+    <ns1:hasSynonym>BROVCA1</ns1:hasSynonym>
+    <ns1:hasSynonym>RNF53</ns1:hasSynonym>
+    <ns1:hasSynonym>BRCAI</ns1:hasSynonym>
+    <ns1:hasName>BRCA1</ns1:hasName>
+    <ns1:hasLongName>breast cancer 1, early onset</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BRCA"/>
+    <ns1:hasSynonym>IRIS</ns1:hasSynonym>
+    <ns1:hasSynonym>PNCA4</ns1:hasSynonym>
+    <ns1:hasSynonym>PPP1R53</ns1:hasSynonym>
+    <ns1:hasSynonym>BRCC1</ns1:hasSynonym>
+    <ns1:hasSynonym>PSCP</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TP73">
+    <ns1:hasLongName>tumor protein p73</ns1:hasLongName>
+    <ns1:hasName>TP73</ns1:hasName>
+    <ns1:hasSynonym>P73</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MYB">
+    <ns1:hasSynonym>Cmyb</ns1:hasSynonym>
+    <ns1:hasSynonym>efg</ns1:hasSynonym>
+    <ns1:hasSynonym>c-myb_CDS</ns1:hasSynonym>
+    <ns1:hasLongName>v-myb avian myeloblastosis viral oncogene homolog</ns1:hasLongName>
+    <ns1:hasSynonym>c-myb</ns1:hasSynonym>
+    <ns1:hasName>MYB</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BRCA2">
+    <ns1:hasSynonym>FAD1</ns1:hasSynonym>
+    <ns1:hasSynonym>FACD</ns1:hasSynonym>
+    <ns1:hasSynonym>FAD</ns1:hasSynonym>
+    <ns1:hasSynonym>FANCD</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BRCA"/>
+    <ns1:hasSynonym>BROVCA2</ns1:hasSynonym>
+    <ns1:hasSynonym>FANCD1</ns1:hasSynonym>
+    <ns1:hasLongName>breast cancer 2, early onset</ns1:hasLongName>
+    <ns1:hasSynonym>PNCA2</ns1:hasSynonym>
+    <ns1:hasName>BRCA2</ns1:hasName>
+    <ns1:hasSynonym>BRCC2</ns1:hasSynonym>
+    <ns1:hasSynonym>GLM3</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FANCC">
+    <ns1:hasSynonym>FACC</ns1:hasSynonym>
+    <ns1:hasSynonym>FAC</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+    <ns1:hasLongName>Fanconi anemia, complementation group C</ns1:hasLongName>
+    <ns1:hasSynonym>FA3</ns1:hasSynonym>
+    <ns1:hasName>FANCC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRP1">
+    <ns1:hasSynonym>RASGRP</ns1:hasSynonym>
+    <ns1:hasSynonym>CALDAG-GEFII</ns1:hasSynonym>
+    <ns1:hasSynonym>CALDAG-GEFI</ns1:hasSynonym>
+    <ns1:hasSynonym>V</ns1:hasSynonym>
+    <ns1:hasName>RASGRP1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+    <ns1:hasLongName>RAS guanyl-releasing protein 1</ns1:hasLongName>
+    <ns1:hasSynonym>hRasGRP1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/APAF1">
+    <ns1:hasName>APAF1</ns1:hasName>
+    <ns1:hasLongName>apoptotic peptidase activating factor 1</ns1:hasLongName>
+    <ns1:hasSynonym>CED4</ns1:hasSynonym>
+    <ns1:hasSynonym>APAF-1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHOC">
+    <ns1:hasName>SHOC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RGL2">
+    <ns1:hasSynonym>RAB2L</ns1:hasSynonym>
+    <ns1:hasName>RGL2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+    <ns1:hasSynonym>HKE1.5</ns1:hasSynonym>
+    <ns1:hasLongName>ral guanine nucleotide dissociation stimulator-like 2</ns1:hasLongName>
+    <ns1:hasSynonym>KE1.5</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERF">
+    <ns1:hasSynonym>CRS4</ns1:hasSynonym>
+    <ns1:hasName>ERF</ns1:hasName>
+    <ns1:hasLongName>Ets2 repressor factor</ns1:hasLongName>
+    <ns1:hasSynonym>PE-2</ns1:hasSynonym>
+    <ns1:hasSynonym>PE2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PTEN">
+    <ns1:hasSynonym>BZS</ns1:hasSynonym>
+    <ns1:hasSynonym>MHAM</ns1:hasSynonym>
+    <ns1:hasSynonym>CWS1</ns1:hasSynonym>
+    <ns1:hasSynonym>MMAC1</ns1:hasSynonym>
+    <ns1:hasName>PTEN</ns1:hasName>
+    <ns1:hasSynonym>PTEN1</ns1:hasSynonym>
+    <ns1:hasSynonym>DEC</ns1:hasSynonym>
+    <ns1:hasSynonym>TEP1</ns1:hasSynonym>
+    <ns1:hasSynonym>GLM2</ns1:hasSynonym>
+    <ns1:hasLongName>phosphatidylinositol 3,4,5-trisphosphate 3-phosphatase and dual-specificity protein phosphatase PTEN</ns1:hasLongName>
+    <ns1:hasSynonym>10q23del</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FLT3">
+    <ns1:hasSynonym>CD135</ns1:hasSynonym>
+    <ns1:hasSynonym>FLK2</ns1:hasSynonym>
+    <ns1:hasLongName>fms-related tyrosine kinase 3</ns1:hasLongName>
+    <ns1:hasSynonym>STK1</ns1:hasSynonym>
+    <ns1:hasSynonym>FLK-2</ns1:hasSynonym>
+    <ns1:hasName>FLT3</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TSC2">
+    <ns1:hasSynonym>TSC4</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
+    <ns1:hasSynonym>LAM</ns1:hasSynonym>
+    <ns1:hasName>TSC2</ns1:hasName>
+    <ns1:hasSynonym>PPP1R160</ns1:hasSynonym>
+    <ns1:hasLongName>Tuberous Sclerosis 2,  Tuberin</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IRS2">
+    <ns1:hasSynonym>IRS-2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IRS"/>
+    <ns1:hasName>IRS2</ns1:hasName>
+    <ns1:hasLongName>insulin receptor substrate 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRED3">
+    <ns1:hasName>SPRED3</ns1:hasName>
+    <ns1:hasLongName>Sprouty-related, EVH1 domain-containing protein 3 </ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+    <ns1:hasSynonym>spred-3</ns1:hasSynonym>
+    <ns1:hasSynonym>Eve-3</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/STK11">
+    <ns1:hasName>STK11</ns1:hasName>
+    <ns1:hasSynonym>PJS</ns1:hasSynonym>
+    <ns1:hasLongName>serine/threonine-protein kinase STK11</ns1:hasLongName>
+    <ns1:hasSynonym>LKB1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STK"/>
+    <ns1:hasSynonym>hLKB1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP3">
+    <ns1:hasName>DUSP3</ns1:hasName>
+    <ns1:hasLongName>dual specificity phosphatase 3</ns1:hasLongName>
+    <ns1:hasSynonym>VHR</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP4">
+    <ns1:hasName>DUSP4</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+    <ns1:hasSynonym>MKP2</ns1:hasSynonym>
+    <ns1:hasSynonym>HVH2</ns1:hasSynonym>
+    <ns1:hasSynonym>TYP</ns1:hasSynonym>
+    <ns1:hasLongName>dual specificity phosphatase 4</ns1:hasLongName>
+    <ns1:hasSynonym>MKP-2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PTPN11">
+    <ns1:hasSynonym>NS1</ns1:hasSynonym>
+    <ns1:hasSynonym>SHP2 </ns1:hasSynonym>
+    <ns1:hasSynonym>SH-PTP2</ns1:hasSynonym>
+    <ns1:hasSynonym>BPTP3</ns1:hasSynonym>
+    <ns1:hasSynonym>PTP-1D</ns1:hasSynonym>
+    <ns1:hasSynonym>PTP2C</ns1:hasSynonym>
+    <ns1:hasSynonym>SH-PTP3</ns1:hasSynonym>
+    <ns1:hasSynonym>CFC</ns1:hasSynonym>
+    <ns1:hasName>PTPN11</ns1:hasName>
+    <ns1:hasLongName>protein tyrosine phosphatase, non-receptor type 11</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRED1">
+    <ns1:hasSynonym>NFLS</ns1:hasSynonym>
+    <ns1:hasName>SPRED1</ns1:hasName>
+    <ns1:hasSynonym>PPP1R147</ns1:hasSynonym>
+    <ns1:hasSynonym>hSpred1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+    <ns1:hasSynonym>spred-1</ns1:hasSynonym>
+    <ns1:hasLongName>Sprouty-related, EVH1 domain-containing protein 1 </ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AKT3">
+    <ns1:hasName>AKT3</ns1:hasName>
+    <ns1:hasSynonym>PKBG</ns1:hasSynonym>
+    <ns1:hasSynonym>MPPH2</ns1:hasSynonym>
+    <ns1:hasSynonym>MPPH</ns1:hasSynonym>
+    <ns1:hasSynonym>RAC-gamma</ns1:hasSynonym>
+    <ns1:hasSynonym>RAC-PK-gamma</ns1:hasSynonym>
+    <ns1:hasSynonym>PKB-GAMMA</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKBG</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+    <ns1:hasSynonym>STK-2</ns1:hasSynonym>
+    <ns1:hasLongName>RAC-gamma serine/threonine-protein kinase</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FOSL1">
+    <ns1:hasSynonym>fra-1 </ns1:hasSynonym>
+    <ns1:hasLongName>FOS-like antigen 1</ns1:hasLongName>
+    <ns1:hasSynonym>FRA</ns1:hasSynonym>
+    <ns1:hasSynonym>FRA1</ns1:hasSynonym>
+    <ns1:hasName>FOSL1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MET">
+    <ns1:hasSynonym>HGFR</ns1:hasSynonym>
+    <ns1:hasName>MET</ns1:hasName>
+    <ns1:hasLongName>MET proto-oncogene, receptor tyrosine kinase; hepatocyte growth factor receptor</ns1:hasLongName>
+    <ns1:hasSynonym>AUTS9</ns1:hasSynonym>
+    <ns1:hasSynonym>c-Met</ns1:hasSynonym>
+    <ns1:hasSynonym>RCCP2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AKT2">
+    <ns1:hasSynonym>PRKBB</ns1:hasSynonym>
+    <ns1:hasName>AKT2</ns1:hasName>
+    <ns1:hasSynonym>PKBB</ns1:hasSynonym>
+    <ns1:hasLongName>RAC-beta serine/threonine-protein kinase </ns1:hasLongName>
+    <ns1:hasSynonym>HIHGHH</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+    <ns1:hasSynonym>PKBBETA</ns1:hasSynonym>
+    <ns1:hasSynonym>RAC-BETA</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKA">
+    <ns1:hasSynonym>PRKA_FAMILY</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKAG_FAMILY</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKAB_FAMILY</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKAR_FAMILY</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKAA_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>PRKA</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/STK3">
+    <ns1:hasLongName>serine/threonine kinase 3</ns1:hasLongName>
+    <ns1:hasSynonym>KRS1</ns1:hasSynonym>
+    <ns1:hasSynonym>MST2</ns1:hasSynonym>
+    <ns1:hasName>STK3</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DAB2IP">
+    <ns1:hasSynonym>AF9Q34</ns1:hasSynonym>
+    <ns1:hasSynonym>AIP1</ns1:hasSynonym>
+    <ns1:hasLongName>DAB2 interacting protein</ns1:hasLongName>
+    <ns1:hasSynonym>AIP-1</ns1:hasSynonym>
+    <ns1:hasSynonym>DIP1/2</ns1:hasSynonym>
+    <ns1:hasName>DAB2IP</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRF1">
+    <ns1:hasSynonym>PP13187</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
+    <ns1:hasSynonym>CDC25</ns1:hasSynonym>
+    <ns1:hasLongName>Ras protein-specific guanine nucleotide-releasing factor 1</ns1:hasLongName>
+    <ns1:hasSynonym>GRF55</ns1:hasSynonym>
+    <ns1:hasSynonym>GRF1</ns1:hasSynonym>
+    <ns1:hasName>RASGRF1</ns1:hasName>
+    <ns1:hasSynonym>CDC25L</ns1:hasSynonym>
+    <ns1:hasSynonym>ras-GRF1</ns1:hasSynonym>
+    <ns1:hasSynonym>GNRP</ns1:hasSynonym>
+    <ns1:hasSynonym>H-GRF55</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHC">
+    <ns1:hasName>SHC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDK4">
+    <ns1:hasSynonym>CMM3</ns1:hasSynonym>
+    <ns1:hasName>CDK4</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+    <ns1:hasSynonym>PSK-J3</ns1:hasSynonym>
+    <ns1:hasLongName>cyclin-dependent kinase 4</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FNT">
+    <ns1:hasName>FNT</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ETS1">
+    <ns1:hasLongName>v-ets avian erythroblastosis virus E26 oncogene homolog 1</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
+    <ns1:hasName>ETS1</ns1:hasName>
+    <ns1:hasSynonym>EWSR2</ns1:hasSynonym>
+    <ns1:hasSynonym>ETS-1</ns1:hasSynonym>
+    <ns1:hasSynonym>p54</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TBK1">
+    <ns1:hasSynonym>T2K</ns1:hasSynonym>
+    <ns1:hasLongName>TANK-binding kinase 1</ns1:hasLongName>
+    <ns1:hasName>TBK1</ns1:hasName>
+    <ns1:hasSynonym>NAK</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ROCK1">
+    <ns1:hasName>ROCK1</ns1:hasName>
+    <ns1:hasSynonym>P160ROCK</ns1:hasSynonym>
+    <ns1:hasLongName>Rho-associated, coiled-coil containing protein kinase 1</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
+    <ns1:hasSynonym>ROCK-I</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MYC">
+    <ns1:hasSynonym>MYCC</ns1:hasSynonym>
+    <ns1:hasSynonym>c-Myc</ns1:hasSynonym>
+    <ns1:hasSynonym>MRTL</ns1:hasSynonym>
+    <ns1:hasName>MYC</ns1:hasName>
+    <ns1:hasLongName>  v-myc avian myelocytomatosis viral oncogene homolog</ns1:hasLongName>
+    <ns1:hasSynonym>bHLHe39</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PDPK1">
+    <ns1:hasSynonym>PDPK2</ns1:hasSynonym>
+    <ns1:hasSynonym>PDK1</ns1:hasSynonym>
+    <ns1:hasSynonym>PRO0461</ns1:hasSynonym>
+    <ns1:hasLongName>3-phosphoinositide-dependent protein kinase 1 </ns1:hasLongName>
+    <ns1:hasName>PDPK1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TIAM1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
+    <ns1:hasLongName>T-lymphoma invasion and metastasis-inducing protein 1 </ns1:hasLongName>
+    <ns1:hasName>TIAM1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3CA">
+    <ns1:hasSynonym>p110-alpha</ns1:hasSynonym>
+    <ns1:hasSynonym>MCMTC</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PI3K"/>
+    <ns1:hasSynonym>MCM</ns1:hasSynonym>
+    <ns1:hasSynonym>MCAP</ns1:hasSynonym>
+    <ns1:hasName>PIK3CA</ns1:hasName>
+    <ns1:hasSynonym>CLOVE</ns1:hasSynonym>
+    <ns1:hasSynonym>CWS5</ns1:hasSynonym>
+    <ns1:hasSynonym>PI3K</ns1:hasSynonym>
+    <ns1:hasLongName>Phosphatidylinositol 4,5-bisphosphate 3-kinase catalytic subunit alpha isoform </ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PPP1CA">
+    <ns1:hasSynonym>PP-1A</ns1:hasSynonym>
+    <ns1:hasSynonym>PP1alpha</ns1:hasSynonym>
+    <ns1:hasName>PPP1CA</ns1:hasName>
+    <ns1:hasSynonym>PP1A</ns1:hasSynonym>
+    <ns1:hasSynonym>PPP1A</ns1:hasSynonym>
+    <ns1:hasLongName>protein phosphatase 1, catalytic subunit, alpha isozyme</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ELK">
+    <ns1:hasName>ELK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NOX1">
+    <ns1:hasName>NOX1</ns1:hasName>
+    <ns1:hasSynonym>NOH-1</ns1:hasSynonym>
+    <ns1:hasSynonym>NOH1 </ns1:hasSynonym>
+    <ns1:hasSynonym>GP91-2</ns1:hasSynonym>
+    <ns1:hasSynonym>MOX1</ns1:hasSynonym>
+    <ns1:hasLongName>NADPH oxidase 1</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC2">
+    <ns1:hasLongName>exocyst complex component 2</ns1:hasLongName>
+    <ns1:hasName>EXOC2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+    <ns1:hasSynonym>SEC5L1</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC5</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec5p</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ETS2">
+    <ns1:hasSynonym>ETS2IT1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
+    <ns1:hasName>ETS2</ns1:hasName>
+    <ns1:hasLongName>v-ets avian erythroblastosis virus E26 oncogene homolog 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IRS1">
+    <ns1:hasName>IRS1</ns1:hasName>
+    <ns1:hasLongName>insulin receptor substrate 1</ns1:hasLongName>
+    <ns1:hasSynonym>HIRS-1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IRS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BRAF">
+    <ns1:hasName>BRAF</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+    <ns1:hasLongName>serine/threonine-protein kinase B-raf </ns1:hasLongName>
+    <ns1:hasSynonym>BRAF1</ns1:hasSynonym>
+    <ns1:hasSynonym>B-RAF1</ns1:hasSynonym>
+    <ns1:hasSynonym>RAFB1</ns1:hasSynonym>
+    <ns1:hasSynonym>NS7</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CNKSR">
+    <ns1:hasName>CNKSR</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC8">
+    <ns1:hasSynonym>SEC84</ns1:hasSynonym>
+    <ns1:hasSynonym>EXO84</ns1:hasSynonym>
+    <ns1:hasLongName>exocyst complex component 8</ns1:hasLongName>
+    <ns1:hasSynonym>Exo84p</ns1:hasSynonym>
+    <ns1:hasName>EXOC8</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DHFR">
+    <ns1:hasLongName>dihydrofolate reductase</ns1:hasLongName>
+    <ns1:hasName>DHFR</ns1:hasName>
+    <ns1:hasSynonym>DYR</ns1:hasSynonym>
+    <ns1:hasSynonym>DHFRP1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF8">
+    <ns1:hasSynonym>HOJ1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasName>RASSF8</ns1:hasName>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family (N-terminal) member 8</ns1:hasLongName>
+    <ns1:hasSynonym>C12orf2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRP4">
+    <ns1:hasLongName>RAS guanyl-releasing protein 4</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+    <ns1:hasName>RASGRP4</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PEA15">
+    <ns1:hasSynonym>MAT1</ns1:hasSynonym>
+    <ns1:hasSynonym>HMAT1</ns1:hasSynonym>
+    <ns1:hasSynonym>PED </ns1:hasSynonym>
+    <ns1:hasLongName>phosphoprotein enriched in astrocytes 15</ns1:hasLongName>
+    <ns1:hasSynonym>HUMMAT1H</ns1:hasSynonym>
+    <ns1:hasName>PEA15</ns1:hasName>
+    <ns1:hasSynonym>PEA-15</ns1:hasSynonym>
+    <ns1:hasSynonym>MAT1H</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ARHGAP35">
+    <ns1:hasName>ARHGAP35</ns1:hasName>
+    <ns1:hasLongName>Rho GTPase-activating protein 35 </ns1:hasLongName>
+    <ns1:hasSynonym>p190ARhoGAP,p190RhoGAP</ns1:hasSynonym>
+    <ns1:hasSynonym>GRLF1</ns1:hasSynonym>
+    <ns1:hasSynonym>P190-A</ns1:hasSynonym>
+    <ns1:hasSynonym>GRF-1</ns1:hasSynonym>
+    <ns1:hasSynonym>P190A</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CCNA2">
+    <ns1:hasSynonym>CCN1</ns1:hasSynonym>
+    <ns1:hasSynonym>CCNA</ns1:hasSynonym>
+    <ns1:hasLongName>cyclin A2</ns1:hasLongName>
+    <ns1:hasName>CCNA2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAB2">
+    <ns1:hasLongName>5'-AMP-activated protein kinase subunit beta-2</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+    <ns1:hasName>PRKAB2</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RHOC">
+    <ns1:hasSynonym>RHOH9</ns1:hasSynonym>
+    <ns1:hasSynonym>ARHC</ns1:hasSynonym>
+    <ns1:hasName>RHOC</ns1:hasName>
+    <ns1:hasSynonym>ARH9</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
+    <ns1:hasLongName>Ras homolog family member C</ns1:hasLongName>
+    <ns1:hasSynonym>H9</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/UNG">
+    <ns1:hasSynonym>HIGM4</ns1:hasSynonym>
+    <ns1:hasSynonym>DGU</ns1:hasSynonym>
+    <ns1:hasName>UNG</ns1:hasName>
+    <ns1:hasLongName>uracil-DNA glycosylase</ns1:hasLongName>
+    <ns1:hasSynonym>HIGM5</ns1:hasSynonym>
+    <ns1:hasSynonym>UNG15</ns1:hasSynonym>
+    <ns1:hasSynonym>UDG, UNG1</ns1:hasSynonym>
+    <ns1:hasSynonym>UNG2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SOS">
+    <ns1:hasSynonym>SOS_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>SOS</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3CD">
+    <ns1:hasLongName>phosphatidylinositol-4,5-bisphosphate 3-kinase, catalytic subunit delta</ns1:hasLongName>
+    <ns1:hasSynonym>APDS</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PI3K"/>
+    <ns1:hasSynonym>p110D</ns1:hasSynonym>
+    <ns1:hasName>PIK3CD</ns1:hasName>
+    <ns1:hasSynonym>PI3K</ns1:hasSynonym>
+    <ns1:hasSynonym>P110DELTA</ns1:hasSynonym>
+    <ns1:hasSynonym>IMD14</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRP2">
+    <ns1:hasName>RASGRP2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+    <ns1:hasSynonym>CALDAG-GEFI</ns1:hasSynonym>
+    <ns1:hasSynonym>CDC25L</ns1:hasSynonym>
+    <ns1:hasLongName>RAS guanyl-releasing protein 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/STK4">
+    <ns1:hasLongName>serine/threonine kinase 4</ns1:hasLongName>
+    <ns1:hasSynonym>MST1</ns1:hasSynonym>
+    <ns1:hasName>STK4</ns1:hasName>
+    <ns1:hasSynonym>YSK3</ns1:hasSynonym>
+    <ns1:hasSynonym>KRS2</ns1:hasSynonym>
+    <ns1:hasSynonym>TIIAC</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FNTA">
+    <ns1:hasSynonym>FPTA</ns1:hasSynonym>
+    <ns1:hasLongName>farnesyltransferase, CAAX box, alpha</ns1:hasLongName>
+    <ns1:hasSynonym>PTAR2</ns1:hasSynonym>
+    <ns1:hasSynonym>PGGT1A</ns1:hasSynonym>
+    <ns1:hasName>FNTA</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDC25A">
+    <ns1:hasSynonym>CDC25A2</ns1:hasSynonym>
+    <ns1:hasName>CDC25A</ns1:hasName>
+    <ns1:hasLongName>cell division cycle 25A</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRF2">
+    <ns1:hasName>RASGRF2</ns1:hasName>
+    <ns1:hasLongName>Ras protein-specific guanine nucleotide-releasing factor 2</ns1:hasLongName>
+    <ns1:hasSynonym>RAS-GRF2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
+    <ns1:hasSynonym>GRF2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/JUN">
+    <ns1:hasSynonym>AP-1</ns1:hasSynonym>
+    <ns1:hasLongName>Jun proto-oncogene</ns1:hasLongName>
+    <ns1:hasName>JUN</ns1:hasName>
+    <ns1:hasSynonym>AP1</ns1:hasSynonym>
+    <ns1:hasSynonym>c-Jun</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC4">
+    <ns1:hasSynonym>SEC8L1</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec8p</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC8</ns1:hasSynonym>
+    <ns1:hasLongName>exocyst complex component 4</ns1:hasLongName>
+    <ns1:hasName>EXOC4</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC7">
+    <ns1:hasSynonym>EX070</ns1:hasSynonym>
+    <ns1:hasSynonym>YJL085W</ns1:hasSynonym>
+    <ns1:hasSynonym>EXOC1</ns1:hasSynonym>
+    <ns1:hasName>EXOC7</ns1:hasName>
+    <ns1:hasLongName>exocyst complex component 7</ns1:hasLongName>
+    <ns1:hasSynonym>2-5-3p</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+    <ns1:hasSynonym>EXO70</ns1:hasSynonym>
+    <ns1:hasSynonym>Exo70p</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAC">
+    <ns1:hasName>RAC</ns1:hasName>
+    <ns1:hasSynonym>RAC_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/GRB">
+    <ns1:hasName>GRB</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FGFR">
+    <ns1:hasName>FGFR</ns1:hasName>
+    <ns1:hasSynonym>FGFR_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHC3">
+    <ns1:hasSynonym>RAI</ns1:hasSynonym>
+    <ns1:hasName>SHC3</ns1:hasName>
+    <ns1:hasSynonym>N-Shc</ns1:hasSynonym>
+    <ns1:hasSynonym>NSHC</ns1:hasSynonym>
+    <ns1:hasLongName>SHC (Src homology 2 domain containing) transforming protein 3</ns1:hasLongName>
+    <ns1:hasSynonym>SHCC</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BUB1">
+    <ns1:hasName>BUB1</ns1:hasName>
+    <ns1:hasLongName>BUB1 mitotic checkpoint serine/threonine kinase</ns1:hasLongName>
+    <ns1:hasSynonym>BUB1L</ns1:hasSynonym>
+    <ns1:hasSynonym>hBUB1</ns1:hasSynonym>
+    <ns1:hasSynonym>BUB1A</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EGFR">
+    <ns1:hasLongName>epidermal growth factor receptor</ns1:hasLongName>
+    <ns1:hasSynonym>mENA</ns1:hasSynonym>
+    <ns1:hasName>EGFR</ns1:hasName>
+    <ns1:hasSynonym>ERBB1</ns1:hasSynonym>
+    <ns1:hasSynonym>HER1</ns1:hasSynonym>
+    <ns1:hasSynonym>PIG61</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+    <ns1:hasSynonym>ERBB</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ECT2">
+    <ns1:hasName>ECT2</ns1:hasName>
+    <ns1:hasSynonym>ARHGEF31</ns1:hasSynonym>
+    <ns1:hasLongName>epithelial cell transforming 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/INSR">
+    <ns1:hasName>INSR</ns1:hasName>
+    <ns1:hasLongName>insulin receptor</ns1:hasLongName>
+    <ns1:hasSynonym>HHF5</ns1:hasSynonym>
+    <ns1:hasSynonym>CD220</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHC1">
+    <ns1:hasSynonym>SHC</ns1:hasSynonym>
+    <ns1:hasLongName>SHC (Src homology 2 domain containing) transforming protein 1</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+    <ns1:hasName>SHC1</ns1:hasName>
+    <ns1:hasSynonym>SHCA</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF10">
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family (N-terminal) member 10</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasName>RASSF10</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAB1">
+    <ns1:hasSynonym>HAMPKb</ns1:hasSynonym>
+    <ns1:hasSynonym>AMPK</ns1:hasSynonym>
+    <ns1:hasName>PRKAB1</ns1:hasName>
+    <ns1:hasLongName>5'-AMP-activated protein kinase subunit beta-1  </ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PLXNB1">
+    <ns1:hasSynonym>PLEXIN-B1</ns1:hasSynonym>
+    <ns1:hasSynonym>SEP</ns1:hasSynonym>
+    <ns1:hasLongName>plexin B1</ns1:hasLongName>
+    <ns1:hasSynonym>PLXN5</ns1:hasSynonym>
+    <ns1:hasName>PLXNB1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+    <ns1:hasName>MCM4</ns1:hasName>
+    <ns1:hasSynonym>CDC21</ns1:hasSynonym>
+    <ns1:hasSynonym>NKCD</ns1:hasSynonym>
+    <ns1:hasSynonym>P1-CDC21</ns1:hasSynonym>
+    <ns1:hasLongName>minichromosome maintenance complex component 4</ns1:hasLongName>
+    <ns1:hasSynonym>NKGCD</ns1:hasSynonym>
+    <ns1:hasSynonym>CDC54</ns1:hasSynonym>
+    <ns1:hasSynonym>hCdc21</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FGFR4">
+    <ns1:hasSynonym>CD334</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+    <ns1:hasSynonym>JTK2</ns1:hasSynonym>
+    <ns1:hasSynonym>TKF </ns1:hasSynonym>
+    <ns1:hasName>FGFR4</ns1:hasName>
+    <ns1:hasLongName>fibroblast growth factor receptor 4</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NF1">
+    <ns1:hasLongName>neurofibromin</ns1:hasLongName>
+    <ns1:hasSynonym>NFNS</ns1:hasSynonym>
+    <ns1:hasName>NF1</ns1:hasName>
+    <ns1:hasSynonym>WSS</ns1:hasSynonym>
+    <ns1:hasSynonym>VRNF</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAG2">
+    <ns1:hasSynonym>CMH6</ns1:hasSynonym>
+    <ns1:hasSynonym>AAKG</ns1:hasSynonym>
+    <ns1:hasLongName>protein kinase, AMP-activated, gamma 2 non-catalytic subunit</ns1:hasLongName>
+    <ns1:hasSynonym>WPWS</ns1:hasSynonym>
+    <ns1:hasName>PRKAG2</ns1:hasName>
+    <ns1:hasSynonym>H91620p</ns1:hasSynonym>
+    <ns1:hasSynonym>AAKG2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAA2">
+    <ns1:hasName>PRKAA2</ns1:hasName>
+    <ns1:hasLongName>5'-AMP-activated protein kinase catalytic subunit alpha-2  </ns1:hasLongName>
+    <ns1:hasSynonym>AMPK2</ns1:hasSynonym>
+    <ns1:hasSynonym>AMPKa2</ns1:hasSynonym>
+    <ns1:hasSynonym>AMPK</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+    <ns1:hasSynonym>PRKAA</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MLST8">
+    <ns1:hasSynonym>GBL</ns1:hasSynonym>
+    <ns1:hasSynonym>POP3</ns1:hasSynonym>
+    <ns1:hasSynonym>WAT1</ns1:hasSynonym>
+    <ns1:hasSynonym>LST8</ns1:hasSynonym>
+    <ns1:hasName>MLST8</ns1:hasName>
+    <ns1:hasLongName>MTOR associated protein, LST8 homolog (S. cerevisiae)</ns1:hasLongName>
+    <ns1:hasSynonym>GbetaL</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRED2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+    <ns1:hasSynonym>Spred-2</ns1:hasSynonym>
+    <ns1:hasName>SPRED2</ns1:hasName>
+    <ns1:hasLongName>Sprouty-related, EVH1 domain-containing protein 2 </ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASA1">
+    <ns1:hasName>RASA1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+    <ns1:hasSynonym>p120GAP</ns1:hasSynonym>
+    <ns1:hasSynonym>CMAVM</ns1:hasSynonym>
+    <ns1:hasSynonym>GAP</ns1:hasSynonym>
+    <ns1:hasSynonym>CM-AVM</ns1:hasSynonym>
+    <ns1:hasSynonym>RASGAP</ns1:hasSynonym>
+    <ns1:hasSynonym>RASA</ns1:hasSynonym>
+    <ns1:hasSynonym>PKWS</ns1:hasSynonym>
+    <ns1:hasLongName>Ras GTPase-activating protein 1 </ns1:hasLongName>
+    <ns1:hasSynonym>p120RASGAP</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SCRIB">
+    <ns1:hasSynonym>Vartul</ns1:hasSynonym>
+    <ns1:hasName>SCRIB</ns1:hasName>
+    <ns1:hasSynonym>CRIB1</ns1:hasSynonym>
+    <ns1:hasSynonym>SCRIB1</ns1:hasSynonym>
+    <ns1:hasSynonym>SCRB1</ns1:hasSynonym>
+    <ns1:hasLongName>scribbled planar cell polarity protein</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MRAS">
+    <ns1:hasSynonym>RRAS3</ns1:hasSynonym>
+    <ns1:hasSynonym>M-RAs</ns1:hasSynonym>
+    <ns1:hasLongName>muscle RAS oncogene homolog</ns1:hasLongName>
+    <ns1:hasName>MRAS</ns1:hasName>
+    <ns1:hasSynonym>R-RAS3</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDC6">
+    <ns1:hasName>CDC6</ns1:hasName>
+    <ns1:hasLongName>cell division cycle 6</ns1:hasLongName>
+    <ns1:hasSynonym>cell division cycle 6</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CCNA1">
+    <ns1:hasSynonym>CT146</ns1:hasSynonym>
+    <ns1:hasLongName>cyclin A1</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+    <ns1:hasName>CCNA1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDK6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+    <ns1:hasName>CDK6</ns1:hasName>
+    <ns1:hasLongName>cyclin-dependent kinase 6</ns1:hasLongName>
+    <ns1:hasSynonym>PLSTIRE</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ROCK2">
+    <ns1:hasLongName>Rho-associated, coiled-coil containing protein kinase 2</ns1:hasLongName>
+    <ns1:hasSynonym>ROCK-II</ns1:hasSynonym>
+    <ns1:hasName>ROCK2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PLCE1">
+    <ns1:hasSynonym>PLCE</ns1:hasSynonym>
+    <ns1:hasSynonym>NPHS3</ns1:hasSynonym>
+    <ns1:hasName>PLCE1</ns1:hasName>
+    <ns1:hasSynonym>PPLC</ns1:hasSynonym>
+    <ns1:hasLongName>phospholipase C, epsilon 1</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MAP2K1">
+    <ns1:hasSynonym>MKK1</ns1:hasSynonym>
+    <ns1:hasName>MAP2K1</ns1:hasName>
+    <ns1:hasSynonym>MAPKK1, MEK1</ns1:hasSynonym>
+    <ns1:hasSynonym>PRKMK1</ns1:hasSynonym>
+    <ns1:hasLongName>dual specificity mitogen-activated protein kinase kinase 1</ns1:hasLongName>
+    <ns1:hasSynonym>CFC3</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAC1">
+    <ns1:hasSynonym>Rac-1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+    <ns1:hasName>RAC1</ns1:hasName>
+    <ns1:hasSynonym>p21-Rac1</ns1:hasSynonym>
+    <ns1:hasLongName>Ras-related C3 botulinum toxin substrate 1 (rho family, small GTP binding protein Rac1)</ns1:hasLongName>
+    <ns1:hasSynonym>TC-25</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAD52">
+    <ns1:hasName>RAD52</ns1:hasName>
+    <ns1:hasLongName>RAD52 homolog (S. cerevisiae)</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FANCA">
+    <ns1:hasSynonym>FANCH</ns1:hasSynonym>
+    <ns1:hasSynonym>FA-H</ns1:hasSynonym>
+    <ns1:hasSynonym>FAA</ns1:hasSynonym>
+    <ns1:hasLongName>Fanconi anemia, complementation group A</ns1:hasLongName>
+    <ns1:hasSynonym>FAH</ns1:hasSynonym>
+    <ns1:hasSynonym>FACA</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+    <ns1:hasSynonym>FA</ns1:hasSynonym>
+    <ns1:hasName>FANCA</ns1:hasName>
+    <ns1:hasSynonym>FA1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RCE1">
+    <ns1:hasSynonym>RCE1B</ns1:hasSynonym>
+    <ns1:hasSynonym>FACE2</ns1:hasSynonym>
+    <ns1:hasName>RCE1</ns1:hasName>
+    <ns1:hasLongName>Ras converting CAAX endopeptidase 1</ns1:hasLongName>
+    <ns1:hasSynonym>RCE1A</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MEK">
+    <ns1:hasName>MEK</ns1:hasName>
+    <ns1:hasSynonym>MEK1_2_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PAK3">
+    <ns1:hasSynonym>MRX47</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+    <ns1:hasSynonym>bPAK</ns1:hasSynonym>
+    <ns1:hasSynonym>OPHN3</ns1:hasSynonym>
+    <ns1:hasName>PAK3</ns1:hasName>
+    <ns1:hasSynonym>MRX30</ns1:hasSynonym>
+    <ns1:hasLongName>p21 protein (Cdc42/Rac)-activated kinase 3</ns1:hasLongName>
+    <ns1:hasSynonym>hPAK3 </ns1:hasSynonym>
+    <ns1:hasSynonym> CDKN1A</ns1:hasSynonym>
+    <ns1:hasSynonym>PAK3beta</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERBB">
+    <ns1:hasName>ERBB</ns1:hasName>
+    <ns1:hasSynonym>EGFR_ERBB_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RHEB">
+    <ns1:hasSynonym>RHEB2</ns1:hasSynonym>
+    <ns1:hasLongName>Ras Homolog Enriched In Brain, GTP-binding protein Rheb</ns1:hasLongName>
+    <ns1:hasName>RHEB</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PAK1">
+    <ns1:hasName>PAK1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+    <ns1:hasSynonym>PAKalpha</ns1:hasSynonym>
+    <ns1:hasLongName>p21 protein (Cdc42/Rac)-activated kinase 1</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RB1">
+    <ns1:hasSynonym>p105-Rb</ns1:hasSynonym>
+    <ns1:hasSynonym>RB</ns1:hasSynonym>
+    <ns1:hasName>RB1</ns1:hasName>
+    <ns1:hasSynonym>PPP1R130</ns1:hasSynonym>
+    <ns1:hasSynonym>pp110</ns1:hasSynonym>
+    <ns1:hasSynonym>pRb</ns1:hasSynonym>
+    <ns1:hasSynonym>OSRC</ns1:hasSynonym>
+    <ns1:hasLongName>Retinoblastoma 1</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AKT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+    <ns1:hasSynonym>RAC</ns1:hasSynonym>
+    <ns1:hasSynonym>AKT</ns1:hasSynonym>
+    <ns1:hasName>AKT1</ns1:hasName>
+    <ns1:hasSynonym>PRKBA</ns1:hasSynonym>
+    <ns1:hasLongName>RAC-alpha serine/threonine-protein kinase</ns1:hasLongName>
+    <ns1:hasSynonym>PKB</ns1:hasSynonym>
+    <ns1:hasSynonym>PKB-ALPHA</ns1:hasSynonym>
+    <ns1:hasSynonym>RAC-ALPHA</ns1:hasSynonym>
+    <ns1:hasSynonym>CWS6</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FOS">
+    <ns1:hasLongName>FBJ murine osteosarcoma viral oncogene homolog</ns1:hasLongName>
+    <ns1:hasName>FOS</ns1:hasName>
+    <ns1:hasSynonym>AP-1</ns1:hasSynonym>
+    <ns1:hasSynonym>C-FOS</ns1:hasSynonym>
+    <ns1:hasSynonym>p55</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ROCK">
+    <ns1:hasSynonym>ROCK_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>ROCK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/E2F3">
+    <ns1:hasSynonym>E2F-3</ns1:hasSynonym>
+    <ns1:hasName>E2F3</ns1:hasName>
+    <ns1:hasLongName>E2F transcription factor 3</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALA">
+    <ns1:hasLongName>Ras-related protein Ral-A</ns1:hasLongName>
+    <ns1:hasSynonym>RAL</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
+    <ns1:hasName>RALA</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TYMS">
+    <ns1:hasName>TYMS</ns1:hasName>
+    <ns1:hasSynonym>TMS</ns1:hasSynonym>
+    <ns1:hasLongName>thymidylate synthetase</ns1:hasLongName>
+    <ns1:hasSynonym>TS</ns1:hasSynonym>
+    <ns1:hasSynonym>HST422</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SOS1">
+    <ns1:hasSynonym>GINGF</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
+    <ns1:hasSynonym>HGF</ns1:hasSynonym>
+    <ns1:hasLongName>Son of sevenless homolog 1</ns1:hasLongName>
+    <ns1:hasSynonym>NS4</ns1:hasSynonym>
+    <ns1:hasSynonym>GF1</ns1:hasSynonym>
+    <ns1:hasSynonym>GGF1</ns1:hasSynonym>
+    <ns1:hasName>SOS1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALGAPA2">
+    <ns1:hasSynonym>p220 </ns1:hasSynonym>
+    <ns1:hasSynonym>dJ1049G11</ns1:hasSynonym>
+    <ns1:hasName>RALGAPA2</ns1:hasName>
+    <ns1:hasLongName>Ral GTPase activating protein, alpha subunit 2 (catalytic)</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RALGAP"/>
+    <ns1:hasSynonym>C20orf74</ns1:hasSynonym>
+    <ns1:hasSynonym> AS250</ns1:hasSynonym>
+    <ns1:hasSynonym>bA287B20.1</ns1:hasSynonym>
+    <ns1:hasSynonym>dJ1049G11.4</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRF">
+    <ns1:hasName>RASGRF</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PAK4">
+    <ns1:hasLongName>p21 protein (Cdc42/Rac)-activated kinase 4</ns1:hasLongName>
+    <ns1:hasName>PAK4</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CBLC">
+    <ns1:hasSynonym>CBL-SL</ns1:hasSynonym>
+    <ns1:hasName>CBLC</ns1:hasName>
+    <ns1:hasLongName>Cbl proto-oncogene C, E3 ubiquitin protein ligase</ns1:hasLongName>
+    <ns1:hasSynonym>CBL-3</ns1:hasSynonym>
+    <ns1:hasSynonym>RNF57</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRY">
+    <ns1:hasName>SPRY</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF6">
+    <ns1:hasName>RASSF6</ns1:hasName>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 6</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ETS">
+    <ns1:hasSynonym>ETS_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>ETS</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+    <ns1:hasSynonym>SEC6L1</ns1:hasSynonym>
+    <ns1:hasSynonym>Sec6p</ns1:hasSynonym>
+    <ns1:hasName>EXOC3</ns1:hasName>
+    <ns1:hasLongName>exocyst complex component 3</ns1:hasLongName>
+    <ns1:hasSynonym>SEC6</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SAV1">
+    <ns1:hasSynonym>WWP4</ns1:hasSynonym>
+    <ns1:hasLongName>salvador family WW domain containing protein 1</ns1:hasLongName>
+    <ns1:hasSynonym>WW45</ns1:hasSynonym>
+    <ns1:hasSynonym>SAV</ns1:hasSynonym>
+    <ns1:hasName>SAV1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/VAV1">
+    <ns1:hasName>VAV1</ns1:hasName>
+    <ns1:hasLongName>vav 1 guanine nucleotide exchange factor</ns1:hasLongName>
+    <ns1:hasSynonym>VAV</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASA3">
+    <ns1:hasSynonym>GAPIII</ns1:hasSynonym>
+    <ns1:hasName>RASA3</ns1:hasName>
+    <ns1:hasSynonym>GAP1IP4BP</ns1:hasSynonym>
+    <ns1:hasLongName>Ras GTPase-activating protein 3</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ROS1">
+    <ns1:hasSynonym>c-ros-1</ns1:hasSynonym>
+    <ns1:hasName>ROS1</ns1:hasName>
+    <ns1:hasSynonym>MCF3</ns1:hasSynonym>
+    <ns1:hasLongName>ROS proto-oncogene 1 , receptor tyrosine kinase</ns1:hasLongName>
+    <ns1:hasSynonym>ROS</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ARHGEF2">
+    <ns1:hasSynonym>GEF</ns1:hasSynonym>
+    <ns1:hasLongName>Rho/Rac guanine nucleotide exchange factor (GEF) 2</ns1:hasLongName>
+    <ns1:hasSynonym>LFP40</ns1:hasSynonym>
+    <ns1:hasName>ARHGEF2</ns1:hasName>
+    <ns1:hasSynonym>P40</ns1:hasSynonym>
+    <ns1:hasSynonym>GEFH1</ns1:hasSynonym>
+    <ns1:hasSynonym>GEF-H1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/E2F2">
+    <ns1:hasName>E2F2</ns1:hasName>
+    <ns1:hasSynonym>E2F-2</ns1:hasSynonym>
+    <ns1:hasLongName>E2F transcription factor 2</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NRAS">
+    <ns1:hasLongName>GTPase NRas</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+    <ns1:hasSynonym>NRAS1</ns1:hasSynonym>
+    <ns1:hasSynonym>CMNS</ns1:hasSynonym>
+    <ns1:hasSynonym>ALPS4</ns1:hasSynonym>
+    <ns1:hasSynonym>N-ras</ns1:hasSynonym>
+    <ns1:hasName>NRAS</ns1:hasName>
+    <ns1:hasSynonym>NS6</ns1:hasSynonym>
+    <ns1:hasSynonym>NCMS</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EIF4EBP3">
+    <ns1:hasName>EIF4EBP3</ns1:hasName>
+    <ns1:hasLongName>eukaryotic translation initiation factor 4E binding protein 3</ns1:hasLongName>
+    <ns1:hasSynonym>4E-BP3</ns1:hasSynonym>
+    <ns1:hasSynonym>4EBP3</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAG3">
+    <ns1:hasLongName>protein kinase, AMP-activated, gamma 3 non-catalytic subunit</ns1:hasLongName>
+    <ns1:hasSynonym>AMPKG3</ns1:hasSynonym>
+    <ns1:hasName>PRKAG3</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAS">
+    <ns1:hasName>RAS</ns1:hasName>
+    <ns1:hasSynonym>RAS_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC5">
+    <ns1:hasSynonym>SEC10P</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+    <ns1:hasSynonym>HSEC10</ns1:hasSynonym>
+    <ns1:hasSynonym>PRO1912</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC10L1</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC10</ns1:hasSynonym>
+    <ns1:hasName>EXOC5</ns1:hasName>
+    <ns1:hasLongName>exocyst complex component 5</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RGL3">
+    <ns1:hasName>RGL3</ns1:hasName>
+    <ns1:hasLongName>ral guanine nucleotide dissociation stimulator-like 3</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RPS6KA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+    <ns1:hasLongName>ribosomal protein S6 kinase alpha-1  </ns1:hasLongName>
+    <ns1:hasName>RPS6KA1</ns1:hasName>
+    <ns1:hasSynonym>RSK1</ns1:hasSynonym>
+    <ns1:hasSynonym>MAPKAPK1A</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC1">
+    <ns1:hasLongName>Exocyst complex component 1</ns1:hasLongName>
+    <ns1:hasSynonym>SEC3</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC3L1</ns1:hasSynonym>
+    <ns1:hasSynonym>SEC3P</ns1:hasSynonym>
+    <ns1:hasName>EXOC1</ns1:hasName>
+    <ns1:hasSynonym>BM-102</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIK3R1">
+    <ns1:hasSynonym>GRB1</ns1:hasSynonym>
+    <ns1:hasName>PIK3R1</ns1:hasName>
+    <ns1:hasSynonym>AGM7</ns1:hasSynonym>
+    <ns1:hasSynonym>p85</ns1:hasSynonym>
+    <ns1:hasSynonym>p85-ALPHA</ns1:hasSynonym>
+    <ns1:hasLongName>phosphatidylinositol 3-kinase regulatory subunit alpha</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF3">
+    <ns1:hasName>RASSF3</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 3</ns1:hasLongName>
+    <ns1:hasSynonym>RASSF5</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RGL">
+    <ns1:hasName>RGL</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SHC4">
+    <ns1:hasSynonym>RaLP</ns1:hasSynonym>
+    <ns1:hasLongName>SHC (Src homology 2 domain containing) transforming protein 4</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+    <ns1:hasName>SHC4</ns1:hasName>
+    <ns1:hasSynonym>SHCD</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/MCM">
+    <ns1:hasName>MCM</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TSC">
+    <ns1:hasName>TSC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TFDP">
+    <ns1:hasSynonym>TFDP_FAMILY</ns1:hasSynonym>
+    <ns1:hasName>TFDP</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAL">
+    <ns1:hasName>RAL</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/YAP1">
+    <ns1:hasSynonym>COB1</ns1:hasSynonym>
+    <ns1:hasSynonym>YAP</ns1:hasSynonym>
+    <ns1:hasLongName>Yes-associated protein 1</ns1:hasLongName>
+    <ns1:hasSynonym>YKI</ns1:hasSynonym>
+    <ns1:hasSynonym>YAP2</ns1:hasSynonym>
+    <ns1:hasSynonym>YAP65</ns1:hasSynonym>
+    <ns1:hasName>YAP1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALGDS">
+    <ns1:hasSynonym>RalGEF</ns1:hasSynonym>
+    <ns1:hasSynonym>RGDS</ns1:hasSynonym>
+    <ns1:hasLongName>Ral guanine nucleotide dissociation stimulator  </ns1:hasLongName>
+    <ns1:hasName>RALGDS</ns1:hasName>
+    <ns1:hasSynonym>RGF</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TP53">
+    <ns1:hasSynonym>BCC7</ns1:hasSynonym>
+    <ns1:hasName>TP53</ns1:hasName>
+    <ns1:hasSynonym>LFS1</ns1:hasSynonym>
+    <ns1:hasSynonym>TRP53</ns1:hasSynonym>
+    <ns1:hasSynonym>P53</ns1:hasSynonym>
+    <ns1:hasLongName>tumor protein p53</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TFDP2">
+    <ns1:hasLongName>transcription factor Dp-2 (E2F dimerization partner 2)</ns1:hasLongName>
+    <ns1:hasName>TFDP2</ns1:hasName>
+    <ns1:hasSynonym>DP2</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CASP3">
+    <ns1:hasName>CASP3</ns1:hasName>
+    <ns1:hasLongName>caspase 3, apoptosis-related cysteine peptidase</ns1:hasLongName>
+    <ns1:hasSynonym>CPP32</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+    <ns1:hasSynonym>SCA-1</ns1:hasSynonym>
+    <ns1:hasSynonym>CPP32B</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CDK">
+    <ns1:hasName>CDK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF2">
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family member 2</ns1:hasLongName>
+    <ns1:hasSynonym>RASFADIN</ns1:hasSynonym>
+    <ns1:hasName>RASSF2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasSynonym>CENP-34</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/KSR2">
+    <ns1:hasLongName>kinase suppressor of Ras 2</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/KSR"/>
+    <ns1:hasName>KSR2</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRY2">
+    <ns1:hasName>SPRY2</ns1:hasName>
+    <ns1:hasLongName>protein sprouty homolog 2 </ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+    <ns1:hasSynonym>hSPRY2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TK1">
+    <ns1:hasLongName>thymidine kinase 1, soluble</ns1:hasLongName>
+    <ns1:hasName>TK1</ns1:hasName>
+    <ns1:hasSynonym>TK2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ARAF">
+    <ns1:hasLongName>serine/threonine-protein kinase A-Raf </ns1:hasLongName>
+    <ns1:hasSynonym>ARAF1</ns1:hasSynonym>
+    <ns1:hasSynonym>RAFA1</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+    <ns1:hasSynonym>A-RAF</ns1:hasSynonym>
+    <ns1:hasName>ARAF</ns1:hasName>
+    <ns1:hasSynonym>PKS2</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Cyclin">
+    <ns1:hasName>Cyclin</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+    <ns1:hasSynonym>GRP3</ns1:hasSynonym>
+    <ns1:hasName>RASGRP3</ns1:hasName>
+    <ns1:hasLongName>Ras guanyl-releasing protein 3 </ns1:hasLongName>
+    <ns1:hasSynonym>KIAA0846</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CCND3">
+    <ns1:hasName>CCND3</ns1:hasName>
+    <ns1:hasLongName>cyclin D3</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+    <ns1:hasSynonym>P-CIP1</ns1:hasSynonym>
+    <ns1:hasSynonym>PAMCI</ns1:hasSynonym>
+    <ns1:hasLongName>Ras association (RalGDS/AF-6) domain family (N-terminal) member 9</ns1:hasLongName>
+    <ns1:hasName>RASSF9</ns1:hasName>
+    <ns1:hasSynonym>PCIP1</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+    <ns1:hasLongName>Ras-related C3 botulinum toxin substrate 3 (rho family, small GTP binding protein Rac3)</ns1:hasLongName>
+    <ns1:hasName>RAC3</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFE2L2">
+    <ns1:hasLongName>nuclear factor, erythroid 2-like 2</ns1:hasLongName>
+    <ns1:hasSynonym>NRF2</ns1:hasSynonym>
+    <ns1:hasName>NFE2L2</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/E2F7">
+    <ns1:hasName>E2F7</ns1:hasName>
+    <ns1:hasLongName>E2F transcription factor 7</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PIN1">
+    <ns1:hasName>PIN1</ns1:hasName>
+    <ns1:hasLongName>peptidylprolyl cis/trans isomerase, NIMA-interacting 1</ns1:hasLongName>
+    <ns1:hasSynonym>DOD</ns1:hasSynonym>
+    <ns1:hasSynonym>UBL5</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RGL1">
+    <ns1:hasLongName>  ral guanine nucleotide dissociation stimulator-like 1</ns1:hasLongName>
+    <ns1:hasSynonym>RGL</ns1:hasSynonym>
+    <ns1:hasName>RGL1</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASGRP">
+    <ns1:hasName>RASGRP</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/INPP4B">
+    <ns1:hasName>INPP4B</ns1:hasName>
+    <ns1:hasLongName>inositol polyphosphate-4-phosphatase, type II, 105kDa</ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BRIP1">
+    <ns1:hasSynonym>BACH1, FANCJ</ns1:hasSynonym>
+    <ns1:hasLongName>BRCA1 interacting protein C-terminal helicase 1</ns1:hasLongName>
+    <ns1:hasSynonym>OF</ns1:hasSynonym>
+    <ns1:hasName>BRIP1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASAL2">
+    <ns1:hasSynonym>NGAP</ns1:hasSynonym>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+    <ns1:hasName>RASAL2</ns1:hasName>
+    <ns1:hasLongName>Ras GTPase-activating protein nGAP </ns1:hasLongName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PRKAG1">
+    <ns1:hasName>PRKAG1</ns1:hasName>
+    <ns1:hasLongName>protein kinase, AMP-activated, gamma 1 non-catalytic subunit</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PRKA"/>
+    <ns1:hasSynonym>AMPKG</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FANC">
+    <ns1:hasName>FANC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ELK1">
+    <ns1:hasLongName>ELK1, member of ETS oncogene family</ns1:hasLongName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ELK"/>
+    <ns1:hasName>ELK1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BRCA">
+    <ns1:hasName>BRCA</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
+    <ns1:hasLongName>Ras-related protein Ral-B</ns1:hasLongName>
+    <ns1:hasName>RALB</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SOS2">
+    <ns1:hasLongName>Son of sevenless homolog 2</ns1:hasLongName>
+    <ns1:hasName>SOS2</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Caspase">
+    <ns1:hasName>Caspase</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/STK">
+    <ns1:hasName>STK</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RAPGEF">
+    <ns1:hasName>RAPGEF</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RALGAP">
+    <ns1:hasName>RALGAP</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRY4">
+    <ns1:hasSynonym>HH17</ns1:hasSynonym>
+    <ns1:hasLongName>protein sprouty homolog 4  </ns1:hasLongName>
+    <ns1:hasName>SPRY4</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/INSRR">
+    <ns1:hasLongName>insulin receptor-related receptor</ns1:hasLongName>
+    <ns1:hasSynonym>IRR</ns1:hasSynonym>
+    <ns1:hasName>INSRR</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASAL">
+    <ns1:hasName>RASAL</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASA">
+    <ns1:hasName>RASA</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/BARD1">
+    <ns1:hasLongName>BRCA1 associated RING domain 1</ns1:hasLongName>
+    <ns1:hasName>BARD1</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SPRED">
+    <ns1:hasName>SPRED</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/DUSP">
+    <ns1:hasName>DUSP</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RASSF">
+    <ns1:hasName>RASSF</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TIAM">
+    <ns1:hasName>TIAM</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/KSR">
+    <ns1:hasName>KSR</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERK">
+    <ns1:hasName>ERK</ns1:hasName>
+    <ns1:hasSynonym>MAPK_ERK1_2_FAMILY</ns1:hasSynonym>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/EXOC">
+    <ns1:hasName>EXOC</ns1:hasName>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/PI3K">
+    <ns1:hasName>PI3K</ns1:hasName>
+  </rdf:Description>
+</rdf:RDF>
