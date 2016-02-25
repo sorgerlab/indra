@@ -711,12 +711,46 @@ def test_activitymod_refinement():
     assert not p5.refinement_of(p7, eh, mh)
     assert not p6.refinement_of(p7, eh, mh)
 
-
 def test_activatingsub_family_refinement():
     pass
 
 def test_rasgef_family_refinement():
-    pass
+    sos = Agent('SOS')
+    sos1 = Agent('SOS1')
+    ras = Agent('RAS')
+    kras = Agent('KRAS')
+    # Statements
+    st1 = RasGef(sos, 'activity', ras)
+    st2 = RasGef(sos1, 'activity', ras)
+    st3 = RasGef(sos, 'activity', kras)
+    st4 = RasGef(sos1, 'activity', kras)
+    st5 = RasGef(sos1, 'different_activity', kras)
+    # st1
+    assert st2.refinement_of(st1, eh, mh)
+    assert st3.refinement_of(st1, eh, mh)
+    assert st4.refinement_of(st1, eh, mh)
+    assert not st5.refinement_of(st1, eh, mh)
+    # st2
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st3.refinement_of(st2, eh, mh)
+    assert st4.refinement_of(st2, eh, mh)
+    assert not st5.refinement_of(st2, eh, mh)
+    # st3
+    assert not st1.refinement_of(st3, eh, mh)
+    assert not st2.refinement_of(st3, eh, mh)
+    assert st4.refinement_of(st3, eh, mh)
+    assert not st5.refinement_of(st3, eh, mh)
+    # st4
+    assert not st1.refinement_of(st4, eh, mh)
+    assert not st2.refinement_of(st4, eh, mh)
+    assert not st3.refinement_of(st4, eh, mh)
+    assert not st5.refinement_of(st4, eh, mh)
+    # st5
+    assert not st1.refinement_of(st5, eh, mh)
+    assert not st2.refinement_of(st5, eh, mh)
+    assert not st3.refinement_of(st5, eh, mh)
+    assert not st4.refinement_of(st5, eh, mh)
+
 
 def test_rasgap_family_refinement():
     pass

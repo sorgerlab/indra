@@ -563,6 +563,17 @@ class RasGef(Statement):
                 (self.gef.name, self.gef_activity, self.ras.name))
         return s
 
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check the GEF
+        if self.gef.refinement_of(other.gef, eh, mh) and \
+           self.ras.refinement_of(other.ras, eh, mh) and \
+           self.gef_activity == other.gef_activity:
+            return True
+        else:
+            return False
 
 class RasGap(Statement):
     """Statement representing the inactivation of a GTP-bound protein
