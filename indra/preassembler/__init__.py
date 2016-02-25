@@ -1,3 +1,4 @@
+import pygraphviz as pgv
 import itertools
 from copy import copy
 from indra.statements import *
@@ -201,4 +202,50 @@ class Preassembler(object):
                                for stmt in ext_group
                                if not stmt.supports]
         return self.related_stmts
+
+
+def render_stmt_graph(statements, agent_style=None):
+    """Renders the supports/supported_by relationships of a set of statements
+    and returns a pygraphviz graph.
+
+    Example
+    -------
+    Pattern for getting statements and rendering as a Graphviz graph::
+
+        bp = biopax_api.process_pc_pathsfromto(['BRAF'], ['MAP2K1'])
+        bp.get_phosphorylation()
+
+        pa = Preassembler(eh, mh, bp.statements)
+        pa.combine_related()
+
+        graph = render_stmt_graph(pa.related_stmts)
+        graph.write('braf.dot')
+        graph.draw('braf.pdf', prog='dot')
+    """
+
+    # Set the default agent formatting properties
+    if agent_style is None:
+        agent_style = {'color': 'lightgray', 'style': 'filled',
+                       'fontname': 'arial'}
+    # Sets to store all of the nodes and edges as we recursively process all
+    # of the statements
+    nodes = set([])
+    edges = set([])
+    # Recursive function for processing all statements
+    def process_stmt(stmt):
+        nodes.add(stmt)
+        for sby_ix, sby_stmt in enumerate(stmt.supported_by):
+            edges.add((str(stmt.matches_key()), str(sby_stmt.matches_key())))
+            process_stmt(sby_stmt)
+    # Process all of the top-level statements, getting the supporting statements
+    # recursively
+    for stmt in statements:
+        process_stmt(stmt)
+    # Add the nodes and edges to the graph
+    graph = pgv.AGraph(name='statements', directed=True)
+    for node in nodes:
+        graph.add_node(str(node.matches_key()), label=str(node), **agent_style)
+    graph.add_edges_from(edges)
+    return graph
+
 

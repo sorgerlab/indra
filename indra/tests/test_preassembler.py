@@ -1,5 +1,5 @@
 import os
-from indra.preassembler import Preassembler
+from indra.preassembler import Preassembler, render_stmt_graph
 from indra.trips import trips_api
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence
@@ -131,3 +131,30 @@ def test_binding_site_refinement():
     # TODO
     assert True
 
+def test_render_stmt_graph():
+    braf = Agent('BRAF')
+    mek1 = Agent('MAP2K1')
+    mek = Agent('MEK')
+    # Statements
+    p0 = Phosphorylation(braf, mek, 'Phosphorylation', None)
+    p1 = Phosphorylation(braf, mek1, 'Phosphorylation', None)
+    p2 = Phosphorylation(braf, mek1, 'Phosphorylation', '218')
+    p3 = Phosphorylation(braf, mek1, 'Phosphorylation', '222')
+    p4 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', None)
+    p5 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '218')
+    p6 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '222')
+    stmts = [p0, p1, p2, p3, p4, p5, p6]
+    pa = Preassembler(eh, mh, stmts)
+    pa.combine_related()
+    graph = render_stmt_graph(pa.related_stmts)
+    # One node for each statement
+    assert len(graph.nodes()) == 7
+    # Edges:
+    # p0 supports p1-p6 = 6 edges
+    # p1 supports p2-p6 = 5 edges
+    # p2 supports p5 = 1 edge
+    # p3 supports p6 = 1 edge
+    # p4 supports p5-p6 = 2 edges
+    # (p5 and p6 support none--they are top-level)
+    # 6 + 5 + 1 + 1 + 2 = 15 edges
+    assert len(graph.edges()) == 15
