@@ -192,7 +192,11 @@ class BiopaxProcessor(object):
             # It seems to be always None.
             # mf_pos_type = mf.getFeatureLocationType()
         return mod, mod_pos
-
+    
+    @staticmethod
+    def is_complex(pe):
+        """Return True if the physical entity is a complex"""
+        return isinstance(pe, bp('Complex'))
 
     def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
                                   force_contains=None):
@@ -214,15 +218,25 @@ class BiopaxProcessor(object):
         res_array = [match_to_array(m) for m in res.toArray()]
         stmts = []
         for r in res_array:
+            controller = r[p.indexOf('controller PE')]
+            if self.is_complex(controller):
+                warnings.warn('Cannot handle complex enzymes.')
+                continue
+            inputpe = r[p.indexOf('input PE')]
+            if self.is_complex(inputpe):
+                warnings.warn('Cannot handle complex substrates.')
+                continue
+            source_id = r[p.indexOf('Control')].getUri()
             enz = self._get_agent_from_er(r[p.indexOf('controller ER')])
-            sub = self._get_agent_from_er(r[p.indexOf('changed generic ER')])
+            sub = self._get_agent_from_er(r[p.indexOf('changed ER')])
             # If neither the enzyme nor the substrate is contained then skip
             if force_contains is not None:
                 if (enz.name not in force_contains) and \
                     (sub.name not in force_contains):
                     continue
             citation = self._get_citation(r[p.indexOf('Conversion')])
-            ev = Evidence(source_api='biopax', pmid=citation)
+            ev = Evidence(source_api='biopax', pmid=citation,
+                          source_id=source_id)
 
             # Get the modification (s)
             # Should this be simple PE?
@@ -266,7 +280,7 @@ class BiopaxProcessor(object):
         cst = bpp('constraint.ConversionSide$Type')
         pt = bpp('constraint.Participant')
 
-        # The following constrainsts were pieced together based on the
+        # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation(). The pattern cannot be started
         # from EntityReference because it cannot be instantiated.
@@ -328,6 +342,7 @@ class BiopaxProcessor(object):
         # If entity is not a complex
         elif isinstance(bp_ent, bp('ProteinReference')) or \
                 isinstance(bp_ent, bp('SmallMoleculeReference')) or \
+                isinstance(bp_ent, bp('Protein')) or \
                 isinstance(bp_ent, bp('EntityReference')):
             hgnc_id = self._get_hgnc_id(bp_ent)
             if hgnc_id is None:
