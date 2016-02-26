@@ -239,61 +239,72 @@ class TripsProcessor(object):
             if precond_event_ref is not None:
                 # Find the event describing the precondition
                 precond_id = precond_event_ref.find('event').attrib['id']
-                precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
                 if precond_id == event_id:
                     warnings.warn('Circular reference to event %s.' %
                                   precond_id)
+                precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
+                if precond_event is None:
+                    # Sometimes, if there are multiple preconditions
+                    # they are numbered with <id>.1, <id>.2, etc.
+                    p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
+                    if p is not None:
+                        self.add_condition(agent, p, term)
+                    p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
+                    if p is not None:
+                        self.add_condition(agent, p, term)
                 else:
-                    precond_event_type = precond_event.find('type').text
-                    # Binding precondition
-                    if precond_event_type == 'ONT::BIND':
-                        arg1 = precond_event.find('arg1')
-                        arg2 = precond_event.find('arg2')
-                        mod = precond_event.findall('mods/mod')
-                        if arg1 is None:
-                            arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                            bound_agent = Agent(arg2_name)
-                        elif arg2 is None:
-                            arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                            bound_agent = Agent(arg1_name)
-                        else:
-                            arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                            arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                            if arg1_name == agent_name:
-                                bound_agent = Agent(arg2_name)
-                            else:
-                                bound_agent = Agent(arg1_name)
-                        # Look for negative flag either in precondition event
-                        # predicate tag or in the term itself
-                        # (after below, neg_flag will be an object, or None)
-                        neg_flag = precond_event.find(
-                                        'predicate/mods/mod[type="ONT::NEG"]')
-                        negation_sign = precond_event.find('negation')
-                        if negation_sign is not None:
-                            if negation_sign.text == '+':
-                                neg_flag = True
-                        # (after this, neg_flag will be a boolean value)
-                        neg_flag = neg_flag or \
-                                   term.find('mods/mod[type="ONT::NEG"]')
-                        negation_sign = precond_event.find('predicate/negation')
-                        if negation_sign is not None:
-                            if negation_sign.text == '+':
-                                neg_flag = True
-
-                        if neg_flag:
-                            bc = BoundCondition(bound_agent, False)
-                        else:
-                            bc = BoundCondition(bound_agent, True)
-                        agent.bound_conditions = [bc]
-
-                    # Phosphorylation precondition
-                    elif precond_event_type == 'ONT::PHOSPHORYLATION':
-                        mod, mod_pos = self._get_mod_site(precond_event)
-                        for m, mp in zip(mod, mod_pos):
-                            agent.mods.append(m)
-                            agent.mod_sites.append(mp)
-            
+                    self.add_condition(agent, precond_event, term)
         return agent
+    
+    def add_condition(self, agent, precond_event, agent_term):
+        precond_event_type = precond_event.find('type').text
+        # Binding precondition
+        if precond_event_type == 'ONT::BIND':
+            arg1 = precond_event.find('arg1')
+            arg2 = precond_event.find('arg2')
+            mod = precond_event.findall('mods/mod')
+            if arg1 is None:
+                arg2_name = self._get_name_by_id(arg2.attrib['id'])
+                bound_agent = Agent(arg2_name)
+            elif arg2 is None:
+                arg1_name = self._get_name_by_id(arg1.attrib['id'])
+                bound_agent = Agent(arg1_name)
+            else:
+                arg1_name = self._get_name_by_id(arg1.attrib['id'])
+                arg2_name = self._get_name_by_id(arg2.attrib['id'])
+                if arg1_name == agent.name:
+                    bound_agent = Agent(arg2_name)
+                else:
+                    bound_agent = Agent(arg1_name)
+            # Look for negative flag either in precondition event
+            # predicate tag or in the term itself
+            # (after below, neg_flag will be an object, or None)
+            neg_flag = precond_event.find(
+                            'predicate/mods/mod[type="ONT::NEG"]')
+            negation_sign = precond_event.find('negation')
+            if negation_sign is not None:
+                if negation_sign.text == '+':
+                    neg_flag = True
+            # (after this, neg_flag will be a boolean value)
+            neg_flag = neg_flag or \
+                       agent_term.find('mods/mod[type="ONT::NEG"]')
+            negation_sign = precond_event.find('predicate/negation')
+            if negation_sign is not None:
+                if negation_sign.text == '+':
+                    neg_flag = True
+
+            if neg_flag:
+                bc = BoundCondition(bound_agent, False)
+            else:
+                bc = BoundCondition(bound_agent, True)
+            agent.bound_conditions.append(bc)
+
+        # Phosphorylation precondition
+        elif precond_event_type == 'ONT::PHOSPHORYLATION':
+            mod, mod_pos = self._get_mod_site(precond_event)
+            for m, mp in zip(mod, mod_pos):
+                agent.mods.append(m)
+                agent.mod_sites.append(mp)
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
@@ -405,7 +416,16 @@ class TripsProcessor(object):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
         static_events = []
         for ie in inevent_tags:
-            static_events.append(ie.attrib['id'])
+            event_id = ie.attrib['id']
+            if self.tree.find("EVENT[@id='%s']" % event_id) is not None:
+                static_events.append(event_id)
+            else:
+                # Check for events that have numbering <id>.1, <id>.2, etc.
+                if self.tree.find("EVENT[@id='%s.1']" % event_id) is not None:
+                    static_events.append(event_id + '.1')
+                if self.tree.find("EVENT[@id='%s.2']" % event_id) is not None:
+                    static_events.append(event_id + '.2')
+
         return static_events
 
     def _load_hgnc_cache(self):
