@@ -40,7 +40,8 @@ def process_text(txt, offline=False):
         tmp_file.file.flush()
         return process_nxml(tmp_file.name)
     else:
-        req = urllib2.Request(reach_text_url, data=urllib.urlencode({'text': txt}))
+        req = urllib2.Request(reach_text_url, 
+            data=urllib.urlencode({'text': txt.encode('utf8')}))
         res = urllib2.urlopen(req)
         json_str = res.read()
         #json_dict = json.loads(json_str)
@@ -61,7 +62,8 @@ def process_nxml(file_name, offline=False):
         json_str = result_map.get('resultJson')
     else:
         txt = open(file_name, 'rt').read()
-        req = urllib2.Request(reach_nxml_url, data=urllib.urlencode({'nxml': txt}))
+        req = urllib2.Request(reach_nxml_url, 
+            data=urllib.urlencode({'nxml': txt.encode('utf8')}))
         res = urllib2.urlopen(req)
         json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
