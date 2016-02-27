@@ -238,22 +238,25 @@ class TripsProcessor(object):
             # Extract preconditions of the agent
             if precond_event_ref is not None:
                 # Find the event describing the precondition
-                precond_id = precond_event_ref.find('event').attrib['id']
-                if precond_id == event_id:
-                    warnings.warn('Circular reference to event %s.' %
-                                  precond_id)
-                precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
-                if precond_event is None:
-                    # Sometimes, if there are multiple preconditions
-                    # they are numbered with <id>.1, <id>.2, etc.
-                    p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
-                    if p is not None:
-                        self.add_condition(agent, p, term)
-                    p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
-                    if p is not None:
-                        self.add_condition(agent, p, term)
-                else:
-                    self.add_condition(agent, precond_event, term)
+                preconds = precond_event_ref.findall('event')
+                for precond in preconds:
+                    precond_id = precond.attrib['id']
+                    if precond_id == event_id:
+                        warnings.warn('Circular reference to event %s.' %
+                                       precond_id)
+                    precond_event = self.tree.find("EVENT[@id='%s']" % 
+                                                    precond_id)
+                    if precond_event is None:
+                        # Sometimes, if there are multiple preconditions
+                        # they are numbered with <id>.1, <id>.2, etc.
+                        p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
+                        if p is not None:
+                            self.add_condition(agent, p, term)
+                        p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
+                        if p is not None:
+                            self.add_condition(agent, p, term)
+                    else:
+                        self.add_condition(agent, precond_event, term)
         return agent
     
     def add_condition(self, agent, precond_event, agent_term):
