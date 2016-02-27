@@ -9,6 +9,9 @@ before_install:
   - conda update --yes conda
   - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython nose
 install:
+  # INDRA dependencies
+  - sudo apt-get install graphviz
+  - pip install pygraphviz
   # PySB and dependencies
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip
