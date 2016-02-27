@@ -2,11 +2,15 @@ import re
 import sys
 import pickle
 import warnings
+import itertools
+import collections
 
 from indra.java_vm import autoclass, JavaException, cast
 
 from indra.databases import hgnc_client
 from indra.statements import *
+
+warnings.simplefilter("always")
 
 # Functions for accessing frequently used java classes with shortened path
 def bp(path):
@@ -48,6 +52,17 @@ def match_to_array(m):
     search cast into their appropriate classes. """
     return [cast_biopax_element(m.get(i)) for i in range(m.varSize())]
 
+def is_complex(pe):
+    """Return True if the physical entity is a complex"""
+    val = isinstance(pe, bp('Complex')) or \
+            isinstance(pe, bpimpl('Complex'))
+    return val
+
+def listify(lst):
+    return [l if isinstance(l, collections.Iterable) else [l] for l in lst]
+
+def get_combinations(lst):
+    return itertools.product(*listify(lst))
 
 class BiopaxProcessor(object):
     def __init__(self, model):
@@ -56,6 +71,41 @@ class BiopaxProcessor(object):
         self._hgnc_cache = self._load_hgnc_cache()
 
     def get_complexes(self, force_contains=None):
+        for obj in self.model.getObjects().toArray():
+            bpe = cast_biopax_element(obj)
+            if not is_complex(bpe):
+                continue
+            members = self.get_complex_members(bpe)
+            if members is not None:
+                complexes = get_combinations(members)
+                for c in complexes:
+                    self.statements.append(Complex(c))
+
+    def get_complex_members(self, cplx):
+        member_pes = cplx.getComponent().toArray()
+        if len(member_pes) == 0:
+            warnings.warn('Complex "%s" has no components' % 
+                cplx.getDisplayName())
+            return None
+        members = []
+        for m in member_pes:
+            if is_complex(m):
+                ms = self.get_complex_members(m)
+                if ms is None:
+                    return None
+                ms = [self._get_agent_from_er(mm) for mm in ms]
+                members.extend(ms)
+            else:
+                ma = self._get_agent_from_er(m)
+                members.append(ma)
+        return members
+        
+
+    def get_in_complex_with(self, force_contains=None):
+        """Search for pairs of proteins that are in a
+        complex with each other and construct corresponding
+        Complex statements.
+        """
         pb = bpp('PatternBox')
         s = bpp('Searcher')
         p = pb.inComplexWith()
@@ -191,12 +241,7 @@ class BiopaxProcessor(object):
             # Do we need to look at mf.getFeatureLocationType()?
             # It seems to be always None.
             # mf_pos_type = mf.getFeatureLocationType()
-        return mod, mod_pos
-    
-    @staticmethod
-    def is_complex(pe):
-        """Return True if the physical entity is a complex"""
-        return isinstance(pe, bp('Complex'))
+        return mod, mod_pos 
 
     def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
                                   force_contains=None):
@@ -219,11 +264,11 @@ class BiopaxProcessor(object):
         stmts = []
         for r in res_array:
             controller = r[p.indexOf('controller PE')]
-            if self.is_complex(controller):
+            if is_complex(controller):
                 warnings.warn('Cannot handle complex enzymes.')
                 continue
             inputpe = r[p.indexOf('input PE')]
-            if self.is_complex(inputpe):
+            if is_complex(inputpe):
                 warnings.warn('Cannot handle complex substrates.')
                 continue
             source_id = r[p.indexOf('Control')].getUri()
@@ -327,22 +372,28 @@ class BiopaxProcessor(object):
         return p
 
     def _get_agent_from_er(self, bp_entref):
-        name = self._get_entity_names(bp_entref)[0]
-        hgnc_id = self._get_hgnc_id(bp_entref)
-        uniprot_id = self._get_uniprot_id(bp_entref)
-        agent = Agent(name, db_refs={'HGNC': hgnc_id, 'UP': uniprot_id})
-        return agent
-    
+        members = bp_entref.getMemberPhysicalEntity().toArray()
+        if members:
+            agents = [self._get_agent_from_er(m) for m in members]
+        else:    
+            name = self._get_entity_names(bp_entref)[0]
+            hgnc_id = self._get_hgnc_id(bp_entref)
+            uniprot_id = self._get_uniprot_id(bp_entref)
+            agent = Agent(name, db_refs={'HGNC': hgnc_id, 'UP': uniprot_id})
+            return agent
+        return agents
+
     def _get_entity_names(self, bp_ent):
         names = []
         # If entity is a complex
-        if isinstance(bp_ent, bp('Complex')):
+        if is_complex(bp_ent):
             names += [self._get_entity_names(m) for
                       m in bp_ent.getComponent().toArray()]
         # If entity is not a complex
         elif isinstance(bp_ent, bp('ProteinReference')) or \
                 isinstance(bp_ent, bp('SmallMoleculeReference')) or \
                 isinstance(bp_ent, bp('Protein')) or \
+                isinstance(bp_ent, bpimpl('Protein')) or \
                 isinstance(bp_ent, bp('EntityReference')):
             hgnc_id = self._get_hgnc_id(bp_ent)
             if hgnc_id is None:
@@ -350,6 +401,9 @@ class BiopaxProcessor(object):
             else:
                 hgnc_name = self._get_hgnc_name(hgnc_id)
             names += [hgnc_name]
+        else:
+            warnings.warn('Unhandled entity type: %s' % 
+                          bpe.getModelInterface().getName())
         
         # Canonicalize names
         for i, name in enumerate(names):
