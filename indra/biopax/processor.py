@@ -83,21 +83,29 @@ class BiopaxProcessor(object):
             res_array = [match_to_array(m) for m in res.toArray()]
         
             for r in res_array:
-                monomer = self._get_agents_from_entity(
-                    r[p.indexOf('changed generic ER')])
-                if force_contains is not None:
-                    if momomer not in force_contains:
-                        continue
-                citation = self._get_citation(r[p.indexOf('Conversion')])
-                ev = Evidence(source_api='biopax', pmid=citation)
-                out_pe = r[p.indexOf('output PE')]
+                conversion = r[p.indexOf('Conversion')]
+                citation = self._get_citation(conversion)
                 activity = 'Activity'
-                mod, mod_pos = self._get_modification_site(out_pe)
-                if mod:
-                    stmt = ActivityModification(monomer, mod, mod_pos, 
-                                            relationship, activity,
-                                            evidence=ev)
-                    self.statements.append(stmt)
+                out_pe = r[p.indexOf('output simple PE')]
+                source_id = conversion.getUri()
+                ev = Evidence(source_api='biopax', pmid=citation,
+                              source_id=source_id)
+                
+                monomers = self._get_agents_from_entity(out_pe)
+                for monomer in listify(monomers):
+                    if force_contains is not None:
+                        if momomer not in force_contains:
+                            continue
+                    mod, mod_pos =\
+                        self._get_modification_site(out_pe, get_activity=False)
+                    if mod:
+                        if mod  == 'Active':
+                            # Skip activity as a modification state
+                            continue
+                        stmt = ActivityModification(monomer, mod, mod_pos, 
+                                                relationship, activity,
+                                                evidence=ev)
+                        self.statements.append(stmt)
 
     def _get_complex_members(self, cplx):
         # Get the members of a complex. This is returned as a list 
@@ -123,7 +131,7 @@ class BiopaxProcessor(object):
         return members
     
     @staticmethod
-    def _get_modification_site(modPE):
+    def _get_modification_site(modPE, get_activity=True):
         # Do we need to look at EntityFeatures?
         modMF = [mf for mf in modPE.getFeature().toArray()
                  if isinstance(mf, bpimpl('ModificationFeature'))]
@@ -132,6 +140,8 @@ class BiopaxProcessor(object):
 
         for mf in modMF:
             mod1, mod_pos1 = BiopaxProcessor._extract_mod_from_feature(mf)
+            if not get_activity and mod1 == 'Active':
+                continue
             mod.append(mod1)
             mod_pos.append(mod_pos1)
         return mod, mod_pos 
