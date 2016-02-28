@@ -131,7 +131,7 @@ class BiopaxProcessor(object):
         mod = []
 
         for mf in modMF:
-            mod1, mod_pos1 = self._extract_mod_from_feature(mf)
+            mod1, mod_pos1 = BiopaxProcessor._extract_mod_from_feature(mf)
             mod.append(mod1)
             mod_pos.append(mod_pos1)
         return mod, mod_pos 
@@ -157,23 +157,27 @@ class BiopaxProcessor(object):
         stmts = []
         for r in res_array:
             controller = r[p.indexOf('controller PE')]
+            inputpe = r[p.indexOf('input PE')]
+            conversion = r[p.indexOf('Conversion')]
+            control = r[p.indexOf('Control')]
             if is_complex(controller):
                 warnings.warn('Cannot handle complex enzymes.')
                 continue
-            inputpe = r[p.indexOf('input PE')]
             if is_complex(inputpe):
                 warnings.warn('Cannot handle complex substrates.')
                 continue
-            source_id = r[p.indexOf('Control')].getUri()
-            enz = self._get_agents_from_entity(r[p.indexOf('controller ER')])
-            sub = self._get_agents_from_entity(r[p.indexOf('changed ER')])
-            # If neither the enzyme nor the substrate is contained then skip
-            if force_contains is not None:
-                if (enz.name not in force_contains) and \
-                    (sub.name not in force_contains):
-                    continue
-            citation = self._get_citation(r[p.indexOf('Conversion')])
-            ev = Evidence(source_api='biopax', pmid=citation,
+            citation = self._get_citation(conversion)
+            source_id = control.getUri()
+            
+            enzs = listify(self._get_agents_from_entity(controller))
+            subs = listify(self._get_agents_from_entity(inputpe))
+            for enz, sub in itertools.product(enzs, subs):
+                # If neither the enzyme nor the substrate is contained then skip
+                if force_contains is not None:
+                    if (enz.name not in force_contains) and \
+                        (sub.name not in force_contains):
+                        continue
+                ev = Evidence(source_api='biopax', pmid=citation,
                           source_id=source_id)
 
             # Get the modification (s)
@@ -183,11 +187,17 @@ class BiopaxProcessor(object):
             else:
                 modPE = r[p.indexOf('input simple PE')]
 
-            # TODO: handle case when
-            # r[p.indexOf('output simple PE')].getRDFId()
-            # is not equal to r[p.indexOf('output PE')].getRDFId()
+            # TODO: this should be based on the difference of input/output PE
+            # and not simply the output PE.
+            # TODO: the mod filter does not catch cases where modificantions
+            # other than the specified one are also gained or lost.
+            # We should introduce another filter here to not include those 
+            # modifications.
             mod, mod_pos = self._get_modification_site(modPE)
             for m, mp in zip(mod, mod_pos):
+                if m  == 'Active':
+                    # Skip activity as a modification state
+                    continue
                 stmt = (enz, sub, m, mp, ev)
                 stmts.append(stmt)
         return stmts
@@ -494,7 +504,13 @@ def is_modification(fe):
     return val
 
 def listify(lst):
+    if not isinstance(lst, collections.Iterable):
+        return [lst]
+    else:
+        return lst
+
+def list_listify(lst):
     return [l if isinstance(l, collections.Iterable) else [l] for l in lst]
 
 def get_combinations(lst):
-    return itertools.product(*listify(lst))
+    return itertools.product(*list_listify(lst))
