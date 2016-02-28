@@ -126,38 +126,9 @@ class BiopaxProcessor(object):
         mod = []
 
         for mf in modMF:
-            # ModificationFeature / SequenceModificationVocabulary
-            mf_type = mf.getModificationType().getTerm().toArray()[0]
-            if len(mf.getModificationType().getTerm().toArray()) != 1:
-                warnings.warn('Other than one modification term')
-            try:
-                mod_type = BiopaxProcessor._mftype_dict[mf_type]
-            except KeyError:
-                warnings.warn('Unknown modification type %s' % mf_type)
-                continue
-
-            mod.append(mod_type)
-
-            # getFeatureLocation returns SequenceLocation, which is the
-            # generic parent class of SequenceSite and SequenceInterval.
-            # Here we need to cast to SequenceSite in order to get to
-            # the sequence position.
-            mf_pos = mf.getFeatureLocation()
-            if mf_pos is not None:
-                mf_site = cast(bp('SequenceSite'), mf_pos)
-                mf_pos_status = mf_site.getPositionStatus()
-                if mf_pos_status is None:
-                    mod_pos.append(None)
-                elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
-                    warnings.warn('Modification site position is %s' %
-                                  mf_pos_status.toString())
-                else:
-                    mod_pos.append(mf_site.getSequencePosition())
-            else:
-                mod_pos.append(None)
-            # Do we need to look at mf.getFeatureLocationType()?
-            # It seems to be always None.
-            # mf_pos_type = mf.getFeatureLocationType()
+            mod1, mod_pos1 = self._extract_mod_from_feature(mf)
+            mod.append(mod1)
+            mod_pos.append(mod_pos1)
         return mod, mod_pos 
 
     def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
