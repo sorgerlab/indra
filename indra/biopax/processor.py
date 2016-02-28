@@ -24,11 +24,16 @@ class BiopaxProcessor(object):
             bpe = cast_biopax_element(obj)
             if not is_complex(bpe):
                 continue
+            citation = self._get_citation(bpe)
+            source_id = bpe.getUri()
             members = self._get_complex_members(bpe)
             if members is not None:
                 complexes = get_combinations(members)
                 for c in complexes:
-                    self.statements.append(Complex(c))
+                    ev = Evidence(source_api='biopax',
+                                  pmid=citation,
+                                  source_id=source_id)
+                    self.statements.append(Complex(c, ev))
 
     def get_phosphorylation(self, force_contains=None):
         stmts = self._get_generic_modification('phospho', 
