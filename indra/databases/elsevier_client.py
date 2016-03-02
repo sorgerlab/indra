@@ -21,7 +21,9 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'article': 'http://www.elsevier.com/xml/svapi/article/dtd',
                'ja': 'http://www.elsevier.com/xml/ja/dtd',
                'xocs': 'http://www.elsevier.com/xml/xocs/dtd',
-               'common': 'http://www.elsevier.com/xml/common/dtd'}
+               'common': 'http://www.elsevier.com/xml/common/dtd',
+               'atom': 'http://www.w3.org/2005/Atom',
+               'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 
 @lru_cache(maxsize=100)
 def download_article(doi):
@@ -79,3 +81,27 @@ def get_article(doi, output='txt'):
         print 'Unknown output format %s.' % output
         return None
     return full_txt
+
+@lru_cache(maxsize=100)
+def get_dois(query_str, count=100):
+    """Search ScienceDirect through the API for articles. See 
+    http://api.elsevier.com/content/search/fields/scidir 
+    for constructing a query string to pass here.
+    Example: 'abstract(BRAF) AND all("colorectal cancer")'
+    """
+    url = 'http://api.elsevier.com/content/search/scidir'
+    if api_key is None:
+        print 'Missing API key, could not perform search.'
+        return None
+    params = {'APIKey': api_key,
+              'query': query_str,
+              'count': count,
+              'httpAccept': 'application/xml',
+              'sort': '-coverdate',
+              'field': 'doi'}
+    res = urllib2.urlopen(url, data=urllib.urlencode(params))
+    xml = res.read()
+    et = ET.fromstring(xml)
+    doi_tags = et.findall('atom:entry/prism:doi', elsevier_ns)
+    dois = [dt.text for dt in doi_tags]
+    return dois
