@@ -1,9 +1,12 @@
 import urllib, urllib2
+from functools32 import lru_cache
 import xml.etree.ElementTree as ET
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+pmid_convert = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
 
+@lru_cache(maxsize=100)
 def send_request(url, data):
     try:
         req = urllib2.Request(url, data)
@@ -49,3 +52,15 @@ def get_abstract(pubmed_id):
         abstract_text = ' '.join([' ' if abst.text is None 
                                     else abst.text for abst in abstract])
         return abstract_text
+
+def pmid_to_doi(pmid):
+    url = pmid_convert
+    data = {'ids': pmid}
+    tree = send_request(url, urllib.urlencode(data))
+    if tree is None:
+        return None
+    record = tree.find('record')
+    if record is None:
+        return None
+    doi = record.attrib['doi']
+    return doi 
