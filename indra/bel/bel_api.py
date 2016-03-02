@@ -7,7 +7,8 @@ import ndex_client
 
 def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
     network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
-    url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
+    #url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
+    url_suffix = '/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
     rdf = ndex_client.send_request(url_suffix, params)
     if rdf is None:
