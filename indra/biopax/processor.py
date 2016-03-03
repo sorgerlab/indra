@@ -166,15 +166,11 @@ class BiopaxProcessor(object):
         stmts = []
         for r in res_array:
             controller_pe = r[p.indexOf('controller PE')]
-            controller_er = r[p.indexOf('controller ER')]
             input_pe = r[p.indexOf('input PE')]
-            changed_er = r[p.indexOf('changed ER')]
+            input_spe = r[p.indexOf('input simple PE')]
+            output_spe = r[p.indexOf('output simple PE')]
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
-            if has_members(controller_er):
-                continue
-            if has_members(changed_er):
-                continue
             
             if is_complex(controller_pe):
                 warnings.warn('Cannot handle complex enzymes.')
@@ -185,21 +181,13 @@ class BiopaxProcessor(object):
             # TODO: should this be the citation for the control?
             citation = BiopaxProcessor._get_citation(reaction)
             source_id = control.getUri()
-            if source_id.startswith('http://purl.org/pc2/7/Catalysis_3a6a25'):
-                for rr in r:
-                    print rr.getUri(), rr.getDisplayName()
             
-                mod_types, mod_poss = BiopaxProcessor._get_entity_mods(controller_pe)
-                enzs = listify(BiopaxProcessor._get_agents_from_entity_ref(controller_er))
-                for e in enzs:
-                    e.mods = mod_types
-                    e.mod_sites = mod_poss
-                import ipdb; ipdb.set_trace()
-            
-            enzs = listify(BiopaxProcessor._get_agents_from_entity(controller_pe))
-            subs = listify(BiopaxProcessor._get_agents_from_entity(input_pe))
-            for enz, sub in itertools.product(enzs, subs):
-                # If neither the enzyme nor the substrate is contained then skip
+            enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+            subs = BiopaxProcessor._get_agents_from_entity(input_spe,
+                                                           expand_pe=False)
+            for enz, sub in itertools.product(listify(enzs), listify(subs)):
+                # If neither the required enzyme nor the substrate is 
+                # present then skip
                 if force_contains is not None:
                     if (enz.name not in force_contains) and \
                         (sub.name not in force_contains):
@@ -207,26 +195,37 @@ class BiopaxProcessor(object):
                 ev = Evidence(source_api='biopax', pmid=citation,
                           source_id=source_id)
 
-            # Get the modification (s)
-            # Should this be simple PE?
-            if mod_gain:
-                modPE = r[p.indexOf('output simple PE')]
-            else:
-                modPE = r[p.indexOf('input simple PE')]
+                # Get the modifications
+                #if mod_gain:
+                #    modPE = r[p.indexOf('output simple PE')]
+                #else:
+                #    modPE = r[p.indexOf('input simple PE')]
 
-            # TODO: this should be based on the difference of input/output PE
-            # and not simply the output PE.
-            # TODO: the mod filter does not catch cases where modificantions
-            # other than the specified one are also gained or lost.
-            # We should introduce another filter here to not include those 
-            # modifications.
-            mod, mod_pos = BiopaxProcessor._get_modification_site(modPE)
-            for m, mp in zip(mod, mod_pos):
-                if m  == 'Active':
-                    # Skip activity as a modification state
-                    continue
-                stmt = (enz, sub, m, mp, ev)
-                stmts.append(stmt)
+                # TODO: this should be based on the difference of 
+                # input/output PE and not simply the output PE.
+                mod_in, mod_pos_in =\
+                    BiopaxProcessor._get_modification_site(input_spe)
+                mod_out, mod_pos_out =\
+                    BiopaxProcessor._get_modification_site(output_spe)
+                
+                mod_shared = set(zip(mod_in, mod_pos_in)).intersection(
+                                set(zip(mod_out, mod_pos_out)))
+                sub.mod = [s[0] for s in mod_shared]
+                sub.mod_pos = [s[1] for s in mod_shared]
+
+                if mod_gain:
+                    gained_mods = set(zip(mod_out, mod_pos_out)).difference(
+                                    set(zip(mod_in, mod_pos_in)))
+                else:
+                    gained_mods = set(zip(mod_in, mod_pos_in)).difference(
+                                    set(zip(mod_out, mod_pos_out)))
+
+                for m, mp in gained_mods:
+                    if m  == 'Active':
+                        # Skip activity as a modification state
+                        continue
+                    stmt = (enz, sub, m, mp, ev)
+                    stmts.append(stmt)
         return stmts
 
     @staticmethod
@@ -255,12 +254,9 @@ class BiopaxProcessor(object):
 
         # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
-        # pb.controlsPhosphorylation(). The pattern cannot be started
-        # from EntityReference because it cannot be instantiated.
-        # Therefore starting with ProteinReference as controller ER
-        #p = bpp('Pattern')(bpimpl('ProteinReference')().getModelInterface(),
-        #                   "controller ER")
-        p = bpp('Pattern')(bpimpl('PhysicalEntity')().getModelInterface(), 'controller PE')
+        # pb.controlsPhosphorylation().
+        p = bpp('Pattern')(bpimpl('PhysicalEntity')().getModelInterface(),
+                           'controller PE')
         # Getting the control itself
         p.add(cb.peToControl(), "controller PE", "Control")
         # Link the control to the conversion that it controls
@@ -270,18 +266,23 @@ class BiopaxProcessor(object):
               "Conversion", "controller PE")
         # Get the input participant of the conversion
         p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
-        # Make sure the participant is a protein
-        p.add(tp(bpimpl('Protein')().getModelInterface()), "input PE")
         # Get the specific PhysicalEntity
         p.add(cb.linkToSpecific(), "input PE", "input simple PE")
+        # Link to ER
+        p.add(cb.peToER(), "input simple PE", "input simple ER")
+        # Make sure the participant is a protein
+        p.add(tp(bpimpl('Protein')().getModelInterface()), "input simple PE")
         # Link to the other side of the conversion
         p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
         # Make sure the two sides are not the same
         p.add(bpp('constraint.Equality')(False), "input PE", "output PE")
-        # Make sure the output is a Protein
-        p.add(tp(bpimpl('Protein')().getModelInterface()), "output PE")
         # Get the specific PhysicalEntity
         p.add(cb.linkToSpecific(), "output PE", "output simple PE")
+        # Link to ER
+        p.add(cb.peToER(), "output simple PE", "output simple ER")
+        p.add(bpp('constraint.Equality')(True), "input simple ER", "output simple ER")
+        # Make sure the output is a Protein
+        p.add(tp(bpimpl('Protein')().getModelInterface()), "output simple PE")
         p.add(bpp('constraint.NOT')(cb.linkToSpecific()),
               "input PE", "output simple PE")
         p.add(bpp('constraint.NOT')(cb.linkToSpecific()),
@@ -289,42 +290,39 @@ class BiopaxProcessor(object):
         return p
 
     @staticmethod
-    def _get_agents_from_entity(bpe):
+    def _get_agents_from_entity(bpe, expand_pe=True, expand_er=True):
         # If the entity has members (like a protein family),
         # we iterate over them
-        members = bpe.getMemberPhysicalEntity().toArray()
-        if members:
-            agents = []
-            for m in members:
-                agents.append(BiopaxProcessor._get_agents_from_entity(m))
-            return agents
+        if expand_pe:
+            members = bpe.getMemberPhysicalEntity().toArray()
+            if members:
+                agents = []
+                for m in members:
+                    agents.append(BiopaxProcessor._get_agents_from_entity(m))
+                return agents
+        
+        # If the entity has a reference which has members, we iterate
+        # over them.
+        mods, mod_sites = BiopaxProcessor._get_entity_mods(bpe)
+
+        if expand_er:
+            er = bpe.getEntityReference()
+            members = er.getMemberEntityReference().toArray()
+            if members:
+                agents = []
+                for m in members:
+                    name = BiopaxProcessor._get_element_name(m)
+                    db_refs = BiopaxProcessor._get_db_refs(m)
+                    agents.append(Agent(name, db_refs=db_refs, 
+                                  mods=mods, mod_sites=mod_sites))
+                return agents
         # If it is a single entity, we get its name and database
         # references
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
-        mods, mod_sites = BiopaxProcessor._get_entity_mods(bpe)
         agent = Agent(name, db_refs=db_refs, mods=mods, mod_sites=mod_sites)
         return agent
 
-    @staticmethod
-    def _get_agents_from_entity_ref(bper):
-        # If the entity has members (like a protein family),
-        # we iterate over them
-        members = bper.getMemberEntityReference().toArray()
-        if members:
-            agents = []
-            for m in members:
-                agents.append(BiopaxProcessor._get_agents_from_entity_ref(m))
-            return agents
-        # If it is a single entity, we get its name and database
-        # references
-        name = BiopaxProcessor._get_element_name(bper)
-        db_refs = BiopaxProcessor._get_db_refs(bper)
-        # Modifications shouldn't be filled for entity reference because
-        # those are not relevant for a specific instance
-        agent = Agent(name, db_refs=db_refs)
-        return agent
-    
     @staticmethod
     def _get_entity_mods(bpe):
         """Get all the modifications of an entity in INDRA format"""
@@ -529,7 +527,7 @@ def is_small_molecule(pe):
     val = isinstance(pe, bp('SmallMolecule')) or \
             isinstance(pe, bpimpl('SmallMolecule')) or \
             isinstance(pe, bp('SmallMoleculeReference')) or \
-            isinstance(pe, bpimpm('SmallMoleculeReference'))
+            isinstance(pe, bpimpl('SmallMoleculeReference'))
     return val
 
 def is_modification(fe):
@@ -541,8 +539,11 @@ def is_modification(fe):
 def is_reference(bpe):
     """Return True if the element is an entity reference."""
     if isinstance(bpe, bp('ProteinReference')) or \
+        isinstance(bpe, bpimpl('ProteinReference')) or \
         isinstance(bpe, bp('SmallMoleculeReference')) or \
-        isinstance(bpe, bp('EntityReference')):
+        isinstance(bpe, bpimpl('SmallMoleculeReference')) or \
+        isinstance(bpe, bp('EntityReference')) or \
+        isinstance(bpe, bpimpl('EntityReference')):
         return True
     else:
         return False
