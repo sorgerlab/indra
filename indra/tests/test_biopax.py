@@ -72,3 +72,58 @@ def test_is_pe2():
                      'ProteinReference_971cec47bcd850e2b7d602f0416edacf')
     bpe = cast(bpc.bp('ProteinReference'), bpe)
     assert(not bpc.is_physical_entity(bpe))
+
+def test_is_er():
+    bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117345.2')
+    bpe = cast(bpc.bp('Protein'), bpe)
+    assert(not bpc.is_reference(bpe))
+    
+def test_is_er2():
+    bpe = bp.model.getByID(uri_prefix +\
+                     'ProteinReference_971cec47bcd850e2b7d602f0416edacf')
+    bpe = cast(bpc.bp('ProteinReference'), bpe)
+    assert(bpc.is_reference(bpe))
+
+def test_is_mod():
+    bpe = bp.model.getByID(uri_prefix +\
+                    'ModificationFeature_59c99eae672d2a11e971a93c7848d5c6')
+    bpe = cast(bpc.bp('ModificationFeature'), bpe)
+    assert(bpc.is_modification(bpe))
+
+def test_is_mod2():
+    bpe = bp.model.getByID(uri_prefix +\
+                    'FragmentFeature_806ae27c773eb2d9138269552899c242')
+    bpe = cast(bpc.bp('FragmentFeature'), bpe)
+    assert(not bpc.is_modification(bpe))
+
+def test_is_complex():
+    bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_24213.2')
+    bpe = cast(bpc.bp('Complex'), bpe)
+    assert(bpc.is_complex(bpe))
+
+def test_is_complex2():
+    bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117345.2')
+    bpe = cast(bpc.bp('Protein'), bpe)
+    assert(not bpc.is_complex(bpe))
+
+def test_uniprot_id_pe():
+    bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117886.3')
+    bpe = cast(bpc.bp('Protein'), bpe)
+    ids = bp._get_uniprot_id(bpe)
+    assert(set(['Q15303', 'Q2M1W1', 'Q59EW4']) == set(ids))
+
+def test_uniprot_id_er():
+    bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
+    bpe = cast(bpc.bp('ProteinReference'), bpe)
+    ids = bp._get_uniprot_id(bpe)
+    assert(set(['Q15303', 'Q2M1W1', 'Q59EW4']) == set(ids))
+
+def test_get_hgnc_id():
+    bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
+    bpe = cast(bpc.bp('ProteinReference'), bpe)
+    hgnc_id = bp._get_hgnc_id(bpe) 
+    assert(hgnc_id == 3432)
+
+def test_get_hgnc_name():
+    hgnc_name = bp._get_hgnc_name(3432)
+    assert(hgnc_name == 'ERBB4')
