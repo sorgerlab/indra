@@ -28,7 +28,9 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
 @lru_cache(maxsize=100)
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
-    url = 'http://api.elsevier.com/content/article/%s' % doi
+    if doi.lower().startswith('doi:'):
+        doi = doi[4:]
+    url = 'http://api.elsevier.com/content/article/doi/%s' % doi
     if api_key is None:
         print 'Missing API key, could not download article.'
         return None
