@@ -1,8 +1,10 @@
 import urllib2
+from functools32 import lru_cache
 import xml.etree.ElementTree as et
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
 
+@lru_cache(maxsize=1000)
 def get_hgnc_name(hgnc_id):
     xml_tree = get_hgnc_entry(hgnc_id)
     if xml_tree is None:
