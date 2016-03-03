@@ -109,11 +109,14 @@ class Preassembler(object):
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement::
 
+            >>> from indra.preassembler.hierarchy_manager import \
+                    entity_hierarchy as eh, modification_hierarchy as mh
             >>> braf = Agent('BRAF')
             >>> map2k1 = Agent('MAP2K1')
             >>> st1 = Phosphorylation(braf, map2k1, 'Phosphorylation', None)
             >>> st2 = Phosphorylation(braf, map2k1, 'Phosphorylation', '218')
-            >>> combined_stmts = Preassembler.combine_related([st1, st2])
+            >>> pa = Preassembler(eh, mh, [st1, st2])
+            >>> combined_stmts = pa.combine_related()
             >>> combined_stmts
             [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
             >>> combined_stmts[0].supported_by
