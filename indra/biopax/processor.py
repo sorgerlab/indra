@@ -196,13 +196,6 @@ class BiopaxProcessor(object):
                           source_id=source_id)
 
                 # Get the modifications
-                #if mod_gain:
-                #    modPE = r[p.indexOf('output simple PE')]
-                #else:
-                #    modPE = r[p.indexOf('input simple PE')]
-
-                # TODO: this should be based on the difference of 
-                # input/output PE and not simply the output PE.
                 mod_in, mod_pos_in =\
                     BiopaxProcessor._get_modification_site(input_spe)
                 mod_out, mod_pos_out =\
@@ -210,8 +203,9 @@ class BiopaxProcessor(object):
                 
                 mod_shared = set(zip(mod_in, mod_pos_in)).intersection(
                                 set(zip(mod_out, mod_pos_out)))
-                sub.mod = [s[0] for s in mod_shared]
-                sub.mod_pos = [s[1] for s in mod_shared]
+                
+                sub.mods = [s[0] for s in mod_shared]
+                sub.mod_sites = [s[1] for s in mod_shared]
 
                 if mod_gain:
                     gained_mods = set(zip(mod_out, mod_pos_out)).difference(
