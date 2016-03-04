@@ -14,7 +14,6 @@ warnings.simplefilter("always")
 
 # TODO:
 # 1. Extract cellularLocation from each PhysicalEntity
-# 2. Look at componentStoichiometry within Complex
 # 3. Look at participantStoichiometry within BiochemicalReaction
 # 5. Check whether Control has a different meaning from Catalysis
 
@@ -136,23 +135,38 @@ class BiopaxProcessor(object):
         # of lists since complexes can contain other complexes. The 
         # list of lists solution allows us to preserve this.
         member_pes = cplx.getComponent().toArray()
+        
+        # Make a dict of member URIs and their
+        # corresponding stoichiometries
+        member_stos = {s.getPhysicalEntity().getUri():
+                        s.getStoichiometricCoefficient() for 
+                        s in cplx.getComponentStoichiometry().toArray()}
 
         # Some complexes do not have any members explicitly listed
-        if len(member_pes) == 0:
-            warnings.warn('Complex "%s" has no members.' % 
-                cplx.getDisplayName())
-            return None
+        if not member_pes:
+            member_pes = cplx.getMemberPhysicalEntity().toArray()
+            if not member_pes:
+                warnings.warn('Complex "%s" has no members.' % 
+                              cplx.getDisplayName())
+                return None
         members = []
         for m in member_pes:
             if is_complex(m):
                 ms = BiopaxProcessor._get_complex_members(m)
                 if ms is None:
                     return None
-                ms = [BiopaxProcessor._get_agents_from_entity(mm) for mm in ms]
-                members.append(ms)
+                members.extend(ms)
             else:
                 ma = BiopaxProcessor._get_agents_from_entity(m)
-                members.append(ma)
+                try:
+                    sto = member_stos[m.getUri()]
+                    sto_int = int(sto)
+                except KeyError:
+                    # No stoichiometry information - assume it is 1
+                    members.append(ma)
+                    sto_int = 1
+                for i in range(sto_int):
+                    members.append(ma)
         return members
     
     @staticmethod
@@ -343,7 +357,11 @@ class BiopaxProcessor(object):
             if members:
                 agents = []
                 for m in members:
-                    agents.append(BiopaxProcessor._get_agents_from_entity(m))
+                    member_agents = BiopaxProcessor._get_agents_from_entity(m)
+                    if isinstance(member_agents, Agent):
+                        agents.append(member_agents)
+                    else:
+                        agents.extend(member_agents)
                 return agents
         
         # If the entity has a reference which has members, we iterate
@@ -351,16 +369,21 @@ class BiopaxProcessor(object):
         mods, mod_sites = BiopaxProcessor._get_entity_mods(bpe)
 
         if expand_er:
-            er = bpe.getEntityReference()
-            members = er.getMemberEntityReference().toArray()
-            if members:
-                agents = []
-                for m in members:
-                    name = BiopaxProcessor._get_element_name(m)
-                    db_refs = BiopaxProcessor._get_db_refs(m)
-                    agents.append(Agent(name, db_refs=db_refs, 
-                                  mods=mods, mod_sites=mod_sites))
-                return agents
+            try:
+                er = bpe.getEntityReference()
+            except AttributeError:
+                warnings.warn('No entity reference for %s' % bpe.getUri())
+                er = None
+            if er is not None:
+                members = er.getMemberEntityReference().toArray()
+                if members:
+                    agents = []
+                    for m in members:
+                        name = BiopaxProcessor._get_element_name(m)
+                        db_refs = BiopaxProcessor._get_db_refs(m)
+                        agents.append(Agent(name, db_refs=db_refs, 
+                                      mods=mods, mod_sites=mod_sites))
+                    return agents
         # If it is a single entity, we get its name and database
         # references
         name = BiopaxProcessor._get_element_name(bpe)
@@ -434,7 +457,7 @@ class BiopaxProcessor(object):
             db_refs = {'CHEBI': chebi_id}
         else:
             warnings.warn('Unhandled entity type %s' %
-                bpe.getModelInterface().getString())
+                bpe.getModelInterface().getName())
             db_refs = {}
         return db_refs
 
@@ -450,7 +473,7 @@ class BiopaxProcessor(object):
             name = bpe.getDisplayName()
         else:
             warnings.warn('Unhandled entity type %s' %
-                bpe.getModelInterface().getString())
+                bpe.getModelInterface().getName())
             name = bpe.getDisplayName()
         
         # Canonicalize name
@@ -470,7 +493,8 @@ class BiopaxProcessor(object):
         else:
             bp_entref = bpe
         xrefs = bp_entref.getXref().toArray()
-        uniprot_refs = [x for x in xrefs if x.getDb() == 'UniProt Knowledgebase']
+        uniprot_refs = [x for x in xrefs if 
+                        x.getDb() == 'UniProt Knowledgebase']
         uniprot_ids = [r.getId() for r in uniprot_refs]
         if not uniprot_ids:
             return None
@@ -546,7 +570,6 @@ def cast_biopax_element(bpe):
     """ Casts a generic BioPAXElement object into a specific type.
     This is useful when a search only returns generic elements. """
     return cast(bpe.getModelInterface().getName(), bpe)
-
 
 def match_to_array(m):
     """ Returns an array consisting of the elements obtained from a pattern
