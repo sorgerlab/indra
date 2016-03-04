@@ -12,6 +12,14 @@ from indra.statements import *
 
 warnings.simplefilter("always")
 
+# TODO:
+# 1. Extract cellularLocation from each PhysicalEntity
+# 2. Look at componentStoichiometry within Complex
+# 3. Look at participantStoichiometry within BiochemicalReaction
+# 4. Look at catalysisDirection within Catalysis (is it sometimes 
+#   RIGHT_TO_LEFT?)
+# 5. Check whether Control has a different meaning from Catalysis
+
 
 class BiopaxProcessor(object):
     def __init__(self, model):
@@ -23,15 +31,23 @@ class BiopaxProcessor(object):
             bpe = cast_biopax_element(obj)
             if not is_complex(bpe):
                 continue
-            citation = self._get_citation(bpe)
+            
+            citations = self._get_citations(bpe) 
             source_id = bpe.getUri()
+            if not citations:
+                ev = Evidence(source_api='biopax',
+                               pmid=None,
+                               source_id=source_id)
+            else:        
+                ev = [Evidence(source_api='biopax',
+                               pmid=cit,
+                               source_id=source_id)
+                      for cit in citations]
+            
             members = self._get_complex_members(bpe)
             if members is not None:
                 complexes = get_combinations(members)
                 for c in complexes:
-                    ev = Evidence(source_api='biopax',
-                                  pmid=citation,
-                                  source_id=source_id)
                     self.statements.append(Complex(c, ev))
 
     def get_phosphorylation(self, force_contains=None):
@@ -82,13 +98,24 @@ class BiopaxProcessor(object):
             res_array = [match_to_array(m) for m in res.toArray()]
         
             for r in res_array:
-                conversion = r[p.indexOf('Conversion')]
-                citation = self._get_citation(conversion)
+                reaction = r[p.indexOf('Conversion')]
+                citations = self._get_citations(reaction)
                 activity = 'Activity'
                 out_pe = r[p.indexOf('output simple PE')]
-                source_id = conversion.getUri()
-                ev = Evidence(source_api='biopax', pmid=citation,
-                              source_id=source_id)
+                
+                # Here we get the evidence for the BiochemicalReaction
+                source_id = reaction.getUri()
+                citations = BiopaxProcessor._get_citations(reaction)
+                if not citations:
+                    ev = Evidence(source_api='biopax',
+                                  pmid=None,
+                                  source_id=source_id)
+                else:        
+                    ev = [Evidence(source_api='biopax',
+                                   pmid=cit,
+                                   source_id=source_id)
+                          for cit in citations]
+                
                 monomers = self._get_agents_from_entity(out_pe)
                 for monomer in listify(monomers):
                     if force_contains is not None:
@@ -111,6 +138,7 @@ class BiopaxProcessor(object):
         # of lists since complexes can contain other complexes. The 
         # list of lists solution allows us to preserve this.
         member_pes = cplx.getComponent().toArray()
+
         # Some complexes do not have any members explicitly listed
         if len(member_pes) == 0:
             warnings.warn('Complex "%s" has no members.' % 
@@ -173,15 +201,35 @@ class BiopaxProcessor(object):
             control = r[p.indexOf('Control')]
             
             if is_complex(controller_pe):
+                # Identifying the "real" enzyme in a complex may not always be
+                # possible.
+                # One heuristic here could be to find the member which is
+                # active and if it is the only active member then
+                # set this as the enzyme to which all other members of the
+                # complex are bound.
                 warnings.warn('Cannot handle complex enzymes.')
                 continue
             if is_complex(input_pe):
+                # It is possible to find which member of the complex is 
+                # actually modified. That member will be the substrate and 
+                # all other members of the complex will be bound to it.
                 warnings.warn('Cannot handle complex substrates.')
                 continue
             # TODO: should this be the citation for the control?
-            citation = BiopaxProcessor._get_citation(reaction)
+            # Sometimes there is an xref within Catalysis which refers to 
+            # a pubmed article in a bp:PublicationXref tag.
+            citations = BiopaxProcessor._get_citations(control)
             source_id = control.getUri()
-            
+            if not citations:
+                ev = Evidence(source_api='biopax',
+                               pmid=None,
+                               source_id=source_id)
+            else:        
+                ev = [Evidence(source_api='biopax',
+                               pmid=cit,
+                               source_id=source_id)
+                      for cit in citations]
+
             enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
@@ -192,9 +240,7 @@ class BiopaxProcessor(object):
                     if (enz.name not in force_contains) and \
                         (sub.name not in force_contains):
                         continue
-                ev = Evidence(source_api='biopax', pmid=citation,
-                          source_id=source_id)
-
+                
                 # Get the modifications
                 mod_in, mod_pos_in =\
                     BiopaxProcessor._get_modification_site(input_spe)
@@ -223,17 +269,21 @@ class BiopaxProcessor(object):
         return stmts
 
     @staticmethod
-    def _get_citation(bpe):
-        evidence = bpe.getEvidence().toArray()
-        refs = []
-        for e in evidence:
-            pub = e.getXref().toArray()
-            for p in pub:
-                if p.getDb() is None:
-                    refs.append(p.getUrl().toArray())
-                else:
-                    refs.append('%s:%s' % (p.getDb(), p.getId()))
+    def _get_citations(bpe):
+        xrefs = bpe.getXref().toArray()
+        refs = [x.getId() for x in xrefs if x.getDb() == 'PUBMED']
+        # TODO: handle non-pubmed evidence
         return refs
+
+    @staticmethod
+    def _get_evidence(bpe):
+        ev = bpe.getEvidence().toArray()
+        print ev
+        for e in ev:
+            xrefs =  e.getXref().toArray()
+            # There are also evidence codes that we could extract.
+            # ev_codes = e.getEvidenceCode().toArray()
+        return xrefs
 
     @staticmethod
     def _construct_modification_pattern():
@@ -341,7 +391,7 @@ class BiopaxProcessor(object):
         # ModificationFeature / SequenceModificationVocabulary
         mf_type = mf.getModificationType()
         if mf_type is None:
-            warnings.warn('Modification type missing for  %s' % mf.getUri())
+            #warnings.warn('Modification type missing for  %s' % mf.getUri())
             return None, None
         if len(mf_type.getTerm().toArray()) != 1:
             warnings.warn('Other than one modification term')
