@@ -16,8 +16,6 @@ warnings.simplefilter("always")
 # 1. Extract cellularLocation from each PhysicalEntity
 # 2. Look at componentStoichiometry within Complex
 # 3. Look at participantStoichiometry within BiochemicalReaction
-# 4. Look at catalysisDirection within Catalysis (is it sometimes 
-#   RIGHT_TO_LEFT?)
 # 5. Check whether Control has a different meaning from Catalysis
 
 
@@ -199,7 +197,10 @@ class BiopaxProcessor(object):
             output_spe = r[p.indexOf('output simple PE')]
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
-            
+           
+            if control.getCatalysisDirection() != 'LEFT_TO_RIGHT':
+                warnings.warn('Unexpected catalysis direction.')
+                continue
             if is_complex(controller_pe):
                 # Identifying the "real" enzyme in a complex may not always be
                 # possible.
