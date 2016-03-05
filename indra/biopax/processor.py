@@ -28,7 +28,7 @@ class BiopaxProcessor(object):
             bpe = cast_biopax_element(obj)
             if not is_complex(bpe):
                 continue
-            
+
             citations = self._get_citations(bpe) 
             source_id = bpe.getUri()
             if not citations:
@@ -212,8 +212,11 @@ class BiopaxProcessor(object):
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
            
-            if control.getCatalysisDirection() != 'LEFT_TO_RIGHT':
-                warnings.warn('Unexpected catalysis direction.')
+            if not is_catalysis(control):
+                continue
+            cat_dir = control.getCatalysisDirection()
+            if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
+                warnings.warn('Unexpected catalysis direction: %s.' % control.getCatalysisDirection())
                 continue
             if is_complex(controller_pe):
                 # Identifying the "real" enzyme in a complex may not always be
@@ -521,7 +524,7 @@ class BiopaxProcessor(object):
     
     @staticmethod
     def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+        hgnc_name = hgnc_client.get_hgnc_name(str(hgnc_id))
         return hgnc_name
 
     def print_statements(self):
@@ -624,6 +627,14 @@ def is_physical_entity(bpe):
         isinstance(bpe, bpimpl('SmallMolecule')) or \
         isinstance(bpe, bp('PhysicalEntity')) or \
         isinstance(bpe, bpimpl('PhysicalEntity')):
+        return True
+    else:
+        return False
+
+def is_catalysis(bpe):
+    """Return True if the element is Catalysis."""
+    if isinstance(bpe, bp('Catalysis')) or \
+        isinstance(bpe, bpimpl('Catalysis')):
         return True
     else:
         return False
