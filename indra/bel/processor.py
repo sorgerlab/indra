@@ -404,7 +404,7 @@ class BelProcessor(object):
             # for modified protein abundances. Instead, the substitution
             # just comes back as a string, e.g., "sub(V,600,E)". This code
             # parses the arguments back out using a regular expression.
-            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
+            match = re.match('sub\(([A-Z])_([0-9]*)_([A-Z])\)', sub_expr)
             if match:
                 matches = match.groups()
                 wt_residue = matches[0]
