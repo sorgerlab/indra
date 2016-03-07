@@ -207,42 +207,6 @@ class Preassembler(object):
                                if not stmt.supports]
         return self.related_stmts
 
-    def check_statements(self):
-        for st in self.stmts:
-            print st
-            self.check_sequence(st)
-
-    @staticmethod
-    def check_sequence(st):
-        """Check whether references to
-        residues and sequence positions are consistent with sequence
-        information in the UniProt database"""
-        # TODO: extend to all Agent modifications
-        if isinstance(st, Phosphorylation):
-            # Skip statements with no specified position
-            if st.mod_pos is None:
-                return
-            # Is looking at the first element enough?
-            sub_id = st.sub.db_refs['UP']
-            if not isinstance(sub_id, basestring):
-                sub_id = sub_id[0]
-            sub = uniprot_client.query_protein(sub_id)
-            if st.mod == 'PhosphorylationSerine':
-                residue = 'S'
-            elif st.mod == 'PhosphorylationThreonine':
-                residue = 'T'
-            elif st.mod == 'PhosphorylationTyrosine':
-                residue = 'Y'
-            else:
-                return
-            ver = uniprot_client.verify_location(sub, residue,
-                                                 location=st.mod_pos)
-            if ver is False:
-                print '-> Sequence check failed; position %s on %s is not %s.' %\
-                      (st.mod_pos, st.sub.name, residue)
-
-
-
 def render_stmt_graph(statements, agent_style=None):
     """Renders the supports/supported_by relationships of a set of statements
     and returns a pygraphviz graph.
@@ -287,4 +251,80 @@ def render_stmt_graph(statements, agent_style=None):
     graph.add_edges_from(edges)
     return graph
 
+def check_statements(stmts):
+    """Iterates over a list of statements and runs checks on them. Then it
+    returns a tuple of lists, with the first element containing statements
+    that passed all checks, and the second the statements that failed the
+    tests"""
+    pass_stmts = []
+    fail_stmts = []
+    for stmt in stmts:
+        print stmt
+        ver = check_sequence(stmt)
+        if ver:
+            pass_stmts.append(stmt)
+        else:
+            fail_stmts.append(stmt)
+    return (pass_stmts, fail_stmts)
 
+def check_sequence(stmt):
+    """Check whether references to
+    residues and sequence positions are consistent with sequence
+    information in the UniProt database"""
+    if isinstance(stmt, Phosphorylation):
+        # Is looking at the first element enough?
+        # Skip statements with no specified position
+        ver_sub = check_agent_mod(stmt.enz)
+        ver_enz = check_agent_mod(stmt.sub)
+        if stmt.mod_pos is not None:
+            ver_phos = check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
+        else:
+            ver_phos = True
+        if ver_sub and ver_enz and ver_phos:
+            return True
+        else:
+            return False
+
+def check_agent_mod(agent, mods=None, mod_sites=None):
+    # If no UniProt ID is found, we don't report a failure
+    up_id = agent.db_refs.get('UP')
+    if up_id is None:
+        return True
+
+    # If the UniProt ID is a list then choose the first one.
+    if not isinstance(up_id, basestring):
+        up_id = up_id[0]
+    agent_entry = uniprot_client.query_protein(up_id)
+    
+    if mod_sites is not None:
+        check_mods = mods
+        check_mod_sites = mod_sites
+    else:
+        check_mods = agent.mods
+        check_mod_sites = agent.mod_sites
+
+    ver = True
+    for m, mp in zip(check_mods, check_mod_sites):
+        if mp is None:
+            continue
+        residue = get_residue(m)
+        ver_one = uniprot_client.verify_location(agent_entry, residue, mp)
+        if not ver_one:
+            print '-> Sequence check failed; position %s on %s is not %s.' %\
+                  (mp, agent.name, residue)
+        ver = ver and ver_one
+    return ver
+
+def get_residue(mod):
+    """Return the amino acid letter from a  modification string"""
+    if mod == 'PhosphorylationSerine':
+        residue = 'S'
+    elif mod == 'PhosphorylationThreonine':
+        residue = 'T'
+    elif mod == 'PhosphorylationTyrosine':
+        residue = 'Y'
+    else:
+        return None
+    return residue
+
+            
