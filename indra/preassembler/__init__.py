@@ -207,35 +207,39 @@ class Preassembler(object):
                                if not stmt.supports]
         return self.related_stmts
 
-    def check_sequence(self):
-        """Iterate over all Statements and check whether references to
+    def check_statements(self):
+        for st in self.stmts:
+            print st
+            self.check_sequence(st)
+
+    @staticmethod
+    def check_sequence(st):
+        """Check whether references to
         residues and sequence positions are consistent with sequence
         information in the UniProt database"""
         # TODO: extend to all Agent modifications
-        for st in self.stmts:
-            if isinstance(st, Phosphorylation):
-                # Skip statements with no specified position
-                if st.mod_pos is None:
-                    continue
-                # Is looking at the first element enough?
-                sub_id = st.sub.db_refs['UP']
-                if not isinstance(sub_id, basestring):
-                    sub_id = sub_id[0]
-                sub = uniprot_client.query_protein(sub_id)
-                if st.mod == 'PhosphorylationSerine':
-                    residue = 'S'
-                elif st.mod == 'PhosphorylationThreonine':
-                    residue = 'T'
-                elif st.mod == 'PhosphorylationTyrosine':
-                    residue = 'Y'
-                else:
-                    continue
-                ver = uniprot_client.verify_location(sub, residue,
-                                                     location=st.mod_pos)
-                if ver is False:
-                    print '%s:' % st
-                    print '-> Sequence check failed; position %s on %s is not %s.' %\
-                          (st.mod_pos, st.sub.name, residue)
+        if isinstance(st, Phosphorylation):
+            # Skip statements with no specified position
+            if st.mod_pos is None:
+                return
+            # Is looking at the first element enough?
+            sub_id = st.sub.db_refs['UP']
+            if not isinstance(sub_id, basestring):
+                sub_id = sub_id[0]
+            sub = uniprot_client.query_protein(sub_id)
+            if st.mod == 'PhosphorylationSerine':
+                residue = 'S'
+            elif st.mod == 'PhosphorylationThreonine':
+                residue = 'T'
+            elif st.mod == 'PhosphorylationTyrosine':
+                residue = 'Y'
+            else:
+                return
+            ver = uniprot_client.verify_location(sub, residue,
+                                                 location=st.mod_pos)
+            if ver is False:
+                print '-> Sequence check failed; position %s on %s is not %s.' %\
+                      (st.mod_pos, st.sub.name, residue)
 
 
 
