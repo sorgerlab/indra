@@ -87,7 +87,12 @@ def _run_pc_query(query_type, source_genes, target_genes=None, neighbor_limit=1)
     query.mergeEquivalentInteractions(True)
     query.limit(autoclass('java.lang.Integer')(neighbor_limit))
     # Execute query
+    print 'Sending Pathway Commons query...'
     model = query.result()
+    if model is not None:
+        print 'Pathway Commons query returned model...'
+    else:
+        print 'Pathway Commons query returned blank model...'
     return model
 
 if __name__ == '__main__':
