@@ -2,6 +2,7 @@ import pygraphviz as pgv
 import itertools
 from copy import copy
 from indra.statements import *
+from indra.databases import uniprot_client
 
 class Preassembler(object):
 
@@ -205,6 +206,30 @@ class Preassembler(object):
                                for stmt in ext_group
                                if not stmt.supports]
         return self.related_stmts
+
+    def check_sequence(self):
+        """Iterate over all Statements and check whether references to
+        residues and sequence positions are consistent with sequence
+        information in the UniProt database"""
+        # TODO: extend to all Agent modifications
+        for st in self.stmts:
+            if isinstance(st, Phosphorylation):
+                sub_id = st.sub.db_refs['UP']
+                sub = uniprot_client.query_protein(sub_id)
+                if st.mod == 'PhosphorylationSerine':
+                    residue = 'S'
+                elif st.mod == 'PhosphorylationThreonine':
+                    residue = 'T'
+                elif st.mod == 'PhosphorylationTyrosine':
+                    residue = 'Y'
+                else:
+                    continue
+                ver = uniprot_client.verify_location(sub, residue, location=st.mod_pos)
+                if ver is False:
+                    print 'Sequence check failed for %s:' % st
+                    print '-> Position %s on %s is not %s.' %\
+                          (st.mod_pos, st.sub.name, residue)
+
 
 
 def render_stmt_graph(statements, agent_style=None):
