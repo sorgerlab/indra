@@ -20,6 +20,18 @@ def query_protein(protein_id):
     except urllib2.HTTPError:
         print 'Could not find protein with id %s' % protein_id
         return None
+    # Check if the entry has been replaced by a new entry
+    query = rdf_prefixes + """
+        SELECT ?res2
+        WHERE {
+            ?res1 up:replacedBy ?res2 .
+            }
+        """
+    res = g.query(query)
+    if res:
+        term = [r for r in res][0][0]
+        replaced_by_id = term.split('/')[-1]
+        return query_protein(replaced_by_id)
     return g
 
 def get_family_members(family_name, human_only=True):

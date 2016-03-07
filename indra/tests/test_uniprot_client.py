@@ -8,6 +8,11 @@ def test_query_protein_nonexist():
     g = uniprot_client.query_protein('XXXX')
     assert(g is None)
 
+def test_query_protein_deprecated():
+    g = uniprot_client.query_protein('Q8NHX1')
+    assert(g is not None)
+    assert(uniprot_client.get_hgnc_name(g) == 'MAPK3')
+
 def test_get_family_members():
     members = uniprot_client.get_family_members('RAF')
     assert('ARAF' in members)
