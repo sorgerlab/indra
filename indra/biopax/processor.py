@@ -13,9 +13,12 @@ from indra.statements import *
 warnings.simplefilter("always")
 
 # TODO:
-# 1. Extract cellularLocation from each PhysicalEntity
-# 3. Look at participantStoichiometry within BiochemicalReaction
-# 5. Check whether Control has a different meaning from Catalysis
+# - Extract cellularLocation from each PhysicalEntity
+# - Look at participantStoichiometry within BiochemicalReaction
+# - Check whether to use Control or only Catalysis (Control might not
+#   be direct)
+# - Implement extracting modifications with Complex enzyme
+# - Implement extracting modifications with Complex substrate
 
 
 class BiopaxProcessor(object):
@@ -455,8 +458,7 @@ class BiopaxProcessor(object):
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
         elif is_small_molecule(bpe):
-            # TODO: get ChEBI ID
-            chebi_id = 999
+            chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             db_refs = {'CHEBI': chebi_id}
         else:
             warnings.warn('Unhandled entity type %s' %
@@ -505,6 +507,23 @@ class BiopaxProcessor(object):
             return uniprot_ids[0]
         else:
             return uniprot_ids
+
+    @staticmethod
+    def _get_chebi_id(bpe):
+        if not is_reference(bpe):
+            bp_entref = bpe.getEntityReference()
+        else:
+            bp_entref = bpe
+        xrefs = bp_entref.getXref().toArray()
+        chebi_refs = [x for x in xrefs if 
+                        x.getDb() == 'ChEBI']
+        chebi_ids = [r.getId().replace('CHEBI:', '') for r in chebi_refs]
+        if not chebi_ids:
+            return None
+        elif len(chebi_ids) == 1:
+            return chebi_ids[0]
+        else:
+            return chebi_ids
 
     @staticmethod
     def _get_hgnc_id(bpe):
