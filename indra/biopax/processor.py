@@ -101,7 +101,20 @@ class BiopaxProcessor(object):
                 reaction = r[p.indexOf('Conversion')]
                 citations = self._get_citations(reaction)
                 activity = 'Activity'
-                out_pe = r[p.indexOf('output simple PE')]
+                input_spe = r[p.indexOf('input simple PE')]
+                output_spe = r[p.indexOf('output simple PE')]
+                
+                # Get the modifications
+                mod_in, mod_pos_in =\
+                    BiopaxProcessor._get_modification_site(input_spe)
+                mod_out, mod_pos_out =\
+                    BiopaxProcessor._get_modification_site(output_spe)
+                
+                mod_shared = set(zip(mod_in, mod_pos_in)).intersection(
+                                set(zip(mod_out, mod_pos_out)))
+                
+                gained_mods = set(zip(mod_out, mod_pos_out)).difference(
+                                set(zip(mod_in, mod_pos_in)))
                 
                 # Here we get the evidence for the BiochemicalReaction
                 source_id = reaction.getUri()
@@ -116,13 +129,20 @@ class BiopaxProcessor(object):
                                    source_id=source_id)
                           for cit in citations]
                 
-                monomers = self._get_agents_from_entity(out_pe)
+                monomers = self._get_agents_from_entity(output_spe)
                 for monomer in listify(monomers):
                     if force_contains is not None:
                         if momomer not in force_contains:
                             continue
+                    static_mods =\
+                        set(zip(monomer.mods, 
+                                monomer.mod_sites)).difference(gained_mods)
+                    monomer.mods = [s[0] for s in static_mods]
+                    monomer.mod_sites = [s[1] for s in static_mods]
+                    
                     mod, mod_pos =\
-                        self._get_modification_site(out_pe, get_activity=False)
+                        self._get_modification_site(output_spe,
+                                                    get_activity=False)
                     if mod:
                         if mod  == 'Active':
                             # Skip activity as a modification state
