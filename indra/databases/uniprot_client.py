@@ -107,7 +107,12 @@ def get_modifications(g):
     res = g.query(query)
     mods = []
     for r in res:
-        mods.append((r[0].value, r[1].value))
+        mod_pos = r[0].value
+        # "Phosphothreonine; by autocatalysis"
+        # "Phosphothreonine; by MAP2K1 and MAP2K2"
+        # TODO: take into account the comment after the ;?
+        mod_res = r[1].value.split(';')[0]
+        mods.append((mod_res, mod_pos))
     return mods
 
 
@@ -137,10 +142,8 @@ def verify_modification(g, residue, location=None):
     given, we only check if there is any residue of the
     given type that is modified.
     """
-    # TODO: take into account the type of modification
-    # based on the comment in mods[1]
     mods = get_modifications(g)
-    mod_locs = [m[0] for m in mods]
+    mod_locs = [m[1] for m in mods]
     seq = get_sequence(g)
     if location:
         if not verify_location(g, residue, location):
