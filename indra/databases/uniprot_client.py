@@ -1,5 +1,6 @@
 import rdflib
 import urllib, urllib2
+from functools32 import lru_cache
 
 uniprot_url = 'http://www.uniprot.org/uniprot/'
 
@@ -10,6 +11,7 @@ rdf_prefixes = """
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
 
+@lru_cache(maxsize=1000)
 def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
     g = rdflib.Graph()
@@ -116,12 +118,16 @@ def verify_location(g, residue, location):
     """
     seq = get_sequence(g)
     try:
-        if seq[location - 1] == residue:
-            return True
-        else:
-            return False
-    except IndexError:
+        loc_int = int(location)
+    except ValueError:
+        print 'Invalid location %s' % location
+        loc_int = -1
+
+    if (loc_int < 1) or (loc_int > len(seq)):
         return False
+    elif seq[loc_int - 1] == residue:
+        return True
+    return False
 
 
 def verify_modification(g, residue, location=None):
