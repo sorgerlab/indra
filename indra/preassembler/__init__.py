@@ -2,6 +2,7 @@ import pygraphviz as pgv
 import itertools
 from copy import copy
 from indra.statements import *
+from indra.databases import uniprot_client
 
 class Preassembler(object):
 
@@ -206,7 +207,6 @@ class Preassembler(object):
                                if not stmt.supports]
         return self.related_stmts
 
-
 def render_stmt_graph(statements, agent_style=None):
     """Renders the supports/supported_by relationships of a set of statements
     and returns a pygraphviz graph.
@@ -251,4 +251,105 @@ def render_stmt_graph(statements, agent_style=None):
     graph.add_edges_from(edges)
     return graph
 
+def check_statements(stmts):
+    """Iterates over a list of statements and runs checks on them. Then it
+    returns a tuple of lists, with the first element containing statements
+    that passed all checks, and the second the statements that failed the
+    tests"""
+    pass_stmts = []
+    fail_stmts = []
+    for stmt in stmts:
+        print stmt
+        ver = check_sequence(stmt)
+        if ver:
+            pass_stmts.append(stmt)
+        else:
+            fail_stmts.append(stmt)
+    return (pass_stmts, fail_stmts)
 
+def check_sequence(stmt):
+    """Check whether references to
+    residues and sequence positions are consistent with sequence
+    information in the UniProt database"""
+    if isinstance(stmt, Complex):
+        ver = True
+        for m in stmt.members:
+            ver_one = check_agent_mod(m)
+            ver = ver and ver_one
+        return ver
+    elif isinstance(stmt, Modification):
+        ver_sub = check_agent_mod(stmt.sub)
+        ver_enz = check_agent_mod(stmt.enz)
+        if stmt.mod_pos is not None:
+            ver_mod = check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
+        else:
+            ver_mod = True
+        if ver_sub and ver_enz and ver_mod:
+            return True
+        else:
+            return False
+    elif isinstance(stmt, SelfModification):
+        ver_enz = check_agent_mod(stmt.sub)
+        if stmt.mod_pos is not None:
+            ver_mod = check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
+        else:
+            ver_mod = True
+        if ver_enz and ver_mod:
+            return True
+        else:
+            return False
+    elif isinstance(stmt, ActivityModification):
+        ver_mon = check_agent_mod(stmt.monomer)
+        ver_mod = check_agent_mod(stmt.monomer, [stmt.mod], [stmt.mod_pos])
+        if ver_mon and ver_mod:
+            return True
+        else:
+            return False
+    else:
+        return True
+
+def check_agent_mod(agent, mods=None, mod_sites=None):
+    # If no UniProt ID is found, we don't report a failure
+    up_id = agent.db_refs.get('UP')
+    if up_id is None:
+        return True
+
+    # If the UniProt ID is a list then choose the first one.
+    if not isinstance(up_id, basestring):
+        up_id = up_id[0]
+    agent_entry = uniprot_client.query_protein(up_id)
+    
+    if mod_sites is not None:
+        check_mods = mods
+        check_mod_sites = mod_sites
+    else:
+        check_mods = agent.mods
+        check_mod_sites = agent.mod_sites
+
+    ver = True
+    for m, mp in zip(check_mods, check_mod_sites):
+        if mp is None:
+            continue
+        residue = get_residue(m)
+        if residue is None:
+            continue
+        ver_one = uniprot_client.verify_location(agent_entry, residue, mp)
+        if not ver_one:
+            print '-> Sequence check failed; position %s on %s is not %s.' %\
+                  (mp, agent.name, residue)
+        ver = ver and ver_one
+    return ver
+
+def get_residue(mod):
+    """Return the amino acid letter from a  modification string"""
+    if mod == 'PhosphorylationSerine':
+        residue = 'S'
+    elif mod == 'PhosphorylationThreonine':
+        residue = 'T'
+    elif mod == 'PhosphorylationTyrosine':
+        residue = 'Y'
+    else:
+        return None
+    return residue
+
+            

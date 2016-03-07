@@ -1,5 +1,6 @@
 import rdflib
 import urllib, urllib2
+from functools32 import lru_cache
 
 uniprot_url = 'http://www.uniprot.org/uniprot/'
 
@@ -10,6 +11,7 @@ rdf_prefixes = """
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
 
+@lru_cache(maxsize=1000)
 def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
     g = rdflib.Graph()
@@ -18,6 +20,18 @@ def query_protein(protein_id):
     except urllib2.HTTPError:
         print 'Could not find protein with id %s' % protein_id
         return None
+    # Check if the entry has been replaced by a new entry
+    query = rdf_prefixes + """
+        SELECT ?res2
+        WHERE {
+            ?res1 up:replacedBy ?res2 .
+            }
+        """
+    res = g.query(query)
+    if res:
+        term = [r for r in res][0][0]
+        replaced_by_id = term.split('/')[-1]
+        return query_protein(replaced_by_id)
     return g
 
 def get_family_members(family_name, human_only=True):
@@ -105,7 +119,12 @@ def get_modifications(g):
     res = g.query(query)
     mods = []
     for r in res:
-        mods.append((r[0].value, r[1].value))
+        mod_pos = r[0].value
+        # "Phosphothreonine; by autocatalysis"
+        # "Phosphothreonine; by MAP2K1 and MAP2K2"
+        # TODO: take into account the comment after the ;?
+        mod_res = r[1].value.split(';')[0]
+        mods.append((mod_res, mod_pos))
     return mods
 
 
@@ -116,12 +135,16 @@ def verify_location(g, residue, location):
     """
     seq = get_sequence(g)
     try:
-        if seq[location - 1] == residue:
-            return True
-        else:
-            return False
-    except IndexError:
+        loc_int = int(location)
+    except ValueError:
+        print 'Invalid location %s' % location
+        loc_int = -1
+
+    if (loc_int < 1) or (loc_int > len(seq)):
         return False
+    elif seq[loc_int - 1] == residue:
+        return True
+    return False
 
 
 def verify_modification(g, residue, location=None):
@@ -131,10 +154,8 @@ def verify_modification(g, residue, location=None):
     given, we only check if there is any residue of the
     given type that is modified.
     """
-    # TODO: take into account the type of modification
-    # based on the comment in mods[1]
     mods = get_modifications(g)
-    mod_locs = [m[0] for m in mods]
+    mod_locs = [m[1] for m in mods]
     seq = get_sequence(g)
     if location:
         if not verify_location(g, residue, location):
