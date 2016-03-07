@@ -271,19 +271,42 @@ def check_sequence(stmt):
     """Check whether references to
     residues and sequence positions are consistent with sequence
     information in the UniProt database"""
-    if isinstance(stmt, Phosphorylation):
-        # Is looking at the first element enough?
-        # Skip statements with no specified position
-        ver_sub = check_agent_mod(stmt.enz)
-        ver_enz = check_agent_mod(stmt.sub)
+    if isinstance(stmt, Complex):
+        ver = True
+        for m in stmt.members:
+            ver_one = check_agent_mod(m)
+            ver = ver and ver_one
+        return ver
+    elif isinstance(stmt, Modification):
+        ver_sub = check_agent_mod(stmt.sub)
+        ver_enz = check_agent_mod(stmt.enz)
         if stmt.mod_pos is not None:
-            ver_phos = check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
+            ver_mod = check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
         else:
-            ver_phos = True
-        if ver_sub and ver_enz and ver_phos:
+            ver_mod = True
+        if ver_sub and ver_enz and ver_mod:
             return True
         else:
             return False
+    elif isinstance(stmt, SelfModification):
+        ver_enz = check_agent_mod(stmt.sub)
+        if stmt.mod_pos is not None:
+            ver_mod = check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
+        else:
+            ver_mod = True
+        if ver_enz and ver_mod:
+            return True
+        else:
+            return False
+    elif isinstance(stmt, ActivityModification):
+        ver_mon = check_agent_mod(stmt.monomer)
+        ver_mod = check_agent_mod(stmt.monomer, [stmt.mod], [stmt.mod_pos])
+        if ver_mon and ver_mod:
+            return True
+        else:
+            return False
+    else:
+        return True
 
 def check_agent_mod(agent, mods=None, mod_sites=None):
     # If no UniProt ID is found, we don't report a failure
@@ -308,6 +331,8 @@ def check_agent_mod(agent, mods=None, mod_sites=None):
         if mp is None:
             continue
         residue = get_residue(m)
+        if residue is None:
+            continue
         ver_one = uniprot_client.verify_location(agent_entry, residue, mp)
         if not ver_one:
             print '-> Sequence check failed; position %s on %s is not %s.' %\
