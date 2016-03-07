@@ -214,7 +214,13 @@ class Preassembler(object):
         # TODO: extend to all Agent modifications
         for st in self.stmts:
             if isinstance(st, Phosphorylation):
+                # Skip statements with no specified position
+                if st.mod_pos is None:
+                    continue
+                # Is looking at the first element enough?
                 sub_id = st.sub.db_refs['UP']
+                if not isinstance(sub_id, basestring):
+                    sub_id = sub_id[0]
                 sub = uniprot_client.query_protein(sub_id)
                 if st.mod == 'PhosphorylationSerine':
                     residue = 'S'
@@ -224,10 +230,11 @@ class Preassembler(object):
                     residue = 'Y'
                 else:
                     continue
-                ver = uniprot_client.verify_location(sub, residue, location=st.mod_pos)
+                ver = uniprot_client.verify_location(sub, residue,
+                                                     location=st.mod_pos)
                 if ver is False:
-                    print 'Sequence check failed for %s:' % st
-                    print '-> Position %s on %s is not %s.' %\
+                    print '%s:' % st
+                    print '-> Sequence check failed; position %s on %s is not %s.' %\
                           (st.mod_pos, st.sub.name, residue)
 
 
