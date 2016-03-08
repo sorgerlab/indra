@@ -300,7 +300,7 @@ def check_sequence(stmt):
             return False
     elif isinstance(stmt, ActivityModification):
         ver_mon = check_agent_mod(stmt.monomer)
-        ver_mod = check_agent_mod(stmt.monomer, [stmt.mod], [stmt.mod_pos])
+        ver_mod = check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
         if ver_mon and ver_mod:
             return True
         else:
