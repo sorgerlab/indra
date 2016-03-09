@@ -18,12 +18,17 @@ residue_names = {
 
 
 class ReachProcessor(object):
-    def __init__(self, json_dict):
+    def __init__(self, json_dict, pmid=None):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
+        self.pmid = pmid
+        citation = self.tree.execute("$.events.object_meta.doc_id")
+        if pmid is None:
+            self.citation = citation
+        else:
+            self.citation = pmid
     
     def get_phosphorylation(self):
-        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[(@.type is 'protein-modification') " + \
                "and (@.subtype is 'phosphorylation')]"
         res = self.tree.execute(qstr)
@@ -62,14 +67,12 @@ class ReachProcessor(object):
                 pos = ''
             mod = mod + residue
             sentence = r['verbose-text']
-            ev = Evidence(source_api='reach', text=sentence, pmid=citation)
-            # TODO: read $.object-meta.doc-id as citation
-            # but dashes don't work with objectpath!
+            ev = Evidence(source_api='reach', text=sentence,
+                          pmid=self.citation)
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, ev))
     
     def get_complexes(self):
-        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
         for r in res:
@@ -80,18 +83,17 @@ class ReachProcessor(object):
             for a in args:
                 agent = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
-            ev = Evidence(source_api='reach', text=sentence, pmid=citation)
+            ev = Evidence(source_api='reach', text=sentence, pmid=self.citation)
             self.statements.append(Complex(members, ev))
    
     def get_activation(self):
-        citation = self.tree.execute("$.events.object_meta.doc_id")
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
         for r in res:
             sentence = r['verbose-text']
             context = self._get_context(r)
-            ev = Evidence(source_api='reach', text=sentence, pmid=citation, 
-                          annotations=context)
+            ev = Evidence(source_api='reach', text=sentence,
+                          pmid=self.citation, annotations=context)
             frame_id = r['frame_id']
             args = r['arguments']
             for a in args:
