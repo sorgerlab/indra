@@ -9,6 +9,7 @@ from indra.java_vm import autoclass, JavaException, cast
 
 from indra.databases import hgnc_client
 from indra.statements import *
+from indra.biopax import pathway_commons_client as pcc
 
 warnings.simplefilter("always")
 
@@ -569,6 +570,29 @@ class BiopaxProcessor(object):
     def print_statements(self):
         for i, stmt in enumerate(self.statements):
             print "%s: %s" % (i, stmt)
+    
+    def model_to_owl(self, fname):
+        io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
+        io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
+
+        try:
+            fileOS = autoclass('java.io.FileOutputStream')(fname)
+        except JavaException:
+            print 'Could not open data file %s' % fname
+            return
+        l3_factory = autoclass('org.biopax.paxtools.model.BioPAXLevel').L3.getDefaultFactory()
+        model_out = l3_factory.createModel()
+        for r in self.model.getObjects().toArray():
+            model_out.add(r)
+        io.convertToOWL(model_out, fileOS)
+
+        fileOS.close()
+
+    def save_model(self, file_name=None):
+        if file_name is None:
+            print 'Missing file name'
+            return
+        pcc.model_to_owl(self.model, file_name)
 
     _mftype_dict = {
         'phosphorylated residue': 'Phosphorylation',
