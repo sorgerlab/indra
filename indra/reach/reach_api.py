@@ -17,10 +17,7 @@ def process_pmc(pmc_id):
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
-    with tempfile.NamedTemporaryFile() as fh:
-        fh.write(xml_str)
-        fh.flush()
-        rp = process_nxml(fh.name)
+    rp = process_nxml_str(xml_str)
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
@@ -51,6 +48,15 @@ def process_text(txt, offline=False):
             fh.write(json_str)
         return process_json_str(json_str)
 
+def process_nxml_str(nxml_str):
+    req = urllib2.Request(reach_nxml_url, 
+        data=urllib.urlencode({'nxml': nxml_str}))
+    res = urllib2.urlopen(req)
+    json_str = res.read()
+    with open('reach_output.json', 'wt') as fh:
+        fh.write(json_str)
+    return process_json_str(json_str) 
+
 def process_nxml(file_name, offline=False):
     if offline:
         try:
@@ -60,16 +66,12 @@ def process_nxml(file_name, offline=False):
             print 'Could not process file %s.' % file_name
             return None
         json_str = result_map.get('resultJson')
+        with open('reach_output.json', 'wt') as fh:
+            fh.write(json_str)
+        return process_json_str(json_str)
     else:
         txt = open(file_name, 'rt').read()
-        req = urllib2.Request(reach_nxml_url, 
-            data=urllib.urlencode({'nxml': txt.encode('utf8')}))
-        res = urllib2.urlopen(req)
-        json_str = res.read()
-    with open('reach_output.json', 'wt') as fh:
-        fh.write(json_str)
-    return process_json_str(json_str)
-
+        return process_nxml_str(txt)
 
 def process_json_file(file_name):
     try:
