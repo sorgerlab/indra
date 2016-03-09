@@ -3,7 +3,7 @@ from indra.java_vm import autoclass, JavaException
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
-def send_request(kind, source, target=None):
+def graph_query(kind, source, target=None, neighbor_limit=1):
     kind_str = kind.lower()
     if kind not in ['neighborhood', 'pathsbetween', 'pathsfromto']:
         print 'Invalid query type %s' % kind_str
@@ -16,6 +16,7 @@ def send_request(kind, source, target=None):
     params = {'kind': kind_str,
               'organism': organism,
               'source': ','.join(source),
+              'limit': neighbor_limit,
               'format': 'BIOPAX'}
     if target is not None:
         if isinstance(target, basestring):
