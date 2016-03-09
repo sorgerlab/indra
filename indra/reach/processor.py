@@ -96,17 +96,28 @@ class ReachProcessor(object):
             args = r['arguments']
             for a in args:
                 if a['argument_label'] == 'controller':
-                    controller = a['arg']
+                    controller = a.get('arg')
+                    # When the controller is not a simple entity
+                    if controller is None:
+                        if a['argument-type'] == 'complex':
+                            controllers = a.get('args').values()
+                            controller_agent =\
+                                self._get_agent_from_entity(controllers[0])
+                            bound_contr = [self._get_agent_from_entity(c) 
+                                           for c in controllers[1:]]
+                            controller_agent.bound_to = bound_contr
+                    else:
+                        controller_agent =\
+                            self._get_agent_from_entity(controlled)
                 if a['argument_label'] == 'controlled':
                     controlled = a['arg']
-            controller_agent = self._get_agent_from_entity(controller)
             controlled_agent = self._get_agent_from_entity(controlled)
             if r['subtype'] == 'positive-activation':
                 rel = 'increases'
             else:
                 rel = 'decreases'
             st = ActivityActivity(controller_agent, 'Activity', rel,
-                controlled_agent, 'Activity', ev)
+                                  controlled_agent, 'Activity', ev)
             self.statements.append(st)
    
     def _get_context(self, frame_term):
