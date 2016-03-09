@@ -21,12 +21,11 @@ class ReachProcessor(object):
     def __init__(self, json_dict, pmid=None):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
-        self.pmid = pmid
-        citation = self.tree.execute("$.events.object_meta.doc_id")
+        self.citation = pmid
         if pmid is None:
-            self.citation = citation
-        else:
-            self.citation = pmid
+            if self.tree is not None:
+                self.citation =\
+                    self.tree.execute("$.events.object_meta.doc_id")
     
     def get_phosphorylation(self):
         qstr = "$.events.frames[(@.type is 'protein-modification') " + \
@@ -149,7 +148,8 @@ class ReachProcessor(object):
         agent = Agent(name, db_refs=db_refs)
         return agent
    
-    def _get_agent_name(self, txt):
+    @staticmethod
+    def _get_agent_name(txt):
         '''
         Produce valid agent name from string.
         '''
@@ -157,7 +157,8 @@ class ReachProcessor(object):
         name = name.replace(' ', '_')
         return name
 
-    def _parse_site_text(self, s):
+    @staticmethod
+    def _parse_site_text(s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)
         if m is not None:
             residue = residue_names[m.groups()[0]]
