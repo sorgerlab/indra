@@ -1,23 +1,46 @@
+import urllib, urllib2
 from indra.java_vm import autoclass, JavaException
 
-def run_pc_query(query_type, source_genes, target_genes=None, neighbor_limit=1):
-    cpath_client = autoclass('cpath.client.CPathClient').\
-        newInstance('http://www.pathwaycommons.org/pc2/')
-    query = cpath_client.createGraphQuery()
-    query.kind(query_type)
-    query.sources(source_genes)
-    query.targets(target_genes)
-    query.organismFilter(['homo sapiens'])
-    query.mergeEquivalentInteractions(True)
-    query.limit(autoclass('java.lang.Integer')(neighbor_limit))
-    # Execute query
-    print 'Sending Pathway Commons query...'
-    model = query.result()
-    if model is not None:
-        print 'Pathway Commons query returned model...'
+pc2_url = 'http://www.pathwaycommons.org/pc2/'
+
+def send_request(kind, source, target=None):
+    kind_str = kind.lower()
+    if kind not in ['neighborhood', 'pathsbetween', 'pathsfromto']:
+        print 'Invalid query type %s' % kind_str
+        return None
+    organism = '9606'
+    if isinstance(source, basestring):
+        source_str = source
     else:
-        print 'Pathway Commons query returned blank model...'
+        source_str = ','.join(source)
+    params = {'kind': kind_str,
+              'organism': organism,
+              'source': ','.join(source),
+              'format': 'BIOPAX'}
+    if target is not None:
+        if isinstance(target, basestring):
+            target_str = target
+        else:
+            target_str = ','.join(target)
+        params['target'] = target_str
+    
+    print 'Sending Pathway Commons query...'
+    res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
+    owl_str = res.read()
+    model = owl_str_to_model(owl_str)
+    if model is not None:
+        print 'Pathway Commons query returned a model...'
     return model
+
+def owl_str_to_model(owl_str):
+    io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
+    io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
+    bais = autoclass('java.io.ByteArrayInputStream')
+    scs = autoclass('java.nio.charset.StandardCharsets')
+    jstr = autoclass('java.lang.String')
+    istream = bais(jstr(owl_str).getBytes(scs.UTF_8));
+    biopax_model = io.convertFromOWL(istream)
+    return biopax_model
 
 def owl_to_model(fname):
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
