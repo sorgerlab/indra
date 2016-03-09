@@ -493,6 +493,8 @@ class BiopaxProcessor(object):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             if hgnc_id is not None:
                 name = BiopaxProcessor._get_hgnc_name(hgnc_id)
+                if name is None:
+                    name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
         elif is_small_molecule(bpe):
