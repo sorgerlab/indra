@@ -4,20 +4,26 @@ from indra.java_vm import autoclass, JavaException
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
 def graph_query(kind, source, target=None, neighbor_limit=1):
+    params = {}
+    params['format'] = 'BIOPAX'
+    params['organism'] = '9606'
+    # Get the "kind" string
     kind_str = kind.lower()
     if kind not in ['neighborhood', 'pathsbetween', 'pathsfromto']:
         print 'Invalid query type %s' % kind_str
         return None
-    organism = '9606'
+    params['kind'] = kind_str
+    # Get the source string
     if isinstance(source, basestring):
         source_str = source
     else:
         source_str = ','.join(source)
-    params = {'kind': kind_str,
-              'organism': organism,
-              'source': ','.join(source),
-              'limit': neighbor_limit,
-              'format': 'BIOPAX'}
+    params['source'] = source_str
+    try:
+        neighbor_limit = int(neighbor_limit)
+    except TypeError, ValueError:
+        print 'Invalid neighborhood limit %s' % neighbor_limit
+        return None
     if target is not None:
         if isinstance(target, basestring):
             target_str = target
