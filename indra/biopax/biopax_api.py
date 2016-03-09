@@ -6,24 +6,21 @@ from indra.java_vm import autoclass, JavaException
 from indra.biopax import pathway_commons_client as pcc
 
 def process_pc_neighborhood(gene_names, neighbor_limit=1):
-    query_type = autoclass('cpath.service.GraphType').NEIGHBORHOOD
-    model = pcc.run_pc_query(query_type, gene_names,
-                             None, neighbor_limit)
+    model = pcc.graph_query('neighborhood', gene_names,
+                            neighbor_limit=neighbor_limit)
     if model is not None:
         return process_model(model)
 
 
 def process_pc_pathsbetween(gene_names, neighbor_limit=1):
-    query_type = autoclass('cpath.service.GraphType').PATHSBETWEEN
-    model = pcc.run_pc_query(query_type, gene_names,
-                             None, neighbor_limit)
+    model = pcc.graph_query('pathsbetween', gene_names,
+                             neighbor_limit=neighbor_limit)
     if model is not None:
         return process_model(model)
 
 
 def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
-    query_type = autoclass('cpath.service.GraphType').PATHSFROMTO
-    model = pcc.run_pc_query(query_type, source_genes, 
+    model = pcc.run_pc_query('pathsfromto', source_genes, 
                              target_genes, neighbor_limit)
     if model is not None:
         return process_model(model)
