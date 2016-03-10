@@ -118,7 +118,10 @@ class BiopaxProcessor(object):
                 
                 gained_mods = set(zip(mod_out, mod_pos_out)).difference(
                                 set(zip(mod_in, mod_pos_in)))
-                
+               
+                if reaction.getUri() == 'http://purl.org/pc2/7/BiochemicalReaction_c45901184c1c3797aba1b72d76700f37':
+                    import ipdb; ipdb.set_trace()
+
                 # Here we get the evidence for the BiochemicalReaction
                 source_id = reaction.getUri()
                 citations = BiopaxProcessor._get_citations(reaction)
@@ -143,14 +146,14 @@ class BiopaxProcessor(object):
                     monomer.mods = [s[0] for s in static_mods]
                     monomer.mod_sites = [s[1] for s in static_mods]
                     
-                    mod, mod_pos =\
-                        self._get_modification_site(output_spe,
-                                                    get_activity=False)
-                    if mod:
-                        if mod  in ['Active', 'Inactive']:
-                            # Skip activity as a modification state
-                            continue
-                        stmt = ActivityModification(monomer, mod, mod_pos, 
+                    mods = [m[0] for m in gained_mods 
+                            if m[0] not in ['Active', 'Inactive']]
+                    mod_sites = [m[1] for m in gained_mods 
+                                 if m[0] not in ['Active', 'Inactive']]
+                        #self._get_modification_site(output_spe,
+                        #                            get_activity=False)
+                    if mods:
+                        stmt = ActivityModification(monomer, mods, mod_sites,
                                                 relationship, activity,
                                                 evidence=ev)
                         self.statements.append(stmt)

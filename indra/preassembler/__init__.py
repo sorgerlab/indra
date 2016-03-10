@@ -264,68 +264,57 @@ def render_stmt_graph(statements, agent_style=None):
     graph.add_edges_from(edges)
     return graph
 
-def check_statements(stmts):
+def check_statements(stmts, save_fname=None):
     """Iterates over a list of statements and runs checks on them. Then it
     returns a tuple of lists, with the first element containing statements
     that passed all checks, and the second the statements that failed the
     tests"""
     pass_stmts = []
     fail_stmts = []
+    failures = []
     for stmt in stmts:
         print stmt
-        ver = check_sequence(stmt)
-        if ver:
-            pass_stmts.append(stmt)
-        else:
+        failures += check_sequence(stmt)
+        if failures:
             fail_stmts.append(stmt)
+        else:
+            pass_stmts.append(stmt)
+    if save_fname:
+        import ipdb; ipdb.set_trace()
+        failure_set = set(failures)
+        with open(save_fname, 'wt') as fh:
+            for f in failure_set:
+                fh.write('%s\t%s\t%s\n' % (f[0], f[1], f[2]))
     return (pass_stmts, fail_stmts)
 
 def check_sequence(stmt):
     """Check whether references to
     residues and sequence positions are consistent with sequence
     information in the UniProt database"""
+    failures = []
     if isinstance(stmt, Complex):
-        ver = True
         for m in stmt.members:
-            ver_one = check_agent_mod(m)
-            ver = ver and ver_one
-        return ver
+            failures += check_agent_mod(m)
     elif isinstance(stmt, Modification):
-        ver_sub = check_agent_mod(stmt.sub)
-        ver_enz = check_agent_mod(stmt.enz)
+        failures += check_agent_mod(stmt.sub)
+        failures += check_agent_mod(stmt.enz)
         if stmt.mod_pos is not None:
-            ver_mod = check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
-        else:
-            ver_mod = True
-        if ver_sub and ver_enz and ver_mod:
-            return True
-        else:
-            return False
+            failures += check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
     elif isinstance(stmt, SelfModification):
-        ver_enz = check_agent_mod(stmt.sub)
+        failures += check_agent_mod(stmt.sub)
         if stmt.mod_pos is not None:
-            ver_mod = check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
-        else:
-            ver_mod = True
-        if ver_enz and ver_mod:
-            return True
-        else:
-            return False
+            failures += check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
     elif isinstance(stmt, ActivityModification):
-        ver_mon = check_agent_mod(stmt.monomer)
-        ver_mod = check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
-        if ver_mon and ver_mod:
-            return True
-        else:
-            return False
-    else:
-        return True
+        failures += check_agent_mod(stmt.monomer)
+        failures += check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
+    return failures
 
 def check_agent_mod(agent, mods=None, mod_sites=None):
+    failures = []
     # If no UniProt ID is found, we don't report a failure
     up_id = agent.db_refs.get('UP')
     if up_id is None:
-        return True
+        return failures
 
     # If the UniProt ID is a list then choose the first one.
     if not isinstance(up_id, basestring):
@@ -339,19 +328,18 @@ def check_agent_mod(agent, mods=None, mod_sites=None):
         check_mods = agent.mods
         check_mod_sites = agent.mod_sites
 
-    ver = True
     for m, mp in zip(check_mods, check_mod_sites):
         if mp is None:
             continue
         residue = get_residue(m)
         if residue is None:
             continue
-        ver_one = uniprot_client.verify_location(agent_entry, residue, mp)
-        if not ver_one:
+        ver = uniprot_client.verify_location(agent_entry, residue, mp)
+        if not ver:
             print '-> Sequence check failed; position %s on %s is not %s.' %\
                   (mp, agent.name, residue)
-        ver = ver and ver_one
-    return ver
+            failures.append((agent.name, residue, mp))
+    return failures
 
 def get_residue(mod):
     """Return the amino acid letter from a  modification string"""
@@ -363,6 +351,4 @@ def get_residue(mod):
         residue = 'Y'
     else:
         return None
-    return residue
-
-            
+    return residue 
