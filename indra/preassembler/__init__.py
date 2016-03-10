@@ -310,10 +310,11 @@ def check_sequence(stmt):
     return failures
 
 def check_agent_mod(agent, mods=None, mod_sites=None):
+    failures = []
     # If no UniProt ID is found, we don't report a failure
     up_id = agent.db_refs.get('UP')
     if up_id is None:
-        return True
+        return failures
 
     # If the UniProt ID is a list then choose the first one.
     if not isinstance(up_id, basestring):
@@ -327,7 +328,6 @@ def check_agent_mod(agent, mods=None, mod_sites=None):
         check_mods = agent.mods
         check_mod_sites = agent.mod_sites
 
-    failures = []
     for m, mp in zip(check_mods, check_mod_sites):
         if mp is None:
             continue
