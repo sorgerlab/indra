@@ -65,13 +65,13 @@ def test_has_members_pe2():
 def test_is_pe():
     bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117345.2')
     bpe = cast(bpc.bp('Protein'), bpe)
-    assert(bpc.is_physical_entity(bpe))
+    assert(bpc.is_entity(bpe))
     
 def test_is_pe2():
     bpe = bp.model.getByID(uri_prefix +\
                      'ProteinReference_971cec47bcd850e2b7d602f0416edacf')
     bpe = cast(bpc.bp('ProteinReference'), bpe)
-    assert(not bpc.is_physical_entity(bpe))
+    assert(not bpc.is_entity(bpe))
 
 def test_is_er():
     bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117345.2')
