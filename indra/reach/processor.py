@@ -56,18 +56,20 @@ class ReachProcessor(object):
                     if a['argument_label'] == 'controller':
                         controller = a['arg']
 
-            if controller is None:
-                warnings.warn('Skipping phosphorylation with missing controller.')
-                continue
+            if controller is not None:
+                controller_agent = self._get_agent_from_entity(controller)
+            else:
+                controller_agent = None
+            #warnings.warn('Skipping phosphorylation with missing controller.')
+            #continue
 
-            controller_agent = self._get_agent_from_entity(controller)
             theme_agent = self._get_agent_from_entity(theme)
             mod = 'Phosphorylation'
             if site is not None:
                 residue, pos = self._parse_site_text(site)
             else:
                 residue = ''
-                pos = ''
+                pos = None
             mod = mod + residue
             sentence = r['verbose-text']
             ev = Evidence(source_api='reach', text=sentence,
