@@ -32,6 +32,8 @@ class ReachProcessor(object):
                "and (@.subtype is 'phosphorylation')]"
         res = self.tree.execute(qstr)
         for r in res:
+            epistemics = self._get_epistemics(r)
+            print epistemics
             frame_id = r['frame_id']
             args = r['arguments']
             site = None
@@ -75,6 +77,7 @@ class ReachProcessor(object):
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
         for r in res:
+            epistemics = self._get_epistemics(r)
             frame_id = r['frame_id']
             args = r['arguments']
             sentence = r['verbose-text']
@@ -89,6 +92,8 @@ class ReachProcessor(object):
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
         for r in res:
+            epistemics = self._get_epistemics(r)
+            print epistemics
             sentence = r['verbose-text']
             context = self._get_context(r)
             ev = Evidence(source_api='reach', text=sentence,
@@ -147,7 +152,19 @@ class ReachProcessor(object):
                 db_refs['UP'] = xr['id']
         agent = Agent(name, db_refs=db_refs)
         return agent
-   
+  
+    @staticmethod
+    def _get_epistemics(event):
+        epistemics = {}
+        # Check whether information is negative
+        neg = event.get('is_negated')
+        if neg is True:
+            epistemics['negative'] = True
+        hyp = event.get('is_hypothesis')
+        if hyp is True:
+            epistemics['hypothesis'] = True
+        return epistemics
+
     @staticmethod
     def _get_agent_name(txt):
         '''

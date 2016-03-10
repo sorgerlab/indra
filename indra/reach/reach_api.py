@@ -86,6 +86,8 @@ def process_json_str(json_str, citation=None):
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')
     json_str = json_str.replace('doc-id','doc_id')
+    json_str = json_str.replace('is-hypothesis','is_hypothesis')
+    json_str = json_str.replace('is-negated','is_negated')
     json_dict = json.loads(json_str)
     rp = ReachProcessor(json_dict, citation)
     rp.get_phosphorylation()
