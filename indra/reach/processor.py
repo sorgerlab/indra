@@ -33,7 +33,8 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             epistemics = self._get_epistemics(r)
-            print epistemics
+            if epistemics.get('negative'):
+                continue
             frame_id = r['frame_id']
             args = r['arguments']
             site = None
@@ -69,7 +70,7 @@ class ReachProcessor(object):
             mod = mod + residue
             sentence = r['verbose-text']
             ev = Evidence(source_api='reach', text=sentence,
-                          pmid=self.citation)
+                          pmid=self.citation, epistemics=epistemics)
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, ev))
     
@@ -78,6 +79,8 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             epistemics = self._get_epistemics(r)
+            if epistemics.get('negative'):
+                continue
             frame_id = r['frame_id']
             args = r['arguments']
             sentence = r['verbose-text']
@@ -85,7 +88,8 @@ class ReachProcessor(object):
             for a in args:
                 agent = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
-            ev = Evidence(source_api='reach', text=sentence, pmid=self.citation)
+            ev = Evidence(source_api='reach', text=sentence, 
+                          pmid=self.citation, epistemics=epistemics)
             self.statements.append(Complex(members, ev))
    
     def get_activation(self):
@@ -93,11 +97,13 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         for r in res:
             epistemics = self._get_epistemics(r)
-            print epistemics
+            if epistemics.get('negative'):
+                continue
             sentence = r['verbose-text']
             context = self._get_context(r)
             ev = Evidence(source_api='reach', text=sentence,
-                          pmid=self.citation, annotations=context)
+                          pmid=self.citation, annotations=context,
+                          epistemics=epistemics)
             frame_id = r['frame_id']
             args = r['arguments']
             for a in args:
