@@ -100,6 +100,36 @@ def test_modification_refinement():
     assert (stmts[0] == st1)
     assert (stmts[0].supported_by == [st2])
 
+def test_modification_refinement_noenz():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    st1 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
+    st2 = Phosphorylation(None, nras, 'PhosphorylationTyrosine', '32')
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # The top-level list should contain only one statement, the more specific
+    # modification, supported by the less-specific modification.
+    assert(len(stmts) == 1)
+    assert (stmts[0] == st1)
+    assert (stmts[0].supported_by == [st2])
+
+def test_modification_norefinement_noenz():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    st1 = Phosphorylation(src, nras, 'Phosphorylation', None)
+    st2 = Phosphorylation(None, nras, 'PhosphorylationTyrosine', '32')
+    pa = Preassembler(eh, mh, [st1, st2])
+    #import ipdb; ipdb.set_trace()
+    stmts = pa.combine_related()
+    # Modification is less specific, enzyme more specific in st1, therefore
+    # these statements shouldn't be combined. 
+    print stmts
+    assert(len(stmts) == 2)
+
 def test_bound_condition_refinement():
     """A statement with more specific bound context should be supported by a
     less specific statement."""
@@ -117,6 +147,22 @@ def test_bound_condition_refinement():
     assert(len(stmts) == 1)
     assert (stmts[0] == st2)
     assert (stmts[0].supported_by == [st1])
+
+def test_bound_condition_norefinement():
+    """A statement with more specific bound context should be supported by a
+    less specific statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    gtp = Agent('GTP', db_refs = {'CHEBI': '15996'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nrasgtp = Agent('NRAS', db_refs = {'HGNC': '7989'},
+        bound_conditions=[BoundCondition(gtp, True)])
+    st1 = Phosphorylation(src, nras, 'PhosphorylationTyrosine', '32')
+    st2 = Phosphorylation(src, nrasgtp, 'Phosphorylation', None)
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # The bound condition is more specific in st2 but the modification is less
+    # specific. Therefore these statements should not be combined.
+    assert(len(stmts) == 2)
 
 def test_mod_sites_refinement():
     """A statement with more specific modification context should be supported
@@ -158,3 +204,6 @@ def test_render_stmt_graph():
     # (p5 and p6 support none--they are top-level)
     # 6 + 5 + 1 + 1 + 2 = 15 edges
     assert len(graph.edges()) == 15
+
+if __name__ == '__main__':
+    test_modification_norefinement_noenz()
