@@ -9,6 +9,7 @@ from indra.java_vm import autoclass, JavaException, cast
 
 from indra.databases import hgnc_client
 from indra.statements import *
+from indra.biopax import pathway_commons_client as pcc
 
 warnings.simplefilter("always")
 
@@ -31,7 +32,6 @@ class BiopaxProcessor(object):
             bpe = cast_biopax_element(obj)
             if not is_complex(bpe):
                 continue
-
             citations = self._get_citations(bpe) 
             source_id = bpe.getUri()
             if not citations:
@@ -46,6 +46,9 @@ class BiopaxProcessor(object):
             
             members = self._get_complex_members(bpe)
             if members is not None:
+                if len(members) > 10:
+                    print 'Skipping complex with more than 10 members.'
+                    continue
                 complexes = get_combinations(members)
                 for c in complexes:
                     self.statements.append(Complex(c, ev))
@@ -144,7 +147,7 @@ class BiopaxProcessor(object):
                         self._get_modification_site(output_spe,
                                                     get_activity=False)
                     if mod:
-                        if mod  == 'Active':
+                        if mod  in ['Active', 'Inactive']:
                             # Skip activity as a modification state
                             continue
                         stmt = ActivityModification(monomer, mod, mod_pos, 
@@ -202,7 +205,7 @@ class BiopaxProcessor(object):
 
         for mf in modMF:
             mod1, mod_pos1 = BiopaxProcessor._extract_mod_from_feature(mf)
-            if not get_activity and mod1 == 'Active':
+            if not get_activity and mod1 in ['Active', 'Inactive']:
                 continue
             mod.append(mod1)
             mod_pos.append(mod_pos1)
@@ -302,7 +305,7 @@ class BiopaxProcessor(object):
                                     set(zip(mod_out, mod_pos_out)))
 
                 for m, mp in gained_mods:
-                    if m  == 'Active':
+                    if m  in ['Active', 'Inactive']:
                         # Skip activity as a modification state
                         continue
                     stmt = (enz, sub, m, mp, ev)
@@ -395,11 +398,7 @@ class BiopaxProcessor(object):
         mods, mod_sites = BiopaxProcessor._get_entity_mods(bpe)
 
         if expand_er:
-            try:
-                er = bpe.getEntityReference()
-            except AttributeError:
-                warnings.warn('No entity reference for %s' % bpe.getUri())
-                er = None
+            er = BiopaxProcessor._get_entref(bpe)
             if er is not None:
                 members = er.getMemberEntityReference().toArray()
                 if members:
@@ -427,7 +426,7 @@ class BiopaxProcessor(object):
             if is_modification(f):
                 mod_type, mod_pos = BiopaxProcessor._extract_mod_from_feature(f)
                 if mod_type is not None:
-                    if mod_type == 'Active':
+                    if mod_type in ['Active', 'Inactive']:
                         # Skip activity as a modification state for now
                         continue
                     mod_types.append(mod_type)
@@ -449,7 +448,7 @@ class BiopaxProcessor(object):
         try:
             mod_type = BiopaxProcessor._mftype_dict[mf_type]
         except KeyError:
-            warnings.warn('Unknown modification type %s' % mf_type)
+            warnings.warn('Ignored modification type %s' % mf_type)
             return None, None
 
         # getFeatureLocation returns SequenceLocation, which is the
@@ -473,17 +472,28 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_db_refs(bpe):
+        db_refs = {}
         if is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
-            db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+            if uniprot_id is not None:
+                db_refs['UP'] = uniprot_id
         elif is_small_molecule(bpe):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
-            db_refs = {'CHEBI': chebi_id}
+            if chebi_id is not None:
+                db_refs['CHEBI'] = chebi_id
         else:
-            warnings.warn('Unhandled entity type %s' %
-                bpe.getModelInterface().getName())
-            db_refs = {}
+            chebi_id = BiopaxProcessor._get_chebi_id(bpe)
+            if chebi_id is not None:
+                db_refs['CHEBI'] = chebi_id
+            hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+            uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
+            if uniprot_id is not None:
+                db_refs['UP'] = uniprot_id
         return db_refs
 
     @staticmethod
@@ -492,13 +502,18 @@ class BiopaxProcessor(object):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             if hgnc_id is not None:
                 name = BiopaxProcessor._get_hgnc_name(hgnc_id)
+                if name is None:
+                    name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
         elif is_small_molecule(bpe):
             name = bpe.getDisplayName()
+        elif is_physical_entity(bpe):
+            name = bpe.getDisplayName()
         else:
             warnings.warn('Unhandled entity type %s' %
                 bpe.getModelInterface().getName())
+            import ipdb; ipdb.set_trace()
             name = bpe.getDisplayName()
         
         # Canonicalize name
@@ -509,14 +524,13 @@ class BiopaxProcessor(object):
     
     @staticmethod
     def _get_uniprot_id(bpe):
-        # There is sometimes more than one UniProt ID reported.
+        # There is often more than one UniProt ID reported.
         # This usually corresponds to the primary accession ID and one or more
         # secondary accession IDs (these IDs are from deprecated entries that
         # have been merged into the primary.
-        if not is_reference(bpe):
-            bp_entref = bpe.getEntityReference()
-        else:
-            bp_entref = bpe
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return None
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if 
                         x.getDb() == 'UniProt Knowledgebase']
@@ -530,10 +544,9 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_chebi_id(bpe):
-        if not is_reference(bpe):
-            bp_entref = bpe.getEntityReference()
-        else:
-            bp_entref = bpe
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return None
         xrefs = bp_entref.getXref().toArray()
         chebi_refs = [x for x in xrefs if 
                         x.getDb() == 'ChEBI']
@@ -547,10 +560,9 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_hgnc_id(bpe):
-        if not is_reference(bpe):
-            bp_entref = bpe.getEntityReference()
-        else:
-            bp_entref = bpe
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return None
         xrefs = bp_entref.getXref().toArray()
         hgnc_refs = [x for x in xrefs if x.getDb() == 'HGNC']
         hgnc_id = None
@@ -565,10 +577,29 @@ class BiopaxProcessor(object):
     def _get_hgnc_name(hgnc_id):
         hgnc_name = hgnc_client.get_hgnc_name(str(hgnc_id))
         return hgnc_name
+    
+    @staticmethod
+    def _get_entref(bpe):
+        """Returns the entity reference of an entity if it exists or
+        return the entity reference that was passed in as argument."""
+        if not is_reference(bpe):
+            try:
+                er = bpe.getEntityReference()
+            except AttributeError:
+                return None
+            return er
+        else:
+            return bpe
 
     def print_statements(self):
         for i, stmt in enumerate(self.statements):
             print "%s: %s" % (i, stmt)
+    
+    def save_model(self, file_name=None):
+        if file_name is None:
+            print 'Missing file name'
+            return
+        pcc.model_to_owl(self.model, file_name)
 
     _mftype_dict = {
         'phosphorylated residue': 'Phosphorylation',
@@ -576,7 +607,8 @@ class BiopaxProcessor(object):
         'O-phospho-L-threonine': 'PhosphorylationThreonine',
         'O-phospho-L-tyrosine': 'PhosphorylationTyrosine',
         'O4\'-phospho-L-tyrosine': 'PhosphorylationTyrosine',
-        'residue modification, active': 'Active'
+        'residue modification, active': 'Active',
+        'residue modification, inactive': 'Inactive'
         }
 
 # Functions for accessing frequently used java classes with shortened path
@@ -640,6 +672,12 @@ def is_small_molecule(pe):
             isinstance(pe, bpimpl('SmallMoleculeReference'))
     return val
 
+def is_physical_entity(pe):
+    """Return True if the element is a physical entity"""
+    val = isinstance(pe, bp('PhysicalEntity')) or \
+           isinstance(pe, bpimpl('PhysicalEntity'))
+    return val
+
 def is_modification(fe):
     """Return True if the feature is a modification"""
     val = isinstance(fe, bp('ModificationFeature')) or \
@@ -658,7 +696,7 @@ def is_reference(bpe):
     else:
         return False
 
-def is_physical_entity(bpe):
+def is_entity(bpe):
     """Return True if the element is a physical entity."""
     if isinstance(bpe, bp('Protein')) or \
         isinstance(bpe, bpimpl('Protein')) or \
@@ -681,7 +719,7 @@ def is_catalysis(bpe):
 def has_members(bpe):
     if is_reference(bpe):
         members =  bpe.getMemberEntityReference().toArray()
-    elif is_physical_entity(bpe):
+    elif is_entity(bpe):
         members =  bpe.getMemberPhysicalEntity().toArray()
     else:
         return False
