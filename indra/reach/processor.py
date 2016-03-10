@@ -35,6 +35,7 @@ class ReachProcessor(object):
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
+            context = self._get_context(r)
             frame_id = r['frame_id']
             args = r['arguments']
             site = None
@@ -70,7 +71,8 @@ class ReachProcessor(object):
             mod = mod + residue
             sentence = r['verbose-text']
             ev = Evidence(source_api='reach', text=sentence,
-                          pmid=self.citation, epistemics=epistemics)
+                          annotations=context, pmid=self.citation,
+                          epistemics=epistemics)
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, ev))
     
@@ -81,6 +83,7 @@ class ReachProcessor(object):
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
+            context = self._get_context(r)
             frame_id = r['frame_id']
             args = r['arguments']
             sentence = r['verbose-text']
@@ -88,8 +91,9 @@ class ReachProcessor(object):
             for a in args:
                 agent = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
-            ev = Evidence(source_api='reach', text=sentence, 
-                          pmid=self.citation, epistemics=epistemics)
+            ev = Evidence(source_api='reach', text=sentence,
+                          annotations=context, pmid=self.citation,
+                          epistemics=epistemics)
             self.statements.append(Complex(members, ev))
    
     def get_activation(self):
@@ -131,20 +135,7 @@ class ReachProcessor(object):
             st = ActivityActivity(controller_agent, 'Activity', rel,
                                   controlled_agent, 'Activity', ev)
             self.statements.append(st)
-   
-    def _get_context(self, frame_term):
-        try:
-            context_term = frame_term['context']
-        except KeyError:
-            return {}
-
-        species = context_term.get('Species')
-        cell_type = context_term.get('CellType')
-        context = {}
-        context['species'] = species
-        context['cell_type'] = cell_type
-        return context
-
+  
     def _get_agent_from_entity(self, entity_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
         res = self.tree.execute(qstr)
@@ -158,6 +149,21 @@ class ReachProcessor(object):
                 db_refs['UP'] = xr['id']
         agent = Agent(name, db_refs=db_refs)
         return agent
+
+    @staticmethod
+    def _get_context(frame_term):
+        try:
+            context_term = frame_term['context']
+        except KeyError:
+            return {}
+
+        species = context_term.get('Species')
+        cell_type = context_term.get('CellType')
+        context = {}
+        context['species'] = species
+        context['cell_type'] = cell_type
+        return context
+
   
     @staticmethod
     def _get_epistemics(event):
