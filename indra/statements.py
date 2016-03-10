@@ -224,8 +224,8 @@ class Statement(object):
         return self.entities_match_key() == other.entities_match_key()
 
     def entities_match_key(self):
-        return (type(self), tuple(a.entity_matches_key()
-                                  for a in self.agent_list()))
+        return (type(self), tuple(a.entity_matches_key() if a is not None
+                                  else None for a in self.agent_list()))
 
     def print_supports(self):
         print '%s supported_by:' % self.__str__()
@@ -249,7 +249,11 @@ class Modification(Statement):
         self.mod_pos = mod_pos
 
     def matches_key(self):
-        return (type(self), self.enz.matches_key(), self.sub.matches_key(),
+        if self.enz is None:
+            enz_key = None
+        else:
+            enz_key = self.enz.matches_key()
+        return (type(self), enz_key, self.sub.matches_key(),
                 self.mod, self.mod_pos)
 
     def agent_list(self):
