@@ -87,7 +87,7 @@ class Agent(object):
                 if (bc_self.agent.entity_matches(bc_other.agent) or
                     entity_hierarchy.isa(bc_self.agent.name,
                                          bc_other.agent.name)) and \
-                   bc_self.is_bound == bc_other.is_bound:
+                    bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
@@ -224,8 +224,8 @@ class Statement(object):
         return self.entities_match_key() == other.entities_match_key()
 
     def entities_match_key(self):
-        return (type(self), tuple(a.entity_matches_key()
-                                  for a in self.agent_list()))
+        return (type(self), tuple(a.entity_matches_key() if a is not None
+                                  else None for a in self.agent_list()))
 
     def print_supports(self):
         print '%s supported_by:' % self.__str__()
@@ -249,7 +249,11 @@ class Modification(Statement):
         self.mod_pos = mod_pos
 
     def matches_key(self):
-        return (type(self), self.enz.matches_key(), self.sub.matches_key(),
+        if self.enz is None:
+            enz_key = None
+        else:
+            enz_key = self.enz.matches_key()
+        return (type(self), enz_key, self.sub.matches_key(),
                 self.mod, self.mod_pos)
 
     def agent_list(self):
@@ -261,10 +265,16 @@ class Modification(Statement):
             return False
 
         # Check agent arguments
-        if not (self.enz.refinement_of(other.enz, entity_hierarchy,
-                                  mod_hierarchy) and \
-                self.sub.refinement_of(other.sub, entity_hierarchy,
-                                  mod_hierarchy)):
+        if self.enz is None:
+            enz_refinement = False
+        elif self.enz is not None and other.enz is None:
+            enz_refinement = True
+        else:
+            enz_refinement = self.enz.refinement_of(other.enz, entity_hierarchy,
+                                                    mod_hierarchy)
+        sub_refinement = self.sub.refinement_of(other.sub, entity_hierarchy,
+                                                mod_hierarchy)
+        if not (enz_refinement and sub_refinement):
             return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
@@ -279,8 +289,12 @@ class Modification(Statement):
             return False
 
     def __str__(self):
+        if self.enz is None:
+            enz_str = None
+        else:
+            enz_str = self.enz.name
         s = ("%s(%s, %s, %s, %s)" %
-                  (type(self).__name__, self.enz.name, self.sub.name, self.mod,
+                  (type(self).__name__, enz_str, self.sub.name, self.mod,
                    self.mod_pos))
         return s
 
