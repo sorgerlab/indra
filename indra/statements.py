@@ -279,8 +279,12 @@ class Modification(Statement):
             return False
 
     def __str__(self):
+        if self.enz is None:
+            enz_str = None
+        else:
+            enz_str = self.enz.name
         s = ("%s(%s, %s, %s, %s)" %
-                  (type(self).__name__, self.enz.name, self.sub.name, self.mod,
+                  (type(self).__name__, enz_str, self.sub.name, self.mod,
                    self.mod_pos))
         return s
 

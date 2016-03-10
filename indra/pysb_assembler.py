@@ -550,6 +550,8 @@ complex_assemble_default = complex_assemble_one_step
 # PHOSPHORYLATION ###################################################
 
 def phosphorylation_monomers_interactions_only(stmt, agent_set):
+    if stmt.enz is None:
+        return
     enz = agent_set.get_create_base_agent(stmt.enz)
     enz.create_site(active_site_names['Kinase'])
     sub = agent_set.get_create_base_agent(stmt.sub)
@@ -558,6 +560,8 @@ def phosphorylation_monomers_interactions_only(stmt, agent_set):
 
 
 def phosphorylation_monomers_one_step(stmt, agent_set):
+    if stmt.enz is None:
+        return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     # NOTE: This assumes that a Phosphorylation statement will only ever
@@ -570,6 +574,8 @@ def phosphorylation_monomers_one_step(stmt, agent_set):
 
 
 def phosphorylation_monomers_two_step(stmt, agent_set):
+    if stmt.enz is None:
+        return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     sub.create_site(site_name(stmt)[0], ('u', 'p'))
@@ -582,6 +588,8 @@ phosphorylation_monomers_default = phosphorylation_monomers_one_step
 
 
 def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
 
@@ -603,6 +611,8 @@ def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
 
 
 def phosphorylation_assemble_one_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     param_name = 'kf_' + stmt.enz.name[0].lower() + \
                     stmt.sub.name[0].lower() + '_phos'
     kf_phospho = get_create_parameter(model, param_name, 1e-6)
@@ -628,6 +638,8 @@ def phosphorylation_assemble_one_step(stmt, model, agent_set):
 
 
 def phosphorylation_assemble_two_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     sub_bs = get_binding_site_name(stmt.sub.name)
     enz_bound = get_complex_pattern(model, stmt.enz, agent_set,
         extra_fields={sub_bs: 1})
