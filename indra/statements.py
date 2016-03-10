@@ -87,7 +87,7 @@ class Agent(object):
                 if (bc_self.agent.entity_matches(bc_other.agent) or
                     entity_hierarchy.isa(bc_self.agent.name,
                                          bc_other.agent.name)) and \
-                   bc_self.is_bound == bc_other.is_bound:
+                    bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
@@ -265,10 +265,16 @@ class Modification(Statement):
             return False
 
         # Check agent arguments
-        if not (self.enz.refinement_of(other.enz, entity_hierarchy,
-                                  mod_hierarchy) and \
-                self.sub.refinement_of(other.sub, entity_hierarchy,
-                                  mod_hierarchy)):
+        if self.enz is None:
+            enz_refinement = False
+        elif self.enz is not None and other.enz is None:
+            enz_refinement = True
+        else:
+            enz_refinement = self.enz.refinement_of(other.enz, entity_hierarchy,
+                                                    mod_hierarchy)
+        sub_refinement = self.sub.refinement_of(other.sub, entity_hierarchy,
+                                                mod_hierarchy)
+        if not (enz_refinement and sub_refinement):
             return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in

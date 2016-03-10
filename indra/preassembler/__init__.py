@@ -21,6 +21,10 @@ class Preassembler(object):
         self.stmts += stmts
 
     def combine_duplicates(self):
+        self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
+
+    @staticmethod
+    def combine_duplicate_stmts(stmts):
         """Combine evidence from duplicate Statements.
 
         Statements are deemed to be duplicates if they have the same key
@@ -34,12 +38,12 @@ class Preassembler(object):
         self.unique_stmts.
         """
 
-        self.unique_stmts = []
+        unique_stmts = []
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        self.stmts.sort(key=lambda x: x.matches_key())
-        for key, duplicates in itertools.groupby(self.stmts,
+        stmts.sort(key=lambda x: x.matches_key())
+        for key, duplicates in itertools.groupby(stmts,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
@@ -50,8 +54,8 @@ class Preassembler(object):
                     first_stmt.evidence += stmt.evidence
             # This should never be None or anything else
             assert isinstance(first_stmt, Statement)
-            self.unique_stmts.append(first_stmt)
-        return self.unique_stmts
+            unique_stmts.append(first_stmt)
+        return unique_stmts
 
     def combine_related(self):
         """Connect related statements based on their refinement relationships.
@@ -176,9 +180,16 @@ class Preassembler(object):
             # that the arguments at that position imply that g1 is the primary
             # group.
             agent_pairs = zip(g1_stmt.agent_list(), g2_stmt.agent_list())
-            g1_is_refinement = [ag1.entity_matches(ag2) or
-                                self.entity_hierarchy.isa(ag1.name, ag2.name)
-                                for ag1, ag2 in agent_pairs]
+            g1_is_refinement = []
+            for ag1, ag2 in agent_pairs:
+                if ag2 is None:
+                    val = True
+                elif ag2 is not None and ag1 is None:
+                    val = False
+                else:
+                    val = ag1.entity_matches(ag2) or\
+                          self.entity_hierarchy.isa(ag1.name, ag2.name)
+                g1_is_refinement.append(val)
             # If g1_is_refinement is all True values, that means everything in
             # the group1 statements isa thing in the group2 statements.
             if all(g1_is_refinement):
@@ -205,6 +216,7 @@ class Preassembler(object):
         self.related_stmts = [stmt for ext_group in ext_groups.values()
                                for stmt in ext_group
                                if not stmt.supports]
+        self.related_stmts = self.combine_duplicate_stmts(self.related_stmts) 
         return self.related_stmts
 
 def render_stmt_graph(statements, agent_style=None):
