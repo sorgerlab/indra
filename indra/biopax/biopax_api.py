@@ -20,7 +20,7 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1):
 
 
 def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
-    model = pcc.run_pc_query('pathsfromto', source_genes, 
+    model = pcc.graph_query('pathsfromto', source_genes, 
                              target_genes, neighbor_limit)
     if model is not None:
         return process_model(model)
