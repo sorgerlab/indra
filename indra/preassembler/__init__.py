@@ -22,6 +22,7 @@ class Preassembler(object):
 
     def combine_duplicates(self):
         self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
+        return self.unique_stmts
 
     @staticmethod
     def combine_duplicate_stmts(stmts):
