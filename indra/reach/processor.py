@@ -155,6 +155,7 @@ class ReachProcessor(object):
         '''
         name = txt.replace('-', '_')
         name = name.replace(' ', '_')
+        name = name.replace('.', '_')
         return name
 
     @staticmethod

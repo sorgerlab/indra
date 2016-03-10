@@ -11,12 +11,14 @@ from processor import ReachProcessor
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 
-def process_pmc(pmc_id):
+def process_pmc(pmc_id, save=False):
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
+    with open(pmc_id + '.nxml', 'wt') as fh:
+        fh.write(xml_str)
     rp = process_nxml_str(xml_str, citation=pmc_id)
     return rp
 
@@ -38,12 +40,9 @@ def process_text(txt, citation=None, offline=False):
         return process_nxml(tmp_file.name, citation)
     else:
         req = urllib2.Request(reach_text_url, 
-            data=urllib.urlencode({'text': txt.encode('utf8')}))
+            data=urllib.urlencode({'text': txt}))
         res = urllib2.urlopen(req)
         json_str = res.read()
-        #json_dict = json.loads(json_str)
-        #events_dict = json_dict['events']
-        #events_json_str = json.dumps(events_dict, indent=1)
         with open('reach_output.json', 'wt') as fh:
             fh.write(json_str)
         return process_json_str(json_str, citation)
