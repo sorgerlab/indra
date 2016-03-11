@@ -407,7 +407,7 @@ class TripsProcessor(object):
 
         site_tag = event.find("site")
         if site_tag is None:
-            return [mod_type_name], ['']
+            return [mod_type_name], [None]
         site_id = site_tag.attrib['id']
         residues, mod_pos = self._get_site_by_id(site_id)
         mod = []
