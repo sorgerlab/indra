@@ -315,6 +315,8 @@ class TripsProcessor(object):
     @staticmethod
     def _get_text(element):
         text_tag = element.find("text")
+        if not text_tag:
+            return None
         text = text_tag.text
         return text
 
