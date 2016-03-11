@@ -13,6 +13,8 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True):
 
 def process_xml(xml_string):
     tp = TripsProcessor(xml_string)
+    if tp.tree is None:
+        return None
     tp.get_complexes()
     tp.get_phosphorylation()
     tp.get_activating_mods()
