@@ -32,6 +32,21 @@ def test_duplicates():
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
 
+def test_duplicates_sorting():
+    map2k1_1 = Agent('MAP2K1', mods=['Phosphorylation'], mod_sites=[None])
+    map2k1_2 = Agent('MAP2K1', mods=['PhosphorylationSerine'],
+                               mod_sites=['218', '222', '298'])
+    mapk3 = Agent('MAPK3')
+    #ras = Agent('MAPK3', db_refs = {'FA': '03663'})
+    #nras = Agent('NRAS', db_refs = {'FA': '03663'})
+    st1 = Phosphorylation(map2k1_1, mapk3, 'Phosphorylation', '218')
+    st2 = Phosphorylation(map2k1_2, mapk3, 'Phosphorylation', None)
+    st3 = Phosphorylation(map2k1_1, mapk3, 'Phosphorylation', '218')
+    stmts = [st1, st2, st3]
+    pa = Preassembler(eh, mh, stmts)
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 2)
+
 def test_combine_duplicates():
     raf = Agent('RAF1')
     mek = Agent('MEK1')
@@ -59,14 +74,14 @@ def test_combine_duplicates():
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0] == p5) # MEK phos ERK
-    assert(len(pa.unique_stmts[0].evidence) == 1)
-    assert(pa.unique_stmts[1] == p1) # RAF phos MEK
-    assert(len(pa.unique_stmts[1].evidence) == 4)
-    assert(pa.unique_stmts[2] == p6) # MEK dephos ERK
-    assert(len(pa.unique_stmts[2].evidence) == 3)
-    assert(pa.unique_stmts[3] == p9) # SRC dephos KRAS
-    assert(len(pa.unique_stmts[3].evidence) == 1)
+    assert(pa.unique_stmts[0] == p6) # MEK dephos ERK
+    assert(len(pa.unique_stmts[0].evidence) == 3)
+    assert(pa.unique_stmts[1] == p9) # SRC dephos KRAS
+    assert(len(pa.unique_stmts[1].evidence) == 1)
+    assert(pa.unique_stmts[2] == p5) # MEK phos ERK
+    assert(len(pa.unique_stmts[2].evidence) == 1)
+    assert(pa.unique_stmts[3] == p1) # RAF phos MEK
+    assert(len(pa.unique_stmts[3].evidence) == 4)
 
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
@@ -83,7 +98,6 @@ def test_superfamily_refinement():
     assert(len(stmts) == 1)
     assert (stmts[0] == st2)
     assert (stmts[0].supported_by == [st1])
-
 
 def test_modification_refinement():
     """A more specific modification statement should be supported by a more
@@ -205,5 +219,3 @@ def test_render_stmt_graph():
     # 6 + 5 + 1 + 1 + 2 = 15 edges
     assert len(graph.edges()) == 15
 
-if __name__ == '__main__':
-    test_modification_norefinement_noenz()

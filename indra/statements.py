@@ -45,7 +45,7 @@ class Agent(object):
                tuple((bc.agent.matches_key(), bc.is_bound)
                      for bc in sorted(self.bound_conditions,
                                       key=lambda x: x.agent.name)))
-        return key
+        return str(key)
 
     def entity_matches(self, other):
         return self.entity_matches_key() == other.entity_matches_key()
@@ -134,8 +134,8 @@ class Agent(object):
         if self.bound_conditions:
             attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
                           for b in self.bound_conditions]
-        if self.db_refs:
-            attr_strs.append('db_refs: %s' % self.db_refs)
+        #if self.db_refs:
+        #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
         return '%s(%s)' % (self.name, attr_str)
 
@@ -224,8 +224,9 @@ class Statement(object):
         return self.entities_match_key() == other.entities_match_key()
 
     def entities_match_key(self):
-        return (type(self), tuple(a.entity_matches_key() if a is not None
+        key = (type(self), tuple(a.entity_matches_key() if a is not None
                                   else None for a in self.agent_list()))
+        return str(key)
 
     def print_supports(self):
         print '%s supported_by:' % self.__str__()
@@ -253,8 +254,9 @@ class Modification(Statement):
             enz_key = None
         else:
             enz_key = self.enz.matches_key()
-        return (type(self), enz_key, self.sub.matches_key(),
+        key = (type(self), enz_key, self.sub.matches_key(),
                 self.mod, self.mod_pos)
+        return str(key)
 
     def agent_list(self):
         return [self.enz, self.sub]
@@ -289,12 +291,8 @@ class Modification(Statement):
             return False
 
     def __str__(self):
-        if self.enz is None:
-            enz_str = None
-        else:
-            enz_str = self.enz.name
         s = ("%s(%s, %s, %s, %s)" %
-                  (type(self).__name__, enz_str, self.sub.name, self.mod,
+                  (type(self).__name__, self.enz, self.sub, self.mod,
                    self.mod_pos))
         return s
 
@@ -314,7 +312,8 @@ class SelfModification(Statement):
         return s
 
     def matches_key(self):
-        return (type(self), self.enz.matches_key(), self.mod, self.mod_pos)
+        key = (type(self), self.enz.matches_key(), self.mod, self.mod_pos)
+        return str(key)
 
     def agent_list(self):
         return [self.enz]
@@ -402,8 +401,9 @@ class ActivityActivity(Statement):
         self.relationship = relationship
 
     def matches_key(self):
-        return (type(self), self.subj.matches_key(), self.subj_activity,
+        key = (type(self), self.subj.matches_key(), self.subj_activity,
                 self.obj.matches_key(), self.obj_activity)
+        return str(key)
 
     def agent_list(self):
         return [self.subj, self.obj]
@@ -473,8 +473,9 @@ class ActivityModification(Statement):
         self.activity = activity
 
     def matches_key(self):
-        return (type(self), self.monomer.matches_key(), self.mod, self.mod_pos,
+        key = (type(self), self.monomer.matches_key(), self.mod, self.mod_pos,
                 self.relationship, self.activity)
+        return str(key)
 
     def agent_list(self):
         return [self.monomer]
@@ -529,7 +530,8 @@ class ActivityModification(Statement):
 
     def __str__(self):
         s = ("ActivityModification(%s, %s, %s, %s, %s)" %
-                (self.monomer.name, self.mod, self.mod_pos, self.relationship,
+                (self.monomer, self.mod, self.mod_pos, self.relationship,
+                #(str(self.monomer), self.mod, self.mod_pos, self.relationship,
                  self.activity))
         return s
 
@@ -549,8 +551,9 @@ class ActivatingSubstitution(Statement):
         self.rel = rel
 
     def matches_key(self):
-        return (type(self), self.monomer.matches_key(), self.wt_residue,
+        key = (type(self), self.monomer.matches_key(), self.wt_residue,
                 self.pos, self.sub_residue, self.activity)
+        return str(key)
 
     def agent_list(self):
         return [self.monomer]
@@ -593,8 +596,9 @@ class RasGef(Statement):
         self.ras = ras
 
     def matches_key(self):
-        return (type(self), self.gef.matches_key(), self.gef_activity,
+        key = (type(self), self.gef.matches_key(), self.gef_activity,
                 self.ras.matches_key())
+        return str(key)
 
     def agent_list(self):
         return [self.gef, self.ras]
@@ -628,8 +632,9 @@ class RasGap(Statement):
         self.ras = ras
 
     def matches_key(self):
-        return (type(self), self.gap.matches_key(), self.gap_activity,
+        key = (type(self), self.gap.matches_key(), self.gap_activity,
                 self.ras.matches_key())
+        return str(key)
 
     def agent_list(self):
         return [self.gap, self.ras]
@@ -660,7 +665,8 @@ class Complex(Statement):
         self.members = members
 
     def matches_key(self):
-        return (type(self), tuple(m.matches_key() for m in self.members))
+        key = (type(self), tuple(m.matches_key() for m in self.members))
+        return str(key)
 
     def agent_list(self):
         return self.members
