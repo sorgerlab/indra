@@ -31,7 +31,6 @@ class TripsProcessor(object):
     def __init__(self, xml_string):
         self.tree = ET.fromstring(xml_string)
         self.statements = []
-        self._hgnc_cache = self._load_hgnc_cache()
         self._static_events = self._find_static_events()
 
     def get_activations(self):
@@ -313,21 +312,19 @@ class TripsProcessor(object):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
 
-    def _get_text(self, element):
+    @staticmethod
+    def _get_text(element):
         text_tag = element.find("text")
         text = text_tag.text
         return text
 
-    def _get_hgnc_name(self, hgnc_id):
-        try:
-            hgnc_name = self._hgnc_cache[hgnc_id]
-        except KeyError:
-            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-
-            self._hgnc_cache[hgnc_id] = hgnc_name
+    @staticmethod
+    def _get_hgnc_name(hgnc_id):
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         return hgnc_name
 
-    def _get_valid_component_name(self, name):
+    @staticmethod
+    def _get_valid_name(name):
         name = name.replace('-', '_')
         return name
 
@@ -341,7 +338,7 @@ class TripsProcessor(object):
             dbid = entity_term.attrib["dbid"]
         except:
             warnings.warn('No grounding information for %s' % name.text)
-            return self._get_valid_component_name(name.text)
+            return self._get_valid_name(name.text)
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
         up_ids = [i for i in dbids if i.startswith('UP')]
@@ -352,7 +349,7 @@ class TripsProcessor(object):
                 warnings.warn('%d HGNC IDs reported.' % len(hgnc_ids))
             hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
-            return self._get_valid_component_name(hgnc_name)
+            return self._get_valid_name(hgnc_name)
         elif up_ids:
             if len(hgnc_ids) > 1:
                 warnings.warn('%d UniProt IDs reported.' % len(up_ids))
@@ -361,14 +358,14 @@ class TripsProcessor(object):
             # First try to get HGNC name
             hgnc_name = up_client.get_hgnc_name(up_rdf)
             if hgnc_name is not None:
-                return self._get_valid_component_name(hgnc_name)
+                return self._get_valid_name(hgnc_name)
             # Next, try to get the gene name
             gene_name = up_client.get_gene_name(up_rdf)
             if gene_name is not None:
-                return self._get_valid_component_name(gene_name)
+                return self._get_valid_name(gene_name)
         # By default, return the text of the name tag
         name_txt = name.text.strip('|')
-        return self._get_valid_component_name(name_txt)
+        return self._get_valid_name(name_txt)
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
@@ -430,17 +427,6 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
-
-    def _load_hgnc_cache(self):
-        try:
-            fh = open('hgnc_cache.pkl', 'rb')
-        except IOError:
-            return {}
-        return pickle.load(fh)
-
-    def _dump_hgnc_cache(self):
-        with open('hgnc_cache.pkl', 'wb') as fh:
-            pickle.dump(self._hgnc_cache, fh)
 
 if __name__ == '__main__':
     tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
