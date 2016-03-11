@@ -3,6 +3,7 @@ import objectpath
 import warnings
 
 from indra.statements import *
+import indra.databases.uniprot_client as up_client
 
 residue_names = {
     'S': 'Serine',
@@ -144,12 +145,32 @@ class ReachProcessor(object):
         if res is None:
             return None
         entity_term = res.next()
-        name = self._get_agent_name(entity_term['text'])
+        # This is the default name, which can be overwritten 
+        # below for specific database entries
+        agent_name = self._get_valid_name(entity_term['text'])
         db_refs = {}
         for xr in entity_term['xrefs']:
-            if xr['namespace'] == 'uniprot':
-                db_refs['UP'] = xr['id']
-        agent = Agent(name, db_refs=db_refs)
+            ns = xr['namespace']
+            if ns == 'uniprot':
+                up_id = xr['id']
+                db_refs['UP'] = up_id
+                # Look up official names in UniProt
+                up_rdf = up_client.query_protein(up_id)
+                hgnc_name = up_client.get_hgnc_name(up_rdf)
+                gene_name = up_client.get_gene_name(up_rdf)
+                if hgnc_name is not None:
+                    agent_name = self._get_valid_name(hgnc_name)
+                elif gene_name is not None:
+                    agent_name = self._get_valid_name(gene_name)
+            elif ns == 'interpro':
+                db_refs['IP'] = xr['id']
+            elif ns == 'chebi':
+                db_refs['CHEBI'] = xr['id'][6:]
+            elif ns == 'go':
+                db_refs['GO'] = xr['id'][3:]
+            elif ns == 'hmdb':
+                db_refs['HMDB'] = xr['id'][4:]
+        agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
     @staticmethod
@@ -180,7 +201,7 @@ class ReachProcessor(object):
         return epistemics
 
     @staticmethod
-    def _get_agent_name(txt):
+    def _get_valid_name(txt):
         '''
         Produce valid agent name from string.
         '''
