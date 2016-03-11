@@ -123,7 +123,7 @@ class Agent(object):
         # Everything checks out
         return True
 
-    def __repr__(self):
+    def __str__(self):
         attr_strs = []
         if self.mods:
             attr_strs.append('mods: %s' % self.mods)
@@ -138,6 +138,9 @@ class Agent(object):
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
         return '%s(%s)' % (self.name, attr_str)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Evidence(object):
