@@ -124,11 +124,11 @@ class Preassembler(object):
             >>> pa = Preassembler(eh, mh, [st1, st2])
             >>> combined_stmts = pa.combine_related()
             >>> combined_stmts
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, 218)]
             >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, None)]
+            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, None)]
             >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF, MAP2K1, Phosphorylation, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, 218)]
         """
 
         # If unique_stmts is not initialized, call combine_duplicates.
