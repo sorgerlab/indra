@@ -258,7 +258,7 @@ def render_stmt_graph(statements, agent_style=None):
     for stmt in statements:
         process_stmt(stmt)
     # Add the nodes and edges to the graph
-    graph = pgv.AGraph(name='statements', directed=True)
+    graph = pgv.AGraph(name='statements', directed=True, rankdir='LR')
     for node in nodes:
         graph.add_node(str(node.matches_key()), label=str(node), **agent_style)
     graph.add_edges_from(edges)
