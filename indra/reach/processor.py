@@ -147,8 +147,18 @@ class ReachProcessor(object):
         name = self._get_agent_name(entity_term['text'])
         db_refs = {}
         for xr in entity_term['xrefs']:
-            if xr['namespace'] == 'uniprot':
+            ns = xr['namespace']
+            print xr
+            if ns == 'uniprot':
                 db_refs['UP'] = xr['id']
+            elif ns == 'interpro':
+                db_refs['IP'] = xr['id']
+            elif ns == 'chebi':
+                db_refs['CHEBI'] = xr['id'][6:]
+            elif ns == 'go':
+                db_refs['GO'] = xr['id'][3:]
+            elif ns == 'hmdb':
+                db_refs['HMDB'] = xr['id'][4:]
         agent = Agent(name, db_refs=db_refs)
         return agent
 
