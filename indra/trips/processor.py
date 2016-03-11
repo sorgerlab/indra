@@ -29,7 +29,12 @@ mod_names = {
 
 class TripsProcessor(object):
     def __init__(self, xml_string):
-        self.tree = ET.fromstring(xml_string)
+        try:
+            self.tree = ET.fromstring(xml_string)
+        except ET.ParseError:
+            print 'Could not parse XML string'
+            self.tree = None
+            return
         self.statements = []
         self._static_events = self._find_static_events()
 
