@@ -273,6 +273,9 @@ def get_annotation(component, db_name, db_ref):
     elif db_name == 'XFAM' and db_ref.startswith('PF'):
         obj = url + 'pfam/%s' % db_ref
         pred = 'is'
+    elif db_name == 'IP':
+        obj = url + 'interpro/%s' % db_ref
+        pred = 'is'
     elif db_name == 'CHEBI':
         obj = url + 'chebi/CHEBI:%s' % db_ref
         pred = 'is'
