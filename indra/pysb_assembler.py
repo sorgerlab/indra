@@ -165,7 +165,20 @@ def get_activating_mods(agent, agent_set):
 # PySB model elements ##################################################
 
 def get_agent_rule_str(agent):
-    return agent.name
+    rule_str_list = [agent.name]
+    if agent.mods:
+        for m, mp in zip(agent.mods, agent.mod_sites):
+            mstr = abbrevs[m]
+            mpstr = '' if mp is None else str(mp)
+            rule_str_list.append('%s%s' % (m,mp))
+    if agent.bound_conditions:
+        for b in agent.bound_conditions:
+            if b.is_bound:
+                rule_str_list.append(b.agent.name)
+            else:
+                rule_str_list.append('n' + b.agent.name)
+    rule_str = '_'.join(rule_str_list)
+    return rule_str
 
 def add_rule_to_model(model, rule):
     try:
