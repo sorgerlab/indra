@@ -164,6 +164,22 @@ def get_activating_mods(agent, agent_set):
 
 # PySB model elements ##################################################
 
+def get_agent_rule_str(agent):
+    rule_str_list = [agent.name]
+    if agent.mods:
+        for m, mp in zip(agent.mods, agent.mod_sites):
+            mstr = abbrevs[m]
+            mpstr = '' if mp is None else str(mp)
+            rule_str_list.append('%s%s' % (mstr, mpstr))
+    if agent.bound_conditions:
+        for b in agent.bound_conditions:
+            if b.is_bound:
+                rule_str_list.append(b.agent.name)
+            else:
+                rule_str_list.append('n' + b.agent.name)
+    rule_str = '_'.join(rule_str_list)
+    return rule_str
+
 def add_rule_to_model(model, rule):
     try:
         model.add_component(rule)
@@ -602,7 +618,10 @@ def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
     # See NOTE in monomers_one_step
     site = site_name(stmt)[0]
 
-    rule_name = '%s_phospho_%s_%s' % (stmt.enz.name, stmt.sub.name, site)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+
+    rule_name = '%s_phospho_%s_%s' % (rule_enz_str, rule_sub_str, site)
     active_site = active_site_names['Kinase']
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
@@ -630,9 +649,12 @@ def phosphorylation_assemble_one_step(stmt, model, agent_set):
         extra_fields={site: 'p'})
 
     enz_act_mods = get_activating_mods(stmt.enz, agent_set)
+    
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, am in enumerate(enz_act_mods):
         rule_name = '%s_phospho_%s_%s_%d' % \
-            (stmt.enz.name, stmt.sub.name, site, i + 1)
+            (rule_enz_str, rule_sub_str, site, i + 1)
         r = Rule(rule_name,
                 enz_pattern(am) + sub_unphos >>
                 enz_pattern(am) + sub_phos,
@@ -664,9 +686,11 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
 
     enz_act_mods = get_activating_mods(stmt.enz, agent_set)
     enz_bs = get_binding_site_name(stmt.enz.name)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, am in enumerate(enz_act_mods):
         rule_name = '%s_phospho_bind_%s_%s_%d' % \
-            (stmt.enz.name, stmt.sub.name, site, i + 1)
+            (rule_enz_str, rule_sub_str, site, i + 1)
         r = Rule(rule_name,
             enz_unbound(am) + \
             sub_pattern(**{site: 'u', enz_bs: None}) >>
@@ -676,7 +700,7 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
         add_rule_to_model(model, r)
 
         rule_name = '%s_phospho_%s_%s_%d' % \
-            (stmt.enz.name, stmt.sub.name, site, i + 1)
+            (rule_enz_str, rule_sub_str, site, i + 1)
         r = Rule(rule_name,
             enz_bound(am) % \
                 sub_pattern(**{site: 'u', enz_bs: 1}) >>
@@ -685,7 +709,7 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
             kf_phospho)
         add_rule_to_model(model, r)
 
-    rule_name = '%s_dissoc_%s' % (stmt.enz.name, stmt.sub.name)
+    rule_name = '%s_dissoc_%s' % (rule_enz_str, rule_sub_str)
     r = Rule(rule_name, model.monomers[stmt.enz.name](**{sub_bs: 1}) % \
              model.monomers[stmt.sub.name](**{enz_bs: 1}) >>
              model.monomers[stmt.enz.name](**{sub_bs: None}) + \
@@ -728,7 +752,8 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set):
                                          extra_fields={site: 'u'})
     pattern_phos = get_complex_pattern(model, stmt.enz, agent_set,
                                        extra_fields={site: 'p'})
-    rule_name = '%s_autophospho_%s_%s' % (stmt.enz.name, stmt.enz.name, site)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str, site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
     add_rule_to_model(model, r)
 
@@ -775,8 +800,10 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     sub_phos = get_complex_pattern(model, bound_agent,
         agent_set, extra_fields={site: 'p'})
 
-    rule_name = '%s_transphospho_%s_%s' % (stmt.enz.name,
-                                           bound_agent.name, site)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_bound_str = get_agent_rule_str(bound_agent)
+    rule_name = '%s_transphospho_%s_%s' % (rule_enz_str,
+                                           rule_bound_str, site)
     r = Rule(rule_name, enz_pattern % sub_unphos >> \
                     enz_pattern % sub_phos, kf)
     add_rule_to_model(model, r)
@@ -808,9 +835,13 @@ def activityactivity_assemble_interactions_only(stmt, model):
     obj = model.monomers[stmt.obj.name]
     subj_active_site = active_site_names[stmt.subj_activity]
     obj_mod_site = default_mod_site_names[stmt.subj_activity]
-    r = Rule('%s_%s_activates_%s_%s' %
-             (stmt.subj.name, stmt.subj_activity, stmt.obj.name,
-              stmt.obj_activity),
+
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+    rule_subj_str = get_agent_rule_str(stmt.subj)
+    rule_name = '%s_%s_activates_%s_%s' %\
+             (rule_subj_str, stmt.subj_activity, rule_obj_str,
+              stmt.obj_activity)
+    r = Rule(rule_name,
              subj(**{subj_active_site: None}) +
              obj(**{obj_mod_site: None}) >>
              subj(**{subj_active_site: 1}) %
@@ -832,8 +863,10 @@ def activityactivity_assemble_one_step(stmt, model, agent_set):
     kf_one_step_activate = \
                    get_create_parameter(model, param_name, 1e-6)
 
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+    rule_subj_str = get_agent_rule_str(stmt.subj)
     rule_name = '%s_%s_activates_%s_%s' % \
-        (stmt.subj.name, stmt.subj_activity, stmt.obj.name,
+        (rule_subj_str, stmt.subj_activity, rule_obj_str,
          stmt.obj_activity)
 
     if stmt.relationship == 'increases':
@@ -883,8 +916,11 @@ def dephosphorylation_assemble_interactions_only(stmt, model, agent_set):
     phos_site = active_site_names['Phosphatase']
     # See NOTE in Phosphorylation.monomers_one_step
     site = site_name(stmt)[0]
+    
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
     r = Rule('%s_dephospho_%s_%s' %
-             (stmt.enz.name, stmt.sub.name, site),
+             (rule_enz_str, rule_sub_str, site),
              phos(**{phos_site: None}) + sub(**{site: None}) >>
              phos(**{phos_site: 1}) + sub(**{site: 1}),
              kf_bind)
@@ -903,8 +939,10 @@ def dephosphorylation_assemble_one_step(stmt, model, agent_set):
     sub_unphos = get_complex_pattern(model, stmt.sub, agent_set,
         extra_fields={site: 'u'})
 
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
     r = Rule('%s_dephospho_%s_%s' %
-             (stmt.enz.name, stmt.sub.name, site),
+             (rule_enz_str, rule_sub_str, site),
              phos_pattern + sub_phos >>
              phos_pattern + sub_unphos,
              kf_dephospho)
@@ -933,9 +971,11 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
     site = site_name(stmt)[0]
 
     phos_act_mods = get_activating_mods(stmt.enz, agent_set)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, am in enumerate(phos_act_mods):
         rule_name = '%s_dephos_bind_%s_%s_%d' % \
-            (stmt.enz.name, stmt.sub.name, site, i + 1)
+            (rule_enz_str, rule_sub_str, site, i + 1)
         r = Rule(rule_name,
             phos_unbound(am) + \
             sub_pattern(**{site: 'p', phos_bs: None}) >>
@@ -945,7 +985,7 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
         add_rule_to_model(model, r)
 
         rule_name = '%s_dephos_%s_%s_%d' % \
-            (stmt.enz.name, stmt.sub.name, site, i + 1)
+            (rule_enz_str, rule_sub_str, site, i + 1)
         r = Rule(rule_name,
             phos_bound(am) % \
                 sub_pattern(**{site: 'p', phos_bs: 1}) >>
@@ -954,7 +994,7 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
             kf_phospho)
         add_rule_to_model(model, r)
 
-    rule_name = '%s_dissoc_%s' % (stmt.enz.name, stmt.sub.name)
+    rule_name = '%s_dissoc_%s' % (rule_enz_str, rule_sub_str)
     r = Rule(rule_name, model.monomers[stmt.enz.name](**{sub_bs: 1}) % \
              model.monomers[stmt.sub.name](**{phos_bs: 1}) >>
              model.monomers[stmt.enz.name](**{sub_bs: None}) + \
@@ -985,8 +1025,10 @@ def rasgef_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
+    rule_gef_str = get_agent_rule_str(stmt.gef)
+    rule_ras_str = get_agent_rule_str(stmt.ras)
     r = Rule('%s_activates_%s' %
-             (stmt.gef.name, stmt.ras.name),
+             (rule_gef_str, rule_ras_str),
              gef(**{'gef_site': None}) +
              ras(**{'p_loop': None}) >>
              gef(**{'gef_site': 1}) +
@@ -1007,8 +1049,10 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
                     stmt.ras.name[0].lower() + '_gef'
     kf_gef = get_create_parameter(model, param_name, 1e-6)
 
+    rule_gef_str = get_agent_rule_str(stmt.gef)
+    rule_ras_str = get_agent_rule_str(stmt.ras)
     r = Rule('%s_activates_%s' %
-             (stmt.gef.name, stmt.ras.name),
+             (rule_gef_str, rule_ras_str),
              gef_pattern + ras_inactive >>
              gef_pattern + ras_active,
              kf_gef)
@@ -1038,8 +1082,10 @@ def rasgap_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
+    rule_gap_str = get_agent_rule_str(stmt.gap)
+    rule_ras_str = get_agent_rule_str(stmt.ras)
     r = Rule('%s_inactivates_%s' %
-             (stmt.gap.name, stmt.ras.name),
+             (rule_gap_str, rule_ras_str),
              gap(**{'gap_site': None}) +
              ras(**{'gtp_site': None}) >>
              gap(**{'gap_site': 1}) +
@@ -1060,8 +1106,10 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
                     stmt.ras.name[0].lower() + '_gap'
     kf_gap = get_create_parameter(model, param_name, 1e-6)
 
+    rule_gap_str = get_agent_rule_str(stmt.gap)
+    rule_ras_str = get_agent_rule_str(stmt.ras)
     r = Rule('%s_deactivates_%s' %
-             (stmt.gap.name, stmt.ras.name),
+             (rule_gap_str, rule_ras_str),
              gap_pattern + ras_active >>
              gap_pattern + ras_inactive,
              kf_gap)

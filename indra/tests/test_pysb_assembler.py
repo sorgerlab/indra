@@ -1,4 +1,4 @@
-from indra.pysb_assembler import PysbAssembler
+from indra.pysb_assembler import PysbAssembler, get_agent_rule_str
 from indra.statements import *
 
 def test_pysb_assembler_complex1():
@@ -273,3 +273,32 @@ def test_unspecified_statement_policies():
     assert(len(model.rules)==4)
     assert(len(model.monomers)==3)
 
+def test_rule_name_str_1():
+    s = get_agent_rule_str(Agent('BRAF'))
+    assert(s == 'BRAF')
+
+def test_rule_name_str_2():
+    a = Agent('GRB2',
+              bound_conditions=[BoundCondition(Agent('EGFR'), True)])
+    s = get_agent_rule_str(a)
+    print s
+    assert(s == 'GRB2_EGFR')
+
+def test_rule_name_str_3():
+    a = Agent('GRB2',
+              bound_conditions=[BoundCondition(Agent('EGFR'), False)])
+    s = get_agent_rule_str(a)
+    print s
+    assert(s == 'GRB2_nEGFR')
+
+def test_rule_name_str_4():
+    a = Agent('BRAF', mods=['PhosphorylationSerine'], mod_sites=[None])
+    s = get_agent_rule_str(a)
+    print s
+    assert(s == 'BRAF_S')
+
+def test_rule_name_str_5():
+    a = Agent('BRAF', mods=['PhosphorylationSerine'], mod_sites=[123])
+    s = get_agent_rule_str(a)
+    print s
+    assert(s == 'BRAF_S123')
