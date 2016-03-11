@@ -170,7 +170,7 @@ def get_agent_rule_str(agent):
         for m, mp in zip(agent.mods, agent.mod_sites):
             mstr = abbrevs[m]
             mpstr = '' if mp is None else str(mp)
-            rule_str_list.append('%s%s' % (m,mp))
+            rule_str_list.append('%s%s' % (mstr, mpstr))
     if agent.bound_conditions:
         for b in agent.bound_conditions:
             if b.is_bound:
