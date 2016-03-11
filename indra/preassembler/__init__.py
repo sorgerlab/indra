@@ -264,11 +264,12 @@ def render_stmt_graph(statements, agent_style=None):
     graph.add_edges_from(edges)
     return graph
 
+"""
 def check_statements(stmts, save_fname=None):
-    """Iterates over a list of statements and runs checks on them. Then it
-    returns a tuple of lists, with the first element containing statements
-    that passed all checks, and the second the statements that failed the
-    tests"""
+    #Iterates over a list of statements and runs checks on them. Then it
+    #returns a tuple of lists, with the first element containing statements
+    #that passed all checks, and the second the statements that failed the
+    #tests
     pass_stmts = []
     fail_stmts = []
     failures = []
@@ -287,9 +288,10 @@ def check_statements(stmts, save_fname=None):
     return (pass_stmts, fail_stmts)
 
 def check_sequence(stmt):
-    """Check whether references to
-    residues and sequence positions are consistent with sequence
-    information in the UniProt database"""
+    #Check whether references to
+    #residues and sequence positions are consistent with sequence
+    #information in the UniProt database
+
     failures = []
     if isinstance(stmt, Complex):
         for m in stmt.members:
@@ -338,3 +340,4 @@ def check_agent_mod(agent, mods=None):
                   (m.position, agent.name, residue)
             failures.append((agent.name, residue, m.position))
     return failures
+"""
