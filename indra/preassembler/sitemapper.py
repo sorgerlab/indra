@@ -83,7 +83,7 @@ class SiteMapper(object):
         """Look up the modification site in Uniprot and then the site map.
         """
 
-        invalid_sites = []
+        invalid_sites = {}
         # If no UniProt ID is found, we don't report a failure
         up_id = agent.db_refs.get('UP')
         if up_id is None:
@@ -112,10 +112,15 @@ class SiteMapper(object):
             if residue is None:
                 continue
             ver = uniprot_client.verify_location(agent_entry, residue, mp)
+            # If it's not found in Uniprot, then look it up in the site map
             if not ver:
-                #print '-> Sequence check failed; position %s on %s is not %s.' %\
-                #      (mp, agent.name, residue)
-                invalid_sites.append((agent.name, str(residue), str(mp)))
+                try:
+                    mapped_site = \
+                            self.site_map[(agent.name, str(residue), str(mp))]
+                except KeyError:
+                    mapped_site = None
+                invalid_sites[(agent.name, str(residue), str(mp))] = mapped_site
+
         return invalid_sites
 
 def load_site_map(path):
@@ -147,10 +152,10 @@ def load_site_map(path):
             if not (row[0] and row[1] and row[2]):
                 raise Exception("Entries in the key (gene, residue, position) "
                                 "may not be empty.")
-            correct_res = row[3] if row[3] else None
-            correct_pos = row[4] if row[4] else None
-            comment = row[5] if row[5] else None
-            site_map[(row[0], row[1], row[2])] = \
+            correct_res = row[3].strip() if row[3] else None
+            correct_pos = row[4].strip() if row[4] else None
+            comment = row[5].strip() if row[5] else None
+            site_map[(row[0].strip(), row[1].strip(), row[2].strip())] = \
                                     (correct_res, correct_pos, comment)
     return site_map
 
