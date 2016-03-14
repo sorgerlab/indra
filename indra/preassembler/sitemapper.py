@@ -67,6 +67,21 @@ class SiteMapper(object):
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)
+            elif isinstance(stmt, Modification):
+                invalid_sites = {}
+                # Check substrate
+                (agent_invalid_sites, new_sub) = self.check_agent_mod(stmt.sub)
+                invalid_sites.update(agent_invalid_sites)
+                # Check enzyme
+                (agent_invalid_sites, new_enz) = self.check_agent_mod(stmt.enz)
+                invalid_sites.update(agent_invalid_sites)
+
+                """
+                if stmt.mod_pos is not None:
+                    (agent_invalid_sites, _) = \
+                            self.check_agent_mod(stmt.sub, [stmt.mod],
+                                                 [stmt.mod_pos])
+                """
 
         return (valid_statements, mapped_statements)
 
@@ -76,12 +91,6 @@ class SiteMapper(object):
         information in the UniProt database"""
         failures = []
 
-        if isinstance(stmt, Modification):
-            failures += check_agent_mod(stmt.sub)
-            failures += check_agent_mod(stmt.enz)
-            if stmt.mod_pos is not None:
-                failures += \
-                           check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
         elif isinstance(stmt, SelfModification):
             failures += check_agent_mod(stmt.sub)
             if stmt.mod_pos is not None:

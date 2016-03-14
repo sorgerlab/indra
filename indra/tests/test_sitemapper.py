@@ -1,4 +1,4 @@
-from indra.preassembler.sitemapper import default_mapper as sm
+from indra.preassembler.sitemapper import default_mapper as sm, MappedStatement
 from indra.statements import *
 
 def test_check_agent_mod():
@@ -40,14 +40,42 @@ def test_check_agent_mod():
 def test_site_map_complex():
     mapk1_invalid = Agent('MAPK1',
                           mods=['PhosphorylationThreonine',
-                                'PhosphorylationThreonine'],
+                                'PhosphorylationTyrosine'],
                           mod_sites=['183', '185'], db_refs={'UP': 'P28482'})
     mapk3_invalid = Agent('MAPK3',
                             mods=['PhosphorylationThreonine',
-                                  'PhosphorylationThreonine'],
-                            mod_sites=['201', '203'])
+                                  'PhosphorylationTyrosine'],
+                            mod_sites=['201', '203'], db_refs={'UP': 'P27361'})
 
     st1 = Complex([mapk1_invalid, mapk3_invalid])
     res = sm.map_sites([st1])
-    
-    # Also check case where statement has site that is incorrect but doesn't map
+    assert len(res) == 2
+    valid_stmts = res[0]
+    mapped_stmts = res[1]
+    assert isinstance(valid_stmts, list)
+    assert isinstance(mapped_stmts, list)
+    assert len(valid_stmts) == 0
+    assert len(mapped_stmts) == 1
+    mapped_stmt = mapped_stmts[0]
+    assert isinstance(mapped_stmt, MappedStatement)
+    assert mapped_stmt.original_stmt == st1
+    assert isinstance(mapped_stmt.mapped_mods, dict)
+    assert len(mapped_stmt.mapped_mods.keys()) == 4
+    ms = mapped_stmt.mapped_stmt
+    assert isinstance(ms, Statement)
+    members = ms.members
+    assert len(members) == 2
+    agent1 = members[0]
+    agent2 = members[1]
+    assert agent1.name == 'MAPK1'
+    assert len(agent1.mods) == 2
+    assert len(agent1.mod_sites) == 2
+    assert agent1.mods[0] == 'PhosphorylationThreonine'
+    assert agent1.mods[1] == 'PhosphorylationTyrosine'
+    assert agent1.mod_sites[0] == '185'
+    assert agent1.mod_sites[1] == '187'
+    assert agent2.mods[0] == 'PhosphorylationThreonine'
+    assert agent2.mods[1] == 'PhosphorylationTyrosine'
+    assert agent2.mod_sites[0] == '202'
+    assert agent2.mod_sites[1] == '204'
+
