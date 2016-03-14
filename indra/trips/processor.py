@@ -37,6 +37,26 @@ class TripsProcessor(object):
             return
         self.statements = []
         self._static_events = self._find_static_events()
+        self.get_all_events()
+        self.extracted_events = {k:[] for k in self.all_events.keys()}
+        print 'All events by type'
+        print '------------------'
+        for k, v in self.all_events.iteritems():
+            print k, len(v)
+        print '------------------'
+
+    def get_all_events(self):
+        self.all_events = {}
+        events = self.tree.findall('EVENT')
+        for e in events:
+            event_id = e.attrib['id']
+            if event_id in self._static_events:
+                continue
+            event_type = e.find('type').text
+            try:
+                self.all_events[event_type].append(event_id)
+            except KeyError:
+                self.all_events[event_type] = [event_id]
 
     def get_activations(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
@@ -49,18 +69,32 @@ class TripsProcessor(object):
                 continue
             agent_id = agent.attrib['id']
             agent_name = self._get_name_by_id(agent_id)
-            agent_agent = Agent(agent_name)
+            if agent_name is None:
+                warnings.warn(
+                    'Skipping activation with missing activator agent')
+                continue
+            activator_agent = Agent(agent_name)
 
             # Get the activated agent in the event
             affected = event.find(".//*[@role=':AFFECTED']")
+            if affected is None:
+                warnings.warn(
+                    'Skipping activation with missing affected agent')
+                continue
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
+            if affected_name is None:
+                warnings.warn(
+                    'Skipping activation with missing affected agent')
+                continue
+
             affected_agent = Agent(affected_name)
 
             ev = Evidence(source_api='trips', text=sentence)
-            self.statements.append(ActivityActivity(agent_agent, 'act',
+            self.statements.append(ActivityActivity(activator_agent, 'act',
                                     'increases', affected_agent, 'act',
                                     evidence=ev))
+            self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
@@ -76,6 +110,11 @@ class TripsProcessor(object):
 
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
+            if affected_name is None:
+                warnings.warn(
+                    'Skipping activating modification with missing' +\
+                    'affected agent')
+                continue
             affected_agent = Agent(affected_name)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
@@ -85,11 +124,16 @@ class TripsProcessor(object):
             precond_id = precond_event_ref.find('event').attrib['id']
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             mod, mod_pos = self._get_mod_site(precond_event)
+            if mod is None:
+                warnings.warn('Skipping activity modification with missing' +\
+                                'modification')
+                continue
 
             ev = Evidence(source_api='trips', text=sentence)
             self.statements.append(ActivityModification(affected_agent, mod,
                                     mod_pos, 'increases', 'Active',
                                     evidence=ev))
+            self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
@@ -135,6 +179,7 @@ class TripsProcessor(object):
                 warnings.warn('Complex with missing members')
                 continue
             self.statements.append(Complex([agent1, agent2]))
+            self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
         phosphorylation_events = \
@@ -144,24 +189,23 @@ class TripsProcessor(object):
                 continue
 
             sentence = self._get_text(event)
-            agent = event.find(".//*[@role=':AGENT']")
-            if agent is None:
-                warnings.warn('Skipping phosphorylation event with no agent.')
-                continue
-            if agent.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-                complex_id = agent.attrib['id']
+            enzyme = event.find(".//*[@role=':AGENT']")
+            if enzyme is None:
+                enzyme_agent = None
+            elif enzyme.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+                complex_id = enzyme.attrib['id']
                 complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
                 components = complex_term.find("components")
                 terms = components.findall("term")
                 term_names = []
                 for t in terms:
                     term_names.append(self._get_name_by_id(t.attrib['id']))
-                agent_name = term_names[0]
-                agent_bound = Agent(term_names[1])
-                agent_agent = Agent(agent_name,
-                            bound_conditions=[BoundCondition(agent_bound,True)])
+                enzyme_name = term_names[0]
+                enzyme_bound = Agent(term_names[1])
+                enzyme_agent = Agent(enzyme_name,
+                    bound_conditions=[BoundCondition(enzyme_bound, True)])
             else:
-                agent_agent = self._get_agent_by_id(agent.attrib['id'],
+                enzyme_agent = self._get_agent_by_id(enzyme.attrib['id'],
                                                     event.attrib['id'])
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
@@ -181,26 +225,31 @@ class TripsProcessor(object):
             # Transphosphorylation
             if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
                 agent_bound = Agent(affected_agent.name)
-                agent_agent.bound_conditions = \
+                enzyme_agent.bound_conditions = \
                                            [BoundCondition(agent_bound, True)]
                 for m, p in zip(mod, mod_pos):
-                    self.statements.append(Transphosphorylation(agent_agent,
+                    self.statements.append(Transphosphorylation(enzyme_agent,
                                         m, p, evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for m, p in zip(mod, mod_pos):
-                    self.statements.append(Dephosphorylation(agent_agent,
+                    self.statements.append(Dephosphorylation(enzyme_agent,
                                         affected_agent, m, p, evidence=ev))
             # Autophosphorylation
-            elif agent.attrib['id'] == affected.attrib['id']:
+            elif enzyme_agent is not None and\
+                (enzyme.attrib['id'] == affected.attrib['id']):
                 for m, p in zip(mod, mod_pos):
-                    self.statements.append(Autophosphorylation(agent_agent,
+                    self.statements.append(Autophosphorylation(enzyme_agent,
                                         m, p, evidence=ev))
             # Regular phosphorylation
             else:
+                if mod is None:
+                    continue
                 for m, p in zip(mod, mod_pos):
-                    self.statements.append(Phosphorylation(agent_agent,
+                    self.statements.append(Phosphorylation(enzyme_agent,
                                             affected_agent, m, p, evidence=ev))
+            self.extracted_events['ONT::PHOSPHORYLATION'].append(
+                                                            event.attrib['id'])
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
@@ -320,7 +369,7 @@ class TripsProcessor(object):
     @staticmethod
     def _get_text(element):
         text_tag = element.find("text")
-        if not text_tag:
+        if text_tag is None:
             return None
         text = text_tag.text
         return text
@@ -333,18 +382,22 @@ class TripsProcessor(object):
     @staticmethod
     def _get_valid_name(name):
         name = name.replace('-', '_')
+        name = name.encode('utf-8')
         return name
 
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
+        if entity_term is None:
+            warnings.warn('Term %s for entity not found' % entity_id)
+            return 
         name = entity_term.find("name")
         if name is None:
             warnings.warn('Entity without a name')
-            return ''
+            return None
         try:
             dbid = entity_term.attrib["dbid"]
         except:
-            warnings.warn('No grounding information for %s' % name.text)
+            #warnings.warn('No grounding information for %s' % name.text)
             return self._get_valid_name(name.text)
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
@@ -379,6 +432,9 @@ class TripsProcessor(object):
         all_residues = []
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
+        if site_term is None:
+            # Missing site term
+            return None, None
         aggregate = site_term.find('aggregate')
         if aggregate is not None:
             for member in aggregate.getchildren():
@@ -398,18 +454,30 @@ class TripsProcessor(object):
             elif site_type == 'ONT::AMINO-ACID':
                 residue = site_name
                 pos = None
+            elif site_type == 'ONT::MOLECULAR-DOMAIN':
+                print 'Molecular domains not handled yet.'
+                return None, None
+            else:
+                print 'Unhandled site type: %s' % site_type
+                return None, None
+
             return (residue, ), (pos, )
         return all_residues, all_pos
 
     def _get_mod_site(self, event):
         mod_type = event.find('type')
-        mod_type_name = mod_names[mod_type.text.split('::')[1]]
+        mod_txt = mod_type.text.split('::')[1]
+        mod_type_name = mod_names.get(mod_txt)
+        if mod_type_name is None:
+            return None, None
 
         site_tag = event.find("site")
         if site_tag is None:
             return [mod_type_name], [None]
         site_id = site_tag.attrib['id']
         residues, mod_pos = self._get_site_by_id(site_id)
+        if residues is None:
+            return None, None
         mod = []
         for r in residues:
             residue_name = residue_names.get(r)
@@ -434,10 +502,3 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
-
-if __name__ == '__main__':
-    tp = TripsProcessor(open('wchen-v3.xml', 'rt').read())
-    tp._find_static_events()
-    tp.get_complexes()
-    tp.get_phosphorylation()
-    tp.get_activating_mods()
