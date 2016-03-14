@@ -169,15 +169,16 @@ class TripsProcessor(object):
             if site_feature is not None:
                 sites, positions = self._get_site_by_id(site_id)
                 print sites, positions
-            
+
             site = event.find("site")
             if site is not None:
                 sites, positions = self._get_site_by_id(site.attrib['id'])
                 print sites, positions
-            
+
             if agent1 is None or agent2 is None:
                 warnings.warn('Complex with missing members')
                 continue
+
             self.statements.append(Complex([agent1, agent2]))
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
@@ -214,6 +215,8 @@ class TripsProcessor(object):
                 continue
             affected_agent = self._get_agent_by_id(affected.attrib['id'],
                                                    event.attrib['id'])
+            if affected_agent is None:
+                continue
             mod, mod_pos = self._get_mod_site(event)
             # TODO: extract more information about text to use as evidence
             ev = Evidence(source_api='trips', text=sentence)
@@ -285,6 +288,8 @@ class TripsProcessor(object):
         # If the entity is not a complex
         else:
             agent_name = self._get_name_by_id(entity_id)
+            if agent_name is None:
+                return None
             agent = Agent(agent_name, db_refs=db_refs_dict)
             precond_event_ref = \
                 self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
@@ -311,7 +316,7 @@ class TripsProcessor(object):
                     else:
                         self.add_condition(agent, precond_event, term)
         return agent
-    
+
     def add_condition(self, agent, precond_event, agent_term):
         precond_event_type = precond_event.find('type').text
         # Binding precondition
@@ -382,14 +387,14 @@ class TripsProcessor(object):
     @staticmethod
     def _get_valid_name(name):
         name = name.replace('-', '_')
-        name = name.encode('utf-8')
+        name = name.encode('utf-8').decode('ascii', 'ignore')
         return name
 
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if entity_term is None:
             warnings.warn('Term %s for entity not found' % entity_id)
-            return 
+            return None
         name = entity_term.find("name")
         if name is None:
             warnings.warn('Entity without a name')
