@@ -170,7 +170,37 @@ class ReachProcessor(object):
                 db_refs['GO'] = xr['id'][3:]
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id'][4:]
-        agent = Agent(agent_name, db_refs=db_refs)
+        
+        mod_terms = entity_term.get('modifications')
+        mods = []
+        mod_sites = []
+        if mod_terms is not None:
+            for m in mod_terms:
+                if m['type'] == 'mutation':
+                    #TODO: represent mutations in INDRA
+                    # Evidence is usualy something like "V600E"
+                    # We could parse this to get the amino acid
+                    # change that happened.
+                    mutation = m.get('evidence')
+                    continue
+                elif m['type'] == 'Phosphorylation':
+                    site = m.get('site')
+                    if site is not None:
+                        mod_res, mod_pos = self._parse_site_text(site)
+                        mod = 'Phosphorylation' + mod_res
+                        mods.append(mod)
+                        mod_sites.append(mod_pos)
+                    else:
+                        mods.append('Phosphorylation')
+                        mod_sites.append(None)
+                elif m['type'] == 'Ubiquitination':
+                    mods.append('Ubiquitination')
+                    mod_sites.append(None)
+                else:
+                    print 'Unhandled entity modification type: %s' % m['type']
+        
+        agent = Agent(agent_name, db_refs=db_refs, mods=mods,
+                      mod_sites=mod_sites)
         return agent
 
     @staticmethod
