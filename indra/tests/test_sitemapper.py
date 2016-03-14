@@ -35,7 +35,8 @@ def test_check_agent_mod():
                              'PhosphorylationTyrosine']
     assert new_agent.mod_sites == ['185', '187']
 
-"""
+    # Test a site that is invalid but not found in the site map
+
 def test_site_map_complex():
     mapk1_invalid = Agent('MAPK1',
                           mods=['PhosphorylationThreonine',
@@ -47,6 +48,6 @@ def test_site_map_complex():
                             mod_sites=['201', '203'])
 
     st1 = Complex([mapk1_invalid, mapk3_invalid])
-    res = sm.check_(st1)
+    res = sm.map_sites([st1])
+    
     # Also check case where statement has site that is incorrect but doesn't map
-"""

@@ -46,17 +46,29 @@ class SiteMapper(object):
         UnmappedStatement entry is created.
         """
 
-        pass_stmts = []
-        fail_stmts = []
-        failures = []
+        valid_statements = []
+        mapped_statements = []
 
         for stmt in stmts:
-            result = check_sequence(stmt)
-            #failures += check_sequence(stmt)
-            #if failures:
-            #    fail_stmts.append(stmt)
-            #else:
-            #    pass_stmts.append(stmt)
+            stmt_copy = deepcopy(stmt)
+            # Map sites for complex
+            if isinstance(stmt, Complex):
+                invalid_sites = {}
+                stmt_copy.members = []
+                for m in stmt.members:
+                    (agent_invalid_sites, new_agent) = self.check_agent_mod(m)
+                    stmt_copy.members.append(new_agent)
+                    invalid_sites.update(agent_invalid_sites)
+                # If the dict isn't empty, that means that there were incorrect
+                # residues for this statement; add to mapped_statements list
+                if invalid_sites:
+                    mapped_stmt = \
+                                MappedStatement(stmt, invalid_sites, stmt_copy)
+                    mapped_statements.append(mapped_stmt)
+                else:
+                    valid_statements.append(stmt)
+
+        return (valid_statements, mapped_statements)
 
     def check_sequence(self, stmt):
         """Check whether references to
@@ -64,24 +76,17 @@ class SiteMapper(object):
         information in the UniProt database"""
         failures = []
 
-        # Map sites for complex
-        stmt_copy = deepcopy(stmt)
-        if isinstance(stmt, Complex):
-            for m in stmt.members:
-                agent_mod_result = check_agent_mod(m)
-                # Check the list of invalid sites--if it is not the empty
-                # dict, then we replace this agent in the new statement with
-                # the mapped agent
-
-        elif isinstance(stmt, Modification):
+        if isinstance(stmt, Modification):
             failures += check_agent_mod(stmt.sub)
             failures += check_agent_mod(stmt.enz)
             if stmt.mod_pos is not None:
-                failures += check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
+                failures += \
+                           check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
         elif isinstance(stmt, SelfModification):
             failures += check_agent_mod(stmt.sub)
             if stmt.mod_pos is not None:
-                failures += check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
+                failures += \
+                           check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
         elif isinstance(stmt, ActivityModification):
             failures += check_agent_mod(stmt.monomer)
             failures += check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
@@ -95,8 +100,7 @@ class SiteMapper(object):
         agent_entry = get_uniprot_entry(agent)
         # If the uniprot entry is not found, let it pass
         if not agent_entry:
-            return ({}, agent)
-
+            return ({}, new_agent)
         # Look up all of the modifications in uniprot, and add them to the list
         # of invalid sites if they are missing
         new_mod_list = []
@@ -143,9 +147,24 @@ class SiteMapper(object):
                             raise Exception("Couldn't map residue.")
                         new_mod_list.append(new_mod_name)
                         new_modpos_list.append(new_pos)
-                        # Add the mapped site to the invalid site list
+                        invalid_sites[(agent.name, str(residue),
+                                               str(old_modpos))] = mapped_site
+                    # Entry is in the site map but is unmapped; mapped site
+                    # is, e.g. (None, None, comment); pass the incorrect site
+                    # through to the new agent
+                    else:
+                        new_mod_list.append(old_mod)
+                        new_modpos_list.append(old_modpos)
+                        invalid_sites[(agent.name, str(residue),
+                                               str(old_modpos))] = mapped_site
+                # No entry in the site map--mapped site is None; pass the
+                # incorrect site through to the new agent
+                else:
+                    new_mod_list.append(old_mod)
+                    new_modpos_list.append(old_modpos)
+                    # Add the mapped site to the invalid site list
                     invalid_sites[(agent.name, str(residue),
-                                               str(old_modpos))] =  mapped_site
+                                               str(old_modpos))] = None
             # If the site is valid, add it and continue
             else:
                 new_mod_list.append(old_mod)
