@@ -27,7 +27,7 @@ class ReachProcessor(object):
             if self.tree is not None:
                 self.citation =\
                     self.tree.execute("$.events.object_meta.doc_id")
-    
+
     def get_phosphorylation(self):
         qstr = "$.events.frames[(@.type is 'protein-modification') " + \
                "and (@.subtype is 'phosphorylation')]"
@@ -78,7 +78,7 @@ class ReachProcessor(object):
                           epistemics=epistemics)
             self.statements.append(Phosphorylation(controller_agent,
                                    theme_agent, mod, pos, ev))
-    
+
     def get_complexes(self):
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
@@ -98,7 +98,7 @@ class ReachProcessor(object):
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
             self.statements.append(Complex(members, ev))
-   
+
     def get_activation(self):
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
@@ -138,7 +138,7 @@ class ReachProcessor(object):
             st = ActivityActivity(controller_agent, 'Activity', rel,
                                   controlled_agent, 'Activity', ev)
             self.statements.append(st)
-  
+
     def _get_agent_from_entity(self, entity_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
         res = self.tree.execute(qstr)
@@ -170,7 +170,7 @@ class ReachProcessor(object):
                 db_refs['GO'] = xr['id'][3:]
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id'][4:]
-        
+
         mod_terms = entity_term.get('modifications')
         mods = []
         mod_sites = []
@@ -198,7 +198,7 @@ class ReachProcessor(object):
                     mod_sites.append(None)
                 else:
                     print 'Unhandled entity modification type: %s' % m['type']
-        
+
         agent = Agent(agent_name, db_refs=db_refs, mods=mods,
                       mod_sites=mod_sites)
         return agent
@@ -217,7 +217,6 @@ class ReachProcessor(object):
         context['cell_type'] = cell_type
         return context
 
-  
     @staticmethod
     def _get_epistemics(event):
         epistemics = {}
@@ -265,5 +264,5 @@ class ReachProcessor(object):
             residue = residue_names[m.groups()[0]]
             site = None
             return residue, site
-       
+
         return '', None

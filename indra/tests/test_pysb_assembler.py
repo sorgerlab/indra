@@ -135,7 +135,7 @@ def test_pysb_assembler_actact1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = ActivityActivity(subj, 'act', 'increase', obj, 'act')
+    stmt = ActivityActivity(subj, 'Activity', 'increase', obj, 'Activity')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -272,6 +272,50 @@ def test_unspecified_statement_policies():
     print model.rules
     assert(len(model.rules)==4)
     assert(len(model.monomers)==3)
+
+def test_activity_activity():
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    stmt = ActivityActivity(subj, 'Activity', 'increases', obj, 'Activity')
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+def test_activity_activity():
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    stmt = ActivityActivity(subj, 'Activity', 'increases', obj, 'Activity')
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+def test_activity_activity2():
+    subj = Agent('Vemurafenib')
+    obj = Agent('BRAF')
+    stmt = ActivityActivity(subj, None, 'decreases', obj, 'Activity')
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+def test_activity_activity3():
+    subj = Agent('Vemurafenib')
+    obj = Agent('BRAF')
+    stmt = ActivityActivity(subj, None, 'decreases', obj, 'Activity')
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    print model.rules
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
 
 def test_rule_name_str_1():
     s = get_agent_rule_str(Agent('BRAF'))

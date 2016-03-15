@@ -104,6 +104,8 @@ active_site_names = {
     'Phosphatase': 'phos_site',
     'GtpBound': 'switch',
     'Catalytic': 'cat_site',
+    # For general molecular activity
+    'Activity': 'act'
 }
 
 states = {
@@ -132,6 +134,7 @@ default_mod_site_names = {
     'Kinase': 'phospho',
     'GtpBound': 'RBD',
     'Phosphatase': 'phospho',
+    'Activity': 'act'
 }
 
 
@@ -814,27 +817,38 @@ transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
 def activityactivity_monomers_interactions_only(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
-    subj.create_site(active_site_names[stmt.subj_activity])
     obj = agent_set.get_create_base_agent(stmt.obj)
-    obj.create_site(active_site_names[stmt.obj_activity])
-    obj.create_site(default_mod_site_names[stmt.subj_activity])
-
+    if stmt.subj_activity is not None:
+        subj.create_site(active_site_names[stmt.subj_activity])
+        obj.create_site(active_site_names[stmt.obj_activity])
+        obj.create_site(default_mod_site_names[stmt.subj_activity])
+    else:
+        subj.create_site(active_site_names[stmt.obj_activity])
+        obj.create_site(active_site_names[stmt.obj_activity])
+        obj.create_site(default_mod_site_names[stmt.obj_activity])
 
 def activityactivity_monomers_one_step(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
-    subj.create_site(stmt.subj_activity, ('inactive', 'active'))
     obj = agent_set.get_create_base_agent(stmt.obj)
-    obj.create_site(stmt.obj_activity, ('inactive', 'active'))
+    if stmt.subj_activity is not None:
+        subj.create_site(active_site_names[stmt.subj_activity],
+                         ('inactive', 'active'))
+    obj.create_site(active_site_names[stmt.obj_activity],
+                    ('inactive', 'active'))
 
 activityactivity_monomers_default = activityactivity_monomers_one_step
 
 
-def activityactivity_assemble_interactions_only(stmt, model):
+def activityactivity_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
-    subj_active_site = active_site_names[stmt.subj_activity]
-    obj_mod_site = default_mod_site_names[stmt.subj_activity]
+    if stmt.subj_activity is not None:
+        subj_active_site = active_site_names[stmt.subj_activity]
+        obj_mod_site = default_mod_site_names[stmt.obj_activity]
+    else:
+        subj_active_site = active_site_names[stmt.obj_activity]
+        obj_mod_site = default_mod_site_names[stmt.obj_activity]
 
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
@@ -851,12 +865,16 @@ def activityactivity_assemble_interactions_only(stmt, model):
 
 
 def activityactivity_assemble_one_step(stmt, model, agent_set):
-    subj_pattern = get_complex_pattern(model, stmt.subj, agent_set,
-        extra_fields={stmt.subj_activity: 'active'})
+    if stmt.subj_activity is not None:
+        subj_pattern = get_complex_pattern(model, stmt.subj, agent_set,
+            extra_fields={active_site_names[stmt.subj_activity]: 'active'})
+    else:
+        subj_pattern = get_complex_pattern(model, stmt.subj, agent_set)
+
     obj_inactive = get_complex_pattern(model, stmt.obj, agent_set,
-        extra_fields={stmt.obj_activity: 'inactive'})
+        extra_fields={active_site_names[stmt.obj_activity]: 'inactive'})
     obj_active = get_complex_pattern(model, stmt.obj, agent_set,
-        extra_fields={stmt.obj_activity: 'active'})
+        extra_fields={active_site_names[stmt.obj_activity]: 'active'})
 
     param_name = 'kf_' + stmt.subj.name[0].lower() + \
                         stmt.obj.name[0].lower() + '_act'

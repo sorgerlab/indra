@@ -60,7 +60,9 @@ class TripsProcessor(object):
 
     def get_activations(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
-        for event in act_events:
+        inact_events = self.tree.findall("EVENT/[type='ONT::DEACTIVATE']")
+        inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
+        for event in (act_events + inact_events):
             sentence = self._get_text(event)
 
             # Get the activating agent in the event
@@ -91,10 +93,22 @@ class TripsProcessor(object):
             affected_agent = Agent(affected_name)
 
             ev = Evidence(source_api='trips', text=sentence)
-            self.statements.append(ActivityActivity(activator_agent, 'act',
-                                    'increases', affected_agent, 'act',
+            if event.find('type').text == 'ONT::ACTIVATE':
+                rel = 'increases'
+                activator_act = 'Activity'
+                self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
+            elif event.find('type').text == 'ONT::INHIBIT':
+                rel = 'decreases'
+                activator_act = None
+                self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
+            elif event.find('type').text == 'ONT::DEACTIVATE':
+                rel = 'decreases'
+                activator_act = 'Activity'
+                self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
+
+            self.statements.append(ActivityActivity(activator_agent, activator_act,
+                                    rel, affected_agent, 'Activity',
                                     evidence=ev))
-            self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
@@ -387,7 +401,7 @@ class TripsProcessor(object):
     @staticmethod
     def _get_valid_name(name):
         name = name.replace('-', '_')
-        name = name.encode('utf-8').decode('ascii', 'ignore')
+        name = str(name.encode('utf-8').decode('ascii', 'ignore'))
         return name
 
     def _get_name_by_id(self, entity_id):
