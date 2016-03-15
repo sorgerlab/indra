@@ -238,7 +238,9 @@ class TripsProcessor(object):
             # distinct steps, we add a statement for each modification
             # independently
 
+            # TODO: the first extraction here might be deprecated
             mod_types = event.findall('predicate/mods/mod/type')
+            mod_types += event.findall('mods/mod/type')
             # Transphosphorylation
             if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
                 agent_bound = Agent(affected_agent.name)
@@ -338,19 +340,27 @@ class TripsProcessor(object):
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
             mod = precond_event.findall('mods/mod')
+            bound_to_term_id = None
             if arg1 is None:
-                arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                bound_agent = Agent(arg2_name)
+                bound_to_term_id = arg2.attrib['id']
             elif arg2 is None:
-                arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                bound_agent = Agent(arg1_name)
+                bound_to_term_id = arg1.attrib['id']
             else:
-                arg1_name = self._get_name_by_id(arg1.attrib['id'])
-                arg2_name = self._get_name_by_id(arg2.attrib['id'])
-                if arg1_name == agent.name:
-                    bound_agent = Agent(arg2_name)
+                if arg1.attrib['id'] == agent_term.attrib['id']:
+                    bound_to_term_id = arg2.attrib['id']
                 else:
-                    bound_agent = Agent(arg1_name)
+                    bound_to_term_id = arg1.attrib['id']
+
+            bound_agents = []
+            bound_to_term = self.tree.find("TERM/[@id='%s']" % bound_to_term_id)
+            if bound_to_term.find('type').text == 'ONT::MOLECULAR-PART':
+                components = bound_to_term.findall('components/component')
+                for c in components:
+                    bound_agent = Agent(self._get_name_by_id(c.attrib['id']))
+                    bound_agents.append(bound_agent)
+            else:
+                bound_agents = [Agent(self._get_name_by_id(bound_to_term_id))]
+
             # Look for negative flag either in precondition event
             # predicate tag or in the term itself
             # (after below, neg_flag will be an object, or None)
@@ -367,12 +377,12 @@ class TripsProcessor(object):
             if negation_sign is not None:
                 if negation_sign.text == '+':
                     neg_flag = True
-
-            if neg_flag:
-                bc = BoundCondition(bound_agent, False)
-            else:
-                bc = BoundCondition(bound_agent, True)
-            agent.bound_conditions.append(bc)
+            for ba in bound_agents:
+                if neg_flag:
+                    bc = BoundCondition(ba, False)
+                else:
+                    bc = BoundCondition(ba, True)
+                agent.bound_conditions.append(bc)
 
         # Phosphorylation precondition
         elif precond_event_type == 'ONT::PHOSPHORYLATION':
@@ -454,9 +464,13 @@ class TripsProcessor(object):
         if site_term is None:
             # Missing site term
             return None, None
-        aggregate = site_term.find('aggregate')
-        if aggregate is not None:
-            for member in aggregate.getchildren():
+
+        # TODO: the 'aggregate' tag here  might be deprecated
+        components = site_term.find('aggregate')
+        if components is None:
+            components = site_term.find('components')
+        if components is not None:
+            for member in components.getchildren():
                 residue, pos = self._get_site_by_id(member.attrib['id'])
                 all_residues.extend(residue)
                 all_pos.extend(pos)
