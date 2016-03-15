@@ -95,16 +95,19 @@ class TripsProcessor(object):
             ev = Evidence(source_api='trips', text=sentence)
             if event.find('type').text == 'ONT::ACTIVATE':
                 rel = 'increases'
+                activator_act = 'Activity'
                 self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::INHIBIT':
                 rel = 'decreases'
+                activator_act = None
                 self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::DEACTIVATE':
                 rel = 'decreases'
+                activator_act = 'Activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
-            self.statements.append(ActivityActivity(activator_agent, 'act',
-                                    rel, affected_agent, 'act',
+            self.statements.append(ActivityActivity(activator_agent, activator_act,
+                                    rel, affected_agent, 'Activity',
                                     evidence=ev))
 
     def get_activating_mods(self):
