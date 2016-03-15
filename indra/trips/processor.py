@@ -238,7 +238,9 @@ class TripsProcessor(object):
             # distinct steps, we add a statement for each modification
             # independently
 
+            # TODO: the first extraction here might be deprecated
             mod_types = event.findall('predicate/mods/mod/type')
+            mod_types += event.findall('mods/mod/type')
             # Transphosphorylation
             if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
                 agent_bound = Agent(affected_agent.name)
@@ -454,9 +456,13 @@ class TripsProcessor(object):
         if site_term is None:
             # Missing site term
             return None, None
-        aggregate = site_term.find('aggregate')
-        if aggregate is not None:
-            for member in aggregate.getchildren():
+
+        # TODO: the 'aggregate' tag here  might be deprecated
+        components = site_term.find('aggregate')
+        if components is None:
+            components = site_term.find('components')
+        if components is not None:
+            for member in components.getchildren():
                 residue, pos = self._get_site_by_id(member.attrib['id'])
                 all_residues.extend(residue)
                 all_pos.extend(pos)
