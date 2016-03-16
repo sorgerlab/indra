@@ -44,6 +44,16 @@ def test_pysb_assembler_phos_noenz():
     assert(len(model.rules)==0)
     assert(len(model.monomers)==0)
 
+def test_pysb_assembler_dephos_noenz():
+    enz = None
+    sub = Agent('MEK1')
+    stmt = Phosphorylation(enz, sub, 'PhosphorylationSerine', '222')
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    assert(len(model.rules)==0)
+    assert(len(model.monomers)==0)
+
 def test_pysb_assembler_phos1():
     enz = Agent('BRAF')
     sub = Agent('MEK1')

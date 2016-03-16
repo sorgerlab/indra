@@ -903,6 +903,8 @@ activityactivity_assemble_default = activityactivity_assemble_one_step
 # DEPHOSPHORYLATION #####################################################
 
 def dephosphorylation_monomers_interactions_only(stmt, agent_set):
+    if stmt.enz is None:
+        return
     phos = agent_set.get_create_base_agent(stmt.enz)
     phos.create_site(active_site_names['Phosphatase'])
     sub = agent_set.get_create_base_agent(stmt.sub)
@@ -910,12 +912,16 @@ def dephosphorylation_monomers_interactions_only(stmt, agent_set):
 
 
 def dephosphorylation_monomers_one_step(stmt, agent_set):
+    if stmt.enz is None:
+        return
     phos = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     sub.create_site(site_name(stmt)[0], ('u', 'p'))
 
 
 def dephosphorylation_monomers_two_step(stmt, agent_set):
+    if stmt.enz is None:
+        return
     phos = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     sub.create_site(site_name(stmt)[0], ('u', 'p'))
@@ -928,13 +934,15 @@ dephosphorylation_monomers_default = dephosphorylation_monomers_one_step
 
 
 def dephosphorylation_assemble_interactions_only(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     phos = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
     phos_site = active_site_names['Phosphatase']
     # See NOTE in Phosphorylation.monomers_one_step
     site = site_name(stmt)[0]
-    
+
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     r = Rule('%s_dephospho_%s_%s' %
@@ -946,6 +954,8 @@ def dephosphorylation_assemble_interactions_only(stmt, model, agent_set):
 
 
 def dephosphorylation_assemble_one_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     param_name = 'kf_' + stmt.enz.name[0].lower() + \
                 stmt.sub.name[0].lower() + '_dephos'
     kf_dephospho = get_create_parameter(model, param_name, 1e-6)
@@ -968,6 +978,8 @@ def dephosphorylation_assemble_one_step(stmt, model, agent_set):
 
 
 def dephosphorylation_assemble_two_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
     sub_bs = get_binding_site_name(stmt.sub.name)
     phos_bs = get_binding_site_name(stmt.enz.name)
     phos_bound = get_complex_pattern(model, stmt.enz, agent_set,
