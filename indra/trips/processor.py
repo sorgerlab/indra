@@ -35,6 +35,14 @@ class TripsProcessor(object):
             print 'Could not parse XML string'
             self.tree = None
             return
+        # Get the document ID from the EKB tag. This is the PMC ID when available.
+        self.doc_id = self.tree.attrib.get('id')
+        # Store all paragraphs and store all sentences in a data structure
+        paragraph_tags = self.tree.findall('input/paragraphs/paragraph')
+        sentence_tags = self.tree.findall('input/sentences/sentence')
+        self.paragraphs = {p.attrib['id']: p.text for p in paragraph_tags}
+        self.sentences = {s.attrib['id']: s.text for s in sentence_tags}
+
         self.statements = []
         self._static_events = self._find_static_events()
         self.get_all_events()
@@ -58,12 +66,27 @@ class TripsProcessor(object):
             except KeyError:
                 self.all_events[event_type] = [event_id]
 
+    def get_evidence_text(self, event_tag):
+        '''
+        Pieces of text linked to an EVENT are fragments of a sentence. The
+        EVENT refers to the paragraph ID and the "uttnum", which corresponds 
+        to a sentence ID. Here we find and return the full sentence from which 
+        the event was taken.
+        '''
+        par_id = event_tag.attrib['paragraph']
+        uttnum = event_tag.attrib['uttnum']
+        text = event_tag.find('text').text
+        sentence = self.sentences[uttnum]
+        return sentence
+
     def get_activations(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         inact_events = self.tree.findall("EVENT/[type='ONT::DEACTIVATE']")
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
-            sentence = self._get_text(event)
+            sentence = self.get_evidence_text(event)
+            ev = Evidence(source_api='trips', text=sentence,
+                          pmid=self.doc_id)
 
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
@@ -92,7 +115,6 @@ class TripsProcessor(object):
 
             affected_agent = Agent(affected_name)
 
-            ev = Evidence(source_api='trips', text=sentence)
             if event.find('type').text == 'ONT::ACTIVATE':
                 rel = 'increases'
                 activator_act = 'Activity'
@@ -115,7 +137,6 @@ class TripsProcessor(object):
         for event in act_events:
             if event.attrib['id'] in self._static_events:
                 continue
-            sentence = self._get_text(event)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 msg = 'Skipping activation event with no affected term.'
@@ -143,7 +164,8 @@ class TripsProcessor(object):
                                 'modification')
                 continue
 
-            ev = Evidence(source_api='trips', text=sentence)
+            sentence = self.get_evidence_text(event)
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
             self.statements.append(ActivityModification(affected_agent, mod,
                                     mod_pos, 'increases', 'Active',
                                     evidence=ev))
@@ -155,7 +177,8 @@ class TripsProcessor(object):
             if event.attrib['id'] in self._static_events:
                 continue
 
-            sentence = self._get_text(event)
+            sentence = self.get_evidence_text(event)
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
 
             arg1 = event.find("arg1")
             if arg1 is None:
@@ -193,7 +216,7 @@ class TripsProcessor(object):
                 warnings.warn('Complex with missing members')
                 continue
 
-            self.statements.append(Complex([agent1, agent2]))
+            self.statements.append(Complex([agent1, agent2], evidence=ev))
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
@@ -203,7 +226,6 @@ class TripsProcessor(object):
             if event.attrib['id'] in self._static_events:
                 continue
 
-            sentence = self._get_text(event)
             enzyme = event.find(".//*[@role=':AGENT']")
             if enzyme is None:
                 enzyme_agent = None
@@ -232,8 +254,9 @@ class TripsProcessor(object):
             if affected_agent is None:
                 continue
             mod, mod_pos = self._get_mod_site(event)
-            # TODO: extract more information about text to use as evidence
-            ev = Evidence(source_api='trips', text=sentence)
+
+            sentence = self.get_evidence_text(event)
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
             # independently
