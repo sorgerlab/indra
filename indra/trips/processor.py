@@ -73,10 +73,15 @@ class TripsProcessor(object):
         to a sentence ID. Here we find and return the full sentence from which 
         the event was taken.
         '''
-        par_id = event_tag.attrib['paragraph']
-        uttnum = event_tag.attrib['uttnum']
-        text = event_tag.find('text').text
-        sentence = self.sentences[uttnum]
+        par_id = event_tag.attrib.get('paragraph')
+        uttnum = event_tag.attrib.get('uttnum')
+        event_text = event_tag.find('text')
+        if self.sentences is not None and uttnum is not None:
+            sentence = self.sentences[uttnum]
+        elif event_text is not None:
+            sentence = event_text.text
+        else:
+            sentence = None
         return sentence
 
     def get_activations(self):
