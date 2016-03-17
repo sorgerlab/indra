@@ -5,17 +5,24 @@ from indra.trips import trips_api
 from indra.databases import pmc_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
-from indra.preassembler import Preassembler
+from indra.preassembler import Preassembler, render_stmt_graph
 from indra.pysb_assembler import PysbAssembler
 
 def have_file(fname):
     return os.path.exists(fname)
 
+def print_stmts(stmts, file_name):
+    with open(file_name, 'wt') as fh:
+        for s in stmts:
+            fh.write(('%s\t%s\t%s\t%s\n' %
+                     (s, s.agent_list(), s.evidence[0].pmid,
+                      s.evidence[0].text)).encode('utf-8'))
+
 if __name__ == '__main__':
     fnames = glob.glob('*.ekb')
-    
+
     pa = Preassembler(eh, mh)
-    
+
     for fn in fnames:
         print '\n\n----------------------------'
         print 'Processing %s...' % fn
@@ -35,6 +42,13 @@ if __name__ == '__main__':
     print '%d statements after combining duplicates.' % len(duplicate_stmts)
     related_stmts = pa.combine_related()
     print '%d statements after combining related.' % len(related_stmts)
+
+    # Print the statement graph
+    graph = render_stmt_graph(related_stmts)
+    graph.draw('trips_graph.pdf', prog='dot')
+    # Print statement diagnostics
+    print_stmts(pa.stmts, 'trips_statements.tsv')
+    print_stmts(related_stmts, 'trips_related_statements.tsv')
 
     pya = PysbAssembler()
     pya.add_statements(related_stmts)
