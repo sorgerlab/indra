@@ -127,7 +127,7 @@ class ReachProcessor(object):
                             controller_agent.bound_to = bound_contr
                     else:
                         controller_agent =\
-                            self._get_agent_from_entity(controlled)
+                            self._get_agent_from_entity(controller)
                 if a['argument_label'] == 'controlled':
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)

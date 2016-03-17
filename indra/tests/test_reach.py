@@ -19,6 +19,16 @@ def test_parse_site_residue_only():
 def test_phosphorylate():
     rp = reach_api.process_text('MEK1 phosphorylates ERK2.')
     assert(len(rp.statements) == 1)
+    s = rp.statements[0]
+    assert (s.enz.name == 'MAP2K1')
+    assert (s.sub.name == 'MAPK1')
+
+def test_activate():
+    rp = reach_api.process_text('HRAS activates BRAF.')
+    assert(len(rp.statements) == 1)
+    s = rp.statements[0]
+    assert (s.subj.name == 'HRAS')
+    assert (s.obj.name == 'BRAF')
 
 def test_bind():
     rp = reach_api.process_text('MEK1 binds ERK2.')
