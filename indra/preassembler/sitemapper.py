@@ -112,41 +112,51 @@ class SiteMapper(object):
         """Look up the modification site in Uniprot and then the site map.
         """
         new_agent = deepcopy(agent)
+        if not agent.mods and not agent.mod_sites:
+            return ([], new_agent)
+        invalid_sites = self.check_agent_mod(agent, agent.mods, agent.mod_sites)
+        if not invalid_sites:
+            return ([], new_agent)
+
+        # Get the list of invalid/mapped sites for the agent
         new_mod_list = []
         new_modpos_list = []
-        # Get the list of invalid/mapped sites for the agent
-        invalid_sites = self.check_agent_mod(agent, agent.mods, agent.mod_sites)
         invalid_site_keys = [site[0] for site in invalid_sites]
         for old_mod, old_modpos in zip(agent.mods, agent.mod_sites):
             # Get the amino acid abbreviation (e.g., 'S', 'T', 'Y')
+            # FIXME this information already exists in the invalid sites list
             residue = site_abbrevs.get(old_mod, None)
             old_mod_key = (agent.name, residue, old_modpos)
             if old_mod_key in invalid_site_keys:
                 mapped_site = \
                         invalid_sites[invalid_site_keys.index(old_mod_key)][1]
-                # FIXME could be None! invalid, not mapped
-                #import ipdb; ipdb.set_trace()
-                # Do we have actual site information?
-                new_res = mapped_site[0]
-                new_pos = mapped_site[1]
-                if new_res is not None and new_pos is not None:
-                    # Since we found the site in the site_map, add the
-                    # updated site/position into the new site lists
-                    # FIXME
-                    if new_res == 'S':
-                        new_mod_name = 'PhosphorylationSerine'
-                    elif new_res == 'T':
-                        new_mod_name = 'PhosphorylationThreonine'
-                    elif new_res == 'Y':
-                        new_mod_name = 'PhosphorylationTyrosine'
-                    else:
-                        raise Exception("Couldn't map residue %s" % new_res )
-                    new_mod_list.append(new_mod_name)
-                    new_modpos_list.append(new_pos)
-                # Mapped, but no site info--pass through unchanged
-                else:
+                # No entry in the map
+                if mapped_site is None:
                     new_mod_list.append(old_mod)
                     new_modpos_list.append(old_modpos)
+                # Entry in the map
+                else:
+                    # Do we have actual site information?
+                    new_res = mapped_site[0]
+                    new_pos = mapped_site[1]
+                    if new_res is not None and new_pos is not None:
+                        # Since we found the site in the site_map, add the
+                        # updated site/position into the new site lists
+                        # FIXME
+                        if new_res == 'S':
+                            new_mod_name = 'PhosphorylationSerine'
+                        elif new_res == 'T':
+                            new_mod_name = 'PhosphorylationThreonine'
+                        elif new_res == 'Y':
+                            new_mod_name = 'PhosphorylationTyrosine'
+                        else:
+                            raise Exception("Couldn't map residue %s" % new_res )
+                        new_mod_list.append(new_mod_name)
+                        new_modpos_list.append(new_pos)
+                    # Mapped, but no site info--pass through unchanged
+                    else:
+                        new_mod_list.append(old_mod)
+                        new_modpos_list.append(old_modpos)
             # Not mapped--pass the site through
             else:
                 new_mod_list.append(old_mod)

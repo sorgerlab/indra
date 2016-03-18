@@ -89,9 +89,17 @@ def test_site_map_modification():
     mapk3_invalid = Agent('MAPK3',
                             mods=['PhosphorylationThreonine'],
                             mod_sites=['201'], db_refs={'UP': 'P27361'})
+    map2k1_invalid = Agent('MAP2K1', mods=['PhosphorylationSerine',
+                                           'PhosphorylationSerine'],
+                                     mod_sites=['217', '221'],
+                                     db_refs={'UP': 'Q02750'})
+
     st1 = Phosphorylation(mapk1_invalid, mapk3_invalid,
                           'PhosphorylationTyrosine', '203')
-    res = sm.map_sites([st1])
+    st2 = Phosphorylation(map2k1_invalid, mapk1_invalid,
+                          'PhosphorylationTyrosine', '218')
+
+    res = sm.map_sites([st1, st2])
 
     assert len(res) == 2
     valid_stmts = res[0]
@@ -99,13 +107,14 @@ def test_site_map_modification():
     assert isinstance(valid_stmts, list)
     assert isinstance(mapped_stmts, list)
     assert len(valid_stmts) == 0
-    assert len(mapped_stmts) == 1
-    mapped_stmt = mapped_stmts[0]
-    assert isinstance(mapped_stmt, MappedStatement)
-    assert mapped_stmt.original_stmt == st1
-    assert isinstance(mapped_stmt.mapped_mods, list)
-    assert len(mapped_stmt.mapped_mods) == 3 # FIXME
-    ms = mapped_stmt.mapped_stmt
+    assert len(mapped_stmts) == 2
+    # MAPK1 -> MAPK3
+    mapped_stmt1 = mapped_stmts[0]
+    assert isinstance(mapped_stmt1, MappedStatement)
+    assert mapped_stmt1.original_stmt == st1
+    assert isinstance(mapped_stmt1.mapped_mods, list)
+    assert len(mapped_stmt1.mapped_mods) == 3 # FIXME
+    ms = mapped_stmt1.mapped_stmt
     assert isinstance(ms, Statement)
     agent1 = ms.enz
     agent2 = ms.sub
@@ -118,4 +127,27 @@ def test_site_map_modification():
     assert agent1.mod_sites[1] == '187'
     assert agent2.mods[0] == 'PhosphorylationThreonine'
     assert agent2.mod_sites[0] == '202'
+    # MAP2K1 -> MAPK1
+    mapped_stmt2 = mapped_stmts[1]
+    assert isinstance(mapped_stmt2, MappedStatement)
+    assert mapped_stmt2.original_stmt == st2
+    assert isinstance(mapped_stmt2.mapped_mods, list)
+    assert len(mapped_stmt2.mapped_mods) == 4 # FIXME
+    ms = mapped_stmt2.mapped_stmt
+    assert isinstance(ms, Statement)
+    agent1 = ms.enz
+    agent2 = ms.sub
+    assert agent1.name == 'MAP2K1'
+    assert len(agent1.mods) == 2
+    assert len(agent1.mod_sites) == 2
+    assert agent1.mods[0] == 'PhosphorylationSerine'
+    assert agent1.mods[1] == 'PhosphorylationSerine'
+    assert agent1.mod_sites[0] == '218'
+    assert agent1.mod_sites[1] == '222'
+    assert len(agent2.mods) == 2
+    assert len(agent2.mod_sites) == 2
+    assert agent2.mods[0] == 'PhosphorylationThreonine'
+    assert agent2.mods[1] == 'PhosphorylationTyrosine'
+    assert agent2.mod_sites[0] == '185'
+    assert agent2.mod_sites[1] == '187'
 
