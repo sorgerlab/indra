@@ -1,5 +1,3 @@
-from pysb import *
-from pysb import ReactionPattern, ComplexPattern, ComponentDuplicateNameError
 from collections import namedtuple
 import textwrap
 
@@ -426,8 +424,8 @@ class ActivityActivity(Statement):
 
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s)" %
-             (type(self).__name__, self.subj.name, self.subj_activity,
-              self.relationship, self.obj.name, self.obj_activity))
+             (type(self).__name__, self.subj, self.subj_activity,
+              self.relationship, self.obj, self.obj_activity))
         return s
 
 
@@ -675,7 +673,7 @@ class Complex(Statement):
         return self.members
 
     def __str__(self):
-        s = ("Complex(%s)" % ([m.name for m in self.members]))
+        s = "Complex(%s)" % (', '.join([('%s' % m) for m in self.members]))
         return s
 
     def refinement_of(self, other, eh, mh):
@@ -691,6 +689,8 @@ class Complex(Statement):
         self_match_indices = set([])
         for other_agent in other.members:
             for self_agent_ix, self_agent in enumerate(self.members):
+                if self_agent_ix in self_match_indices:
+                    continue
                 if self_agent.refinement_of(other_agent, eh, mh):
                     self_match_indices.add(self_agent_ix)
                     break
