@@ -5,7 +5,7 @@ import xml.etree.ElementTree as et
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 
 def get_xml(pmc_id):
-    if pmc_id.startswith('PMC'):
+    if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
 
     params = {}

@@ -35,6 +35,8 @@ def get_ids(search_term, retmax=1000):
     return ids
 
 def get_abstract(pubmed_id):
+    if pubmed_id.upper().startswith('PMID'):
+        pubmed_id = pubmed_id[4:]
     params = {'db': 'pubmed',
                 'retmode': 'xml',
                 'rettype': 'abstract',
@@ -53,9 +55,11 @@ def get_abstract(pubmed_id):
                                     else abst.text for abst in abstract])
         return abstract_text
 
-def pmid_to_doi(pmid):
+def pmid_to_doi(pubmed_id):
+    if pubmed_id.upper().startswith('PMID'):
+        pubmed_id = pubmed_id[4:]
     url = pmid_convert
-    data = {'ids': pmid}
+    data = {'ids': pubmed_id}
     tree = send_request(url, urllib.urlencode(data))
     if tree is None:
         return None

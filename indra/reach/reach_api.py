@@ -16,19 +16,15 @@ reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 reach_reader = ReachReader()
 
 def process_pmc(pmc_id, save=False):
-    if pmc_id.upper().startswith('PMC'):
-        pmc_id = pmc_id[3:]
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
     with open(pmc_id + '.nxml', 'wt') as fh:
-        fh.write(xml_str)
+        fh.write(xml_str.encode('utf-8'))
     rp = process_nxml_str(xml_str, citation=pmc_id)
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
-    if pubmed_id.upper().startswith('PMID'):
-        pubmed_id = pubmed_id[4:]
     abs_txt = pubmed_client.get_abstract(pubmed_id)
     if abs_txt is None:
         return None
@@ -50,7 +46,7 @@ def process_text(text, citation=None, offline=False):
         json_str = result_map.get('resultJson')
     else:
         req = urllib2.Request(reach_text_url,
-            data=urllib.urlencode({'text': text}))
+            data=urllib.urlencode({'text': text.encode('utf-8')}))
         res = urllib2.urlopen(req)
         json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
@@ -59,7 +55,7 @@ def process_text(text, citation=None, offline=False):
 
 def process_nxml_str(nxml_str, citation):
     req = urllib2.Request(reach_nxml_url, 
-        data=urllib.urlencode({'nxml': nxml_str}))
+        data=urllib.urlencode({'nxml': nxml_str.encode('utf-8')}))
     res = urllib2.urlopen(req)
     json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
