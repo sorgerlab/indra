@@ -14,7 +14,7 @@ if '-Xmx4g' not in jnius_config.get_options():
 
 path_here = os.path.dirname(os.path.realpath(__file__))
 cp = path_here + '/biopax/jars/paxtools.jar'
-os.environ['CLASSPATH'] = cp
+os.environ['CLASSPATH'] = cp + ':' + os.environ['CLASSPATH']
 
 from jnius import autoclass, JavaException, cast
 

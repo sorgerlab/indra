@@ -11,6 +11,11 @@ from processor import ReachProcessor
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 
+try:
+    api_ruler = autoclass('edu.arizona.sista.reach.apis.ApiRuler')
+except JavaException:
+    api_ruler = None
+
 def process_pmc(pmc_id, save=False):
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
@@ -31,21 +36,22 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     rp = process_text(abs_txt, citation=pubmed_id, offline=offline)
     return rp
 
-def process_text(txt, citation=None, offline=False):
+def process_text(text, citation=None, offline=False):
     if offline:
-        nxml_txt = '<article><body><sec><p>%s</p></sec></body></article>' % txt
-        tmp_file = tempfile.NamedTemporaryFile()
-        tmp_file.file.write(nxml_txt)
-        tmp_file.file.flush()
-        return process_nxml(tmp_file.name, citation)
+        try:
+            result_map = api_ruler.annotateText(text, 'fries')
+        except JavaException:
+            print 'Could not process file %s.' % file_name
+            return None
+        json_str = result_map.get('resultJson')
     else:
-        req = urllib2.Request(reach_text_url, 
-            data=urllib.urlencode({'text': txt}))
+        req = urllib2.Request(reach_text_url,
+            data=urllib.urlencode({'text': text}))
         res = urllib2.urlopen(req)
         json_str = res.read()
-        with open('reach_output.json', 'wt') as fh:
-            fh.write(json_str)
-        return process_json_str(json_str, citation)
+    with open('reach_output.json', 'wt') as fh:
+        fh.write(json_str)
+    return process_json_str(json_str, citation)
 
 def process_nxml_str(nxml_str, citation):
     req = urllib2.Request(reach_nxml_url, 
@@ -59,7 +65,6 @@ def process_nxml_str(nxml_str, citation):
 def process_nxml(file_name, citation=None, offline=False):
     if offline:
         try:
-            api_ruler = autoclass('edu.arizona.sista.reach.apis.ApiRuler')
             result_map = api_ruler.annotateNxml(file_name, 'fries')
         except JavaException:
             print 'Could not process file %s.' % file_name
