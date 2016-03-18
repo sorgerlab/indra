@@ -467,18 +467,22 @@ class TripsProcessor(object):
         # XFAM:PF00244.15, FA:00007
         if hgnc_ids:
             if len(hgnc_ids) > 1:
-                lisp_str = entity_term.attrib['lisp']
-                parts = lisp_str.split('(TERM :ID ')
-                scores = {}
-                for p in parts:
-                    res = re.findall('HGNC::\|(.*)\|', p)
-                    if res:
-                        hgnc_id = res[0]
-                        score = re.findall(':SCORE ([^ ]+)', p)[0]
-                        scores[hgnc_id] = float(score)
-                if scores:
-                    sorted_ids = sorted(scores.items(), key=operator.itemgetter(1))
-                    hgnc_id = sorted_ids[-1][0]
+                lisp_str = entity_term.attrib.get('lisp')
+                if lisp_str is None:
+                    hgnc_id = re.match(r'HGNC\:([0-9]*)',
+                                       hgnc_ids[0]).groups()[0]
+                else:
+                    parts = lisp_str.split('(TERM :ID ')
+                    scores = {}
+                    for p in parts:
+                        res = re.findall('HGNC::\|(.*)\|', p)
+                        if res:
+                            hgnc_id = res[0]
+                            score = re.findall(':SCORE ([^ ]+)', p)[0]
+                            scores[hgnc_id] = float(score)
+                    if scores:
+                        sorted_ids = sorted(scores.items(), key=operator.itemgetter(1))
+                        hgnc_id = sorted_ids[-1][0]
             else:
                 hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
