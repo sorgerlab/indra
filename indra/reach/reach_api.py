@@ -15,13 +15,17 @@ reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 # For offline reading
 reach_reader = ReachReader()
 
-def process_pmc(pmc_id, save=False):
+def process_pmc(pmc_id, offline=False):
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
-    with open(pmc_id + '.nxml', 'wt') as fh:
+    fname = pmc_id + '.nxml'
+    with open(fname, 'wt') as fh:
         fh.write(xml_str.encode('utf-8'))
-    rp = process_nxml_str(xml_str, citation=pmc_id)
+    if offline:
+        rp = process_nxml(fname, citation=pmc_id, offline=True)
+    else:
+        rp = process_nxml_str(xml_str, citation=pmc_id)
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
@@ -70,6 +74,7 @@ def process_nxml(file_name, citation=None, offline=False):
                     ' be instantiated.'
             return None
         try:
+            #TODO: Test if UTF-8 files are parsed correctly here
             result_map = api_ruler.annotateNxml(file_name, 'fries')
         except JavaException:
             print 'Could not process file %s.' % file_name
