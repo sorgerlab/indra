@@ -2,8 +2,12 @@ import urllib
 import urllib2
 import xml.etree.ElementTree as et
 
+pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
+
 def get_xml(pmc_id):
-    pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
+    if pmc_id.startswith('PMC'):
+        pmc_id = pmc_id[3:]
+
     params = {}
     params['verb'] = 'GetRecord'
     params['identifier'] = 'oai:pubmedcentral.nih.gov:%s' % pmc_id
@@ -16,6 +20,7 @@ def get_xml(pmc_id):
     except urllib2.HTTPError:
         print 'Couldn\'t download PMC%d' % pmc_id
     xml_str = res.read()
+    xml_str = xml_str.decode('utf-8')
 
     err = check_xml_error(xml_str)
     if err is None:
@@ -25,7 +30,7 @@ def get_xml(pmc_id):
         return None
 
 def check_xml_error(xml_str):
-    tree = et.fromstring(xml_str)
+    tree = et.fromstring(xml_str.encode('utf-8'))
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:
