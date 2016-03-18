@@ -113,7 +113,7 @@ def test_site_map_modification():
     assert isinstance(mapped_stmt1, MappedStatement)
     assert mapped_stmt1.original_stmt == st1
     assert isinstance(mapped_stmt1.mapped_mods, list)
-    assert len(mapped_stmt1.mapped_mods) == 3 # FIXME
+    assert len(mapped_stmt1.mapped_mods) == 4 # FIXME
     ms = mapped_stmt1.mapped_stmt
     assert isinstance(ms, Statement)
     agent1 = ms.enz
@@ -127,12 +127,15 @@ def test_site_map_modification():
     assert agent1.mod_sites[1] == '187'
     assert agent2.mods[0] == 'PhosphorylationThreonine'
     assert agent2.mod_sites[0] == '202'
+    assert ms.mod == 'PhosphorylationTyrosine'
+    assert ms.mod_pos == '204'
+
     # MAP2K1 -> MAPK1
     mapped_stmt2 = mapped_stmts[1]
     assert isinstance(mapped_stmt2, MappedStatement)
     assert mapped_stmt2.original_stmt == st2
     assert isinstance(mapped_stmt2.mapped_mods, list)
-    assert len(mapped_stmt2.mapped_mods) == 4 # FIXME
+    assert len(mapped_stmt2.mapped_mods) == 5 # FIXME
     ms = mapped_stmt2.mapped_stmt
     assert isinstance(ms, Statement)
     agent1 = ms.enz
