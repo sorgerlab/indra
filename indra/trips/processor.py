@@ -1,6 +1,7 @@
 import re
 import warnings
 import pickle
+import operator
 
 import xml.etree.ElementTree as ET
 
@@ -304,12 +305,12 @@ class TripsProcessor(object):
             return None
 
         # Extract database references
-        try:
-            dbid = term.attrib["dbid"]
+        dbid = term.attrib.get('dbid')
+        if dbid is None:
+            db_refs_dict = {}
+        else:
             dbids = dbid.split('|')
             db_refs_dict = dict([d.split(':') for d in dbids])
-        except KeyError:
-            db_refs_dict = {}
 
         # If the entity is a complex
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
@@ -456,15 +457,30 @@ class TripsProcessor(object):
         except:
             #warnings.warn('No grounding information for %s' % name.text)
             return self._get_valid_name(name.text)
+
         dbids = dbid.split('|')
         hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
         up_ids = [i for i in dbids if i.startswith('UP')]
+
+
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
         if hgnc_ids:
             if len(hgnc_ids) > 1:
-                warnings.warn('%d HGNC IDs reported.' % len(hgnc_ids))
-            hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
+                lisp_str = entity_term.attrib['lisp']
+                parts = lisp_str.split('(TERM :ID ')
+                scores = {}
+                for p in parts:
+                    res = re.findall('HGNC::\|(.*)\|', p)
+                    if res:
+                        hgnc_id = res[0]
+                        score = re.findall(':SCORE ([^ ]+)', p)[0]
+                        scores[hgnc_id] = float(score)
+                if scores:
+                    sorted_ids = sorted(scores.items(), key=operator.itemgetter(1))
+                    hgnc_id = sorted_ids[-1][0]
+            else:
+                hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return self._get_valid_name(hgnc_name)
         elif up_ids:
