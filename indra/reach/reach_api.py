@@ -7,14 +7,13 @@ from indra.java_vm import autoclass, JavaException
 import indra.databases.pmc_client as pmc_client
 import indra.databases.pubmed_client as pubmed_client
 from processor import ReachProcessor
+from reach_reader import ReachReader
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 
-try:
-    api_ruler = autoclass('edu.arizona.sista.reach.apis.ApiRuler')
-except JavaException:
-    api_ruler = None
+# For offline reading
+reach_reader = ReachReader()
 
 def process_pmc(pmc_id, save=False):
     if pmc_id.upper().startswith('PMC'):
@@ -38,9 +37,10 @@ def process_pubmed_abstract(pubmed_id, offline=False):
 
 def process_text(text, citation=None, offline=False):
     if offline:
+        api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
             print 'Cannot read offline because the REACH ApiRuler could not' +\
-                    'be instantiated.'
+                    ' be instantiated.'
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -68,9 +68,10 @@ def process_nxml_str(nxml_str, citation):
 
 def process_nxml(file_name, citation=None, offline=False):
     if offline:
+        api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
             print 'Cannot read offline because the REACH ApiRuler could not' +\
-                    'be instantiated.'
+                    ' be instantiated.'
             return None
         try:
             result_map = api_ruler.annotateNxml(file_name, 'fries')
