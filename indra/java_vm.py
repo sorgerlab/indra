@@ -16,12 +16,10 @@ path_here = os.path.dirname(os.path.realpath(__file__))
 cp = path_here + '/biopax/jars/paxtools.jar'
 cp_existing = os.environ.get('CLASSPATH')
 
-print 'before', os.environ.get('CLASSPATH')
 if cp_existing is not None:
     os.environ['CLASSPATH'] = cp + ':' + cp_existing
 else:
     os.environ['CLASSPATH'] = cp
-print 'after', os.environ.get('CLASSPATH')
 
 from jnius import autoclass, JavaException, cast
 
