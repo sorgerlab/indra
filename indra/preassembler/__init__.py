@@ -280,7 +280,6 @@ def check_statements(stmts, save_fname=None):
         else:
             pass_stmts.append(stmt)
     if save_fname:
-        import ipdb; ipdb.set_trace()
         failure_set = set(failures)
         with open(save_fname, 'wt') as fh:
             for f in failure_set:
