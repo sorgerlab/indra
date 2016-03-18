@@ -1,0 +1,227 @@
+import sys
+import itertools
+import copy
+import collections
+import lxml.builder
+import lxml.etree
+from indra.trips import trips_api
+from indra import statements as ist
+
+
+abbrevs = {
+    'PhosphorylationSerine': 'S',
+    'PhosphorylationThreonine': 'T',
+    'PhosphorylationTyrosine': 'Y',
+    'Phosphorylation': 'phospho',
+    'Ubiquitination': 'ub',
+    'Farnesylation': 'farnesyl',
+    'Hydroxylation': 'hydroxyl',
+    'Acetylation': 'acetyl',
+    'Sumoylation': 'sumo',
+    'Glycosylation': 'glycosyl',
+    'Methylation': 'methyl',
+    'Modification': 'mod',
+}
+
+states = {
+    'PhosphorylationSerine': ['u', 'p'],
+    'PhosphorylationThreonine': ['u', 'p'],
+    'PhosphorylationTyrosine': ['u', 'p'],
+    'Phosphorylation': ['u', 'p'],
+    'Ubiquitination': ['n', 'y'],
+    'Farnesylation': ['n', 'y'],
+    'Hydroxylation': ['n', 'y'],
+    'Acetylation': ['n', 'y'],
+    'Sumoylation': ['n', 'y'],
+    'Glycosylation': ['n', 'y'],
+    'Methylation': ['n', 'y'],
+    'Modification': ['n', 'y'],
+}
+
+
+class SBGNAssembler(object):
+
+    def __init__(self, policies=None):
+        self.statements = []
+        self.agent_set = None
+
+    def statement_exists(self, stmt):
+        for s in self.statements:
+            if stmt.matches(s):
+                return True
+        return False
+
+    def add_statements(self, stmts):
+        for stmt in stmts:
+            stmt = copy.deepcopy(stmt)
+            uppercase_agents(stmt)
+            if not self.statement_exists(stmt):
+                self.statements.append(stmt)
+
+    def make_sbgn(self):
+
+        def make_id(_counter=[0]):
+            id_ = 'id_%d' % _counter[0]
+            _counter[0] += 1
+            return id_
+
+        def class_(name):
+            return {'class': name}
+
+        def glyph_for_monomer(agent, in_complex=False):
+            if in_complex:
+                agent_id = make_id()
+            else:
+                agent_id = agent_ids[agent.matches_key()]
+            glyph = E.glyph(
+                E.label(text=agent.name),
+                E.bbox(x='0', y='0', w='120', h='60'),
+                class_('macromolecule'), id=agent_id,
+                )
+            for st in sbgn_states_for_agent(agent):
+                glyph.append(
+                    E.glyph(
+                        E.state(**st._asdict()),
+                        E.bbox(x='1', y='1', w='70', h='30'),
+                        class_('state variable'), id=make_id(),
+                        )
+                    )
+            return glyph
+
+        def glyph_for_complex(agent):
+            glyph = E.glyph(
+                E.bbox(x='0', y='0', w='120', h='60'),
+                class_('complex'), id=agent_ids[agent.matches_key()],
+                )
+            for component in complex_components(agent):
+               glyph.append(glyph_for_monomer(component, in_complex=True))
+            return glyph
+
+        E = lxml.builder.ElementMaker(nsmap={None: 'http://sbgn.org/libsbgn/pd/0.1'})
+        root = E.sbgn()
+        map = E.map()
+        root.append(map)
+        base = agents_for_statements(self.statements)
+        transformed = transformed_agents(self.statements)
+        agents = distinct_agents(base + transformed)
+        agent_ids = {a.matches_key(): make_id() for a in agents}
+        for a in agents:
+            if not a.bound_conditions:
+                glyph = glyph_for_monomer(a)
+            else:
+                glyph = glyph_for_complex(a)
+            map.append(glyph)
+        for s in self.statements:
+            if isinstance(s, ist.Modification):
+                class_name = 'process'
+                consumed = [s.sub]
+            elif isinstance(s, ist.Complex):
+                class_name = 'association'
+                consumed = s.members
+            else:
+                print >>sys.stderr, "WARNING: skipping %s" % type(s)
+                continue
+            produced = [statement_product(s)]
+            pg_id = make_id()
+            process_glyph = E.glyph(E.bbox(x='0', y='0', w='20', h='20'),
+                                    class_(class_name), id=pg_id)
+            map.append(process_glyph)
+            for c in consumed:
+                map.append(
+                    E.arc(class_('consumption'),
+                          source=agent_ids[c.matches_key()],
+                          target=pg_id,
+                          id=make_id(),
+                          )
+                    )
+            for p in produced:
+                map.append(
+                    E.arc(class_('production'),
+                          source=pg_id,
+                          target=agent_ids[p.matches_key()],
+                          id=make_id(),
+                          )
+                    )
+            if isinstance(s, ist.Modification):
+                map.append(
+                    E.arc(class_('catalysis'),
+                          source=agent_ids[s.enz.matches_key()],
+                          target=pg_id,
+                          id=make_id(),
+                          )
+                    )
+        return lxml.etree.tostring(root, pretty_print=True)
+
+SBGNState = collections.namedtuple('SBGNState', 'variable value')
+
+def sbgn_states_for_agent(agent):
+    agent_states = []
+    for m, mp in zip(agent.mods, agent.mod_sites):
+        mod = abbrevs[m]
+        mod_pos = mp if mp is not None else ''
+        variable = '%s%s' % (mod, mod_pos)
+        value = states[m][1].upper()
+        agent_states.append(SBGNState(variable, value))
+    return agent_states
+
+def agents_for_statements(statements):
+    return [a for stmt in statements for a in stmt.agent_list()]
+
+def transformed_agents(statements):
+    agents = [statement_product(s) for s in statements]
+    # Following filter not needed once all statement types are implemented.
+    return [a for a in agents if a is not None]
+
+def statement_product(stmt):
+    if isinstance(stmt, ist.Modification):
+        product = copy.deepcopy(stmt.sub)
+        product.mods.append(stmt.mod)
+        product.mod_sites.append(stmt.mod_pos)
+    elif isinstance(stmt, ist.Complex):
+        product = copy.deepcopy(stmt.members[0])
+        for member in stmt.members[1:]:
+            bc = ist.BoundCondition(member, True)
+            product.bound_conditions.append(bc)
+    else:
+        print >>sys.stderr, "WARNING: skipping %s" % type(stmt)
+        product = None
+    return product
+
+def distinct_agents(agents):
+    agents = sorted(agents, key=ist.Agent.matches_key)
+    gb = itertools.groupby(agents, ist.Agent.matches_key)
+    distinct = [next(g[1]) for g in gb]
+    return distinct
+
+def complex_components(agent):
+    agent_copy = copy.copy(agent)
+    agent_copy.bound_conditions = []
+    agents = [agent_copy]
+    for bc in agent.bound_conditions:
+        agents += complex_components(bc.agent)
+    return agents
+
+def uppercase_agents(statement):
+
+    def uppercase_single(agent):
+        agent.name = agent.name.upper()
+        for bc in agent.bound_conditions:
+            uppercase_single(bc.agent)
+
+    for agent in statement.agent_list():
+        uppercase_single(agent)
+
+def text_to_sbgn(text=None, trips_xml=None):
+    if ((text is None and trips_xml is None) or
+        (text is not None and trips_xml is not None)):
+        raise ValueError("Must provide ONE of 'text' or 'trips_xml'")
+    elif text is not None:
+        tp = trips_api.process_text(text)
+    elif trips_xml is not None:
+        tp = trips_api.process_xml(trips_xml)
+    else:
+        raise RuntimeError("Unexpected or impossible combination of arguments")
+    sa = SBGNAssembler()
+    sa.add_statements(tp.statements)
+    sbgn_output = sa.make_sbgn()
+    return sbgn_output
