@@ -15,7 +15,7 @@ def main():
           packages=['indra', 'indra.bel', 'indra.biopax', 
                     'indra.reach', 'indra.trips', 'indra.databases'],
           install_requires=['pysb', 'objectpath', 'rdflib', 'jnius-indra', 
-                            'functools32', 'requests'],
+                            'functools32', 'requests', 'lxml'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp', 
                     'mechanism', 'biochemistry'],
