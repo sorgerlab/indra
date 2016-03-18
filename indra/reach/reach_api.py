@@ -38,10 +38,14 @@ def process_pubmed_abstract(pubmed_id, offline=False):
 
 def process_text(text, citation=None, offline=False):
     if offline:
+        if api_ruler is None:
+            print 'Cannot read offline because the REACH ApiRuler could not' +\
+                    'be instantiated.'
+            return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
         except JavaException:
-            print 'Could not process file %s.' % file_name
+            print 'Could not process text.'
             return None
         json_str = result_map.get('resultJson')
     else:
@@ -64,6 +68,10 @@ def process_nxml_str(nxml_str, citation):
 
 def process_nxml(file_name, citation=None, offline=False):
     if offline:
+        if api_ruler is None:
+            print 'Cannot read offline because the REACH ApiRuler could not' +\
+                    'be instantiated.'
+            return None
         try:
             result_map = api_ruler.annotateNxml(file_name, 'fries')
         except JavaException:
