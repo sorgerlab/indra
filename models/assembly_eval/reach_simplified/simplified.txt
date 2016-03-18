@@ -1,0 +1,22 @@
+Gab1 binds PI-3 kinase.
+Gab1 phosphorylated on tyrosine binds PI-3 kinase.
+Gab1 binds Shp2.
+Gab1 binds p85.
+Shp2 dephosphorylates Gab1.
+Shp2 dephosphorylates Gab1 on tyrosine.
+BRAF binds BRAF.
+CRAF binds CRAF.
+BRAF binds CRAF.
+RAF binds RAF.
+RAF-bound RAF activates RAF.
+CRAF activates BRAF.
+MEK phosphorylates ERK1 and ERK2 on threonine and tyrosine.
+Active ERK phosphorylates RSK.
+MKP dephosphorylates MAPK at threonine and tyrosine.
+Akt phosphorylates RAF on Ser-259.
+Estradiol phosphorylates SRC-3.
+Estradiol phosphorylates SRC-3 that is bound to ER-alpha.
+Estradiol phosphorylates SRC-3.
+Estradiol phosphorylates SRC-3.
+Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Estradiol phosphorylates SRC-3.

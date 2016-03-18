@@ -1,0 +1,9 @@
+c-SRC binds HRAS that is bound to GTP.
+c-SRC phosphorylates GTP-bound HRAS at Y32.
+c-SRC binds NRAS that is bound to GTP.
+c-SRC phosphorylates GTP-bound NRAS at Y32.
+c-SRC binds RAS.
+c-SRC binds HRAS.
+c-SRC binds GTP-bound RAS.
+c-SRC phosphorylates RAS.
+c-SRC phosphorylates RAS at Y32.

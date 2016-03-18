@@ -14,9 +14,14 @@ def have_file(fname):
 def print_stmts(stmts, file_name):
     with open(file_name, 'wt') as fh:
         for s in stmts:
-            fh.write(('%s\t%s\t%s\t%s\n' %
-                     (s, s.agent_list(), s.evidence[0].pmid,
-                      s.evidence[0].text)).encode('utf-8'))
+            agents = s.agent_list()
+            db_refs = [('%s(%s)' % (a.name, a.db_refs))
+                        for a in agents if a is not None]
+            db_refs_str = ', '.join(db_refs)
+            ev_txt = (s.evidence[0].text).encode('utf-8')
+            fh.write('%s\t%s\t%s\t%s\n' %
+                     (s, db_refs_str, 'PMC'+s.evidence[0].pmid,
+                      ev_txt))
 
 if __name__ == '__main__':
     fnames = glob.glob('*.ekb')

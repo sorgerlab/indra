@@ -1,0 +1,4 @@
+Complex(SRC(), HRAS(bound: [GTP, True]))	SRC({'UP': 'P12931', 'HGNC': '11283'}), HRAS({'UP': 'P01112', 'HGNC': '5173'})	c-SRC binds HRAS that is bound to GTP.
+Complex(SRC(), NRAS(bound: [GTP, True]))	SRC({'UP': 'P12931', 'HGNC': '11283'}), NRAS({'UP': 'P01111', 'HGNC': '7989'})	c-SRC binds NRAS that is bound to GTP.
+Phosphorylation(SRC(), HRAS(bound: [GTP, True]), PhosphorylationTyrosine, 32)	SRC({'UP': 'P12931', 'HGNC': '11283'}), HRAS({'UP': 'P01112', 'HGNC': '5173'})	c-SRC phosphorylates GTP-bound HRAS at Y32.
+Phosphorylation(SRC(), NRAS(bound: [GTP, True]), PhosphorylationTyrosine, 32)	SRC({'UP': 'P12931', 'HGNC': '11283'}), NRAS({'UP': 'P01111', 'HGNC': '7989'})	c-SRC phosphorylates GTP-bound NRAS at Y32.

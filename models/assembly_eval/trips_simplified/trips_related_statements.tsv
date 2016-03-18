@@ -1,0 +1,18 @@
+ActivityActivity(RAF1(), Activity, increases, BRAF(), Activity)	RAF1({}), BRAF({})	CRAF activates BRAF.
+Complex(BRAF(), BRAF())	BRAF({'UP': 'P15056', 'HGNC': '1097'}), BRAF({'UP': 'P15056', 'HGNC': '1097'})	BRAF binds BRAF.
+Complex(BRAF(), RAF1())	BRAF({'UP': 'P15056', 'HGNC': '1097'}), RAF1({'XFAM': 'PF02196', 'UP': 'P11345', 'HGNC': '9829'})	BRAF binds CRAF.
+Complex(GAB1(mods: ['PhosphorylationTyrosine'], mod_sites: [None]), PI3())	GAB1({'UP': 'Q13480', 'HGNC': '4066'}), PI3({'XFAM': 'PF00095', 'UP': 'P19400', 'HGNC': '8947'})	Gab1 phosphorylated on tyrosine binds PI-3 kinase.
+Complex(GAB1(), PPP1R13B())	GAB1({'UP': 'Q13480', 'HGNC': '4066'}), PPP1R13B({'UP': 'Q14155', 'HGNC': '14950'})	Gab1 binds p85.
+Complex(GAB1(), PTPN11())	GAB1({'UP': 'Q13480', 'HGNC': '4066'}), PTPN11({'UP': 'Q06124', 'HGNC': '9644'})	Gab1 binds Shp2.
+Complex(RAF1(), RAF1())	RAF1({'XFAM': 'PF02196', 'UP': 'P11345', 'HGNC': '9829'}), RAF1({'XFAM': 'PF02196', 'UP': 'P11345', 'HGNC': '9829'})	CRAF binds CRAF.
+Dephosphorylation(MKP(), spk1(), PhosphorylationThreonine, None)	MKP({'CHEBI': '63036'}), spk1({'XFAM': 'PF00069', 'UP': 'P27638'})	MKP dephosphorylates MAPK at threonine and tyrosine.
+Dephosphorylation(MKP(), spk1(), PhosphorylationTyrosine, None)	MKP({'CHEBI': '63036'}), spk1({'XFAM': 'PF00069', 'UP': 'P27638'})	MKP dephosphorylates MAPK at threonine and tyrosine.
+Dephosphorylation(PTPN11(), GAB1(), PhosphorylationTyrosine, None)	PTPN11({'XFAM': 'PF00017', 'UP': 'Q06124', 'HGNC': '9644'}), GAB1({'UP': 'Q13480', 'HGNC': '4066'})	Shp2 dephosphorylates Gab1 on tyrosine.
+Phosphorylation(AKT1(), RAF(), PhosphorylationSerine, 259)	AKT1({'UP': 'P31749', 'HGNC': '391'}), RAF({'FA': '03114'})	Akt phosphorylates RAF on Ser-259.
+Phosphorylation(ESTRADIOL(), NCOA3(), PhosphorylationSerine, 505)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'XFAM': 'PF00989', 'UP': 'O09000', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Phosphorylation(ESTRADIOL(), NCOA3(), PhosphorylationSerine, 543)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'XFAM': 'PF00989', 'UP': 'O09000', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Phosphorylation(ESTRADIOL(), NCOA3(), PhosphorylationSerine, 857)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'XFAM': 'PF00989', 'UP': 'O09000', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Phosphorylation(ESTRADIOL(), NCOA3(), PhosphorylationSerine, 867)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'XFAM': 'PF00989', 'UP': 'O09000', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Phosphorylation(ESTRADIOL(), NCOA3(), PhosphorylationThreonine, 24)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'XFAM': 'PF00989', 'UP': 'O09000', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 at Thr24, S505, S543, S857 and S867.
+Phosphorylation(ESTRADIOL(), NCOA3(bound: [ESR1, True]), Phosphorylation, None)	ESTRADIOL({'CHEBI': '23965'}), NCOA3({'UP': 'Q9Y6Q9', 'HGNC': '7670'})	Estradiol phosphorylates SRC-3 that is bound to ER-alpha.
+Phosphorylation(MAPK1(), RPS6KA3(), Phosphorylation, None)	MAPK1({'UP': 'P28482', 'HGNC': '6871'}), RPS6KA3({'UP': 'P51812', 'HGNC': '10432'})	Active ERK phosphorylates RSK.

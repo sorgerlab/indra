@@ -1,7 +1,7 @@
 import os
+import glob
 import shutil
 from indra.reach import reach_api
-from indra.databases import pmc_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph
@@ -13,34 +13,29 @@ def have_file(fname):
 def print_stmts(stmts, file_name):
     with open(file_name, 'wt') as fh:
         for s in stmts:
-            fh.write('%s\t%s\t%s\t%s\n' %
-                     (s, s.agent_list(), s.evidence[0].pmid,
-                      s.evidence[0].text))
+            agents = s.agent_list()
+            db_refs = [('%s(%s)' % (a.name, a.db_refs))
+                        for a in agents if a is not None]
+            if db_refs:
+                db_refs_str = ', '.join(db_refs)
+            else:
+                db_refs_str = ''
+            fh.write('%s\t%s\t%s\n' %
+                     (s, db_refs_str, s.evidence[0].text))
 
 if __name__ == '__main__':
-    pmc_ids = ['PMC1234335', 'PMC3178447', 'PMC3690480',
-               'PMC4345513', 'PMC534114']
-    rerun = False
+    fnames = glob.glob('*.txt')
 
     pa = Preassembler(eh, mh)
 
-    for pi in pmc_ids:
-        print 'Reading %s...' % pi
-        # If REACH already processed it then don't run it again
-        if rerun or not have_file(pi + '.json'):
-            if have_file(pi + '.txt'):
-                txt = open(pi + '.txt').read()
-                rp = reach_api.process_text(txt)
-            elif have_file(pi + '.nxml'):
-                rp = reach_api.process_nxml(pi + '.nxml')
-            else:
-                rp = reach_api.process_pmc(pi, save=True)
-            shutil.move('reach_output.json', pi + '.json')
-        else:
-            rp = reach_api.process_json_file(pi + '.json')
-
+    for fn in fnames:
+        print '\n\n----------------------------'
+        print 'Processing %s...' % fn
+        txt = open(fn, 'rt').read()
+        rp = reach_api.process_text(txt)
         print '%s statements collected.' % len(rp.statements)
         pa.add_statements(rp.statements)
+        print '----------------------------\n\n'
 
     print '%d statements collected in total.' % len(pa.stmts)
     duplicate_stmts = pa.combine_duplicates()
