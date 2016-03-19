@@ -15,20 +15,20 @@ reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 # For offline reading
 reach_reader = ReachReader()
 
-def process_pmc(pmc_id, save=False):
-    if pmc_id.upper().startswith('PMC'):
-        pmc_id = pmc_id[3:]
+def process_pmc(pmc_id, offline=False):
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
-    with open(pmc_id + '.nxml', 'wt') as fh:
-        fh.write(xml_str)
-    rp = process_nxml_str(xml_str, citation=pmc_id)
+    fname = pmc_id + '.nxml'
+    with open(fname, 'wt') as fh:
+        fh.write(xml_str.encode('utf-8'))
+    if offline:
+        rp = process_nxml(fname, citation=pmc_id, offline=True)
+    else:
+        rp = process_nxml_str(xml_str, citation=pmc_id)
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
-    if pubmed_id.upper().startswith('PMID'):
-        pubmed_id = pubmed_id[4:]
     abs_txt = pubmed_client.get_abstract(pubmed_id)
     if abs_txt is None:
         return None
@@ -50,16 +50,17 @@ def process_text(text, citation=None, offline=False):
         json_str = result_map.get('resultJson')
     else:
         req = urllib2.Request(reach_text_url,
-            data=urllib.urlencode({'text': text}))
+            data=urllib.urlencode({'text': text.encode('utf-8')}))
         res = urllib2.urlopen(req)
         json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
-        fh.write(json_str)
+        out_str = json_str
+        fh.write(out_str)
     return process_json_str(json_str, citation)
 
 def process_nxml_str(nxml_str, citation):
     req = urllib2.Request(reach_nxml_url, 
-        data=urllib.urlencode({'nxml': nxml_str}))
+        data=urllib.urlencode({'nxml': nxml_str.encode('utf-8')}))
     res = urllib2.urlopen(req)
     json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
@@ -74,6 +75,7 @@ def process_nxml(file_name, citation=None, offline=False):
                     ' be instantiated.'
             return None
         try:
+            #TODO: Test if UTF-8 files are parsed correctly here
             result_map = api_ruler.annotateNxml(file_name, 'fries')
         except JavaException:
             print 'Could not process file %s.' % file_name
