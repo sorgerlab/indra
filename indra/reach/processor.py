@@ -235,6 +235,7 @@ class ReachProcessor(object):
         Produce valid agent name from string.
         '''
         name = txt.replace('-', '_')
+        name = txt.replace('/', '_')
         name = name.replace(' ', '_')
         name = name.replace('.', '_')
         return name
