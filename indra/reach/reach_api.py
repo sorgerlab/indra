@@ -54,7 +54,8 @@ def process_text(text, citation=None, offline=False):
         res = urllib2.urlopen(req)
         json_str = res.read()
     with open('reach_output.json', 'wt') as fh:
-        fh.write(json_str)
+        out_str = json_str
+        fh.write(out_str)
     return process_json_str(json_str, citation)
 
 def process_nxml_str(nxml_str, citation):
