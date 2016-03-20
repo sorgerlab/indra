@@ -49,6 +49,15 @@ pa.add_statements(trips_processor.statements)
 # Assemble the model
 model = pa.make_model(policies='two_step')
 ```
+INDRA also provides an interface for the [REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language parser. In this example, a full paper from [PubMed Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). 
+
+```python
+from indra.reach import reach_api
+# Process the neighborhood of BRAF and MAP2K1
+reach_processor = reach_api.process_pmc('3717945')
+# At this point, reach_processor.statements contains a list of INDRA statements
+# extracted from the PMC paper.
+```
 
 Next we look at an example of reading the 10 most recent PubMed abstracts on BRAF and 
 collecting the results in INDRA statements.
@@ -67,16 +76,6 @@ for pmid in pmids:
             all_statements += reach_processor.statements
 # At this point, the all_statements list contains all the statements
 # extracted from the 10 abstracts.
-```
-
-This example shows how to read a full open access paper from PubMed Central
-to extract INDRA statements.
-
-```python
-from indra.reach import reach_api
-reach_processor = reach_api.process_pmc('PMC4345513')
-# At this point, reach_processor.statements is a list containing
-# all the INDRA statements extracted from the paper. 
 ```
 
 The next example shows querying the [BEL large corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb) network thorugh [NDEx](http://ndexbio.org) for a neighborhood of a given list of proteins using their HGNC gene names. 
@@ -100,12 +99,3 @@ biopax_processor.get_phosphorylation()
 # Phosphorylation statements extracted from the paths-from-to query.
 ```
 
-INDRA also provides an interface for the [REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language parser. In this example, a full paper from [PubMed Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). 
-
-```python
-from indra.reach import reach_api
-# Process the neighborhood of BRAF and MAP2K1
-reach_processor = reach_api.process_pmc('3717945')
-# At this point, reach_processor.statements contains a list of INDRA statements
-# extracted from the PMC paper.
-```

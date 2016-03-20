@@ -1,7 +1,6 @@
 import os
 import json
 import tempfile
-import urllib, urllib2
 import requests
 from indra.java_vm import autoclass, JavaException
 import indra.databases.pmc_client as pmc_client
@@ -49,20 +48,23 @@ def process_text(text, citation=None, offline=False):
             return None
         json_str = result_map.get('resultJson')
     else:
-        req = urllib2.Request(reach_text_url,
-            data=urllib.urlencode({'text': text.encode('utf-8')}))
-        res = urllib2.urlopen(req)
-        json_str = res.read()
+        data = {'text': text.encode('utf-8')}
+        res = requests.post(reach_text_url, data)
+        # TODO: we could use res.json() here to get a dict 
+        # directly
+        json_str = res.text
     with open('reach_output.json', 'wt') as fh:
         out_str = json_str
         fh.write(out_str)
     return process_json_str(json_str, citation)
 
 def process_nxml_str(nxml_str, citation):
-    req = urllib2.Request(reach_nxml_url, 
-        data=urllib.urlencode({'nxml': nxml_str.encode('utf-8')}))
-    res = urllib2.urlopen(req)
-    json_str = res.read()
+    data = {'nxml': nxml_str}
+    res = requests.post(reach_nxml_url, data)
+    if res.status_code != 200:
+        print 'Could not process NXML.'
+        return None
+    json_str = res.text
     with open('reach_output.json', 'wt') as fh:
         fh.write(json_str)
     return process_json_str(json_str, citation)
