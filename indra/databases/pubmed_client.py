@@ -32,7 +32,7 @@ def get_ids(search_term, retmax=1000, db='pubmed'):
         return []
     ids = [idt.text for idt in id_terms]
     if count != len(ids):
-        print 'Not all ids were retreived, limited at %d.' % retmax
+        print 'Not all ids were retrieved, limited at %d.' % retmax
     return ids
 
 def get_abstract(pubmed_id):
