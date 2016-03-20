@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-ndex_base_url = 'http://general.bigmech.ndexbio.org:8082'
+ndex_base_url = 'http://bel2rdf.bigmech.ndexbio.org'
 #ndex_base_url = 'http://52.37.175.128'
 
 def send_request(url_suffix, params):
