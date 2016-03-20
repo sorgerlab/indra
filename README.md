@@ -2,9 +2,9 @@
 
 INDRA
 =====
-INDRA (Integrated Dynamical Reasoning Assembler) generates executable models of 
-pathway dynamics from natural language (using the TRIPS parser), BioPAX and BEL 
-sources (including the PathwayCommons database and NDEx).
+INDRA (Integrated Dynamical Reasoning Assembler) generates executable models of
+pathway dynamics from natural language (using the TRIPS and REACH parsers),
+BioPAX and BEL sources (including the PathwayCommons database and NDEx).
 
 Installing INDRA
 ----------------
@@ -48,6 +48,35 @@ trips_processor = trips_api.process_text('MEK2 phosphorylates ERK1 at Thr-202 an
 pa.add_statements(trips_processor.statements)
 # Assemble the model
 model = pa.make_model(policies='two_step')
+```
+
+Next we look at an example of reading the 10 most recent PubMed abstracts on BRAF and 
+collecting the results in INDRA statements.
+
+```python
+from indra.reach import reach_api
+from indra.databases import pubmed_client
+# Search for 10 most recent abstracts in PubMed on 'BRAF'
+pmids = pubmed_client.get_ids('BRAF', 10)
+all_statements = []
+for pmid in pmids:
+    abs = pubmed_client.get_abstract(pmid)
+    if abs is not None:
+        reach_processor = reach_api.process_text(abs)
+        if reach_processor is not None:
+            all_statements += reach_processor.statements
+# At this point, the all_statements list contains all the statements
+# extracted from the 10 abstracts.
+```
+
+This example shows how to read a full open access paper from PubMed Central
+to extract INDRA statements.
+
+```python
+from indra.reach import reach_api
+reach_processor = reach_api.process_pmc('PMC4345513')
+# At this point, reach_processor.statements is a list containing
+# all the INDRA statements extracted from the paper. 
 ```
 
 The next example shows querying the [BEL large corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb) network thorugh [NDEx](http://ndexbio.org) for a neighborhood of a given list of proteins using their HGNC gene names. 
