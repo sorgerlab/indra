@@ -17,9 +17,10 @@ def send_request(url, data):
         return None
     return tree
 
-def get_ids(search_term, retmax=1000):
-    params = {'db': 'pubmed',
+def get_ids(search_term, retmax=1000, db='pubmed'):
+    params = {'db': db,
                 'term': search_term,
+                'sort': 'pub+date',
                 'retstart': 0,
                 'retmax': retmax}
     tree = send_request(pubmed_search, urllib.urlencode(params))
