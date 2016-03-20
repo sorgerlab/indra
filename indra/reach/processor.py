@@ -27,6 +27,25 @@ class ReachProcessor(object):
             if self.tree is not None:
                 self.citation =\
                     self.tree.execute("$.events.object_meta.doc_id")
+        self.get_all_events()
+
+    def print_event_statistics(self):
+        print 'All events by type'
+        print '-------------------'
+        for k, v in self.all_events.iteritems():
+            print k, len(v)
+        print '-------------------'
+
+    def get_all_events(self):
+        self.all_events = {}
+        events = self.tree.execute("$.events.frames")
+        for e in events:
+            event_type = e.get('type')
+            frame_id = e.get('frame_id')
+            try:
+                self.all_events[event_type].append(frame_id)
+            except KeyError:
+                self.all_events[event_type] = [frame_id]
 
     def get_phosphorylation(self):
         qstr = "$.events.frames[(@.type is 'protein-modification') " + \
