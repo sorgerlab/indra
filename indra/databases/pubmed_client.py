@@ -67,5 +67,5 @@ def pmid_to_doi(pubmed_id):
     record = tree.find('record')
     if record is None:
         return None
-    doi = record.attrib['doi']
+    doi = record.attrib.get('doi')
     return doi 
