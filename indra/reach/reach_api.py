@@ -21,10 +21,7 @@ def process_pmc(pmc_id, offline=False):
     fname = pmc_id + '.nxml'
     with open(fname, 'wt') as fh:
         fh.write(xml_str.encode('utf-8'))
-    if offline:
-        rp = process_nxml(fname, citation=pmc_id, offline=True)
-    else:
-        rp = process_nxml_str(xml_str, citation=pmc_id)
+    rp = process_nxml_str(xml_str, citation=pmc_id, offline=offline)
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
@@ -58,18 +55,7 @@ def process_text(text, citation=None, offline=False):
         fh.write(out_str)
     return process_json_str(json_str, citation)
 
-def process_nxml_str(nxml_str, citation):
-    data = {'nxml': nxml_str}
-    res = requests.post(reach_nxml_url, data)
-    if res.status_code != 200:
-        print 'Could not process NXML.'
-        return None
-    json_str = res.text
-    with open('reach_output.json', 'wt') as fh:
-        fh.write(json_str)
-    return process_json_str(json_str, citation)
-
-def process_nxml(file_name, citation=None, offline=False):
+def process_nxml_str(nxml_str, citation=None, offline=False):
     if offline:
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
@@ -78,17 +64,26 @@ def process_nxml(file_name, citation=None, offline=False):
             return None
         try:
             #TODO: Test if UTF-8 files are parsed correctly here
-            result_map = api_ruler.annotateNxml(file_name, 'fries')
+            result_map = api_ruler.annotateNxml(nxml_str, 'fries')
         except JavaException:
-            print 'Could not process file %s.' % file_name
+            print 'Could not process NXML.'
             return None
         json_str = result_map.get('resultJson')
-        with open('reach_output.json', 'wt') as fh:
-            fh.write(json_str)
-        return process_json_str(json_str, citation)
     else:
-        txt = open(file_name, 'rt').read()
-        return process_nxml_str(txt, citation)
+        data = {'nxml': nxml_str}
+        res = requests.post(reach_nxml_url, data)
+        if res.status_code != 200:
+            print 'Could not process NXML.'
+            return None
+        json_str = res.text
+    with open('reach_output.json', 'wt') as fh:
+        fh.write(json_str)
+    return process_json_str(json_str, citation)
+
+def process_nxml_file(file_name, citation=None, offline=False):
+    nxml_str = open(file_name, 'rt').read()
+    nxml_str = nxml_str.decode('utf-8')
+    return process_nxml_str(nxml_str, citation, offline)
 
 def process_json_file(file_name, citation=None):
     try:
