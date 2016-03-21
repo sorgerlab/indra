@@ -16,6 +16,14 @@ def test_parse_site_residue_only():
         assert(residue == 'Serine')
         assert(site is None)
 
+def test_valid_name():
+    assert(ReachProcessor._get_valid_name('') == '')
+    assert(ReachProcessor._get_valid_name('a') == 'a')
+    assert(ReachProcessor._get_valid_name('Name123') == 'Name123')
+    assert(ReachProcessor._get_valid_name('<>#~!,./][;-') == '____________')
+    assert(ReachProcessor._get_valid_name('PI3 Kinase') == 'PI3_Kinase')
+    assert(ReachProcessor._get_valid_name('14-3-3') == 'p14_3_3')
+
 def test_phosphorylate():
     rp = reach_api.process_text('MEK1 phosphorylates ERK2.')
     assert(len(rp.statements) == 1)

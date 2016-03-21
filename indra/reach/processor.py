@@ -253,10 +253,9 @@ class ReachProcessor(object):
         '''
         Produce valid agent name from string.
         '''
-        name = txt.replace('-', '_')
-        name = name.replace('/', '_')
-        name = name.replace(' ', '_')
-        name = name.replace('.', '_')
+        name = ''.join(ch if ch.isalnum() else '_' for ch in txt)
+        if name and name[0].isdigit():
+            name = 'p' + name
         return name
 
     @staticmethod
