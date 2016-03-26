@@ -352,6 +352,20 @@ class TripsProcessor(object):
                             self.add_condition(agent, p, term)
                     else:
                         self.add_condition(agent, precond_event, term)
+            mutations = term.findall('features/mutation')
+            for mut in mutations:
+                mut_id = mut.attrib.get('id')
+                if mut_id is None:
+                    continue
+                mut_term = self.tree.find("TERM/[@id='%s']" %\
+                    mut.attrib.get('id'))
+                if mut_term is None:
+                    continue
+                mut_values = self._get_mutation(mut_term)
+                if mut_values is None:
+                    continue
+                mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
+                agent.mut_conditions.append(mc)
         return agent
 
     def add_condition(self, agent, precond_event, agent_term):
@@ -576,6 +590,18 @@ class TripsProcessor(object):
             mc = ModCondition(mod_type_name, residue_name, p, is_modified)
             mods.append(mc)
         return mods
+
+    def _get_mutation(self, term):
+        mut = term.find('mutation')
+        if mut is None:
+            return None
+        if mut.find('type').text == 'SUBSTITUTION':
+            pos = mut.find('pos').text
+            aa_from = mut.find('aa-from/aa/code').text
+            aa_to = mut.find('aa-to/aa/code').text
+            return pos, aa_from, aa_to
+        else:
+            return None
 
     def _find_static_events(self):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
