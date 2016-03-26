@@ -23,6 +23,7 @@ def read_amino_acids():
 amino_acids, amino_acids_reverse = read_amino_acids()
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
+MutCondition = namedtuple('MutCondition', ['pos', 'aa_from', 'aa_to'])
 
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
@@ -66,7 +67,7 @@ class ModCondition(object):
 
 class Agent(object):
     def __init__(self, name, mods=None, active=None,
-                 bound_conditions=None, db_refs=None):
+                 bound_conditions=None, mut_conditions=None, db_refs=None):
         self.name = name
 
         if mods is None:
@@ -84,6 +85,11 @@ class Agent(object):
             self.bound_conditions = [bound_conditions]
         else:
             self.bound_conditions = bound_conditions
+
+        if mut_conditions is None:
+            self.mut_conditions = []
+        else:
+            self.mut_conditions = mut_conditions
 
         self.active = active
 
