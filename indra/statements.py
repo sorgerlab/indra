@@ -2,21 +2,48 @@ from collections import namedtuple
 import textwrap
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
-ModCondition = namedtuple('ModCondition', ['type', 'residue', 'position'])
+
+class ModCondition(object):
+    def __init__(self, mod_type, residue=None, position=None, is_modified=True):
+        self.mod_type = mod_type
+        self.residue = residue
+        if not isinstance(position, basestring):
+            if position is None:
+                self.position = None
+            else:
+                self.position = str(position)
+        else:
+            self.position = position
+        self.is_modified = is_modified
+
+    def matches(self, other, mod_hierarchy):
+        type_match = (self.mod_type == other.mod_type or \
+            mod_hierarchy.isa(self.mod_type, other.mod_type))
+        residue_match = (self.residue == other.residue or \
+            (self.residue is not None and other.residue is None))
+        pos_match = (self.position == other.position or \
+            (self.position is not None and other.position is None))
+        return (type_match and residue_match and pos_match)
 
 class Agent(object):
 
-    def __init__(self, name, mod_conditions=None, active=None,
+    def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, db_refs=None):
         self.name = name
 
-        if mod_conditions is None:
-            self.mod_conditions = []
-        else:    
-            self.mod_conditions = mod_conditions
+        if mods is None:
+            self.mods = []
+        # Promote to list
+        elif isinstance(mods, ModCondition):
+            self.mods = [mods]
+        else:
+            self.mods = mods
 
         if bound_conditions is None:
             self.bound_conditions = []
+        # Promote to list
+        elif isinstance(bound_conditions, BoundCondition):
+            self.bound_conditions = [bound_conditions]
         else:
             self.bound_conditions = bound_conditions
 
@@ -32,7 +59,7 @@ class Agent(object):
 
     def matches_key(self):
         key = (self.name,
-               set(self.mod_conditions),
+               set(self.mods),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
@@ -91,12 +118,12 @@ class Agent(object):
         # Similar to the above, we check that self has all of the modifications
         # of other.
         # Make sure they have the same modifications
-        for other_mod_ix in range(len(other.mod_conditions)):
+        for other_mod_ix in range(len(other.mods)):
             mod_found = False
-            other_mod = other.mod_conditions[other_mod_ix]
-            for self_mod_ix in range(len(self.mod_conditions)):
-                self_mod = self.mod_conditions[self_mod_ix]
-                if mod_matches(self_mod, other_mod, mod_hierarchy):
+            other_mod = other.mods[other_mod_ix]
+            for self_mod_ix in range(len(self.mods)):
+                self_mod = self.mods[self_mod_ix]
+                if self_mod.matches(other_mod, mod_hierarchy):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
@@ -108,10 +135,10 @@ class Agent(object):
 
     def __str__(self):
         attr_strs = []
-        if self.mod_conditions:
+        if self.mods:
             attr_strs += [append('mods: [%s, %s, %s]' %\
                             (m.type, m.residue, m.pos))
-                            for m in self.mod_conditions]
+                            for m in self.mods]
         if self.active:
             attr_strs.append('active: %s' % self.active)
         if self.bound_conditions:
@@ -266,7 +293,7 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if mod_matches(self.mod, other.mod, mod_hierarchy):    
+        if self.mod.matches(other.mod, mod_hierarchy):    
             return True
         else:
             return False
@@ -310,7 +337,7 @@ class SelfModification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if mod_matches(self.mod, other.mod, mod_hierarchy):
+        if self.mod.matches(other.mod, mod_hierarchy):
             return True
         else:
             return False
@@ -416,7 +443,11 @@ class ActivityModification(Statement):
                  evidence=None):
         super(ActivityModification, self).__init__(evidence)
         self.monomer = monomer
-        self.mod = mod
+        # Turn mod conditions into a list of a single one is given
+        if isinstance(mod, ModCondition):
+            self.mod = [mod]
+        else:
+            self.mod = mod
         self.relationship = relationship
         self.activity = activity
 
@@ -449,7 +480,7 @@ class ActivityModification(Statement):
             other_mod = other.mod[other_mod_ix]
             for self_mod_ix in range(len(self.mod)):
                 self_mod = self.mod[self_mod_ix]
-                if mod_matches(self_mod, other_mod, mod_hierarchy):    
+                if self_mod.matches(other_mod, mod_hierarchy):    
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
@@ -634,11 +665,3 @@ class Complex(Statement):
         else:
             return True
 
-def mod_matches(ref, other, mod_hierarchy):
-    type_match = (ref.type == other.type or \
-            mod_hierarchy.isa(ref.type, other.type))
-    residue_match = (ref.residue == other.residue or \
-            (ref.residue is not None and other.residue is None))
-    pos_match = (ref.pos == other.pos or \
-            (ref.pos is not None and other.pos is None))
-    return (type_match and residue_match and pos_match)
