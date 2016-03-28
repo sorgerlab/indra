@@ -85,18 +85,18 @@ class BaseAgent(object):
 # Site/state information ###############################################
 
 abbrevs = {
-    'PhosphorylationSerine': 'S',
-    'PhosphorylationThreonine': 'T',
-    'PhosphorylationTyrosine': 'Y',
-    'Phosphorylation': 'phospho',
-    'Ubiquitination': 'ub',
-    'Farnesylation': 'farnesyl',
-    'Hydroxylation': 'hydroxyl',
-    'Acetylation': 'acetyl',
-    'Sumoylation': 'sumo',
-    'Glycosylation': 'glycosyl',
-    'Methylation': 'methyl',
-    'Modification': 'mod',
+    'phosphorylation': 'phospho',
+    'ubiquitination': 'ub',
+    'farnesylation': 'farnesyl',
+    'hydroxylation': 'hydroxyl',
+    'acetylation': 'acetyl',
+    'sumoylation': 'sumo',
+    'glycosylation': 'glycosyl',
+    'methylation': 'methyl',
+    'modification': 'mod',
+    'serine': 'S',
+    'threonine': 'T',
+    'tyrosine': 'Y'
 }
 
 active_site_names = {
@@ -109,18 +109,15 @@ active_site_names = {
 }
 
 states = {
-    'PhosphorylationSerine': ['u', 'p'],
-    'PhosphorylationThreonine': ['u', 'p'],
-    'PhosphorylationTyrosine': ['u', 'p'],
-    'Phosphorylation': ['u', 'p'],
-    'Ubiquitination': ['n', 'y'],
-    'Farnesylation': ['n', 'y'],
-    'Hydroxylation': ['n', 'y'],
-    'Acetylation': ['n', 'y'],
-    'Sumoylation': ['n', 'y'],
-    'Glycosylation': ['n', 'y'],
-    'Methylation': ['n', 'y'],
-    'Modification': ['n', 'y'],
+    'phosphorylation': ['u', 'p'],
+    'ubiquitination': ['n', 'y'],
+    'farnesylation': ['n', 'y'],
+    'hydroxylation': ['n', 'y'],
+    'acetylation': ['n', 'y'],
+    'sumoylation': ['n', 'y'],
+    'glycosylation': ['n', 'y'],
+    'methylation': ['n', 'y'],
+    'modification': ['n', 'y'],
 }
 
 # The following dict specifies the default modification/binding site names for
@@ -147,15 +144,16 @@ def site_name(stmt):
     """Return all site names for a modification-type statement."""
     names = []
     if isinstance(stmt.mod, (list, tuple)):
-        for m, mp in zip(stmt.mod, stmt.mod_pos):
-            mod = abbrevs[m]
-            mod_pos = mp if mp is not None else ''
-            names.append('%s%s' % (mod, mod_pos))
+        mods = stmt.mod
     else:
-        mod = abbrevs[stmt.mod]
-        mod_pos = stmt.mod_pos if stmt.mod_pos is not None else ''
-        names.append('%s%s' % (mod, mod_pos))
-
+        mods = [stmt.mod]
+    for mod in mods:
+        if mod.residue is None:
+            mod_str = abbrevs[mod.mod_type]
+        else:
+            mod_str = abbrevs[mod.residue]
+        mod_pos = mod.position if mod.position is not None else ''
+        names.append('%s%s' % (mod_str, mod_pos))
     return names
 
 
@@ -169,11 +167,13 @@ def get_activating_mods(agent, agent_set):
 
 def get_agent_rule_str(agent):
     rule_str_list = [agent.name]
-    if agent.mods:
-        for m, mp in zip(agent.mods, agent.mod_sites):
-            mstr = abbrevs[m]
-            mpstr = '' if mp is None else str(mp)
-            rule_str_list.append('%s%s' % (mstr, mpstr))
+    for mod in agent.mods:
+        mstr = abbrevs[mod.mod_type]
+        if mod.residue is not None:
+            mstr += abbrevs[mod.residue]
+        if mod.position is not None:
+            mstr += mod.position
+        rule_str_list.append('%s' % mstr)
     if agent.bound_conditions:
         for b in agent.bound_conditions:
             if b.is_bound:
@@ -239,13 +239,13 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
             pattern[get_binding_site_name(bc.agent.name)] = None
 
     # Add the pattern for the modifications of the agent
-    # TODO: This is specific to phosphorylation but we should be
-    # able to support other types as well
-    for m, mp in zip(agent.mods, agent.mod_sites):
-        mod = abbrevs[m]
-        mod_pos = mp if mp is not None else ''
-        mod_site = ('%s%s' % (mod, mod_pos))
-        pattern[mod_site] = 'p'
+    for mod in agent.mods:
+        mod_site_str = abbrevs[mod.mod_type]
+        if mod.residue is not None:
+            mod_site_str = abbrevs[mod.residue]
+        mod_pos_str = mod.position if mod.position is not None else ''
+        mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
+        pattern[mod_site] = states[mod.mod_type][1]
 
     complex_pattern = monomer(**pattern)
     return complex_pattern
@@ -402,13 +402,14 @@ def complex_monomers_one_step(stmt, agent_set):
     for i, member in enumerate(stmt.members):
         gene_mono = agent_set.get_create_base_agent(member)
         # Add sites for agent modifications
-        # TODO: This assumes phosphorylation, but in principle
-        # it could be some other modification
-        for m, mp in zip(member.mods, member.mod_sites):
-            mod = abbrevs[m]
-            mod_pos = mp if mp is not None else ''
-            mod_site = ('%s%s' % (mod, mod_pos))
-            gene_mono.create_site(mod_site, ['u', 'p'])
+        for mod in member.mods:
+            if mod.residue is None:
+                mod_str = abbrevs[mod.mod_type]
+            else:
+                mod_str = abbrevs[mod.residue]
+            mod_pos = mod.position if mod.position is not None else ''
+            mod_site = ('%s%s' % (mod_str, mod_pos))
+            gene_mono.create_site(mod_site, states[mod.mod_type])
 
         # Specify a binding site for each of the other complex members
         # bp = abbreviation for "binding partner"
@@ -525,14 +526,15 @@ def complex_assemble_multi_way(stmt, model, agent_set):
             right_site_dict[bp_bs] = bond_ix
 
         # Add the pattern for the modifications of the member
-        # TODO: This is specific to phosphorylation but we should be
-        # able to support other types as well
-        for m, mp in zip(member.mods, member.mod_sites):
-            mod = abbrevs[m]
-            mod_pos = mp if mp is not None else ''
-            mod_site = ('%s%s' % (mod, mod_pos))
-            left_site_dict[mod_site] = 'p'
-            right_site_dict[mod_site] = 'p'
+        for mod in member.mods:
+            if mod.residue is None:
+                mod_str = abbrevs[mod.mod_type]
+            else:
+                mod_str = abbrevs[mod.residue]
+            mod_pos = mod.position if mod.position is not None else ''
+            mod_site = ('%s%s' % (mod_str, mod_pos))
+            left_site_dict[mod_site] = states[mod.mod_type][1]
+            right_site_dict[mod_site] = states[mod.mod_type][1]
 
         # Add the pattern for the member being bound
         for bc in member.bound_conditions:
@@ -1156,11 +1158,10 @@ def activitymodification_monomers_interactions_only(stmt, agent_set):
 def activitymodification_monomers_one_step(stmt, agent_set):
     agent = agent_set.get_create_base_agent(stmt.monomer)
     sites = site_name(stmt)
-    active_states = [states[m][1] for m in stmt.mod]
 
     activity_pattern = {}
     for i, s in enumerate(sites):
-        site_states = states[stmt.mod[i]]
+        site_states = states[stmt.mod[i].mod_type]
         active_state = site_states[1]
         agent.create_site(s, site_states)
         activity_pattern[s] = active_state
@@ -1191,8 +1192,4 @@ if __name__ == '__main__':
     pa = PysbAssembler()
     bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
     pa.add_statements(bp.statements)
-    # bp = bel_api.process_ndex_neighborhood("ARAF")
-    # pa.add_statements(bp.statements)
-    # tp = trips_api.process_text("BRAF phosphorylates MEK1 at Ser222")
-    # pa.add_statements(tp.statements)
     model = pa.make_model()
