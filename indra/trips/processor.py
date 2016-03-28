@@ -11,20 +11,20 @@ import indra.databases.uniprot_client as up_client
 
 
 residue_names = {
-    'S': 'Serine',
-    'T': 'Threonine',
-    'Y': 'Tyrosine',
-    'SER': 'Serine',
-    'THR': 'Threonine',
-    'TYR': 'Tyrosine',
-    'SERINE': 'Serine',
-    'THREONINE': 'Threonine',
-    'TYROSINE': 'Tyrosine'
+    'S': 'serine',
+    'T': 'threonine',
+    'Y': 'tyrosine',
+    'SER': 'serine',
+    'THR': 'threonine',
+    'TYR': 'tyrosine',
+    'SERINE': 'serine',
+    'THREONINE': 'threonine',
+    'TYROSINE': 'tyrosine'
     }
 
 
 mod_names = {
-    'PHOSPHORYLATION': 'Phosphorylation'
+    'PHOSPHORYLATION': 'phosphorylation'
     }
 
 
@@ -164,17 +164,16 @@ class TripsProcessor(object):
                 continue
             precond_id = precond_event_ref.find('event').attrib['id']
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
-            mod, mod_pos = self._get_mod_site(precond_event)
-            if mod is None:
+            mods = self._get_mod_site(precond_event)
+            if mods is None:
                 warnings.warn('Skipping activity modification with missing' +\
                                 'modification')
                 continue
 
             sentence = self.get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
-            self.statements.append(ActivityModification(affected_agent, mod,
-                                    mod_pos, 'increases', 'Active',
-                                    evidence=ev))
+            self.statements.append(ActivityModification(affected_agent, mods,
+                                    'increases', 'Active', evidence=ev))
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):
@@ -259,7 +258,7 @@ class TripsProcessor(object):
                                                    event.attrib['id'])
             if affected_agent is None:
                 continue
-            mod, mod_pos = self._get_mod_site(event)
+            mods = self._get_mod_site(event)
 
             sentence = self.get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
@@ -275,27 +274,27 @@ class TripsProcessor(object):
                 agent_bound = Agent(affected_agent.name)
                 enzyme_agent.bound_conditions = \
                                            [BoundCondition(agent_bound, True)]
-                for m, p in zip(mod, mod_pos):
+                for m in mods:
                     self.statements.append(Transphosphorylation(enzyme_agent,
-                                        m, p, evidence=ev))
+                                           m, evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
-                for m, p in zip(mod, mod_pos):
+                for m in mods:
                     self.statements.append(Dephosphorylation(enzyme_agent,
-                                        affected_agent, m, p, evidence=ev))
+                                           affected_agent, m, evidence=ev))
             # Autophosphorylation
             elif enzyme_agent is not None and\
                 (enzyme.attrib['id'] == affected.attrib['id']):
-                for m, p in zip(mod, mod_pos):
+                for m in mods:
                     self.statements.append(Autophosphorylation(enzyme_agent,
-                                        m, p, evidence=ev))
+                                           m, evidence=ev))
             # Regular phosphorylation
             else:
-                if mod is None:
+                if mods is None:
                     continue
-                for m, p in zip(mod, mod_pos):
+                for m in mods:
                     self.statements.append(Phosphorylation(enzyme_agent,
-                                            affected_agent, m, p, evidence=ev))
+                                            affected_agent, m, evidence=ev))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
 
@@ -415,10 +414,8 @@ class TripsProcessor(object):
 
         # Phosphorylation precondition
         elif precond_event_type == 'ONT::PHOSPHORYLATION':
-            mod, mod_pos = self._get_mod_site(precond_event)
-            for m, mp in zip(mod, mod_pos):
-                agent.mods.append(m)
-                agent.mod_sites.append(mp)
+            mods = self._get_mod_site(precond_event)
+            agent.mods = mods
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
@@ -520,8 +517,8 @@ class TripsProcessor(object):
         if components is not None:
             for member in components.getchildren():
                 residue, pos = self._get_site_by_id(member.attrib['id'])
-                all_residues.extend(residue)
-                all_pos.extend(pos)
+                all_residues += residue
+                all_pos += pos
         else:
             site_type = site_term.find("type").text
             site_name = site_term.find("name").text
@@ -546,27 +543,37 @@ class TripsProcessor(object):
         return all_residues, all_pos
 
     def _get_mod_site(self, event):
+        # Find the modification type
         mod_type = event.find('type')
         mod_txt = mod_type.text.split('::')[1]
         mod_type_name = mod_names.get(mod_txt)
+        # If it is an unknown modification type
         if mod_type_name is None:
-            return None, None
+            return None
 
+        # Find the site of the modification
         site_tag = event.find("site")
+        # If there is not site specified
         if site_tag is None:
-            return [mod_type_name], [None]
+            return [ModCondition(mod_type_name)]
         site_id = site_tag.attrib['id']
+        # Find the site TERM and get the specific residues and
+        # positions
         residues, mod_pos = self._get_site_by_id(site_id)
+        # If residue is missing
         if residues is None:
-            return None, None
-        mod = []
-        for r in residues:
+            return [ModCondition(mod_type_name)]
+
+        # Collect mods in a list
+        mods = []
+        for r, p in zip(residues, mod_pos):
             residue_name = residue_names.get(r)
             if residue_name is None:
                 warnings.warn('Residue name %s unknown. ' % r)
-                residue_name = ''
-            mod.append(mod_type_name + residue_name)
-        return mod, mod_pos
+                residue_name = None
+            mc = ModCondition(mod_type_name, residue_name, p)
+            mods.append(mc)
+        return mods
 
     def _find_static_events(self):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
