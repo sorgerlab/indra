@@ -15,74 +15,36 @@ mh = HierarchyManager(mod_file)
 
 # Argument checking for ActivityModifications ----------------------------
 
-@raises(ValueError)
-def test_activitymod_list_and_string():
-    st = ActivityModification(Agent('MAP2K1'),
-                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                        '218', 'increases', 'KinaseActivity')
-
-@raises(ValueError)
-def test_activitymod_list_and_int():
-    st = ActivityModification(Agent('MAP2K1'),
-                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                        218, 'increases', 'KinaseActivity')
-
-@raises(ValueError)
-def test_activitymod_list_and_none():
-    st = ActivityModification(Agent('MAP2K1'),
-                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                        None, 'increases', 'KinaseActivity')
-
-@raises(ValueError)
-def test_activitymod_mismatched_lists():
-    st = ActivityModification(Agent('MAP2K1'),
-                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                        ['218'], 'increases', 'KinaseActivity')
-
 def test_activitymod_sitelist_of_ints():
     """Check that mod positions specified as ints get promoted to strings."""
     st = ActivityModification(Agent('MAP2K1'),
-                        ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                        [218, 222], 'increases', 'KinaseActivity')
-    assert isinstance(st.mod, list)
-    assert isinstance(st.mod_pos, list)
-    assert len(st.mod_pos) == 2
-    assert isinstance(st.mod_pos[0], basestring)
-    assert isinstance(st.mod_pos[1], basestring)
+                              [ModCondition('phosphorylation', 'serine', 218),
+                               ModCondition('phosphorylation', 'serine', 222)],
+                              'increases', 'KinaseActivity')
+    assert isinstance(st.mod[0].position, basestring)
+    assert isinstance(st.mod[1].position, basestring)
 
 def testactivitymod_string_string():
-    """Check that string mod and mod_pos get promoted to lists"""
-    st = ActivityModification(Agent('MAP2K1'), 'PhosphorylationSerine', '218',
+    """Check that string mod position is preserved"""
+    st = ActivityModification(Agent('MAP2K1'),
+                              [ModCondition('phosphorylation' 'serine', '218')],
                               'increases', 'KinaseActivity')
-    assert isinstance(st.mod, list)
-    assert isinstance(st.mod_pos, list)
-    assert len(st.mod) == 1
-    assert len(st.mod_pos) == 1
-    assert isinstance(st.mod_pos[0], basestring)
-
-def testactivitymod_string_int():
-    """Check that string mod and int mod_pos get promoted to lists of strings"""
-    st = ActivityModification(Agent('MAP2K1'), 'PhosphorylationSerine', 218,
-                              'increases', 'KinaseActivity')
-    assert isinstance(st.mod, list)
-    assert isinstance(st.mod_pos, list)
-    assert len(st.mod) == 1
-    assert len(st.mod_pos) == 1
-    assert isinstance(st.mod_pos[0], basestring)
-
-@raises(ValueError)
-def testactivitymod_none_int():
-    """Check that None for mod triggers ValueError"""
-    st = ActivityModification(Agent('MAP2K1'), None, 218,
-                              'increases', 'KinaseActivity')
+    assert isinstance(st.mod[0].position, basestring)
 
 def testactivitymod_string_none():
-    """Make sure None for mod_pos is permissible (doesn't error)"""
-    st = ActivityModification(Agent('MAP2K1'), 'Phosphorylation', None,
+    """Check that None mod position is preserved"""
+    st = ActivityModification(Agent('MAP2K1'),
+                              [ModCondition('phosphorylation' 'serine', None)],
+                              'increases', 'KinaseActivity')
+    assert (st.mod[0].position is None)
+
+def testactivitymod_nolist():
+    """Make sure mod is correctly turned into a list if it's 
+    a single ModCondition"""
+    mc = ModCondition('phosphorylation')
+    st = ActivityModification(Agent('MAP2K1'), mc,
                               'increases', 'KinaseActivity')
     assert isinstance(st.mod, list)
-    assert isinstance(st.mod_pos, list)
-    assert st.mod_pos[0] is None
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
@@ -103,29 +65,35 @@ def test_matches_key():
 def test_matches2():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
-    st2 = Phosphorylation(raf, mek, 'Phosphorylation', None)
+    mc = ModCondition('phosphorylation')
+    st1 = Phosphorylation(raf, mek, mc)
+    st2 = Phosphorylation(raf, mek, mc)
     assert(st1.matches(st2))
 
 def test_matches_key2():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
-    st2 = Phosphorylation(raf, mek, 'Phosphorylation', None)
+    mc = ModCondition('phosphorylation')
+    st1 = Phosphorylation(raf, mek, mc)
+    st2 = Phosphorylation(raf, mek, mc)
     assert(st1.matches_key() == st2.matches_key())
 
 def test_not_matches():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
-    st2 = Phosphorylation(raf, mek, 'PhosphorylationTyrosine', None)
+    mc1 = ModCondition('phosphorylation')
+    mc2 = ModCondition('phosphorylation', residue='tyrosine')
+    st1 = Phosphorylation(raf, mek, mc1)
+    st2 = Phosphorylation(raf, mek, mc2)
     assert(not st1.matches(st2))
 
 def test_not_matches_key():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    st1 = Phosphorylation(raf, mek, 'Phosphorylation', None)
-    st2 = Phosphorylation(raf, mek, 'PhosphorylationTyrosine', None)
+    mc1 = ModCondition('phosphorylation')
+    mc2 = ModCondition('phosphorylation', residue='tyrosine')
+    st1 = Phosphorylation(raf, mek, mc1)
+    st2 = Phosphorylation(raf, mek, mc2)
     assert(st1.matches_key() != st2.matches_key())
 
 def test_matches_dbrefs():
@@ -213,12 +181,14 @@ def test_matches_selfmod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Autophosphorylation(nras1, 'PhosphorylationTyrosine', '32',
-                          evidence=Evidence(text='foo'))
-    st2 = Autophosphorylation(nras1, 'PhosphorylationTyrosine', '32',
-                          evidence=Evidence(text='bar'))
-    st3 = Autophosphorylation(nras2, 'Phosphorylation', None,
-                          evidence=Evidence(text='bar'))
+    st1 = Autophosphorylation(nras1, ModCondition('phosphorylation',
+                                                  'tyrosine', '32'),
+                              evidence=Evidence(text='foo'))
+    st2 = Autophosphorylation(nras1, ModCondition('phosphorylation',
+                                                  'tyrosine', '32'),
+                              evidence=Evidence(text='bar'))
+    st3 = Autophosphorylation(nras2, ModCondition('phosphorylation'),
+                              evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
@@ -243,13 +213,15 @@ def test_matches_activitymod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityModification(nras1, 'PhosphorylationTyrosine', '32',
+    st1 = ActivityModification(nras1, ModCondition('phosphorylation',
+                                                   'tyrosine', '32'),
                                'increases1', 'GtpBoundActivity1',
                                evidence=Evidence(text='foo'))
-    st2 = ActivityModification(nras1, 'PhosphorylationTyrosine', '32',
+    st2 = ActivityModification(nras1, ModCondition('phosphorylation',
+                                                   'tyrosine', '32'),
                                'increases1', 'GtpBoundActivity1',
                                evidence=Evidence(text='bar'))
-    st3 = ActivityModification(nras2, 'Phosphorylation', None,
+    st3 = ActivityModification(nras2, ModCondition('phosphorylation'),
                                'increases2', 'GtpBoundActivity2',
                                evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
@@ -321,9 +293,10 @@ def test_entities_match_mod():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Phosphorylation(src, nras1, 'PhosphorylationTyrosine', '32',
+    st1 = Phosphorylation(src, nras1, ModCondition('phosphorylation',
+                                                   'tyrosine', '32'),
                           evidence=Evidence(text='foo'))
-    st2 = Phosphorylation(src, nras2, 'Phosphorylation', None,
+    st2 = Phosphorylation(src, nras2, ModCondition('phosphorylation'),
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -331,9 +304,11 @@ def test_entities_match_selfmod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Autophosphorylation(nras1, 'PhosphorylationTyrosine', '32',
+    st1 = Autophosphorylation(nras1,
+                          ModCondition('phosphorylation', 'tyrosine', '32'),
                           evidence=Evidence(text='foo'))
-    st2 = Autophosphorylation(nras2, 'Phosphorylation', None,
+    st2 = Autophosphorylation(nras2,
+                          ModCondition('phosphorylation'),
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -354,10 +329,11 @@ def test_entities_match_activitymod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityModification(nras1, 'PhosphorylationTyrosine', '32',
+    st1 = ActivityModification(nras1, ModCondition('phosphorylation',
+                                                   'tyrosine', '32'),
                                'increases1', 'GtpBoundActivity1',
                                evidence=Evidence(text='foo'))
-    st2 = ActivityModification(nras2, 'Phosphorylation', None,
+    st2 = ActivityModification(nras2, ModCondition('phosphorylation'),
                                'increases2', 'GtpBoundActivity2',
                                evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
@@ -463,23 +439,23 @@ def test_agent_modification_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
     mek1 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['Phosphorylation'], mod_sites=[None])
+                mods=ModCondition('phosphorylation'))
     mek2 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['Phosphorylation'], mod_sites=['218'])
+                mods=ModCondition('phosphorylation', position='218'))
     mek3 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['Phosphorylation'], mod_sites=['222'])
+                mods=ModCondition('phosphorylation', position='222'))
     mek4 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['Phosphorylation', 'Phosphorylation'],
-                mod_sites=['218', '222'])
+                mods=[ModCondition('phosphorylation', position='218'),
+                      ModCondition('phosphorylation', position='222')])
     mek5 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['PhosphorylationSerine'], mod_sites=[None])
+                mods=ModCondition('phosphorylation', 'serine', None))
     mek6 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['PhosphorylationSerine'], mod_sites=['218'])
+                mods=ModCondition('phosphorylation', 'serine', '218'))
     mek7 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['PhosphorylationSerine'], mod_sites=['222'])
+                mods=ModCondition('phosphorylation', 'serine', '222'))
     mek8 = Agent('MAP2K1', db_refs = {'HGNC': 'asdf'},
-                mods=['PhosphorylationSerine', 'PhosphorylationSerine'],
-                mod_sites=['218', '222'])
+                mods=[ModCondition('phosphorylation', 'serine', '218'),
+                      ModCondition('phosphorylation', 'serine', '222')])
 
     # mek1 agent is refined by all others
     assert mek2.refinement_of(mek1, eh, mh)
@@ -549,12 +525,18 @@ def test_agent_modification_refinement():
 def test_phosphorylation_modification_refinement():
     braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
     mek1 = Agent('MAP2K1', db_refs = {'HGNC': 'map2k1'})
-    p1 = Phosphorylation(braf, mek1, 'Phosphorylation', None)
-    p2 = Phosphorylation(braf, mek1, 'Phosphorylation', '218')
-    p3 = Phosphorylation(braf, mek1, 'Phosphorylation', '222')
-    p4 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', None)
-    p5 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '218')
-    p6 = Phosphorylation(braf, mek1, 'PhosphorylationSerine', '222')
+    p1 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation'))
+    p2 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation', position='218'))
+    p3 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation', position='222'))
+    p4 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation', 'serine'))
+    p5 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation', 'serine', '218'))
+    p6 = Phosphorylation(braf, mek1,
+                         ModCondition('phosphorylation', 'serine', '222'))
 
     # p1
     assert p2.refinement_of(p1, eh, mh)
@@ -595,12 +577,18 @@ def test_phosphorylation_modification_refinement():
 
 def test_autophosphorylation_modification_refinement():
     braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
-    p1 = Autophosphorylation(braf, 'Phosphorylation', None)
-    p2 = Autophosphorylation(braf, 'Phosphorylation', '218')
-    p3 = Autophosphorylation(braf, 'Phosphorylation', '222')
-    p4 = Autophosphorylation(braf, 'PhosphorylationSerine', None)
-    p5 = Autophosphorylation(braf, 'PhosphorylationSerine', '218')
-    p6 = Autophosphorylation(braf, 'PhosphorylationSerine', '222')
+    p1 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation'))
+    p2 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation', position='218'))
+    p3 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation', position='222'))
+    p4 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation', 'serine'))
+    p5 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation', 'serine', '218'))
+    p6 = Autophosphorylation(braf,
+                             ModCondition('phosphorylation', 'serine', '222'))
 
     # p1
     assert p2.refinement_of(p1, eh, mh)
@@ -684,21 +672,25 @@ def test_activityactivity_modification_refinement():
 def test_activitymod_refinement():
     mek_fam = Agent('MEK')
     mek1 = Agent('MAP2K1')
-    p1 = ActivityModification(mek_fam, 'Phosphorylation', None, 'increases',
-                              'KinaseActivity')
-    p2 = ActivityModification(mek_fam, 'PhosphorylationSerine', '218',
+    p1 = ActivityModification(mek_fam, ModCondition('phosphorylation'),
                               'increases', 'KinaseActivity')
-    p3 = ActivityModification(mek1, 'Phosphorylation', None, 'increases',
-                              'KinaseActivity')
-    p4 = ActivityModification(mek1, 'PhosphorylationSerine', None, 'increases',
-                              'KinaseActivity')
-    p5 = ActivityModification(mek1, 'PhosphorylationSerine', '218', 'increases',
-                              'KinaseActivity')
-    p6 = ActivityModification(mek1, 'PhosphorylationSerine', '222', 'increases',
-                              'KinaseActivity')
+    p2 = ActivityModification(mek_fam, ModCondition('phosphorylation',
+                                                    'serine', '218'),
+                              'increases', 'KinaseActivity')
+    p3 = ActivityModification(mek1, ModCondition('phosphorylation'),
+                              'increases', 'KinaseActivity')
+    p4 = ActivityModification(mek1, ModCondition('phosphorylation', 'serine'),
+                              'increases', 'KinaseActivity')
+    p5 = ActivityModification(mek1, ModCondition('phosphorylation',
+                                                 'serine', '218'),
+                              'increases', 'KinaseActivity')
+    p6 = ActivityModification(mek1, ModCondition('phosphorylation',
+                                                 'serine', '222'),
+                              'increases', 'KinaseActivity')
     p7 = ActivityModification(mek1,
-                            ['PhosphorylationSerine', 'PhosphorylationSerine'],
-                            ['218', '222'], 'increases', 'KinaseActivity')
+                            [ModCondition('phosphorylation', 'serine', '218'),
+                             ModCondition('phosphorylation', 'serine', '222')],
+                            'increases', 'KinaseActivity')
     # p1
     assert p2.refinement_of(p1, eh, mh)
     assert p3.refinement_of(p1, eh, mh)
