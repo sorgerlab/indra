@@ -2,22 +2,18 @@ from collections import namedtuple
 import textwrap
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
+ModCondition = namedtuple('ModCondition', ['type', 'residue', 'position'])
 
 class Agent(object):
 
-    def __init__(self, name, mods=None, mod_sites=None, active=None,
+    def __init__(self, name, mod_conditions=None, active=None,
                  bound_conditions=None, db_refs=None):
         self.name = name
 
-        if mods is None:
-            self.mods = []
-        else:
-            self.mods = mods
-
-        if mod_sites is None:
-            self.mod_sites = []
-        else:
-            self.mod_sites = mod_sites
+        if mod_conditions is None:
+            self.mod_conditions = []
+        else:    
+            self.mod_conditions = mod_conditions
 
         if bound_conditions is None:
             self.bound_conditions = []
@@ -36,8 +32,7 @@ class Agent(object):
 
     def matches_key(self):
         key = (self.name,
-               set(self.mods),
-               set(self.mod_sites),
+               set(self.mod_conditions),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
@@ -95,23 +90,13 @@ class Agent(object):
         # MODIFICATIONS
         # Similar to the above, we check that self has all of the modifications
         # of other.
-        assert len(self.mods) == len(self.mod_sites), \
-               "Mods and mod_sites must match."
-        assert len(other.mods) == len(other.mod_sites), \
-               "Mods and mod_sites must match."
         # Make sure they have the same modifications
-        for other_mod_ix in range(len(other.mods)):
+        for other_mod_ix in range(len(other.mod_conditions)):
             mod_found = False
-            other_mod = other.mods[other_mod_ix]
-            other_mod_site = other.mod_sites[other_mod_ix]
-            for self_mod_ix in range(len(self.mods)):
-                self_mod = self.mods[self_mod_ix]
-                self_mod_site = self.mod_sites[self_mod_ix]
-                # Or has an isa relationship...
-                if (self_mod == other_mod or \
-                        mod_hierarchy.isa(self_mod, other_mod)) and \
-                   (self_mod_site == other_mod_site or \
-                        (self_mod_site is not None and other_mod_site is None)):
+            other_mod = other.mod_conditions[other_mod_ix]
+            for self_mod_ix in range(len(self.mod_conditions)):
+                self_mod = self.mod_conditions[self_mod_ix]
+                if mod_matches(self_mod, other_mod, mod_hierarchy):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
@@ -123,10 +108,10 @@ class Agent(object):
 
     def __str__(self):
         attr_strs = []
-        if self.mods:
-            attr_strs.append('mods: %s' % self.mods)
-        if self.mod_sites:
-            attr_strs.append('mod_sites: %s' % self.mod_sites)
+        if self.mod_conditions:
+            attr_strs += [append('mods: [%s, %s, %s]' %\
+                            (m.type, m.residue, m.pos))
+                            for m in self.mod_conditions]
         if self.active:
             attr_strs.append('active: %s' % self.active)
         if self.bound_conditions:
@@ -243,20 +228,18 @@ class Statement(object):
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
-    def __init__(self, enz, sub, mod, mod_pos, evidence=None):
+    def __init__(self, enz, sub, mod, evidence=None):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
         self.mod = mod
-        self.mod_pos = mod_pos
 
     def matches_key(self):
         if self.enz is None:
             enz_key = None
         else:
             enz_key = self.enz.matches_key()
-        key = (type(self), enz_key, self.sub.matches_key(),
-                self.mod, self.mod_pos)
+        key = (type(self), enz_key, self.sub.matches_key(), self.mod)
         return str(key)
 
     def agent_list(self):
@@ -283,37 +266,32 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if (self.mod == other.mod or \
-                mod_hierarchy.isa(self.mod, other.mod)) and \
-           (self.mod_pos == other.mod_pos or \
-                (self.mod_pos is not None and other.mod_pos is None)):
+        if mod_matches(self.mod, other.mod, mod_hierarchy):    
             return True
         else:
             return False
 
     def __str__(self):
         s = ("%s(%s, %s, %s, %s)" %
-                  (type(self).__name__, self.enz, self.sub, self.mod,
-                   self.mod_pos))
+                  (type(self).__name__, self.enz, self.sub, self.mod))
         return s
 
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
 
-    def __init__(self, enz, mod, mod_pos, evidence=None):
+    def __init__(self, enz, mod, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
         self.mod = mod
-        self.mod_pos = mod_pos
 
     def __str__(self):
         s = ("%s(%s, %s, %s)" %
-             (type(self).__name__, self.enz.name, self.mod, self.mod_pos))
+             (type(self).__name__, self.enz.name, self.mod))
         return s
 
     def matches_key(self):
-        key = (type(self), self.enz.matches_key(), self.mod, self.mod_pos)
+        key = (type(self), self.enz.matches_key(), self.mod)
         return str(key)
 
     def agent_list(self):
@@ -332,10 +310,7 @@ class SelfModification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if (self.mod == other.mod or \
-                mod_hierarchy.isa(self.mod, other.mod)) and \
-           (self.mod_pos == other.mod_pos or \
-                (self.mod_pos is not None and other.mod_pos is None)):
+        if mod_matches(self.mod, other.mod, mod_hierarchy):
             return True
         else:
             return False
@@ -437,44 +412,16 @@ class ActivityModification(Statement):
     """Statement representing the activation of a protein as a result
     of a residue modification"""
 
-    def __init__(self, monomer, mod, mod_pos, relationship, activity,
+    def __init__(self, monomer, mod, relationship, activity,
                  evidence=None):
         super(ActivityModification, self).__init__(evidence)
         self.monomer = monomer
-        # This means that one of mod and mod_pos are a list, but not both,
-        # which should raise a ValueError
-        if isinstance(mod, list) and len(mod) > 1 and mod_pos is None:
-            raise ValueError('If more than one modification is specified then '
-                             'mod_pos must also be specified and cannot be '
-                             'None.')
-        elif isinstance(mod, list) != isinstance(mod_pos, list):
-            raise ValueError('If mod or mod_pos are provided as lists they '
-                             'must be matched.')
-        elif isinstance(mod, list) and isinstance(mod_pos, list) and \
-                len(mod) != len(mod_pos):
-            raise ValueError('If mod and mod_pos are lists, then they must be '
-                             'the same length.')
-        elif isinstance(mod, list) and isinstance(mod_pos, list) and \
-                len(mod) == len(mod_pos):
-            # Set the fields to be the lists, but make sure to stringify
-            # any entries in the mod_pos list that might be ints
-            self.mod = mod
-            self.mod_pos = [str(mp) for mp in mod_pos]
-        elif isinstance(mod, basestring) and \
-                (isinstance(mod_pos, int) or isinstance(mod_pos, basestring)):
-            self.mod = [mod]
-            self.mod_pos = [str(mod_pos)]
-        elif isinstance(mod, basestring) and mod_pos is None:
-            self.mod = [mod]
-            self.mod_pos = [None]
-        else:
-            raise ValueError('Invalid values for mod and/or mod_pos')
-
+        self.mod = mod
         self.relationship = relationship
         self.activity = activity
 
     def matches_key(self):
-        key = (type(self), self.monomer.matches_key(), self.mod, self.mod_pos,
+        key = (type(self), self.monomer.matches_key(), self.mod,
                 self.relationship, self.activity)
         return str(key)
 
@@ -491,12 +438,6 @@ class ActivityModification(Statement):
                                           mod_hierarchy):
             return False
 
-        # Mod and mod_pos should always be lists of the same length; mod_pos
-        # can also be None
-        assert isinstance(self.mod, list)
-        assert isinstance(self.mod_pos, list) or mod_pos is None
-        assert isinstance(other.mod, list)
-        assert isinstance(other.mod_pos, list) or mod_pos is None
         # Make sure that every instance of a modification in other is also
         # found (or refined) in self. To facilitate comparisons, we first zip
         # the two lists together in a list of tuples that can be sorted to
@@ -506,15 +447,9 @@ class ActivityModification(Statement):
         for other_mod_ix in range(len(other.mod)):
             mod_found = False
             other_mod = other.mod[other_mod_ix]
-            other_mod_pos = other.mod_pos[other_mod_ix]
             for self_mod_ix in range(len(self.mod)):
                 self_mod = self.mod[self_mod_ix]
-                self_mod_pos = self.mod_pos[self_mod_ix]
-                # Or has an isa relationship...
-                if (self_mod == other_mod or \
-                        mod_hierarchy.isa(self_mod, other_mod)) and \
-                   (self_mod_pos == other_mod_pos or \
-                        (self_mod_pos is not None and other_mod_pos is None)):
+                if mod_matches(self_mod, other_mod, mod_hierarchy):    
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
@@ -531,8 +466,8 @@ class ActivityModification(Statement):
 
     def __str__(self):
         s = ("ActivityModification(%s, %s, %s, %s, %s)" %
-                (self.monomer, self.mod, self.mod_pos, self.relationship,
-                #(str(self.monomer), self.mod, self.mod_pos, self.relationship,
+                (self.monomer, self.mod, self.relationship,
+                #(str(self.monomer), self.mod, self.mod, self.relationship,
                  self.activity))
         return s
 
@@ -699,3 +634,11 @@ class Complex(Statement):
         else:
             return True
 
+def mod_matches(ref, other, mod_hierarchy):
+    type_match = (ref.type == other.type or \
+            mod_hierarchy.isa(ref.type, other.type))
+    residue_match = (ref.residue == other.residue or \
+            (ref.residue is not None and other.residue is None))
+    pos_match = (ref.pos == other.pos or \
+            (ref.pos is not None and other.pos is None))
+    return (type_match and residue_match and pos_match)
