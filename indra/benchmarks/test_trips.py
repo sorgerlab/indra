@@ -73,7 +73,8 @@ def test_bound_mod():
     assert(has_hgnc_ref(st.members[0]))
     assert(has_hgnc_ref(st.members[1]))
     assert(st.members[1].mods)
-    assert('PhosphorylationTyrosine' in st.members[1].mods)
+    assert(st.members[1].mods[0].mod_type == 'phosphorylation')
+    assert(st.members[1].mods[0].residue == 'tyrosine')
     os.remove(fname)
 
 def test_not_bound_to():
@@ -182,7 +183,7 @@ def test_transphosphorylate():
     assert(st.enz is not None)
     assert(st.enz.name == 'EGFR')
     assert(has_hgnc_ref(st.enz))
-    assert(st.mod == 'Phosphorylation')
+    assert(st.residue == None)
     assert(len(st.enz.bound_conditions) == 1)
     assert(st.enz.bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
@@ -197,7 +198,7 @@ def test_transphosphorylate2():
     assert(st.enz is not None)
     assert(st.enz.name == 'EGFR')
     assert(has_hgnc_ref(st.enz))
-    assert(st.mod == 'PhosphorylationTyrosine')
+    assert(st.residue == 'tyrosine')
     assert(len(st.enz.bound_conditions) == 1)
     assert(st.enz.bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
@@ -211,8 +212,10 @@ def test_act_mod():
     assert(is_actmod(st))
     assert(st.monomer is not None)
     assert(st.monomer.name == 'MAP2K1')
-    assert(st.monomer.mod == ['PhosphorylationSerine', 'PhosphorylationSerine'])
-    assert(st.monomer.mod_pos == ['218', '222'])
+    residues = [m.residue for m in st.mod]
+    positions = [m.position for m in st.mod]
+    assert(residues == ['serine', 'serine'])
+    assert(positions == ['218', '222'])
     assert(st.relationship == 'increases')
     os.remove(fname)
 
@@ -227,7 +230,7 @@ def test_bound_phosphorylate():
     assert(st.enz.name == 'RAF')
     assert(st.sub is not None)
     assert(st.sub.name == 'MAP2K1')
-    assert(st.mod == 'Phosphorylation')
+    assert(st.residue == None)
     os.remove(fname)
 
 '''
@@ -257,8 +260,8 @@ def test_act_phosphorylate():
     assert(st.enz.name == 'MAP2K1')
     assert(st.sub is not None)
     assert(st.sub.name == 'MAPK1')
-    assert(st.mod == 'PhosphorylationTyrosine')
-    assert(st.mod_pos == '187')
+    assert(st.residue == 'tyrosine')
+    assert(st.position == '187')
     os.remove(fname)
 
 def test_dephosphorylate():
@@ -272,8 +275,8 @@ def test_dephosphorylate():
     assert(st.enz.name == 'DUSP6')
     assert(st.sub is not None)
     assert(st.sub.name == 'MAPK1')
-    assert(st.mod == 'PhosphorylationTyrosine')
-    assert(st.mod_pos == '187')
+    assert(st.residue == 'tyrosine')
+    assert(st.position == '187')
     os.remove(fname)
 
 def is_complex(statement):
@@ -284,10 +287,10 @@ def is_phosphorylation(statement):
 
 def is_transphosphorylation(statement):
     return isinstance(statement, indra.statements.Transphosphorylation)
-   
+
 def is_actmod(statement):
     return isinstance(statement, indra.statements.ActivityModification)
-    
+
 def is_dephosphorylation(statement):
     return isinstance(statement, indra.statements.Dephosphorylation)
 
