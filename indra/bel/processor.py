@@ -168,20 +168,25 @@ class BelProcessor(object):
 
             if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
                 self.statements.append(
-                        Phosphorylation(enz, sub, mc, evidence))
+                        Phosphorylation(enz, sub, mc.residue, mc.position,
+                                        evidence))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.statements.append(
-                            Hydroxylation(enz, sub, mc, evidence))
+                            Hydroxylation(enz, sub, mc.residue, mc.position,
+                                          evidence))
                 elif mod == 'Sumoylation':
                     self.statements.append(
-                            Sumoylation(enz, sub, mc, evidence))
+                            Sumoylation(enz, sub, mc.residue, mc.position,
+                                        evidence))
                 elif mod == 'Acetylation':
                     self.statements.append(
-                            Acetylation(enz, sub, mc, evidence))
+                            Acetylation(enz, sub, mc.residue, mc.position,
+                                        evidence))
                 elif mod == 'Ubiquitination':
                     self.statements.append(
-                            Ubiquitination(enz, sub, mc, evidence))
+                            Ubiquitination(enz, sub, mc.residue, mc.position,
+                                           evidence))
                 else:
                     print "Warning: Unknown modification type!"
                     print("Activity: %s, Mod: %s, Mod_Pos: %s" %
