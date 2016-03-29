@@ -46,7 +46,12 @@ def process_text(text, citation=None, offline=False):
         json_str = result_map.get('resultJson')
     else:
         data = {'text': text.encode('utf-8')}
-        res = requests.post(reach_text_url, data)
+        try:
+            res = requests.post(reach_text_url, data)
+        except requests.exceptions.RequestException as e:
+            print 'Could not connect to REACH service:'
+            print e
+            return None
         # TODO: we could use res.json() here to get a dict 
         # directly
         json_str = res.text
@@ -71,9 +76,14 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         json_str = result_map.get('resultJson')
     else:
         data = {'nxml': nxml_str}
-        res = requests.post(reach_nxml_url, data)
+        try:
+            res = requests.post(reach_nxml_url, data)
+        except requests.exceptions.RequestException as e:
+            print 'Could not connect to REACH service:'
+            print e
+            return None
         if res.status_code != 200:
-            print 'Could not process NXML.'
+            print 'Could not process NXML via REACH service.'
             return None
         json_str = res.text
     with open('reach_output.json', 'wt') as fh:
