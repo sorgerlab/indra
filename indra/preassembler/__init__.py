@@ -297,12 +297,14 @@ def check_sequence(stmt):
     elif isinstance(stmt, Modification):
         failures += check_agent_mod(stmt.sub)
         failures += check_agent_mod(stmt.enz)
-        if stmt.mod.position is not None:
-            failures += check_agent_mod(stmt.sub, [stmt.mod])
+        if stmt.position is not None:
+            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
+            failures += check_agent_mod(stmt.sub, [mc])
     elif isinstance(stmt, SelfModification):
         failures += check_agent_mod(stmt.sub)
-        if stmt.mod.position is not None:
-            failures += check_agent_mod(stmt.enz, [stmt.mod])
+        if stmt.position is not None:
+            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
+            failures += check_agent_mod(stmt.enz, [mc])
     elif isinstance(stmt, ActivityModification):
         failures += check_agent_mod(stmt.monomer)
         failures += check_agent_mod(stmt.monomer, stmt.mod)
