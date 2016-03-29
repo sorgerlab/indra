@@ -26,8 +26,8 @@ def test_from_text():
 def test_duplicates():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
-    st1 = Phosphorylation(src, ras, ModCondition('phosphorylation'))
-    st2 = Phosphorylation(src, ras, ModCondition('phosphorylation'))
+    st1 = Phosphorylation(src, ras)
+    st2 = Phosphorylation(src, ras)
     pa = Preassembler(eh, mh, [st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
@@ -42,12 +42,9 @@ def test_duplicates_sorting():
     mapk3 = Agent('MAPK3')
     #ras = Agent('MAPK3', db_refs = {'FA': '03663'})
     #nras = Agent('NRAS', db_refs = {'FA': '03663'})
-    st1 = Phosphorylation(map2k1_1, mapk3,
-                          ModCondition('phosphorylation', position='218'))
-    st2 = Phosphorylation(map2k1_2, mapk3,
-                          ModCondition('phosphorylation'))
-    st3 = Phosphorylation(map2k1_1, mapk3,
-                          ModCondition('phosphorylation', position='218'))
+    st1 = Phosphorylation(map2k1_1, mapk3, position='218')
+    st2 = Phosphorylation(map2k1_2, mapk3)
+    st3 = Phosphorylation(map2k1_1, mapk3, position='218')
     stmts = [st1, st2, st3]
     pa = Preassembler(eh, mh, stmts)
     pa.combine_duplicates()
@@ -57,24 +54,23 @@ def test_combine_duplicates():
     raf = Agent('RAF1')
     mek = Agent('MEK1')
     erk = Agent('ERK2')
-    mcphos = ModCondition('phosphorylation')
-    p1 = Phosphorylation(raf, mek, mcphos,
+    p1 = Phosphorylation(raf, mek,
             evidence=Evidence(text='foo'))
-    p2 = Phosphorylation(raf, mek, mcphos,
+    p2 = Phosphorylation(raf, mek,
             evidence=Evidence(text='bar'))
-    p3 = Phosphorylation(raf, mek, mcphos,
+    p3 = Phosphorylation(raf, mek,
             evidence=Evidence(text='baz'))
-    p4 = Phosphorylation(raf, mek, mcphos,
+    p4 = Phosphorylation(raf, mek,
             evidence=Evidence(text='beep'))
-    p5 = Phosphorylation(mek, erk, mcphos,
+    p5 = Phosphorylation(mek, erk,
             evidence=Evidence(text='foo'))
-    p6 = Dephosphorylation(mek, erk, mcphos,
+    p6 = Dephosphorylation(mek, erk,
             evidence=Evidence(text='bar'))
-    p7 = Dephosphorylation(mek, erk, mcphos,
+    p7 = Dephosphorylation(mek, erk,
             evidence=Evidence(text='baz'))
-    p8 = Dephosphorylation(mek, erk, mcphos,
+    p8 = Dephosphorylation(mek, erk,
             evidence=Evidence(text='beep'))
-    p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'), mcphos,
+    p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
                            evidence=Evidence(text='beep'))
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
     pa = Preassembler(eh, mh, stmts)
@@ -96,9 +92,8 @@ def test_superfamily_refinement():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, ras, mcphostyr)
-    st2 = Phosphorylation(src, nras, mcphostyr)
+    st1 = Phosphorylation(src, ras, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nras, 'tyrosine', '32')
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
@@ -112,10 +107,8 @@ def test_modification_refinement():
     generic modification statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    mcphos = ModCondition('phosphorylation')
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, nras, mcphostyr)
-    st2 = Phosphorylation(src, nras, mcphos)
+    st1 = Phosphorylation(src, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nras)
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
@@ -129,9 +122,8 @@ def test_modification_refinement_noenz():
     generic modification statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, nras, mcphostyr)
-    st2 = Phosphorylation(None, nras, mcphostyr)
+    st1 = Phosphorylation(src, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(None, nras, 'tyrosine', '32')
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
@@ -145,10 +137,8 @@ def test_modification_norefinement_noenz():
     generic modification statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    mcphos = ModCondition('phosphorylation')
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, nras, mcphos)
-    st2 = Phosphorylation(None, nras, mcphostyr)
+    st1 = Phosphorylation(src, nras)
+    st2 = Phosphorylation(None, nras, 'tyrosine', '32')
     pa = Preassembler(eh, mh, [st1, st2])
     #import ipdb; ipdb.set_trace()
     stmts = pa.combine_related()
@@ -165,9 +155,8 @@ def test_bound_condition_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nrasgtp = Agent('NRAS', db_refs = {'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp, True)])
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, nras, mcphostyr)
-    st2 = Phosphorylation(src, nrasgtp, mcphostyr)
+    st1 = Phosphorylation(src, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nrasgtp, 'tyrosine', '32')
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     pa = Preassembler(eh, mh, [st1, st2])
@@ -184,10 +173,8 @@ def test_bound_condition_norefinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nrasgtp = Agent('NRAS', db_refs = {'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp, True)])
-    mcphos = ModCondition('phosphorylation')
-    mcphostyr = ModCondition('phosphorylation', 'tyrosine', '32')
-    st1 = Phosphorylation(src, nras, mcphostyr)
-    st2 = Phosphorylation(src, nrasgtp, mcphos)
+    st1 = Phosphorylation(src, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nrasgtp)
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     # The bound condition is more specific in st2 but the modification is less
@@ -212,18 +199,13 @@ def test_render_stmt_graph():
     mek1 = Agent('MAP2K1')
     mek = Agent('MEK')
     # Statements
-    p0 = Phosphorylation(braf, mek, ModCondition('phosphorylation'))
-    p1 = Phosphorylation(braf, mek1, ModCondition('phosphorylation'))
-    p2 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', position='218'))
-    p3 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', position='222'))
-    p4 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine'))
-    p5 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine', '218'))
-    p6 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine', '222'))
+    p0 = Phosphorylation(braf, mek)
+    p1 = Phosphorylation(braf, mek1)
+    p2 = Phosphorylation(braf, mek1, position='218')
+    p3 = Phosphorylation(braf, mek1, position='222')
+    p4 = Phosphorylation(braf, mek1, 'serine')
+    p5 = Phosphorylation(braf, mek1, 'serine', '218')
+    p6 = Phosphorylation(braf, mek1, 'serine', '222')
     stmts = [p0, p1, p2, p3, p4, p5, p6]
     pa = Preassembler(eh, mh, stmts)
     pa.combine_related()
