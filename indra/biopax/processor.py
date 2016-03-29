@@ -296,7 +296,7 @@ class BiopaxProcessor(object):
                     if m.mod_type  in ['active', 'inactive']:
                         # Skip activity as a modification state
                         continue
-                    stmt = (enz, sub, m, ev)
+                    stmt = (enz, sub, m.residue, m.position, ev)
                     stmts.append(stmt)
         return stmts
 
