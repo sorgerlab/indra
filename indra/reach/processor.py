@@ -6,15 +6,15 @@ from indra.statements import *
 import indra.databases.uniprot_client as up_client
 
 residue_names = {
-    'S': 'Serine',
-    'T': 'Threonine',
-    'Y': 'Tyrosine',
-    'SER': 'Serine',
-    'THR': 'Threonine',
-    'TYR': 'Tyrosine',
-    'SERINE': 'Serine',
-    'THREONINE': 'Threonine',
-    'TYROSINE': 'Tyrosine'
+    'S': 'serine',
+    'T': 'threonine',
+    'Y': 'tyrosine',
+    'SER': 'serine',
+    'THR': 'threonine',
+    'TYR': 'tyrosine',
+    'SERINE': 'serine',
+    'THREONINE': 'threonine',
+    'TYROSINE': 'tyrosine'
     }
 
 

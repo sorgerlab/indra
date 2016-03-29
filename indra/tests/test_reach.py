@@ -6,14 +6,14 @@ def test_parse_site_text():
             'threonine residue 185', 'T185']
     for t in text:
         residue, site = ReachProcessor._parse_site_text(t)
-        assert(residue == 'Threonine')
+        assert(residue == 'threonine')
         assert(site == '185')
 
 def test_parse_site_residue_only():
     text = ['serine residue', 'serine', 'a serine site']
     for t in text:
         residue, site = ReachProcessor._parse_site_text(t)
-        assert(residue == 'Serine')
+        assert(residue == 'serine')
         assert(site is None)
 
 def test_valid_name():
