@@ -7,43 +7,49 @@ def test_agent_basic():
     assert (s == 'EGFR')
 
 def test_agent_mod():
-    a = Agent('EGFR', mods=['Phosphorylation'], mod_sites=[None])
+    mc = ModCondition('phosphorylation')
+    a = Agent('EGFR', mods=mc)
     s = ea.assemble_agent_str(a)
     print s
     assert (s == 'phosphorylated EGFR')
 
 def test_agent_mod2():
-    a = Agent('EGFR', mods=['PhosphorylationTyrosine'], mod_sites=[None])
+    mc = ModCondition('phosphorylation', 'tyrosine')
+    a = Agent('EGFR', mods=mc)
     s = ea.assemble_agent_str(a)
     print s
     assert (s == 'tyrosine-phosphorylated EGFR')
 
 def test_agent_mod3():
-    a = Agent('EGFR', mods=['PhosphorylationTyrosine'], mod_sites=[1111])
+    mc = ModCondition('phosphorylation', 'tyrosine', '1111')
+    a = Agent('EGFR', mods=mc)
     s = ea.assemble_agent_str(a)
     print s
     assert (s == 'EGFR phosphorylated on Y1111')
 
 def test_agent_mods():
-    a = Agent('EGFR', mods=['PhosphorylationTyrosine', 
-              'PhosphorylationTyrosine'], mod_sites=[1111, 1234])
+    mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
+    mc2 = ModCondition('phosphorylation', 'tyrosine', '1234')
+    a = Agent('EGFR', mods=[mc1, mc2])
     s = ea.assemble_agent_str(a)
     print s
     assert (s == 'EGFR phosphorylated on Y1111 and Y1234')
 
 def test_agent_mods2():
-    a = Agent('EGFR', mods=['PhosphorylationTyrosine', 
-              'PhosphorylationTyrosine'], mod_sites=[1111, None])
+    mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
+    mc2 = ModCondition('phosphorylation', 'tyrosine')
+    a = Agent('EGFR', mods=[mc1, mc2])
     s = ea.assemble_agent_str(a)
     print s
-    assert (s == 'EGFR phosphorylated on Y1111 and a tyrosine residue')
+    assert (s == 'EGFR phosphorylated on Y1111 and tyrosine')
 
 def test_agent_mods3():
-    a = Agent('EGFR', mods=['PhosphorylationTyrosine', 
-              'Phosphorylation'], mod_sites=[1111, None])
+    mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
+    mc2 = ModCondition('phosphorylation')
+    a = Agent('EGFR', mods=[mc1, mc2])
     s = ea.assemble_agent_str(a)
     print s
-    assert (s == 'EGFR phosphorylated on Y1111 and an unknown site')
+    assert (s == 'EGFR phosphorylated on Y1111 and an unknown residue')
 
 def test_agent_bound():
     bc = BoundCondition(Agent('EGF'), True)
@@ -86,21 +92,22 @@ def test_agent_bound_mixed():
 
 def test_phos_noenz():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a, 'Phosphorylation', None)
+    st = Phosphorylation(None, a, ModCondition('phosphorylation'))
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated.')
 
 def test_phos_noenz2():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a, 'PhosphorylationSerine', None)
+    st = Phosphorylation(None, a, ModCondition('phosphorylation', 'serine'))
     s = ea.assemble_phosphorylation(st)
     print s
-    assert(s == 'MAP2K1 is phosphorylated on a serine residue.')
+    assert(s == 'MAP2K1 is phosphorylated on serine.')
 
 def test_phos_noenz3():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a, 'PhosphorylationSerine', 222)
+    st = Phosphorylation(None, a,
+                         ModCondition('phosphorylation', 'serine', '222'))
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated on S222.')
@@ -108,7 +115,8 @@ def test_phos_noenz3():
 def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('BRAF')
-    st = Phosphorylation(b, a, 'PhosphorylationSerine', 222)
+    st = Phosphorylation(b, a,
+                         ModCondition('phosphorylation', 'serine', '222'))
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'BRAF phosphorylates MAP2K1 on S222.')
@@ -116,7 +124,8 @@ def test_phos_enz():
 def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st = Dephosphorylation(b, a, 'PhosphorylationSerine', 222)
+    st = Dephosphorylation(b, a,
+                           ModCondition('phosphorylation', 'serine', '222'))
     s = ea.assemble_dephosphorylation(st)
     print s
     assert(s == 'PP2A dephosphorylates MAP2K1 on S222.')
@@ -141,7 +150,8 @@ def test_complex_more():
 def test_assemble_one():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st = Dephosphorylation(b, a, 'PhosphorylationSerine', 222)
+    st = Dephosphorylation(b, a,
+                           ModCondition('phosphorylation', 'serine', 222))
     e = ea.EnglishAssembler()
     e.add_statements([st])
     s = e.make_model()
@@ -151,7 +161,8 @@ def test_assemble_one():
 def test_assemble_more():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st1 = Dephosphorylation(b, a, 'PhosphorylationSerine', 222)
+    st1 = Dephosphorylation(b, a,
+                            ModCondition('phosphorylation', 'serine', 222))
     b = Agent('BRAF')
     c = Agent('RAF1')
     st2 = Complex([a, b, c])

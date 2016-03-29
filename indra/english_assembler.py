@@ -46,22 +46,27 @@ def assemble_agent_str(agent):
                 join_list(not_bound_to)
 
     # Handle modification conditions
-    # TODO: handle non-phosphorylation mods
     if agent.mods:
         # Special case
-        if len(agent.mods) == 1 and agent.mod_sites[0] is None:
-            agent_str = abbrev_prefix[agent.mods[0]] + ' ' + agent_str
+        if len(agent.mods) == 1 and agent.mods[0].position is None:
+            prefix = abbrev_prefix[agent.mods[0].mod_type]
+            if agent.mods[0].residue is not None:
+                prefix = agent.mods[0].residue + '-' + prefix
+            agent_str =  prefix + ' ' + agent_str
         else:
             if agent.bound_conditions:
                 agent_str += ' and'
-            agent_str += ' phosphorylated on '
+            # TODO: handle multiple different mod types
+            agent_str += ' %s on ' % abbrev_prefix[agent.mods[0].mod_type]
             mod_lst = []
-            for m, p in zip(agent.mods, agent.mod_sites):
-                if p is None:
-                    if abbrev_word[m]:
-                        mod_lst.append(abbrev_word[m])
+            for m in agent.mods:
+                if m.position is None:
+                    if m.residue is not None:
+                        mod_lst.append(m.residue)
+                    else:
+                        mod_lst.append('an unknown residue')
                 else:
-                    mod_lst.append(abbrev_letter[m] + str(p))
+                    mod_lst.append(abbrev_letter[m.residue] + m.position)
             agent_str += join_list(mod_lst)
 
     return agent_str
@@ -85,14 +90,14 @@ def assemble_phosphorylation(stmt):
         stmt_str = enz_str + ' phosphorylates ' + sub_str
     else:
         stmt_str = sub_str + ' is phosphorylated'
-    # TODO: mod, mod_pos
-    if stmt.mod_pos is None:
-        if stmt.mod != 'Phosphorylation':
-            mod_str = 'on ' + abbrev_word[stmt.mod]
+
+    if stmt.mod.residue is not None:
+        if stmt.mod.position is None:
+            mod_str = 'on ' + stmt.mod.residue
         else:
-            mod_str = ''
+            mod_str = 'on ' + abbrev_letter[stmt.mod.residue] + stmt.mod.position
     else:
-        mod_str = 'on ' + abbrev_letter[stmt.mod] + str(stmt.mod_pos)
+        mod_str = ''
     stmt_str += ' ' + mod_str
     return make_sentence(stmt_str)
 
@@ -103,14 +108,14 @@ def assemble_dephosphorylation(stmt):
         stmt_str = enz_str + ' dephosphorylates ' + sub_str
     else:
         stmt_str = sub_str + ' is dephosphorylated'
-    # TODO: mod, mod_pos
-    if stmt.mod_pos is None:
-        if stmt.mod != 'Phosphorylation':
-            mod_str = 'on ' + abbrev_word[stmt.mod]
+
+    if stmt.mod.residue is not None:
+        if stmt.mod.position is None:
+            mod_str = 'on ' + stmt.mod.residue
         else:
-            mod_str = ''
+            mod_str = 'on ' + abbrev_letter[stmt.mod.residue] + stmt.mod.position
     else:
-        mod_str = 'on ' + abbrev_letter[stmt.mod] + str(stmt.mod_pos)
+        mod_str = 'on an unknown residue '
     stmt_str += ' ' + mod_str
     return make_sentence(stmt_str)
 
@@ -126,22 +131,12 @@ def make_sentence(txt):
     return txt
 
 abbrev_letter = {
-    'Phosphorylation': 'an unknown site',
-    'PhosphorylationSerine': 'S',
-    'PhosphorylationThreonine': 'T',
-    'PhosphorylationTyrosine': 'Y',
-}
-
-abbrev_word = {
-    'Phosphorylation': 'an unknown site',
-    'PhosphorylationSerine': 'a serine residue',
-    'PhosphorylationThreonine': 'a threonine residue',
-    'PhosphorylationTyrosine': 'a tyrosine residue',
+    'serine': 'S',
+    'threonine': 'T',
+    'tyrosine': 'Y',
 }
 
 abbrev_prefix = {
-    'Phosphorylation': 'phosphorylated',
-    'PhosphorylationSerine': 'serine-phosphorylated',
-    'PhosphorylationThreonine': 'threonine-phosphorylated',
-    'PhosphorylationTyrosine': 'tyrosine-phosphorylated',
+    'phosphorylation': 'phosphorylated',
+    'ubiquitination': 'ubiquitinated'
 }
