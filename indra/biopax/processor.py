@@ -38,12 +38,12 @@ class BiopaxProcessor(object):
                 ev = Evidence(source_api='biopax',
                                pmid=None,
                                source_id=source_id)
-            else:        
+            else:
                 ev = [Evidence(source_api='biopax',
                                pmid=cit,
                                source_id=source_id)
                       for cit in citations]
-            
+
             members = self._get_complex_members(bpe)
             if members is not None:
                 if len(members) > 10:
@@ -54,31 +54,31 @@ class BiopaxProcessor(object):
                     self.statements.append(Complex(c, ev))
 
     def get_phosphorylation(self, force_contains=None):
-        stmts = self._get_generic_modification('phospho', 
+        stmts = self._get_generic_modification('phospho',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Phosphorylation(*s))
 
     def get_dephosphorylation(self, force_contains=None):
-        stmts = self._get_generic_modification('phospho', mod_gain=False, 
+        stmts = self._get_generic_modification('phospho', mod_gain=False,
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Dephosphorylation(*s))
 
     def get_acetylation(self, force_contains=None):
-        stmts = self._get_generic_modification('acetyl', 
+        stmts = self._get_generic_modification('acetyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Acetylation(*s))
 
     def get_glycosylation(self, force_contains=None):
-        stmts = self._get_generic_modification('glycosyl', 
+        stmts = self._get_generic_modification('glycosyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Glycosylation(*s))
 
     def get_palmitoylation(self, force_contains=None):
-        stmts = self._get_generic_modification('palmitoyl', 
+        stmts = self._get_generic_modification('palmitoyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Palmitoylation(*s))
@@ -99,28 +99,22 @@ class BiopaxProcessor(object):
             s = bpp('Searcher')
             res = s.searchPlain(self.model, p)
             res_array = [match_to_array(m) for m in res.toArray()]
-        
+
             for r in res_array:
                 reaction = r[p.indexOf('Conversion')]
                 citations = self._get_citations(reaction)
                 activity = 'Activity'
                 input_spe = r[p.indexOf('input simple PE')]
                 output_spe = r[p.indexOf('output simple PE')]
-                
+
                 # Get the modifications
-                mod_in, mod_pos_in =\
-                    BiopaxProcessor._get_modification_site(input_spe)
-                mod_out, mod_pos_out =\
-                    BiopaxProcessor._get_modification_site(output_spe)
-                
-                mod_shared = set(zip(mod_in, mod_pos_in)).intersection(
-                                set(zip(mod_out, mod_pos_out)))
-                
-                gained_mods = set(zip(mod_out, mod_pos_out)).difference(
-                                set(zip(mod_in, mod_pos_in)))
-               
-                if reaction.getUri() == 'http://purl.org/pc2/7/BiochemicalReaction_c45901184c1c3797aba1b72d76700f37':
-                    import ipdb; ipdb.set_trace()
+                mod_in =\
+                    BiopaxProcessor._get_entity_mods(input_spe)
+                mod_out =\
+                    BiopaxProcessor._get_entity_mods(output_spe)
+
+                mod_shared = set(mod_in).intersection(set(mod_out))
+                gained_mods = set(mod_out).difference(set(mod_in))
 
                 # Here we get the evidence for the BiochemicalReaction
                 source_id = reaction.getUri()
@@ -129,31 +123,25 @@ class BiopaxProcessor(object):
                     ev = Evidence(source_api='biopax',
                                   pmid=None,
                                   source_id=source_id)
-                else:        
+                else:
                     ev = [Evidence(source_api='biopax',
                                    pmid=cit,
                                    source_id=source_id)
                           for cit in citations]
-                
+
                 monomers = self._get_agents_from_entity(output_spe)
                 for monomer in listify(monomers):
                     if force_contains is not None:
                         if momomer not in force_contains:
                             continue
                     static_mods =\
-                        set(zip(monomer.mods, 
-                                monomer.mod_sites)).difference(gained_mods)
-                    monomer.mods = [s[0] for s in static_mods]
-                    monomer.mod_sites = [s[1] for s in static_mods]
-                    
-                    mods = [m[0] for m in gained_mods 
-                            if m[0] not in ['Active', 'Inactive']]
-                    mod_sites = [m[1] for m in gained_mods 
-                                 if m[0] not in ['Active', 'Inactive']]
-                        #self._get_modification_site(output_spe,
-                        #                            get_activity=False)
+                        set(monomer.mods).difference(gained_mods)
+                    monomer.mods = static_mods
+
+                    mods = [m for m in gained_mods 
+                            if m.mod_type not in ['active', 'inactive']]
                     if mods:
-                        stmt = ActivityModification(monomer, mods, mod_sites,
+                        stmt = ActivityModification(monomer, mods,
                                                 relationship, activity,
                                                 evidence=ev)
                         self.statements.append(stmt)
@@ -164,18 +152,18 @@ class BiopaxProcessor(object):
         # of lists since complexes can contain other complexes. The 
         # list of lists solution allows us to preserve this.
         member_pes = cplx.getComponent().toArray()
-        
+
         # Make a dict of member URIs and their
         # corresponding stoichiometries
         member_stos = {s.getPhysicalEntity().getUri():
-                        s.getStoichiometricCoefficient() for 
+                        s.getStoichiometricCoefficient() for
                         s in cplx.getComponentStoichiometry().toArray()}
 
         # Some complexes do not have any members explicitly listed
         if not member_pes:
             member_pes = cplx.getMemberPhysicalEntity().toArray()
             if not member_pes:
-                warnings.warn('Complex "%s" has no members.' % 
+                warnings.warn('Complex "%s" has no members.' %
                               cplx.getDisplayName())
                 return None
         members = []
@@ -197,25 +185,26 @@ class BiopaxProcessor(object):
                 for i in range(sto_int):
                     members.append(ma)
         return members
-    
-    @staticmethod
-    def _get_modification_site(modPE, get_activity=True):
-        # Do we need to look at EntityFeatures?
-        modMF = [mf for mf in modPE.getFeature().toArray()
-                 if isinstance(mf, bpimpl('ModificationFeature'))]
-        mod_pos = []
-        mod = []
 
-        for mf in modMF:
-            mod1, mod_pos1 = BiopaxProcessor._extract_mod_from_feature(mf)
-            if not get_activity and mod1 in ['Active', 'Inactive']:
-                continue
-            mod.append(mod1)
-            mod_pos.append(mod_pos1)
-        return mod, mod_pos 
+    @staticmethod
+    def _get_entity_mods(bpe, get_activity=True):
+        """Get all the modifications of an entity in INDRA format"""
+        feats = [f for f in bpe.getFeature().toArray() if is_modification(f)]
+        mods = []
+        for f in feats:
+            mc = BiopaxProcessor._extract_mod_from_feature(f)
+            if mc is not None:
+                if not get_activity and mc.mod_type in ['active', 'inactive']:
+                    # Skip activity as a modification state for now
+                    continue
+                mods.append(mc)
+        return mods
 
     def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
                                   force_contains=None):
+        '''
+        Get all modification reactions given a filter
+        '''
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
         # Start with a generic modification pattern
@@ -240,7 +229,7 @@ class BiopaxProcessor(object):
             output_spe = r[p.indexOf('output simple PE')]
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
-           
+
             if not is_catalysis(control):
                 continue
             cat_dir = control.getCatalysisDirection()
@@ -271,7 +260,7 @@ class BiopaxProcessor(object):
                 ev = Evidence(source_api='biopax',
                                pmid=None,
                                source_id=source_id)
-            else:        
+            else:
                 ev = [Evidence(source_api='biopax',
                                pmid=cit,
                                source_id=source_id)
@@ -287,31 +276,27 @@ class BiopaxProcessor(object):
                     if (enz.name not in force_contains) and \
                         (sub.name not in force_contains):
                         continue
-                
+
                 # Get the modifications
-                mod_in, mod_pos_in =\
-                    BiopaxProcessor._get_modification_site(input_spe)
-                mod_out, mod_pos_out =\
-                    BiopaxProcessor._get_modification_site(output_spe)
-                
-                mod_shared = set(zip(mod_in, mod_pos_in)).intersection(
-                                set(zip(mod_out, mod_pos_out)))
-                
-                sub.mods = [s[0] for s in mod_shared]
-                sub.mod_sites = [s[1] for s in mod_shared]
+                mod_in =\
+                    BiopaxProcessor._get_entity_mods(input_spe)
+                mod_out =\
+                    BiopaxProcessor._get_entity_mods(output_spe)
+
+                mod_shared = set(mod_in).intersection(set(mod_out))
+
+                sub.mods = mod_shared
 
                 if mod_gain:
-                    gained_mods = set(zip(mod_out, mod_pos_out)).difference(
-                                    set(zip(mod_in, mod_pos_in)))
+                    gained_mods = set(mod_out).difference(set(mod_in))
                 else:
-                    gained_mods = set(zip(mod_in, mod_pos_in)).difference(
-                                    set(zip(mod_out, mod_pos_out)))
+                    gained_mods = set(mod_in).difference(set(mod_out))
 
-                for m, mp in gained_mods:
-                    if m  in ['Active', 'Inactive']:
+                for m in gained_mods:
+                    if m.mod_type  in ['active', 'inactive']:
                         # Skip activity as a modification state
                         continue
-                    stmt = (enz, sub, m, mp, ev)
+                    stmt = (enz, sub, m, ev)
                     stmts.append(stmt)
         return stmts
 
@@ -334,6 +319,9 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _construct_modification_pattern():
+        '''
+        Constructs the BioPAX pattern to extract modification reactions
+        '''
         pb = bpp('PatternBox')
         cb = bpp('constraint.ConBox')
         flop = bpp('constraint.Field$Operation')
@@ -395,10 +383,10 @@ class BiopaxProcessor(object):
                     else:
                         agents.extend(member_agents)
                 return agents
-        
+
         # If the entity has a reference which has members, we iterate
         # over them.
-        mods, mod_sites = BiopaxProcessor._get_entity_mods(bpe)
+        mods = BiopaxProcessor._get_entity_mods(bpe)
 
         if expand_er:
             er = BiopaxProcessor._get_entref(bpe)
@@ -409,33 +397,15 @@ class BiopaxProcessor(object):
                     for m in members:
                         name = BiopaxProcessor._get_element_name(m)
                         db_refs = BiopaxProcessor._get_db_refs(m)
-                        agents.append(Agent(name, db_refs=db_refs, 
-                                      mods=mods, mod_sites=mod_sites))
+                        agents.append(Agent(name, db_refs=db_refs, mods=mods))
                     return agents
         # If it is a single entity, we get its name and database
         # references
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
-        agent = Agent(name, db_refs=db_refs, mods=mods, mod_sites=mod_sites)
+        agent = Agent(name, db_refs=db_refs, mods=mods)
         return agent
 
-    @staticmethod
-    def _get_entity_mods(bpe):
-        """Get all the modifications of an entity in INDRA format"""
-        feats = bpe.getFeature().toArray()
-        mod_types = []
-        mod_poss = []
-        for f in feats:
-            if is_modification(f):
-                mod_type, mod_pos = BiopaxProcessor._extract_mod_from_feature(f)
-                if mod_type is not None:
-                    if mod_type in ['Active', 'Inactive']:
-                        # Skip activity as a modification state for now
-                        continue
-                    mod_types.append(mod_type)
-                    mod_poss.append(mod_pos)
-        return mod_types, mod_poss
-    
     @staticmethod
     def _extract_mod_from_feature(mf):
         """Extract the type of modification and the position from
@@ -443,16 +413,15 @@ class BiopaxProcessor(object):
         # ModificationFeature / SequenceModificationVocabulary
         mf_type = mf.getModificationType()
         if mf_type is None:
-            #warnings.warn('Modification type missing for  %s' % mf.getUri())
-            return None, None
+            return None
         if len(mf_type.getTerm().toArray()) != 1:
             warnings.warn('Other than one modification term')
         mf_type = mf_type.getTerm().toArray()[0]
         try:
-            mod_type = BiopaxProcessor._mftype_dict[mf_type]
+            mod_type, residue = BiopaxProcessor._mftype_dict[mf_type]
         except KeyError:
             warnings.warn('Ignored modification type %s' % mf_type)
-            return None, None
+            return None
 
         # getFeatureLocation returns SequenceLocation, which is the
         # generic parent class of SequenceSite and SequenceInterval.
@@ -471,7 +440,8 @@ class BiopaxProcessor(object):
                 mod_pos = mf_site.getSequencePosition()
         else:
             mod_pos = None
-        return mod_type, mod_pos
+        mc = ModCondition(mod_type, residue, mod_pos)
+        return mc
 
     @staticmethod
     def _get_db_refs(bpe):
@@ -518,13 +488,13 @@ class BiopaxProcessor(object):
                 bpe.getModelInterface().getName())
             import ipdb; ipdb.set_trace()
             name = bpe.getDisplayName()
-        
+
         # Canonicalize name
         name = re.sub(r'[^\w]', '_', name)
         if re.match('[0-9]', name) is not None:
             name = 'p' + name
         return name
-    
+
     @staticmethod
     def _get_uniprot_id(bpe):
         # There is often more than one UniProt ID reported.
@@ -575,12 +545,12 @@ class BiopaxProcessor(object):
             except ValueError:
                 continue
         return hgnc_id
-    
+
     @staticmethod
     def _get_hgnc_name(hgnc_id):
         hgnc_name = hgnc_client.get_hgnc_name(str(hgnc_id))
         return hgnc_name
-    
+
     @staticmethod
     def _get_entref(bpe):
         """Returns the entity reference of an entity if it exists or
@@ -597,7 +567,7 @@ class BiopaxProcessor(object):
     def print_statements(self):
         for i, stmt in enumerate(self.statements):
             print "%s: %s" % (i, stmt)
-    
+
     def save_model(self, file_name=None):
         if file_name is None:
             print 'Missing file name'
@@ -605,13 +575,13 @@ class BiopaxProcessor(object):
         pcc.model_to_owl(self.model, file_name)
 
     _mftype_dict = {
-        'phosphorylated residue': 'Phosphorylation',
-        'O-phospho-L-serine': 'PhosphorylationSerine',
-        'O-phospho-L-threonine': 'PhosphorylationThreonine',
-        'O-phospho-L-tyrosine': 'PhosphorylationTyrosine',
-        'O4\'-phospho-L-tyrosine': 'PhosphorylationTyrosine',
-        'residue modification, active': 'Active',
-        'residue modification, inactive': 'Inactive'
+        'phosphorylated residue': ('phosphorylation', None),
+        'O-phospho-L-serine': ('phosphorylation', 'serine'),
+        'O-phospho-L-threonine': ('phosphorylation', 'threonine'),
+        'O-phospho-L-tyrosine': ('phosphorylation', 'tyrosine'),
+        'O4\'-phospho-L-tyrosine': ('phosphorylation', 'tyrosine'),
+        'residue modification, active': ('active', None),
+        'residue modification, inactive': ('inactive', None)
         }
 
 # Functions for accessing frequently used java classes with shortened path
