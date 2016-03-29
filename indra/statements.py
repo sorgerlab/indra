@@ -73,7 +73,7 @@ class Agent(object):
 
     def matches_key(self):
         key = (self.name,
-               set(self.mods),
+               set([m.matches_key() for m in self.mods]),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
