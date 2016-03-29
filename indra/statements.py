@@ -25,6 +25,17 @@ class ModCondition(object):
             (self.position is not None and other.position is None))
         return (type_match and residue_match and pos_match)
 
+    def __str__(self):
+        ms = '%s' % self.mod_type
+        if self.residue is not None:
+            ms += ', %s' % self.residue
+        if self.position is not None:
+            ms += ', %s' % self.position
+        if not self.is_modified:
+            ms += ', FALSE'
+        ms = '(' + ms + ')'
+        return ms
+
 class Agent(object):
 
     def __init__(self, name, mods=None, active=None,
@@ -136,9 +147,8 @@ class Agent(object):
     def __str__(self):
         attr_strs = []
         if self.mods:
-            attr_strs += [append('mods: [%s, %s, %s]' %\
-                            (m.type, m.residue, m.pos))
-                            for m in self.mods]
+            mod_str = 'mods: '
+            mod_str += ', '.join(['%s' % m for m in self.mods])
         if self.active:
             attr_strs.append('active: %s' % self.active)
         if self.bound_conditions:
@@ -293,13 +303,13 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if self.mod.matches(other.mod, mod_hierarchy):    
+        if self.mod.matches(other.mod, mod_hierarchy):
             return True
         else:
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s)" %
                   (type(self).__name__, self.enz, self.sub, self.mod))
         return s
 
@@ -496,10 +506,9 @@ class ActivityModification(Statement):
             return False
 
     def __str__(self):
-        s = ("ActivityModification(%s, %s, %s, %s, %s)" %
-                (self.monomer, self.mod, self.relationship,
-                #(str(self.monomer), self.mod, self.mod, self.relationship,
-                 self.activity))
+        mods = '[' + ', '.join(['%s' % m for m in self.mod]) + ']'
+        s = ("ActivityModification(%s, %s, %s, %s)" %
+                (self.monomer, mods, self.relationship, self.activity))
         return s
 
 
