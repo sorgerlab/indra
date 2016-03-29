@@ -27,14 +27,14 @@ def test_activitymod_sitelist_of_ints():
 def testactivitymod_string_string():
     """Check that string mod position is preserved"""
     st = ActivityModification(Agent('MAP2K1'),
-                              [ModCondition('phosphorylation' 'serine', '218')],
+                              [ModCondition('phosphorylation', 'serine', '218')],
                               'increases', 'KinaseActivity')
     assert isinstance(st.mod[0].position, basestring)
 
 def testactivitymod_string_none():
     """Check that None mod position is preserved"""
     st = ActivityModification(Agent('MAP2K1'),
-                              [ModCondition('phosphorylation' 'serine', None)],
+                              [ModCondition('phosphorylation', 'serine', None)],
                               'increases', 'KinaseActivity')
     assert (st.mod[0].position is None)
 
@@ -65,35 +65,29 @@ def test_matches_key():
 def test_matches2():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    mc = ModCondition('phosphorylation')
-    st1 = Phosphorylation(raf, mek, mc)
-    st2 = Phosphorylation(raf, mek, mc)
+    st1 = Phosphorylation(raf, mek)
+    st2 = Phosphorylation(raf, mek)
     assert(st1.matches(st2))
 
 def test_matches_key2():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    mc = ModCondition('phosphorylation')
-    st1 = Phosphorylation(raf, mek, mc)
-    st2 = Phosphorylation(raf, mek, mc)
+    st1 = Phosphorylation(raf, mek)
+    st2 = Phosphorylation(raf, mek)
     assert(st1.matches_key() == st2.matches_key())
 
 def test_not_matches():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    mc1 = ModCondition('phosphorylation')
-    mc2 = ModCondition('phosphorylation', residue='tyrosine')
-    st1 = Phosphorylation(raf, mek, mc1)
-    st2 = Phosphorylation(raf, mek, mc2)
+    st1 = Phosphorylation(raf, mek)
+    st2 = Phosphorylation(raf, mek, 'tyrosine')
     assert(not st1.matches(st2))
 
 def test_not_matches_key():
     raf = Agent('Raf')
     mek = Agent('Mek')
-    mc1 = ModCondition('phosphorylation')
-    mc2 = ModCondition('phosphorylation', residue='tyrosine')
-    st1 = Phosphorylation(raf, mek, mc1)
-    st2 = Phosphorylation(raf, mek, mc2)
+    st1 = Phosphorylation(raf, mek)
+    st2 = Phosphorylation(raf, mek, 'tyrosine')
     assert(st1.matches_key() != st2.matches_key())
 
 def test_matches_dbrefs():
@@ -181,14 +175,11 @@ def test_matches_selfmod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Autophosphorylation(nras1, ModCondition('phosphorylation',
-                                                  'tyrosine', '32'),
+    st1 = Autophosphorylation(nras1, 'tyrosine', '32',
                               evidence=Evidence(text='foo'))
-    st2 = Autophosphorylation(nras1, ModCondition('phosphorylation',
-                                                  'tyrosine', '32'),
+    st2 = Autophosphorylation(nras1, 'tyrosine', '32',
                               evidence=Evidence(text='bar'))
-    st3 = Autophosphorylation(nras2, ModCondition('phosphorylation'),
-                              evidence=Evidence(text='bar'))
+    st3 = Autophosphorylation(nras2, evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
@@ -293,8 +284,7 @@ def test_entities_match_mod():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Phosphorylation(src, nras1, ModCondition('phosphorylation',
-                                                   'tyrosine', '32'),
+    st1 = Phosphorylation(src, nras1, 'tyrosine', '32',
                           evidence=Evidence(text='foo'))
     st2 = Phosphorylation(src, nras2, ModCondition('phosphorylation'),
                           evidence=Evidence(text='bar'))
@@ -304,11 +294,9 @@ def test_entities_match_selfmod():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Autophosphorylation(nras1,
-                          ModCondition('phosphorylation', 'tyrosine', '32'),
+    st1 = Autophosphorylation(nras1, 'tyrosine', '32',
                           evidence=Evidence(text='foo'))
     st2 = Autophosphorylation(nras2,
-                          ModCondition('phosphorylation'),
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -525,18 +513,12 @@ def test_agent_modification_refinement():
 def test_phosphorylation_modification_refinement():
     braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
     mek1 = Agent('MAP2K1', db_refs = {'HGNC': 'map2k1'})
-    p1 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation'))
-    p2 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', position='218'))
-    p3 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', position='222'))
-    p4 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine'))
-    p5 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine', '218'))
-    p6 = Phosphorylation(braf, mek1,
-                         ModCondition('phosphorylation', 'serine', '222'))
+    p1 = Phosphorylation(braf, mek1)
+    p2 = Phosphorylation(braf, mek1, position='218')
+    p3 = Phosphorylation(braf, mek1, position='222')
+    p4 = Phosphorylation(braf, mek1, 'serine')
+    p5 = Phosphorylation(braf, mek1, 'serine', '218')
+    p6 = Phosphorylation(braf, mek1, 'serine', '222')
 
     # p1
     assert p2.refinement_of(p1, eh, mh)
@@ -577,18 +559,12 @@ def test_phosphorylation_modification_refinement():
 
 def test_autophosphorylation_modification_refinement():
     braf = Agent('BRAF', db_refs = {'HGNC': 'braf'})
-    p1 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation'))
-    p2 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation', position='218'))
-    p3 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation', position='222'))
-    p4 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation', 'serine'))
-    p5 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation', 'serine', '218'))
-    p6 = Autophosphorylation(braf,
-                             ModCondition('phosphorylation', 'serine', '222'))
+    p1 = Autophosphorylation(braf,)
+    p2 = Autophosphorylation(braf, position='218')
+    p3 = Autophosphorylation(braf, position='222')
+    p4 = Autophosphorylation(braf, 'serine')
+    p5 = Autophosphorylation(braf, 'serine', '218')
+    p6 = Autophosphorylation(braf, 'serine', '222')
 
     # p1
     assert p2.refinement_of(p1, eh, mh)

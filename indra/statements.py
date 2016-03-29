@@ -25,6 +25,9 @@ class ModCondition(object):
             (self.position is not None and other.position is None))
         return (type_match and residue_match and pos_match)
 
+    def matches_key(self):
+        return (self.mod_type, self.residue, self.position, self.is_modified)
+
     def __str__(self):
         ms = '%s' % self.mod_type
         if self.residue is not None:
@@ -265,18 +268,23 @@ class Statement(object):
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
-    def __init__(self, enz, sub, mod, evidence=None):
+    def __init__(self, enz, sub, residue=None, position=None, evidence=None):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
-        self.mod = mod
+        self.residue = residue
+        if position is not None:
+            if not isinstance(position, basestring):
+                position = str(position)
+        self.position = position
 
     def matches_key(self):
         if self.enz is None:
             enz_key = None
         else:
             enz_key = self.enz.matches_key()
-        key = (type(self), enz_key, self.sub.matches_key(), self.mod)
+        key = (type(self), enz_key, self.sub.matches_key(),
+               self.residue, self.position)
         return str(key)
 
     def agent_list(self):
@@ -303,32 +311,40 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if self.mod.matches(other.mod, mod_hierarchy):
-            return True
-        else:
-            return False
+        residue_matches = (other.residue is None or\
+                           (self.residue == other.residue))
+        position_matches = (other.position is None or\
+                            (self.position == other.position))
+        return (residue_matches and position_matches)
 
     def __str__(self):
-        s = ("%s(%s, %s, %s)" %
-                  (type(self).__name__, self.enz, self.sub, self.mod))
+        s = ("%s(%s, %s, %s, %s)" %
+                  (type(self).__name__, self.enz, self.sub,
+                   self.residue, self.position))
         return s
 
 
 class SelfModification(Statement):
     """Generic statement representing the self modification of a protein"""
 
-    def __init__(self, enz, mod, evidence=None):
+    def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
-        self.mod = mod
+        self.residue = residue
+        if position is not None:
+            if not isinstance(position, basestring):
+                position = str(position)
+        self.position = position
 
     def __str__(self):
-        s = ("%s(%s, %s, %s)" %
-             (type(self).__name__, self.enz.name, self.mod))
+        s = ("%s(%s, %s, %s, %s)" %
+             (type(self).__name__, self.enz.name,
+              self.residue, self.position))
         return s
 
     def matches_key(self):
-        key = (type(self), self.enz.matches_key(), self.mod)
+        key = (type(self), self.enz.matches_key(),
+               self.residue, self.position)
         return str(key)
 
     def agent_list(self):
@@ -347,10 +363,11 @@ class SelfModification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        if self.mod.matches(other.mod, mod_hierarchy):
-            return True
-        else:
-            return False
+        residue_matches = (other.residue is None or\
+                           (self.residue == other.residue))
+        position_matches = (other.position is None or\
+                            (self.position == other.position))
+        return (residue_matches and position_matches)
 
 
 class Phosphorylation(Modification):
@@ -462,7 +479,8 @@ class ActivityModification(Statement):
         self.activity = activity
 
     def matches_key(self):
-        key = (type(self), self.monomer.matches_key(), self.mod,
+        mod_key = [m.matches_key() for m in self.mod]
+        key = (type(self), self.monomer.matches_key(), mod_key,
                 self.relationship, self.activity)
         return str(key)
 
@@ -490,7 +508,7 @@ class ActivityModification(Statement):
             other_mod = other.mod[other_mod_ix]
             for self_mod_ix in range(len(self.mod)):
                 self_mod = self.mod[self_mod_ix]
-                if self_mod.matches(other_mod, mod_hierarchy):    
+                if self_mod.matches(other_mod, mod_hierarchy):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
