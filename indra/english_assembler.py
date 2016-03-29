@@ -91,11 +91,11 @@ def assemble_phosphorylation(stmt):
     else:
         stmt_str = sub_str + ' is phosphorylated'
 
-    if stmt.mod.residue is not None:
-        if stmt.mod.position is None:
-            mod_str = 'on ' + stmt.mod.residue
+    if stmt.residue is not None:
+        if stmt.position is None:
+            mod_str = 'on ' + stmt.residue
         else:
-            mod_str = 'on ' + abbrev_letter[stmt.mod.residue] + stmt.mod.position
+            mod_str = 'on ' + abbrev_letter[stmt.residue] + stmt.position
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
@@ -109,11 +109,11 @@ def assemble_dephosphorylation(stmt):
     else:
         stmt_str = sub_str + ' is dephosphorylated'
 
-    if stmt.mod.residue is not None:
-        if stmt.mod.position is None:
-            mod_str = 'on ' + stmt.mod.residue
+    if stmt.residue is not None:
+        if stmt.position is None:
+            mod_str = 'on ' + stmt.residue
         else:
-            mod_str = 'on ' + abbrev_letter[stmt.mod.residue] + stmt.mod.position
+            mod_str = 'on ' + abbrev_letter[stmt.residue] + stmt.position
     else:
         mod_str = 'on an unknown residue '
     stmt_str += ' ' + mod_str

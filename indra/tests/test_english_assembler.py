@@ -92,22 +92,21 @@ def test_agent_bound_mixed():
 
 def test_phos_noenz():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a, ModCondition('phosphorylation'))
+    st = Phosphorylation(None, a)
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated.')
 
 def test_phos_noenz2():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a, ModCondition('phosphorylation', 'serine'))
+    st = Phosphorylation(None, a, 'serine')
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated on serine.')
 
 def test_phos_noenz3():
     a = Agent('MAP2K1')
-    st = Phosphorylation(None, a,
-                         ModCondition('phosphorylation', 'serine', '222'))
+    st = Phosphorylation(None, a, 'serine', '222')
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated on S222.')
@@ -115,8 +114,7 @@ def test_phos_noenz3():
 def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('BRAF')
-    st = Phosphorylation(b, a,
-                         ModCondition('phosphorylation', 'serine', '222'))
+    st = Phosphorylation(b, a, 'serine', '222')
     s = ea.assemble_phosphorylation(st)
     print s
     assert(s == 'BRAF phosphorylates MAP2K1 on S222.')
@@ -124,8 +122,7 @@ def test_phos_enz():
 def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st = Dephosphorylation(b, a,
-                           ModCondition('phosphorylation', 'serine', '222'))
+    st = Dephosphorylation(b, a, 'serine', '222')
     s = ea.assemble_dephosphorylation(st)
     print s
     assert(s == 'PP2A dephosphorylates MAP2K1 on S222.')
@@ -150,8 +147,7 @@ def test_complex_more():
 def test_assemble_one():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st = Dephosphorylation(b, a,
-                           ModCondition('phosphorylation', 'serine', 222))
+    st = Dephosphorylation(b, a, 'serine', 222)
     e = ea.EnglishAssembler()
     e.add_statements([st])
     s = e.make_model()
@@ -161,8 +157,7 @@ def test_assemble_one():
 def test_assemble_more():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
-    st1 = Dephosphorylation(b, a,
-                            ModCondition('phosphorylation', 'serine', 222))
+    st1 = Dephosphorylation(b, a, 'serine', 222)
     b = Agent('BRAF')
     c = Agent('RAF1')
     st2 = Complex([a, b, c])
