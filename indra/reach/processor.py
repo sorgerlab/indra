@@ -84,19 +84,17 @@ class ReachProcessor(object):
             #continue
 
             theme_agent = self._get_agent_from_entity(theme)
-            mod = 'Phosphorylation'
             if site is not None:
                 residue, pos = self._parse_site_text(site)
             else:
-                residue = ''
+                residue = None
                 pos = None
-            mod = mod + residue
             sentence = r['verbose-text']
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
             self.statements.append(Phosphorylation(controller_agent,
-                                   theme_agent, mod, pos, ev))
+                                   theme_agent, residue, pos, ev))
 
     def get_complexes(self):
         qstr = "$.events.frames[@.type is 'complex-assembly']"
@@ -192,7 +190,6 @@ class ReachProcessor(object):
 
         mod_terms = entity_term.get('modifications')
         mods = []
-        mod_sites = []
         if mod_terms is not None:
             for m in mod_terms:
                 if m['type'] == 'mutation':
@@ -206,20 +203,16 @@ class ReachProcessor(object):
                     site = m.get('site')
                     if site is not None:
                         mod_res, mod_pos = self._parse_site_text(site)
-                        mod = 'Phosphorylation' + mod_res
+                        mod = ModCondition('phosphorylation', mod_res, mod_pos)
                         mods.append(mod)
-                        mod_sites.append(mod_pos)
                     else:
-                        mods.append('Phosphorylation')
-                        mod_sites.append(None)
+                        mods.append(ModCondition('phosphorylation'))
                 elif m['type'] == 'Ubiquitination':
-                    mods.append('Ubiquitination')
-                    mod_sites.append(None)
+                    mods.append(ModCondition('ubiquitination'))
                 else:
                     print 'Unhandled entity modification type: %s' % m['type']
 
-        agent = Agent(agent_name, db_refs=db_refs, mods=mods,
-                      mod_sites=mod_sites)
+        agent = Agent(agent_name, db_refs=db_refs, mods=mods)
         return agent
 
     @staticmethod
