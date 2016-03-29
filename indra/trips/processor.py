@@ -276,25 +276,31 @@ class TripsProcessor(object):
                                            [BoundCondition(agent_bound, True)]
                 for m in mods:
                     self.statements.append(Transphosphorylation(enzyme_agent,
-                                           m, evidence=ev))
+                                            m.residue, m.position,
+                                            evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for m in mods:
                     self.statements.append(Dephosphorylation(enzyme_agent,
-                                           affected_agent, m, evidence=ev))
+                                            affected_agent,
+                                            m.residue, m.position,
+                                            evidence=ev))
             # Autophosphorylation
             elif enzyme_agent is not None and\
                 (enzyme.attrib['id'] == affected.attrib['id']):
                 for m in mods:
                     self.statements.append(Autophosphorylation(enzyme_agent,
-                                           m, evidence=ev))
+                                            m.residue, m.position,
+                                            evidence=ev))
             # Regular phosphorylation
             else:
                 if mods is None:
                     continue
                 for m in mods:
                     self.statements.append(Phosphorylation(enzyme_agent,
-                                            affected_agent, m, evidence=ev))
+                                            affected_agent,
+                                            m.residue, m.position,
+                                            evidence=ev))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
 

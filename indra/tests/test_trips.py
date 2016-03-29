@@ -12,30 +12,24 @@ def test_phosphorylation():
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
-    assert(isinstance(st.mod, ist.ModCondition))
-    assert(st.mod.mod_type == 'phosphorylation')
-    assert(st.mod.residue == 'serine')
-    assert(st.mod.position == '222')
+    assert(st.residue == 'serine')
+    assert(st.position == '222')
 
 def test_phosphorylation_noresidue():
     tp = trips_api.process_text('BRAF phosphorylates MEK1.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
-    assert(isinstance(st.mod, ist.ModCondition))
-    assert(st.mod.mod_type == 'phosphorylation')
-    assert(st.mod.residue is None)
-    assert(st.mod.position is None)
+    assert(st.residue is None)
+    assert(st.position is None)
 
 def test_phosphorylation_nosite():
     tp = trips_api.process_text('BRAF phosphorylates MEK1 at Serine.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
-    assert(isinstance(st.mod, ist.ModCondition))
-    assert(st.mod.mod_type == 'phosphorylation')
-    assert(st.mod.residue == 'serine')
-    assert(st.mod.position is None)
+    assert(st.residue == 'serine')
+    assert(st.position is None)
 
 def test_actmod():
     tp = trips_api.process_text('MEK1 phosphorylated at Ser222 is activated.')
