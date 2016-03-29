@@ -74,7 +74,7 @@ collecting the results in INDRA statements.
 
 ```python
 from indra.reach import reach_api
-from indra.databases import pubmed_client
+from indra.literature import pubmed_client
 # Search for 10 most recent abstracts in PubMed on 'BRAF'
 pmids = pubmed_client.get_ids('BRAF', 10)
 all_statements = []
