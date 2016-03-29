@@ -337,7 +337,7 @@ class SelfModification(Statement):
         self.position = position
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
+        s = ("%s(%s, %s, %s)" %
              (type(self).__name__, self.enz.name,
               self.residue, self.position))
         return s
