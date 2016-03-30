@@ -160,32 +160,32 @@ class BelProcessor(object):
             sub_name = gene_name_from_uri(stmt[2])
             sub = Agent(sub_name)
             mod = term_from_uri(stmt[3])
+            residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[4])
-            mc = self._get_mod_condition(mod, mod_pos)
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
             if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
                 self.statements.append(
-                        Phosphorylation(enz, sub, mc.residue, mc.position,
+                        Phosphorylation(enz, sub, residue, mod_pos,
                                         evidence))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.statements.append(
-                            Hydroxylation(enz, sub, mc.residue, mc.position,
+                            Hydroxylation(enz, sub, residue, mod_pos,
                                           evidence))
                 elif mod == 'Sumoylation':
                     self.statements.append(
-                            Sumoylation(enz, sub, mc.residue, mc.position,
+                            Sumoylation(enz, sub, residue, mod_pos,
                                         evidence))
                 elif mod == 'Acetylation':
                     self.statements.append(
-                            Acetylation(enz, sub, mc.residue, mc.position,
+                            Acetylation(enz, sub, residue, mod_pos,
                                         evidence))
                 elif mod == 'Ubiquitination':
                     self.statements.append(
-                            Ubiquitination(enz, sub, mc.residue, mc.position,
+                            Ubiquitination(enz, sub, residue, mod_pos,
                                            evidence))
                 else:
                     print "Warning: Unknown modification type!"
@@ -197,17 +197,24 @@ class BelProcessor(object):
                       (act_type, mod, mod_pos))
 
     @staticmethod
+    def _get_residue(mod):
+        if mod.startswith('Phosphorylation'):
+            if mod == 'Phosphorylation':
+                residue = None
+            else:
+                residue = mod[15:].lower()
+        else:
+            residue = None
+        return residue
+
+    @staticmethod
     def _get_mod_condition(mod, mod_pos):
         if mod.startswith('Phosphorylation'):
             mc = ModCondition('phosphorylation')
-            if mod == 'Phosphorylation':
-                mc.residue = None
-            else:
-                mc.residue = mod[15:].lower()
-            mc.position = mod_pos
         else:
             mc = ModCondition(mod)
-            mc.position = mod_pos
+        mc.residue = BelProcessor._get_residue(mod)
+        mc.position = mod_pos
         return mc
 
     def get_dephosphorylations(self):
