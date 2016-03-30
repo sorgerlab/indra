@@ -152,6 +152,7 @@ class Agent(object):
         if self.mods:
             mod_str = 'mods: '
             mod_str += ', '.join(['%s' % m for m in self.mods])
+            attr_strs.append(mod_str)
         if self.active:
             attr_strs.append('active: %s' % self.active)
         if self.bound_conditions:
