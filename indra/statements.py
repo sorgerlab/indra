@@ -16,7 +16,7 @@ class ModCondition(object):
             self.position = position
         self.is_modified = is_modified
 
-    def matches(self, other, mod_hierarchy):
+    def refinement_of(self, other, mod_hierarchy):
         type_match = (self.mod_type == other.mod_type or \
             mod_hierarchy.isa(self.mod_type, other.mod_type))
         residue_match = (self.residue == other.residue or \
@@ -25,8 +25,12 @@ class ModCondition(object):
             (self.position is not None and other.position is None))
         return (type_match and residue_match and pos_match)
 
+    def matches(self, other):
+        return (self.matches_key() == other.matches_key())
+
     def matches_key(self):
-        return (self.mod_type, self.residue, self.position, self.is_modified)
+        key = (self.mod_type, self.residue, self.position, self.is_modified)
+        return str(key)
 
     def __str__(self):
         ms = '%s' % self.mod_type
@@ -72,6 +76,9 @@ class Agent(object):
         return self.matches_key() == other.matches_key()
 
     def matches_key(self):
+        # NOTE: Making a set of the mod matches_keys mat break if
+        # you have an agent with two phosphorylations at serine
+        # with unknown sites.
         key = (self.name,
                set([m.matches_key() for m in self.mods]),
                self.active,
@@ -132,12 +139,10 @@ class Agent(object):
         # Similar to the above, we check that self has all of the modifications
         # of other.
         # Make sure they have the same modifications
-        for other_mod_ix in range(len(other.mods)):
+        for other_mod in other.mods:
             mod_found = False
-            other_mod = other.mods[other_mod_ix]
-            for self_mod_ix in range(len(self.mods)):
-                self_mod = self.mods[self_mod_ix]
-                if self_mod.matches(other_mod, mod_hierarchy):
+            for self_mod in self.mods:
+                if self_mod.refinement_of(other_mod, mod_hierarchy):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
@@ -504,12 +509,10 @@ class ActivityModification(Statement):
         # canonicalize the ordering.
 
         # Make sure they have the same modifications
-        for other_mod_ix in range(len(other.mod)):
+        for other_mod in other.mod:
             mod_found = False
-            other_mod = other.mod[other_mod_ix]
-            for self_mod_ix in range(len(self.mod)):
-                self_mod = self.mod[self_mod_ix]
-                if self_mod.matches(other_mod, mod_hierarchy):
+            for self_mod in self.mod:
+                if self_mod.refinement_of(other_mod, mod_hierarchy):
                     mod_found = True
             # If we didn't find an exact match for this mod in other, then
             # no refinement
