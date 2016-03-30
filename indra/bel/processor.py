@@ -159,29 +159,34 @@ class BelProcessor(object):
             act_type = name_from_uri(stmt[1])
             sub_name = gene_name_from_uri(stmt[2])
             sub = Agent(sub_name)
-            print stmt[3]
             mod = term_from_uri(stmt[3])
+            residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
-            if act_type == 'Kinase' and mod in phospho_mods:
+            if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
                 self.statements.append(
-                        Phosphorylation(enz, sub, mod, mod_pos, evidence))
+                        Phosphorylation(enz, sub, residue, mod_pos,
+                                        evidence))
             elif act_type == 'Catalytic':
                 if mod == 'Hydroxylation':
                     self.statements.append(
-                            Hydroxylation(enz, sub, mod, mod_pos, evidence))
+                            Hydroxylation(enz, sub, residue, mod_pos,
+                                          evidence))
                 elif mod == 'Sumoylation':
                     self.statements.append(
-                            Sumoylation(enz, sub, mod, mod_pos, evidence))
+                            Sumoylation(enz, sub, residue, mod_pos,
+                                        evidence))
                 elif mod == 'Acetylation':
                     self.statements.append(
-                            Acetylation(enz, sub, mod, mod_pos, evidence))
+                            Acetylation(enz, sub, residue, mod_pos,
+                                        evidence))
                 elif mod == 'Ubiquitination':
                     self.statements.append(
-                            Ubiquitination(enz, sub, mod, mod_pos, evidence))
+                            Ubiquitination(enz, sub, residue, mod_pos,
+                                           evidence))
                 else:
                     print "Warning: Unknown modification type!"
                     print("Activity: %s, Mod: %s, Mod_Pos: %s" %
@@ -190,6 +195,27 @@ class BelProcessor(object):
                 print "Warning: Unknown modification type!"
                 print("Activity: %s, Mod: %s, Mod_Pos: %s" %
                       (act_type, mod, mod_pos))
+
+    @staticmethod
+    def _get_residue(mod):
+        if mod.startswith('Phosphorylation'):
+            if mod == 'Phosphorylation':
+                residue = None
+            else:
+                residue = mod[15:].lower()
+        else:
+            residue = None
+        return residue
+
+    @staticmethod
+    def _get_mod_condition(mod, mod_pos):
+        if mod.startswith('Phosphorylation'):
+            mc = ModCondition('phosphorylation')
+        else:
+            mc = ModCondition(mod)
+        mc.residue = BelProcessor._get_residue(mod)
+        mc.position = mod_pos
+        return mc
 
     def get_dephosphorylations(self):
         q_phospho = prefixes + """
@@ -272,8 +298,10 @@ class BelProcessor(object):
             act_type = term_from_uri(stmt[1])
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
+            mc1 = self._get_mod_condition(mod1, mod_pos1)
             mod2 = term_from_uri(stmt[4])
             mod_pos2 = term_from_uri(stmt[5])
+            mc2 = self._get_mod_condition(mod2, mod_pos2)
             rel = term_from_uri(stmt[6])
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'
@@ -283,8 +311,7 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, (mod1, mod2),
-                                         (mod_pos1, mod_pos2),
+                    ActivityModification(species, [mc1, mc2],
                                          rel, act_type, evidence))
 
     def get_activating_mods(self):
@@ -319,6 +346,7 @@ class BelProcessor(object):
             act_type = term_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
+            mc = self._get_mod_condition(mod, mod_pos)
             rel = term_from_uri(stmt[4])
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'
@@ -328,8 +356,8 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, (mod,), (mod_pos,), rel,
-                                         act_type, evidence))
+                    ActivityModification(species, mc, rel, act_type,
+                                         evidence))
 
     def get_complexes(self):
         # Find all complexes described in the corpus
@@ -414,7 +442,7 @@ class BelProcessor(object):
                 print("Warning: Could not parse substitution expression %s" %
                       sub_expr)
                 continue
-            
+
             rel = strip_statement(stmt[3])
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'

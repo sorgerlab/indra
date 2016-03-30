@@ -8,7 +8,7 @@ class GraphAssembler():
         self.existing_edges = []
         self.graph = pygraphviz.AGraph(directed=True, rankdir='LR',
                                        splines='spline')
-    
+
     def add_statements(self, stmts):
         for stmt in stmts:
             self.statements.append(stmt)
@@ -27,7 +27,7 @@ class GraphAssembler():
                 self.add_node(stmt.enz)
                 self.add_node(stmt.sub)
                 self.add_dephosphorylation(stmt.enz, stmt.sub)
-     
+
     def add_edge(self, source, target, color, arrowhead):
         style = 'solid'
         self.graph.add_edge(source, target,
@@ -54,20 +54,20 @@ class GraphAssembler():
         arrowhead = 'normal'
         self.add_edge(source, target, color, arrowhead)
 
-    def add_node(self, agent):    
+    def add_node(self, agent):
         node_name = agent.name
         if node_name in self.existing_nodes:
             return
         self.existing_nodes.append(node_name)
         node_label = agent.name
-        color = "#ffeeee" 
+        color = "#ffeeee"
         self.graph.add_node(node_name,
                         label=node_label,
                         shape='Mrecord',
                         fillcolor=color, style="filled", color="transparent",
                         fontsize="12",
                         margin="0.06,0")
-    
+
     def get_string(self):
         graph_string = self.graph.string()
         graph_string = graph_string.replace('\\N', '\\n')
@@ -77,6 +77,6 @@ class GraphAssembler():
         s = self.get_string()
         with open(fname, 'wt') as fh:
             fh.write(s)
-    
+
     def save_pdf(self, fname='graph.pdf'):
         self.graph.draw(fname, prog='circo')

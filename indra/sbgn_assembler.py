@@ -9,35 +9,31 @@ from indra import statements as ist
 
 
 abbrevs = {
-    'PhosphorylationSerine': 'S',
-    'PhosphorylationThreonine': 'T',
-    'PhosphorylationTyrosine': 'Y',
-    'Phosphorylation': 'phospho',
-    'Ubiquitination': 'ub',
-    'Farnesylation': 'farnesyl',
-    'Hydroxylation': 'hydroxyl',
-    'Acetylation': 'acetyl',
-    'Sumoylation': 'sumo',
-    'Glycosylation': 'glycosyl',
-    'Methylation': 'methyl',
-    'Modification': 'mod',
+    'phosphorylation': 'phospho',
+    'ubiquitination': 'ub',
+    'farnesylation': 'farnesyl',
+    'hydroxylation': 'hydroxyl',
+    'acetylation': 'acetyl',
+    'sumoylation': 'sumo',
+    'glycosylation': 'glycosyl',
+    'methylation': 'methyl',
+    'modification': 'mod',
+    'serine': 'S',
+    'threonine': 'T',
+    'tyrosine': 'Y'
 }
 
 states = {
-    'PhosphorylationSerine': ['u', 'p'],
-    'PhosphorylationThreonine': ['u', 'p'],
-    'PhosphorylationTyrosine': ['u', 'p'],
-    'Phosphorylation': ['u', 'p'],
-    'Ubiquitination': ['n', 'y'],
-    'Farnesylation': ['n', 'y'],
-    'Hydroxylation': ['n', 'y'],
-    'Acetylation': ['n', 'y'],
-    'Sumoylation': ['n', 'y'],
-    'Glycosylation': ['n', 'y'],
-    'Methylation': ['n', 'y'],
-    'Modification': ['n', 'y'],
+    'phosphorylation': ['u', 'p'],
+    'ubiquitination': ['n', 'y'],
+    'farnesylation': ['n', 'y'],
+    'hydroxylation': ['n', 'y'],
+    'acetylation': ['n', 'y'],
+    'sumoylation': ['n', 'y'],
+    'glycosylation': ['n', 'y'],
+    'methylation': ['n', 'y'],
+    'modification': ['n', 'y'],
 }
-
 
 class SBGNAssembler(object):
 
@@ -156,11 +152,14 @@ SBGNState = collections.namedtuple('SBGNState', 'variable value')
 
 def sbgn_states_for_agent(agent):
     agent_states = []
-    for m, mp in zip(agent.mods, agent.mod_sites):
-        mod = abbrevs[m]
-        mod_pos = mp if mp is not None else ''
+    for m in agent.mods:
+        if m.residue is not None:
+            mod = abbrevs[m.residue]
+        else:
+            mod = abbrevs[m.mod_type]
+        mod_pos = m.position if m.position is not None else ''
         variable = '%s%s' % (mod, mod_pos)
-        value = states[m][1].upper()
+        value = states[m.mod_type][1].upper()
         agent_states.append(SBGNState(variable, value))
     return agent_states
 
@@ -173,10 +172,10 @@ def transformed_agents(statements):
     return [a for a in agents if a is not None]
 
 def statement_product(stmt):
-    if isinstance(stmt, ist.Modification):
+    if isinstance(stmt, ist.Phosphorylation):
         product = copy.deepcopy(stmt.sub)
-        product.mods.append(stmt.mod)
-        product.mod_sites.append(stmt.mod_pos)
+        mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
+        product.mods.append(mc)
     elif isinstance(stmt, ist.Complex):
         product = copy.deepcopy(stmt.members[0])
         for member in stmt.members[1:]:

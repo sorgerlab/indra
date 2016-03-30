@@ -25,15 +25,11 @@ def test_find_entity4():
 
 def test_find_mod():
     hm = HierarchyManager(mod_file)
-    assert(hm.find_entity('Phosphorylation'))
+    assert(hm.find_entity('phosphorylation'))
 
 def test_find_mod2():
     hm = HierarchyManager(mod_file)
-    assert(hm.find_entity('Sumoylation'))
-
-def test_find_mod3():
-    hm = HierarchyManager(mod_file)
-    assert(hm.find_entity('PhosphorylationSerine'))
+    assert(hm.find_entity('sumoylation'))
 
 def test_isa():
     hm = HierarchyManager(entity_file)
@@ -53,16 +49,8 @@ def test_isa4():
 
 def test_isa_mod():
     hm = HierarchyManager(mod_file)
-    assert(hm.isa('Phosphorylation', 'Modification'))
+    assert(hm.isa('phosphorylation', 'modification'))
 
-def test_isa_mod2():
+def test_isa_mod_not():
     hm = HierarchyManager(mod_file)
-    assert(hm.isa('PhosphorylationSerine', 'Phosphorylation'))
-
-def test_isa_mod3():
-    hm = HierarchyManager(mod_file)
-    assert(hm.isa('PhosphorylationSerine', 'Modification'))
-
-def test_isa_mod4():
-    hm = HierarchyManager(mod_file)
-    assert(not hm.isa('Phosphorylation', 'Ubiquitination'))
+    assert(not hm.isa('phosphorylation', 'ubiquitination'))

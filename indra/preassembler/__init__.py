@@ -297,18 +297,20 @@ def check_sequence(stmt):
     elif isinstance(stmt, Modification):
         failures += check_agent_mod(stmt.sub)
         failures += check_agent_mod(stmt.enz)
-        if stmt.mod_pos is not None:
-            failures += check_agent_mod(stmt.sub, [stmt.mod], [stmt.mod_pos])
+        if stmt.position is not None:
+            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
+            failures += check_agent_mod(stmt.sub, [mc])
     elif isinstance(stmt, SelfModification):
         failures += check_agent_mod(stmt.sub)
-        if stmt.mod_pos is not None:
-            failures += check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
+        if stmt.position is not None:
+            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
+            failures += check_agent_mod(stmt.enz, [mc])
     elif isinstance(stmt, ActivityModification):
         failures += check_agent_mod(stmt.monomer)
-        failures += check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
+        failures += check_agent_mod(stmt.monomer, stmt.mod)
     return failures
 
-def check_agent_mod(agent, mods=None, mod_sites=None):
+def check_agent_mod(agent, mods=None):
     failures = []
     # If no UniProt ID is found, we don't report a failure
     up_id = agent.db_refs.get('UP')
@@ -319,35 +321,32 @@ def check_agent_mod(agent, mods=None, mod_sites=None):
     if not isinstance(up_id, basestring):
         up_id = up_id[0]
     agent_entry = uniprot_client.query_protein(up_id)
-    
-    if mod_sites is not None:
+
+    if mods is not None:
         check_mods = mods
-        check_mod_sites = mod_sites
     else:
         check_mods = agent.mods
-        check_mod_sites = agent.mod_sites
 
-    for m, mp in zip(check_mods, check_mod_sites):
-        if mp is None:
+    for m in check_mods:
+        if m.position is None:
             continue
-        residue = get_residue(m)
+        residue = get_residue(m.residue)
         if residue is None:
             continue
-        ver = uniprot_client.verify_location(agent_entry, residue, mp)
+        ver = uniprot_client.verify_location(agent_entry, residue, m.position)
         if not ver:
             print '-> Sequence check failed; position %s on %s is not %s.' %\
-                  (mp, agent.name, residue)
-            failures.append((agent.name, residue, mp))
+                  (m.position, agent.name, residue)
+            failures.append((agent.name, residue, m.position))
     return failures
 
-def get_residue(mod):
+def get_residue(residue):
     """Return the amino acid letter from a  modification string"""
-    if mod == 'PhosphorylationSerine':
-        residue = 'S'
-    elif mod == 'PhosphorylationThreonine':
-        residue = 'T'
-    elif mod == 'PhosphorylationTyrosine':
-        residue = 'Y'
+    if residue == 'serine':
+        return 'S'
+    elif residue == 'threonine':
+        return 'T'
+    elif residue == 'tyrosine':
+        return 'Y'
     else:
         return None
-    return residue 

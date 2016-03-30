@@ -4,38 +4,26 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Modification">
-    <ns1:hasName>Modification</ns1:hasName>
+    <ns1:hasName>modification</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Ubiquitination">
-    <ns1:hasName>Ubiquitination</ns1:hasName>
+    <ns1:hasName>ubiquitination</ns1:hasName>
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Modification"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Acetylation">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Modification"/>
-    <ns1:hasName>Acetylation</ns1:hasName>
+    <ns1:hasName>acetylation</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Sumoylation">
-    <ns1:hasName>Sumoylation</ns1:hasName>
+    <ns1:hasName>sumoylation</ns1:hasName>
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Modification"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/PhosphorylationThreonine">
-    <ns1:hasName>PhosphorylationThreonine</ns1:hasName>
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Phosphorylation"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/PhosphorylationSerine">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Phosphorylation"/>
-    <ns1:hasName>PhosphorylationSerine</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Phosphorylation">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Modification"/>
-    <ns1:hasName>Phosphorylation</ns1:hasName>
+    <ns1:hasName>phosphorylation</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/Hydroxylation">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Modification"/>
-    <ns1:hasName>Hydroxylation</ns1:hasName>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entitiess/PhosphorylationTyrosine">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entitiess/Phosphorylation"/>
-    <ns1:hasName>PhosphorylationTyrosine</ns1:hasName>
+    <ns1:hasName>hydroxylation</ns1:hasName>
   </rdf:Description>
 </rdf:RDF>
