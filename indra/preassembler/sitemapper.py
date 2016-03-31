@@ -52,6 +52,7 @@ class SiteMapper(object):
         for stmt in stmts:
             stmt_copy = deepcopy(stmt)
             # FIXME: Does not follow bound agents!!!
+            # COMPLEXES
             # Map sites for complex
             if isinstance(stmt, Complex):
                 invalid_sites = []
@@ -68,6 +69,7 @@ class SiteMapper(object):
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)
+            # MODIFICATIONs
             # FIXME: Does not follow bound agents!!!
             elif isinstance(stmt, Modification):
                 invalid_sites = []
@@ -103,6 +105,33 @@ class SiteMapper(object):
                 if invalid_sites:
                     mapped_stmt = \
                                 MappedStatement(stmt, invalid_sites, stmt_copy)
+                    mapped_statements.append(mapped_stmt)
+                else:
+                    valid_statements.append(stmt)
+            elif isinstance(stmt, ActivityModification):
+                invalid_sites = []
+                # Check agent
+                (agent_invalid_sites, new_monomer) = \
+                                self.map_agent_sites(stmt.monomer)
+                invalid_sites += agent_invalid_sites
+                stmt_copy.monomer = new_monomer
+                # Check modification on sites
+                # Filter lists
+                if stmt.mod_pos and stmt.mod:
+                    stmt_invalid_sites = \
+                            self.check_agent_mod(stmt_copy.monomer,
+                                                 filt_mod, filt_mod_pos)
+                    invalid_sites += stmt_invalid_sites
+                    (new_mod_list, new_modpos_list) = \
+                            update_mod_list(stmt_copy.monomer.name,
+                                            stmt_copy.mod,
+                                            stmt_copy.mod_pos,
+                                            stmt_invalid_sites)
+                    stmt_copy.mod = new_mod_list
+                    stmt_copy.modpos = new_modpos_list
+                if invalid_sites:
+                    mapped_stmt = \
+                            MappedStatement(stmt, invalid_sites, stmt_copy)
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)

@@ -154,3 +154,13 @@ def test_site_map_modification():
     assert agent2.mod_sites[0] == '185'
     assert agent2.mod_sites[1] == '187'
 
+def test_site_map_activity_modification():
+    mapk1_invalid = Agent('MAPK1', db_refs={'UP': 'P28482'})
+
+    st1 = ActivityModification(mapk1_invalid,
+                               ['PhosphorylationThreonine',
+                                     'PhosphorylationTyrosine'],
+                               ['183', '185'], 'increases',
+                               'KinaseActivity')
+    (valid, mapped) = sm.map_sites([st1])
+    import ipdb; ipdb.set_trace()
