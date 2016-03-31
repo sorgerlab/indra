@@ -108,6 +108,7 @@ class SiteMapper(object):
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)
+            """
             elif isinstance(stmt, ActivityModification):
                 invalid_sites = []
                 # Check agent
@@ -135,7 +136,7 @@ class SiteMapper(object):
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)
-
+            """
         return (valid_statements, mapped_statements)
 
     def check_sequence(self, stmt):
