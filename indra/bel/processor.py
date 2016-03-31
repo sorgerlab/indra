@@ -100,7 +100,7 @@ class BelProcessor(object):
             try:
                 evidence = stmt[0].format()
                 citation = stmt[1].format()
-            except KeyError:
+            except (KeyError, IndexError):
                 warnings.warn('Problem converting evidence/citation string')
 
         # Query for all annotations of the statement
