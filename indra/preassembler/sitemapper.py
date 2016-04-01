@@ -2,7 +2,6 @@ import os
 import csv
 from collections import namedtuple
 from copy import deepcopy
-from indra.pysb_assembler import abbrevs as site_abbrevs
 from indra.databases import uniprot_client
 from indra.statements import *
 
@@ -139,10 +138,11 @@ class SiteMapper(object):
             """
         return (valid_statements, mapped_statements)
 
+    """
     def check_sequence(self, stmt):
-        """Check whether references to
-        residues and sequence positions are consistent with sequence
-        information in the UniProt database"""
+        #Check whether references to
+        #residues and sequence positions are consistent with sequence
+        #information in the UniProt database
         failures = []
 
         if isinstance(stmt, SelfModification):
@@ -154,25 +154,23 @@ class SiteMapper(object):
             failures += check_agent_mod(stmt.monomer)
             failures += check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
         return failures
+    """
 
     def map_agent_sites(self, agent):
         """Look up the modification site in Uniprot and then the site map.
         """
         new_agent = deepcopy(agent)
-        if not agent.mods and not agent.mod_sites:
+        if not agent.mods:
             return ([], new_agent)
-        invalid_sites = self.check_agent_mod(agent, agent.mods, agent.mod_sites)
+        invalid_sites = self.check_agent_mod(agent, agent.mods)
         if not invalid_sites:
             return ([], new_agent)
-        (new_mod_list, new_modpos_list) = \
-                    update_mod_list(agent.name, agent.mods, agent.mod_sites,
-                                    invalid_sites)
+        new_mod_list = update_mod_list(agent.name, agent.mods, invalid_sites)
         # Finally, update the agent, and return along with invalid site info
         new_agent.mods = new_mod_list
-        new_agent.mod_sites = new_modpos_list
         return (invalid_sites, new_agent)
 
-    def check_agent_mod(self, agent, mods, mod_sites):
+    def check_agent_mod(self, agent, mods):
         """Look up the modification site in Uniprot and then the site map.
         Return a list of invalid sites, where each entry in the list has
         two elements: ((gene_name, residue, position), mapped_site).
@@ -185,34 +183,27 @@ class SiteMapper(object):
         agent_entry = get_uniprot_entry(agent)
         # If the uniprot entry is not found, let it pass
         if not agent_entry:
-            return invalid_sites
+            return invalid_sites # empty list
         # Look up all of the modifications in uniprot, and add them to the list
         # of invalid sites if they are missing
-        for old_mod, old_modpos in zip(mods, mod_sites):
+        for old_mod in mods:
             # If no site information for this residue, skip
-            if old_mod is None or old_modpos is None:
-                continue
-            # Get the amino acid abbreviation (e.g., 'S', 'T', 'Y')
-            residue = site_abbrevs.get(old_mod, None)
-            # If no site for this type of modification, skip
-            if residue is None:
+            if old_mod.position is None or old_mod.residue is None:
                 continue
             # Look up the residue/position in uniprot
-            site_valid = uniprot_client.verify_location(agent_entry, residue,
-                                                 old_modpos)
+            site_valid = uniprot_client.verify_location(agent_entry,
+                                                        old_mod.residue,
+                                                        old_mod.position)
             # If it's not found in Uniprot, then look it up in the site map
             if not site_valid:
-                mapped_site = self.site_map.get(
-                             (agent.name, str(residue), str(old_modpos)), None)
+                site_key = (agent.name, old_mod.residue, old_mod.position)
+                mapped_site = self.site_map.get(site_key, None)
                 # We found an entry in the site map!
                 if mapped_site is not None:
-                    invalid_sites.append(
-                            ((agent.name, str(residue), str(old_modpos)),
-                             mapped_site))
+                    invalid_sites.append((site_key, mapped_site))
                 # No entry in the site map--set site info to None
                 else:
-                    invalid_sites.append(
-                            ((agent.name, str(residue), str(old_modpos)), None))
+                    invalid_sites.append((site_key, None))
         return invalid_sites
 
 
@@ -261,51 +252,37 @@ class SiteMapper(object):
 
         return invalid_sites
 
-def update_mod_list(agent_name, mods, mod_sites, invalid_sites):
-    # Get the list of invalid/mapped sites for the agent
+def update_mod_list(agent_name, mods, invalid_sites):
     new_mod_list = []
-    new_modpos_list = []
+    # Get the list of invalid/mapped sites for the agent
     invalid_site_keys = [site[0] for site in invalid_sites]
-    for old_mod, old_modpos in zip(mods, mod_sites):
-        # Get the amino acid abbreviation (e.g., 'S', 'T', 'Y')
-        # FIXME this information already exists in the invalid sites list
-        residue = site_abbrevs.get(old_mod, None)
-        old_mod_key = (agent_name, residue, old_modpos)
+    for old_mod in mods:
+        old_mod_key = (agent_name, old_mod.residue, old_mod.position)
+        # If the original modification was found to be invalid, create a newly
+        # updated modification
         if old_mod_key in invalid_site_keys:
             mapped_site = \
                     invalid_sites[invalid_site_keys.index(old_mod_key)][1]
-            # No entry in the map
+            # No entry in the map: pass the incorrect site through
             if mapped_site is None:
                 new_mod_list.append(old_mod)
-                new_modpos_list.append(old_modpos)
             # Entry in the map
             else:
                 # Do we have actual site information?
                 new_res = mapped_site[0]
                 new_pos = mapped_site[1]
                 if new_res is not None and new_pos is not None:
-                    # Since we found the site in the site_map, add the
-                    # updated site/position into the new site lists
-                    # FIXME
-                    if new_res == 'S':
-                        new_mod_name = 'PhosphorylationSerine'
-                    elif new_res == 'T':
-                        new_mod_name = 'PhosphorylationThreonine'
-                    elif new_res == 'Y':
-                        new_mod_name = 'PhosphorylationTyrosine'
-                    else:
-                        raise Exception("Couldn't map residue %s" % new_res )
-                    new_mod_list.append(new_mod_name)
-                    new_modpos_list.append(new_pos)
+                    new_mod_list.append(
+                            ModCondition(old_mod.mod_type, new_res, new_pos,
+                                         old_mod.is_modified))
                 # Mapped, but no site info--pass through unchanged
                 else:
                     new_mod_list.append(old_mod)
-                    new_modpos_list.append(old_modpos)
-        # Not mapped--pass the site through
+        # The modification is not in the invalid site list, so it's considered
+        # valid
         else:
             new_mod_list.append(old_mod)
-            new_modpos_list.append(old_modpos)
-    return (new_mod_list, new_modpos_list)
+    return new_mod_list
 
 
 def get_uniprot_entry(agent):
