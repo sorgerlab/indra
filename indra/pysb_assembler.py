@@ -44,6 +44,13 @@ class BaseAgentSet(object):
             site_states = states[mc.mod_type]
             base_agent.create_site(mod_site_name, site_states)
 
+        # Handle mutation conditions
+        for mc in agent.mut_conditions:
+            mut_site_name = mc.residue_from + mc.position
+            base_agent.create_site(mut_site_name, states=['WT'])
+            if mc.residue_to is not None:
+                base_agent.add_site_states(mut_site_name, [mc.residue_to])
+
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.iteritems():
             base_agent.db_refs[db_name] = db_ref
@@ -172,6 +179,11 @@ def get_agent_rule_str(agent):
         if mod.position is not None:
             mstr += mod.position
         rule_str_list.append('%s' % mstr)
+    for mut in agent.mut_conditions:
+        mstr = mut.residue_from + mut.position
+        if mut.residue_to is not None:
+            mstr += mut.residue_to
+        rule_str_list.append(mstr)
     if agent.bound_conditions:
         for b in agent.bound_conditions:
             if b.is_bound:
@@ -228,6 +240,7 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
         for k, v in extra_fields.iteritems():
             pattern[k] = v
 
+    # Handle bound conditions
     for bc in agent.bound_conditions:
         # Here we make the assumption that the binding site
         # is simply named after the binding partner
@@ -236,7 +249,7 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
         else:
             pattern[get_binding_site_name(bc.agent.name)] = None
 
-    # Add the pattern for the modifications of the agent
+    # Handle modifications
     for mod in agent.mods:
         mod_site_str = abbrevs[mod.mod_type]
         if mod.residue is not None:
@@ -248,6 +261,12 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
             pattern[mod_site] = site_states[1]
         else:
             pattern[mod_site] = site_states[0]
+
+    # Handle mutations
+    for mc in agent.mut_conditions:
+        mut_site_name = mc.residue_from + mc.position
+        mut_site_state = mc.residue_to
+        pattern[mut_site_name] = mut_site_state
 
     complex_pattern = monomer(**pattern)
     return complex_pattern
