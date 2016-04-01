@@ -3,9 +3,9 @@ from indra.statements import *
 
 def test_check_agent_mod():
     mapk1_valid = Agent('MAPK1',
-                         mods=['PhosphorylationThreonine',
-                                'PhosphorylationTyrosine'],
-                          mod_sites=['185', '187'], db_refs={'UP': 'P28482'})
+                        mods=[ModCondition('phosphorylation', 'T', '185'),
+                              ModCondition('phosphorylation', 'Y', '187')],
+                        db_refs={'UP': 'P28482'})
     res_valid = sm.map_agent_sites(mapk1_valid)
     assert len(res_valid) == 2
     assert res_valid[0] == []
@@ -13,9 +13,9 @@ def test_check_agent_mod():
     assert res_valid[1].matches(mapk1_valid)
 
     mapk1_invalid = Agent('MAPK1',
-                          mods=['PhosphorylationThreonine',
-                                'PhosphorylationTyrosine'],
-                          mod_sites=['183', '185'], db_refs={'UP': 'P28482'})
+                          mods=[ModCondition('phosphorylation', 'T', '183'),
+                                ModCondition('phosphorylation', 'Y', '185')],
+                          db_refs={'UP': 'P28482'})
     res_invalid = sm.map_agent_sites(mapk1_invalid)
     assert len(res_invalid) == 2
     assert isinstance(res_invalid[0], list)
@@ -33,21 +33,21 @@ def test_check_agent_mod():
     assert map185[1][0] == 'Y'
     assert map185[1][1] == '187'
     new_agent = res_invalid[1]
-    assert new_agent.mods == ['PhosphorylationThreonine',
-                             'PhosphorylationTyrosine']
-    assert new_agent.mod_sites == ['185', '187']
+    assert len(new_agent.mods) == 2
+    assert new_agent.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert new_agent.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
 
-    # Test a site that is invalid but not found in the site map
+    # TODO Test a site that is invalid but not found in the site map
 
 def test_site_map_complex():
     mapk1_invalid = Agent('MAPK1',
-                          mods=['PhosphorylationThreonine',
-                                'PhosphorylationTyrosine'],
-                          mod_sites=['183', '185'], db_refs={'UP': 'P28482'})
+                          mods=[ModCondition('phosphorylation', 'T', '183'),
+                                ModCondition('phosphorylation', 'Y', '185')],
+                          db_refs={'UP': 'P28482'})
     mapk3_invalid = Agent('MAPK3',
-                            mods=['PhosphorylationThreonine',
-                                  'PhosphorylationTyrosine'],
-                            mod_sites=['201', '203'], db_refs={'UP': 'P27361'})
+                          mods=[ModCondition('phosphorylation', 'T', '201'),
+                                ModCondition('phosphorylation', 'Y', '203')],
+                          db_refs={'UP': 'P27361'})
 
     st1 = Complex([mapk1_invalid, mapk3_invalid])
     res = sm.map_sites([st1])
@@ -72,32 +72,26 @@ def test_site_map_complex():
     assert agent1.name == 'MAPK1'
     assert len(agent1.mods) == 2
     assert len(agent1.mod_sites) == 2
-    assert agent1.mods[0] == 'PhosphorylationThreonine'
-    assert agent1.mods[1] == 'PhosphorylationTyrosine'
-    assert agent1.mod_sites[0] == '185'
-    assert agent1.mod_sites[1] == '187'
-    assert agent2.mods[0] == 'PhosphorylationThreonine'
-    assert agent2.mods[1] == 'PhosphorylationTyrosine'
-    assert agent2.mod_sites[0] == '202'
-    assert agent2.mod_sites[1] == '204'
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+    assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
+    assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
 
 def test_site_map_modification():
     mapk1_invalid = Agent('MAPK1',
-                          mods=['PhosphorylationThreonine',
-                                'PhosphorylationTyrosine'],
-                          mod_sites=['183', '185'], db_refs={'UP': 'P28482'})
+                          mods=[ModCondition('phosphorylation', 'T', '183'),
+                                ModCondition('phosphorylation', 'Y', '185')],
+                          db_refs={'UP': 'P28482'})
     mapk3_invalid = Agent('MAPK3',
-                            mods=['PhosphorylationThreonine'],
-                            mod_sites=['201'], db_refs={'UP': 'P27361'})
-    map2k1_invalid = Agent('MAP2K1', mods=['PhosphorylationSerine',
-                                           'PhosphorylationSerine'],
-                                     mod_sites=['217', '221'],
-                                     db_refs={'UP': 'Q02750'})
+                          mods=[ModCondition('phosphorylation', 'T', '201')],
+                          db_refs={'UP': 'P27361'})
+    map2k1_invalid = Agent('MAP2K1',
+                           mods=[ModCondition('phosphorylation', 'S', '217'),
+                                 ModCondition('phosphorylation', 'S', '221')],
+                           db_refs={'UP': 'Q02750'})
 
-    st1 = Phosphorylation(mapk1_invalid, mapk3_invalid,
-                          'PhosphorylationTyrosine', '203')
-    st2 = Phosphorylation(map2k1_invalid, mapk1_invalid,
-                          'PhosphorylationTyrosine', '218')
+    st1 = Phosphorylation(mapk1_invalid, mapk3_invalid, 'T', '203')
+    st2 = Phosphorylation(map2k1_invalid, mapk1_invalid, 'Y', '218')
 
     res = sm.map_sites([st1, st2])
 
@@ -120,15 +114,14 @@ def test_site_map_modification():
     agent2 = ms.sub
     assert agent1.name == 'MAPK1'
     assert len(agent1.mods) == 2
-    assert len(agent1.mod_sites) == 2
-    assert agent1.mods[0] == 'PhosphorylationThreonine'
-    assert agent1.mods[1] == 'PhosphorylationTyrosine'
-    assert agent1.mod_sites[0] == '185'
-    assert agent1.mod_sites[1] == '187'
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+
     assert agent2.mods[0] == 'PhosphorylationThreonine'
     assert agent2.mod_sites[0] == '202'
-    assert ms.mod == 'PhosphorylationTyrosine'
-    assert ms.mod_pos == '204'
+    assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
+    assert ms.residue == 'Y'
+    assert ms.position == '204'
 
     # MAP2K1 -> MAPK1
     mapped_stmt2 = mapped_stmts[1]
@@ -142,18 +135,18 @@ def test_site_map_modification():
     agent2 = ms.sub
     assert agent1.name == 'MAP2K1'
     assert len(agent1.mods) == 2
-    assert len(agent1.mod_sites) == 2
-    assert agent1.mods[0] == 'PhosphorylationSerine'
-    assert agent1.mods[1] == 'PhosphorylationSerine'
-    assert agent1.mod_sites[0] == '218'
-    assert agent1.mod_sites[1] == '222'
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'S', '218'))
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'S', '222'))
     assert len(agent2.mods) == 2
-    assert len(agent2.mod_sites) == 2
-    assert agent2.mods[0] == 'PhosphorylationThreonine'
-    assert agent2.mods[1] == 'PhosphorylationTyrosine'
-    assert agent2.mod_sites[0] == '185'
-    assert agent2.mod_sites[1] == '187'
+    assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+    # The incorrect phosphorylation residue is passed through to the new
+    # statement unchanged
+    assert ms.residue == 'Y'
+    assert ms.position == '218'
 
+
+"""
 def test_site_map_activity_modification():
     mapk1_invalid = Agent('MAPK1', db_refs={'UP': 'P28482'})
 
@@ -164,3 +157,5 @@ def test_site_map_activity_modification():
                                'KinaseActivity')
     (valid, mapped) = sm.map_sites([st1])
     import ipdb; ipdb.set_trace()
+"""
+
