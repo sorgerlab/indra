@@ -37,3 +37,13 @@ def get_publisher(doi):
         return None
     publisher = metadata.get('publisher')
     return publisher
+
+def get_license_links(doi):
+    metadata = get_metadata(doi)
+    if metadata is None:
+        return None
+    licenses = metadata.get('license')
+    if licenses is None:
+        return None
+    urls = [l.get('URL') for l in licenses]
+    return urls
