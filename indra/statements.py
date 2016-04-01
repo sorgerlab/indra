@@ -24,6 +24,8 @@ BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
+        if residue is not None and amino_acids.get(residue) is None:
+            raise InvalidResidueError(residue)
         self.residue = residue
         if not isinstance(position, basestring):
             if position is None:
@@ -62,7 +64,6 @@ class ModCondition(object):
         return ms
 
 class Agent(object):
-
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, db_refs=None):
         self.name = name
@@ -296,6 +297,8 @@ class Modification(Statement):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
+        if residue is not None and amino_acids.get(residue) is None:
+            raise InvalidResidueError(residue)
         self.residue = residue
         if position is not None:
             if not isinstance(position, basestring):
@@ -354,6 +357,8 @@ class SelfModification(Statement):
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
+        if residue is not None and amino_acids.get(residue) is None:
+            raise InvalidResidueError(residue)
         self.residue = residue
         if position is not None:
             if not isinstance(position, basestring):
@@ -713,3 +718,8 @@ class Complex(Statement):
             return False
         else:
             return True
+
+class InvalidResidueError(ValueError):
+    """Invalid residue (amino acid) name."""
+    def __init__(self, name):
+        ValueError.__init__(self, "Invalid residue name: '%s'" % name)
