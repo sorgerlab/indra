@@ -10,19 +10,6 @@ import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
 
-residue_names = {
-    'S': 'serine',
-    'T': 'threonine',
-    'Y': 'tyrosine',
-    'SER': 'serine',
-    'THR': 'threonine',
-    'TYR': 'tyrosine',
-    'SERINE': 'serine',
-    'THREONINE': 'threonine',
-    'TYROSINE': 'tyrosine'
-    }
-
-
 mod_names = {
     'PHOSPHORYLATION': 'phosphorylation'
     }
@@ -582,7 +569,7 @@ class TripsProcessor(object):
         # Collect mods in a list
         mods = []
         for r, p in zip(residues, mod_pos):
-            residue_name = residue_names.get(r)
+            residue_name = get_valid_residue(r)
             if residue_name is None:
                 warnings.warn('Residue name %s unknown. ' % r)
                 residue_name = None
