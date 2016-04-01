@@ -71,7 +71,6 @@ def test_site_map_complex():
     agent2 = members[1]
     assert agent1.name == 'MAPK1'
     assert len(agent1.mods) == 2
-    assert len(agent1.mod_sites) == 2
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
@@ -116,9 +115,6 @@ def test_site_map_modification():
     assert len(agent1.mods) == 2
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
-
-    assert agent2.mods[0] == 'PhosphorylationThreonine'
-    assert agent2.mod_sites[0] == '202'
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
     assert ms.residue == 'Y'
     assert ms.position == '204'

@@ -7,9 +7,7 @@ from indra.statements import *
 
 MappedStatement = namedtuple('MappedStatement',
                              ['original_stmt', 'mapped_mods', 'mapped_stmt'])
-UnmappedStatement = namedtuple('UnmappedStatement',
-                               ['original_stmt', 'unmapped_mods',
-                                'is_curated', 'comment'])
+
 class SiteMapper(object):
     """
     Parameters
@@ -40,9 +38,6 @@ class SiteMapper(object):
         If there is a problem with the statement, the offending modifications
         are looked up in the site map. If corresponding entries are found,
         a MappedStatement instance is created.
-
-        If corresponding entres are not found for all residues, an
-        UnmappedStatement entry is created.
         """
 
         valid_statements = []
@@ -60,7 +55,7 @@ class SiteMapper(object):
                     (agent_invalid_sites, new_agent) = self.map_agent_sites(m)
                     stmt_copy.members.append(new_agent)
                     invalid_sites += agent_invalid_sites
-                # If the dict isn't empty, that means that there were incorrect
+                # If the list isn't empty, that means that there were incorrect
                 # residues for this statement; add to mapped_statements list
                 if invalid_sites:
                     mapped_stmt = \
