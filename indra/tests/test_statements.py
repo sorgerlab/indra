@@ -222,12 +222,15 @@ def test_matches_activatingsub():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivatingSubstitution(nras1, 'G', '12', 'D', 'GtpBoundActivity1',
-                                 'increases1', evidence=Evidence(text='foo'))
-    st2 = ActivatingSubstitution(nras1, 'G', '12', 'D', 'GtpBoundActivity1',
-                                 'increases1', evidence=Evidence(text='bar'))
-    st3 = ActivatingSubstitution(nras2, 'Q', '61', 'L', 'GtpBoundActivity2',
-                                 'increases2', evidence=Evidence(text='bar'))
+    st1 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
+                                 'GtpBoundActivity1', 'increases1',
+                                 evidence=Evidence(text='foo'))
+    st2 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
+                                 'GtpBoundActivity1', 'increases1',
+                                 evidence=Evidence(text='bar'))
+    st3 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
+                                 'GtpBoundActivity2', 'increases2',
+                                 evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
@@ -330,10 +333,12 @@ def test_entities_match_activatingsub():
     """Test matching of entities only, entities match only on name."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivatingSubstitution(nras1, 'G', '12', 'D', 'GtpBoundActivity1',
-                                 'increases1', evidence=Evidence(text='foo'))
-    st2 = ActivatingSubstitution(nras2, 'Q', '61', 'L', 'GtpBoundActivity2',
-                                 'increases2', evidence=Evidence(text='bar'))
+    st1 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
+                                 'GtpBoundActivity1', 'increases1',
+                                 evidence=Evidence(text='foo'))
+    st2 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
+                                 'GtpBoundActivity2', 'increases2',
+                                 evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
 def test_entities_match_rasgef():
@@ -721,10 +726,14 @@ def test_activatingsub_family_refinement():
     ras = Agent('RAS')
     kras = Agent('KRAS')
     nras = Agent('NRAS')
-    st1 = ActivatingSubstitution(ras, 'G', '12', 'D', 'activity', 'increases')
-    st2 = ActivatingSubstitution(kras, 'G', '12', 'D', 'activity', 'increases')
-    st3 = ActivatingSubstitution(nras, 'G', '12', 'D', 'activity', 'increases')
-    st4 = ActivatingSubstitution(kras, 'G', '12', 'D', 'activity', 'increasesX')
+    st1 = ActivatingSubstitution(ras, MutCondition('12', 'G', 'D'),
+                                 'Activity', 'increases')
+    st2 = ActivatingSubstitution(kras, MutCondition('12', 'G', 'D'),
+                                 'Activity', 'increases')
+    st3 = ActivatingSubstitution(nras, MutCondition('12', 'G', 'D'),
+                                 'Activity', 'increases')
+    st4 = ActivatingSubstitution(kras, MutCondition('12', 'G', 'D'),
+                                 'Activity', 'increases1')
     # st1
     assert st2.refinement_of(st1, eh, mh)
     assert st3.refinement_of(st1, eh, mh)
