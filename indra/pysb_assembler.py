@@ -1185,7 +1185,10 @@ def activitymodification_monomers_one_step(stmt, agent_set):
     activity_pattern = {}
     for i, s in enumerate(sites):
         site_states = states[stmt.mod[i].mod_type]
-        active_state = site_states[1]
+        if stmt.mod[i].is_modified:
+            active_state = site_states[1]
+        else:
+            active_state = site_states[0]
         agent.create_site(s, site_states)
         activity_pattern[s] = active_state
 
