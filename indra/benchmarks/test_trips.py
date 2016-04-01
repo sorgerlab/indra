@@ -74,7 +74,7 @@ def test_bound_mod():
     assert(has_hgnc_ref(st.members[1]))
     assert(st.members[1].mods)
     assert(st.members[1].mods[0].mod_type == 'phosphorylation')
-    assert(st.members[1].mods[0].residue == 'tyrosine')
+    assert(st.members[1].mods[0].residue == 'Y')
     os.remove(fname)
 
 def test_not_bound_to():
@@ -198,7 +198,7 @@ def test_transphosphorylate2():
     assert(st.enz is not None)
     assert(st.enz.name == 'EGFR')
     assert(has_hgnc_ref(st.enz))
-    assert(st.residue == 'tyrosine')
+    assert(st.residue == 'Y')
     assert(len(st.enz.bound_conditions) == 1)
     assert(st.enz.bound_conditions[0].agent.name == 'EGFR')
     os.remove(fname)
@@ -214,7 +214,7 @@ def test_act_mod():
     assert(st.monomer.name == 'MAP2K1')
     residues = [m.residue for m in st.mod]
     positions = [m.position for m in st.mod]
-    assert(residues == ['serine', 'serine'])
+    assert(residues == ['S', 'S'])
     assert(positions == ['218', '222'])
     assert(st.relationship == 'increases')
     os.remove(fname)
@@ -260,7 +260,7 @@ def test_act_phosphorylate():
     assert(st.enz.name == 'MAP2K1')
     assert(st.sub is not None)
     assert(st.sub.name == 'MAPK1')
-    assert(st.residue == 'tyrosine')
+    assert(st.residue == 'Y')
     assert(st.position == '187')
     os.remove(fname)
 
@@ -275,7 +275,7 @@ def test_dephosphorylate():
     assert(st.enz.name == 'DUSP6')
     assert(st.sub is not None)
     assert(st.sub.name == 'MAPK1')
-    assert(st.residue == 'tyrosine')
+    assert(st.residue == 'Y')
     assert(st.position == '187')
     os.remove(fname)
 

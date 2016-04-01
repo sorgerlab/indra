@@ -286,7 +286,7 @@ def test_entities_match_mod():
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = Phosphorylation(src, nras1, 'tyrosine', '32',
                           evidence=Evidence(text='foo'))
-    st2 = Phosphorylation(src, nras2, ModCondition('phosphorylation'),
+    st2 = Phosphorylation(src, nras2,
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -854,6 +854,28 @@ def test_complex_family_refinement():
     assert not st2.refinement_of(st5, eh, mh)
     assert not st3.refinement_of(st5, eh, mh)
     assert not st4.refinement_of(st5, eh, mh)
+
+@raises(InvalidResidueError)
+def test_residue_mod_condition():
+    mc = ModCondition('phosphorylation', 'xyz')
+
+@raises(InvalidResidueError)
+def test_residue_mod():
+    Phosphorylation(Agent('a'), Agent('b'), 'xyz')
+
+@raises(InvalidResidueError)
+def test_residue_selfmod():
+    Autophosphorylation(Agent('a'), 'xyz')
+
+def test_valid_mod_residue():
+    mc = ModCondition('phosphorylation', 'serine')
+    assert(mc.residue == 'S')
+
+def test_valid_residue():
+    assert(get_valid_residue('serine') == 'S')
+    assert(get_valid_residue('ser') == 'S')
+    assert(get_valid_residue('Serine') == 'S')
+    assert(get_valid_residue('SERINE') == 'S')
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
