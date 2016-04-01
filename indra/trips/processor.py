@@ -557,18 +557,27 @@ class TripsProcessor(object):
         if mod_type_name is None:
             return None
 
+        # Check if the event is negated
+        neg = event.find('negation')
+        if neg is not None and neg.text == '+':
+            is_modified = False
+        else:
+            is_modified = True
+
         # Find the site of the modification
         site_tag = event.find("site")
         # If there is not site specified
         if site_tag is None:
-            return [ModCondition(mod_type_name)]
+            mc = ModCondition(mod_type_name, is_modified=is_modified)
+            return [mc]
         site_id = site_tag.attrib['id']
         # Find the site TERM and get the specific residues and
         # positions
         residues, mod_pos = self._get_site_by_id(site_id)
         # If residue is missing
         if residues is None:
-            return [ModCondition(mod_type_name)]
+            mc = ModCondition(mod_type_name, is_modified=is_modified)
+            return [mc]
 
         # Collect mods in a list
         mods = []
@@ -577,7 +586,7 @@ class TripsProcessor(object):
             if residue_name is None:
                 warnings.warn('Residue name %s unknown. ' % r)
                 residue_name = None
-            mc = ModCondition(mod_type_name, residue_name, p)
+            mc = ModCondition(mod_type_name, residue_name, p, is_modified)
             mods.append(mc)
         return mods
 
