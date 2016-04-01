@@ -1,5 +1,23 @@
+import os
 from collections import namedtuple
 import textwrap
+
+def read_amino_acids():
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    aa_file = this_dir + '/../data/amino_acids.tsv'
+    amino_acids = {}
+    with open(aa_file, 'rt') as fh:
+        lines = fh.readlines()
+        for lin in lines[1:]:
+            terms = lin.strip().split('\t')
+            key = terms[2]
+            val = {'full_name': terms[0],
+                   'short_name': terms[1],
+                   'indra_name': terms[3]}
+            amino_acids[key] = val
+    return amino_acids
+
+amino_acids = read_amino_acids()
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
 
@@ -695,4 +713,3 @@ class Complex(Statement):
             return False
         else:
             return True
-
