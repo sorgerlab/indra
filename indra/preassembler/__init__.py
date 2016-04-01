@@ -119,16 +119,16 @@ class Preassembler(object):
                     entity_hierarchy as eh, modification_hierarchy as mh
             >>> braf = Agent('BRAF')
             >>> map2k1 = Agent('MAP2K1')
-            >>> st1 = Phosphorylation(braf, map2k1, 'Phosphorylation', None)
-            >>> st2 = Phosphorylation(braf, map2k1, 'Phosphorylation', '218')
+            >>> st1 = Phosphorylation(braf, map2k1)
+            >>> st2 = Phosphorylation(braf, map2k1, position='218')
             >>> pa = Preassembler(eh, mh, [st1, st2])
             >>> combined_stmts = pa.combine_related()
             >>> combined_stmts
-            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
             >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, None)]
+            [Phosphorylation(BRAF(), MAP2K1(), None, None)]
             >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF(), MAP2K1(), Phosphorylation, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
         """
 
         # If unique_stmts is not initialized, call combine_duplicates.
