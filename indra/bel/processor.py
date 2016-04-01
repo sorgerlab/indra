@@ -16,13 +16,6 @@ prefixes = """
     PREFIX belns: <http://www.openbel.org/bel/namespace/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
 
-phospho_mods = [
-    'PhosphorylationSerine',
-    'PhosphorylationThreonine',
-    'PhosphorylationTyrosine',
-    'Phosphorylation',
-]
-
 class InvalidNameError(ValueError):
     def __init__(self, name):
         ValueError.__init__(self, "Not a valid name: %s" % name)

@@ -138,7 +138,7 @@ def test_get_mod_feature():
     mf = cast(bpc.bp('ModificationFeature'), bpe)
     mc = bpc.BiopaxProcessor._extract_mod_from_feature(mf)
     assert(mc.mod_type == 'phosphorylation')
-    assert(mc.residue == 'threonine')
+    assert(mc.residue == 'T')
     assert(mc.position == '274')
 
 def test_get_entity_mods():
@@ -150,6 +150,6 @@ def test_get_entity_mods():
     mod_types = set([m.mod_type for m in mods])
     assert(mod_types == set(['phosphorylation']))
     residues = set([m.residue for m in mods])
-    assert(residues == set(['tyrosine']))
+    assert(residues == set(['Y']))
     mod_pos = set([m.position for m in mods])
     assert(mod_pos == set(['1035', '1056', '1128', '1188', '1242']))

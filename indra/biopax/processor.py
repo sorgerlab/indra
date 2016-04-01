@@ -576,10 +576,10 @@ class BiopaxProcessor(object):
 
     _mftype_dict = {
         'phosphorylated residue': ('phosphorylation', None),
-        'O-phospho-L-serine': ('phosphorylation', 'serine'),
-        'O-phospho-L-threonine': ('phosphorylation', 'threonine'),
-        'O-phospho-L-tyrosine': ('phosphorylation', 'tyrosine'),
-        'O4\'-phospho-L-tyrosine': ('phosphorylation', 'tyrosine'),
+        'O-phospho-L-serine': ('phosphorylation', 'S'),
+        'O-phospho-L-threonine': ('phosphorylation', 'T'),
+        'O-phospho-L-tyrosine': ('phosphorylation', 'Y'),
+        'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
         'residue modification, active': ('active', None),
         'residue modification, inactive': ('inactive', None)
         }

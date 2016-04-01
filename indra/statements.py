@@ -1,12 +1,33 @@
+import os
 from collections import namedtuple
 import textwrap
+
+def read_amino_acids():
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    aa_file = this_dir + '/../data/amino_acids.tsv'
+    amino_acids = {}
+    amino_acids_reverse = {}
+    with open(aa_file, 'rt') as fh:
+        lines = fh.readlines()
+    for lin in lines[1:]:
+        terms = lin.strip().split('\t')
+        key = terms[2]
+        val = {'full_name': terms[0],
+               'short_name': terms[1],
+               'indra_name': terms[3]}
+        amino_acids[key] = val
+        for v in val.values():
+            amino_acids_reverse[v] = key
+    return amino_acids, amino_acids_reverse
+
+amino_acids, amino_acids_reverse = read_amino_acids()
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
 
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
-        self.residue = residue
+        self.residue = get_valid_residue(residue)
         if not isinstance(position, basestring):
             if position is None:
                 self.position = None
@@ -44,7 +65,6 @@ class ModCondition(object):
         return ms
 
 class Agent(object):
-
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, db_refs=None):
         self.name = name
@@ -278,7 +298,7 @@ class Modification(Statement):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
-        self.residue = residue
+        self.residue = get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -336,7 +356,7 @@ class SelfModification(Statement):
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
-        self.residue = residue
+        self.residue = get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -696,3 +716,16 @@ class Complex(Statement):
         else:
             return True
 
+def get_valid_residue(residue):
+    if residue is not None and amino_acids.get(residue) is None:
+        res = amino_acids_reverse.get(residue.lower())
+        if res is None:
+            raise InvalidResidueError(residue)
+        else:
+            return res
+    return residue
+
+class InvalidResidueError(ValueError):
+    """Invalid residue (amino acid) name."""
+    def __init__(self, name):
+        ValueError.__init__(self, "Invalid residue name: '%s'" % name)

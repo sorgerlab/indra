@@ -12,7 +12,7 @@ def test_phosphorylation():
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
-    assert(st.residue == 'serine')
+    assert(st.residue == 'S')
     assert(st.position == '222')
 
 def test_phosphorylation_noresidue():
@@ -28,7 +28,7 @@ def test_phosphorylation_nosite():
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
-    assert(st.residue == 'serine')
+    assert(st.residue == 'S')
     assert(st.position is None)
 
 def test_actmod():
@@ -38,7 +38,7 @@ def test_actmod():
     assert(isinstance(st, ist.ActivityModification))
     assert(isinstance(st.mod[0], ist.ModCondition))
     assert(st.mod[0].mod_type == 'phosphorylation')
-    assert(st.mod[0].residue == 'serine')
+    assert(st.mod[0].residue == 'S')
     assert(st.mod[0].position == '222')
 
 def test_actmods():
@@ -49,7 +49,7 @@ def test_actmods():
     assert(isinstance(st.mod[0], ist.ModCondition))
     assert(isinstance(st.mod[1], ist.ModCondition))
     assert(st.mod[0].mod_type == 'phosphorylation')
-    assert(st.mod[0].residue == 'serine')
+    assert(st.mod[0].residue == 'S')
     assert(st.mod[0].position == '218')
 
 def test_actmods():
@@ -59,7 +59,7 @@ def test_actmods():
     assert(isinstance(st, ist.Complex))
     braf = st.members[0]
     assert(braf.mods[0].mod_type == 'phosphorylation')
-    assert(braf.mods[0].residue == 'serine')
+    assert(braf.mods[0].residue == 'S')
     assert(braf.mods[0].position == '536')
 
 def test_trips_processor_online():

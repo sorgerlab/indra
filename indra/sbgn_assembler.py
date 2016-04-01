@@ -18,9 +18,6 @@ abbrevs = {
     'glycosylation': 'glycosyl',
     'methylation': 'methyl',
     'modification': 'mod',
-    'serine': 'S',
-    'threonine': 'T',
-    'tyrosine': 'Y'
 }
 
 states = {
@@ -154,7 +151,7 @@ def sbgn_states_for_agent(agent):
     agent_states = []
     for m in agent.mods:
         if m.residue is not None:
-            mod = abbrevs[m.residue]
+            mod = m.residue
         else:
             mod = abbrevs[m.mod_type]
         mod_pos = m.position if m.position is not None else ''

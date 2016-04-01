@@ -5,18 +5,6 @@ import warnings
 from indra.statements import *
 import indra.databases.uniprot_client as up_client
 
-residue_names = {
-    'S': 'serine',
-    'T': 'threonine',
-    'Y': 'tyrosine',
-    'SER': 'serine',
-    'THR': 'threonine',
-    'TYR': 'tyrosine',
-    'SERINE': 'serine',
-    'THREONINE': 'threonine',
-    'TYROSINE': 'tyrosine'
-    }
-
 
 class ReachProcessor(object):
     def __init__(self, json_dict, pmid=None):
@@ -255,25 +243,25 @@ class ReachProcessor(object):
     def _parse_site_text(s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)
         if m is not None:
-            residue = residue_names[m.groups()[0]]
+            residue = get_valid_residue(m.groups()[0])
             site = m.groups()[1]
             return residue, site
 
         m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())    
         if m is not None:
-            residue = residue_names[m.groups()[0]]
+            residue = get_valid_residue(m.groups()[0])
             site = m.groups()[1]
             return residue, site
 
         m = re.match(r'(THREONINE|TYROSINE|SERINE)[^0-9]*([0-9]+)', s.upper())
         if m is not None:
-            residue = residue_names[m.groups()[0]]
+            residue = get_valid_residue(m.groups()[0])
             site = m.groups()[1]
             return residue, site
 
         m = re.match(r'.*(THREONINE|TYROSINE|SERINE).*', s.upper())
         if m is not None:
-            residue = residue_names[m.groups()[0]]
+            residue = get_valid_residue(m.groups()[0])
             site = None
             return residue, site
 
