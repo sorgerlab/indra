@@ -77,24 +77,20 @@ class SiteMapper(object):
                 stmt_copy.enz = new_enz
 
                 # Check modification
-                if stmt.mod_pos is not None and stmt.mod is not None:
-                    # FIXME For now, both mod and mod_pos are expected to be
-                    # strings (not lists) so that the list will contain only
-                    # one item
-                    assert isinstance(stmt.mod_pos, basestring) and \
-                           isinstance(stmt.mod, basestring)
-                    old_mod_list = [stmt_copy.mod]
-                    old_modpos_list = [stmt_copy.mod_pos]
+                if stmt.residue is not None and stmt.position is not None:
+                    assert isinstance(stmt.residue, basestring) and \
+                           isinstance(stmt.position, basestring)
+                    old_mod_list = [ModCondition(None, stmt.residue,
+                                                 stmt.position)]
                     # Figure out if this site is invalid
                     stmt_invalid_sites = \
-                            self.check_agent_mod(stmt_copy.sub,
-                                                 old_mod_list, old_modpos_list)
+                            self.check_agent_mod(stmt_copy.sub, old_mod_list)
                     invalid_sites += stmt_invalid_sites
-                    (new_mod_list, new_modpos_list) = \
+                    new_mod_list = \
                             update_mod_list(stmt_copy.sub.name, old_mod_list,
-                                            old_modpos_list, stmt_invalid_sites)
-                    stmt_copy.mod = new_mod_list[0]
-                    stmt_copy.mod_pos = new_modpos_list[0]
+                                            stmt_invalid_sites)
+                    stmt_copy.residue = new_mod_list[0].residue
+                    stmt_copy.position = new_mod_list[0].position
                 # Return valid/mapped site lists
                 if invalid_sites:
                     mapped_stmt = \

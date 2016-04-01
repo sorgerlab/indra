@@ -89,7 +89,7 @@ def test_site_map_modification():
                                  ModCondition('phosphorylation', 'S', '221')],
                            db_refs={'UP': 'Q02750'})
 
-    st1 = Phosphorylation(mapk1_invalid, mapk3_invalid, 'T', '203')
+    st1 = Phosphorylation(mapk1_invalid, mapk3_invalid, 'Y', '203')
     st2 = Phosphorylation(map2k1_invalid, mapk1_invalid, 'Y', '218')
 
     res = sm.map_sites([st1, st2])
@@ -132,7 +132,7 @@ def test_site_map_modification():
     assert agent1.name == 'MAP2K1'
     assert len(agent1.mods) == 2
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'S', '218'))
-    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'S', '222'))
+    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'S', '222'))
     assert len(agent2.mods) == 2
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
