@@ -23,7 +23,24 @@ def read_amino_acids():
 amino_acids, amino_acids_reverse = read_amino_acids()
 
 BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
-MutCondition = namedtuple('MutCondition', ['pos', 'aa_from', 'aa_to'])
+
+class MutCondition(object):
+    def __init__(self, position, residue_from, residue_to=None):
+        self.position = position
+        self.residue_from = get_valid_residue(residue_from)
+        self.residue_to = get_valid_residue(residue_to)
+
+    def matches(self, other):
+        return (self.matches_key() == other.matches_key())
+
+    def matches_key(self):
+        key = (self.position, self.residue_from, self.residue_to)
+        return str(key)
+
+    def __str__(self):
+        s = '(%s, %s, %s)' % (self.residue_from, self.position,
+                               self.residue_to)
+        return s
 
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
@@ -65,6 +82,9 @@ class ModCondition(object):
         ms = '(' + ms + ')'
         return ms
 
+    def __repr__(self):
+        return self.__str__()
+
 class Agent(object):
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, mut_conditions=None, db_refs=None):
@@ -88,6 +108,8 @@ class Agent(object):
 
         if mut_conditions is None:
             self.mut_conditions = []
+        elif isinstance(mut_conditions, MutCondition):
+            self.mut_conditions = [mut_conditions]
         else:
             self.mut_conditions = mut_conditions
 
@@ -107,6 +129,7 @@ class Agent(object):
         # with unknown sites.
         key = (self.name,
                set([m.matches_key() for m in self.mods]),
+               set([m.matches_key() for m in self.mut_conditions]),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
@@ -186,6 +209,10 @@ class Agent(object):
             attr_strs.append(mod_str)
         if self.active:
             attr_strs.append('active: %s' % self.active)
+        if self.mut_conditions:
+            mut_str = 'muts: '
+            mut_str += ', '.join(['%s' % m for m in self.mut_conditions])
+            attr_strs.append(mut_str)
         if self.bound_conditions:
             attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
                           for b in self.bound_conditions]
@@ -564,19 +591,17 @@ class ActivatingSubstitution(Statement):
     """Statement representing the activation of a protein as a result
     of a residue substitution"""
 
-    def __init__(self, monomer, wt_residue, pos, sub_residue, activity, rel,
+    def __init__(self, monomer, mutation, activity, rel,
                  evidence=None):
         super(ActivatingSubstitution, self).__init__(evidence)
         self.monomer = monomer
-        self.wt_residue = wt_residue
-        self.pos = pos
-        self.sub_residue = sub_residue
+        self.mutation = mutation
         self.activity = activity
         self.rel = rel
 
     def matches_key(self):
-        key = (type(self), self.monomer.matches_key(), self.wt_residue,
-                self.pos, self.sub_residue, self.activity)
+        key = (type(self), self.monomer.matches_key(),
+               self.mutation.matches_key(), self.activity)
         return str(key)
 
     def agent_list(self):
@@ -593,9 +618,6 @@ class ActivatingSubstitution(Statement):
         if type(self) != type(other):
             return False
         if self.monomer.refinement_of(other.monomer, eh, mh) and \
-           self.wt_residue == other.wt_residue and \
-           self.pos == other.pos and \
-           self.sub_residue == other.sub_residue and \
            self.activity == other.activity and \
            self.rel == other.rel:
             return True
@@ -604,8 +626,7 @@ class ActivatingSubstitution(Statement):
 
     def __str__(self):
         s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
-                (self.monomer.name, self.wt_residue, self.pos,
-                 self.sub_residue, self.activity, self.rel))
+                (self.monomer.name, self.mutation, self.activity, self.rel))
         return s
 
 
