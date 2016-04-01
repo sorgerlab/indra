@@ -358,3 +358,28 @@ def test_rule_name_str_5():
     s = get_agent_rule_str(a)
     print s
     assert(s == 'BRAF_phosphoS123')
+
+def test_neg_act_mod():
+    mc = ModCondition('phosphorylation', 'serine', '123', False)
+    st1 = ActivityModification(Agent('BRAF'), mc, 'increases', 'Active')
+    st2 = Phosphorylation(Agent('BRAF'), Agent('MAP2K2'))
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1, st2])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'S123': 'u'})
+
+def test_neg_agent_mod():
+    mc = ModCondition('phosphorylation', 'serine', '123', False)
+    st = Phosphorylation(Agent('BRAF', mods=[mc]), Agent('MAP2K2'))
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'S123': 'u'})
