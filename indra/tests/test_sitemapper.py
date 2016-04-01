@@ -142,16 +142,25 @@ def test_site_map_modification():
     assert ms.position == '218'
 
 
-"""
 def test_site_map_activity_modification():
-    mapk1_invalid = Agent('MAPK1', db_refs={'UP': 'P28482'})
+    mapk1 = Agent('MAPK1', db_refs={'UP': 'P28482'})
 
-    st1 = ActivityModification(mapk1_invalid,
-                               ['PhosphorylationThreonine',
-                                     'PhosphorylationTyrosine'],
-                               ['183', '185'], 'increases',
-                               'KinaseActivity')
+    st1 = ActivityModification(mapk1,
+                               [ModCondition('phosphorylation', 'T', '183'),
+                                ModCondition('phosphorylation', 'Y', '185')],
+                               'increases', 'KinaseActivity')
     (valid, mapped) = sm.map_sites([st1])
-    import ipdb; ipdb.set_trace()
-"""
-
+    assert len(valid) == 0
+    assert len(mapped) == 1
+    ms = mapped[0]
+    assert ms.mapped_mods[0][0] == ('MAPK1', 'T', '183')
+    assert ms.mapped_mods[0][1][0] == 'T'
+    assert ms.mapped_mods[0][1][1] == '185'
+    assert ms.mapped_mods[1][0] == ('MAPK1', 'Y', '185')
+    assert ms.mapped_mods[1][1][0] == 'Y'
+    assert ms.mapped_mods[1][1][1] == '187'
+    assert ms.original_stmt == st1
+    assert ms.mapped_stmt.mod[0].matches(ModCondition('phosphorylation',
+                                                      'T', '185'))
+    assert ms.mapped_stmt.mod[1].matches(ModCondition('phosphorylation',
+                                                      'Y', '187'))
