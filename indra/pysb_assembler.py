@@ -31,10 +31,18 @@ class BaseAgentSet(object):
             base_agent = BaseAgent(agent.name)
             self.agents[agent.name] = base_agent
 
+        # Handle bound conditions
         for bc in agent.bound_conditions:
             bound_base_agent = self.get_create_base_agent(bc.agent)
             bound_base_agent.create_site(get_binding_site_name(agent.name))
             base_agent.create_site(get_binding_site_name(bc.agent.name))
+
+        # Handle modification conditions
+        for mc in agent.mods:
+            mod_site_name =\
+                get_mod_site_name(mc.mod_type, mc.residue, mc.position)
+            site_states = states[mc.mod_type]
+            base_agent.create_site(mod_site_name, site_states)
 
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.iteritems():
@@ -238,7 +246,11 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
             mod_site_str = abbrevs[mod.residue]
         mod_pos_str = mod.position if mod.position is not None else ''
         mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
-        pattern[mod_site] = states[mod.mod_type][1]
+        site_states = states[mod.mod_type]
+        if mod.is_modified:
+            pattern[mod_site] = site_states[1]
+        else:
+            pattern[mod_site] = site_states[0]
 
     complex_pattern = monomer(**pattern)
     return complex_pattern
