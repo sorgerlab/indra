@@ -330,7 +330,7 @@ def check_agent_mod(agent, mods=None):
     for m in check_mods:
         if m.position is None:
             continue
-        residue = get_residue(m.residue)
+        residue = m.residue
         if residue is None:
             continue
         ver = uniprot_client.verify_location(agent_entry, residue, m.position)
@@ -339,14 +339,3 @@ def check_agent_mod(agent, mods=None):
                   (m.position, agent.name, residue)
             failures.append((agent.name, residue, m.position))
     return failures
-
-def get_residue(residue):
-    """Return the amino acid letter from a  modification string"""
-    if residue == 'serine':
-        return 'S'
-    elif residue == 'threonine':
-        return 'T'
-    elif residue == 'tyrosine':
-        return 'Y'
-    else:
-        return None

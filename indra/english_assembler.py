@@ -51,22 +51,25 @@ def assemble_agent_str(agent):
         if len(agent.mods) == 1 and agent.mods[0].position is None:
             prefix = abbrev_prefix[agent.mods[0].mod_type]
             if agent.mods[0].residue is not None:
-                prefix = agent.mods[0].residue + '-' + prefix
+                residue_str =\
+                    ist.amino_acids[agent.mods[0].residue]['full_name']
+                prefix = residue_str + '-' + prefix
             agent_str =  prefix + ' ' + agent_str
         else:
             if agent.bound_conditions:
                 agent_str += ' and'
-            # TODO: handle multiple different mod types
             agent_str += ' %s on ' % abbrev_prefix[agent.mods[0].mod_type]
             mod_lst = []
             for m in agent.mods:
                 if m.position is None:
                     if m.residue is not None:
-                        mod_lst.append(m.residue)
+                        residue_str =\
+                            ist.amino_acids[m.residue]['full_name']
+                        mod_lst.append(residue_str)
                     else:
                         mod_lst.append('an unknown residue')
                 else:
-                    mod_lst.append(abbrev_letter[m.residue] + m.position)
+                    mod_lst.append(m.residue + m.position)
             agent_str += join_list(mod_lst)
 
     return agent_str
@@ -93,9 +96,9 @@ def assemble_phosphorylation(stmt):
 
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + stmt.residue
+            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + abbrev_letter[stmt.residue] + stmt.position
+            mod_str = 'on ' + stmt.residue + stmt.position
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
@@ -111,9 +114,9 @@ def assemble_dephosphorylation(stmt):
 
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + stmt.residue
+            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + abbrev_letter[stmt.residue] + stmt.position
+            mod_str = 'on ' + stmt.residue + stmt.position
     else:
         mod_str = 'on an unknown residue '
     stmt_str += ' ' + mod_str
@@ -129,12 +132,6 @@ def make_sentence(txt):
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'
     return txt
-
-abbrev_letter = {
-    'serine': 'S',
-    'threonine': 'T',
-    'tyrosine': 'Y',
-}
 
 abbrev_prefix = {
     'phosphorylation': 'phosphorylated',

@@ -101,9 +101,6 @@ abbrevs = {
     'glycosylation': 'glycosyl',
     'methylation': 'methyl',
     'modification': 'mod',
-    'serine': 'S',
-    'threonine': 'T',
-    'tyrosine': 'Y'
 }
 
 active_site_names = {
@@ -153,7 +150,7 @@ def get_mod_site_name(mod_type, residue, position):
     if residue is None:
         mod_str = abbrevs[mod_type]
     else:
-        mod_str = abbrevs[residue]
+        mod_str = residue
     mod_pos = position if position is not None else ''
     name = ('%s%s' % (mod_str, mod_pos))
     return name
@@ -171,7 +168,7 @@ def get_agent_rule_str(agent):
     for mod in agent.mods:
         mstr = abbrevs[mod.mod_type]
         if mod.residue is not None:
-            mstr += abbrevs[mod.residue]
+            mstr += mod.residue
         if mod.position is not None:
             mstr += mod.position
         rule_str_list.append('%s' % mstr)
@@ -243,7 +240,7 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
     for mod in agent.mods:
         mod_site_str = abbrevs[mod.mod_type]
         if mod.residue is not None:
-            mod_site_str = abbrevs[mod.residue]
+            mod_site_str = mod.residue
         mod_pos_str = mod.position if mod.position is not None else ''
         mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
         site_states = states[mod.mod_type]
@@ -411,7 +408,7 @@ def complex_monomers_one_step(stmt, agent_set):
             if mod.residue is None:
                 mod_str = abbrevs[mod.mod_type]
             else:
-                mod_str = abbrevs[mod.residue]
+                mod_str = mod.residue
             mod_pos = mod.position if mod.position is not None else ''
             mod_site = ('%s%s' % (mod_str, mod_pos))
             gene_mono.create_site(mod_site, states[mod.mod_type])
@@ -535,7 +532,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
             if mod.residue is None:
                 mod_str = abbrevs[mod.mod_type]
             else:
-                mod_str = abbrevs[mod.residue]
+                mod_str = mod.residue
             mod_pos = mod.position if mod.position is not None else ''
             mod_site = ('%s%s' % (mod_str, mod_pos))
             left_site_dict[mod_site] = states[mod.mod_type][1]
