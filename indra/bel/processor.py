@@ -446,9 +446,10 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivatingSubstitution(enz, wt_residue, position,
-                                           sub_residue, act_type, rel,
-                                           evidence))
+                    ActivatingSubstitution(enz,
+                                           MutCondition(position, wt_residue,
+                                                        sub_residue),
+                                           act_type, rel, evidence))
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
