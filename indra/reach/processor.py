@@ -178,15 +178,16 @@ class ReachProcessor(object):
 
         mod_terms = entity_term.get('modifications')
         mods = []
+        muts = []
         if mod_terms is not None:
             for m in mod_terms:
                 if m['type'] == 'mutation':
-                    #TODO: represent mutations in INDRA
                     # Evidence is usualy something like "V600E"
                     # We could parse this to get the amino acid
                     # change that happened.
-                    mutation = m.get('evidence')
-                    continue
+                    mutation_str = m.get('evidence')
+                    mut = self._parse_mutation(mutation_str)
+                    muts.append(mut)
                 elif m['type'] == 'Phosphorylation':
                     site = m.get('site')
                     if site is not None:
@@ -200,7 +201,7 @@ class ReachProcessor(object):
                 else:
                     print 'Unhandled entity modification type: %s' % m['type']
 
-        agent = Agent(agent_name, db_refs=db_refs, mods=mods)
+        agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
     @staticmethod
@@ -240,6 +241,19 @@ class ReachProcessor(object):
         return name
 
     @staticmethod
+    def _parse_mutation(s):
+        m = re.match(r'([A-Z])([0-9]+)([A-Z])', s)
+        if m is not None:
+            parts = m.groups()
+            residue_from = get_valid_residue(parts[0])
+            residue_to = get_valid_residue(parts[2])
+            position = parts[1]
+            mut = MutCondition(position, residue_from, residue_to)
+            return mut
+        else:
+            return None
+
+    @staticmethod
     def _parse_site_text(s):
         m = re.match(r'([TYS])[-]?([0-9]+)', s)
         if m is not None:
@@ -247,7 +261,7 @@ class ReachProcessor(object):
             site = m.groups()[1]
             return residue, site
 
-        m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())    
+        m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())
         if m is not None:
             residue = get_valid_residue(m.groups()[0])
             site = m.groups()[1]
