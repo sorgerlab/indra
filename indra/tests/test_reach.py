@@ -45,3 +45,13 @@ def test_bind():
 def test_activity():
     rp = reach_api.process_text('MEK1 activates ERK2.')
     assert(len(rp.statements) == 1)
+
+def test_mutation():
+    rp = reach_api.process_text('BRAF(V600E) phosphorylates MEK.')
+    assert(len(rp.statements) == 1)
+    braf = rp.statements[0].enz
+    assert(braf.name == 'BRAF')
+    assert(len(braf.mutations) == 1)
+    assert(braf.mutations[0].position == '600')
+    assert(braf.mutations[0].residue_from == 'V')
+    assert(braf.mutations[0].residue_to == 'E')

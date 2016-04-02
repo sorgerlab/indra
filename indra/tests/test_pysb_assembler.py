@@ -383,3 +383,16 @@ def test_neg_agent_mod():
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
     assert(braf.site_conditions == {'S123': 'u'})
+
+def test_mut():
+    mut = MutCondition('600', 'V', 'E')
+    st = Phosphorylation(Agent('BRAF', mutations=[mut]), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'V600': 'E'})
+
