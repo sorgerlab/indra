@@ -403,15 +403,6 @@ def complex_monomers_one_step(stmt, agent_set):
     all the others."""
     for i, member in enumerate(stmt.members):
         gene_mono = agent_set.get_create_base_agent(member)
-        # Add sites for agent modifications
-        for mod in member.mods:
-            if mod.residue is None:
-                mod_str = abbrevs[mod.mod_type]
-            else:
-                mod_str = mod.residue
-            mod_pos = mod.position if mod.position is not None else ''
-            mod_site = ('%s%s' % (mod_str, mod_pos))
-            gene_mono.create_site(mod_site, states[mod.mod_type])
 
         # Specify a binding site for each of the other complex members
         # bp = abbreviation for "binding partner"
@@ -436,18 +427,10 @@ def complex_assemble_one_step(stmt, model, agent_set):
         kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-6)
 
         # Make a rule name
-        name_components = []
-        for m in pair:
-            for bc in m.bound_conditions:
-                if bc.is_bound:
-                    name_components.append(m.name + '_' + bc.agent.name)
-                else:
-                    name_components.append(m.name + '_n' + bc.agent.name)
-            else:
-                name_components.append(m.name)
+        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
+        rule_name += '_bind'
 
         # Construct full patterns of each agent with conditions
-        rule_name = '_'.join(name_components) + '_bind'
         agent1_pattern = get_complex_pattern(model, agent1, agent_set)
         agent2_pattern = get_complex_pattern(model, agent2, agent_set)
         agent1_bs = get_binding_site_name(agent2.name)
@@ -460,7 +443,7 @@ def complex_assemble_one_step(stmt, model, agent_set):
         add_rule_to_model(model, r)
 
         # In reverse reaction, assume that dissocition is unconditional
-        rule_name = '_'.join(name_components) + '_dissociate'
+        rule_name = '_'.join([a.name for a in pair]) + '_dissociate'
         agent1_uncond = get_complex_pattern(model, ist.Agent(agent1.name),
                                             agent_set)
         agent2_uncond = get_complex_pattern(model, ist.Agent(agent2.name),
@@ -480,16 +463,9 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-6)
 
     # Make a rule name
-    name_components = []
-    for m in stmt.members:
-        for bc in m.bound_conditions:
-            if bc.is_bound:
-                name_components.append(m.name + '_' + bc.agent.name)
-            else:
-                name_components.append(m.name + '_n' + bc.agent.name)
-        else:
-            name_components.append(m.name)
-    rule_name = '_'.join(name_components) + '_bind'
+    rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
+    rule_name += '_bind'
+
     # Initialize the left and right-hand sides of the rule
     lhs = ReactionPattern([])
     rhs = ComplexPattern([], None)
