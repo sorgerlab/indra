@@ -625,7 +625,7 @@ class ActivatingSubstitution(Statement):
             return False
 
     def __str__(self):
-        s = ("ActivatingSubstitution(%s, %s, %s, %s, %s, %s)" %
+        s = ("ActivatingSubstitution(%s, %s, %s, %s)" %
                 (self.monomer.name, self.mutation, self.activity, self.rel))
         return s
 
