@@ -365,7 +365,7 @@ class TripsProcessor(object):
                 if mut_values is None:
                     continue
                 mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
-                agent.mut_conditions.append(mc)
+                agent.mutations.append(mc)
         return agent
 
     def add_condition(self, agent, precond_event, agent_term):

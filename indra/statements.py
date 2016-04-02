@@ -87,7 +87,7 @@ class ModCondition(object):
 
 class Agent(object):
     def __init__(self, name, mods=None, active=None,
-                 bound_conditions=None, mut_conditions=None, db_refs=None):
+                 bound_conditions=None, mutations=None, db_refs=None):
         self.name = name
 
         if mods is None:
@@ -106,12 +106,12 @@ class Agent(object):
         else:
             self.bound_conditions = bound_conditions
 
-        if mut_conditions is None:
-            self.mut_conditions = []
-        elif isinstance(mut_conditions, MutCondition):
-            self.mut_conditions = [mut_conditions]
+        if mutations is None:
+            self.mutations = []
+        elif isinstance(mutations, MutCondition):
+            self.mutations = [mutations]
         else:
-            self.mut_conditions = mut_conditions
+            self.mutations = mutations
 
         self.active = active
 
@@ -129,7 +129,7 @@ class Agent(object):
         # with unknown sites.
         key = (self.name,
                set([m.matches_key() for m in self.mods]),
-               set([m.matches_key() for m in self.mut_conditions]),
+               set([m.matches_key() for m in self.mutations]),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
@@ -209,9 +209,9 @@ class Agent(object):
             attr_strs.append(mod_str)
         if self.active:
             attr_strs.append('active: %s' % self.active)
-        if self.mut_conditions:
+        if self.mutations:
             mut_str = 'muts: '
-            mut_str += ', '.join(['%s' % m for m in self.mut_conditions])
+            mut_str += ', '.join(['%s' % m for m in self.mutations])
             attr_strs.append(mut_str)
         if self.bound_conditions:
             attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
