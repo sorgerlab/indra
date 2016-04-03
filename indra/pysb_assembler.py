@@ -1,14 +1,16 @@
 import itertools
+import warnings
 
 from pysb import (Model, Monomer, Parameter, Rule, Annotation,
         ComponentDuplicateNameError, ANY)
 from pysb.core import SelfExporter
 import pysb.export
+
 from bel import bel_api
 from biopax import biopax_api
 from trips import trips_api
 from indra import statements as ist
-import warnings
+from indra.databases import context_client
 
 SelfExporter.do_export = False
 
@@ -272,12 +274,6 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
     return complex_pattern
 
 
-def add_default_initial_conditions(model):
-    # Iterate over all monomers
-    for m in model.monomers:
-        set_base_initial_condition(model, m, 100.0)
-
-
 def set_base_initial_condition(model, monomer, value):
     # Build up monomer pattern dict
     sites_dict = {}
@@ -393,8 +389,45 @@ class PysbAssembler(object):
         self.assemble()
         # Add initial conditions
         if initial_conditions:
-            add_default_initial_conditions(self.model)
+            self.add_default_initial_conditions()
         return self.model
+
+    def add_default_initial_conditions(self):
+        if self.model is None:
+            return
+        for m in self.model.monomers:
+            set_base_initial_condition(self.model, m, 100.0)
+
+    def set_context(self, cell_type):
+        """Uses the INDRA context client to get protein expression
+        for cancer cell lines."""
+        if self.model is None:
+            return
+        monomer_names = [m.name for m in self.model.monomers]
+        res = context_client.get_protein_expression(monomer_names, cell_type)
+        if not res:
+            print 'Could not get context for %s cell type.' % cell_type
+            self.add_default_initial_conditions()
+        monomers_found = []
+        monomers_notfound = []
+        for m in self.model.monomers:
+            init = res.get(m.name)
+            if init is not None:
+                set_base_initial_condition(self.model, m, init[cell_type])
+                monomers_found.append(m.name)
+            else:
+                set_base_initial_condition(self.model, m, 100.0)
+                monomers_notfound.append(m.name)
+        print 'Monomers set to %s context' % cell_type
+        print '--------------------------------'
+        for m in monomers_found:
+            print m
+        if monomers_notfound:
+            print
+            print 'Monomers not found in %s context' % cell_type
+            print '-----------------------------------------'
+            for m in monomers_notfound:
+                print m
 
     def print_model(self, fname='pysb_model.py'):
         if self.model is not None:
