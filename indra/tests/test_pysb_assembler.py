@@ -396,3 +396,15 @@ def test_mut():
     assert(braf.monomer.name == 'BRAF')
     assert(braf.site_conditions == {'V600': 'E'})
 
+def test_set_context():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(pa.model.parameters['MAP2K1_0'].value < 1000)
+    assert(pa.model.parameters['MAPK3_0'].value < 1000)
+    pa.set_context('A375_SKIN')
+    assert(pa.model.parameters['MAP2K1_0'].value > 10000)
+    assert(pa.model.parameters['MAPK3_0'].value > 10000)
+
+
