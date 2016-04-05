@@ -495,13 +495,12 @@ class TripsProcessor(object):
             if len(hgnc_ids) > 1:
                 warnings.warn('%d UniProt IDs reported.' % len(up_ids))
             up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
-            up_rdf = up_client.query_protein(up_id)
             # First try to get HGNC name
-            hgnc_name = up_client.get_hgnc_name(up_rdf)
+            hgnc_name = up_client.get_hgnc_name(up_id)
             if hgnc_name is not None:
                 return self._get_valid_name(hgnc_name)
             # Next, try to get the gene name
-            gene_name = up_client.get_gene_name(up_rdf)
+            gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
                 return self._get_valid_name(gene_name)
         # By default, return the text of the name tag

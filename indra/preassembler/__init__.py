@@ -320,7 +320,6 @@ def check_agent_mod(agent, mods=None):
     # If the UniProt ID is a list then choose the first one.
     if not isinstance(up_id, basestring):
         up_id = up_id[0]
-    agent_entry = uniprot_client.query_protein(up_id)
 
     if mods is not None:
         check_mods = mods
@@ -333,7 +332,7 @@ def check_agent_mod(agent, mods=None):
         residue = m.residue
         if residue is None:
             continue
-        ver = uniprot_client.verify_location(agent_entry, residue, m.position)
+        ver = uniprot_client.verify_location(up_id, residue, m.position)
         if not ver:
             print '-> Sequence check failed; position %s on %s is not %s.' %\
                   (m.position, agent.name, residue)

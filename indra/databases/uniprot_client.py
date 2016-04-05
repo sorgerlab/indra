@@ -1,3 +1,5 @@
+import os
+import csv
 import rdflib
 import urllib, urllib2
 from functools32 import lru_cache
@@ -10,6 +12,20 @@ rdf_prefixes = """
     PREFIX faldo: <http://biohackathon.org/resource/faldo#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
+
+hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
+            '/../../data/hgnc_entries.txt'
+try:
+    fh = open(hgnc_file, 'rt')
+    rd = csv.reader(fh, delimiter='\t')
+    uniprot_hgnc = {}
+    for row in rd:
+        hgnc_name = row[1]
+        uniprot_id = row[5]
+        if uniprot_id:
+            uniprot_hgnc[uniprot_id] = hgnc_name
+except IOError:
+    uniprot_hgnc = {}
 
 @lru_cache(maxsize=1000)
 def query_protein(protein_id):
@@ -46,14 +62,21 @@ def get_family_members(family_name, human_only=True):
         protein_list = html.strip().split('\n')
         gene_names = []
         for p in protein_list:
-            g  = query_protein(p)
-            hgnc_name = get_hgnc_name(g)
+            hgnc_name = get_hgnc_name(p)
             gene_names.append(hgnc_name)
         return gene_names
     else:
         return None
 
-def get_hgnc_name(g):
+def get_hgnc_name(protein_id):
+    # Try getting it from the dict first
+    try:
+        hgnc_name = uniprot_hgnc[protein_id]
+        return hgnc_name
+    except KeyError:
+        pass
+    # If it's not in the dict then call webservice
+    g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?name
         WHERE {
@@ -70,10 +93,11 @@ def get_hgnc_name(g):
         return None
 
 
-def get_gene_name(g):
+def get_gene_name(protein_id):
     # This is an alternative to get_hgnc_name and is useful when
     # HGNC name is not availabe (for instance, when the organism
     # is not homo sapiens)
+    g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?name
         WHERE {
@@ -89,7 +113,8 @@ def get_gene_name(g):
         return None
 
 
-def get_sequence(g):
+def get_sequence(protein_id):
+    g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?seq
         WHERE {
@@ -102,7 +127,8 @@ def get_sequence(g):
     return seq
 
 
-def get_modifications(g):
+def get_modifications(protein_id):
+    g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?beg_pos ?comment
         WHERE {
@@ -128,12 +154,13 @@ def get_modifications(g):
     return mods
 
 
-def verify_location(g, residue, location):
+def verify_location(protein_id, residue, location):
     """
     Verify if a given residue is at the given location
     acording to the UniProt sequence
     """
-    seq = get_sequence(g)
+    g = query_protein(protein_id)
+    seq = get_sequence(protein_id)
     try:
         loc_int = int(location)
     except ValueError:
@@ -147,18 +174,19 @@ def verify_location(g, residue, location):
     return False
 
 
-def verify_modification(g, residue, location=None):
+def verify_modification(protein_id, residue, location=None):
     """
     Verify if a given residue at the given location
     has a reported modification. If location is not
     given, we only check if there is any residue of the
     given type that is modified.
     """
-    mods = get_modifications(g)
+    g = query_protein(protein_id)
+    mods = get_modifications(protein_id)
     mod_locs = [m[1] for m in mods]
-    seq = get_sequence(g)
+    seq = get_sequence(protein_id)
     if location:
-        if not verify_location(g, residue, location):
+        if not verify_location(protein_id, residue, location):
             return False
         try:
             mod_idx = mod_locs.index(location)
@@ -173,7 +201,7 @@ def verify_modification(g, residue, location=None):
 
 if __name__ == '__main__':
     g = query_protein('Q02750')
-    seq = get_sequence(g)
-    mods = get_modifications(g)
-    hgnc_name = get_hgnc_name(g)
-    gene_name = get_gene_name(g)
+    seq = get_sequence('Q02750')
+    mods = get_modifications('Q02750')
+    hgnc_name = get_hgnc_name('Q02750')
+    gene_name = get_gene_name('Q02750')

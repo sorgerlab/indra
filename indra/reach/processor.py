@@ -160,13 +160,13 @@ class ReachProcessor(object):
                 up_id = xr['id']
                 db_refs['UP'] = up_id
                 # Look up official names in UniProt
-                up_rdf = up_client.query_protein(up_id)
-                hgnc_name = up_client.get_hgnc_name(up_rdf)
-                gene_name = up_client.get_gene_name(up_rdf)
+                hgnc_name = up_client.get_hgnc_name(up_id)
                 if hgnc_name is not None:
                     agent_name = self._get_valid_name(hgnc_name)
-                elif gene_name is not None:
-                    agent_name = self._get_valid_name(gene_name)
+                else:
+                    gene_name = up_client.get_gene_name(up_id)
+                    if gene_name is not None:
+                        agent_name = self._get_valid_name(gene_name)
             elif ns == 'interpro':
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':
