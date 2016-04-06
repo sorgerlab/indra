@@ -371,7 +371,17 @@ class PysbAssembler(object):
         for stmt in self.statements:
             self.dispatch(stmt, 'assemble', self.model, self.agent_set)
 
-    def make_model(self, initial_conditions=True):
+    def make_model(self, policies=None, initial_conditions=True):
+        # Set local policies for this make_model call that overwrite
+        # the global policies of the PySB assembler
+        if policies is not None:
+            global_policies = self.policies
+            if isinstance(policies, basestring):
+                local_policies = {'other': policies}
+            else:
+                local_policies = {'other': 'default'}
+                local_policies.update(policies)
+            self.policies = local_policies
         self.model = Model()
         self.agent_set = BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
@@ -390,6 +400,11 @@ class PysbAssembler(object):
         # Add initial conditions
         if initial_conditions:
             self.add_default_initial_conditions()
+
+        # If local policies were applied, revert to the global one
+        if policies is not None:
+            self.policies = global_policies
+
         return self.model
 
     def add_default_initial_conditions(self):
