@@ -186,8 +186,13 @@ class ReachProcessor(object):
                     # We could parse this to get the amino acid
                     # change that happened.
                     mutation_str = m.get('evidence')
+                    # TODO: sometimes mutation_str is "mutant", "Mutant",
+                    # "mutants" - this indicates that there is a mutation
+                    # but not the specific type. We should encode this
+                    # somehow as a "blank" mutation condition
                     mut = self._parse_mutation(mutation_str)
-                    muts.append(mut)
+                    if mut is not None:
+                        muts.append(mut)
                 elif m['type'] == 'Phosphorylation':
                     site = m.get('site')
                     if site is not None:
@@ -244,7 +249,7 @@ class ReachProcessor(object):
     def _parse_mutation(s):
         m = re.match(r'([A-Z])([0-9]+)([A-Z])', s)
         if m is not None:
-            parts = m.groups()
+            parts = [str(g) for g in m.groups()]
             residue_from = get_valid_residue(parts[0])
             residue_to = get_valid_residue(parts[2])
             position = parts[1]
