@@ -2,7 +2,7 @@ import itertools
 import warnings
 
 from pysb import (Model, Monomer, Parameter, Rule, Annotation,
-        ComponentDuplicateNameError, ANY)
+        ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY)
 from pysb.core import SelfExporter
 import pysb.export
 
@@ -480,6 +480,7 @@ def complex_monomers_one_step(stmt, agent_set):
             gene_mono.create_site(get_binding_site_name(bp.name))
 
 complex_monomers_interactions_only = complex_monomers_one_step
+complex_monomers_multi_way = complex_monomers_one_step
 complex_monomers_default = complex_monomers_one_step
 
 
@@ -530,7 +531,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-6)
 
     # Make a rule name
-    rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
+    rule_name = '_'.join([get_agent_rule_str(m) for m in stmt.members])
     rule_name += '_bind'
 
     # Initialize the left and right-hand sides of the rule
@@ -1264,10 +1265,3 @@ def activitymodification_assemble_one_step(stmt, model, agent_set):
     pass
 
 activitymodification_assemble_default = activitymodification_assemble_one_step
-
-
-if __name__ == '__main__':
-    pa = PysbAssembler()
-    bp = bel_api.process_belrdf('data/RAS_neighborhood.rdf')
-    pa.add_statements(bp.statements)
-    model = pa.make_model()

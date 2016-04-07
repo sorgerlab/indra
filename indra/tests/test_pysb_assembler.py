@@ -34,6 +34,17 @@ def test_pysb_assembler_complex3():
     assert(len(model.rules)==2)
     assert(len(model.monomers)==3)
 
+def test_pysb_assembler_complex_multiway():
+    member1 = Agent('BRAF')
+    member2 = Agent('MEK1')
+    member3 = Agent('ERK1')
+    stmt = Complex([member1, member2, member3])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model(policies='multi_way')
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==3)
+
 def test_pysb_assembler_phos_noenz():
     enz = None
     sub = Agent('MEK1')
@@ -396,6 +407,18 @@ def test_neg_act_mod():
     assert(braf.monomer.name == 'BRAF')
     assert(braf.site_conditions == {'S123': 'u'})
 
+def test_pos_agent_mod():
+    mc = ModCondition('phosphorylation', 'serine', '123', True)
+    st = Phosphorylation(Agent('BRAF', mods=[mc]), Agent('MAP2K2'))
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'S123': 'p'})
+
 def test_neg_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
     st = Phosphorylation(Agent('BRAF', mods=[mc]), Agent('MAP2K2'))
@@ -431,4 +454,42 @@ def test_set_context():
     assert(pa.model.parameters['MAP2K1_0'].value > 10000)
     assert(pa.model.parameters['MAPK3_0'].value > 10000)
 
+def test_set_context_monomer_notfound():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('XYZ'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(pa.model.parameters['MAP2K1_0'].value < 1000)
+    assert(pa.model.parameters['XYZ_0'].value < 1000)
+    pa.set_context('A375_SKIN')
+    assert(pa.model.parameters['MAP2K1_0'].value > 10000)
+    assert(pa.model.parameters['XYZ_0'].value < 1000)
 
+def test_set_context_celltype_notfound():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    pa.set_context('XYZ')
+
+def test_annotation():
+    st = Phosphorylation(Agent('BRAF', db_refs = {'UP': 'P15056'}),
+                         Agent('MAP2K2', db_refs = {'HGNC': '6842'}))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.annotations) == 2)
+
+def test_print_model():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    pa.print_model('/dev/null')
+
+def test_print_rst():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    pa.print_rst('/dev/null')
