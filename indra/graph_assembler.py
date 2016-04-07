@@ -1,3 +1,4 @@
+import itertools
 from indra.statements import *
 import pygraphviz
 
@@ -27,11 +28,19 @@ class GraphAssembler():
                 self.add_node(stmt.enz)
                 self.add_node(stmt.sub)
                 self.add_dephosphorylation(stmt.enz, stmt.sub)
+            elif isinstance(stmt, ActivityActivity):
+                self.add_node(stmt.subj)
+                self.add_node(stmt.obj)
+                self.add_activityactivity(stmt.subj, stmt.obj,
+                                          stmt.relationship)
+            elif isinstance(stmt, Complex):
+                for m in stmt.members:
+                    self.add_node(m)
+                self.add_complex(stmt.members)
 
-    def add_edge(self, source, target, color, arrowhead):
+    def add_edge(self, source, target, **kwargs):
         style = 'solid'
-        self.graph.add_edge(source, target,
-                            arrowhead=arrowhead, color=color, style=style)
+        self.graph.add_edge(source, target, **kwargs)
 
     def add_phosphorylation(self, enz, sub):
         source = enz.name
@@ -40,9 +49,9 @@ class GraphAssembler():
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        color = '#000000'
-        arrowhead = 'normal'
-        self.add_edge(source, target, color, arrowhead)
+        params = {'color': '#000000',
+                  'arrowhead': 'normal'}
+        self.add_edge(source, target, **params)
 
     def add_dephosphorylation(self, enz, sub):
         source = enz.name
@@ -50,9 +59,33 @@ class GraphAssembler():
         edge_key = (source, target, 'dephosphorylation')
         if edge_key in self.existing_edges:
             return
-        color = '#ff0000'
-        arrowhead = 'normal'
-        self.add_edge(source, target, color, arrowhead)
+        self.existing_edges.append(edge_key)
+        params = {'color': '#ff0000',
+                  'arrowhead': 'normal'}
+        self.add_edge(source, target, **params)
+
+    def add_activityactivity(self, subj, obj, rel):
+        source = subj.name
+        target = obj.name
+        edge_key = (source, target, 'activity', rel)
+        if edge_key in self.existing_edges:
+            return
+        self.existing_edges.append(edge_key)
+        color = '#000000' if rel == 'increases' else '#ff0000'
+        arrowhead = 'vee' if rel == 'increases' else 'tee'
+        params = {'color': color,
+                  'arrowhead': arrowhead}
+        self.add_edge(source, target, **params)
+
+    def add_complex(self, members):
+        params = {'color': '#000000',
+                  'arrowhead': 'none'}
+        for m1, m2 in itertools.combinations(members, 2):
+            edge_key = (set([m1.name, m2.name]), 'complex')
+            if edge_key in self.existing_edges:
+                return
+            self.existing_edges.append(edge_key)
+            self.add_edge(m1.name, m2.name, **params)
 
     def add_node(self, agent):
         node_name = agent.name
