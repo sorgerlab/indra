@@ -6,8 +6,8 @@ class CxAssembler():
     # http://www.ndexbio.org/data-model/
     def __init__(self):
         self.statements = []
-        self.existing_nodes = []
-        self.existing_edges = []
+        self.existing_nodes = {}
+        self.existing_edges = {}
         self.cx = {'nodes': [], 'edges': [],
                       'nodeAttributes': [], 'edgeAttributes': []}
         self.id_counter = 0
@@ -34,8 +34,28 @@ class CxAssembler():
         sub_id = self.add_node(stmt.sub)
         self.add_edge(enz_id, sub_id, 'Phosphorylation', stmt)
 
+    def add_dephosphorylation(self, stmt):
+        if stmt.enz is None:
+            return
+        enz_id = self.add_node(stmt.enz)
+        sub_id = self.add_node(stmt.sub)
+        self.add_edge(enz_id, sub_id, 'Dephosphorylation', stmt)
+
+    def add_complex(self, stmt):
+        for m1, m2 in itertools.combinations(stmt.members, 2):
+            m1_id = self.add_node(m1)
+            m2_id = self.add_node(m2)
+            self.add_edge(m1_id, m2_id, 'Complex', stmt)
+
     def add_node(self, agent):
+        node_key = agent.name
+        try:
+            node_id = self.existing_nodes[node_key]
+            return node_id
+        except KeyError:
+            pass
         node_id = self.id_counter
+        self.existing_nodes[node_key] = node_id
         node = {'@id': node_id,
                 'n': agent.name}
         self.cx['nodes'].append(node)
@@ -48,7 +68,14 @@ class CxAssembler():
         return node_id
 
     def add_edge(self, source, target, interaction, stmt):
+        edge_key = (source, target, interaction)
+        try:
+            edge_id = self.existing_edges[edge_key]
+            return edge_id
+        except KeyError:
+            pass
         edge_id = self.id_counter
+        self.existing_nodes[edge_key] = edge_id
         edge = {'@id': edge_id,
                 's': source,
                 't': target,
@@ -62,6 +89,11 @@ class CxAssembler():
                 self.cx['edgeAttributes'].append(edge_attribute)
         return edge_id
 
-    def print_json(self):
+    def print_cx(self):
         json_str = json.dumps(self.cx)
         return json_str
+
+    def save_model(self, fname='model.cx'):
+        with open(fname, 'wt') as fh:
+            cx_str = self.print_cx()
+            fh.write(cx_str)
