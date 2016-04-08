@@ -9,7 +9,8 @@ class CxAssembler():
         self.existing_nodes = {}
         self.existing_edges = {}
         self.cx = {'nodes': [], 'edges': [],
-                      'nodeAttributes': [], 'edgeAttributes': []}
+                   'nodeAttributes': [], 'edgeAttributes': [],
+                   'networkAttributes': []}
         self.id_counter = 0
 
     def add_statements(self, stmts):
@@ -26,6 +27,11 @@ class CxAssembler():
                 self.add_activityactivity(stmt)
             elif isinstance(stmt, Complex):
                 self.add_complex(stmt)
+        network_name = 'indra_assembled'
+        network_description = ''
+        self.cx['networkAttributes'].append({'n': 'name', 'v': network_name})
+        self.cx['networkAttributes'].append({'n': 'description',
+                                             'v': network_description})
 
     def add_phosphorylation(self, stmt):
         if stmt.enz is None:
@@ -46,6 +52,12 @@ class CxAssembler():
             m1_id = self.add_node(m1)
             m2_id = self.add_node(m2)
             self.add_edge(m1_id, m2_id, 'Complex', stmt)
+
+    def add_activity_activity(self, stmt):
+        subj_id = self.add_node(stmt.subj)
+        obj_id = self.add_node(stmt.obj)
+        # TODO: take into account relation here
+        self.add_edge(subj_id, obj_id, 'ActivityActivity', stmt)
 
     def add_node(self, agent):
         node_key = agent.name
@@ -90,7 +102,8 @@ class CxAssembler():
         return edge_id
 
     def print_cx(self):
-        json_str = json.dumps(self.cx)
+        full_cx = [self.cx]
+        json_str = json.dumps(full_cx)
         return json_str
 
     def save_model(self, fname='model.cx'):
