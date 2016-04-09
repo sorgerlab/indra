@@ -99,10 +99,19 @@ class CxAssembler():
                                   'n': 'pmid',
                                   'v': stmt.evidence[0].pmid}
                 self.cx['edgeAttributes'].append(edge_attribute)
+        self.id_counter += 1
         return edge_id
 
     def print_cx(self):
-        full_cx = [self.cx]
+        full_cx = self.cx.copy()
+        full_cx['metaData'] = [{'idCounter': self.id_counter, 'name': 'nodes'},
+                               {'idCounter': self.id_counter, 'name': 'edges'}]
+        full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
+        if not full_cx['nodeAttributes']:
+            full_cx.pop('nodeAttributes', None)
+        if not full_cx['edgeAttributes']:
+            full_cx.pop('edgeAttributes', None)
+        full_cx = [{k: v} for k, v in full_cx.iteritems()]
         json_str = json.dumps(full_cx)
         return json_str
 
