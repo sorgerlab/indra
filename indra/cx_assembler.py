@@ -12,6 +12,7 @@ class CxAssembler():
         self.cx = {'nodes': [], 'edges': [],
                    'nodeAttributes': [], 'edgeAttributes': [],
                    'citations': [], 'edgeCitations': [],
+                   'supports': [], 'edgeSupports': [],
                    'networkAttributes': []}
         self.id_counter = 0
 
@@ -99,24 +100,48 @@ class CxAssembler():
                 't': target,
                 'i': interaction}
         self.cx['edges'].append(edge)
-        self.add_edge_attributes(edge_id, stmt)
+        self.add_edge_metadata(edge_id, stmt)
         return edge_id
 
-    def add_edge_attributes(self, edge_id, stmt):
+    def add_edge_metadata(self, edge_id, stmt):
+        '''
+        Add all annotations, evidence, citations, etc. to the edge
+        '''
+        # Add the string of the statement itself
         indra_stmt_str = '%s' % stmt
         edge_attribute = {'po': edge_id,
                           'n': 'INDRA statement',
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
-        pmids = [e.pmid for e in stmt.evidence if e.pmid is not None]
+
+        # Add the citations for the edge
+        pmids = [e.pmid for e in stmt.evidence if e.pmid]
+        edge_citations = []
         for pmid in pmids:
             citation_id = self._get_new_id()
             citation = {'@id': citation_id,
                         'dc:identifier': 'pmid:%s' % pmid}
             self.cx['citations'].append(citation)
-            edge_citation = {'citations': [citation_id],
+            edge_citations.append(citation_id)
+        if edge_citations:
+            edge_citation = {'citations': edge_citations,
                              'po': [edge_id]}
             self.cx['edgeCitations'].append(edge_citation)
+
+        # Add the textual supports for the edge
+        texts = [e.text for e in stmt.evidence if e.text]
+        edge_supports = []
+        for text in texts:
+            support_id = self._get_new_id()
+            support = {'@id': support_id,
+                       'text': text}
+            self.cx['supports'].append(support)
+            edge_supports.append(support_id)
+        if edge_supports:
+            edge_support = {'supports': edge_supports,
+                            'po': [edge_id]}
+            self.cx['edgeSupports'].append(edge_support)
+
 
     def print_cx(self):
         full_cx = OrderedDict()

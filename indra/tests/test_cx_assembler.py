@@ -10,7 +10,8 @@ st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
 st_actact = ActivityActivity(mek, 'Activity', 'increases', erk, 'Activity')
 st_actact2 = ActivityActivity(dusp, 'Activity', 'decreases', erk, 'Activity')
-st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345'))
+st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
+                                              text='MEK phosphorylates ERK'))
 
 
 def test_phos():
@@ -52,4 +53,18 @@ def test_edge_attributes():
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
     assert(len(cxa.cx['edgeAttributes']) == 2)
+
+def test_cited():
+    cxa = CxAssembler()
+    cxa.add_statements([st_cited])
+    cxa.make_model()
+    assert(len(cxa.cx['citations']) == 1)
+    assert(len(cxa.cx['edgeCitations']) == 1)
+
+def test_supports():
+    cxa = CxAssembler()
+    cxa.add_statements([st_cited])
+    cxa.make_model()
+    assert(len(cxa.cx['supports']) == 1)
+    assert(len(cxa.cx['edgeSupports']) == 1)
     cxa.save_model('small_example.cx')
