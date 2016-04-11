@@ -1,5 +1,6 @@
 import json
 import itertools
+from collections import OrderedDict
 from indra.statements import *
 
 class CxAssembler():
@@ -53,7 +54,7 @@ class CxAssembler():
             m2_id = self.add_node(m2)
             self.add_edge(m1_id, m2_id, 'Complex', stmt)
 
-    def add_activity_activity(self, stmt):
+    def add_activityactivity(self, stmt):
         subj_id = self.add_node(stmt.subj)
         obj_id = self.add_node(stmt.obj)
         # TODO: take into account relation here
@@ -93,26 +94,23 @@ class CxAssembler():
                 't': target,
                 'i': interaction}
         self.cx['edges'].append(edge)
-        if stmt.evidence:
-            if stmt.evidence[0].pmid:
-                edge_attribute = {'po': edge_id,
-                                  'n': 'pmid',
-                                  'v': stmt.evidence[0].pmid}
-                self.cx['edgeAttributes'].append(edge_attribute)
+        indra_stmt_str = '%s' % stmt
+        edge_attribute = {'po': edge_id,
+                          'n': 'INDRA statement',
+                          'v': indra_stmt_str}
+        self.cx['edgeAttributes'].append(edge_attribute)
         self.id_counter += 1
         return edge_id
 
     def print_cx(self):
-        full_cx = self.cx.copy()
+        full_cx = OrderedDict()
+        full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
         full_cx['metaData'] = [{'idCounter': self.id_counter, 'name': 'nodes'},
                                {'idCounter': self.id_counter, 'name': 'edges'}]
-        full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
-        if not full_cx['nodeAttributes']:
-            full_cx.pop('nodeAttributes', None)
-        if not full_cx['edgeAttributes']:
-            full_cx.pop('edgeAttributes', None)
+        for k, v in self.cx.iteritems():
+            full_cx[k] = v
         full_cx = [{k: v} for k, v in full_cx.iteritems()]
-        json_str = json.dumps(full_cx)
+        json_str = json.dumps(full_cx, indent=2)
         return json_str
 
     def save_model(self, fname='model.cx'):
