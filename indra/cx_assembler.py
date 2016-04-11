@@ -11,8 +11,14 @@ class CxAssembler():
         self.existing_edges = {}
         self.cx = {'nodes': [], 'edges': [],
                    'nodeAttributes': [], 'edgeAttributes': [],
+                   'citations': [], 'edgeCitations': [],
                    'networkAttributes': []}
         self.id_counter = 0
+
+    def _get_new_id(self):
+        ret = self.id_counter
+        self.id_counter += 1
+        return ret
 
     def add_statements(self, stmts):
         for stmt in stmts:
@@ -67,7 +73,7 @@ class CxAssembler():
             return node_id
         except KeyError:
             pass
-        node_id = self.id_counter
+        node_id = self._get_new_id()
         self.existing_nodes[node_key] = node_id
         node = {'@id': node_id,
                 'n': agent.name}
@@ -77,7 +83,6 @@ class CxAssembler():
                               'n': db_name,
                               'v': db_ids}
             self.cx['nodeAttributes'].append(node_attribute)
-        self.id_counter += 1
         return node_id
 
     def add_edge(self, source, target, interaction, stmt):
@@ -87,20 +92,31 @@ class CxAssembler():
             return edge_id
         except KeyError:
             pass
-        edge_id = self.id_counter
+        edge_id = self._get_new_id()
         self.existing_nodes[edge_key] = edge_id
         edge = {'@id': edge_id,
                 's': source,
                 't': target,
                 'i': interaction}
         self.cx['edges'].append(edge)
+        self.add_edge_attributes(edge_id, stmt)
+        return edge_id
+
+    def add_edge_attributes(self, edge_id, stmt):
         indra_stmt_str = '%s' % stmt
         edge_attribute = {'po': edge_id,
                           'n': 'INDRA statement',
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
-        self.id_counter += 1
-        return edge_id
+        pmids = [e.pmid for e in stmt.evidence if e.pmid is not None]
+        for pmid in pmids:
+            citation_id = self._get_new_id()
+            citation = {'@id': citation_id,
+                        'dc:identifier': 'pmid:%s' % pmid}
+            self.cx['citations'].append(citation)
+            edge_citation = {'citations': [citation_id],
+                             'po': [edge_id]}
+            self.cx['edgeCitations'].append(edge_citation)
 
     def print_cx(self):
         full_cx = OrderedDict()
