@@ -167,9 +167,9 @@ class SiteMapper(object):
         """
 
         invalid_sites = []
-        agent_entry = get_uniprot_entry(agent)
+        up_id = get_uniprot_id(agent)
         # If the uniprot entry is not found, let it pass
-        if not agent_entry:
+        if not up_id:
             return invalid_sites # empty list
         # Look up all of the modifications in uniprot, and add them to the list
         # of invalid sites if they are missing
@@ -178,7 +178,7 @@ class SiteMapper(object):
             if old_mod.position is None or old_mod.residue is None:
                 continue
             # Look up the residue/position in uniprot
-            site_valid = uniprot_client.verify_location(agent_entry,
+            site_valid = uniprot_client.verify_location(up_id,
                                                         old_mod.residue,
                                                         old_mod.position)
             # If it's not found in Uniprot, then look it up in the site map
@@ -194,22 +194,14 @@ class SiteMapper(object):
         return invalid_sites
 
 
+    """
     def check_stmt_mod(self, agent, mods=None, mod_sites=None):
-        """Look up the modification site in Uniprot and then the site map.
-        """
+        #Look up the modification site in Uniprot and then the site map.
 
         invalid_sites = {}
-        # FIXME This should go outside the func?
-        # If no UniProt ID is found, we don't report a failure
-        up_id = agent.db_refs.get('UP')
-        if up_id is None:
+        up_id = get_uniprot_id(agent)
+        if not up_id:
             return invalid_sites
-        # FIXME
-        # If the UniProt ID is a list then choose the first one.
-        if not isinstance(up_id, basestring):
-            up_id = up_id[0]
-        agent_entry = uniprot_client.query_protein(up_id)
-
         # Figure out which modifications we are checking: the agent's
         # modifications or the modifications in a statement
         if mod_sites is not None:
@@ -227,7 +219,7 @@ class SiteMapper(object):
             residue = site_abbrevs.get(m, None)
             if residue is None:
                 continue
-            ver = uniprot_client.verify_location(agent_entry, residue, mp)
+            ver = uniprot_client.verify_location(up_id, residue, mp)
             # If it's not found in Uniprot, then look it up in the site map
             if not ver:
                 try:
@@ -236,8 +228,8 @@ class SiteMapper(object):
                 except KeyError:
                     mapped_site = None
                 invalid_sites[(agent.name, str(residue), str(mp))] = mapped_site
-
         return invalid_sites
+    """
 
 def update_mod_list(agent_name, mods, invalid_sites):
     new_mod_list = []
@@ -272,16 +264,16 @@ def update_mod_list(agent_name, mods, invalid_sites):
     return new_mod_list
 
 
-def get_uniprot_entry(agent):
+def get_uniprot_id(agent):
     # If no UniProt ID is found, we don't report a failure
     up_id = agent.db_refs.get('UP')
     if up_id is None:
         return None
     # If the UniProt ID is a list then choose the first one.
-    if not isinstance(up_id, basestring):
+    if not isinstance(up_id, basestring) and \
+       isinstance(up_id[0], basestring):
         up_id = up_id[0]
-    agent_entry = uniprot_client.query_protein(up_id)
-    return agent_entry
+    return up_id
 
 def load_site_map(path):
     """Load the modification site map from a file.
