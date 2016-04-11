@@ -14,11 +14,12 @@ gene_list = []
 
 # STEP 0: Get gene list
 # Get gene list from ras_pathway_proteins.csv
-with open('data/ras_pathway_proteins.csv') as f:
+with open('../../data/ras_pathway_proteins.csv') as f:
     csvreader = csv.reader(f, delimiter='\t')
     for row in csvreader:
         gene_list.append(row[0].strip())
 
+"""
 # STEP 1: Get statements from BEL
 bel_statements = []
 for gene in gene_list:
@@ -50,8 +51,9 @@ bp.get_activity_modification()
 
 stmts = bp.statements + bel_statements
 with open('ras_genes_stmts.pkl', 'w') as f:
-    pickle.dump(pa.unique_stmts, f)
+    pickle.dump(stmts, f)
 """
+
 
 # STEP 3
 with open('ras_genes_stmts.pkl') as f:
@@ -151,4 +153,3 @@ for s in braf_grounded:
 #from indra.sbgn_assembler import SBGNAssembler
 #sbgn = SBGNAssembler(rel)
 #sbgn.make_sbgn()
-"""
