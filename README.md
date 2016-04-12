@@ -19,12 +19,17 @@ running setup.py from the terminal as
     $ cd indra
     $ python setup.py install
 
+Releases of INDRA are also available via [pip](https://pip.pypa.io/en/latest/installing/),
+you can install the latest release as
+
+    $ pip install indra
+
 INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
 also PySB (for more information on PySB, see https://github.com/pysb/pysb). 
 These packages are installed by setup.py.
 
-INDRA also uses a package called [pyjnius](https://github.com/kivy/pyjnius) 
-to allow using Java classes from Python. 
+For using BioPAX, an additional package called [pyjnius](https://github.com/kivy/pyjnius)
+is needed to allow using Java classes from Python.
 This is used only in the BioPAX API and the rest of INDRA will work without 
 pyjnius. Pyjnius requires cython and needs JRE and JDK 1.8 to be 
 installed. On Mac, install both [Java for OS X](http://support.apple.com/kb/DL1572) 
@@ -89,6 +94,7 @@ bel_processor = bel_api.process_ndex_neighborhood(['BRAF', 'MAP2K1'])
 ```
 
 Next, we look at an example of querying the [Pathway Commons database](http://pathwaycommons.org) for paths between two lists of proteins. 
+Note: see installation notes above for installing jnius, which is required for using the BioPAX API of INDRA.
 ```python
 from indra.biopax import biopax_api
 # Process the neighborhood of BRAF and MAP2K1
