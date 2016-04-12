@@ -7,7 +7,7 @@ before_install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
   - conda update --yes conda
-  - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython nose lxml
+  - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython=0.23.5 nose lxml
 install:
   # INDRA dependencies
   - sudo apt-get install graphviz
@@ -20,9 +20,6 @@ install:
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
-  # REACH dependencies
-  - pip install objectpath
-  # BEL dependencies
-  - pip install rdflib
+  - pip install .
 script:
   - nosetests --with-doctest
