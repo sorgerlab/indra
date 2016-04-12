@@ -83,4 +83,3 @@ def test_supports():
     cxa.make_model()
     assert(len(cxa.cx['supports']) == 1)
     assert(len(cxa.cx['edgeSupports']) == 1)
-    cxa.save_model('small_example.cx')

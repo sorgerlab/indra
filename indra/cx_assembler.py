@@ -1,3 +1,4 @@
+import re
 import json
 import itertools
 from collections import OrderedDict
@@ -94,12 +95,21 @@ class CxAssembler():
         node = {'@id': node_id,
                 'n': agent.name}
         self.cx['nodes'].append(node)
+        self.add_node_metadata(node_id, agent)
+        return node_id
+
+    def add_node_metadata(self, node_id, agent):
         for db_name, db_ids in agent.db_refs.iteritems():
+            if isinstance(db_ids, basestring):
+                db_id = db_ids
+            elif isinstance(db_ids, int):
+                db_id = str(db_ids)
+            else:
+                db_id = db_ids[0]
             node_attribute = {'po': node_id,
                               'n': db_name,
-                              'v': db_ids}
+                              'v': db_id}
             self.cx['nodeAttributes'].append(node_attribute)
-        return node_id
 
     def add_edge(self, source, target, interaction, stmt):
         edge_key = (source, target, interaction)
@@ -133,9 +143,18 @@ class CxAssembler():
         pmids = [e.pmid for e in stmt.evidence if e.pmid]
         edge_citations = []
         for pmid in pmids:
+            if re.match('[0-9]+', pmid):
+                pmid_txt = pmid
+            else:
+                m = re.match('.*pubmed:([0-9]+)', pmid)
+                if m:
+                    pmid_txt = m.groups()[0]
+                m = re.match('.*pmid:([0-9]+)', pmid)
+                if m:
+                    pmid_txt = m.groups()[0]
             citation_id = self._get_new_id()
             citation = {'@id': citation_id,
-                        'dc:identifier': 'pmid:%s' % pmid}
+                        'dc:identifier': 'pmid:%s' % pmid_txt}
             self.cx['citations'].append(citation)
             edge_citations.append(citation_id)
         if edge_citations:
@@ -157,6 +176,15 @@ class CxAssembler():
                             'po': [edge_id]}
             self.cx['edgeSupports'].append(edge_support)
 
+        # NOTE: supports and edgeSupports are currently
+        # not shown on NDEx therefore we add text evidence as a generic
+        # edgeAttribute
+        if texts:
+            text = texts[0]
+            edge_attribute = {'po': edge_id,
+                              'n': 'Text',
+                              'v': text}
+            self.cx['edgeAttributes'].append(edge_attribute)
 
     def print_cx(self):
         full_cx = OrderedDict()
