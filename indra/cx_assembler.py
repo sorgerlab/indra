@@ -27,33 +27,36 @@ class CxAssembler():
 
     def make_model(self):
         for stmt in self.statements:
-            if isinstance(stmt, Phosphorylation):
-                self.add_phosphorylation(stmt)
-            elif isinstance(stmt, Dephosphorylation):
-                self.add_dephosphorylation(stmt)
+            if isinstance(stmt, Modification):
+                self.add_modification(stmt)
+            if isinstance(stmt, SelfModification):
+                self.add_self_modification(stmt)
             elif isinstance(stmt, ActivityActivity):
                 self.add_activityactivity(stmt)
             elif isinstance(stmt, Complex):
                 self.add_complex(stmt)
+            elif isinstance(stmt, RasGef):
+                self.add_rasgef(stmt)
+            elif isinstance(stmt, RasGap):
+                self.add_rasgap(stmt)
         network_name = 'indra_assembled'
         network_description = ''
         self.cx['networkAttributes'].append({'n': 'name', 'v': network_name})
         self.cx['networkAttributes'].append({'n': 'description',
                                              'v': network_description})
 
-    def add_phosphorylation(self, stmt):
+    def add_modification(self, stmt):
         if stmt.enz is None:
             return
         enz_id = self.add_node(stmt.enz)
         sub_id = self.add_node(stmt.sub)
-        self.add_edge(enz_id, sub_id, 'Phosphorylation', stmt)
+        stmt_type = stmt.__class__.__name__
+        self.add_edge(enz_id, sub_id, stmt_type, stmt)
 
-    def add_dephosphorylation(self, stmt):
-        if stmt.enz is None:
-            return
+    def add_self_modification(self, stmt):
         enz_id = self.add_node(stmt.enz)
-        sub_id = self.add_node(stmt.sub)
-        self.add_edge(enz_id, sub_id, 'Dephosphorylation', stmt)
+        stmt_type = stmt.__class__.__name__
+        self.add_edge(enz_id, enz_id, stmt_type, stmt)
 
     def add_complex(self, stmt):
         for m1, m2 in itertools.combinations(stmt.members, 2):
@@ -66,6 +69,18 @@ class CxAssembler():
         obj_id = self.add_node(stmt.obj)
         # TODO: take into account relation here
         self.add_edge(subj_id, obj_id, 'ActivityActivity', stmt)
+
+    def add_rasgef(self, stmt):
+        gef_id = self.add_node(stmt.gef)
+        ras_id = self.add_node(stmt.ras)
+        stmt_type = stmt.__class__.__name__
+        self.add_edge(gef_id, ras_id, stmt_type, stmt)
+
+    def add_rasgap(self, stmt):
+        gap_id = self.add_node(stmt.gap)
+        ras_id = self.add_node(stmt.ras)
+        stmt_type = stmt.__class__.__name__
+        self.add_edge(gap_id, ras_id, stmt_type, stmt)
 
     def add_node(self, agent):
         node_key = agent.name
