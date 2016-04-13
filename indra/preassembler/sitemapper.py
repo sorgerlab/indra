@@ -45,19 +45,24 @@ class SiteMapper(object):
 
         for stmt in stmts:
             stmt_copy = deepcopy(stmt)
-            # COMPLEXES
-            # Note: Does not follow bound agents!!!
-            # Map sites for complex
-            if isinstance(stmt, Complex):
+            # Warn that ActivatingSubstitution is not implemented
+            if isinstance(stmt, ActivatingSubstitution):
+                warnings.warn("Site mapping not implemented for "
+                              "ActivatingSubstitutions.")
+            # For these statements replace agents with invalid sites
+            elif isinstance(stmt, Complex) or isinstance(stmt, RasGef) or \
+                 isinstance(stmt, RasGap) or \
+                 isinstance(stmt, ActivityActivity):
                 invalid_sites = []
-                stmt_copy.members = []
-                for m in stmt.members:
+                new_agent_list = []
+                for m in stmt.agent_list():
                     (agent_invalid_sites, new_agent) = self.map_agent_sites(m)
-                    stmt_copy.members.append(new_agent)
+                    new_agent_list.append(new_agent)
                     invalid_sites += agent_invalid_sites
                 # If the list isn't empty, that means that there were incorrect
                 # residues for this statement; add to mapped_statements list
                 if invalid_sites:
+                    stmt_copy.set_agent_list(new_agent_list)
                     mapped_stmt = \
                                 MappedStatement(stmt, invalid_sites, stmt_copy)
                     mapped_statements.append(mapped_stmt)

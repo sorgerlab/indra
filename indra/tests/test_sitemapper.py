@@ -34,47 +34,12 @@ def test_check_agent_mod():
     assert map185[1][1] == '187'
     new_agent = res_invalid[1]
     assert len(new_agent.mods) == 2
-    assert new_agent.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
-    assert new_agent.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+    assert new_agent.mods[0].matches(ModCondition('phosphorylation',
+                                                  'T', '185'))
+    assert new_agent.mods[1].matches(ModCondition('phosphorylation',
+                                                  'Y', '187'))
 
     # TODO Test a site that is invalid but not found in the site map
-
-def test_site_map_complex():
-    mapk1_invalid = Agent('MAPK1',
-                          mods=[ModCondition('phosphorylation', 'T', '183'),
-                                ModCondition('phosphorylation', 'Y', '185')],
-                          db_refs={'UP': 'P28482'})
-    mapk3_invalid = Agent('MAPK3',
-                          mods=[ModCondition('phosphorylation', 'T', '201'),
-                                ModCondition('phosphorylation', 'Y', '203')],
-                          db_refs={'UP': 'P27361'})
-
-    st1 = Complex([mapk1_invalid, mapk3_invalid])
-    res = sm.map_sites([st1])
-    assert len(res) == 2
-    valid_stmts = res[0]
-    mapped_stmts = res[1]
-    assert isinstance(valid_stmts, list)
-    assert isinstance(mapped_stmts, list)
-    assert len(valid_stmts) == 0
-    assert len(mapped_stmts) == 1
-    mapped_stmt = mapped_stmts[0]
-    assert isinstance(mapped_stmt, MappedStatement)
-    assert mapped_stmt.original_stmt == st1
-    assert isinstance(mapped_stmt.mapped_mods, list)
-    assert len(mapped_stmt.mapped_mods) == 4
-    ms = mapped_stmt.mapped_stmt
-    assert isinstance(ms, Statement)
-    members = ms.members
-    assert len(members) == 2
-    agent1 = members[0]
-    agent2 = members[1]
-    assert agent1.name == 'MAPK1'
-    assert len(agent1.mods) == 2
-    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
-    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
-    assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
-    assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
 
 def test_site_map_modification():
     mapk1_invalid = Agent('MAPK1',
@@ -165,6 +130,7 @@ def test_site_map_activity_modification():
     assert ms.mapped_stmt.mod[1].matches(ModCondition('phosphorylation',
                                                       'Y', '187'))
 
+
 def test_site_map_selfmodification():
     mapk1_invalid = Agent('MAPK1',
                           mods=[ModCondition('phosphorylation', 'T', '183')],
@@ -186,3 +152,77 @@ def test_site_map_selfmodification():
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert ms.residue == 'Y'
     assert ms.position == '187'
+
+# The following Statements are all handled by the same block of code and hence
+# can be tested in similar fashion
+
+def test_site_map_complex():
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+    st1 = RasGef(mapk1_invalid, 'Activity', mapk3_invalid)
+    res = sm.map_sites([st1])
+    check_validated_mapks(res, st1)
+
+
+def test_site_map_rasgef():
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+    st1 = RasGef(mapk1_invalid, 'Activity', mapk3_invalid)
+    res = sm.map_sites([st1])
+    check_validated_mapks(res, st1)
+
+
+def test_site_map_rasgap():
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+    st1 = RasGap(mapk1_invalid, 'Activity', mapk3_invalid)
+    res = sm.map_sites([st1])
+    check_validated_mapks(res, st1)
+
+
+def test_site_map_activityactivity():
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+    st1 = ActivityActivity(mapk1_invalid, 'Kinase', 'increases',
+                           mapk3_invalid, 'Kinase')
+    res = sm.map_sites([st1])
+    check_validated_mapks(res, st1)
+
+
+def get_invalid_mapks():
+    """A handy function for getting the invalid MAPK agents we want."""
+    mapk1_invalid = Agent('MAPK1',
+                          mods=[ModCondition('phosphorylation', 'T', '183'),
+                                ModCondition('phosphorylation', 'Y', '185')],
+                          db_refs={'UP': 'P28482'})
+    mapk3_invalid = Agent('MAPK3',
+                          mods=[ModCondition('phosphorylation', 'T', '201'),
+                                ModCondition('phosphorylation', 'Y', '203')],
+                          db_refs={'UP': 'P27361'})
+    return (mapk1_invalid, mapk3_invalid)
+
+
+def check_validated_mapks(res, st1):
+    """Validate that the invalid MAPKs have been fixed appropriately."""
+    assert len(res) == 2
+    valid_stmts = res[0]
+    mapped_stmts = res[1]
+    assert isinstance(valid_stmts, list)
+    assert isinstance(mapped_stmts, list)
+    assert len(valid_stmts) == 0
+    assert len(mapped_stmts) == 1
+    mapped_stmt = mapped_stmts[0]
+    assert isinstance(mapped_stmt, MappedStatement)
+    assert mapped_stmt.original_stmt == st1
+    assert isinstance(mapped_stmt.mapped_mods, list)
+    assert len(mapped_stmt.mapped_mods) == 4
+    ms = mapped_stmt.mapped_stmt
+    assert isinstance(ms, Statement)
+    agents = ms.agent_list()
+    assert len(agents) == 2
+    agent1 = agents[0]
+    agent2 = agents[1]
+    assert agent1.name == 'MAPK1'
+    assert len(agent1.mods) == 2
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+    assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
+    assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
+
+
