@@ -386,7 +386,7 @@ class BiopaxProcessor(object):
 
         # If the entity has a reference which has members, we iterate
         # over them.
-        mods = BiopaxProcessor._get_entity_mods(bpe)
+        mods = BiopaxProcessor._get_entity_mods(bpe, get_activity=False)
 
         if expand_er:
             er = BiopaxProcessor._get_entref(bpe)
