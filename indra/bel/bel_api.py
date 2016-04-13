@@ -17,7 +17,6 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
     with open(rdf_out, 'wt') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf)
-    bp.print_statements()
     return bp
 
 
@@ -25,7 +24,7 @@ def process_belrdf(rdf_str):
     # Parse the RDF
     g = rdflib.Graph()
     g.parse(data=rdf_str, format='nt')
-    # Build BelPy statements from RDF
+    # Build INDRA statements from RDF
     bp = BelProcessor(g)
     bp.get_complexes()
     bp.get_activating_subs()
@@ -37,7 +36,7 @@ def process_belrdf(rdf_str):
 
     # Print some output about the process
     bp.print_statement_coverage()
-    print "\n--- Converted BelPy Statements -------------"
+    print "\n--- Converted INDRA Statements -------------"
     bp.print_statements()
     return bp
 
