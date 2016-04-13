@@ -59,66 +59,55 @@ class SiteMapper(object):
             if invalid_sites:
                 stmt_copy.set_agent_list(new_agent_list)
 
+            # --- Special handling for these statements ---
             # Warn that ActivatingSubstitution is not implemented
             if isinstance(stmt, ActivatingSubstitution):
                 warnings.warn("Site mapping not implemented for "
                               "ActivatingSubstitutions.")
-            # For these statements replace agents with invalid sites
-            elif isinstance(stmt, Complex) or isinstance(stmt, RasGef) or \
-                 isinstance(stmt, RasGap) or \
-                 isinstance(stmt, ActivityActivity):
-                pass
-            # MODIFICATIONs
-            # Note: Does not follow bound agents!!!
-            elif isinstance(stmt, Modification):
-                # Check modification
-                if stmt.residue is not None and stmt.position is not None:
-                    assert isinstance(stmt.residue, basestring) and \
-                           isinstance(stmt.position, basestring)
-                    old_mod_list = [ModCondition(None, stmt.residue,
-                                                 stmt.position)]
-                    # Figure out if this site is invalid
-                    stmt_invalid_sites = \
-                            self.check_agent_mod(stmt_copy.sub, old_mod_list)
-                    invalid_sites += stmt_invalid_sites
-                    new_mod_list = \
-                            update_mod_list(stmt_copy.sub.name, old_mod_list,
-                                            stmt_invalid_sites)
-                    stmt_copy.residue = new_mod_list[0].residue
-                    stmt_copy.position = new_mod_list[0].position
-            elif isinstance(stmt, ActivityModification):
-                # Check modification on sites
-                # Filter lists
-                if stmt.mod:
-                    # stmt.mod is already a list of ModConditions
-                    stmt_invalid_sites = \
-                            self.check_agent_mod(stmt_copy.monomer, stmt.mod)
-                    invalid_sites += stmt_invalid_sites
-                    new_mod_list = \
-                            update_mod_list(stmt_copy.monomer.name,
-                                            stmt_copy.mod,
-                                            stmt_invalid_sites)
-                    stmt_copy.mod = new_mod_list
-            elif isinstance(stmt, SelfModification):
-                # Check modification
-                if stmt.residue is not None and stmt.position is not None:
-                    assert isinstance(stmt.residue, basestring) and \
-                           isinstance(stmt.position, basestring)
-                    old_mod_list = [ModCondition(None, stmt.residue,
-                                                 stmt.position)]
-                    # Figure out if this site is invalid
-                    stmt_invalid_sites = \
-                            self.check_agent_mod(stmt_copy.enz, old_mod_list)
-                    invalid_sites += stmt_invalid_sites
-                    new_mod_list = \
-                            update_mod_list(stmt_copy.enz.name, old_mod_list,
-                                            stmt_invalid_sites)
-                    stmt_copy.residue = new_mod_list[0].residue
-                    stmt_copy.position = new_mod_list[0].position
+            # For modifications, fix residue and position
+            elif (isinstance(stmt, Modification) or \
+                  isinstance(stmt, SelfModification)) and \
+                 stmt.residue is not None and stmt.position is not None:
+                # Make sure we didn't end up with lists by accident
+                assert isinstance(stmt.residue, basestring) and \
+                       isinstance(stmt.position, basestring)
+                # Get the right agent depending on whether this is a
+                # Modification or SelfModification statement
+                agent_to_check = (stmt_copy.sub
+                                  if isinstance(stmt, Modification)
+                                  else stmt_copy.enz)
+                # Check the modification on the appropriate agent
+                old_mod_list = [ModCondition(None, stmt.residue,
+                                             stmt.position)]
+                # Figure out if this site is invalid
+                stmt_invalid_sites = \
+                        self.check_agent_mod(agent_to_check, old_mod_list)
+                # Add to our list of invalid sites
+                invalid_sites += stmt_invalid_sites
+                # Get the updated list of ModCondition objects
+                new_mod_list = \
+                        update_mod_list(agent_to_check.name, old_mod_list,
+                                        stmt_invalid_sites)
+                # Update the statement with the correct site
+                stmt_copy.residue = new_mod_list[0].residue
+                stmt_copy.position = new_mod_list[0].position
+            # ActivityModification
+            elif isinstance(stmt, ActivityModification) and stmt.mod:
+                stmt_invalid_sites = \
+                        self.check_agent_mod(stmt_copy.monomer, stmt.mod)
+                # Add to our list of invalid sites
+                invalid_sites += stmt_invalid_sites
+                new_mod_list = \
+                        update_mod_list(stmt_copy.monomer.name,
+                                        stmt_copy.mod,
+                                        stmt_invalid_sites)
+                stmt_copy.mod = new_mod_list
+            # --- end special handling for Modification, SelfModification,
+            #     and ActivityModification statements ---
 
             # If the invalid_sites list isn't empty, that means that there were
-            # incorrect residues for this statement; add to mapped_statements
-            # list
+            # incorrect residues for this statement; add the statement to
+            # the mapped_statements list
             if invalid_sites:
                 mapped_stmt = \
                             MappedStatement(stmt, invalid_sites, stmt_copy)
