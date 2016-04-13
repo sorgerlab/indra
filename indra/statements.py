@@ -548,7 +548,7 @@ class ActivityModification(Statement):
         self.activity = activity
 
     def matches_key(self):
-        mod_key = [m.matches_key() for m in self.mod]
+        mod_key = set([m.matches_key() for m in self.mod])
         key = (type(self), self.monomer.matches_key(), mod_key,
                 self.relationship, self.activity)
         return str(key)
