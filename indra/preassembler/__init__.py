@@ -218,6 +218,10 @@ class Preassembler(object):
                                for stmt in ext_group
                                if not stmt.supports]
         self.related_stmts = self.combine_duplicate_stmts(self.related_stmts) 
+        # Make sure we haven't lost any statements!
+        assert len(self.unique_stmts) == \
+               len(flatten_stmts(self.related_stmts)), \
+               "Statements lost after combining related"
         return self.related_stmts
 
 def render_stmt_graph(statements, agent_style=None):
@@ -263,6 +267,15 @@ def render_stmt_graph(statements, agent_style=None):
         graph.add_node(str(node.matches_key()), label=str(node), **agent_style)
     graph.add_edges_from(edges)
     return graph
+
+def flatten_stmts(stmts):
+    """Return the full set of unique stmts in a pre-assembled stmt graph."""
+    total_stmts = set(stmts)
+    for stmt in stmts:
+        if stmt.supported_by:
+            children = flatten_stmts(stmt.supported_by)
+            total_stmts = total_stmts.union(children)
+    return total_stmts
 
 """
 def check_statements(stmts, save_fname=None):
