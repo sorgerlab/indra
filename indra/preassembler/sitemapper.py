@@ -43,8 +43,22 @@ class SiteMapper(object):
         valid_statements = []
         mapped_statements = []
 
+        def get_updated_agents(stmt):
+            invalid_sites = []
+            new_agent_list = []
+            for agent in stmt.agent_list():
+                (agent_invalid_sites, new_agent) = self.map_agent_sites(agent)
+                new_agent_list.append(new_agent)
+                invalid_sites += agent_invalid_sites
+            return (invalid_sites, new_agent_list)
+
         for stmt in stmts:
             stmt_copy = deepcopy(stmt)
+            # For all statements, replace agents with invalid modifications
+            (invalid_sites, new_agent_list) = get_updated_agents(stmt)
+            if invalid_sites:
+                stmt_copy.set_agent_list(new_agent_list)
+
             # Warn that ActivatingSubstitution is not implemented
             if isinstance(stmt, ActivatingSubstitution):
                 warnings.warn("Site mapping not implemented for "
@@ -53,16 +67,9 @@ class SiteMapper(object):
             elif isinstance(stmt, Complex) or isinstance(stmt, RasGef) or \
                  isinstance(stmt, RasGap) or \
                  isinstance(stmt, ActivityActivity):
-                invalid_sites = []
-                new_agent_list = []
-                for m in stmt.agent_list():
-                    (agent_invalid_sites, new_agent) = self.map_agent_sites(m)
-                    new_agent_list.append(new_agent)
-                    invalid_sites += agent_invalid_sites
                 # If the list isn't empty, that means that there were incorrect
                 # residues for this statement; add to mapped_statements list
                 if invalid_sites:
-                    stmt_copy.set_agent_list(new_agent_list)
                     mapped_stmt = \
                                 MappedStatement(stmt, invalid_sites, stmt_copy)
                     mapped_statements.append(mapped_stmt)
@@ -71,16 +78,6 @@ class SiteMapper(object):
             # MODIFICATIONs
             # Note: Does not follow bound agents!!!
             elif isinstance(stmt, Modification):
-                invalid_sites = []
-                # Check substrate
-                (agent_invalid_sites, new_sub) = self.map_agent_sites(stmt.sub)
-                invalid_sites += agent_invalid_sites
-                stmt_copy.sub = new_sub
-                # Check enzyme
-                (agent_invalid_sites, new_enz) = self.map_agent_sites(stmt.enz)
-                invalid_sites += agent_invalid_sites
-                stmt_copy.enz = new_enz
-
                 # Check modification
                 if stmt.residue is not None and stmt.position is not None:
                     assert isinstance(stmt.residue, basestring) and \
@@ -104,12 +101,6 @@ class SiteMapper(object):
                 else:
                     valid_statements.append(stmt)
             elif isinstance(stmt, ActivityModification):
-                invalid_sites = []
-                # Check agent
-                (agent_invalid_sites, new_monomer) = \
-                                self.map_agent_sites(stmt.monomer)
-                invalid_sites += agent_invalid_sites
-                stmt_copy.monomer = new_monomer
                 # Check modification on sites
                 # Filter lists
                 if stmt.mod:
@@ -129,13 +120,6 @@ class SiteMapper(object):
                 else:
                     valid_statements.append(stmt)
             elif isinstance(stmt, SelfModification):
-                invalid_sites = []
-                # Check agent
-                (agent_invalid_sites, new_monomer) = \
-                            self.map_agent_sites(stmt.enz)
-                invalid_sites += agent_invalid_sites
-                stmt_copy.enz = new_monomer
-
                 # Check modification
                 if stmt.residue is not None and stmt.position is not None:
                     assert isinstance(stmt.residue, basestring) and \
