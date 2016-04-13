@@ -43,19 +43,15 @@ class SiteMapper(object):
         valid_statements = []
         mapped_statements = []
 
-        def get_updated_agents(stmt):
+        for stmt in stmts:
+            stmt_copy = deepcopy(stmt)
+            # For all statements, replace agents with invalid modifications
             invalid_sites = []
             new_agent_list = []
             for agent in stmt.agent_list():
                 (agent_invalid_sites, new_agent) = self.map_agent_sites(agent)
                 new_agent_list.append(new_agent)
                 invalid_sites += agent_invalid_sites
-            return (invalid_sites, new_agent_list)
-
-        for stmt in stmts:
-            stmt_copy = deepcopy(stmt)
-            # For all statements, replace agents with invalid modifications
-            (invalid_sites, new_agent_list) = get_updated_agents(stmt)
             if invalid_sites:
                 stmt_copy.set_agent_list(new_agent_list)
 
