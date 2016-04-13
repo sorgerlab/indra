@@ -85,6 +85,16 @@ class ModCondition(object):
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        type_match = (self.mod_type == other.mod_type)
+        residue_match = (self.residue == other.residue)
+        pos_match = (self.position == other.position)
+        is_mod_match = (self.is_modified == other.is_modified)
+        return (type_match and residue_match and pos_match and is_mod_match)
+
+    def __hash__(self):
+        return hash(self.matches_key())
+
 class Agent(object):
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, mutations=None, db_refs=None):
