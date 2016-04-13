@@ -67,14 +67,7 @@ class SiteMapper(object):
             elif isinstance(stmt, Complex) or isinstance(stmt, RasGef) or \
                  isinstance(stmt, RasGap) or \
                  isinstance(stmt, ActivityActivity):
-                # If the list isn't empty, that means that there were incorrect
-                # residues for this statement; add to mapped_statements list
-                if invalid_sites:
-                    mapped_stmt = \
-                                MappedStatement(stmt, invalid_sites, stmt_copy)
-                    mapped_statements.append(mapped_stmt)
-                else:
-                    valid_statements.append(stmt)
+                pass
             # MODIFICATIONs
             # Note: Does not follow bound agents!!!
             elif isinstance(stmt, Modification):
@@ -93,13 +86,6 @@ class SiteMapper(object):
                                             stmt_invalid_sites)
                     stmt_copy.residue = new_mod_list[0].residue
                     stmt_copy.position = new_mod_list[0].position
-                # Return valid/mapped site lists
-                if invalid_sites:
-                    mapped_stmt = \
-                                MappedStatement(stmt, invalid_sites, stmt_copy)
-                    mapped_statements.append(mapped_stmt)
-                else:
-                    valid_statements.append(stmt)
             elif isinstance(stmt, ActivityModification):
                 # Check modification on sites
                 # Filter lists
@@ -113,12 +99,6 @@ class SiteMapper(object):
                                             stmt_copy.mod,
                                             stmt_invalid_sites)
                     stmt_copy.mod = new_mod_list
-                if invalid_sites:
-                    mapped_stmt = \
-                            MappedStatement(stmt, invalid_sites, stmt_copy)
-                    mapped_statements.append(mapped_stmt)
-                else:
-                    valid_statements.append(stmt)
             elif isinstance(stmt, SelfModification):
                 # Check modification
                 if stmt.residue is not None and stmt.position is not None:
@@ -135,12 +115,16 @@ class SiteMapper(object):
                                             stmt_invalid_sites)
                     stmt_copy.residue = new_mod_list[0].residue
                     stmt_copy.position = new_mod_list[0].position
-                if invalid_sites:
-                    mapped_stmt = \
+
+            # If the invalid_sites list isn't empty, that means that there were
+            # incorrect residues for this statement; add to mapped_statements
+            # list
+            if invalid_sites:
+                mapped_stmt = \
                             MappedStatement(stmt, invalid_sites, stmt_copy)
-                    mapped_statements.append(mapped_stmt)
-                else:
-                    valid_statements.append(stmt)
+                mapped_statements.append(mapped_stmt)
+            else:
+                valid_statements.append(stmt)
 
         return (valid_statements, mapped_statements)
 
