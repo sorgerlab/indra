@@ -5,8 +5,10 @@ from copy import deepcopy
 from indra.databases import uniprot_client
 from indra.statements import *
 
+
 MappedStatement = namedtuple('MappedStatement',
                              ['original_stmt', 'mapped_mods', 'mapped_stmt'])
+
 
 class SiteMapper(object):
     """
@@ -113,24 +115,6 @@ class SiteMapper(object):
 
         return (valid_statements, mapped_statements)
 
-    """
-    def check_sequence(self, stmt):
-        #Check whether references to
-        #residues and sequence positions are consistent with sequence
-        #information in the UniProt database
-        failures = []
-
-        if isinstance(stmt, SelfModification):
-            failures += check_agent_mod(stmt.sub)
-            if stmt.mod_pos is not None:
-                failures += \
-                           check_agent_mod(stmt.enz, [stmt.mod], [stmt.mod_pos])
-        elif isinstance(stmt, ActivityModification):
-            failures += check_agent_mod(stmt.monomer)
-            failures += check_agent_mod(stmt.monomer, stmt.mod, stmt.mod_pos)
-        return failures
-    """
-
     def map_agent_sites(self, agent):
         """Look up the modification site in Uniprot and then the site map.
         """
@@ -182,43 +166,6 @@ class SiteMapper(object):
         return invalid_sites
 
 
-    """
-    def check_stmt_mod(self, agent, mods=None, mod_sites=None):
-        #Look up the modification site in Uniprot and then the site map.
-
-        invalid_sites = {}
-        up_id = get_uniprot_id(agent)
-        if not up_id:
-            return invalid_sites
-        # Figure out which modifications we are checking: the agent's
-        # modifications or the modifications in a statement
-        if mod_sites is not None:
-            check_mods = mods
-            check_mod_sites = mod_sites
-        else:
-            check_mods = agent.mods
-            check_mod_sites = agent.mod_sites
-
-        # Look up all of the modifications in uniprot, and add them to the list
-        # of invalid sites if they are missing
-        for m, mp in zip(check_mods, check_mod_sites):
-            if mp is None:
-                continue
-            residue = site_abbrevs.get(m, None)
-            if residue is None:
-                continue
-            ver = uniprot_client.verify_location(up_id, residue, mp)
-            # If it's not found in Uniprot, then look it up in the site map
-            if not ver:
-                try:
-                    mapped_site = \
-                            self.site_map[(agent.name, str(residue), str(mp))]
-                except KeyError:
-                    mapped_site = None
-                invalid_sites[(agent.name, str(residue), str(mp))] = mapped_site
-        return invalid_sites
-    """
-
 def update_mod_list(agent_name, mods, invalid_sites):
     new_mod_list = []
     # Get the list of invalid/mapped sites for the agent
@@ -263,6 +210,7 @@ def get_uniprot_id(agent):
         up_id = up_id[0]
     return up_id
 
+
 def load_site_map(path):
     """Load the modification site map from a file.
 
@@ -298,6 +246,7 @@ def load_site_map(path):
             site_map[(row[0].strip(), row[1].strip(), row[2].strip())] = \
                                     (correct_res, correct_pos, comment)
     return site_map
+
 
 default_site_map_path = os.path.join(os.path.dirname(__file__),
                              'curated_site_map.txt')
