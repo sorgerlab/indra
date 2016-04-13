@@ -1,6 +1,7 @@
 from indra.preassembler.sitemapper import default_mapper as sm, MappedStatement
 from indra.statements import *
 
+
 def test_check_agent_mod():
     mapk1_valid = Agent('MAPK1',
                         mods=[ModCondition('phosphorylation', 'T', '185'),
@@ -39,7 +40,6 @@ def test_check_agent_mod():
     assert new_agent.mods[1].matches(ModCondition('phosphorylation',
                                                   'Y', '187'))
 
-    # TODO Test a site that is invalid but not found in the site map
 
 def test_site_map_modification():
     mapk1_invalid = Agent('MAPK1',
