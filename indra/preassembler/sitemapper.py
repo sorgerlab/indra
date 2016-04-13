@@ -123,6 +123,36 @@ class SiteMapper(object):
                     mapped_statements.append(mapped_stmt)
                 else:
                     valid_statements.append(stmt)
+            elif isinstance(stmt, SelfModification):
+                invalid_sites = []
+                # Check agent
+                (agent_invalid_sites, new_monomer) = \
+                            self.map_agent_sites(stmt.enz)
+                invalid_sites += agent_invalid_sites
+                stmt_copy.enz = new_monomer
+
+                # Check modification
+                if stmt.residue is not None and stmt.position is not None:
+                    assert isinstance(stmt.residue, basestring) and \
+                           isinstance(stmt.position, basestring)
+                    old_mod_list = [ModCondition(None, stmt.residue,
+                                                 stmt.position)]
+                    # Figure out if this site is invalid
+                    stmt_invalid_sites = \
+                            self.check_agent_mod(stmt_copy.enz, old_mod_list)
+                    invalid_sites += stmt_invalid_sites
+                    new_mod_list = \
+                            update_mod_list(stmt_copy.enz.name, old_mod_list,
+                                            stmt_invalid_sites)
+                    stmt_copy.residue = new_mod_list[0].residue
+                    stmt_copy.position = new_mod_list[0].position
+                if invalid_sites:
+                    mapped_stmt = \
+                            MappedStatement(stmt, invalid_sites, stmt_copy)
+                    mapped_statements.append(mapped_stmt)
+                else:
+                    valid_statements.append(stmt)
+
         return (valid_statements, mapped_statements)
 
     """

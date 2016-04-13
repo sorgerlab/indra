@@ -164,3 +164,25 @@ def test_site_map_activity_modification():
                                                       'T', '185'))
     assert ms.mapped_stmt.mod[1].matches(ModCondition('phosphorylation',
                                                       'Y', '187'))
+
+def test_site_map_selfmodification():
+    mapk1_invalid = Agent('MAPK1',
+                          mods=[ModCondition('phosphorylation', 'T', '183')],
+                          db_refs={'UP': 'P28482'})
+    st1 = SelfModification(mapk1_invalid, 'Y', '185')
+    (valid, mapped) = sm.map_sites([st1])
+    assert len(valid) == 0
+    assert len(mapped) == 1
+    mapped_stmt = mapped[0]
+    assert mapped_stmt.mapped_mods[0][0] == ('MAPK1', 'T', '183')
+    assert mapped_stmt.mapped_mods[0][1][0] == 'T'
+    assert mapped_stmt.mapped_mods[0][1][1] == '185'
+    assert mapped_stmt.mapped_mods[1][0] == ('MAPK1', 'Y', '185')
+    assert mapped_stmt.mapped_mods[1][1][0] == 'Y'
+    assert mapped_stmt.mapped_mods[1][1][1] == '187'
+    assert mapped_stmt.original_stmt == st1
+    ms = mapped_stmt.mapped_stmt
+    agent1 = ms.enz
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert ms.residue == 'Y'
+    assert ms.position == '187'
