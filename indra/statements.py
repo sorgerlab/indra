@@ -359,6 +359,12 @@ class Modification(Statement):
     def agent_list(self):
         return [self.enz, self.sub]
 
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 2:
+            raise ValueError("Modification has two agents in agent_list.")
+        self.enz = agent_list[0]
+        self.sub = agent_list[1]
+
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
         # Make sure the statement types match
         if type(self) != type(other):
@@ -418,6 +424,11 @@ class SelfModification(Statement):
 
     def agent_list(self):
         return [self.enz]
+
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 1:
+            raise ValueError("SelfModification has one agent.")
+        self.enz = agent_list[0]
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
         # Make sure the statement types match
@@ -507,6 +518,12 @@ class ActivityActivity(Statement):
     def agent_list(self):
         return [self.subj, self.obj]
 
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 2:
+            raise ValueError("ActivityActivity has two agents.")
+        self.subj = agent_list[0]
+        self.obj = agent_list[1]
+
     def refinement_of(self, other, eh, mh):
         # Make sure the statement types match
         if type(self) != type(other):
@@ -555,6 +572,11 @@ class ActivityModification(Statement):
 
     def agent_list(self):
         return [self.monomer]
+
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 1:
+            raise ValueError("ActivityModification has one agent.")
+        self.monomer = agent_list[0]
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
         # Make sure the statement types match
@@ -617,6 +639,11 @@ class ActivatingSubstitution(Statement):
     def agent_list(self):
         return [self.monomer]
 
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 1:
+            raise ValueError("ActivityModification has one agent.")
+        self.monomer = agent_list[0]
+
     def monomers_interactions_only(self, agent_set):
         pass
 
@@ -658,6 +685,12 @@ class RasGef(Statement):
     def agent_list(self):
         return [self.gef, self.ras]
 
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 2:
+            raise ValueError("RasGef has two agents.")
+        self.gef = agent_list[0]
+        self.ras = agent_list[1]
+
     def __str__(self):
         s = ("RasGef(%s, %s, %s)" %
                 (self.gef.name, self.gef_activity, self.ras.name))
@@ -694,6 +727,12 @@ class RasGap(Statement):
     def agent_list(self):
         return [self.gap, self.ras]
 
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 2:
+            raise ValueError("RasGap has two agents.")
+        self.gap = agent_list[0]
+        self.ras = agent_list[1]
+
     def refinement_of(self, other, eh, mh):
         # Make sure the statement types match
         if type(self) != type(other):
@@ -725,6 +764,9 @@ class Complex(Statement):
 
     def agent_list(self):
         return self.members
+
+    def set_agent_list(self, agent_list):
+        self.members = agent_list
 
     def __str__(self):
         s = "Complex(%s)" % (', '.join([('%s' % m) for m in self.members]))

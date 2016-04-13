@@ -100,7 +100,7 @@ class BelProcessor(object):
             try:
                 evidence = stmt[0].format()
                 citation = stmt[1].format()
-            except KeyError:
+            except (KeyError, IndexError):
                 warnings.warn('Problem converting evidence/citation string')
 
         # Query for all annotations of the statement
@@ -241,12 +241,13 @@ class BelProcessor(object):
             sub_name = gene_name_from_uri(stmt[1])
             sub = Agent(sub_name)
             mod = term_from_uri(stmt[2])
+            residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[3])
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    Dephosphorylation(phos, sub, mod, mod_pos, evidence))
+                    Dephosphorylation(phos, sub, residue, mod_pos, evidence))
 
     def get_composite_activating_mods(self):
         # To eliminate multiple matches, we use pos1 < pos2 but this will

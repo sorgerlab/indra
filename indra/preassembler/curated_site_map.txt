@@ -1,0 +1,40 @@
+Gene	OrigRes	OrigPos	CorrectRes	CorrectPos	Comment
+ARHGEF2	 S	885	S	886	off by one
+BRAF	 T	151	S	151	wrong residue
+BRAF	 S	578	S	579	wrong residue
+BRAF	 S	753	T	753	wrong residue
+GAB1	 Y	527	Y	627	off by 100
+KSR1	 T	260			mouse sequence
+KSR1	 S	320			mouse sequence
+KSR1	 S	404	S	406	off by two
+KSR1	 S	443			mouse sequence
+MAP2K1	 S	217	S	218	off by one
+MAP2K1	 S	221	S	222	off by one
+MAPK1	 T	182	T	185	off by three
+MAPK1	 T	183	T	185	off by two; mouse sequence
+MAPK1	 Y	184	Y	187	off by three
+MAPK1	 Y	185	Y	187	off by two: mouse sequence
+MAPK3	 T	201	T	202	off by one
+MAPK3	 Y	203	Y	204	off by one
+MAPK7	 T	218	T	219	off by one
+MAPK7	 Y	220	Y	221	off by one
+PAK1	 S	198	S	199	off by one
+PAK1	 S	203	S	204	off by one
+RAF1	 S	269	T	269	wrong residue
+RASSF1	 S	203	S	207	off by four
+RPS6KA3	 T	573	T	577	numbering from RPS6KA1
+RPS6KA6	 S	221	S	232	numbering from RPS6KA1
+RPS6KA6	 S	363	S	372	numbering from RPS6KA1
+RPS6KA6	 S	380	S	389	numbering from RPS6KA1
+RPS6KA6	 T	573	T	581	numbering from RPS6KA1
+RPS6KB1	 T	389			numbering from isoform alpha 2
+SDC2	 Y	180	Y	179	off by one
+SHC1	 Y	194			numbering from isoform p46
+SHC1	 Y	195			numbering from isoform p46
+SHC1	 Y	272			numbering from isoform p46
+SHC3	 Y	218			numbering from isoform p52
+SHC3	 Y	219			numbering from isoform p52
+SHC3	 Y	256			numbering from isoform p52
+SHC3	 Y	257			numbering from isoform p52
+SHC3	 Y	283			numbering from isoform p52
+SHC3	 Y	301			numbering from isoform p52
