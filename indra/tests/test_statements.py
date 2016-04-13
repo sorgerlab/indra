@@ -886,6 +886,22 @@ def test_valid_residue():
     assert(get_valid_residue('Serine') == 'S')
     assert(get_valid_residue('SERINE') == 'S')
 
+def test_modcondition_order_actmod():
+    mc1 = ModCondition('phoshporylation', 'S', '222')
+    mc2 = ModCondition('phoshporylation', 'S', '224')
+    p1 = ActivityModification(Agent('MAP2K1'), [mc1, mc2],
+                              'increases', 'KinaseActivity')
+    p2 = ActivityModification(Agent('MAP2K1'), [mc2, mc1],
+                              'increases', 'KinaseActivity')
+    assert(p1.matches(p2))
+
+def test_modcondition_order_agent():
+    mc1 = ModCondition('phoshporylation', 'S', '222')
+    mc2 = ModCondition('phoshporylation', 'S', '224')
+    p1 = Agent('MAP2K1', mods=[mc1, mc2])
+    p2 = Agent('MAP2K1', mods=[mc2, mc1])
+    assert(p1.matches(p2))
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 
