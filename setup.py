@@ -15,7 +15,7 @@ def main():
           download_url='https://github.com/sorgerlab/indra/tarball/1.0.1',
           packages=['indra', 'indra.bel', 'indra.biopax',
                     'indra.reach', 'indra.trips', 'indra.databases',
-                    'indra.tests'],
+                    'indra.resources', 'indra.tests'],
           install_requires=['pysb', 'objectpath', 'rdflib',
                             'functools32', 'requests', 'lxml'],
           tests_require=['jnius-indra'],

@@ -9,7 +9,7 @@ hgnc_url = 'http://rest.genenames.org/fetch/'
 # Download http://tinyurl.com/jgm29xp and save it in
 # the indra/data folder as hgnc_entries.txt
 hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../../data/hgnc_entries.txt'
+            '/../resources/hgnc_entries.txt'
 try:
     fh = open(hgnc_file, 'rt')
     rd = csv.reader(fh, delimiter='\t')

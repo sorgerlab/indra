@@ -6,6 +6,13 @@ import sys
 import os
 
 
+
+NRAS-bound BRAF that is not bound to Vemurafenib binds NRAS-bound BRAF that is not bound to Vemurafenib.
+
+BRAF that is bound to Vemurafenib binds BRAF that is not bound to Vemurafenib and NRAS.
+BRAF that is bound to NRAS and Vemurafenib binds NRAS-bound BRAF that is not bound to Vemurafenib.
+
+
 def test_bind():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.'
@@ -34,6 +41,20 @@ def test_complex_bind():
 
 def test_complex_bind2():
     fname = sys._getframe().f_code.co_name + '.xml'
+    txt = 'The EGFR-EGFR complex binds GRB2.'
+    tp = trips_api.process_text(txt, fname, False)
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(is_complex(st))
+    assert(len(st.members) == 2)
+    assert(st.members[0].name == 'EGFR')
+    assert(st.members[1].name == 'GRB2')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(st.members[0].bound_conditions[0].agent.name == 'EGFR')
+    os.remove(fname)
+
+def test_complex_bind3():
+    fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'RAF binds to the RAS-GTP complex.'
     tp = trips_api.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
@@ -46,7 +67,7 @@ def test_complex_bind2():
     assert(st.members[1].bound_conditions[0].agent.name == 'GTP')
     os.remove(fname)
 
-def test_complex_bind3():
+def test_complex_bind4():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The RAF-RAS complex binds another RAF-RAS complex.'
     tp = trips_api.process_text(txt, fname, False)
@@ -112,6 +133,33 @@ def test_not_bound_to2():
     assert(st.enz.bound_conditions[0].is_bound == False)
     os.remove(fname)
 
+def test_not_bound_to3():
+    fname = sys._getframe().f_code.co_name + '.xml'
+    txt = 'SOS1 bound to GRB2 binds NRAS that is not bound to BRAF and GTP.' 
+    tp = trips_api.process_text(txt, fname, False)
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(is_complex(st))
+    assert(st.members[0].name == 'SOS1')
+    assert(st.members[1].name == 'NRAS')
+    assert(len(st.members[0].bound_conditions) == 1)
+    assert(len(st.members[1].bound_conditions) == 2)
+    os.remove(fname)
+
+def test_not_bound_to4():
+    fname = sys._getframe().f_code.co_name + '.xml'
+    txt = 'BRAF that is not bound to NRAS and Vemurafenib binds BRAF ' +\
+          'that is not bound to Vemurafenib.' 
+    tp = trips_api.process_text(txt, fname, False)
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(is_complex(st))
+    assert(st.members[0].name == 'BRAF')
+    assert(st.members[1].name == 'BRAF')
+    assert(len(st.members[0].bound_conditions) == 2)
+    assert(len(st.members[1].bound_conditions) == 1)
+    os.remove(fname)
+
 def test_bound_to():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'NRAS, bound to GTP, binds BRAF.'
@@ -171,6 +219,21 @@ def test_bound_to4():
     assert(st.members[1].name == 'GTP')
     assert(len(st.members[0].bound_conditions) == 1)
     assert(st.members[0].bound_conditions[0].agent.name == 'SOS1')
+    os.remove(fname)
+
+def test_bound_to5():
+    fname = sys._getframe().f_code.co_name + '.xml'
+    txt = 'BRAF that is bound to NRAS and Vemurafenib binds' +\
+          'BRAF that is bound to NRAS and Vemurafenib.'
+    tp = trips_api.process_text(txt, fname, False)
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(is_complex(st))
+    assert(len(st.members) == 2)
+    assert(st.members[0].name == 'BRAF')
+    assert(st.members[1].name == 'BRAF')
+    assert(len(st.members[0].bound_conditions) == 2)
+    assert(len(st.members[1].bound_conditions) == 2)
     os.remove(fname)
 
 def test_transphosphorylate():

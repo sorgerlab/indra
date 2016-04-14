@@ -14,7 +14,7 @@ rdf_prefixes = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
 
 hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../../data/hgnc_entries.txt'
+            '/../resources/hgnc_entries.txt'
 try:
     fh = open(hgnc_file, 'rt')
     rd = csv.reader(fh, delimiter='\t')
