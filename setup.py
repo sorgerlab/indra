@@ -4,7 +4,7 @@ from setuptools import setup
 
 def main():
     setup(name='indra',
-          version='1.1.0',
+          version='1.1.1',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models of biochemical '
@@ -12,7 +12,6 @@ def main():
           author='Benjamin Gyori',
           author_email='benjamin_gyori@hms.harvard.edu',
           url='http://github.com/sorgerlab/indra',
-          download_url='https://github.com/sorgerlab/indra/tarball/1.1.0',
           packages=['indra', 'indra.bel', 'indra.biopax',
                     'indra.reach', 'indra.trips', 'indra.databases',
                     'indra.tests'],
