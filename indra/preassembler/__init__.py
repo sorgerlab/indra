@@ -4,6 +4,7 @@ from copy import copy
 from indra.statements import *
 from indra.databases import uniprot_client
 
+
 class Preassembler(object):
 
     def __init__(self, entity_hierarchy, mod_hierarchy, stmts=None):
@@ -224,6 +225,7 @@ class Preassembler(object):
                "Statements lost after combining related"
         return self.related_stmts
 
+
 def render_stmt_graph(statements, agent_style=None):
     """Renders the supports/supported_by relationships of a set of statements
     and returns a pygraphviz graph.
@@ -268,6 +270,7 @@ def render_stmt_graph(statements, agent_style=None):
     graph.add_edges_from(edges)
     return graph
 
+
 def flatten_stmts(stmts):
     """Return the full set of unique stmts in a pre-assembled stmt graph."""
     total_stmts = set(stmts)
@@ -277,80 +280,3 @@ def flatten_stmts(stmts):
             total_stmts = total_stmts.union(children)
     return total_stmts
 
-"""
-def check_statements(stmts, save_fname=None):
-    #Iterates over a list of statements and runs checks on them. Then it
-    #returns a tuple of lists, with the first element containing statements
-    #that passed all checks, and the second the statements that failed the
-    #tests
-    pass_stmts = []
-    fail_stmts = []
-    failures = []
-    for stmt in stmts:
-        print stmt
-        failures += check_sequence(stmt)
-        if failures:
-            fail_stmts.append(stmt)
-        else:
-            pass_stmts.append(stmt)
-    if save_fname:
-        failure_set = set(failures)
-        with open(save_fname, 'wt') as fh:
-            for f in failure_set:
-                fh.write('%s\t%s\t%s\n' % (f[0], f[1], f[2]))
-    return (pass_stmts, fail_stmts)
-
-def check_sequence(stmt):
-    #Check whether references to
-    #residues and sequence positions are consistent with sequence
-    #information in the UniProt database
-
-    failures = []
-    if isinstance(stmt, Complex):
-        for m in stmt.members:
-            failures += check_agent_mod(m)
-    elif isinstance(stmt, Modification):
-        failures += check_agent_mod(stmt.sub)
-        failures += check_agent_mod(stmt.enz)
-        if stmt.position is not None:
-            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
-            failures += check_agent_mod(stmt.sub, [mc])
-    elif isinstance(stmt, SelfModification):
-        failures += check_agent_mod(stmt.sub)
-        if stmt.position is not None:
-            mc = ModCondition('phosphorylation', stmt.residue, stmt.position)
-            failures += check_agent_mod(stmt.enz, [mc])
-    elif isinstance(stmt, ActivityModification):
-        failures += check_agent_mod(stmt.monomer)
-        failures += check_agent_mod(stmt.monomer, stmt.mod)
-    return failures
-
-def check_agent_mod(agent, mods=None):
-    failures = []
-    # If no UniProt ID is found, we don't report a failure
-    up_id = agent.db_refs.get('UP')
-    if up_id is None:
-        return failures
-
-    # If the UniProt ID is a list then choose the first one.
-    if not isinstance(up_id, basestring):
-        up_id = up_id[0]
-
-    if mods is not None:
-        check_mods = mods
-    else:
-        check_mods = agent.mods
-
-    for m in check_mods:
-        if m.position is None:
-            continue
-        residue = m.residue
-        if residue is None:
-            continue
-        ver = uniprot_client.verify_location(up_id, residue, m.position)
-        if not ver:
-            print '-> Sequence check failed; position %s on %s is not %s.' %\
-                  (m.position, agent.name, residue)
-            failures.append((agent.name, residue, m.position))
-    return failures
-"""
