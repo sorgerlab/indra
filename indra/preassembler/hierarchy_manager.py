@@ -56,9 +56,9 @@ class HierarchyManager(object):
 
 # Load the default entity and modification hierarchies
 entity_file_path = os.path.join(os.path.dirname(__file__),
-                    'entity_hierarchy.rdf')
+                    '../resources/entity_hierarchy.rdf')
 mod_file_path = os.path.join(os.path.dirname(__file__),
-                    'modification_hierarchy.rdf')
+                    '../resources/modification_hierarchy.rdf')
 entity_hierarchy = HierarchyManager(entity_file_path)
 modification_hierarchy = HierarchyManager(mod_file_path)
 
