@@ -1,5 +1,6 @@
 import os
 import csv
+import warnings
 from collections import namedtuple
 from copy import deepcopy
 from indra.databases import uniprot_client
