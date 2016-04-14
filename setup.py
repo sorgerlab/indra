@@ -14,7 +14,7 @@ def main():
           url='http://github.com/sorgerlab/indra',
           packages=['indra', 'indra.bel', 'indra.biopax',
                     'indra.reach', 'indra.trips', 'indra.databases',
-                    'indra.tests'],
+                    'indra.preassembler', 'indra.tests'],
           install_requires=['pysb', 'objectpath', 'rdflib',
                             'functools32', 'requests', 'lxml'],
           tests_require=['jnius-indra'],
