@@ -6,9 +6,9 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 entity_file_path = os.path.join(os.path.dirname(__file__),
-                    '..', 'preassembler', 'entity_hierarchy.rdf')
+                    '..', 'resources', 'entity_hierarchy.rdf')
 mod_file_path = os.path.join(os.path.dirname(__file__),
-                    '..', 'preassembler', 'modification_hierarchy.rdf')
+                    '..', 'resources', 'modification_hierarchy.rdf')
 eh = HierarchyManager(entity_file_path)
 mh = HierarchyManager(mod_file_path)
 

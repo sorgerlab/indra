@@ -2,10 +2,10 @@ import os
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 entity_file = os.path.join(os.path.dirname(__file__), 
-        '../preassembler/entity_hierarchy.rdf')
+        '../resources/entity_hierarchy.rdf')
 
 mod_file = os.path.join(os.path.dirname(__file__), 
-        '../preassembler/modification_hierarchy.rdf')
+        '../resources/modification_hierarchy.rdf')
 
 def test_find_entity():
     hm = HierarchyManager(entity_file)

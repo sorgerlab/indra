@@ -5,11 +5,11 @@ from indra.preassembler.hierarchy_manager import HierarchyManager
 from nose.tools import raises
 
 # Load the hierarchy manager data
-ent_path = os.path.join('preassembler', 'entity_hierarchy.rdf')
+ent_path = os.path.join('resources', 'entity_hierarchy.rdf')
 ent_file = pkg_resources.resource_filename('indra', ent_path)
 eh = HierarchyManager(ent_file)
 
-mod_path = os.path.join('preassembler', 'modification_hierarchy.rdf')
+mod_path = os.path.join('resources', 'modification_hierarchy.rdf')
 mod_file = pkg_resources.resource_filename('indra', mod_path)
 mh = HierarchyManager(mod_file)
 

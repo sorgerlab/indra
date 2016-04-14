@@ -249,7 +249,7 @@ def load_site_map(path):
 
 
 default_site_map_path = os.path.join(os.path.dirname(__file__),
-                             'curated_site_map.txt')
+                             '../resources/curated_site_map.txt')
 
 default_site_map = load_site_map(default_site_map_path)
 

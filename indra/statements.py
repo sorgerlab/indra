@@ -4,7 +4,7 @@ import textwrap
 
 def read_amino_acids():
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    aa_file = this_dir + '/../data/amino_acids.tsv'
+    aa_file = this_dir + '/resources/amino_acids.tsv'
     amino_acids = {}
     amino_acids_reverse = {}
     with open(aa_file, 'rt') as fh:
