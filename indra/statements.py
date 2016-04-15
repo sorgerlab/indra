@@ -633,7 +633,7 @@ class ActivatingSubstitution(Statement):
 
     def matches_key(self):
         key = (type(self), self.monomer.matches_key(),
-               self.mutation.matches_key(), self.activity)
+               self.mutation.matches_key(), self.activity, self.rel)
         return str(key)
 
     def agent_list(self):
@@ -641,14 +641,8 @@ class ActivatingSubstitution(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
-            raise ValueError("ActivityModification has one agent.")
+            raise ValueError("ActivatingSubstitution has one agent.")
         self.monomer = agent_list[0]
-
-    def monomers_interactions_only(self, agent_set):
-        pass
-
-    def assemble_interactions_only(self, model, agent_set):
-        pass
 
     def refinement_of(self, other, eh, mh):
         # Make sure the statement types match
@@ -656,6 +650,7 @@ class ActivatingSubstitution(Statement):
             return False
         if self.monomer.refinement_of(other.monomer, eh, mh) and \
            self.activity == other.activity and \
+           self.mutation.matches(other.mutation) and \
            self.rel == other.rel:
             return True
         else:

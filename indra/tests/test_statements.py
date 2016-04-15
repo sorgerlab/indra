@@ -231,8 +231,16 @@ def test_matches_activatingsub():
     st3 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
                                  'GtpBoundActivity2', 'increases2',
                                  evidence=Evidence(text='bar'))
+    st4 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
+                                 'GtpBoundActivity2', 'increases3',
+                                 evidence=Evidence(text='bar'))
+    st5 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
+                                 'GtpBoundActivity3', 'increases2',
+                                 evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert(not st3.matches(st4)) # Differ only in relationship
+    assert(not st3.matches(st5)) # Differ only in activity
 
 def test_matches_rasgef():
     """Test matching of entities only, entities match only on name."""
