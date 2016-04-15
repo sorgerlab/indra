@@ -29,6 +29,7 @@ class GeneNetwork(object):
         self.gene_list = gene_list
         self.basename = basename
 
+
     def get_bel_stmts(self, filter=False):
         """Get relevant statements from the BEL large corpus.
 
@@ -116,17 +117,19 @@ class GeneNetwork(object):
         print "Combining duplicates"
         pa1.combine_duplicates()
 
+        """
         print "Mapping sites"
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
-
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
 
         pa2 = Preassembler(eh, mh, mapped_stmts)
         print "Combining duplicates again"
         pa2.combine_duplicates()
 
-        #print "Combining related"
-        #pa2.combine_related()
+        profile.enable()
+        print "Combining related"
+        pa2.combine_related()
+        profile.disable()
 
         self.results = {}
         self.results['raw'] = stmts
@@ -150,9 +153,16 @@ class GeneNetwork(object):
         results_filename = '%s_results.pkl' % self.basename
         with open(results_filename, 'w') as f:
             pickle.dump(self.results, f)
+        """
 
+        profile.enable()
+        pa1.combine_related()
+        profile.disable()
+        import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
+    import cProfile
+    import pstats
 
     # STEP 0: Get gene list
     gene_list = []
@@ -164,6 +174,10 @@ if __name__ == '__main__':
 
     gn = GeneNetwork(gene_list, 'ras_genes')
     stmts = gn.get_statements()
+    profile = cProfile.Profile()
+    gn.run_preassembly(stmts)
+    profile.dump_stats('related_stats')
+    stats = pstats.Stats('related_stats')
 
 """
 sublist = ['RAF1', 'MAP2K1', 'MAPK1', 'KSR1', 'DUSP1', 'KRAS', 'AKT1', 'PDPK1']
