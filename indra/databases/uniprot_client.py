@@ -27,8 +27,35 @@ try:
 except IOError:
     uniprot_hgnc = {}
 
+# File containing secondary accession numbers mapped
+# to primary accession numbers
+sec_file = os.path.dirname(os.path.abspath(__file__)) +\
+            '/../resources/uniprot_sec_ac.txt'
+try:
+    uniprot_sec = {}
+    lines = open(sec_file, 'rt').readlines()
+    for i, l in enumerate(lines):
+        if l.startswith('Secondary AC'):
+            entry_lines = lines[i+2:]
+
+    for l in entry_lines:
+        sec_id, prim_id = l.split()
+        try:
+            uniprot_sec[sec_id].append(prim_id)
+        except KeyError:
+            uniprot_sec[sec_id] = [prim_id]
+except IOError:
+    uniprot_sec = {}
+
 @lru_cache(maxsize=1000)
 def query_protein(protein_id):
+    # Try looking up a primary ID if the given one
+    # is a secondary ID
+    try:
+        prim_ids = uniprot_sec[protein_id]
+        protein_id = prim_ids[0]
+    except KeyError:
+        pass
     url = uniprot_url + protein_id + '.rdf'
     g = rdflib.Graph()
     try:
@@ -112,18 +139,21 @@ def get_gene_name(protein_id):
     else:
         return None
 
-
+@lru_cache(maxsize=1000)
 def get_sequence(protein_id):
-    g = query_protein(protein_id)
-    query = rdf_prefixes + """
-        SELECT ?seq
-        WHERE {
-            ?simple_seq a up:Simple_Sequence .
-            ?simple_seq rdf:value ?seq .
-            }
-        """
-    res = g.query(query)
-    seq = [r for r in res][0][0].toPython()
+    try:
+        prim_ids = uniprot_sec[protein_id]
+        protein_id = prim_ids[0]
+    except KeyError:
+        pass
+    url = uniprot_url + '%s.fasta' % protein_id
+    try:
+        res = urllib2.urlopen(url)
+    except urllib2.HTTPError:
+        print 'Could not find sequence for protein %s' % protein_id
+        return None
+    lines = res.readlines()
+    seq = (''.join(lines[1:])).replace('\n','')
     return seq
 
 
@@ -159,7 +189,6 @@ def verify_location(protein_id, residue, location):
     Verify if a given residue is at the given location
     acording to the UniProt sequence
     """
-    g = query_protein(protein_id)
     seq = get_sequence(protein_id)
     try:
         loc_int = int(location)
@@ -181,7 +210,6 @@ def verify_modification(protein_id, residue, location=None):
     given, we only check if there is any residue of the
     given type that is modified.
     """
-    g = query_protein(protein_id)
     mods = get_modifications(protein_id)
     mod_locs = [m[1] for m in mods]
     seq = get_sequence(protein_id)
