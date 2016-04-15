@@ -280,8 +280,10 @@ def test_matches_complex():
     map2k2 = Agent('MAP2K1', db_refs = {'HGNC': 'map2k2'})
     st1 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='foo'))
     st2 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='bar'))
+    st3 = Complex([braf1, map2k1, ksr1], evidence=Evidence(text='bax'))
     assert(st1.matches(st2))
-
+    assert(st2.matches(st3))
+    assert(st3.matches(st1))
 
 # Entity matching between statements ----------------------------------------
 def test_agent_entity_match():
@@ -383,7 +385,10 @@ def test_entities_match_complex():
     map2k2 = Agent('MAP2K1', db_refs = {'HGNC': 'map2k2'})
     st1 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='foo'))
     st2 = Complex([ksr2, braf2, map2k2], evidence=Evidence(text='bar'))
+    st3 = Complex([braf2, map2k2, ksr2], evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
+    assert(st2.entities_match(st3))
+    assert(st3.entities_match(st1))
 
 def test_agent_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
