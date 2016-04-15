@@ -117,19 +117,18 @@ class GeneNetwork(object):
         print "Combining duplicates"
         pa1.combine_duplicates()
 
-        """
         print "Mapping sites"
+        profile.enable()
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
+        profile.disable()
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
 
         pa2 = Preassembler(eh, mh, mapped_stmts)
         print "Combining duplicates again"
         pa2.combine_duplicates()
 
-        profile.enable()
         print "Combining related"
         pa2.combine_related()
-        profile.disable()
 
         self.results = {}
         self.results['raw'] = stmts
@@ -153,12 +152,10 @@ class GeneNetwork(object):
         results_filename = '%s_results.pkl' % self.basename
         with open(results_filename, 'w') as f:
             pickle.dump(self.results, f)
-        """
 
-        profile.enable()
-        pa1.combine_related()
-        profile.disable()
-        import ipdb; ipdb.set_trace()
+        #profile.enable()
+        #pa1.combine_related()
+        #profile.disable()
 
 if __name__ == '__main__':
     import cProfile
