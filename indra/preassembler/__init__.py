@@ -1,9 +1,9 @@
+import sys
 import pygraphviz as pgv
 import itertools
 from copy import copy
 from indra.statements import *
 from indra.databases import uniprot_client
-
 
 class Preassembler(object):
 
@@ -147,6 +147,16 @@ class Preassembler(object):
         # statements which involve either the same entities or entities with
         # family relationships.
         ext_groups = copy(groups)
+        # Set up progress bar
+        # see http://stackoverflow.com/questions/3160699/python-progress-bar
+        num_comparisons = len(groups.keys()) ** 2
+        toolbar_width = 40
+        sys.stdout.write("Combining related stmts: [%s]"
+                         % (" " * toolbar_width))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (toolbar_width+1)) # return to start of bar
+        counter = 0
+        num_cmps_per_step = num_comparisons / int(toolbar_width)
         # We examine pairs of Statement groups, looking for "isa" relationships:
         for g1_key, g2_key in itertools.permutations(groups.keys(), 2):
             g1 = groups[g1_key]
@@ -197,7 +207,14 @@ class Preassembler(object):
             if all(g1_is_refinement):
                 g1_ext_list = ext_groups[g1_key]
                 ext_groups[g1_key] = g1_ext_list + g2
-            continue
+            # Update progress bar
+            if counter >= num_cmps_per_step:
+                sys.stdout.write("-")
+                sys.stdout.flush()
+                counter = 0
+            else:
+                counter += 1
+
         # At this point we have, in ext_groups, a dict of lists of Statements
         # indexed by their entity_matches key, but now the groups contain not
         # only statements with matching entities, but also entities related by
