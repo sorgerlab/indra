@@ -1,7 +1,7 @@
 import urllib
 import urllib2
 import xml.etree.ElementTree as et
-from indra.databases import pubmed_client
+from indra.literature import pubmed_client
 
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 

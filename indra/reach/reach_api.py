@@ -3,8 +3,8 @@ import json
 import tempfile
 import requests
 from indra.java_vm import autoclass, JavaException
-import indra.databases.pmc_client as pmc_client
-import indra.databases.pubmed_client as pubmed_client
+import indra.literature.pmc_client as pmc_client
+import indra.literature.pubmed_client as pubmed_client
 from processor import ReachProcessor
 from reach_reader import ReachReader
 

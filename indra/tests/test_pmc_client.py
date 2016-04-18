@@ -1,4 +1,4 @@
-from indra.databases import pmc_client
+from indra.literature import pmc_client
 
 def test_get_xml():
     pmc_id = '4322985'

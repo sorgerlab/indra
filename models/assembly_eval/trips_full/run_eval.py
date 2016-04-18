@@ -2,7 +2,7 @@ import os
 import glob
 import shutil
 from indra.trips import trips_api
-from indra.databases import pmc_client
+from indra.literature import pmc_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph

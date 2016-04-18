@@ -26,6 +26,9 @@ def get_ids(search_term, retmax=1000, db='pubmed'):
     tree = send_request(pubmed_search, urllib.urlencode(params))
     if tree is None:
         return []
+    if tree.find('ERROR') is not None:
+        print tree.find('ERROR').text
+        return []
     count = int(tree.find('Count').text)
     id_terms = tree.findall('IdList/Id')
     if id_terms is None:
@@ -56,16 +59,3 @@ def get_abstract(pubmed_id):
                                     else abst.text for abst in abstract])
         return abstract_text
 
-def pmid_to_doi(pubmed_id):
-    if pubmed_id.upper().startswith('PMID'):
-        pubmed_id = pubmed_id[4:]
-    url = pmid_convert
-    data = {'ids': pubmed_id}
-    tree = send_request(url, urllib.urlencode(data))
-    if tree is None:
-        return None
-    record = tree.find('record')
-    if record is None:
-        return None
-    doi = record.attrib.get('doi')
-    return doi 

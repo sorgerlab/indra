@@ -1,7 +1,7 @@
 import os
 import shutil
 from indra.reach import reach_api
-from indra.databases import pmc_client
+from indra.literature import pmc_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph

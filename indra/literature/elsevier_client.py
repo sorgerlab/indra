@@ -62,13 +62,18 @@ def get_article(doi, output='txt'):
         return None
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
+    if main_body is None:
+        return None
     if output == 'xml':
         return main_body
     elif output == 'txt':
         sections = main_body.findall('common:sections/common:section', elsevier_ns)
         full_txt = ''
         for s in sections:
+            # Paragraphs that are directly under the section
             pars = s.findall('common:para', elsevier_ns)
+            # Paragraphs that are under a section within the section
+            pars += s.findall('common:section/common:para', elsevier_ns)
             for p in pars:
                 # Get the initial string inside the paragraph
                 if p.text is not None:
