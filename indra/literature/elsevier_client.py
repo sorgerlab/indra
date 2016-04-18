@@ -62,6 +62,8 @@ def get_article(doi, output='txt'):
         return None
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
+    if main_body is None:
+        return None
     if output == 'xml':
         return main_body
     elif output == 'txt':

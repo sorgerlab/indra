@@ -56,16 +56,3 @@ def get_abstract(pubmed_id):
                                     else abst.text for abst in abstract])
         return abstract_text
 
-def pmid_to_doi(pubmed_id):
-    if pubmed_id.upper().startswith('PMID'):
-        pubmed_id = pubmed_id[4:]
-    url = pmid_convert
-    data = {'ids': pubmed_id}
-    tree = send_request(url, urllib.urlencode(data))
-    if tree is None:
-        return None
-    record = tree.find('record')
-    if record is None:
-        return None
-    doi = record.attrib.get('doi')
-    return doi 
