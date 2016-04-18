@@ -47,7 +47,6 @@ def name_from_uri(uri):
 
 def gene_name_from_uri(uri):
     name = name_from_uri(uri).upper()
-    print uri, name
     return name
 
 def namespace_from_uri(uri):
@@ -70,12 +69,18 @@ def term_from_uri(uri):
     """
     if uri is None:
         return None
-    # Strip gene name off from URI
-    term = uri.rsplit('/')[-1]
+    # This is to handle URIs like
+    # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
+    match = re.match('http://www.openbel.org/bel/namespace//(.*)', uri)
+    if match is not None:
+        term = match.groups()[0]
+    else:
+        term = uri.rsplit('/')[-1]
     # Decode URL to handle spaces, special characters
     term = urllib.unquote(term)
     # Replace any spaces, hyphens, commas, or periods with underscores
     term = term.replace(' ', '_')
+    term = term.replace('/', '_')
     term = term.replace('-', '_')
     term = term.replace(',', '_')
     term = term.replace('.', '_')
