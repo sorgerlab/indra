@@ -17,12 +17,24 @@ def send_request(url, data):
         return None
     return tree
 
-def get_ids(search_term, retmax=1000, db='pubmed'):
-    params = {'db': db,
-                'term': search_term,
-                'sort': 'pub+date',
-                'retstart': 0,
-                'retmax': retmax}
+def get_ids(search_term, **kwargs):
+    """Search Pubmed for paper IDs given a search term
+    the options are passed as named arguments. For details
+    on parameters that can be used, see
+    http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
+    Some useful parameters to pass are
+    db='pmc' to search PMC instead of pubmed
+    reldate=2 to search for papers within the last 2 days
+    mindate='2016/03/01', maxdate='2016/03/31' to search for papers
+                                               in March 2016
+    """
+    params = {'term': search_term,
+              'retmax': 1000,
+              'retstart': 0,
+              'db': 'pubmed',
+              'sort': 'pub+date'}
+    for k, v in kwargs.iteritems():
+        params[k] = v
     tree = send_request(pubmed_search, urllib.urlencode(params))
     if tree is None:
         return []
@@ -35,7 +47,7 @@ def get_ids(search_term, retmax=1000, db='pubmed'):
         return []
     ids = [idt.text for idt in id_terms]
     if count != len(ids):
-        print 'Not all ids were retrieved, limited at %d.' % retmax
+        print 'Not all ids were retrieved, limited at %d.' % params['retmax']
     return ids
 
 def get_abstract(pubmed_id):
