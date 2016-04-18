@@ -6,9 +6,6 @@ from pysb import (Model, Monomer, Parameter, Rule, Annotation,
 from pysb.core import SelfExporter
 import pysb.export
 
-from bel import bel_api
-from biopax import biopax_api
-from trips import trips_api
 from indra import statements as ist
 from indra.databases import context_client
 
