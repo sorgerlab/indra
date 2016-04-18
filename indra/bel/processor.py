@@ -1,4 +1,5 @@
 from indra.statements import *
+from indra.databases import hgnc_client
 
 from rdflib import URIRef, Namespace
 from rdflib.namespace import RDF
@@ -45,7 +46,21 @@ def name_from_uri(uri):
     return name
 
 def gene_name_from_uri(uri):
-    return name_from_uri(uri).upper()
+    name = name_from_uri(uri).upper()
+    print uri, name
+    return name
+
+def namespace_from_uri(uri):
+    """Return the entity namespace from the URI. Examples:
+    http://www.openbel.org/bel/p_HGNC_RAF1 -> HGNC
+    http://www.openbel.org/bel/p_RGD_Raf1 -> RGD
+    http://www.openbel.org/bel/p_PFH_MEK1/2_Family -> PFH
+    """
+    match = re.match('http://www.openbel.org/bel/p_([A-Za-z]+)_.*', uri)
+    if match is not None:
+        return match.groups()[0]
+    else:
+        return None
 
 def term_from_uri(uri):
     """Basic conversion of RDF URIs to more friendly strings.
@@ -80,6 +95,18 @@ class BelProcessor(object):
         self.converted_stmts = []
         self.degenerate_stmts = []
         self.indirect_stmts = []
+
+    @staticmethod
+    def get_agent(concept, entity):
+        name = gene_name_from_uri(concept)
+        namespace = namespace_from_uri(entity)
+        db_refs = {}
+        if namespace == 'HGNC':
+            hgnc_id = hgnc_client.get_hgnc_id(name)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+        agent = Agent(name, db_refs=db_refs)
+        return agent
 
     def get_evidence(self, statement):
         evidence = None
@@ -122,7 +149,7 @@ class BelProcessor(object):
     def get_modifications(self):
         q_phospho = prefixes + """
             SELECT ?enzName ?actType ?substrateName ?mod ?pos
-                   ?stmt
+                   ?stmt ?enzyme ?substrate
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
@@ -147,11 +174,9 @@ class BelProcessor(object):
         for stmt in res_phospho:
             evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
-            enz_name = gene_name_from_uri(stmt[0])
-            enz = Agent(enz_name)
+            enz = self.get_agent(stmt[0], stmt[6])
             act_type = name_from_uri(stmt[1])
-            sub_name = gene_name_from_uri(stmt[2])
-            sub = Agent(sub_name)
+            sub = self.get_agent(stmt[2], stmt[7])
             mod = term_from_uri(stmt[3])
             residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[4])
@@ -213,6 +238,7 @@ class BelProcessor(object):
     def get_dephosphorylations(self):
         q_phospho = prefixes + """
             SELECT ?phosName ?substrateName ?mod ?pos ?stmt
+                   ?phosphatase ?substrate
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
@@ -236,10 +262,8 @@ class BelProcessor(object):
         for stmt in res_phospho:
             evidence = self.get_evidence(stmt[4])
             # Parse out the elements of the query
-            phos_name = gene_name_from_uri(stmt[0])
-            phos = Agent(phos_name)
-            sub_name = gene_name_from_uri(stmt[1])
-            sub = Agent(sub_name)
+            phos = self.get_agent(stmt[0], stmt[5])
+            sub = self.get_agent(stmt[1], stmt[6])
             mod = term_from_uri(stmt[2])
             residue = self._get_residue(mod)
             mod_pos = term_from_uri(stmt[3])
@@ -255,6 +279,7 @@ class BelProcessor(object):
         # the same mod combination may appear in the result
         q_mods = prefixes + """
             SELECT ?speciesName ?actType ?mod1 ?pos1 ?mod2 ?pos2 ?rel ?stmt
+                   ?species
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -287,8 +312,7 @@ class BelProcessor(object):
         for stmt in res_mods:
             evidence = self.get_evidence(stmt[7])
             # Parse out the elements of the query
-            species_name = gene_name_from_uri(stmt[0])
-            species = Agent(species_name)
+            species = self.get_agent(stmt[0], stmt[8])
             act_type = term_from_uri(stmt[1])
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
@@ -310,7 +334,7 @@ class BelProcessor(object):
 
     def get_activating_mods(self):
         q_mods = prefixes + """
-            SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt
+            SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt ?species
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -335,8 +359,7 @@ class BelProcessor(object):
         for stmt in res_mods:
             evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
-            species_name = gene_name_from_uri(stmt[0])
-            species = Agent(species_name)
+            species = self.get_agent(stmt[0], stmt[6])
             act_type = term_from_uri(stmt[1])
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
@@ -356,7 +379,7 @@ class BelProcessor(object):
     def get_complexes(self):
         # Find all complexes described in the corpus
         q_cmplx = prefixes + """
-            SELECT ?complexTerm ?childName
+            SELECT ?complexTerm ?childName ?child
             WHERE {
                 ?complexTerm a belvoc:Term .
                 ?complexTerm a belvoc:ComplexAbundance .
@@ -372,8 +395,7 @@ class BelProcessor(object):
         cmplx_dict = collections.defaultdict(list)
         for stmt in res_cmplx:
             cmplx_name = term_from_uri(stmt[0])
-            child_name = gene_name_from_uri(stmt[1])
-            child = Agent(child_name)
+            child = self.get_agent(stmt[1], stmt[2])
             cmplx_dict[cmplx_name].append(child)
         # Now iterate over the stored complex information and create binding
         # statements
@@ -392,7 +414,7 @@ class BelProcessor(object):
         p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
         """
         q_mods = prefixes + """
-            SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt
+            SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt ?subject
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -416,8 +438,7 @@ class BelProcessor(object):
         for stmt in res_mods:
             evidence = self.get_evidence(stmt[4])
             # Parse out the elements of the query
-            enz_name = gene_name_from_uri(stmt[0])
-            enz = Agent(enz_name)
+            enz = self.get_agent(stmt[0], stmt[5])
             sub_expr = term_from_uri(stmt[1])
             act_type = term_from_uri(stmt[2])
             # Parse the WT and substituted residues from the node label.
@@ -458,7 +479,7 @@ class BelProcessor(object):
         # to a modification.
         q_stmts = prefixes + """
             SELECT ?subjName ?subjActType ?rel ?objName ?objActType
-                   ?stmt
+                   ?stmt ?subj ?obj
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasSubject ?subj .
@@ -478,16 +499,14 @@ class BelProcessor(object):
 
         for stmt in res_stmts:
             evidence = self.get_evidence(stmt[5])
-            subj_name = gene_name_from_uri(stmt[0])
-            subj = Agent(subj_name)
+            subj = self.get_agent(stmt[0], stmt[6])
             subj_activity = name_from_uri(stmt[1])
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'
             else:
                 rel = 'increases'
-            obj_name = gene_name_from_uri(stmt[3])
-            obj = Agent(obj_name)
+            obj = self.get_agent(stmt[3], stmt[7])
             obj_activity = name_from_uri(stmt[4])
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
