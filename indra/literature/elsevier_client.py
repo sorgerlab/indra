@@ -70,7 +70,10 @@ def get_article(doi, output='txt'):
         sections = main_body.findall('common:sections/common:section', elsevier_ns)
         full_txt = ''
         for s in sections:
+            # Paragraphs that are directly under the section
             pars = s.findall('common:para', elsevier_ns)
+            # Paragraphs that are under a section within the section
+            pars += s.findall('common:section/common:para', elsevier_ns)
             for p in pars:
                 # Get the initial string inside the paragraph
                 if p.text is not None:

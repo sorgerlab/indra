@@ -26,6 +26,9 @@ def get_ids(search_term, retmax=1000, db='pubmed'):
     tree = send_request(pubmed_search, urllib.urlencode(params))
     if tree is None:
         return []
+    if tree.find('ERROR') is not None:
+        print tree.find('ERROR').text
+        return []
     count = int(tree.find('Count').text)
     id_terms = tree.findall('IdList/Id')
     if id_terms is None:

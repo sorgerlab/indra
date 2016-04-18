@@ -62,4 +62,4 @@ def get_full_text(paper_id):
         abstract = pubmed_client.get_abstract(pmid)
         return abstract, 'abstract'
 
-
+    return None, None
