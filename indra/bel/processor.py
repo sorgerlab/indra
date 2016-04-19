@@ -226,6 +226,7 @@ class BelProcessor(object):
                 residue = None
             else:
                 residue = mod[15:].lower()
+                residue = get_valid_residue(residue)
         else:
             residue = None
         return residue
