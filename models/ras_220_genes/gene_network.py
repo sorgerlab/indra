@@ -65,7 +65,7 @@ class GeneNetwork(object):
         return bel_statements
 
 
-    def get_biopax_stmts(self):
+    def get_biopax_stmts(self, filter=False):
         """Get relevant statements from Pathway Commons."""
 
         # Check for cached Biopax stmt file
@@ -102,11 +102,19 @@ class GeneNetwork(object):
         with open(biopax_stmt_path, 'w') as f:
             pickle.dump(bp.statements, f)
 
-        return bp.statements
+        # Optionally filter out statements not involving only our gene set
+        if filter:
+            print("Filtering statements to match gene list")
+            bp_statements = [s for s in bp.statements
+                              if all([(agent.name in self.gene_list)
+                                      for agent in s.agent_list()])]
+            return bp_statements
+        else:
+            return bp.statements
 
 
     def get_statements(self, filter=False):
-        bp_stmts = self.get_biopax_stmts()
+        bp_stmts = self.get_biopax_stmts(filter=filter)
         bel_stmts = self.get_bel_stmts(filter=filter)
 
         return bp_stmts + bel_stmts
@@ -118,16 +126,13 @@ class GeneNetwork(object):
         pa1.combine_duplicates()
 
         print "Mapping sites"
-        profile.enable()
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
-        profile.disable()
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
 
         pa2 = Preassembler(eh, mh, mapped_stmts)
         print "Combining duplicates again"
         pa2.combine_duplicates()
 
-        print "Combining related"
         pa2.combine_related()
 
         self.results = {}
@@ -140,6 +145,7 @@ class GeneNetwork(object):
         self.results['related2'] = pa2.related_stmts
 
         if print_summary:
+            print
             print("Starting number of statements: %d" % len(stmts))
             print("After duplicate removal: %d" % len(pa1.unique_stmts))
             print("Unique statements with valid sites: %d" % len(valid))
@@ -153,13 +159,12 @@ class GeneNetwork(object):
         with open(results_filename, 'w') as f:
             pickle.dump(self.results, f)
 
+        return results
         #profile.enable()
         #pa1.combine_related()
         #profile.disable()
 
 if __name__ == '__main__':
-    import cProfile
-    import pstats
 
     # STEP 0: Get gene list
     gene_list = []
@@ -170,11 +175,14 @@ if __name__ == '__main__':
             gene_list.append(row[0].strip())
 
     gn = GeneNetwork(gene_list, 'ras_genes')
-    stmts = gn.get_statements()
-    profile = cProfile.Profile()
-    gn.run_preassembly(stmts)
-    profile.dump_stats('related_stats')
-    stats = pstats.Stats('related_stats')
+    stmts = gn.get_statements(filter=True)
+    results = gn.run_preassembly(stmts)
+
+    #import cProfile
+    #import pstats
+    #profile = cProfile.Profile()
+    #profile.dump_stats('related_stats')
+    #stats = pstats.Stats('related_stats')
 
 """
 sublist = ['RAF1', 'MAP2K1', 'MAPK1', 'KSR1', 'DUSP1', 'KRAS', 'AKT1', 'PDPK1']
