@@ -14,6 +14,7 @@ try:
     fh = open(hgnc_file, 'rt')
     rd = csv.reader(fh, delimiter='\t')
     hgnc_names = {}
+    hgnc_withdrawn = []
     for row in rd:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -24,10 +25,12 @@ try:
             descr = row[2]
             m = re.match(r'symbol withdrawn, see ([^ ]*)', descr)
             new_name = m.groups()[0]
+            hgnc_withdrawn.append(hgnc_id)
             hgnc_names[hgnc_id] = new_name
         uniprot_id = row[4]
 except IOError:
     hgnc_names = {}
+    hgnc_withdrawn = []
 
 def get_hgnc_name(hgnc_id):
     try:
@@ -42,6 +45,11 @@ def get_hgnc_name(hgnc_id):
             return None
         hgnc_name = hgnc_name_tag.text.strip()
     return hgnc_name
+
+def get_hgnc_id(hgnc_name):
+    for k, v in hgnc_names.iteritems():
+        if v == hgnc_name and k not in hgnc_withdrawn:
+            return k
 
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
