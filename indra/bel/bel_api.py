@@ -1,5 +1,6 @@
 import sys
 import rdflib
+from rdflib.plugins.parsers.ntriples import ParseError
 import json
 import urllib2
 from processor import BelProcessor
@@ -21,9 +22,15 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
 
 
 def process_belrdf(rdf_str):
-    # Parse the RDF
+    """Process a BEL RDF string and process and return a
+    BEL processor.
+    """
     g = rdflib.Graph()
-    g.parse(data=rdf_str, format='nt')
+    try:
+        g.parse(data=rdf_str, format='nt')
+    except ParseError:
+        print 'Could not parse rdf.'
+        return None
     # Build INDRA statements from RDF
     bp = BelProcessor(g)
     bp.get_complexes()
