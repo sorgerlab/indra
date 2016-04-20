@@ -134,6 +134,9 @@ class BelProcessor(object):
                 citation = stmt[1].format()
             except (KeyError, IndexError):
                 warnings.warn('Problem converting evidence/citation string')
+        m = re.match('.*pubmed:([0-9]+)', citation)
+        if m is not None:
+            citation = m.groups()[0]
 
         # Query for all annotations of the statement
         q_annotations = prefixes + """
@@ -393,6 +396,7 @@ class BelProcessor(object):
                 ?child belvoc:hasConcept ?childName .
             }
         """
+        ev = Evidence(source_api='bel')
         # Run the query
         res_cmplx = self.g.query(q_cmplx)
 
@@ -411,7 +415,7 @@ class BelProcessor(object):
                        cmplx_name
                 warnings.warn(msg)
             else:
-                self.statements.append(Complex(cmplx_list))
+                self.statements.append(Complex(cmplx_list, evidence=ev))
 
     def get_activating_subs(self):
         """
