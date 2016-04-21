@@ -5,7 +5,7 @@ from indra import reach
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph
-from indra.pysb_assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 def have_file(fname):
     return os.path.exists(fname)

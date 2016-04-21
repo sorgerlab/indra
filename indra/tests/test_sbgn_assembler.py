@@ -1,6 +1,6 @@
 from os.path import dirname, join
 from hashlib import sha1
-from indra.assembler.sbgn_assembler import text_to_sbgn
+from indra.assemblers.sbgn_assembler import text_to_sbgn
 
 test_small_file = join(dirname(__file__), 'test_small.xml')
 

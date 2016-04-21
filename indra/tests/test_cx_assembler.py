@@ -1,6 +1,6 @@
 import json
 from indra.statements import *
-from indra.assembler import CxAssembler
+from indra.assemblers import CxAssembler
 
 mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})

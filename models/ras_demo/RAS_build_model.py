@@ -5,7 +5,7 @@ from pysb import Parameter, Observable, Rule
 from pysb.integrate import Solver
 import pysb.core
 
-from indra.assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 from indra import bel
 
 def get_base_state(mon):

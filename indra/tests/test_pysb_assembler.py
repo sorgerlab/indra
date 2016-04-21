@@ -1,5 +1,5 @@
-from indra.assembler import PysbAssembler
-from indra.assembler.pysb_assembler import get_agent_rule_str
+from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb_assembler import get_agent_rule_str
 from indra.statements import *
 
 def test_pysb_assembler_complex1():

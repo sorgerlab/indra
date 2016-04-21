@@ -1,5 +1,5 @@
 from indra import bel, biopax, trips
-from indra.assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 from pysb.integrate import Solver
 import numpy as np
 from matplotlib import pyplot as plt

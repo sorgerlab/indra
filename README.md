@@ -49,7 +49,7 @@ In this example INDRA assembles a PySB model from the natural language descripti
 of a mechanism via the [TRIPS parser web service](http://trips.ihmc.us/parser/cgi/drum). 
 
 ```python
-from indra.assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 from indra import trips
 pa = PysbAssembler()
 # Process a natural language description of a mechanism

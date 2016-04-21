@@ -1,4 +1,4 @@
-from indra.assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 from indra import trips
 from os.path import dirname, join
 import indra.statements as ist

@@ -7,7 +7,7 @@ from pysb.integrate import Solver
 import pysb.tools.render_reactions as rr
 import pysb.tools.render_species as rs
 from indra import trips, biopax
-from indra.assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 
 def set_initial(model, cell_line):
