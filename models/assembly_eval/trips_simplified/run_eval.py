@@ -1,7 +1,7 @@
 import os
 import glob
 import shutil
-from indra.trips import trips_api
+from indra import trips
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print '\n\n----------------------------'
         print 'Processing %s...' % fn
         txt = open(fn, 'rt').read()
-        tp = trips_api.process_text(txt)
+        tp = trips.process_text(txt)
         pa.add_statements(tp.statements)
         print '----------------------------\n\n'
 

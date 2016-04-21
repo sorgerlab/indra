@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from pysb.integrate import Solver
 import pysb.tools.render_reactions as rr
 import pysb.tools.render_species as rs
-from indra.pysb_assembler import *
+from indra import trips, biopax
+from indra.assembler import PysbAssembler
 
 
 def set_initial(model, cell_line):
@@ -27,7 +28,7 @@ def set_initial(model, cell_line):
 if __name__ == '__main__':
     # Instantiate the assembler
     pa = PysbAssembler()
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--online', action="store_true")
     parser.add_argument('--render', action="store_true")
@@ -47,11 +48,11 @@ if __name__ == '__main__':
     if use_xml:
         fname = 'egfr_model_v4.xml'
         print 'Processing parser output from XML file %s...' % fname
-        tp = trips_api.process_xml(open(fname).read())
+        tp = trips.process_xml(open(fname).read())
     else:
         print 'Submitting text to TRIPS parser...'
         tstart = time.time()
-        tp = trips_api.process_text(open('model_text.txt').read())
+        tp = trips.process_text(open('model_text.txt').read())
         tend = time.time()
         print '> TRIPS parser took %d seconds.' % (tend - tstart)
     pa.add_statements(tp.statements)
@@ -60,13 +61,13 @@ if __name__ == '__main__':
     if use_owl:
         fname = 'DUSP.owl'
         print 'Processing OWL file %s...' % fname
-        bp = biopax_api.process_owl('DUSP.owl')
+        bp = biopax.process_owl('DUSP.owl')
     else:
         print 'Processing output from PathwayCommons query'
-        bp = biopax_api.process_pc_neighborhood(['DUSP4'])
+        bp = biopax.process_pc_neighborhood(['DUSP4'])
     bp.get_dephosphorylation(force_contains=['MAPK1'])
     pa.add_statements(bp.statements)
-    
+
     # Assemble model
     model = pa.make_model(initial_conditions=True)
 
@@ -94,7 +95,6 @@ if __name__ == '__main__':
         gv_str = rs.run(model)
         with open('species.dot', 'w') as f:
             f.write(gv_str)
-      
 
     if args.simulate:
         # Set parameters
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         model.rules['DUSP4_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
         model.rules['DUSP6_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
         model.rules['DUSP7_dephospho_MAPK1_Y187'].rate_forward = model.parameters['kfc_dephos']
-         
+
 
         # Set initial conditions
         set_initial(model, 'BT20')
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         # Run model simulation
         # TODO: save figure as file
         ts = numpy.linspace(0, 120*60, 1000)
-                
+
         import pickle
         if args.loadmodel:
             print 'Loading ODE solver...'

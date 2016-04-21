@@ -1,6 +1,6 @@
 import os
 import shutil
-from indra.reach import reach_api
+from indra import reach
 from indra.literature import pmc_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
@@ -34,14 +34,14 @@ if __name__ == '__main__':
         if rerun or not have_file(pi + '.json'):
             if have_file(pi + '.txt'):
                 txt = open(pi + '.txt').read()
-                rp = reach_api.process_text(txt)
+                rp = reach.process_text(txt)
             elif have_file(pi + '.nxml'):
-                rp = reach_api.process_nxml(pi + '.nxml')
+                rp = reach.process_nxml(pi + '.nxml')
             else:
-                rp = reach_api.process_pmc(pi, save=True)
+                rp = reach.process_pmc(pi, save=True)
             shutil.move('reach_output.json', pi + '.json')
         else:
-            rp = reach_api.process_json_file(pi + '.json')
+            rp = reach.process_json_file(pi + '.json')
 
         print '%s statements collected.' % len(rp.statements)
         pa.add_statements(rp.statements)

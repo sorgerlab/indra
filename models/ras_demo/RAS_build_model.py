@@ -5,7 +5,8 @@ from pysb import Parameter, Observable, Rule
 from pysb.integrate import Solver
 import pysb.core
 
-from indra.pysb_assembler import *
+from indra.assembler import PysbAssembler
+from indra import bel
 
 def get_base_state(mon):
     sdict = {}
@@ -28,7 +29,7 @@ def add_initial(model, pattern, value):
 
 # Generate model rules via indra
 pa = PysbAssembler()
-bp = bel_api.process_belrdf('../../data/RAS_combined.rdf')
+bp = bel.process_belrdf('../../data/RAS_combined.rdf')
 pa.add_statements(bp.statements)
 model = pa.make_model(initial_conditions=False)
 

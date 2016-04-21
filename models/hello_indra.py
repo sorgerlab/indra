@@ -1,7 +1,5 @@
-from indra.bel import bel_api
-from indra.trips import trips_api
-from indra.biopax import biopax_api
-from indra.pysb_assembler import PysbAssembler
+from indra import bel, biopax, trips
+from indra.assembler import PysbAssembler
 from pysb.integrate import Solver
 import numpy as np
 from matplotlib import pyplot as plt
@@ -14,17 +12,17 @@ text = ('MEK1 phosphorylates ERK2 on Thr-185 and Tyr-187. DUSP4 '
 # Show round trip going out to TRIPS/DRUM web service,
 # return logical form to INDRA, which is queried by
 # INDRA for relevant statements
-tp = trips_api.process_text(text)
+tp = trips.process_text(text)
 
 # 2. BIOPAX
 # Show round trip going out to PC web service, returning
 # Biopax model, queried by INDRA
-#bp = biopax_api.process_pc_pathsbetween(['MAP2K1', 'MAPK1'])
+#bp = biopax.process_pc_pathsbetween(['MAP2K1', 'MAPK1'])
 #bp.get_phosphorylation()
 
 # 3. BEL
 # Show round trip to NDeX/BEL service
-#belp = bel_api.process_ndex_neighborhood(['MAP2K1'])
+#belp = bel.process_ndex_neighborhood(['MAP2K1'])
 
 # Statements can now be collected since they are in the same format
 #stmts = tp.statements + bp.statements + belp.statements
