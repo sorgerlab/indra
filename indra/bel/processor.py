@@ -134,6 +134,10 @@ class BelProcessor(object):
                 citation = stmt[1].format()
             except (KeyError, IndexError):
                 warnings.warn('Problem converting evidence/citation string')
+        if citation is not None:
+            m = re.match('.*pubmed:([0-9]+)', citation)
+            if m is not None:
+                citation = m.groups()[0]
 
         # Query for all annotations of the statement
         q_annotations = prefixes + """
@@ -385,8 +389,19 @@ class BelProcessor(object):
     def get_complexes(self):
         # Find all complexes described in the corpus
         q_cmplx = prefixes + """
-            SELECT ?complexTerm ?childName ?child
+            SELECT ?complexTerm ?childName ?child ?stmt
             WHERE {
+                {
+                {?stmt belvoc:hasSubject ?complexTerm}
+                UNION
+                {?stmt belvoc:hasObject ?complexTerm .}
+                UNION
+                {?stmt belvoc:hasSubject ?term .
+                ?term belvoc:hasChild ?complexTerm .}
+                UNION
+                {?stmt belvoc:hasObject ?term .
+                ?term belvoc:hasChild ?complexTerm .}
+                }
                 ?complexTerm a belvoc:Term .
                 ?complexTerm a belvoc:ComplexAbundance .
                 ?complexTerm belvoc:hasChild ?child .
@@ -399,10 +414,15 @@ class BelProcessor(object):
         # Store the members of each complex in a dict of lists, keyed by the
         # term for the complex
         cmplx_dict = collections.defaultdict(list)
+        cmplx_ev = {}
         for stmt in res_cmplx:
+            ev = self.get_evidence(stmt[3])
             cmplx_name = term_from_uri(stmt[0])
             child = self.get_agent(stmt[1], stmt[2])
             cmplx_dict[cmplx_name].append(child)
+            # This might be written multiple times but with the same
+            # evidence
+            cmplx_ev[cmplx_name] = ev
         # Now iterate over the stored complex information and create binding
         # statements
         for cmplx_name, cmplx_list in cmplx_dict.iteritems():
@@ -411,7 +431,8 @@ class BelProcessor(object):
                        cmplx_name
                 warnings.warn(msg)
             else:
-                self.statements.append(Complex(cmplx_list))
+                self.statements.append(Complex(cmplx_list,               
+                                               evidence=cmplx_ev[cmplx_name]))
 
     def get_activating_subs(self):
         """
