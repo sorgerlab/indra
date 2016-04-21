@@ -2,7 +2,7 @@ import os
 from indra.java_vm import autoclass, cast
 from indra.biopax import biopax_api
 import indra.biopax.processor as bpc
-from indra.pysb_assembler import PysbAssembler
+from indra.assembler import PysbAssembler
 
 model_path = os.path.dirname(os.path.abspath(__file__)) +\
              '/../../data/biopax_test.owl'

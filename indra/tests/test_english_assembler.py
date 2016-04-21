@@ -1,4 +1,4 @@
-import indra.english_assembler as ea
+import indra.assembler.english_assembler as ea
 from indra.statements import *
 
 def test_agent_basic():
