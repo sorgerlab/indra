@@ -1,5 +1,5 @@
 from indra.statements import *
-from indra.graph_assembler import GraphAssembler
+from indra.assemblers import GraphAssembler
 
 def test_phosphorylation():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]

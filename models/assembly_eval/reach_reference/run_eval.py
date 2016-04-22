@@ -1,11 +1,11 @@
 import os
 import glob
 import shutil
-from indra.reach import reach_api
+from indra import reach
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph
-from indra.pysb_assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 def have_file(fname):
     return os.path.exists(fname)
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         print '\n\n----------------------------'
         print 'Processing %s...' % fn
         txt = open(fn, 'rt').read()
-        rp = reach_api.process_text(txt)
+        rp = reach.process_text(txt)
         print '%s statements collected.' % len(rp.statements)
         pa.add_statements(rp.statements)
         print '----------------------------\n\n'

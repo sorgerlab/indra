@@ -1,5 +1,5 @@
-from indra.pysb_assembler import PysbAssembler
-from indra.trips import trips_api
+from indra.assemblers import PysbAssembler
+from indra import trips
 from os.path import dirname, join
 import indra.statements as ist
 import sys
@@ -8,7 +8,7 @@ import os
 test_small_file = join(dirname(__file__), 'test_small.xml')
 
 def test_phosphorylation():
-    tp = trips_api.process_text('BRAF phosphorylates MEK1 at Ser222.')
+    tp = trips.process_text('BRAF phosphorylates MEK1 at Ser222.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
@@ -16,7 +16,7 @@ def test_phosphorylation():
     assert(st.position == '222')
 
 def test_phosphorylation_noresidue():
-    tp = trips_api.process_text('BRAF phosphorylates MEK1.')
+    tp = trips.process_text('BRAF phosphorylates MEK1.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
@@ -24,7 +24,7 @@ def test_phosphorylation_noresidue():
     assert(st.position is None)
 
 def test_phosphorylation_nosite():
-    tp = trips_api.process_text('BRAF phosphorylates MEK1 at Serine.')
+    tp = trips.process_text('BRAF phosphorylates MEK1 at Serine.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Phosphorylation))
@@ -32,7 +32,7 @@ def test_phosphorylation_nosite():
     assert(st.position is None)
 
 def test_actmod():
-    tp = trips_api.process_text('MEK1 phosphorylated at Ser222 is activated.')
+    tp = trips.process_text('MEK1 phosphorylated at Ser222 is activated.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.ActivityModification))
@@ -42,7 +42,7 @@ def test_actmod():
     assert(st.mod[0].position == '222')
 
 def test_actmods():
-    tp = trips_api.process_text('MEK1 phosphorylated at Ser 218 and Ser222 is activated.')
+    tp = trips.process_text('MEK1 phosphorylated at Ser 218 and Ser222 is activated.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.ActivityModification))
@@ -53,7 +53,7 @@ def test_actmods():
     assert(st.mod[0].position == '218')
 
 def test_actmods():
-    tp = trips_api.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
+    tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Complex))
@@ -65,9 +65,9 @@ def test_actmods():
 def test_trips_processor_online():
     """Smoke test to see if imports and executes without error. Doesn't
     check for correctness of parse or of assembled model."""
-    tp = trips_api.process_text('BRAF phosphorylates MEK1 at Ser222.')
+    tp = trips.process_text('BRAF phosphorylates MEK1 at Ser222.')
 
 def test_trips_processor_offline():
     """Smoke test to see if imports and executes without error. Doesn't
     check for correctness of parse or of assembled model."""
-    tp = trips_api.process_xml(open(test_small_file).read())
+    tp = trips.process_xml(open(test_small_file).read())

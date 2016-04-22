@@ -1,4 +1,4 @@
-from indra.reach import reach_api
+from indra import reach
 from indra.reach.processor import ReachProcessor
 
 def test_parse_site_text():
@@ -25,29 +25,29 @@ def test_valid_name():
     assert(ReachProcessor._get_valid_name('14-3-3') == 'p14_3_3')
 
 def test_phosphorylate():
-    rp = reach_api.process_text('MEK1 phosphorylates ERK2.')
+    rp = reach.process_text('MEK1 phosphorylates ERK2.')
     assert(len(rp.statements) == 1)
     s = rp.statements[0]
     assert (s.enz.name == 'MAP2K1')
     assert (s.sub.name == 'MAPK1')
 
 def test_activate():
-    rp = reach_api.process_text('HRAS activates BRAF.')
+    rp = reach.process_text('HRAS activates BRAF.')
     assert(len(rp.statements) == 1)
     s = rp.statements[0]
     assert (s.subj.name == 'HRAS')
     assert (s.obj.name == 'BRAF')
 
 def test_bind():
-    rp = reach_api.process_text('MEK1 binds ERK2.')
+    rp = reach.process_text('MEK1 binds ERK2.')
     assert(len(rp.statements) == 1)
 
 def test_activity():
-    rp = reach_api.process_text('MEK1 activates ERK2.')
+    rp = reach.process_text('MEK1 activates ERK2.')
     assert(len(rp.statements) == 1)
 
 def test_mutation():
-    rp = reach_api.process_text('BRAF(V600E) phosphorylates MEK.')
+    rp = reach.process_text('BRAF(V600E) phosphorylates MEK.')
     assert(len(rp.statements) == 1)
     braf = rp.statements[0].enz
     assert(braf.name == 'BRAF')

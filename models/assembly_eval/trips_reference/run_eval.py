@@ -1,11 +1,11 @@
 import os
 import glob
 import shutil
-from indra.trips import trips_api
+from indra import trips
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph
-from indra.pysb_assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 def have_file(fname):
     return os.path.exists(fname)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print '\n\n----------------------------'
         print 'Processing %s...' % fn
         txt = open(fn, 'rt').read()
-        tp = trips_api.process_xml(txt)
+        tp = trips.process_xml(txt)
         print 'Extracted events by type'
         print '------------------------'
         for k,v in tp.extracted_events.iteritems():

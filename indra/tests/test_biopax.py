@@ -1,13 +1,13 @@
 import os
 from indra.java_vm import autoclass, cast
-from indra.biopax import biopax_api
+from indra import biopax
 import indra.biopax.processor as bpc
-from indra.pysb_assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 model_path = os.path.dirname(os.path.abspath(__file__)) +\
              '/../../data/biopax_test.owl'
 
-bp = biopax_api.process_owl(model_path)
+bp = biopax.process_owl(model_path)
 uri_prefix = 'http://purl.org/pc2/7/'
 
 '''

@@ -1,6 +1,6 @@
 import os
 from indra.preassembler import Preassembler, render_stmt_graph
-from indra.trips import trips_api
+from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActivatingSubstitution, MutCondition
@@ -20,7 +20,7 @@ def test_from_text():
                 'Src phosphorylates NRAS that is bound to GTP.']
     pa = Preassembler()
     for s in sentences:
-        tp = trips_api.process_text(s)
+        tp = trips.process_text(s)
         pa.add_statements(tp.statements)
 """
 
