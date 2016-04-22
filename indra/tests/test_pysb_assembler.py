@@ -256,6 +256,17 @@ def test_pysb_assembler_phos_twostep1():
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
+def test_pysb_assembler_twostep_mixed():
+    member1 = Agent('BRAF')
+    member2 = Agent('RAF1')
+    st1 = Complex([member1, member2])
+    st2 = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2])
+    pa.make_model(policies='two_step')
+    assert(len(pa.model.rules)==5)
+    assert(len(pa.model.monomers)==4)
+
 def test_pysb_assembler_phos_twostep_local():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
@@ -494,3 +505,4 @@ def test_print_rst():
     pa.add_statements([st])
     pa.make_model()
     pa.print_rst('/dev/null')
+

@@ -482,6 +482,7 @@ def complex_monomers_one_step(stmt, agent_set):
             gene_mono.create_site(get_binding_site_name(bp.name))
 
 complex_monomers_interactions_only = complex_monomers_one_step
+complex_monomers_two_step = complex_monomers_one_step
 complex_monomers_multi_way = complex_monomers_one_step
 complex_monomers_default = complex_monomers_one_step
 
@@ -617,6 +618,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     add_rule_to_model(model, rule)
 
 complex_assemble_interactions_only = complex_assemble_one_step
+complex_assemble_two_step = complex_assemble_one_step
 complex_assemble_default = complex_assemble_one_step
 
 # PHOSPHORYLATION ###################################################
@@ -907,6 +909,7 @@ def activityactivity_monomers_one_step(stmt, agent_set):
                     ('inactive', 'active'))
 
 activityactivity_monomers_default = activityactivity_monomers_one_step
+activityactivity_monomers_twostep = activityactivity_monomers_one_step
 
 
 def activityactivity_assemble_interactions_only(stmt, model, agent_set):
@@ -969,6 +972,7 @@ def activityactivity_assemble_one_step(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 activityactivity_assemble_default = activityactivity_assemble_one_step
+activityactivity_assemble_twostep = activityactivity_assemble_one_step
 
 # DEPHOSPHORYLATION #####################################################
 
@@ -1257,6 +1261,7 @@ def activitymodification_monomers_one_step(stmt, agent_set):
                       'implemented!')
 
 activitymodification_monomers_default = activitymodification_monomers_one_step
+activitymodification_monomers_two_step = activitymodification_monomers_one_step
 
 
 def activitymodification_assemble_interactions_only(stmt, model, agent_set):
@@ -1267,3 +1272,4 @@ def activitymodification_assemble_one_step(stmt, model, agent_set):
     pass
 
 activitymodification_assemble_default = activitymodification_assemble_one_step
+activitymodification_assemble_two_step = activitymodification_assemble_one_step
