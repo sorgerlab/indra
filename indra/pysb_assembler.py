@@ -441,10 +441,15 @@ class PysbAssembler(object):
             for m in monomers_notfound:
                 print m
 
-    def print_model(self, fname='pysb_model.py'):
+    def print_model(self):
+        model_str = pysb.export.export(self.model, 'pysb_flat')
+        return model_str
+
+    def save_model(self, fname='pysb_model.py'):
         if self.model is not None:
+            model_str = self.print_model()
             with open(fname, 'wt') as fh:
-                fh.write(pysb.export.export(self.model, 'pysb_flat'))
+                fh.write(model_str)
 
     def print_rst(self, fname='pysb_model.rst', module_name='pysb_module'):
         if self.model is not None:
