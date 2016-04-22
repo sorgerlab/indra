@@ -485,7 +485,7 @@ def test_print_model():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    pa.print_model('/dev/null')
+    pa.save_model('/dev/null')
 
 def test_print_rst():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
