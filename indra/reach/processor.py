@@ -284,4 +284,4 @@ class ReachProcessor(object):
             site = None
             return residue, site
 
-        return '', None
+        return None, None
