@@ -30,9 +30,14 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         else:
             target_str = ','.join(target)
         params['target'] = target_str
-    
+
     print 'Sending Pathway Commons query...'
-    res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
+    try:
+        res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
+    except urllib2.HTTPError as e:
+        print 'Response is HTTP eror code %d.' % e.code
+        return None
+
     owl_str = res.read()
     model = owl_str_to_model(owl_str)
     if model is not None:
