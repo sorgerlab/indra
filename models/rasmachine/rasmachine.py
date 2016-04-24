@@ -1,7 +1,6 @@
 import os
 import time
 import shutil
-import getpass
 import gmail_client
 import twitter_client
 from incremental_model import IncrementalModel
@@ -11,11 +10,13 @@ from indra.literature import pubmed_client, get_full_text
 model_path = os.path.dirname(os.path.abspath(__file__))
 use_twitter = False
 
-def get_email_pmids(uname, passfile):
+def get_email_pmids(cred_file):    
     try:
-        passwd = open(pass_file, 'rt').read().strip()
+        fh = open(cred_file, 'rt')
+        uname, passwd = [l.strip() for l in fh.readlines()]
     except IOError:
-        passwd = getpass.getpass()
+        print 'Could not access Gmail credentials.'
+        return []
 
     M = gmail_client.gmail_login(uname, passwd)
     gmail_client.select_mailbox(M, 'INBOX')
@@ -103,9 +104,7 @@ if __name__ == '__main__':
     print time.strftime('%c')
 
     # Get email PMIDs
-    uname = 'therasmachine@gmail.com'
-    pass_file = 'rasmachine_cred.txt'
-    pmids = get_email_pmids(uname, pass_file)
+    pmids = get_email_pmids('gmail_cred.txt')
     # Load the model
     rasmodel = IncrementalModel(model_path + '/rasmodel.pkl')
     pysb_model = rasmodel.make_model()

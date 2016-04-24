@@ -88,7 +88,7 @@ def get_message_pmids(M):
 
 def pmids_from_ncbi_email(msg_text):
     res = re.findall('PMID: [^.;]+', msg_text.replace('\n',''))
-    pmids = [r[6:] for r in res]
+    pmids = [r[6:].strip() for r in res]
     return pmids
 
 def pmids_from_subject(subject):
