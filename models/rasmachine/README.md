@@ -2,7 +2,7 @@ Starting a new model
 ====================
 To start a new model, run 
 
-    ./start_model.sh model_name
+    ./new_machine.sh model_name
 
 This script generates the following folders and files
 
