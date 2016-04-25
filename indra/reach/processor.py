@@ -62,7 +62,7 @@ class ReachProcessor(object):
             for reg in reg_res:
                 for a in reg['arguments']:
                     if a['argument_label'] == 'controller':
-                        controller = a['arg']
+                        controller = a.get('arg')
 
             if controller is not None:
                 controller_agent = self._get_agent_from_entity(controller)
@@ -181,7 +181,7 @@ class ReachProcessor(object):
         muts = []
         if mod_terms is not None:
             for m in mod_terms:
-                if m['type'] == 'mutation':
+                if m['type'].lower() == 'mutation':
                     # Evidence is usualy something like "V600E"
                     # We could parse this to get the amino acid
                     # change that happened.
@@ -193,7 +193,8 @@ class ReachProcessor(object):
                     mut = self._parse_mutation(mutation_str)
                     if mut is not None:
                         muts.append(mut)
-                elif m['type'] == 'Phosphorylation':
+                elif m['type'].lower() == 'phosphorylation' or\
+                     m['type'].lower() == 'phosphorylated':
                     site = m.get('site')
                     if site is not None:
                         mod_res, mod_pos = self._parse_site_text(site)
@@ -201,7 +202,7 @@ class ReachProcessor(object):
                         mods.append(mod)
                     else:
                         mods.append(ModCondition('phosphorylation'))
-                elif m['type'] == 'Ubiquitination':
+                elif m['type'].lower() == 'ubiquitination':
                     mods.append(ModCondition('ubiquitination'))
                 else:
                     print 'Unhandled entity modification type: %s' % m['type']
