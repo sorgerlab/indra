@@ -4,7 +4,7 @@ To start a new model, run
 
     ./start_model.sh model_name
 
-This script generated the following folders and files
+This script generates the following folders and files
 
     model_name
     model_name/log.txt
@@ -27,15 +27,16 @@ To extend a model, run
     
     ./run_machine.sh model_name
 
-This script sets the JAVA\_HOME, CLASSPATH and INDRA environmental variables
+This script sets the JAVA\_HOME, CLASSPATH and PYTHONPATH environmental variables
 and then calls
 
     python rasmachine.py --model model_name [--twitter twitter_cred]
                          [--gmail gmail_cred]
 
 Extending a model involves extracting PMIDs from emails (if Gmail credentials
-are given), and searches PubMed with each line of search\_terms.txt 
-as a search term. It then uses INDRA's literature client to find the 
+are given), and searching using INDRA's PubMed client 
+with each line of search\_terms.txt as a search term. 
+INDRA's literature client is then used to find the 
 full text corresponding to each PMID or its abstract when the full text 
 is not available. The REACH parser is then used to read each new paper. INDRA
 uses the REACH output to construct Statements corresponding to mechanisms. 
