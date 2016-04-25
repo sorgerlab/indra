@@ -123,7 +123,8 @@ class Preassembler(object):
             >>> st1 = Phosphorylation(braf, map2k1)
             >>> st2 = Phosphorylation(braf, map2k1, position='218')
             >>> pa = Preassembler(eh, mh, [st1, st2])
-            >>> combined_stmts = pa.combine_related()
+            >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
+            Combining ...
             >>> combined_stmts
             [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
             >>> combined_stmts[0].supported_by
@@ -214,7 +215,8 @@ class Preassembler(object):
                 counter = 0
             else:
                 counter += 1
-
+        # Move cursor to next line after progress bar
+        print
         # At this point we have, in ext_groups, a dict of lists of Statements
         # indexed by their entity_matches key, but now the groups contain not
         # only statements with matching entities, but also entities related by
