@@ -215,15 +215,16 @@ class TripsProcessor(object):
         phosphorylation_events = \
             self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
         for event in phosphorylation_events:
-            if event.attrib['id'] in self._static_events:
+            event_id = event.attrib['id']
+            if event_id in self._static_events:
                 continue
 
             enzyme = event.find(".//*[@role=':AGENT']")
             if enzyme is None:
                 enzyme_agent = None
-            elif enzyme.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-                complex_id = enzyme.attrib['id']
-                complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
+            enzyme_id = enzyme.attrib['id']
+            enzyme_term = self.tree.find("TERM/[@id='%s']" % enzyme_id)
+            if enzyme_term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
                 components = complex_term.find("components")
                 terms = components.findall("term")
                 term_names = []
@@ -234,15 +235,14 @@ class TripsProcessor(object):
                 enzyme_agent = Agent(enzyme_name,
                     bound_conditions=[BoundCondition(enzyme_bound, True)])
             else:
-                enzyme_agent = self._get_agent_by_id(enzyme.attrib['id'],
-                                                    event.attrib['id'])
+                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 warnings.warn('Skipping phosphorylation event with no '
                               'affected term.')
                 continue
-            affected_agent = self._get_agent_by_id(affected.attrib['id'],
-                                                   event.attrib['id'])
+            affected_id = affected.attrib['id']
+            affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
                 continue
             mods = self._get_mod_site(event)
@@ -273,8 +273,7 @@ class TripsProcessor(object):
                                             m.residue, m.position,
                                             evidence=ev))
             # Autophosphorylation
-            elif enzyme_agent is not None and\
-                (enzyme.attrib['id'] == affected.attrib['id']):
+            elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
                     self.statements.append(Autophosphorylation(enzyme_agent,
                                             m.residue, m.position,
@@ -529,7 +528,7 @@ class TripsProcessor(object):
             site_type = site_term.find("type").text
             site_name = site_term.find("name").text
             if site_type == 'ONT::MOLECULAR-SITE':
-                residue = site_term.find('features/site/name').text.upper()
+                residue = site_term.find('features/site/code').text.upper()
                 pos = site_term.find('features/site/pos').text.upper()
             elif site_type == 'ONT::RESIDUE':
                 # Example name: TYROSINE-RESIDUE
