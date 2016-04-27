@@ -14,7 +14,8 @@ st_rasgap = RasGap(Agent('RASA1'), 'Activity', Agent('HRAS'))
 st_actact2 = ActivityActivity(dusp, 'Activity', 'decreases', erk, 'Activity')
 st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
                                               text='MEK phosphorylates ERK'))
-
+st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',
+                                              text='MEK phosphorylates ERK'))
 
 def test_phos():
     cxa = CxAssembler()
@@ -73,6 +74,13 @@ def test_edge_attributes():
 def test_cited():
     cxa = CxAssembler()
     cxa.add_statements([st_cited])
+    cxa.make_model()
+    assert(len(cxa.cx['citations']) == 1)
+    assert(len(cxa.cx['edgeCitations']) == 1)
+
+def test_cited():
+    cxa = CxAssembler()
+    cxa.add_statements([st_cited2])
     cxa.make_model()
     assert(len(cxa.cx['citations']) == 1)
     assert(len(cxa.cx['edgeCitations']) == 1)

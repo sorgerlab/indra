@@ -143,18 +143,21 @@ class CxAssembler():
         pmids = [e.pmid for e in stmt.evidence if e.pmid]
         edge_citations = []
         for pmid in pmids:
+            pmid_txt = None
             if re.match('[0-9]+', pmid):
-                pmid_txt = pmid
+                pmid_txt = 'pmid:' + pmid
             else:
                 m = re.match('.*pubmed:([0-9]+)', pmid)
                 if m:
-                    pmid_txt = m.groups()[0]
+                    pmid_txt = 'pmid:' + m.groups()[0]
                 m = re.match('.*pmid:([0-9]+)', pmid)
                 if m:
-                    pmid_txt = m.groups()[0]
+                    pmid_txt = 'pmid:' + m.groups()[0]
+            if pmid_txt is None:
+                pmid_txt = pmid
             citation_id = self._get_new_id()
             citation = {'@id': citation_id,
-                        'dc:identifier': 'pmid:%s' % pmid_txt}
+                        'dc:identifier': pmid_txt}
             self.cx['citations'].append(citation)
             edge_citations.append(citation_id)
         if edge_citations:
