@@ -279,9 +279,9 @@ class BiopaxProcessor(object):
 
                 # Get the modifications
                 mod_in =\
-                    BiopaxProcessor._get_entity_mods(input_spe)
+                    BiopaxProcessor._get_entity_mods(input_spe, False)
                 mod_out =\
-                    BiopaxProcessor._get_entity_mods(output_spe)
+                    BiopaxProcessor._get_entity_mods(output_spe, False)
 
                 mod_shared = set(mod_in).intersection(set(mod_out))
 
