@@ -11,6 +11,21 @@ from indra.databases import context_client
 
 SelfExporter.do_export = False
 
+# Here we define the types of INDRA statements that are meant to be
+# assembled using the PySB assembler. If a type of statement appears
+# in this list then we require that there is at least one default
+# policy implemented to assemble that type of statement.
+statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
+                       ist.ActivityActivity, ist.ActivityModification,
+                       ist.RasGef, ist.RasGap]
+
+def is_whitelisted(stmt):
+    for s in statement_whitelist:
+        if isinstance(stmt, s):
+            return True
+    return False
+
+
 # BaseAgent classes ####################################################
 
 class BaseAgentSet(object):
@@ -321,7 +336,6 @@ def get_annotation(component, db_name, db_ref):
 class UnknownPolicyError(Exception):
     pass
 
-
 class PysbAssembler(object):
     def __init__(self, policies=None):
         self.statements = []
@@ -355,18 +369,28 @@ class PysbAssembler(object):
         func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
         func = globals().get(func_name)
         if func is None:
-            raise UnknownPolicyError('%s function %s not defined' %
-                                     (stage, func_name))
+            # The specific policy is not implemented for the
+            # given statement type.
+            # We try to apply a default policy next.
+            func_name = '%s_%s_default' % (class_name.lower(), stage)
+            func = globals().get(func_name)
+            if func is None:
+                # The given statement type doesn't have a default
+                # policy.
+                raise UnknownPolicyError('%s function %s not defined' %
+                                         (stage, func_name))
         return func(stmt, *args)
 
     def monomers(self):
         """Calls the appropriate monomers method based on policies."""
         for stmt in self.statements:
-            self.dispatch(stmt, 'monomers', self.agent_set)
+            if is_whitelisted(stmt):
+                self.dispatch(stmt, 'monomers', self.agent_set)
 
     def assemble(self):
         for stmt in self.statements:
-            self.dispatch(stmt, 'assemble', self.model, self.agent_set)
+            if is_whitelisted(stmt):
+                self.dispatch(stmt, 'assemble', self.model, self.agent_set)
 
     def make_model(self, policies=None, initial_conditions=True):
         # Set local policies for this make_model call that overwrite
@@ -481,9 +505,6 @@ def complex_monomers_one_step(stmt, agent_set):
                 continue
             gene_mono.create_site(get_binding_site_name(bp.name))
 
-complex_monomers_interactions_only = complex_monomers_one_step
-complex_monomers_two_step = complex_monomers_one_step
-complex_monomers_multi_way = complex_monomers_one_step
 complex_monomers_default = complex_monomers_one_step
 
 
@@ -617,8 +638,6 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
     add_rule_to_model(model, rule)
 
-complex_assemble_interactions_only = complex_assemble_one_step
-complex_assemble_two_step = complex_assemble_one_step
 complex_assemble_default = complex_assemble_one_step
 
 # PHOSPHORYLATION ###################################################
@@ -909,7 +928,6 @@ def activityactivity_monomers_one_step(stmt, agent_set):
                     ('inactive', 'active'))
 
 activityactivity_monomers_default = activityactivity_monomers_one_step
-activityactivity_monomers_twostep = activityactivity_monomers_one_step
 
 
 def activityactivity_assemble_interactions_only(stmt, model, agent_set):
@@ -972,7 +990,6 @@ def activityactivity_assemble_one_step(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 activityactivity_assemble_default = activityactivity_assemble_one_step
-activityactivity_assemble_twostep = activityactivity_assemble_one_step
 
 # DEPHOSPHORYLATION #####################################################
 
@@ -1261,7 +1278,6 @@ def activitymodification_monomers_one_step(stmt, agent_set):
                       'implemented!')
 
 activitymodification_monomers_default = activitymodification_monomers_one_step
-activitymodification_monomers_two_step = activitymodification_monomers_one_step
 
 
 def activitymodification_assemble_interactions_only(stmt, model, agent_set):
@@ -1272,4 +1288,3 @@ def activitymodification_assemble_one_step(stmt, model, agent_set):
     pass
 
 activitymodification_assemble_default = activitymodification_assemble_one_step
-activitymodification_assemble_two_step = activitymodification_assemble_one_step

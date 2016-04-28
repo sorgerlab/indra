@@ -35,6 +35,16 @@ def test_pysb_assembler_complex3():
     assert(len(model.rules)==2)
     assert(len(model.monomers)==3)
 
+def test_pysb_assembler_complex_twostep():
+    member1 = Agent('BRAF')
+    member2 = Agent('MEK1')
+    stmt = Complex([member1, member2])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model(policies='two_step')
+    assert(len(model.rules)==2)
+    assert(len(model.monomers)==2)
+
 def test_pysb_assembler_complex_multiway():
     member1 = Agent('BRAF')
     member2 = Agent('MEK1')
@@ -45,6 +55,16 @@ def test_pysb_assembler_complex_multiway():
     model = pa.make_model(policies='multi_way')
     assert(len(model.rules)==1)
     assert(len(model.monomers)==3)
+
+def test_pysb_assembler_actsub():
+    a = Agent('BRAF')
+    stmt = ActivatingSubstitution(a, MutCondition('600', 'V', 'E'),
+                                  'Activity', 'increases')
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    model = pa.make_model(policies='two_step')
+    assert(len(model.rules)==0)
+    assert(len(model.monomers)==0)
 
 def test_pysb_assembler_phos_noenz():
     enz = None
