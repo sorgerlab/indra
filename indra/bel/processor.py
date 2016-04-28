@@ -130,9 +130,10 @@ class BelProcessor(object):
         res_evidence = self.g.query(q_evidence)
         for stmt in res_evidence:
             try:
-                evidence = stmt[0].format()
-                citation = stmt[1].format()
-            except (KeyError, IndexError):
+                evidence = unicode(stmt[0])
+                citation = unicode(stmt[1])
+            except IndexError:
+                import ipdb; ipdb.set_trace()
                 warnings.warn('Problem converting evidence/citation string')
         if citation is not None:
             m = re.match('.*pubmed:([0-9]+)', citation)
@@ -416,23 +417,25 @@ class BelProcessor(object):
         cmplx_dict = collections.defaultdict(list)
         cmplx_ev = {}
         for stmt in res_cmplx:
-            ev = self.get_evidence(stmt[3])
+            stmt_uri = stmt[3]
+            ev = self.get_evidence(stmt_uri)
             cmplx_name = term_from_uri(stmt[0])
+            cmplx_id = stmt_uri + '#' + cmplx_name
             child = self.get_agent(stmt[1], stmt[2])
-            cmplx_dict[cmplx_name].append(child)
+            cmplx_dict[cmplx_id].append(child)
             # This might be written multiple times but with the same
             # evidence
-            cmplx_ev[cmplx_name] = ev
+            cmplx_ev[cmplx_id] = ev
         # Now iterate over the stored complex information and create binding
         # statements
-        for cmplx_name, cmplx_list in cmplx_dict.iteritems():
+        for cmplx_id, cmplx_list in cmplx_dict.iteritems():
             if len(cmplx_list) < 2:
                 msg = 'Complex %s has less than 2 members! Skipping.' % \
                        cmplx_name
                 warnings.warn(msg)
             else:
-                self.statements.append(Complex(cmplx_list,               
-                                               evidence=cmplx_ev[cmplx_name]))
+                self.statements.append(Complex(cmplx_list,
+                                               evidence=cmplx_ev[cmplx_id]))
 
     def get_activating_subs(self):
         """
