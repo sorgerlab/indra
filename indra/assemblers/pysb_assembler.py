@@ -129,6 +129,7 @@ active_site_names = {
     'Phosphatase': 'phos_site',
     'GtpBound': 'switch',
     'Catalytic': 'cat_site',
+    'Transcription': 'trans_act',
     # For general molecular activity
     'Activity': 'act'
 }
