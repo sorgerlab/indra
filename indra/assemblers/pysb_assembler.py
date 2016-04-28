@@ -1289,3 +1289,11 @@ def activitymodification_assemble_one_step(stmt, model, agent_set):
     pass
 
 activitymodification_assemble_default = activitymodification_assemble_one_step
+
+# RASGTPACTIVITIACTIVITY ######################################
+def rasgtpactivityactivity_monomers_default(stmt, agent_set):
+    pass
+
+def rasgtpactivityactivity_assemble_default(stmt, model, agent_set):
+    pass
+
