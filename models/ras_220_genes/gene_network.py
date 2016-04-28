@@ -159,7 +159,7 @@ class GeneNetwork(object):
         with open(results_filename, 'w') as f:
             pickle.dump(self.results, f)
 
-        return results
+        return self.results
         #profile.enable()
         #pa1.combine_related()
         #profile.disable()
