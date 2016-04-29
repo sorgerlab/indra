@@ -48,7 +48,7 @@ class IncrementalModel(object):
             prior_agents = self.get_prior_agents()
             if prior_agents:
                 for i in stmts_to_add:
-                    agents = stmts[i].agent_list()
+                    agents = set([a.name for a in stmts[i].agent_list()])
                     if 'prior_all' in filters:
                         if any(not a in prior_agents for a in agents):
                             stmts_to_add.remove(i)
@@ -60,20 +60,21 @@ class IncrementalModel(object):
             model_agents = self.get_model_agents()
             if model_agents:
                 for i in stmts_to_add:
-                    agents = stmts[i].agent_list()
+                    agents = set([a.name for a in stmts[i].agent_list()])
                     if 'model_all' in filters:
                         if any(not a in model_agents for a in agents):
                             stmts_to_add.remove(i)
                     if 'model_one' in filters:
                         if all(not a in model_agents for a in agents):
                             stmts_to_add.remove(i)
-        self.stmts[pmid] = [stmts[i] for i in stmt_to_add]
+        self.stmts[pmid] = [stmts[i] for i in stmts_to_add]
 
     def get_model_agents(self):
         model_stmts = self.get_statements()
         agents = set()
         for stmt in model_stmts:
-            agents.add(a) for a in stmt.agent_list()
+            for a in stmt.agent_list():
+                agents.add(a.name)
         return agents
 
     def get_prior_agents(self):
@@ -82,7 +83,8 @@ class IncrementalModel(object):
         if prior_stmts is None:
             return agents
         for stmt in prior_stmts:
-            agents.add(a) for a in stmt.agent_list()
+            for a in stmt.agent_list():
+                agents.add(a.name)
         return agents
 
     def add_statement(self, pmid, stmt):
