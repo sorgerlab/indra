@@ -1,6 +1,7 @@
 import json
 from indra.statements import *
 from indra.literature import id_lookup
+from indra.databases import hgnc_client, uniprot_client
 
 global_submitter = 'sorgerlab'
 
@@ -61,7 +62,40 @@ def assemble_modification(stmt):
             'aa_code': stmt.residue
             }
         ]
+    card.card['participant_a'] = get_participant(stmt.enz)
+    card.card['participant_b'] = get_participant(stmt.sub)
     return card
+
+def get_participant(agent):
+    # Handle missing Agent as generic protein
+    if agent is None:
+        participant = {
+            'entity_text': ['']
+            'entity_type': 'protein',
+            'identifier': 'GENERIC'
+            }
+        return participant
+    # The Agent is not missing
+    participant = {}
+    participant['entity_text'] = [agent.name]
+    hgnc_id = agent.db_refs.get('HGNC')
+    uniprot_id = agent.db_refs.get('UP')
+    chebi_id = agent.db_refs.get('CHEBI')
+    # If HGNC grounding is available, that is the first choice
+    if hgnc_id:
+        uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
+    if uniprot_id:
+        uniprot_mnemonic = uniprot_client.get_mnemonic(uniprot_id_hgnc)
+        participant['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
+        participant['entity_type'] = 'protein'
+    elif chebi_id:
+        participant['identifier'] = 'CHEBI:%s' chebi_id
+        participant['entity_type'] = 'chemical'
+    else:
+        participant['identifier'] = None
+        participant['entity_type'] = None
+    return participant
+
 
 def get_pmc_id(stmt):
     for ev in stmt.evidence:
