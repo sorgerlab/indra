@@ -45,7 +45,7 @@ class IncrementalModel(object):
             for i, stmt in enumerate(stmts):
                 agents = stmt.agent_list()
                 # Check that all agents are grounded
-                if any(not a.db_refs for a in agents):
+                if any(not a.db_refs for a in agents if a is not None):
                     stmts_to_add.remove(i)
 
         if ('prior_all' in filters) or ('prior_one' in filters):

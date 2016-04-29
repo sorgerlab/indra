@@ -107,7 +107,8 @@ def extend_model(model, pmids):
                 else:
                     npapers += 1
                 print pmid, len(rp.statements)
-                model.add_statements(pmid, rp.statements)
+                model.add_statements(pmid, rp.statements,
+                                     filters=global_filters)
             else:
                 model.add_statements(pmid, [])
                 print 'No statement extracted from PMID%s' % pmid
