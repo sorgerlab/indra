@@ -1,3 +1,4 @@
+import json
 from indra.statements import *
 from indra.literature import id_lookup
 
@@ -26,8 +27,8 @@ class IndexCardAssembler(object):
 class IndexCard(object):
     def __init__(self):
         self.card  = {
-            'pmc_id': None
-            'submitter': None
+            'pmc_id': None,
+            'submitter': None,
             'interaction': {
                 'negative_information': False,
                 'interaction_type': None,
@@ -35,7 +36,7 @@ class IndexCard(object):
                     'entity_type': None,
                     'entity_text': None,
                     'identifier': None
-                    }
+                    },
                 'participant_b': {
                     'entity_type': None,
                     'entity_text': None,
@@ -44,24 +45,29 @@ class IndexCard(object):
                 }
             }
 
+    def get_string(self):
+        return json.dumps(self.card)
+
 def assemble_modification(stmt):
     card = IndexCard()
-    card['pmc_id'] = get_pmc_id(stmt)
-    card['submitter'] = global_submitter
-    card['evidence'] = get_evidence_text(stmt)
-    card['interaction']['interaction_type'] = 'adds_modification'
-    card['interaction']['modifications'] = [
-        {
-        'feature_type': 'modification_feature',
-        'modification_type': str(type(stmt)).lower(),
-        'location': stmt.position,
-        'aa_code': stmt.residue
-        }
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    card.card['interaction']['interaction_type'] = 'adds_modification'
+    card.card['interaction']['modifications'] = [{
+            'feature_type': 'modification_feature',
+            'modification_type': stmt.__class__.__name__.lower(),
+            'location': stmt.position,
+            'aa_code': stmt.residue
+            }
         ]
+    return card
 
 def get_pmc_id(stmt):
     for ev in stmt.evidence:
-        pmc_id = id_lookup(ev.pmid)['pmc']
+        pmc_id = id_lookup(ev.pmid)['pmcid']
+    if pmc_id.startswith('PMC'):
+        pmc_id = pmc_id[3:]
     return pmc_id
 
 def get_evidence_text(stmt):
