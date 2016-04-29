@@ -95,6 +95,21 @@ def get_family_members(family_name, human_only=True):
     else:
         return None
 
+def get_mnemonic(protein_id):
+    g = query_protein(protein_id)
+    query = rdf_prefixes + """
+        SELECT ?mnemonic
+        WHERE {
+            ?r up:mnemonic ?mnemonic .
+        }
+        """
+    res = g.query(query)
+    if res:
+        mnemonic = [r for r in res][0][0].toPython()
+        return mnemonic
+    else:
+        return None
+
 def get_hgnc_name(protein_id):
     # Try getting it from the dict first
     try:

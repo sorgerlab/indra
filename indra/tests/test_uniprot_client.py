@@ -49,3 +49,7 @@ def test_verify_location():
     assert(not uniprot_client.verify_location('P27361', 'S', 202))
     assert(not uniprot_client.verify_location('P27361', 'T', -1))
     assert(not uniprot_client.verify_location('P27361', 'T', 10000))
+
+def test_get_mnemonic():
+    mnemonic = uniprot_client.get_mnemonic('Q02750')
+    assert(mnemonic == 'MP2K1_HUMAN')
