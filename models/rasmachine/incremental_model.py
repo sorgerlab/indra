@@ -34,6 +34,10 @@ class IncrementalModel(object):
         if not filters:
             self.stmts[pmid] = stmts
             return
+        # If the statements are empty in the first place
+        if not stmts:
+            self.stmts[pmid] = []
+            return
 
         stmts_to_add = range(len(stmts))
         # Filter for grounding
@@ -74,7 +78,8 @@ class IncrementalModel(object):
         agents = set()
         for stmt in model_stmts:
             for a in stmt.agent_list():
-                agents.add(a.name)
+                if a is not None:
+                    agents.add(a.name)
         return agents
 
     def get_prior_agents(self):
@@ -84,7 +89,8 @@ class IncrementalModel(object):
             return agents
         for stmt in prior_stmts:
             for a in stmt.agent_list():
-                agents.add(a.name)
+                if a is not None:
+                    agents.add(a.name)
         return agents
 
     def add_statement(self, pmid, stmt):

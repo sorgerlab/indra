@@ -10,6 +10,7 @@ from indra import reach
 from indra.literature import pubmed_client, get_full_text
 
 model_path = os.path.dirname(os.path.abspath(__file__))
+global_filters = ['grounding', 'prior_one']
 
 def get_email_pmids(cred_file):    
     try:
