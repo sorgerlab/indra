@@ -55,14 +55,16 @@ def assemble_complex(stmt):
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
     card.card['interaction']['interaction_type'] = 'complexes_with'
-    card.pop('participant_b', None)
+    card.card['interaction'].pop('participant_b', None)
     # NOTE: fill out entity_text
-    card.card['participant_a']['entity_type'] = 'complex'
-    card.card['participant_a']['entities'] = []
+    card.card['interaction']['participant_a']['entity_type'] = 'complex'
+    card.card['interaction']['participant_a']['entity_text'] = ['']
+    card.card['interaction']['participant_a'].pop('identifier', None)
+    card.card['interaction']['participant_a']['entities'] = []
     for m in stmt.members:
         p = get_participant(m)
-        card.card['participant_a']['entities'].append(p)
-
+        card.card['interaction']['participant_a']['entities'].append(p)
+    return card
 
 def assemble_modification(stmt):
     card = IndexCard()
@@ -110,7 +112,7 @@ def get_participant(agent):
     if hgnc_id:
         uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
     if uniprot_id:
-        uniprot_mnemonic = uniprot_client.get_mnemonic(uniprot_id)
+        uniprot_mnemonic = str(uniprot_client.get_mnemonic(uniprot_id))
         participant['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
         participant['entity_type'] = 'protein'
     elif chebi_id:

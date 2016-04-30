@@ -46,6 +46,12 @@ def test_assemble_dephosphorylation():
     print card.get_string()
     print
 
+def test_assemble_complex():
+    card = assemble_complex(Complex([braf, brafmut, map2k1], evidence=ev))
+    jsonschema.validate(card.card, schema)
+    print card.get_string()
+    print
+
 def test_get_participant():
     participant = get_participant(brafmut)
     print participant
