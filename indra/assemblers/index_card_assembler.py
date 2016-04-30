@@ -72,11 +72,14 @@ def assemble_modification(stmt):
     mod_type = stmt.__class__.__name__.lower()
     if mod_type.startswith('de'):
         card.card['interaction']['interaction_type'] = 'removes_modification'
+        mod_type = stmt.__class__.__name__.lower()[2:]
     else:
         card.card['interaction']['interaction_type'] = 'adds_modification'
+        mod_type = stmt.__class__.__name__.lower()
+
     card.card['interaction']['modifications'] = [{
             'feature_type': 'modification_feature',
-            'modification_type': stmt.__class__.__name__.lower(),
+            'modification_type': mod_type,
             }]
     if stmt.position is not None:
         pos = int(stmt.position)
@@ -115,8 +118,8 @@ def get_participant(agent):
         participant['identifier'] = 'CHEBI:%s' % chebi_id
         participant['entity_type'] = 'chemical'
     else:
-        participant['identifier'] = None
-        participant['entity_type'] = None
+        participant['identifier'] = ''
+        participant['entity_type'] = 'protein'
 
     features = []
     not_features = []
@@ -125,10 +128,10 @@ def get_participant(agent):
         feature = {
             'feature_type': 'binding_feature',
             'bound_to': {
-                # NOTE: get type and grounding for bound to protein
+                # NOTE: get type and identifier for bound to protein
                 'entity_type': 'protein',
                 'entity_text': [bc.agent.name],
-                'identifier': None
+                'identifier': ''
                 }
             }
         if bc.is_bound:
@@ -158,7 +161,7 @@ def get_participant(agent):
             'to_aa': mc.residue_to
             }
         if mc.position is not None:
-            pos = mc.position
+            pos = int(mc.position)
             feature['location'] = pos
         features.append(feature)
     if features:
