@@ -18,3 +18,7 @@ try:
     from sbgn_assembler import SBGNAssembler
 except ImportError:
     pass
+try:
+    from index_card_assembler import IndexCardAssembler
+except ImportError:
+    pass

@@ -15,6 +15,7 @@ try:
     rd = csv.reader(fh, delimiter='\t')
     hgnc_names = {}
     hgnc_withdrawn = []
+    uniprot_ids = {}
     for row in rd:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -27,10 +28,15 @@ try:
             new_name = m.groups()[0]
             hgnc_withdrawn.append(hgnc_id)
             hgnc_names[hgnc_id] = new_name
-        uniprot_id = row[4]
+        uniprot_id = row[5]
+        uniprot_ids[hgnc_id] = uniprot_id
 except IOError:
     hgnc_names = {}
     hgnc_withdrawn = []
+    uniprot_ids = {}
+
+def get_uniprot_id(hgnc_id):
+    return uniprot_ids.get(hgnc_id)
 
 def get_hgnc_name(hgnc_id):
     try:

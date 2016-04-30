@@ -13,6 +13,7 @@ install:
   - sudo apt-get install graphviz
   - pip install pygraphviz
   - pip install functools32
+  - pip install jsonschema
   # PySB and dependencies
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip

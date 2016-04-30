@@ -1,0 +1,377 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Index Card",
+    "type": "object",
+    "properties": {
+        "pmc_id": {
+            "type": "string",
+            "pattern": "^PMC[0-9]+$"
+        },
+        "submitter": {
+            "type": "string"
+        },
+        "evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+        },
+        "interaction": {
+            "oneOf": [
+                { "$ref": "#/definitions/binds" },
+                { "$ref": "#/definitions/increases" },
+                { "$ref": "#/definitions/decreases" },
+                { "$ref": "#/definitions/adds_modification" },
+                { "$ref": "#/definitions/removes_modification" },
+                { "$ref": "#/definitions/translocates" },
+                { "$ref": "#/definitions/complexes_with" }
+            ]
+        },
+        "context": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/context" }
+        }
+    },
+    "required": [ "pmc_id", "interaction", "submitter", "evidence" ],
+    "definitions": {
+        "context": {
+            "properties": {
+                "cell_line": { "type": "string" },
+                "cell_type": { "type": "string" },
+                "organism": { "type": "string" },
+                "tissue_type": { "type": "string" },
+                "location": { "type": "string" }
+            }
+        },
+        "participant_a": {
+            "type": ["object"],
+            "oneOf": [
+                { "$ref": "#/definitions/chemical" },
+                { "$ref": "#/definitions/protein" },
+                { "$ref": "#/definitions/protein_family" },
+                { "$ref": "#/definitions/complex" },
+                { "$ref": "#/definitions/gene" },
+                { "$ref": "#/definitions/process" },
+                { "type": "null" }
+            ]
+        },
+        "participant_b": {
+            "type": ["object"],
+            "oneOf": [
+                { "$ref": "#/definitions/chemical" },
+                { "$ref": "#/definitions/protein" },
+                { "$ref": "#/definitions/protein_family" },                
+                { "$ref": "#/definitions/complex" },
+                { "$ref": "#/definitions/gene" },
+                { "$ref": "#/definitions/binds" },
+                { "$ref": "#/definitions/increases" },
+                { "$ref": "#/definitions/decreases" },
+                { "$ref": "#/definitions/adds_modification" },
+                { "$ref": "#/definitions/removes_modification" },
+                { "$ref": "#/definitions/translocates" },
+                { "$ref": "#/definitions/complexes_with" }
+            ]
+        },
+        "interaction": {
+            "properties": {
+                "interaction_type": {  "type": "string"},
+                "negative_information": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "participant_a": { "$ref": "#/definitions/participant_a" },
+                "participant_b": { "$ref": "#/definitions/participant_b" }
+            },
+            "required": ["interaction_type", "negative_information", "participant_b"]
+        },
+        "increases": {
+            "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": [ "increases" ] }
+                    }
+                }
+            ]
+        },
+        "decreases": {
+            "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": [ "decreases" ] }
+                    }
+                }
+            ]
+        },
+        "binds": {
+            "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": ["binds"] },
+                        "binding_site_a": { "type": "string" },
+                        "binding_site_b": { "type": "string" }
+                    },
+                    "required": ["participant_a"]
+                }
+            ]
+        },
+        "modifications": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/modification_feature" }
+        },
+        "adds_modification": {
+            "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": [ "adds_modification" ] },
+                        "modifications": { "$ref": "#/definitions/modifications" }
+                    },
+                    "required": ["modifications"]
+                }
+            ]
+        },
+        "removes_modification": {
+            "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": ["removes_modification"] },
+                        "modifications": { "$ref": "#/definitions/modifications" }
+                    },
+                    "required": ["modifications"]
+                }
+            ]
+        },
+        "translocates": {
+           "allOf": [
+                { "$ref": "#/definitions/interaction" },
+                {
+                    "properties": {
+                        "interaction_type": { "enum": ["translocates"] },
+                        "from_location_text": { "type": "string" },
+                        "from_location_id": { "type": "string" },
+                        "to_location_text": { "type": "string" },
+                        "to_location_id": { "type": "string" }
+                    },
+                    "required": ["to_location_text", "to_location_id"]
+                }
+            ]
+        },
+        "complexes_with": {
+            "properties": {
+                "negative_information": {
+                    "type": "boolean",
+                    "default": false
+                },                   
+                "participant_a": { "$ref": "#/definitions/complex" }
+            },
+            "required": ["negative_information", "participant_a"]
+        },
+        "modification_feature": {
+            "allOf": [
+                { "$ref": "#/definitions/feature" },
+                {
+                    "properties": {
+                        "feature_type": { "enum": ["modification_feature"] },
+                        "location": {
+                            "type": "number",
+                            "multipleOf": 1.0
+                        },
+                        "modification_type": {
+                            "enum": [
+                                "phosphorylation",
+                                "acetylation",
+                                "farnesylation",
+                                "glycosylation",
+                                "hydroxylation",
+                                "methylation",
+                                "ribosylation",
+                                "sumoylation",
+                                "ubiquitination"
+                            ]
+                        },
+                        "aa_code": { "$ref": "#/definitions/amino_acid" }
+                    },
+                    "required": ["modification_type"]
+                }
+            ]
+        },
+        "amino_acid": {
+            "enum": ["A", "R", "N", "D", "C", "E", "Q",
+                     "G", "H", "I", "L", "K", "M", "F",
+                     "P", "S", "T", "W", "Y", "V"],
+            "type": "string"
+        },
+        "mutation_feature": {
+            "allOf": [
+                { "$ref": "#/definitions/feature" },
+                {
+                    "properties": {
+                        "feature_type": { "enum": ["mutation_feature"] },
+                        "location": {
+                            "type": "number",
+                            "multipleOf": 1.0
+                        },
+                        "from_aa": { "$ref": "#/definitions/amino_acid" },
+                        "to_aa": { "$ref": "#/definitions/amino_acid" }
+                    },
+                    "required": ["location", "to_aa"]
+                }
+            ]
+        },
+        "binding_feature": {
+            "allOf": [
+                { "$ref": "#/definitions/feature" },
+                {
+                    "properties": {
+                        "feature_type": { "enum": ["binding_feature"] },
+                        "bound_to": {
+                            "oneOf": [
+                                { "$ref": "#/definitions/protein" },
+                                { "$ref": "#/definitions/complex" },
+                                { "$ref": "#/definitions/protein_family" }
+                            ]
+                         }
+                    },
+                    "required": ["bound_to"]
+                }
+            ]
+        },
+        "location_feature": {
+            "allOf": [
+                { "$ref": "#/definitions/feature"},
+                {
+                    "properties": {
+                        "feature_type": { "enum": ["location_feature"] },
+                        "location": { "type": "string" }
+                    },
+                    "required": ["location"]
+                }
+            ]
+        },
+        "entity": {
+            "type": "object",
+            "properties": {
+                "entity_type": { "type": "string" },
+                "entity_text": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "minItems": 1
+                }
+            },
+            "required": ["entity_type", "entity_text"]
+        },
+        "complex": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["complex"] },
+                        "entities": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    { "$ref": "#/definitions/protein" },
+                                    { "$ref": "#/definitions/chemical" },
+                                    { "$ref": "#/definitions/protein_family" }
+                                ]
+                            },
+                            "minItems": 2
+                        }
+                    },
+                    "required": ["entities"]
+                }
+            ]
+        },
+        "process": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["process"] },
+                        "identifier": { "type": "string" }
+                    },
+                    "required": ["identifier"]
+                }
+            ]
+        },
+        "chemical": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["chemical"] },
+                        "identifier": { "type": "string" }
+                    },
+                    "required": ["identifier"]
+                }
+            ]
+        },
+        "gene": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["gene"]},
+                        "identifier": { "type": "string" }
+                    },
+                    "required": ["identifier"]
+                }
+            ]
+        },
+        "feature": {
+            "type": "object",
+            "properties": { "feature_type": { "type": "string" } },
+            "required": ["feature_type"]
+        },        
+        "protein_features": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    { "$ref": "#/definitions/modification_feature" },
+                    { "$ref": "#/definitions/mutation_feature" },
+                    { "$ref": "#/definitions/binding_feature" },
+                    { "$ref": "#/definitions/location_feature" }
+                ]
+            },
+            "minItems": 1
+        },
+        "protein": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["protein"] },
+                        "identifier": { "type": "string" },
+                        "features": { "$ref": "#/definitions/protein_features" },
+                        "not_features": { "$ref": "#/definitions/protein_features" }
+                    },
+                    "required": ["identifier"]
+                }
+            ]
+        },
+        "protein_family": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["protein_family"] },
+                        "features": { "$ref": "#/definitions/protein_features" },
+                        "not_features": { "$ref": "#/definitions/protein_features" },
+                        "entities": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    { "$ref": "#/definitions/protein" }
+                                ]
+                            },
+                            "minItems": 2
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
