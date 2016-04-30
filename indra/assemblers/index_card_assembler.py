@@ -49,12 +49,31 @@ class IndexCard(object):
     def get_string(self):
         return json.dumps(self.card)
 
+def assemble_complex(stmt):
+    card = IndexCard()
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    card.card['interaction']['interaction_type'] = 'complexes_with'
+    card.pop('participant_b', None)
+    # NOTE: fill out entity_text
+    card.card['participant_a']['entity_type'] = 'complex'
+    card.card['participant_a']['entities'] = []
+    for m in stmt.members:
+        p = get_participant(m)
+        card.card['participant_a']['entities'].append(p)
+
+
 def assemble_modification(stmt):
     card = IndexCard()
     card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
-    card.card['interaction']['interaction_type'] = 'adds_modification'
+    mod_type = stmt.__class__.__name__.lower()
+    if mod_type.startswith('de'):
+        card.card['interaction']['interaction_type'] = 'removes_modification'
+    else:
+        card.card['interaction']['interaction_type'] = 'adds_modification'
     card.card['interaction']['modifications'] = [{
             'feature_type': 'modification_feature',
             'modification_type': stmt.__class__.__name__.lower(),
@@ -113,7 +132,7 @@ def get_participant(agent):
             features.append(feature)
         else:
             not_features.append(feature)
-
+    # NOTE: residues should be numbers not strings
     # Modification features
     for mc in agent.mods:
         feature = {
