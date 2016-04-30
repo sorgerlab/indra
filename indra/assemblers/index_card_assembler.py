@@ -3,7 +3,7 @@ from indra.statements import *
 from indra.literature import id_lookup
 from indra.databases import hgnc_client, uniprot_client
 
-global_submitter = 'sorgerlab'
+global_submitter = 'cure'
 
 class IndexCardAssembler(object):
     def __init__(self, statements=None):
@@ -62,15 +62,15 @@ def assemble_modification(stmt):
             'aa_code': stmt.residue
             }
         ]
-    card.card['participant_a'] = get_participant(stmt.enz)
-    card.card['participant_b'] = get_participant(stmt.sub)
+    card.card['interaction']['participant_a'] = get_participant(stmt.enz)
+    card.card['interaction']['participant_b'] = get_participant(stmt.sub)
     return card
 
 def get_participant(agent):
     # Handle missing Agent as generic protein
     if agent is None:
         participant = {
-            'entity_text': ['']
+            'entity_text': [''],
             'entity_type': 'protein',
             'identifier': 'GENERIC'
             }
@@ -85,17 +85,61 @@ def get_participant(agent):
     if hgnc_id:
         uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
     if uniprot_id:
-        uniprot_mnemonic = uniprot_client.get_mnemonic(uniprot_id_hgnc)
+        uniprot_mnemonic = uniprot_client.get_mnemonic(uniprot_id)
         participant['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
         participant['entity_type'] = 'protein'
     elif chebi_id:
-        participant['identifier'] = 'CHEBI:%s' chebi_id
+        # NOTE: we need to convert to PubChem ID
+        participant['identifier'] = 'CHEBI:%s' % chebi_id
         participant['entity_type'] = 'chemical'
     else:
         participant['identifier'] = None
         participant['entity_type'] = None
-    return participant
+    
+    features = []
+    not_features = []
+    # Binding features
+    for bc in agent.bound_conditions:
+        feature = {
+            'feature_type': 'binding_feature',
+            'bound_to': {
+                # NOTE: get type and grounding for bound to protein
+                'entity_type': 'protein',
+                'entity_text': [bc.agent.name],
+                'identifier': None
+                }
+            }
+        if bc.is_bound:
+            features.append(feature)
+        else:
+            not_features.append(feature)
 
+    # Modification features
+    for mc in agent.mods:
+        feature = {
+            'feature_type': 'modification_feature',
+            'modification_type': mc.mod_type.lower(),
+            'location': mc.position,
+            'aa_code': mc.residue
+            }
+        if mc.is_modified:
+            features.append(feature)
+        else:
+            not_features.append(feature)
+
+    # Mutation features
+    for mc in agent.mutations:
+        feature = {
+            'feature_type': 'mutation_feature',
+            'location': mc.position,
+            'from_aa': mc.residue_from,
+            'to_aa': mc.residue_to
+            }
+        features.append(feature)
+
+    participant['features'] = features
+    participant['not_features'] = not_features
+    return participant
 
 def get_pmc_id(stmt):
     for ev in stmt.evidence:
