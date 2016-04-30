@@ -77,10 +77,13 @@ def assemble_modification(stmt):
     card.card['interaction']['modifications'] = [{
             'feature_type': 'modification_feature',
             'modification_type': stmt.__class__.__name__.lower(),
-            'location': stmt.position,
-            'aa_code': stmt.residue
-            }
-        ]
+            }]
+    if stmt.position is not None:
+        pos = int(stmt.position)
+        card.card['interaction']['modifications'][0]['location'] = pos
+    if stmt.residue is not None:
+        card.card['interaction']['modifications'][0]['aa_code'] =  stmt.residue
+
     card.card['interaction']['participant_a'] = get_participant(stmt.enz)
     card.card['interaction']['participant_b'] = get_participant(stmt.sub)
     return card
@@ -114,7 +117,7 @@ def get_participant(agent):
     else:
         participant['identifier'] = None
         participant['entity_type'] = None
-    
+
     features = []
     not_features = []
     # Binding features
@@ -132,39 +135,43 @@ def get_participant(agent):
             features.append(feature)
         else:
             not_features.append(feature)
-    # NOTE: residues should be numbers not strings
     # Modification features
     for mc in agent.mods:
         feature = {
             'feature_type': 'modification_feature',
             'modification_type': mc.mod_type.lower(),
-            'location': mc.position,
-            'aa_code': mc.residue
             }
+        if mc.position is not None:
+            pos = int(mc.position)
+            feature['location'] = pos
+        if mc.residue is not None:
+            feature['aa_code'] = mc.residue
         if mc.is_modified:
             features.append(feature)
         else:
             not_features.append(feature)
-
     # Mutation features
     for mc in agent.mutations:
         feature = {
             'feature_type': 'mutation_feature',
-            'location': mc.position,
             'from_aa': mc.residue_from,
             'to_aa': mc.residue_to
             }
+        if mc.position is not None:
+            pos = mc.position
+            feature['location'] = pos
         features.append(feature)
-
-    participant['features'] = features
-    participant['not_features'] = not_features
+    if features:
+        participant['features'] = features
+    if not_features:
+        participant['not_features'] = not_features
     return participant
 
 def get_pmc_id(stmt):
     for ev in stmt.evidence:
         pmc_id = id_lookup(ev.pmid)['pmcid']
-    if pmc_id.startswith('PMC'):
-        pmc_id = pmc_id[3:]
+    if not pmc_id.startswith('PMC'):
+        pmc_id = 'PMC' + pmc_id
     return pmc_id
 
 def get_evidence_text(stmt):

@@ -13,7 +13,7 @@ brafmut = Agent('BRAF', db_refs={'UP': 'P15056'},
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
-    assert(pmc_id == '4849135')
+    assert(pmc_id == 'PMC4849135')
 
 def test_get_evidence_text():
     ev_txt = get_evidence_text(stmt_phos)
