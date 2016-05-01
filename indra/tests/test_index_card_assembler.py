@@ -52,6 +52,13 @@ def test_assemble_complex():
     print card.get_string()
     print
 
+def test_assemble_multiple():
+    ia = IndexCardAssembler()
+    ia.add_statements([stmt_phos, stmt_dephos])
+    ia.make_model()
+    ia.print_model()
+    ia.save_model('/dev/null')
+
 def test_get_participant():
     participant = get_participant(brafmut)
     print participant

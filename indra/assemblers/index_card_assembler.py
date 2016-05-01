@@ -19,12 +19,22 @@ class IndexCardAssembler(object):
     def make_model(self):
         for stmt in self.statements:
             if isinstance(stmt, Modification):
-                assemble_modification(stmt)
+                card = assemble_modification(stmt)
+                self.cards.append(card)
             elif isinstance(stmt, Complex):
-                assemble_complex(stmt)
+                card = assemble_complex(stmt)
+                self.cards.append(card)
             else:
                 print 'Assembly not defined for %s' % type(stmt)
+    
+    def print_model(self):
+        cards = [c.card for c in self.cards]
+        return json.dumps(cards)
 
+    def save_model(self, file_name='index_cards.json'):
+        with open(file_name, 'wt') as fh:
+            fh.write(self.print_model())
+        
 class IndexCard(object):
     def __init__(self):
         self.card  = {
@@ -173,10 +183,14 @@ def get_participant(agent):
     return participant
 
 def get_pmc_id(stmt):
+    pmc_id = ''
     for ev in stmt.evidence:
         pmc_id = id_lookup(ev.pmid)['pmcid']
-    if not pmc_id.startswith('PMC'):
-        pmc_id = 'PMC' + pmc_id
+        if pmc_id is not None:
+            if not pmc_id.startswith('PMC'):
+                pmc_id = 'PMC' + pmc_id
+        else:
+            pmc_id = ''
     return pmc_id
 
 def get_evidence_text(stmt):
