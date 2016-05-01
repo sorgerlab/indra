@@ -15,6 +15,8 @@ rdf_prefixes = """
 
 hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
             '/../resources/hgnc_entries.txt'
+mnemonic_file = os.path.dirname(os.path.abspath(__file__)) +\
+            '/../resources/uniprot_mnemonics.txt'
 try:
     fh = open(hgnc_file, 'rt')
     rd = csv.reader(fh, delimiter='\t')
@@ -26,6 +28,16 @@ try:
             uniprot_hgnc[uniprot_id] = hgnc_name
 except IOError:
     uniprot_hgnc = {}
+
+try:
+    fh = open(mnemonic_file, 'rt')
+    rd = csv.reader(fh, delimiter='\t')
+    uniprot_mnemonic = {}
+    for row in rd:
+        uniprot_mnemonic[row[0]] = row[1]
+except IOError:
+    uniprot_mnemonic = {}
+
 
 # File containing secondary accession numbers mapped
 # to primary accession numbers
@@ -96,6 +108,11 @@ def get_family_members(family_name, human_only=True):
         return None
 
 def get_mnemonic(protein_id):
+    try:
+        mnemonic = uniprot_mnemonic[protein_id]
+        return mnemonic
+    except KeyError:
+        pass
     g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?mnemonic
