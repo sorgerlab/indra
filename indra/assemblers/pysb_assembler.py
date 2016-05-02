@@ -112,7 +112,7 @@ class BaseAgent(object):
         if is_active:
             self.active_forms.append(activity_pattern)
         else:
-            self.inactive_form.append(activity_pattern)
+            self.inactive_forms.append(activity_pattern)
 
 # Site/state information ###############################################
 
