@@ -13,38 +13,38 @@ mod_path = os.path.join('resources', 'modification_hierarchy.rdf')
 mod_file = pkg_resources.resource_filename('indra', mod_path)
 mh = HierarchyManager(mod_file)
 
-# Argument checking for ActivityModifications ----------------------------
+# Argument checking for ActiveForms ----------------------------
 
 def test_activitymod_sitelist_of_ints():
     """Check that mod positions specified as ints get promoted to strings."""
-    st = ActivityModification(Agent('MAP2K1'),
+    st = ActiveForm(Agent('MAP2K1', mods=
                               [ModCondition('phosphorylation', 'serine', 218),
-                               ModCondition('phosphorylation', 'serine', 222)],
-                              'increases', 'KinaseActivity')
-    assert isinstance(st.mod[0].position, basestring)
-    assert isinstance(st.mod[1].position, basestring)
+                               ModCondition('phosphorylation', 'serine', 222)]),
+                              'kinase', True)
+    assert isinstance(st.agent.mods[0].position, basestring)
+    assert isinstance(st.agent.mods[1].position, basestring)
 
 def testactivitymod_string_string():
     """Check that string mod position is preserved"""
-    st = ActivityModification(Agent('MAP2K1'),
-                              [ModCondition('phosphorylation', 'serine', '218')],
-                              'increases', 'KinaseActivity')
-    assert isinstance(st.mod[0].position, basestring)
+    st = ActiveForm(Agent('MAP2K1', mods=
+                              [ModCondition('phosphorylation', 'serine', '218')]),
+                              'kinase', True)
+    assert isinstance(st.agent.mods[0].position, basestring)
 
 def testactivitymod_string_none():
     """Check that None mod position is preserved"""
-    st = ActivityModification(Agent('MAP2K1'),
-                              [ModCondition('phosphorylation', 'serine', None)],
-                              'increases', 'KinaseActivity')
-    assert (st.mod[0].position is None)
+    st = ActiveForm(Agent('MAP2K1', mods=
+                          [ModCondition('phosphorylation', 'serine', None)]),
+                          'kinase', True)
+    assert (st.agent.mods[0].position is None)
 
 def testactivitymod_nolist():
-    """Make sure mod is correctly turned into a list if it's 
+    """Make sure mod is correctly turned into a list if it's
     a single ModCondition"""
     mc = ModCondition('phosphorylation')
-    st = ActivityModification(Agent('MAP2K1'), mc,
-                              'increases', 'KinaseActivity')
-    assert isinstance(st.mod, list)
+    st = ActiveForm(Agent('MAP2K1', mods=mc),
+                          'kinase', True)
+    assert isinstance(st.agent.mods, list)
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
@@ -202,41 +202,36 @@ def test_matches_activityactivity():
 
 def test_matches_activitymod():
     """Test matching of entities only, entities match only on name."""
-    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityModification(nras1, ModCondition('phosphorylation',
-                                                   'tyrosine', '32'),
-                               'increases1', 'GtpBoundActivity1',
-                               evidence=Evidence(text='foo'))
-    st2 = ActivityModification(nras1, ModCondition('phosphorylation',
-                                                   'tyrosine', '32'),
-                               'increases1', 'GtpBoundActivity1',
-                               evidence=Evidence(text='bar'))
-    st3 = ActivityModification(nras2, ModCondition('phosphorylation'),
-                               'increases2', 'GtpBoundActivity2',
-                               evidence=Evidence(text='bar'))
+    mc = ModCondition('phosphorylation', 'Y', '32')
+    mc2 = ModCondition('phosphorylation')
+    nras1 = Agent('NRAS', mods=[mc], db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', mods=[mc2], db_refs = {'HGNC': 'dummy'})
+    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='bar'))
+    st3 = ActiveForm(nras2, 'GtpBoundActivity2', True,
+                     evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
 def test_matches_activatingsub():
     """Test matching of entities only, entities match only on name."""
-    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='foo'))
-    st2 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='bar'))
-    st3 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
-                                 'GtpBoundActivity2', 'increases2',
-                                 evidence=Evidence(text='bar'))
-    st4 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
-                                 'GtpBoundActivity2', 'increases3',
-                                 evidence=Evidence(text='bar'))
-    st5 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
-                                 'GtpBoundActivity3', 'increases2',
-                                 evidence=Evidence(text='bar'))
+    mut1 = MutCondition('12', 'G', 'D')
+    mut2 = MutCondition('61', 'Q', 'L')
+    nras1 = Agent('NRAS', mutations=[mut1], db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', mutations=[mut2], db_refs = {'HGNC': 'dummy'})
+    
+    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='bar'))
+    st3 = ActiveForm(nras2, 'GtpBoundActivity2', True,
+                     evidence=Evidence(text='bar'))
+    st4 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+                     evidence=Evidence(text='bar'))
+    st5 = ActiveForm(nras2, 'GtpBoundActivity3', True,
+                     evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
     assert(not st3.matches(st4)) # Differ only in relationship
@@ -328,27 +323,26 @@ def test_entities_match_activityactivity():
 
 def test_entities_match_activitymod():
     """Test matching of entities only, entities match only on name."""
-    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityModification(nras1, ModCondition('phosphorylation',
-                                                   'tyrosine', '32'),
-                               'increases1', 'GtpBoundActivity1',
-                               evidence=Evidence(text='foo'))
-    st2 = ActivityModification(nras2, ModCondition('phosphorylation'),
-                               'increases2', 'GtpBoundActivity2',
-                               evidence=Evidence(text='bar'))
+    mc1 = ModCondition('phosphorylation', 'tyrosine', '32')
+    mc2 = ModCondition('phosphorylation')
+    nras1 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': '7989'})
+    nras2 = Agent('NRAS', mods=[mc2], db_refs={'HGNC': 'dummy'})
+    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+                     evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
 def test_entities_match_activatingsub():
     """Test matching of entities only, entities match only on name."""
-    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivatingSubstitution(nras1, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='foo'))
-    st2 = ActivatingSubstitution(nras2, MutCondition('61', 'Q', 'L'),
-                                 'GtpBoundActivity2', 'increases2',
-                                 evidence=Evidence(text='bar'))
+    mc1 = MutCondition('12', 'G', 'D')
+    mc2 = MutCondition('61', 'Q', 'L')
+    nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': 'dummy'})
+    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+                     evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
 def test_entities_match_rasgef():
@@ -664,27 +658,19 @@ def test_activityactivity_modification_refinement():
     assert not st4.refinement_of(st5, eh, mh)
 
 def test_activitymod_refinement():
+    mc1 = ModCondition('phosphorylation')
+    mc2 = ModCondition('phosphorylation', 'S')
+    mc3 = ModCondition('phosphorylation', 'S', '218')
+    mc4 = ModCondition('phosphorylation', 'S', '222')
     mek_fam = Agent('MEK')
     mek1 = Agent('MAP2K1')
-    p1 = ActivityModification(mek_fam, ModCondition('phosphorylation'),
-                              'increases', 'KinaseActivity')
-    p2 = ActivityModification(mek_fam, ModCondition('phosphorylation',
-                                                    'serine', '218'),
-                              'increases', 'KinaseActivity')
-    p3 = ActivityModification(mek1, ModCondition('phosphorylation'),
-                              'increases', 'KinaseActivity')
-    p4 = ActivityModification(mek1, ModCondition('phosphorylation', 'serine'),
-                              'increases', 'KinaseActivity')
-    p5 = ActivityModification(mek1, ModCondition('phosphorylation',
-                                                 'serine', '218'),
-                              'increases', 'KinaseActivity')
-    p6 = ActivityModification(mek1, ModCondition('phosphorylation',
-                                                 'serine', '222'),
-                              'increases', 'KinaseActivity')
-    p7 = ActivityModification(mek1,
-                            [ModCondition('phosphorylation', 'serine', '218'),
-                             ModCondition('phosphorylation', 'serine', '222')],
-                            'increases', 'KinaseActivity')
+    p1 = ActiveForm(Agent('MEK', mods=[mc1]), 'kinase', True)
+    p2 = ActiveForm(Agent('MEK', mods=[mc3]), 'kinase', True)
+    p3 = ActiveForm(Agent('MAP2K1', mods=[mc1]), 'kinase', True)
+    p4 = ActiveForm(Agent('MAP2K1', mods=[mc2]), 'kinase', True)
+    p5 = ActiveForm(Agent('MAP2K1', mods=[mc3]), 'kinase', True)
+    p6 = ActiveForm(Agent('MAP2K1', mods=[mc4]), 'kinase', True)
+    p7 = ActiveForm(Agent('MAP2K1', mods=[mc3, mc4]), 'kinase', True)
     # p1
     assert p2.refinement_of(p1, eh, mh)
     assert p3.refinement_of(p1, eh, mh)
@@ -736,17 +722,14 @@ def test_activitymod_refinement():
     assert not p6.refinement_of(p7, eh, mh)
 
 def test_activatingsub_family_refinement():
-    ras = Agent('RAS')
-    kras = Agent('KRAS')
-    nras = Agent('NRAS')
-    st1 = ActivatingSubstitution(ras, MutCondition('12', 'G', 'D'),
-                                 'Activity', 'increases')
-    st2 = ActivatingSubstitution(kras, MutCondition('12', 'G', 'D'),
-                                 'Activity', 'increases')
-    st3 = ActivatingSubstitution(nras, MutCondition('12', 'G', 'D'),
-                                 'Activity', 'increases')
-    st4 = ActivatingSubstitution(kras, MutCondition('12', 'G', 'D'),
-                                 'Activity', 'increases1')
+    mc = MutCondition('12', 'G', 'D')
+    ras = Agent('RAS', mutations=[mc])
+    kras = Agent('KRAS', mutations=[mc])
+    nras = Agent('NRAS', mutations=[mc])
+    st1 = ActiveForm(ras, 'activity', True)
+    st2 = ActiveForm(kras, 'activity', True)
+    st3 = ActiveForm(nras, 'activity', True)
+    st4 = ActiveForm(kras, 'activity', False)
     # st1
     assert st2.refinement_of(st1, eh, mh)
     assert st3.refinement_of(st1, eh, mh)
@@ -902,10 +885,8 @@ def test_valid_residue():
 def test_modcondition_order_actmod():
     mc1 = ModCondition('phoshporylation', 'S', '222')
     mc2 = ModCondition('phoshporylation', 'S', '224')
-    p1 = ActivityModification(Agent('MAP2K1'), [mc1, mc2],
-                              'increases', 'KinaseActivity')
-    p2 = ActivityModification(Agent('MAP2K1'), [mc2, mc1],
-                              'increases', 'KinaseActivity')
+    p1 = ActiveForm(Agent('MAP2K1', mods=[mc1, mc2]), 'kinase', True)
+    p2 = ActiveForm(Agent('MAP2K1', mods=[mc2, mc1]), 'kinase', True)
     assert(p1.matches(p2))
 
 def test_modcondition_order_agent():
