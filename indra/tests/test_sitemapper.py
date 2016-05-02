@@ -108,12 +108,11 @@ def test_site_map_modification():
 
 
 def test_site_map_activity_modification():
-    mapk1 = Agent('MAPK1', db_refs={'UP': 'P28482'})
+    mc = [ModCondition('phosphorylation', 'T', '183'),
+          ModCondition('phosphorylation', 'Y', '185')]
+    mapk1 = Agent('MAPK1', mods=mc, db_refs={'UP': 'P28482'})
 
-    st1 = ActivityModification(mapk1,
-                               [ModCondition('phosphorylation', 'T', '183'),
-                                ModCondition('phosphorylation', 'Y', '185')],
-                               'increases', 'KinaseActivity')
+    st1 = ActiveForm(mapk1, 'kinase', True)
     (valid, mapped) = sm.map_sites([st1])
     assert len(valid) == 0
     assert len(mapped) == 1
@@ -125,10 +124,10 @@ def test_site_map_activity_modification():
     assert ms.mapped_mods[1][1][0] == 'Y'
     assert ms.mapped_mods[1][1][1] == '187'
     assert ms.original_stmt == st1
-    assert ms.mapped_stmt.mod[0].matches(ModCondition('phosphorylation',
-                                                      'T', '185'))
-    assert ms.mapped_stmt.mod[1].matches(ModCondition('phosphorylation',
-                                                      'Y', '187'))
+    assert ms.mapped_stmt.agent.mods[0].matches(ModCondition('phosphorylation',
+                                                             'T', '185'))
+    assert ms.mapped_stmt.agent.mods[1].matches(ModCondition('phosphorylation',
+                                                             'Y', '187'))
 
 
 def test_site_map_selfmodification():

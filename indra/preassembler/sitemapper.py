@@ -59,13 +59,9 @@ class SiteMapper(object):
                 stmt_copy.set_agent_list(new_agent_list)
 
             # --- Special handling for these statements ---
-            # Warn that ActivatingSubstitution is not implemented
-            if isinstance(stmt, ActivatingSubstitution):
-                warnings.warn("Site mapping not implemented for "
-                              "ActivatingSubstitutions.")
             # For modifications, fix residue and position
-            elif (isinstance(stmt, Modification) or \
-                  isinstance(stmt, SelfModification)) and \
+            if (isinstance(stmt, Modification) or \
+                isinstance(stmt, SelfModification)) and \
                  stmt.residue is not None and stmt.position is not None:
                 # Make sure we didn't end up with lists by accident
                 assert isinstance(stmt.residue, basestring) and \
@@ -90,19 +86,6 @@ class SiteMapper(object):
                 # Update the statement with the correct site
                 stmt_copy.residue = new_mod_list[0].residue
                 stmt_copy.position = new_mod_list[0].position
-            # ActivityModification
-            elif isinstance(stmt, ActivityModification) and stmt.mod:
-                stmt_invalid_sites = \
-                        self.check_agent_mod(stmt_copy.monomer, stmt.mod)
-                # Add to our list of invalid sites
-                invalid_sites += stmt_invalid_sites
-                new_mod_list = \
-                        update_mod_list(stmt_copy.monomer.name,
-                                        stmt_copy.mod,
-                                        stmt_invalid_sites)
-                stmt_copy.mod = new_mod_list
-            # --- end special handling for Modification, SelfModification,
-            #     and ActivityModification statements ---
 
             # If the invalid_sites list isn't empty, that means that there were
             # incorrect residues for this statement; add the statement to
