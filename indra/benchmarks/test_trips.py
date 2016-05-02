@@ -352,7 +352,7 @@ def is_transphosphorylation(statement):
     return isinstance(statement, indra.statements.Transphosphorylation)
 
 def is_actmod(statement):
-    return isinstance(statement, indra.statements.ActivityModification)
+    return isinstance(statement, indra.statements.ActiveForm)
 
 def is_dephosphorylation(statement):
     return isinstance(statement, indra.statements.Dephosphorylation)
