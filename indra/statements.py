@@ -208,6 +208,20 @@ class Agent(object):
             if not mod_found:
                 return False
 
+        # MUTATIONS
+        # Similar to the above, we check that self has all of the mutations
+        # of other.
+        # Make sure they have the same mutations
+        for other_mut in other.mutations:
+            mut_found = False
+            for self_mut in self.mutations:
+                if self_mut.matches(other_mut):
+                    mut_found = True
+            # If we didn't find an exact match for this mut in other, then
+            # no refinement
+            if not mut_found:
+                return False
+
         # Everything checks out
         return True
 
