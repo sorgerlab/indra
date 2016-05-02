@@ -35,22 +35,22 @@ def test_actmod():
     tp = trips.process_text('MEK1 phosphorylated at Ser222 is activated.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
-    assert(isinstance(st, ist.ActivityModification))
-    assert(isinstance(st.mod[0], ist.ModCondition))
-    assert(st.mod[0].mod_type == 'phosphorylation')
-    assert(st.mod[0].residue == 'S')
-    assert(st.mod[0].position == '222')
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.mods[0], ist.ModCondition))
+    assert(st.agent.mods[0].mod_type == 'phosphorylation')
+    assert(st.agent.mods[0].residue == 'S')
+    assert(st.agent.mods[0].position == '222')
 
 def test_actmods():
     tp = trips.process_text('MEK1 phosphorylated at Ser 218 and Ser222 is activated.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
-    assert(isinstance(st, ist.ActivityModification))
-    assert(isinstance(st.mod[0], ist.ModCondition))
-    assert(isinstance(st.mod[1], ist.ModCondition))
-    assert(st.mod[0].mod_type == 'phosphorylation')
-    assert(st.mod[0].residue == 'S')
-    assert(st.mod[0].position == '218')
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.mods[0], ist.ModCondition))
+    assert(isinstance(st.agent.mods[1], ist.ModCondition))
+    assert(st.agent.mods[0].mod_type == 'phosphorylation')
+    assert(st.agent.mods[0].residue == 'S')
+    assert(st.agent.mods[0].position == '218')
 
 def test_actmods():
     tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
