@@ -11,7 +11,8 @@ def test_get_no_ids():
 def test_get_pmc_ids():
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert(len(ids) == 10)
-    assert(len([i for i in ids if i.startswith('4')]) == 10)
+    assert(len([i for i in ids if i.startswith('4') or
+                i.startswith('3')]) == 10)
 
 def test_get_abstract():
     abstract = pubmed_client.get_abstract('27085458')
