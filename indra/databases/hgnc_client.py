@@ -16,6 +16,7 @@ try:
     hgnc_names = {}
     hgnc_withdrawn = []
     uniprot_ids = {}
+    entrez_ids = {}
     for row in rd:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -28,15 +29,23 @@ try:
             new_name = m.groups()[0]
             hgnc_withdrawn.append(hgnc_id)
             hgnc_names[hgnc_id] = new_name
-        uniprot_id = row[5]
+        # Uniprot
+        uniprot_id = row[6]
         uniprot_ids[hgnc_id] = uniprot_id
+        # Entrez
+        entrez_id = row[5]
+        entrez_ids[hgnc_id] = entrez_id
 except IOError:
     hgnc_names = {}
     hgnc_withdrawn = []
     uniprot_ids = {}
+    entrez_ids = {}
 
 def get_uniprot_id(hgnc_id):
     return uniprot_ids.get(hgnc_id)
+
+def get_entrez_id(hgnc_id):
+    return entrez_ids.get(hgnc_id)
 
 def get_hgnc_name(hgnc_id):
     try:
