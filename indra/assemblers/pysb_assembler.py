@@ -16,7 +16,7 @@ SelfExporter.do_export = False
 # in this list then we require that there is at least one default
 # policy implemented to assemble that type of statement.
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
-                       ist.ActivityActivity, ist.ActivityModification,
+                       ist.ActivityActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap]
 
 def is_whitelisted(stmt):
@@ -86,7 +86,8 @@ class BaseAgent(object):
         # The list of site/state configurations that lead to this agent
         # being active (where the agent is currently assumed to have only
         # one type of activity)
-        self.activating_mods = []
+        self.active_forms = []
+        self.inactive_forms = []
         self.db_refs = {}
 
     def create_site(self, site, states=None):
@@ -107,8 +108,11 @@ class BaseAgent(object):
             if state not in self.site_states[site]:
                 self.site_states[site].append(state)
 
-    def add_activating_modification(self, activity_pattern):
-        self.activating_mods.append(activity_pattern)
+    def add_active_form(self, activity_pattern, is_active):
+        if is_active:
+            self.active_forms.append(activity_pattern)
+        else:
+            self.inactive_form.append(activity_pattern)
 
 # Site/state information ###############################################
 
@@ -125,13 +129,13 @@ abbrevs = {
 }
 
 active_site_names = {
-    'Kinase': 'kin_site',
-    'Phosphatase': 'phos_site',
-    'GtpBound': 'switch',
-    'Catalytic': 'cat_site',
-    'Transcription': 'trans_act',
+    'kinase': 'kin_site',
+    'phosphatase': 'phos_site',
+    'gtpbound': 'switch',
+    'catalytic': 'cat_site',
+    'transcription': 'trans_act',
     # For general molecular activity
-    'Activity': 'act'
+    'activity': 'act'
 }
 
 states = {
@@ -154,10 +158,10 @@ states = {
 # ActivityActivity rules, where the modification site mediating the activation
 # is not specified.
 default_mod_site_names = {
-    'Kinase': 'phospho',
-    'GtpBound': 'RBD',
-    'Phosphatase': 'phospho',
-    'Activity': 'act'
+    'kinase': 'phospho',
+    'gtpbound': 'RBD',
+    'phosphatase': 'phospho',
+    'activity': 'act'
 }
 
 
@@ -177,11 +181,11 @@ def get_mod_site_name(mod_type, residue, position):
     name = ('%s%s' % (mod_str, mod_pos))
     return name
 
-def get_activating_mods(agent, agent_set):
-    act_mods = agent_set[agent.name].activating_mods
-    if not act_mods:
-        act_mods = [{}]
-    return act_mods
+def get_active_forms(agent, agent_set):
+    act_forms = agent_set[agent.name].active_forms
+    if not act_forms:
+        act_forms = [{}]
+    return act_forms
 
 # PySB model elements ##################################################
 
@@ -245,10 +249,8 @@ def get_create_parameter(model, name, value, unique=True):
     return parameter
 
 
-def get_complex_pattern(model, agent, agent_set, extra_fields=None):
+def get_complex_pattern(model, agent, extra_fields=None):
     """Constructs a PySB ComplexPattern from an Agent"""
-
-    monomer = model.monomers[agent.name]
     pattern = {}
 
     if extra_fields is not None:
@@ -283,8 +285,14 @@ def get_complex_pattern(model, agent, agent_set, extra_fields=None):
         mut_site_state = mc.residue_to
         pattern[mut_site_name] = mut_site_state
 
-    complex_pattern = monomer(**pattern)
-    return complex_pattern
+    # If a model is given, return the Monomer with the generated pattern,
+    # otherwise just return the pattern
+    if model is not None:
+        monomer = model.monomers[agent.name]
+        complex_pattern = monomer(**pattern)
+        return complex_pattern
+    else:
+        return pattern
 
 
 def set_base_initial_condition(model, monomer, value):
@@ -524,8 +532,8 @@ def complex_assemble_one_step(stmt, model, agent_set):
         rule_name += '_bind'
 
         # Construct full patterns of each agent with conditions
-        agent1_pattern = get_complex_pattern(model, agent1, agent_set)
-        agent2_pattern = get_complex_pattern(model, agent2, agent_set)
+        agent1_pattern = get_complex_pattern(model, agent1)
+        agent2_pattern = get_complex_pattern(model, agent2)
         agent1_bs = get_binding_site_name(agent2.name)
         agent2_bs = get_binding_site_name(agent1.name)
         r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) + \
@@ -537,10 +545,8 @@ def complex_assemble_one_step(stmt, model, agent_set):
 
         # In reverse reaction, assume that dissocition is unconditional
         rule_name = '_'.join([a.name for a in pair]) + '_dissociate'
-        agent1_uncond = get_complex_pattern(model, ist.Agent(agent1.name),
-                                            agent_set)
-        agent2_uncond = get_complex_pattern(model, ist.Agent(agent2.name),
-                                            agent_set)
+        agent1_uncond = get_complex_pattern(model, ist.Agent(agent1.name))
+        agent2_uncond = get_complex_pattern(model, ist.Agent(agent2.name))
         r = Rule(rule_name, agent1_uncond(**{agent1_bs: 1}) % \
                             agent2_uncond(**{agent2_bs: 1}) >>
                             agent1_uncond(**{agent1_bs: None}) + \
@@ -725,13 +731,13 @@ def phosphorylation_assemble_one_step(stmt, model, agent_set):
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
 
-    enz_pattern = get_complex_pattern(model, stmt.enz, agent_set)
-    sub_unphos = get_complex_pattern(model, stmt.sub, agent_set,
+    enz_pattern = get_complex_pattern(model, stmt.enz)
+    sub_unphos = get_complex_pattern(model, stmt.sub,
         extra_fields={phos_site: 'u'})
-    sub_phos = get_complex_pattern(model, stmt.sub, agent_set,
+    sub_phos = get_complex_pattern(model, stmt.sub,
         extra_fields={phos_site: 'p'})
 
-    enz_act_mods = get_activating_mods(stmt.enz, agent_set)
+    enz_act_mods = get_active_forms(stmt.enz, agent_set)
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
@@ -749,11 +755,11 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
     sub_bs = get_binding_site_name(stmt.sub.name)
-    enz_bound = get_complex_pattern(model, stmt.enz, agent_set,
+    enz_bound = get_complex_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
-    enz_unbound = get_complex_pattern(model, stmt.enz, agent_set,
+    enz_unbound = get_complex_pattern(model, stmt.enz,
         extra_fields={sub_bs: None})
-    sub_pattern = get_complex_pattern(model, stmt.sub, agent_set)
+    sub_pattern = get_complex_pattern(model, stmt.sub)
 
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
@@ -768,7 +774,7 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
 
-    enz_act_mods = get_activating_mods(stmt.enz, agent_set)
+    enz_act_mods = get_active_forms(stmt.enz, agent_set)
     enz_bs = get_binding_site_name(stmt.enz.name)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
@@ -837,9 +843,9 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set):
     # See NOTE in monomers_one_step
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
-    pattern_unphos = get_complex_pattern(model, stmt.enz, agent_set,
+    pattern_unphos = get_complex_pattern(model, stmt.enz,
                                          extra_fields={phos_site: 'u'})
-    pattern_phos = get_complex_pattern(model, stmt.enz, agent_set,
+    pattern_phos = get_complex_pattern(model, stmt.enz,
                                        extra_fields={phos_site: 'p'})
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
@@ -888,12 +894,12 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
 
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
-    enz_pattern = get_complex_pattern(model, stmt.enz, agent_set)
+    enz_pattern = get_complex_pattern(model, stmt.enz)
     bound_agent = stmt.enz.bound_conditions[0].agent
     sub_unphos = get_complex_pattern(model, bound_agent,
-        agent_set, extra_fields={phos_site: 'u'})
+                                     extra_fields={phos_site: 'u'})
     sub_phos = get_complex_pattern(model, bound_agent,
-        agent_set, extra_fields={phos_site: 'p'})
+                                   extra_fields={phos_site: 'p'})
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_bound_str = get_agent_rule_str(bound_agent)
@@ -958,14 +964,14 @@ def activityactivity_assemble_interactions_only(stmt, model, agent_set):
 
 def activityactivity_assemble_one_step(stmt, model, agent_set):
     if stmt.subj_activity is not None:
-        subj_pattern = get_complex_pattern(model, stmt.subj, agent_set,
+        subj_pattern = get_complex_pattern(model, stmt.subj,
             extra_fields={active_site_names[stmt.subj_activity]: 'active'})
     else:
-        subj_pattern = get_complex_pattern(model, stmt.subj, agent_set)
+        subj_pattern = get_complex_pattern(model, stmt.subj)
 
-    obj_inactive = get_complex_pattern(model, stmt.obj, agent_set,
+    obj_inactive = get_complex_pattern(model, stmt.obj,
         extra_fields={active_site_names[stmt.obj_activity]: 'inactive'})
-    obj_active = get_complex_pattern(model, stmt.obj, agent_set,
+    obj_active = get_complex_pattern(model, stmt.obj,
         extra_fields={active_site_names[stmt.obj_activity]: 'active'})
 
     param_name = 'kf_' + stmt.subj.name[0].lower() + \
@@ -998,7 +1004,7 @@ def dephosphorylation_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     phos = agent_set.get_create_base_agent(stmt.enz)
-    phos.create_site(active_site_names['Phosphatase'])
+    phos.create_site(active_site_names['phosphatase'])
     dephos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
     sub = agent_set.get_create_base_agent(stmt.sub)
@@ -1037,7 +1043,7 @@ def dephosphorylation_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     phos = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
-    phos_site = active_site_names['Phosphatase']
+    phos_site = active_site_names['phosphatase']
     # See NOTE in Phosphorylation.monomers_one_step
     dephos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
@@ -1061,11 +1067,11 @@ def dephosphorylation_assemble_one_step(stmt, model, agent_set):
 
     dephos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
-    phos_pattern = get_complex_pattern(model, stmt.enz, agent_set)
-    sub_phos = get_complex_pattern(model, stmt.sub, agent_set,
-        extra_fields={dephos_site: 'p'})
-    sub_unphos = get_complex_pattern(model, stmt.sub, agent_set,
-        extra_fields={dephos_site: 'u'})
+    phos_pattern = get_complex_pattern(model, stmt.enz)
+    sub_phos = get_complex_pattern(model, stmt.sub,
+                                   extra_fields={dephos_site: 'p'})
+    sub_unphos = get_complex_pattern(model, stmt.sub,
+                                     extra_fields={dephos_site: 'u'})
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
@@ -1082,11 +1088,11 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
         return
     sub_bs = get_binding_site_name(stmt.sub.name)
     phos_bs = get_binding_site_name(stmt.enz.name)
-    phos_bound = get_complex_pattern(model, stmt.enz, agent_set,
-        extra_fields={sub_bs: 1})
-    phos_unbound = get_complex_pattern(model, stmt.enz, agent_set,
-        extra_fields={sub_bs: None})
-    sub_pattern = get_complex_pattern(model, stmt.sub, agent_set)
+    phos_bound = get_complex_pattern(model, stmt.enz,
+                                     extra_fields={sub_bs: 1})
+    phos_unbound = get_complex_pattern(model, stmt.enz,
+                                       extra_fields={sub_bs: None})
+    sub_pattern = get_complex_pattern(model, stmt.sub)
 
     param_name = 'kf_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
@@ -1101,7 +1107,7 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
     dephos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
 
-    phos_act_mods = get_activating_mods(stmt.enz, agent_set)
+    phos_act_mods = get_active_forms(stmt.enz, agent_set)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, am in enumerate(phos_act_mods):
@@ -1169,11 +1175,11 @@ def rasgef_assemble_interactions_only(stmt, model, agent_set):
 
 
 def rasgef_assemble_one_step(stmt, model, agent_set):
-    gef_pattern = get_complex_pattern(model, stmt.gef, agent_set,
+    gef_pattern = get_complex_pattern(model, stmt.gef,
         extra_fields={stmt.gef_activity: 'active'})
-    ras_inactive = get_complex_pattern(model, stmt.ras, agent_set,
+    ras_inactive = get_complex_pattern(model, stmt.ras,
         extra_fields={'GtpBound': 'inactive'})
-    ras_active = get_complex_pattern(model, stmt.ras, agent_set,
+    ras_active = get_complex_pattern(model, stmt.ras,
         extra_fields={'GtpBound': 'active'})
 
     param_name = 'kf_' + stmt.gef.name[0].lower() + \
@@ -1226,11 +1232,11 @@ def rasgap_assemble_interactions_only(stmt, model, agent_set):
 
 
 def rasgap_assemble_one_step(stmt, model, agent_set):
-    gap_pattern = get_complex_pattern(model, stmt.gap, agent_set,
+    gap_pattern = get_complex_pattern(model, stmt.gap,
         extra_fields={stmt.gap_activity: 'active'})
-    ras_inactive = get_complex_pattern(model, stmt.ras, agent_set,
+    ras_inactive = get_complex_pattern(model, stmt.ras,
         extra_fields={'GtpBound': 'inactive'})
-    ras_active = get_complex_pattern(model, stmt.ras, agent_set,
+    ras_active = get_complex_pattern(model, stmt.ras,
         extra_fields={'GtpBound': 'active'})
 
     param_name = 'kf_' + stmt.gap.name[0].lower() + \
@@ -1248,47 +1254,31 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
 
 rasgap_assemble_default = rasgap_assemble_one_step
 
-# ACTIVITYMODIFICATION ######################################
+# ACTIVEFORM ############################################
 
-def activitymodification_monomers_interactions_only(stmt, agent_set):
+def activeform_monomers_interactions_only(stmt, agent_set):
     pass
 
 
-def activitymodification_monomers_one_step(stmt, agent_set):
-    agent = agent_set.get_create_base_agent(stmt.monomer)
-    sites = [get_mod_site_name(m.mod_type, m.residue, m.position)
-             for m in stmt.mod]
+def activeform_monomers_one_step(stmt, agent_set):
+    agent = agent_set.get_create_base_agent(stmt.agent)
+    site_conditions = get_complex_pattern(None, stmt.agent)
 
-    activity_pattern = {}
-    for i, s in enumerate(sites):
-        site_states = states[stmt.mod[i].mod_type]
-        if stmt.mod[i].is_modified:
-            active_state = site_states[1]
-        else:
-            active_state = site_states[0]
-        agent.create_site(s, site_states)
-        activity_pattern[s] = active_state
+    # Add this activity pattern explicitly to the agent's list
+    # of active states
+    agent.add_active_form(site_conditions, stmt.is_active)
 
-    # Add this activity modification explicitly to the agent's list
-    # of activating modifications
-    agent.add_activating_modification(activity_pattern)
-    # Inactivating modifications will require a different treatment
-    # of the resolution of when the agent is active
-    if stmt.relationship == 'decreases':
-        warnings.warn('Inactivating modifications not currently '
-                      'implemented!')
-
-activitymodification_monomers_default = activitymodification_monomers_one_step
+activeform_monomers_default = activeform_monomers_one_step
 
 
-def activitymodification_assemble_interactions_only(stmt, model, agent_set):
+def activeform_assemble_interactions_only(stmt, model, agent_set):
     pass
 
 
-def activitymodification_assemble_one_step(stmt, model, agent_set):
+def activeform_assemble_one_step(stmt, model, agent_set):
     pass
 
-activitymodification_assemble_default = activitymodification_assemble_one_step
+activeform_assemble_default = activeform_assemble_one_step
 
 # RASGTPACTIVITIACTIVITY ######################################
 def rasgtpactivityactivity_monomers_default(stmt, agent_set):

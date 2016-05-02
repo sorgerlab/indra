@@ -57,14 +57,13 @@ def test_pysb_assembler_complex_multiway():
     assert(len(model.monomers)==3)
 
 def test_pysb_assembler_actsub():
-    a = Agent('BRAF')
-    stmt = ActivatingSubstitution(a, MutCondition('600', 'V', 'E'),
-                                  'Activity', 'increases')
+    stmt = ActiveForm(Agent('BRAF', mutations=[MutCondition('600', 'V', 'E')]),
+                      'activity', True)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
     assert(len(model.rules)==0)
-    assert(len(model.monomers)==0)
+    assert(len(model.monomers)==1)
 
 def test_pysb_assembler_phos_noenz():
     enz = None
@@ -177,7 +176,7 @@ def test_pysb_assembler_actact1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = ActivityActivity(subj, 'Activity', 'increase', obj, 'Activity')
+    stmt = ActivityActivity(subj, 'activity', 'increase', obj, 'activity')
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -236,7 +235,7 @@ def test_pysb_assembler_actmod1():
     stmts = []
     mc1 = ModCondition('phosphorylation', 'serine', '218')
     mc2 = ModCondition('phosphorylation', 'serine', '222')
-    stmts.append(ActivityModification(mek, [mc1, mc2], 'increases', 'act'))
+    stmts.append(ActiveForm(Agent('MEK', mods=[mc1, mc2]), 'activity', True))
     stmts.append(Phosphorylation(mek, erk, 'threonine', '185'))
     stmts.append(Phosphorylation(mek, erk, 'tyrosine', '187'))
     pa = PysbAssembler()
@@ -250,12 +249,12 @@ def test_pysb_assembler_actmod2():
     mek = Agent('MEK')
     erk = Agent('ERK')
     stmts = []
-    stmts.append(ActivityModification(mek,
-                    [ModCondition('phosphorylation', 'serine', '218')],
-                    'increases', 'act'))
-    stmts.append(ActivityModification(mek,
-                    [ModCondition('phosphorylation', 'serine', '222')],
-                    'increases', 'act'))
+    stmts.append(ActiveForm(Agent('MEK',
+                    mods=[ModCondition('phosphorylation', 'serine', '218')]),
+                    'activity', True))
+    stmts.append(ActiveForm(Agent('MEK',
+                    mods=[ModCondition('phosphorylation', 'serine', '222')]),
+                    'activity', True))
     stmts.append(Phosphorylation(mek, erk, 'threonine', '185'))
     stmts.append(Phosphorylation(mek, erk, 'tyrosine', '187'))
     pa = PysbAssembler()
@@ -355,7 +354,7 @@ def test_unspecified_statement_policies():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, 'Activity', 'increases', obj, 'Activity')
+    stmt = ActivityActivity(subj, 'activity', 'increases', obj, 'activity')
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -366,7 +365,7 @@ def test_activity_activity():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, 'Activity', 'increases', obj, 'Activity')
+    stmt = ActivityActivity(subj, 'activity', 'increases', obj, 'activity')
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -377,7 +376,7 @@ def test_activity_activity():
 def test_activity_activity2():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, None, 'decreases', obj, 'Activity')
+    stmt = ActivityActivity(subj, None, 'decreases', obj, 'activity')
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -388,7 +387,7 @@ def test_activity_activity2():
 def test_activity_activity3():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, None, 'decreases', obj, 'Activity')
+    stmt = ActivityActivity(subj, None, 'decreases', obj, 'activity')
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -428,7 +427,7 @@ def test_rule_name_str_5():
 
 def test_neg_act_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
-    st1 = ActivityModification(Agent('BRAF'), mc, 'increases', 'Active')
+    st1 = ActiveForm(Agent('BRAF', mods=[mc]), 'active', True)
     st2 = Phosphorylation(Agent('BRAF'), Agent('MAP2K2'))
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
