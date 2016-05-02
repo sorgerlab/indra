@@ -1,6 +1,7 @@
 import urllib, urllib2
 from functools32 import lru_cache
 import xml.etree.ElementTree as ET
+from indra.databases import hgnc_client
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
@@ -16,6 +17,7 @@ def send_request(url, data):
     except:
         return None
     return tree
+
 
 def get_ids(search_term, **kwargs):
     """Search Pubmed for paper IDs given a search term
@@ -49,6 +51,39 @@ def get_ids(search_term, **kwargs):
     if count != len(ids):
         print 'Not all ids were retrieved, limited at %d.' % params['retmax']
     return ids
+
+
+def get_ids_for_gene(hgnc_name, **kwargs):
+    """Get the curated set of articles for a gene in the Entrez database."""
+    # Get the HGNC ID for the HGNC name
+    hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+    if hgnc_id is None:
+        raise ValueError('Invalid HGNC name.')
+    # Get the Entrez ID
+    entrez_id = hgnc_client.get_entrez_id(hgnc_id)
+    if entrez_id is None:
+        raise ValueError('Entrez ID not found in HGNC table.')
+    # Query the Entrez Gene database
+    params = {'db': 'gene',
+              'retmode': 'xml',
+              'id': entrez_id,
+              }
+    for k, v in kwargs.iteritems():
+        params[k] = v
+    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    if tree is None:
+        return []
+    if tree.find('ERROR') is not None:
+        print tree.find('ERROR').text
+        return []
+    # Get all PMIDs from the XML tree
+    id_terms = tree.findall('.//PubMedId')
+    if id_terms is None:
+        return []
+    # Use a set to remove duplicate IDs
+    ids = list(set([idt.text for idt in id_terms]))
+    return ids
+
 
 def get_abstract(pubmed_id):
     if pubmed_id.upper().startswith('PMID'):
