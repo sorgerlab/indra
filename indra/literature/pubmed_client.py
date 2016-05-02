@@ -48,7 +48,8 @@ def get_ids(search_term, **kwargs):
         return []
     ids = [idt.text for idt in id_terms]
     if count != len(ids):
-        print 'Not all ids were retrieved, limited at %d.' % params['retmax']
+        print('Not all ids were retrieved for search %s;\n'
+              'limited at %d.' % (search_term, params['retmax']))
     return ids
 
 
