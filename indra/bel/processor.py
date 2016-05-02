@@ -331,17 +331,17 @@ class BelProcessor(object):
             mod2 = term_from_uri(stmt[4])
             mod_pos2 = term_from_uri(stmt[5])
             mc2 = self._get_mod_condition(mod2, mod_pos2)
+            species.mods = [mc1, mc2]
             rel = term_from_uri(stmt[6])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, [mc1, mc2],
-                                         rel, act_type, evidence))
+                    ActiveForm(species, act_type, is_active, evidence))
 
     def get_activating_mods(self):
         q_mods = prefixes + """
@@ -375,17 +375,17 @@ class BelProcessor(object):
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
             mc = self._get_mod_condition(mod, mod_pos)
+            species.mods = [mc]
             rel = term_from_uri(stmt[4])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, mc, rel, act_type,
-                                         evidence))
+                    ActiveForm(species, act_type, is_active, evidence))
 
     def get_complexes(self):
         # Find all complexes described in the corpus
@@ -487,21 +487,19 @@ class BelProcessor(object):
                 print("Warning: Could not parse substitution expression %s" %
                       sub_expr)
                 continue
-
+            mc = MutCondition(position, wt_residue, sub_residue)
+            enz.mutations = [mc]
             rel = strip_statement(stmt[3])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
 
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivatingSubstitution(enz,
-                                           MutCondition(position, wt_residue,
-                                                        sub_residue),
-                                           act_type, rel, evidence))
+                    ActiveForm(enz, act_type, is_active, evidence))
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
