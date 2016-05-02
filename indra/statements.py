@@ -606,7 +606,7 @@ class ActiveForm(Statement):
             return False
 
     def __str__(self):
-        s = ("ActiveForm(%s, %s, %s, %s)" %
+        s = ("ActiveForm(%s, %s, %s)" %
                 (self.agent, self.activity, self.is_active))
         return s
 
