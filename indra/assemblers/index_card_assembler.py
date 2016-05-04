@@ -26,15 +26,15 @@ class IndexCardAssembler(object):
                 self.cards.append(card)
             else:
                 print 'Assembly not defined for %s' % type(stmt)
-    
+
     def print_model(self):
         cards = [c.card for c in self.cards]
-        return json.dumps(cards)
+        return json.dumps(cards, indent=1)
 
     def save_model(self, file_name='index_cards.json'):
         with open(file_name, 'wt') as fh:
             fh.write(self.print_model())
-        
+
 class IndexCard(object):
     def __init__(self):
         self.card  = {

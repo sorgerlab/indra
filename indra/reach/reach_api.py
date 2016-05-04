@@ -40,8 +40,9 @@ def process_text(text, citation=None, offline=False):
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
-        except JavaException:
+        except JavaException as e:
             print 'Could not process text.'
+            print e
             return None
         json_str = result_map.get('resultJson')
     else:
@@ -83,7 +84,7 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             print e
             return None
         if res.status_code != 200:
-            print 'Could not process NXML via REACH service.'
+            print 'Could not process NXML via REACH service. Status code: %d' % res.status_code
             return None
         json_str = res.text
     with open('reach_output.json', 'wt') as fh:
@@ -105,12 +106,14 @@ def process_json_file(file_name, citation=None):
 
 
 def process_json_str(json_str, citation=None):
+    json_str = str(json_str)
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')
     json_str = json_str.replace('doc-id','doc_id')
     json_str = json_str.replace('is-hypothesis','is_hypothesis')
     json_str = json_str.replace('is-negated','is_negated')
+    json_str = json_str.replace('is-direct','is_direct')
     json_dict = json.loads(json_str)
     rp = ReachProcessor(json_dict, citation)
     rp.get_phosphorylation()
