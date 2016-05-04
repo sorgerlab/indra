@@ -85,17 +85,29 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     return ids
 
 
-def get_abstract(pubmed_id):
+def get_article_xml(pubmed_id):
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
     params = {'db': 'pubmed',
                 'retmode': 'xml',
-                'rettype': 'abstract',
                 'id': pubmed_id}
     tree = send_request(pubmed_fetch, urllib.urlencode(params))
     if tree is None:
         return None
     article = tree.find('PubmedArticle/MedlineCitation/Article')
+    return article # May be none
+
+
+def get_title(pubmed_id):
+    article = get_article_xml(pubmed_id)
+    if article is None:
+        return None
+    title = article.find('ArticleTitle').text
+    return title
+
+
+def get_abstract(pubmed_id):
+    article = get_article_xml(pubmed_id)
     if article is None:
         return None
     abstract = article.findall('Abstract/AbstractText')

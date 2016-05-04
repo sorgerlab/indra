@@ -1,8 +1,11 @@
 import requests
 import json
 from functools32 import lru_cache
+import urllib
+import re
 
 crossref_url = 'http://api.crossref.org/'
+crossref_search_url = 'http://search.crossref.org/'
 
 @lru_cache(maxsize=100)
 def get_metadata(doi):
@@ -47,3 +50,18 @@ def get_license_links(doi):
         return None
     urls = [l.get('URL') for l in licenses]
     return urls
+
+def doi_query(title):
+    url = crossref_search_url + 'dois?q=' + \
+          urllib.quote_plus(title.encode('UTF-8')) + \
+          'sort=score'
+    res = requests.get(url)
+    if res.status_code != 200:
+        print 'Could not get DOI from CrossRef, code %d' % res.status_code
+        return None
+    raw_message = res.json()
+    first_result = raw_message[0]
+    doi_url = first_result['doi'] # Return DOI of first result (Yikes!)
+    m = re.match('^http://dx.doi.org/(.*)$', doi_url)
+    doi = m.groups()[0]
+    return doi

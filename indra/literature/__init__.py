@@ -30,9 +30,19 @@ def id_lookup(paper_id):
     record = tree.find('record')
     if record is None:
         return {}
-    ids = {'doi': record.attrib.get('doi'),
-           'pmid': record.attrib.get('pmid'),
-           'pmcid': record.attrib.get('pmcid')}
+    doi = record.attrib.get('doi')
+    pmid = record.attrib.get('pmid')
+    pmcid = record.attrib.get('pmcid')
+    # If we've failed to find the DOI, and we have the PMID, we do a
+    # fallback--get the title from PubMed and then search CrossRef for the DOI
+    if doi is None and pmid is not None:
+        print "Couldn't find the DOI in PubMed, querying CrossRef"
+        title = pubmed_client.get_title(pmid)
+        doi = crossref_client.doi_query(title)
+        print "Found doi: %s" % doi
+    ids = {'doi': doi,
+           'pmid': pmid,
+           'pmcid': pmcid}
     return ids
 
 def get_full_text(paper_id):
@@ -42,7 +52,7 @@ def get_full_text(paper_id):
     doi = ids.get('doi')
     # First try to find paper via PMC
     if pmcid:
-        nxml = pmc_client.get_xml(ids.get('pmcid'))
+        nxml = pmc_client.get_xml(pmcid)
         if nxml:
             return nxml, 'nxml'
 
