@@ -122,7 +122,7 @@ if __name__ == '__main__':
             doi_cache[row[0]] = row[1]
 
     total = 0
-    no_text_or_doi = []
+    no_text_or_doi = set([])
     ref_table = []
     counter = 0
     limit = 200
@@ -147,7 +147,7 @@ if __name__ == '__main__':
             auth_xml = True if ref in pmid_auth_xml else False
             if doi is None and not any((oa_xml, oa_txt, auth_xml)) and \
                ref not in doi_cache.keys():
-                no_text_or_doi.append(ref)
+                no_text_or_doi.add(ref)
                 #print "%d: Looking up %s:%s in XREF" % (counter, gene, ref)
                 #title = pubmed_client.get_title(ref)
                 #doi = crossref_client.doi_query(title)
@@ -156,6 +156,7 @@ if __name__ == '__main__':
             ref_table.append(row)
             counter += 1
 
+    # Remove duplicates by converting to a set
     with open('missing_dois.txt', 'w') as f:
         for ref in no_text_or_doi:
             f.write('%s\n' % ref)
