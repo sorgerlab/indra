@@ -127,12 +127,12 @@ if __name__ == '__main__':
     counter = 0
     limit = 200
     for gene, refs in pmids_from_gene.iteritems():
-        if counter > limit:
-            break
+        #if counter > limit:
+        #    break
         print gene
         for ref in refs:
-            if counter > limit:
-                break
+            #if counter > limit:
+            #    break
             total += 1
             # Look up PMCID
             id_map = pmid_map.get(ref)
@@ -147,13 +147,20 @@ if __name__ == '__main__':
             auth_xml = True if ref in pmid_auth_xml else False
             if doi is None and not any((oa_xml, oa_txt, auth_xml)) and \
                ref not in doi_cache.keys():
-                print "%d: Looking up %s:%s in XREF" % (counter, gene, ref)
-                title = pubmed_client.get_title(ref)
-                doi = crossref_client.doi_query(title)
-                doi_cache[ref] = doi
+                no_text_or_doi.append(ref)
+                #print "%d: Looking up %s:%s in XREF" % (counter, gene, ref)
+                #title = pubmed_client.get_title(ref)
+                #doi = crossref_client.doi_query(title)
+                #doi_cache[ref] = doi
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
             counter += 1
+
+    with open('missing_dois.txt', 'w') as f:
+        for ref in no_text_or_doi:
+            f.write('%s\n' % ref)
+
+    import sys; sys.exit()
 
     with open('doi_cache.txt', 'w') as f:
         csvwriter = csv.writer(f, delimiter='\t')
