@@ -31,7 +31,7 @@ def get_ids():
 
     for gene in gene_list:
         print "Querying for", gene
-        ids_gene = pubmed_client.get_ids_for_gene(gene)
+        ids_gene = set(pubmed_client.get_ids_for_gene(gene))
         print "Found %d in gene query" % len(ids_gene)
         # Hack to deal with excessive number of names
         if gene == 'MET':
@@ -40,7 +40,8 @@ def get_ids():
             query_gene = 'CJUN'
         else:
             query_gene = gene
-        ids_pubmed = pubmed_client.get_ids(query_gene, **{'retmax': 100000})
+        ids_pubmed = set(pubmed_client.get_ids(query_gene,
+                                               **{'retmax': 100000}))
         print "Found %d in string query" % len(ids_pubmed)
         pmids[gene] = ids_pubmed
         pmids_from_gene[gene] = ids_gene
@@ -79,11 +80,62 @@ def plot_parallel_counts(refs1, refs2, ax, **kwargs):
     ax.set_xlabel('Gene index')
     return pmid_counts
 
+# Load the lookup table of PMIDs with full texts (from the MySQL DB on EC2)
+with open('pmids_fulltext.txt') as f:
+    pmid_fulltexts = set([line.strip('\n') for line in f.readlines()])
+
+with open('pmids_oa_txt.txt') as f:
+    pmid_oa_txt = set([line.strip('\n') for line in f.readlines()])
+
+with open('pmids_oa_xml.txt') as f:
+    pmid_oa_xml = set([line.strip('\n') for line in f.readlines()])
+
+with open('pmids_auth_xml.txt') as f:
+    pmid_auth_xml = set([line.strip('\n') for line in f.readlines()])
+
+pmid_map = {}
+with open('pmid_pmcid_doi_map.txt') as f:
+    csvreader = csv.reader(f, delimiter='\t')
+    for row in csvreader:
+        doi = None if row[2] == 'None' else row[2]
+        pmid_map[row[0]] = (row[1], doi)
+
+def get_fulltexts(pmids_dict):
+    fulltext_counts = OrderedDict()
+    # Iterate over all 
+    for gene, refs in pmids_dict.iteritems():
+        refs_with_fulltext = pmid_fulltexts.intersection(set(refs))
+        fulltext_counts[gene] = refs_with_fulltext
+    return fulltext_counts
 
 if __name__ == '__main__':
     import plot_formatting as pf
 
     (pmids, pmids_from_gene) = get_ids()
+
+    not_found = 0
+    ref_table = []
+    for gene, refs in pmids_from_gene.iteritems():
+        print gene
+        for ref in refs:
+            # Look up PMCID
+            id_map = pmid_map.get(ref)
+            if id_map is None:
+                pmcid = None
+                doi = None
+            else:
+                (pmcid, doi) = id_map
+            # Look up full text status
+            oa_xml = True if ref in pmid_oa_xml else False
+            oa_txt = True if ref in pmid_oa_txt else False
+            auth_xml = True if ref in pmid_auth_xml else False
+            if pmcid is not None and not any((oa_xml, oa_txt, auth_xml)):
+                not_found += 1
+            row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
+            ref_table.append(row)
+
+    import sys; sys.exit()
+
 
     plt.ion()
     pf.set_fig_params()
@@ -108,7 +160,45 @@ if __name__ == '__main__':
     plt.subplots_adjust(left=0.19, bottom=0.16)
 
     # Figure out how many of the publications have full text in PMC
-    # TODO
+    pmids_gene_ft = get_fulltexts(pmids_from_gene)
+    fig = plt.figure(figsize=(2, 2), dpi=300)
+    ax = fig.gca()
+    plot_parallel_counts(pmids_from_gene, pmids_gene_ft, ax)
+    pf.format_axis(ax)
+    plt.legend(['By Gene ID', 'Full Text in PMC'], loc='upper left',
+               fontsize=pf.fontsize, frameon=False)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+
+    total_gene = np.sum([len(refs) for refs in pmids_from_gene.values()])
+    total_gene_ft = np.sum([len(refs) for refs in pmids_gene_ft.values()])
+
+    print "Total (by gene)", total_gene
+    print "Total (by gene) with full text", total_gene_ft
+    print "%.2f%% with full text" % \
+          ((total_gene_ft / float(total_gene)) * 100)
+
+    # Figure out how many of the publications have full text in PMC
+    pmids_ft = get_fulltexts(pmids)
+    fig = plt.figure(figsize=(2, 2), dpi=300)
+    ax = fig.gca()
+    plot_parallel_counts(pmids, pmids_ft, ax)
+    pf.format_axis(ax)
+    plt.legend(['By Name', 'Full Text in PMC'], loc='upper left',
+               fontsize=pf.fontsize, frameon=False)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+
+    total_pmids = np.sum([len(refs) for refs in pmids.values()])
+    total_pmids_ft = np.sum([len(refs) for refs in pmids_ft.values()])
+
+    print "Total (by gene)", total_pmids
+    print "Total (by gene) with full text", total_pmids_ft
+    print "%.2f%% with full text" % \
+          ((total_pmids_ft / float(total_pmids)) * 100)
+
+
+    # Figure out how many of the publications have xml/txt/auth
+    
+
     import sys; sys.exit()
 
     s3 = boto3.resource('s3')
