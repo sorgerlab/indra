@@ -115,12 +115,24 @@ if __name__ == '__main__':
 
     (pmids, pmids_from_gene) = get_ids()
 
+    doi_cache = {}
+    with open('doi_cache.txt') as f:
+        csvreader = csv.reader(f, delimiter='\t')
+        for row in csvreader:
+            doi_cache[row[0]] = row[1]
+
     total = 0
     no_text_or_doi = []
     ref_table = []
+    counter = 0
+    limit = 200
     for gene, refs in pmids_from_gene.iteritems():
+        if counter > limit:
+            break
         print gene
         for ref in refs:
+            if counter > limit:
+                break
             total += 1
             # Look up PMCID
             id_map = pmid_map.get(ref)
@@ -133,11 +145,22 @@ if __name__ == '__main__':
             oa_xml = True if ref in pmid_oa_xml else False
             oa_txt = True if ref in pmid_oa_txt else False
             auth_xml = True if ref in pmid_auth_xml else False
-            if doi is None and not any((oa_xml, oa_txt, auth_xml)):
-                no_text_or_doi.append(ref)
+            if doi is None and not any((oa_xml, oa_txt, auth_xml)) and \
+               ref not in doi_cache.keys():
+                print "%d: Looking up %s:%s in XREF" % (counter, gene, ref)
+                title = pubmed_client.get_title(ref)
+                doi = crossref_client.doi_query(title)
+                doi_cache[ref] = doi
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
+            counter += 1
 
+    with open('doi_cache.txt', 'w') as f:
+        csvwriter = csv.writer(f, delimiter='\t')
+        for k, v in doi_cache.iteritems():
+            csvwriter.writerow((k, v))
+
+    import sys; sys.exit()
 
     # Randomly sample the PMIDs with no DOI to see if I can get the DOI
     # from PubMed
