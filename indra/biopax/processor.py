@@ -87,9 +87,9 @@ class BiopaxProcessor(object):
         mcc = bpp('constraint.ModificationChangeConstraint')
         mcct = bpp('constraint.ModificationChangeConstraint$Type')
         mod_filter = 'residue modification, active'
-        for relationship in ['increases', 'decreases']:
+        for is_active in [True, False]:
             p = self._construct_modification_pattern()
-            if relationship == 'increases':
+            if is_active:
                 rel = mcct.GAIN
             else:
                 rel = mcct.LOSS
@@ -103,7 +103,7 @@ class BiopaxProcessor(object):
             for r in res_array:
                 reaction = r[p.indexOf('Conversion')]
                 citations = self._get_citations(reaction)
-                activity = 'Activity'
+                activity = 'activity'
                 input_spe = r[p.indexOf('input simple PE')]
                 output_spe = r[p.indexOf('output simple PE')]
 
@@ -140,10 +140,17 @@ class BiopaxProcessor(object):
 
                     mods = [m for m in gained_mods 
                             if m.mod_type not in ['active', 'inactive']]
+                    # NOTE: with the ActiveForm representation we cannot
+                    # separate static_mods and gained_mods. We assume here
+                    # that the static_mods are inconsequential and therefore
+                    # are not mentioned as an Agent condition, following
+                    # don't care don't write semantics. Therefore only the
+                    # gained_mods are listed in the ActiveForm as Agent
+                    # conditions.
+                    monomer.mods = mods
                     if mods:
-                        stmt = ActivityModification(monomer, mods,
-                                                relationship, activity,
-                                                evidence=ev)
+                        stmt = ActiveForm(monomer, activity, is_active,
+                                          evidence=ev)
                         self.statements.append(stmt)
 
     @staticmethod

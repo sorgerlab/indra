@@ -208,6 +208,20 @@ class Agent(object):
             if not mod_found:
                 return False
 
+        # MUTATIONS
+        # Similar to the above, we check that self has all of the mutations
+        # of other.
+        # Make sure they have the same mutations
+        for other_mut in other.mutations:
+            mut_found = False
+            for self_mut in self.mutations:
+                if self_mut.matches(other_mut):
+                    mut_found = True
+            # If we didn't find an exact match for this mut in other, then
+            # no refinement
+            if not mut_found:
+                return False
+
         # Everything checks out
         return True
 
@@ -548,35 +562,29 @@ class RasGtpActivityActivity(ActivityActivity):
     pass
 
 
-class ActivityModification(Statement):
-    """Statement representing the activation of a protein as a result
-    of a residue modification"""
+class ActiveForm(Statement):
+    """Statement representing the activity of an Agent in a state described by
+    one or more Agent conditions (including modification conditions, 
+    bound-to conditions and mutation conditions)."""
 
-    def __init__(self, monomer, mod, relationship, activity,
-                 evidence=None):
-        super(ActivityModification, self).__init__(evidence)
-        self.monomer = monomer
-        # Turn mod conditions into a list of a single one is given
-        if isinstance(mod, ModCondition):
-            self.mod = [mod]
-        else:
-            self.mod = mod
-        self.relationship = relationship
+    def __init__(self, agent, activity, is_active, evidence=None):
+        super(ActiveForm, self).__init__(evidence)
+        self.agent = agent
         self.activity = activity
+        self.is_active = is_active
 
     def matches_key(self):
-        mod_key = set([m.matches_key() for m in self.mod])
-        key = (type(self), self.monomer.matches_key(), mod_key,
-                self.relationship, self.activity)
+        key = (type(self), self.agent.matches_key(),
+                self.activity, self.is_active)
         return str(key)
 
     def agent_list(self):
-        return [self.monomer]
+        return [self.agent]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
-            raise ValueError("ActivityModification has one agent.")
-        self.monomer = agent_list[0]
+            raise ValueError("ActivityForm has one agent.")
+        self.agent = agent_list[0]
 
     def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
         # Make sure the statement types match
@@ -584,83 +592,23 @@ class ActivityModification(Statement):
             return False
 
         # Check agent arguments
-        if not self.monomer.refinement_of(other.monomer, entity_hierarchy,
+        if not self.agent.refinement_of(other.agent, entity_hierarchy,
                                           mod_hierarchy):
             return False
 
-        # Make sure that every instance of a modification in other is also
-        # found (or refined) in self. To facilitate comparisons, we first zip
-        # the two lists together in a list of tuples that can be sorted to
-        # canonicalize the ordering.
-
-        # Make sure they have the same modifications
-        for other_mod in other.mod:
-            mod_found = False
-            for self_mod in self.mod:
-                if self_mod.refinement_of(other_mod, mod_hierarchy):
-                    mod_found = True
-            # If we didn't find an exact match for this mod in other, then
-            # no refinement
-            if not mod_found:
-                return False
         # Make sure that the relationships and activities match
         # TODO: Develop an activity hierarchy? In which kinaseactivity is a
         # refinement of activity, for example.
         if self.activity == other.activity and \
-           self.relationship == other.relationship:
+           self.is_active == other.is_active:
                return True
         else:
             return False
 
     def __str__(self):
-        mods = '[' + ', '.join(['%s' % m for m in self.mod]) + ']'
-        s = ("ActivityModification(%s, %s, %s, %s)" %
-                (self.monomer, mods, self.relationship, self.activity))
+        s = ("ActiveForm(%s, %s, %s)" %
+                (self.agent, self.activity, self.is_active))
         return s
-
-
-class ActivatingSubstitution(Statement):
-    """Statement representing the activation of a protein as a result
-    of a residue substitution"""
-
-    def __init__(self, monomer, mutation, activity, rel,
-                 evidence=None):
-        super(ActivatingSubstitution, self).__init__(evidence)
-        self.monomer = monomer
-        self.mutation = mutation
-        self.activity = activity
-        self.rel = rel
-
-    def matches_key(self):
-        key = (type(self), self.monomer.matches_key(),
-               self.mutation.matches_key(), self.activity, self.rel)
-        return str(key)
-
-    def agent_list(self):
-        return [self.monomer]
-
-    def set_agent_list(self, agent_list):
-        if len(agent_list) != 1:
-            raise ValueError("ActivatingSubstitution has one agent.")
-        self.monomer = agent_list[0]
-
-    def refinement_of(self, other, eh, mh):
-        # Make sure the statement types match
-        if type(self) != type(other):
-            return False
-        if self.monomer.refinement_of(other.monomer, eh, mh) and \
-           self.activity == other.activity and \
-           self.mutation.matches(other.mutation) and \
-           self.rel == other.rel:
-            return True
-        else:
-            return False
-
-    def __str__(self):
-        s = ("ActivatingSubstitution(%s, %s, %s, %s)" %
-                (self.monomer.name, self.mutation, self.activity, self.rel))
-        return s
-
 
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein

@@ -324,24 +324,24 @@ class BelProcessor(object):
             evidence = self.get_evidence(stmt[7])
             # Parse out the elements of the query
             species = self.get_agent(stmt[0], stmt[8])
-            act_type = term_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[1]).lower()
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
             mc1 = self._get_mod_condition(mod1, mod_pos1)
             mod2 = term_from_uri(stmt[4])
             mod_pos2 = term_from_uri(stmt[5])
             mc2 = self._get_mod_condition(mod2, mod_pos2)
+            species.mods = [mc1, mc2]
             rel = term_from_uri(stmt[6])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, [mc1, mc2],
-                                         rel, act_type, evidence))
+                    ActiveForm(species, act_type, is_active, evidence))
 
     def get_activating_mods(self):
         q_mods = prefixes + """
@@ -371,21 +371,21 @@ class BelProcessor(object):
             evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             species = self.get_agent(stmt[0], stmt[6])
-            act_type = term_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[1]).lower()
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
             mc = self._get_mod_condition(mod, mod_pos)
+            species.mods = [mc]
             rel = term_from_uri(stmt[4])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivityModification(species, mc, rel, act_type,
-                                         evidence))
+                    ActiveForm(species, act_type, is_active, evidence))
 
     def get_complexes(self):
         # Find all complexes described in the corpus
@@ -487,21 +487,19 @@ class BelProcessor(object):
                 print("Warning: Could not parse substitution expression %s" %
                       sub_expr)
                 continue
-
+            mc = MutCondition(position, wt_residue, sub_residue)
+            enz.mutations = [mc]
             rel = strip_statement(stmt[3])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_active = False
             else:
-                rel = 'increases'
+                is_active = True
 
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
             self.statements.append(
-                    ActivatingSubstitution(enz,
-                                           MutCondition(position, wt_residue,
-                                                        sub_residue),
-                                           act_type, rel, evidence))
+                    ActiveForm(enz, act_type, is_active, evidence))
 
     def get_activity_activity(self):
         # Query for all statements where the activity of one protein
@@ -530,34 +528,34 @@ class BelProcessor(object):
         for stmt in res_stmts:
             evidence = self.get_evidence(stmt[5])
             subj = self.get_agent(stmt[0], stmt[6])
-            subj_activity = name_from_uri(stmt[1])
+            subj_activity = name_from_uri(stmt[1]).lower()
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
                 rel = 'decreases'
             else:
                 rel = 'increases'
             obj = self.get_agent(stmt[3], stmt[7])
-            obj_activity = name_from_uri(stmt[4])
+            obj_activity = name_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
 
             # Distinguish the case when the activator is a RasGTPase
             # (since this may involve unique and stereotyped mechanisms)
-            if subj_activity == 'GtpBound':
+            if subj_activity == 'gtpbound':
                 self.statements.append(
                      RasGtpActivityActivity(subj, subj_activity,
                                             rel, obj, obj_activity,
                                             evidence))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
-            elif obj_activity == 'GtpBound' and \
+            elif obj_activity == 'gtpbound' and \
                  rel == 'increases':
                 self.statements.append(
                         RasGef(subj, subj_activity, obj, evidence))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
-            elif obj_activity == 'GtpBound' and \
+            elif obj_activity == 'gtpnound' and \
                  rel == 'decreases':
                 self.statements.append(
                         RasGap(subj, subj_activity, obj, evidence))

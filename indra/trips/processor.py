@@ -156,11 +156,11 @@ class TripsProcessor(object):
                 warnings.warn('Skipping activity modification with missing' +\
                                 'modification')
                 continue
-
+            affected_agent.mods = mods
             sentence = self.get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
-            self.statements.append(ActivityModification(affected_agent, mods,
-                                    'increases', 'Active', evidence=ev))
+            self.statements.append(ActiveForm(affected_agent, 'active', True,
+                                              evidence=ev))
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):

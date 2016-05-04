@@ -3,7 +3,7 @@ from indra.preassembler import Preassembler, render_stmt_graph
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActivatingSubstitution, MutCondition
+                             ActiveForm, MutCondition
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 entity_file_path = os.path.join(os.path.dirname(__file__),
@@ -198,24 +198,21 @@ def test_binding_site_refinement():
 def test_activating_substitution_refinement():
     """Should only be refinement if entities are a refinement and all
     fields match."""
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS')
-
-    st1 = ActivatingSubstitution(ras, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='bar'))
-    st2 = ActivatingSubstitution(nras, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='foo'))
-    st3 = ActivatingSubstitution(nras, MutCondition('61', 'Q', 'L'),
-                                 'GtpBoundActivity1', 'increases1',
-                                 evidence=Evidence(text='bar'))
-    st4 = ActivatingSubstitution(nras, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity2', 'increases1',
-                                 evidence=Evidence(text='bar'))
-    st5 = ActivatingSubstitution(nras, MutCondition('12', 'G', 'D'),
-                                 'GtpBoundActivity1', 'increases2',
-                                 evidence=Evidence(text='bar'))
+    mc1 = MutCondition('12', 'G', 'D')
+    mc2 = MutCondition('61', 'Q', 'L')
+    nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
+    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
+    ras = Agent('RAS', mutations=[mc1])
+    st1 = ActiveForm(ras, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='bar'))
+    st2 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='foo'))
+    st3 = ActiveForm(nras2, 'GtpBoundActivity1', True,
+                     evidence=Evidence(text='bar'))
+    st4 = ActiveForm(nras1, 'GtpBoundActivity2', True,
+                     evidence=Evidence(text='bar'))
+    st5 = ActiveForm(nras1, 'GtpBoundActivity1', False,
+                     evidence=Evidence(text='bar'))
     assert(st2.refinement_of(st1, eh, mh))
     assert(not st3.refinement_of(st1, eh, mh))
     assert(not st4.refinement_of(st1, eh, mh))
