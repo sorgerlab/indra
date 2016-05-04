@@ -1,7 +1,7 @@
 import sys
 import pygraphviz as pgv
 import itertools
-from copy import copy
+from copy import copy, deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
 
@@ -11,7 +11,7 @@ class Preassembler(object):
         self.entity_hierarchy = entity_hierarchy
         self.mod_hierarchy = mod_hierarchy
         if stmts:
-            self.stmts = stmts
+            self.stmts = deepcopy(stmts)
         else:
             self.stmts = []
         self.unique_stmts = []
@@ -19,7 +19,7 @@ class Preassembler(object):
 
     def add_statements(self, stmts):
         """Add to the current list of statements."""
-        self.stmts += stmts
+        self.stmts += deepcopy(stmts)
 
     def combine_duplicates(self):
         self.unique_stmts = self.combine_duplicate_stmts(self.stmts)

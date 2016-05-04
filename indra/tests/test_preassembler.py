@@ -33,6 +33,19 @@ def test_duplicates():
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
 
+def test_duplicates_copy():
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    ras = Agent('RAS', db_refs = {'FA': '03663'})
+    st1 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 1')])
+    st2 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 2')])
+    stmts = [st1, st2]
+    pa = Preassembler(eh, mh, stmts)
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 1)
+    assert(len(stmts) == 2)
+    assert(len(stmts[0].evidence) == 1)
+    assert(len(stmts[1].evidence) == 1)
+
 def test_duplicates_sorting():
     mc = ModCondition('phosphorylation')
     map2k1_1 = Agent('MAP2K1', mods=[mc])
