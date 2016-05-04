@@ -140,8 +140,8 @@ class ReachProcessor(object):
                 rel = 'increases'
             else:
                 rel = 'decreases'
-            st = ActivityActivity(controller_agent, 'Activity', rel,
-                                  controlled_agent, 'Activity', ev)
+            st = ActivityActivity(controller_agent, 'activity', rel,
+                                  controlled_agent, 'activity', ev)
             self.statements.append(st)
 
     def _get_agent_from_entity(self, entity_id):
