@@ -37,6 +37,15 @@ class MutCondition(object):
         key = (self.position, self.residue_from, self.residue_to)
         return str(key)
 
+    def __eq__(self, other):
+        pos_match = (self.position == other.position)
+        residue_from_match = (self.residue_from == other.residue_from)
+        residue_to_match = (self.residue_to == other.residue_to)
+        return (pos_match and residue_from_match and residue_to_match)
+
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         s = '(%s, %s, %s)' % (self.residue_from, self.position,
                                self.residue_to)
@@ -91,6 +100,9 @@ class ModCondition(object):
         pos_match = (self.position == other.position)
         is_mod_match = (self.is_modified == other.is_modified)
         return (type_match and residue_match and pos_match and is_mod_match)
+
+    def __ne__(self, other):
+        return not self == other
 
     def __hash__(self):
         return hash(self.matches_key())
@@ -225,6 +237,18 @@ class Agent(object):
         # Everything checks out
         return True
 
+    def __eq__(self, other):
+        matches = (self.name == other.name) and\
+                  (self.mods == other.mods) and\
+                  (self.mutations == other.mutations) and\
+                  (self.bound_conditions == other.bound_conditions) and\
+                  (self.active == other.active) and\
+                  (self.db_refs == other.db_refs)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         attr_strs = []
         if self.mods:
@@ -284,6 +308,18 @@ class Evidence(object):
         else:
             self.annotations = []
         self.epistemics = epistemics
+
+    def __eq__(self, other):
+        matches = (self.source_api == other.source_api) and\
+                  (self.source_id == other.source_id) and\
+                  (self.pmid == other.pmid) and\
+                  (self.text == other.text) and\
+                  (self.annotations == other.annotations) and\
+                  (self.epistemics == other.epistemics)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
 
     def __str__(self):
         ev_str = u'Evidence(%s, %s, %s, %s)' % \

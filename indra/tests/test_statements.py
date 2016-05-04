@@ -896,6 +896,31 @@ def test_modcondition_order_agent():
     p2 = Agent('MAP2K1', mods=[mc2, mc1])
     assert(p1.matches(p2))
 
+def test_eq_mut():
+    assert(MutCondition('600', 'V', 'E') == MutCondition('600', 'V', 'E'))
+    assert(MutCondition('600', 'V', 'E') != MutCondition('600', 'V', 'D'))
+
+def test_eq_agent():
+    assert(Agent('one') == Agent('one'))
+    assert(Agent('one') != Agent('two'))
+    assert(Agent('one', db_refs={'UP': '123'}) !=
+           Agent('one', db_refs={'UP': '999'}))
+    assert(Agent('one', mods=[ModCondition('phosphorylation')]) ==
+           Agent('one', mods=[ModCondition('phosphorylation')]))
+    assert(Agent('one', mods=[ModCondition('phosphorylation')]) !=
+           Agent('one', mods=[ModCondition('ubiquitination')]))
+    assert(Agent('one', mutations=[MutCondition('600', 'V', 'E')]) ==
+           Agent('one', mutations=[MutCondition('600', 'V', 'E')]))
+    assert(Agent('one', mutations=[MutCondition('600', 'V', 'E')]) !=
+           Agent('one', mutations=[MutCondition('600', 'V', 'D')]))
+    assert(Agent('one', bound_conditions=[BoundCondition(Agent('two'), True)]) ==
+           Agent('one', bound_conditions=[BoundCondition(Agent('two'), True)]))
+    assert(Agent('one', bound_conditions=[BoundCondition(Agent('two'), True)]) !=
+           Agent('one', bound_conditions=[BoundCondition(Agent('two'), False)]))
+    assert(Agent('one', bound_conditions=[BoundCondition(Agent('two'), True)]) !=
+           Agent('one', bound_conditions=[BoundCondition(Agent('three'), True)]))
+
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 
