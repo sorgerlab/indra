@@ -7,6 +7,7 @@ import numpy as np
 import boto3
 import botocore
 import os
+from indra.literature import id_lookup
 
 def get_ids():
     """Search PubMed for references for the Ras 227 gene set."""
@@ -113,11 +114,13 @@ if __name__ == '__main__':
 
     (pmids, pmids_from_gene) = get_ids()
 
-    not_found = 0
+    total = 0
+    no_text_or_doi = []
     ref_table = []
     for gene, refs in pmids_from_gene.iteritems():
         print gene
         for ref in refs:
+            total += 1
             # Look up PMCID
             id_map = pmid_map.get(ref)
             if id_map is None:
@@ -129,13 +132,28 @@ if __name__ == '__main__':
             oa_xml = True if ref in pmid_oa_xml else False
             oa_txt = True if ref in pmid_oa_txt else False
             auth_xml = True if ref in pmid_auth_xml else False
-            if pmcid is not None and not any((oa_xml, oa_txt, auth_xml)):
-                not_found += 1
+            if doi is None and not any((oa_xml, oa_txt, auth_xml)):
+                no_text_or_doi.append(ref)
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
 
     import sys; sys.exit()
 
+    # Randomly sample the PMIDs with no DOI to see if I can get the DOI
+    # from PubMed
+    samples = np.random.choice(no_text_or_doi, size=100, replace=False)
+    print "Querying for DOIs"
+    pm_found = []
+    pm_not_found = []
+    for sample in samples:
+        ids = id_lookup('PMID%s' % sample)
+        if ids:
+            if ids.get('doi'):
+                pm_found.append(sample)
+            else:
+                pm_not_found.append(sample)
+        else:
+            pm_not_found.append(sample)
 
     plt.ion()
     pf.set_fig_params()
