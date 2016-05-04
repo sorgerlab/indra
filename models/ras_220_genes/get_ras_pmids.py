@@ -8,6 +8,7 @@ import boto3
 import botocore
 import os
 from indra.literature import id_lookup
+from indra.literature import crossref_client
 
 def get_ids():
     """Search PubMed for references for the Ras 227 gene set."""
@@ -137,11 +138,35 @@ if __name__ == '__main__':
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
 
-    import sys; sys.exit()
 
     # Randomly sample the PMIDs with no DOI to see if I can get the DOI
     # from PubMed
     samples = np.random.choice(no_text_or_doi, size=100, replace=False)
+
+    xr_found = []
+    xr_not_found = []
+    doi_cache = []
+    import time
+    start = time.time()
+    for sample in samples:
+        print "Querying for ", sample
+        title = pubmed_client.get_title(sample)
+        doi = crossref_client.doi_query(title)
+        if doi:
+            xr_found.append(sample)
+            doi_cache.append((sample, doi))
+        else:
+            xr_not_found.append(sample)
+    end = time.time()
+    elapsed = end - start
+    print "Elapsed time", elapsed
+
+    with open('doi_cache.txt', 'w') as f:
+        csvwriter = csv.writer(f, delimiter='\t')
+        csv.writerows(doi_cache)
+
+    import sys; sys.exit()
+
     print "Querying for DOIs"
     pm_found = []
     pm_not_found = []
