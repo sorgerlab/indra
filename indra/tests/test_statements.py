@@ -920,6 +920,37 @@ def test_eq_agent():
     assert(Agent('one', bound_conditions=[BoundCondition(Agent('two'), True)]) !=
            Agent('one', bound_conditions=[BoundCondition(Agent('three'), True)]))
 
+def test_eq_stmt():
+    ev1 = Evidence(text='1')
+    ev2 = Evidence(text='2')
+    assert(Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]) ==
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]))
+    assert(Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]) !=
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev2]))
+    assert(Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]) !=
+            Phosphorylation(Agent('a'), Agent('c'), evidence=[ev2]))
+    assert(Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]) !=
+            Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev2]))
+    assert(Complex([Agent('a'), Agent('b')], evidence=[ev1]) ==
+           Complex([Agent('a'), Agent('b')], evidence=[ev1]))
+    assert(Complex([Agent('a'), Agent('b')], evidence=[ev1]) !=
+           Complex([Agent('a'), Agent('b')], evidence=[ev2]))
+    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]) ==
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]))
+    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]) !=
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('c'), 'activity', evidence=[ev1]))
+    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]) !=
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'kinase', evidence=[ev1]))
+    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]) !=
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev2]))
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

@@ -383,6 +383,11 @@ class Statement(object):
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        matches = (self.agent_list() == other.agent_list()) and\
+                  (self.evidence == other.evidence)
+        return matches
+
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -442,6 +447,16 @@ class Modification(Statement):
                             (self.position == other.position))
         return (residue_matches and position_matches)
 
+    def __eq__(self, other):
+        matches = super(Modification, self).__eq__(other)
+        matches = matches and\
+                  (self.residue == other.residue) and\
+                  (self.position == other.position)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         s = ("%s(%s, %s, %s, %s)" %
                   (type(self).__name__, self.enz, self.sub,
@@ -498,6 +513,16 @@ class SelfModification(Statement):
         position_matches = (other.position is None or\
                             (self.position == other.position))
         return (residue_matches and position_matches)
+
+    def __eq__(self, other):
+        matches = super(SelfModification, self).__eq__(other)
+        matches = matches and\
+                  (self.residue == other.residue) and\
+                  (self.position == other.position)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class Phosphorylation(Modification):
@@ -593,6 +618,17 @@ class ActivityActivity(Statement):
               self.relationship, self.obj, self.obj_activity))
         return s
 
+    def __eq__(self, other):
+        matches = super(ActivityActivity, self).__eq__(other)
+        matches = matches and\
+                  (self.subj_activity == other.subj_activity) and\
+                  (self.obj_activity == other.obj_activity) and\
+                  (self.relationship == other.relationship)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
+
 
 class RasGtpActivityActivity(ActivityActivity):
     pass
@@ -646,6 +682,16 @@ class ActiveForm(Statement):
                 (self.agent, self.activity, self.is_active))
         return s
 
+    def __eq__(self, other):
+        matches = super(ActivityActivity, self).__eq__(other)
+        matches = matches and\
+                  (self.activity == other.activity) and\
+                  (self.is_active == other.is_active)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
+
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
     upon Gef activity."""
@@ -686,6 +732,14 @@ class RasGef(Statement):
             return True
         else:
             return False
+
+    def __eq__(self, other):
+        matches = super(RasGef, self).__eq__(other)
+        matches = matches and (self.gef_activity == other.gef_activity)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class RasGap(Statement):
@@ -728,6 +782,14 @@ class RasGap(Statement):
         s = ("RasGap(%s, %s, %s)" %
                 (self.gap.name, self.gap_activity, self.ras.name))
         return s
+
+    def __eq__(self, other):
+        matches = super(RasGap, self).__eq__(other)
+        matches = matches and (self.gap_activity == other.gap_activity)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class Complex(Statement):
@@ -780,6 +842,13 @@ class Complex(Statement):
             return False
         else:
             return True
+
+    def __eq__(self, other):
+        matches = super(Complex, self).__eq__(other)
+        return matches
+
+    def __ne__(self, other):
+        return not self == other
 
 def get_valid_residue(residue):
     if residue is not None and amino_acids.get(residue) is None:
