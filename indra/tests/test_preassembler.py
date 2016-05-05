@@ -3,7 +3,7 @@ from indra.preassembler import Preassembler, render_stmt_graph
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition
+                             ActiveForm, MutCondition, Complex
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 entity_file_path = os.path.join(os.path.dirname(__file__),
@@ -32,6 +32,19 @@ def test_duplicates():
     pa = Preassembler(eh, mh, [st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
+
+def test_duplicates_copy():
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    ras = Agent('RAS', db_refs = {'FA': '03663'})
+    st1 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 1')])
+    st2 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 2')])
+    stmts = [st1, st2]
+    pa = Preassembler(eh, mh, stmts)
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 1)
+    assert(len(stmts) == 2)
+    assert(len(stmts[0].evidence) == 1)
+    assert(len(stmts[1].evidence) == 1)
 
 def test_duplicates_sorting():
     mc = ModCondition('phosphorylation')
@@ -78,13 +91,13 @@ def test_combine_duplicates():
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0] == p6) # MEK dephos ERK
+    assert(pa.unique_stmts[0].matches(p6)) # MEK dephos ERK
     assert(len(pa.unique_stmts[0].evidence) == 3)
-    assert(pa.unique_stmts[1] == p9) # SRC dephos KRAS
+    assert(pa.unique_stmts[1].matches(p9)) # SRC dephos KRAS
     assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(pa.unique_stmts[2] == p5) # MEK phos ERK
+    assert(pa.unique_stmts[2].matches(p5)) # MEK phos ERK
     assert(len(pa.unique_stmts[2].evidence) == 1)
-    assert(pa.unique_stmts[3] == p1) # RAF phos MEK
+    assert(pa.unique_stmts[3].matches(p1)) # RAF phos MEK
     assert(len(pa.unique_stmts[3].evidence) == 4)
 
 def test_superfamily_refinement():
@@ -100,8 +113,9 @@ def test_superfamily_refinement():
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st2)
-    assert (stmts[0].supported_by == [st1])
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
 
 def test_modification_refinement():
     """A more specific modification statement should be supported by a more
@@ -115,8 +129,9 @@ def test_modification_refinement():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st1)
-    assert (stmts[0].supported_by == [st2])
+    assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
 
 def test_modification_refinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -130,8 +145,10 @@ def test_modification_refinement_noenz():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st1)
-    assert (stmts[0].supported_by == [st2])
+    assert (stmts[0].equals(st1))
+    assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
 
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -139,14 +156,46 @@ def test_modification_norefinement_noenz():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras)
-    st2 = Phosphorylation(None, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(None, nras, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
     pa = Preassembler(eh, mh, [st1, st2])
-    #import ipdb; ipdb.set_trace()
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
-    print stmts
     assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
+
+def test_modification_norefinement_subsfamily():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    ras = Agent('RAS')
+    st1 = Phosphorylation(src, nras)
+    st2 = Phosphorylation(src, ras, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # Modification is less specific, enzyme more specific in st1, therefore
+    # these statements shouldn't be combined. 
+    assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
+
+def test_modification_norefinement_enzfamily():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    mek = Agent('MEK')
+    raf = Agent('RAF')
+    braf = Agent('BRAF')
+    st1 = Phosphorylation(raf, mek, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek)
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # Modification is less specific, enzyme more specific in st1, therefore
+    # these statements shouldn't be combined. 
+    assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
 
 def test_bound_condition_refinement():
     """A statement with more specific bound context should be supported by a
@@ -163,8 +212,9 @@ def test_bound_condition_refinement():
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     assert(len(stmts) == 1)
-    assert (stmts[0] == st2)
-    assert (stmts[0].supported_by == [st1])
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
 
 def test_bound_condition_norefinement():
     """A statement with more specific bound context should be supported by a
@@ -181,6 +231,17 @@ def test_bound_condition_norefinement():
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
     assert(len(stmts) == 2)
+
+def test_complex_refinement():
+    ras = Agent('RAS')
+    raf = Agent('RAF')
+    mek = Agent('MEK')
+    st1 = Complex([ras, raf])
+    st2 = Complex([mek, ras, raf])
+    pa = Preassembler(eh, mh, [st1, st2])
+    pa.combine_related()
+    assert(len(pa.unique_stmts) == 2)
+    assert(len(pa.related_stmts) == 2)
 
 def test_mod_sites_refinement():
     """A statement with more specific modification context should be supported

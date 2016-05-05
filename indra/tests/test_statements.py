@@ -830,7 +830,7 @@ def test_complex_family_refinement():
 
     st1 = Complex([raf, mek])
     st2 = Complex([braf, mek])
-    st3 = Complex([raf, mek1])
+    st3 = Complex([mek1, raf])
     st4 = Complex([braf, mek1])
     st5 = Complex([braf, raf1])
 
@@ -859,6 +859,15 @@ def test_complex_family_refinement():
     assert not st2.refinement_of(st5, eh, mh)
     assert not st3.refinement_of(st5, eh, mh)
     assert not st4.refinement_of(st5, eh, mh)
+
+def test_mismatched_complex_refinement():
+    ras = Agent('RAS')
+    raf = Agent('RAF')
+    mek = Agent('MEK')
+    st1 = Complex([ras, raf])
+    st2 = Complex([mek, ras, raf])
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st2.refinement_of(st1, eh, mh)
 
 @raises(InvalidResidueError)
 def test_residue_mod_condition():
@@ -895,6 +904,70 @@ def test_modcondition_order_agent():
     p1 = Agent('MAP2K1', mods=[mc1, mc2])
     p2 = Agent('MAP2K1', mods=[mc2, mc1])
     assert(p1.matches(p2))
+
+def test_eq_mut():
+    assert(MutCondition('600', 'V', 'E').equals(MutCondition('600', 'V', 'E')))
+    assert(not MutCondition('600', 'V', 'E').equals(
+                                             MutCondition('600', 'V', 'D')))
+
+def test_eq_agent():
+    assert(Agent('one').equals(Agent('one')))
+    assert(not Agent('one').equals(Agent('two')))
+    assert(not Agent('one', db_refs={'UP': '123'}).equals(
+           Agent('one', db_refs={'UP': '999'})))
+    assert(Agent('one', mods=[ModCondition('phosphorylation')]).equals(
+           Agent('one', mods=[ModCondition('phosphorylation')])))
+    assert(not Agent('one', mods=[ModCondition('phosphorylation')]).equals(
+           Agent('one', mods=[ModCondition('ubiquitination')])))
+    assert(Agent('one', mutations=[MutCondition('600', 'V', 'E')]).equals(
+           Agent('one', mutations=[MutCondition('600', 'V', 'E')])))
+    assert(not Agent('one', mutations=[MutCondition('600', 'V', 'E')]).equals(
+           Agent('one', mutations=[MutCondition('600', 'V', 'D')])))
+    assert(Agent('one',
+                 bound_conditions=[BoundCondition(Agent('two'), True)]).equals(
+           Agent('one',
+                 bound_conditions=[BoundCondition(Agent('two'), True)])))
+    assert(not Agent('one',
+                     bound_conditions=[BoundCondition(Agent('two'),
+                                                      True)]).equals(
+           Agent('one', bound_conditions=[BoundCondition(Agent('two'),
+                                                         False)])))
+    assert(not Agent('one', bound_conditions=[BoundCondition(Agent('two'),
+                                                             True)]).equals(
+           Agent('one', bound_conditions=[BoundCondition(Agent('three'),
+                                                         True)])))
+
+def test_eq_stmt():
+    ev1 = Evidence(text='1')
+    ev2 = Evidence(text='2')
+    assert(Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1])))
+    assert(not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev2])))
+    assert(not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('c'), evidence=[ev2])))
+    assert(not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev2])))
+    assert(Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
+           Complex([Agent('a'), Agent('b')], evidence=[ev1])))
+    assert(not Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
+           Complex([Agent('a'), Agent('b')], evidence=[ev2])))
+    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]).equals(
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1])))
+    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]).equals(
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('c'), 'activity', evidence=[ev1])))
+    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]).equals(
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'kinase', evidence=[ev1])))
+    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev1]).equals(
+           ActivityActivity(Agent('a'), 'activity', 'increases',
+                            Agent('b'), 'activity', evidence=[ev2])))
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

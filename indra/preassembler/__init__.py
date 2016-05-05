@@ -1,7 +1,7 @@
 import sys
 import pygraphviz as pgv
 import itertools
-from copy import copy
+from copy import copy, deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
 
@@ -11,7 +11,7 @@ class Preassembler(object):
         self.entity_hierarchy = entity_hierarchy
         self.mod_hierarchy = mod_hierarchy
         if stmts:
-            self.stmts = stmts
+            self.stmts = deepcopy(stmts)
         else:
             self.stmts = []
         self.unique_stmts = []
@@ -19,7 +19,7 @@ class Preassembler(object):
 
     def add_statements(self, stmts):
         """Add to the current list of statements."""
-        self.stmts += stmts
+        self.stmts += deepcopy(stmts)
 
     def combine_duplicates(self):
         self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
@@ -41,11 +41,14 @@ class Preassembler(object):
         """
 
         unique_stmts = []
+        
+        # Remove exact duplicates using a set() call, then make copies:
+        st = list(deepcopy(set(stmts)))
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        stmts.sort(key=lambda x: x.matches_key())
-        for key, duplicates in itertools.groupby(stmts,
+        st.sort(key=lambda x: x.matches_key())
+        for key, duplicates in itertools.groupby(st,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
@@ -121,16 +124,16 @@ class Preassembler(object):
             >>> braf = Agent('BRAF')
             >>> map2k1 = Agent('MAP2K1')
             >>> st1 = Phosphorylation(braf, map2k1)
-            >>> st2 = Phosphorylation(braf, map2k1, position='218')
+            >>> st2 = Phosphorylation(braf, map2k1, residue='S')
             >>> pa = Preassembler(eh, mh, [st1, st2])
             >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
             Combining ...
             >>> combined_stmts
-            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), S)]
             >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF(), MAP2K1(), None, None)]
+            [Phosphorylation(BRAF(), MAP2K1())]
             >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), S)]
         """
 
         # If unique_stmts is not initialized, call combine_duplicates.
@@ -140,9 +143,10 @@ class Preassembler(object):
         # and store the resulting lists in a dict, indexed by the key defined
         # by the statement type and its entities:
         # Sort the statements in place by entities_match_key():
-        self.unique_stmts.sort(key=lambda x: x.entities_match_key())
+        unique_stmts = deepcopy(self.unique_stmts)
+        unique_stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
-                  for grouper in itertools.groupby(self.unique_stmts,
+                  for grouper in itertools.groupby(unique_stmts,
                                           key=lambda x: x.entities_match_key())}
         # The ext_groups dict is where we store the extended groups, those
         # statements which involve either the same entities or entities with
@@ -183,6 +187,11 @@ class Preassembler(object):
             g2_stmt = g2[0]
             # Check that the statements are of the same type; if not, no merge.
             if type(g1_stmt) is not type(g2_stmt):
+                continue
+            # If both statements are Complexes, make sure they have the same
+            # number of members:
+            if type(g1_stmt) is Complex and \
+               len(g1_stmt.members) != len(g2_stmt.members):
                 continue
             # Check that all of the agents match or have an isa relationship.
             # Because the statements are of the same type, they should have the
