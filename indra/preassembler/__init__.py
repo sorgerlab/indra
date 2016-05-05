@@ -41,11 +41,12 @@ class Preassembler(object):
         """
 
         unique_stmts = []
+        st = deepcopy(stmts)
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        stmts.sort(key=lambda x: x.matches_key())
-        for key, duplicates in itertools.groupby(stmts,
+        st.sort(key=lambda x: x.matches_key())
+        for key, duplicates in itertools.groupby(st,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
@@ -140,9 +141,10 @@ class Preassembler(object):
         # and store the resulting lists in a dict, indexed by the key defined
         # by the statement type and its entities:
         # Sort the statements in place by entities_match_key():
-        self.unique_stmts.sort(key=lambda x: x.entities_match_key())
+        unique_stmts = deepcopy(self.unique_stmts)
+        unique_stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
-                  for grouper in itertools.groupby(self.unique_stmts,
+                  for grouper in itertools.groupby(unique_stmts,
                                           key=lambda x: x.entities_match_key())}
         # The ext_groups dict is where we store the extended groups, those
         # statements which involve either the same entities or entities with
