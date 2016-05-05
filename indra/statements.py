@@ -144,8 +144,8 @@ class Agent(object):
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
         key = (self.name,
-               set([m.matches_key() for m in self.mods]),
-               set([m.matches_key() for m in self.mutations]),
+               sorted([m.matches_key() for m in self.mods]),
+               sorted([m.matches_key() for m in self.mutations]),
                self.active,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
@@ -204,11 +204,18 @@ class Agent(object):
         # Similar to the above, we check that self has all of the modifications
         # of other.
         # Make sure they have the same modifications
+        # Here we need to make sure that a mod in self.mods is only matched
+        # once to a mod in other.mods. Otherwise ('phoshporylation') would be
+        # considered a refinement of ('phosphorylation', 'phosphorylation')
+        matched_indices = []
         for other_mod in other.mods:
             mod_found = False
-            for self_mod in self.mods:
+            for ix, self_mod in enumerate(self.mods):
                 if self_mod.refinement_of(other_mod, mod_hierarchy):
+                    if ix in matched_indices:
+                        continue
                     mod_found = True
+                    matched_indices.append(ix)
             # If we didn't find an exact match for this mod in other, then
             # no refinement
             if not mod_found:

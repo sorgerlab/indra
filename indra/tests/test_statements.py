@@ -170,6 +170,31 @@ def test_matches_key_bound_multiple_order():
                                             BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches_key() == hras2.matches_key())
 
+def test_matches_agent_mod_order():
+    hras1 = Agent('MAP2K1',
+        mods=[ModCondition('phosphorylation'), ModCondition('ubiquitination')])
+    hras2 = Agent('MAP2K1',
+        mods=[ModCondition('ubiquitination'), ModCondition('phosphorylation')])
+    assert(hras1.matches(hras2))
+
+def test_refinement_agent_mod_order():
+    hras1 = Agent('MAP2K1',
+        mods=[ModCondition('phosphorylation', 'S'),
+              ModCondition('ubiquitination')])
+    hras2 = Agent('MAP2K1',
+        mods=[ModCondition('ubiquitination'), ModCondition('phosphorylation')])
+    assert(hras1.refinement_of(hras2, eh, mh))
+    assert(not hras2.refinement_of(hras1, eh, mh))
+
+def test_refinement_agent_mod_same_order():
+    hras1 = Agent('MAP2K1',
+        mods=[ModCondition('phosphorylation'),
+              ModCondition('phosphorylation')])
+    hras2 = Agent('MAP2K1',
+        mods=[ModCondition('phosphorylation')])
+    assert(hras1.refinement_of(hras2, eh, mh))
+    assert(not hras2.refinement_of(hras1, eh, mh))
+
 # Check matches implementations for all statement types ---------------------
 def test_matches_selfmod():
     """Test matching of entities only, entities match only on name."""
