@@ -19,15 +19,19 @@ def save(doi_cache, counter):
 
 for counter, ref in enumerate(missing_dois):
     if doi_cache.get(ref):
-        print "Already got", ref
         continue
     title = pubmed_client.get_title(ref)
     if not title:
         print "No title, skipping", ref
         continue
     doi = crossref_client.doi_query(title)
-    doi_cache[ref] = doi
-    print "%d: %s --> %s" % (counter, ref, doi)
+    if doi:
+        doi_cache[ref] = doi
+        print "%d: %s --> %s" % (counter, ref, doi)
+    else:
+        print "No DOI for %s: %s" % (ref, title)
+        continue
+
     if counter % 100 == 0:
         save(doi_cache, counter)
 

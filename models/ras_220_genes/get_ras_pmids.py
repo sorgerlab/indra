@@ -99,7 +99,7 @@ pmid_map = {}
 with open('pmid_pmcid_doi_map.txt') as f:
     csvreader = csv.reader(f, delimiter='\t')
     for row in csvreader:
-        doi = None if row[2] == 'None' else row[2]
+        doi = None if row[2] == '' else row[2]
         pmid_map[row[0]] = (row[1], doi)
 
 def get_fulltexts(pmids_dict):
@@ -138,23 +138,44 @@ if __name__ == '__main__':
             id_map = pmid_map.get(ref)
             if id_map is None:
                 pmcid = None
-                doi = None
+                pm_doi = None
             else:
-                (pmcid, doi) = id_map
+                (pmcid, pm_doi) = id_map
             # Look up full text status
             oa_xml = True if ref in pmid_oa_xml else False
             oa_txt = True if ref in pmid_oa_txt else False
             auth_xml = True if ref in pmid_auth_xml else False
-            if doi is None and ref not in doi_cache.keys():
-                title = pubmed_client.get_title(ref)
-                if title:
-                    no_text_or_doi.add(ref)
-                    doi = crossref_client.doi_query(title)
-                    doi_cache[ref] = doi
-                    print "%d: Looked %s:%s --> %s" % (counter, gene, ref, doi)
+            cached_doi = doi_cache.get(ref)
+            if pm_doi and cached_doi:
+                assert pm_doi == cached_doi
+                print "DOIs match"
+                doi = pm_doi
+            elif pm_doi and not cached_doi:
+                doi = pm_doi
+            elif cached_doi and not pm_doi:
+                doi = cached_doi
+            # Don't have DOI from anywhere
+            elif not pm_doi and not cached_doi:
+                print counter
+                no_text_or_doi.add(ref)
+                #title = pubmed_client.get_title(ref)
+                #if title:
+                #    no_text_or_doi.add(ref)
+                #    doi = crossref_client.doi_query(title)
+                #    doi_cache[ref] = doi
+                #    print "%d: Looked %s:%s --> %s" % (counter, gene, ref, doi)
+                #    print title
+            else:
+                assert False #?????
+
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
             counter += 1
+
+    # Remove duplicates by converting to a set
+    with open('missing_dois.txt', 'w') as f:
+        for ref in set(no_text_or_doi):
+            f.write('%s\n' % ref)
 
     import sys; sys.exit()
 
