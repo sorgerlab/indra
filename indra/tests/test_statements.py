@@ -830,7 +830,7 @@ def test_complex_family_refinement():
 
     st1 = Complex([raf, mek])
     st2 = Complex([braf, mek])
-    st3 = Complex([raf, mek1])
+    st3 = Complex([mek1, raf])
     st4 = Complex([braf, mek1])
     st5 = Complex([braf, raf1])
 
@@ -859,6 +859,15 @@ def test_complex_family_refinement():
     assert not st2.refinement_of(st5, eh, mh)
     assert not st3.refinement_of(st5, eh, mh)
     assert not st4.refinement_of(st5, eh, mh)
+
+def test_mismatched_complex_refinement():
+    ras = Agent('RAS')
+    raf = Agent('RAF')
+    mek = Agent('MEK')
+    st1 = Complex([ras, raf])
+    st2 = Complex([mek, ras, raf])
+    assert not st1.refinement_of(st2, eh, mh)
+    assert not st2.refinement_of(st1, eh, mh)
 
 @raises(InvalidResidueError)
 def test_residue_mod_condition():

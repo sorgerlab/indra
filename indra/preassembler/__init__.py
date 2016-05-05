@@ -186,6 +186,11 @@ class Preassembler(object):
             # Check that the statements are of the same type; if not, no merge.
             if type(g1_stmt) is not type(g2_stmt):
                 continue
+            # If both statements are Complexes, make sure they have the same
+            # number of members:
+            if type(g1_stmt) is Complex and \
+               len(g1_stmt.members) != len(g2_stmt.members):
+                continue
             # Check that all of the agents match or have an isa relationship.
             # Because the statements are of the same type, they should have the
             # same number of agents as arguments.  First, let's keep track of

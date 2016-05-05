@@ -3,7 +3,7 @@ from indra.preassembler import Preassembler, render_stmt_graph
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition
+                             ActiveForm, MutCondition, Complex
 from indra.preassembler.hierarchy_manager import HierarchyManager
 
 entity_file_path = os.path.join(os.path.dirname(__file__),
@@ -193,6 +193,17 @@ def test_bound_condition_norefinement():
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
     assert(len(stmts) == 2)
+
+def test_complex_refinement():
+    ras = Agent('RAS')
+    raf = Agent('RAF')
+    mek = Agent('MEK')
+    st1 = Complex([ras, raf])
+    st2 = Complex([mek, ras, raf])
+    pa = Preassembler(eh, mh, [st1, st2])
+    pa.combine_related()
+    assert(len(pa.unique_stmts) == 2)
+    assert(len(pa.related_stmts) == 2)
 
 def test_mod_sites_refinement():
     """A statement with more specific modification context should be supported
