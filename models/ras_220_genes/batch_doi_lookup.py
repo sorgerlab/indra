@@ -10,6 +10,13 @@ with open('doi_cache.txt') as f:
 with open('missing_dois.txt') as f:
     missing_dois = [line.strip('\n') for line in f.readlines()]
 
+def save(doi_cache, counter):
+    with open('doi_cache_%.5d.txt' % counter, 'w') as f:
+        print "Writing to doi cache"
+        csvwriter = csv.writer(f, delimiter='\t')
+        for k, v in doi_cache.iteritems():
+            csvwriter.writerow((k, v))
+
 for counter, ref in enumerate(missing_dois):
     if doi_cache.get(ref):
         print "Already got", ref
@@ -22,8 +29,6 @@ for counter, ref in enumerate(missing_dois):
     doi_cache[ref] = doi
     print "%d: %s --> %s" % (counter, ref, doi)
     if counter % 100 == 0:
-        with open('doi_cache_%.5d.txt' % counter, 'w') as f:
-            print "Writing to doi cache"
-            csvwriter = csv.writer(f, delimiter='\t')
-            for k, v in doi_cache.iteritems():
-                csvwriter.writerow((k, v))
+        save(doi_cache, counter)
+
+save(doi_cache, counter)
