@@ -145,28 +145,16 @@ if __name__ == '__main__':
             oa_xml = True if ref in pmid_oa_xml else False
             oa_txt = True if ref in pmid_oa_txt else False
             auth_xml = True if ref in pmid_auth_xml else False
-            if doi is None and not any((oa_xml, oa_txt, auth_xml)) and \
-               ref not in doi_cache.keys():
-                no_text_or_doi.add(ref)
-                #print "%d: Looking up %s:%s in XREF" % (counter, gene, ref)
-                #title = pubmed_client.get_title(ref)
-                #doi = crossref_client.doi_query(title)
-                #doi_cache[ref] = doi
+            if doi is None and ref not in doi_cache.keys():
+                title = pubmed_client.get_title(ref)
+                if title:
+                    no_text_or_doi.add(ref)
+                    doi = crossref_client.doi_query(title)
+                    doi_cache[ref] = doi
+                    print "%d: Looked %s:%s --> %s" % (counter, gene, ref, doi)
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
             counter += 1
-
-    # Remove duplicates by converting to a set
-    with open('missing_dois.txt', 'w') as f:
-        for ref in no_text_or_doi:
-            f.write('%s\n' % ref)
-
-    import sys; sys.exit()
-
-    with open('doi_cache.txt', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        for k, v in doi_cache.iteritems():
-            csvwriter.writerow((k, v))
 
     import sys; sys.exit()
 
