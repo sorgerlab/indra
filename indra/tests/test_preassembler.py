@@ -113,8 +113,9 @@ def test_superfamily_refinement():
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st2)
-    assert (stmts[0].supported_by == [st1])
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
 
 def test_modification_refinement():
     """A more specific modification statement should be supported by a more
@@ -128,8 +129,9 @@ def test_modification_refinement():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st1)
-    assert (stmts[0].supported_by == [st2])
+    assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
 
 def test_modification_refinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -143,8 +145,10 @@ def test_modification_refinement_noenz():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
-    assert (stmts[0] == st1)
-    assert (stmts[0].supported_by == [st2])
+    assert (stmts[0].equals(st1))
+    assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
 
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -208,8 +212,9 @@ def test_bound_condition_refinement():
     pa = Preassembler(eh, mh, [st1, st2])
     stmts = pa.combine_related()
     assert(len(stmts) == 1)
-    assert (stmts[0] == st2)
-    assert (stmts[0].supported_by == [st1])
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
 
 def test_bound_condition_norefinement():
     """A statement with more specific bound context should be supported by a

@@ -37,14 +37,11 @@ class MutCondition(object):
         key = (self.position, self.residue_from, self.residue_to)
         return str(key)
 
-    def __eq__(self, other):
+    def equals(self, other):
         pos_match = (self.position == other.position)
         residue_from_match = (self.residue_from == other.residue_from)
         residue_to_match = (self.residue_to == other.residue_to)
         return (pos_match and residue_from_match and residue_to_match)
-
-    def __ne__(self, other):
-        return not self == other
 
     def __str__(self):
         s = '(%s, %s, %s)' % (self.residue_from, self.position,
@@ -94,15 +91,12 @@ class ModCondition(object):
     def __repr__(self):
         return self.__str__()
 
-    def __eq__(self, other):
+    def equals(self, other):
         type_match = (self.mod_type == other.mod_type)
         residue_match = (self.residue == other.residue)
         pos_match = (self.position == other.position)
         is_mod_match = (self.is_modified == other.is_modified)
         return (type_match and residue_match and pos_match and is_mod_match)
-
-    def __ne__(self, other):
-        return not self == other
 
     def __hash__(self):
         return hash(self.matches_key())
@@ -237,17 +231,28 @@ class Agent(object):
         # Everything checks out
         return True
 
-    def __eq__(self, other):
+    def equals(self, other):
         matches = (self.name == other.name) and\
-                  (self.mods == other.mods) and\
-                  (self.mutations == other.mutations) and\
-                  (self.bound_conditions == other.bound_conditions) and\
                   (self.active == other.active) and\
                   (self.db_refs == other.db_refs)
-        return matches
+        if len(self.mods) == len(other.mods):
+            for s, o in zip(self.mods, other.mods):
+                matches = matches and s.equals(o)
+        else:
+            return False
+        if len(self.mutations) == len(other.mutations):
+            for s, o in zip(self.mutations, other.mutations):
+                matches = matches and s.equals(o)
+        else:
+            return False
+        if len(self.bound_conditions) == len(other.bound_conditions):
+            for s, o in zip(self.bound_conditions, other.bound_conditions):
+                matches = matches and s.agent.equals(o.agent) and\
+                                      s.is_bound == o.is_bound
+        else:
+            return False
 
-    def __ne__(self, other):
-        return not self == other
+        return matches
 
     def __str__(self):
         attr_strs = []
@@ -309,7 +314,7 @@ class Evidence(object):
             self.annotations = []
         self.epistemics = epistemics
 
-    def __eq__(self, other):
+    def equals(self, other):
         matches = (self.source_api == other.source_api) and\
                   (self.source_id == other.source_id) and\
                   (self.pmid == other.pmid) and\
@@ -317,9 +322,6 @@ class Evidence(object):
                   (self.annotations == other.annotations) and\
                   (self.epistemics == other.epistemics)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
     def __str__(self):
         ev_str = u'Evidence(%s, %s, %s, %s)' % \
@@ -383,11 +385,23 @@ class Statement(object):
     def __repr__(self):
         return self.__str__()
 
-    def __eq__(self, other):
-        matches = (self.agent_list() == other.agent_list()) and\
-                  (self.evidence == other.evidence)
-        return matches
-
+    def equals(self, other):
+        if len(self.agent_list()) == len(other.agent_list()):
+            for s, o in zip(self.agent_list(), other.agent_list()):
+                if (s is None and o is not None) or\
+                    (s is not None and o is None):
+                    return False
+                if s is not None and o is not None and not s.equals(o):
+                    return False
+        else:
+            return False
+        if len(self.evidence) == len(other.evidence):
+            for s, o in zip(self.evidence, other.evidence):
+                if not s.equals(o):
+                    return False
+        else:
+            return False
+        return True
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
@@ -447,15 +461,12 @@ class Modification(Statement):
                             (self.position == other.position))
         return (residue_matches and position_matches)
 
-    def __eq__(self, other):
-        matches = super(Modification, self).__eq__(other)
+    def equals(self, other):
+        matches = super(Modification, self).equals(other)
         matches = matches and\
                   (self.residue == other.residue) and\
                   (self.position == other.position)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
     def __str__(self):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
@@ -516,16 +527,12 @@ class SelfModification(Statement):
                             (self.position == other.position))
         return (residue_matches and position_matches)
 
-    def __eq__(self, other):
-        matches = super(SelfModification, self).__eq__(other)
+    def equals(self, other):
+        matches = super(SelfModification, self).equals(other)
         matches = matches and\
                   (self.residue == other.residue) and\
                   (self.position == other.position)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
-
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
@@ -620,16 +627,13 @@ class ActivityActivity(Statement):
               self.relationship, self.obj, self.obj_activity))
         return s
 
-    def __eq__(self, other):
-        matches = super(ActivityActivity, self).__eq__(other)
+    def equals(self, other):
+        matches = super(ActivityActivity, self).equals(other)
         matches = matches and\
                   (self.subj_activity == other.subj_activity) and\
                   (self.obj_activity == other.obj_activity) and\
                   (self.relationship == other.relationship)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
 
 class RasGtpActivityActivity(ActivityActivity):
@@ -684,15 +688,12 @@ class ActiveForm(Statement):
                 (self.agent, self.activity, self.is_active))
         return s
 
-    def __eq__(self, other):
-        matches = super(ActiveForm, self).__eq__(other)
+    def equals(self, other):
+        matches = super(ActiveForm, self).equals(other)
         matches = matches and\
                   (self.activity == other.activity) and\
                   (self.is_active == other.is_active)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
@@ -735,13 +736,10 @@ class RasGef(Statement):
         else:
             return False
 
-    def __eq__(self, other):
-        matches = super(RasGef, self).__eq__(other)
+    def equals(self, other):
+        matches = super(RasGef, self).equals(other)
         matches = matches and (self.gef_activity == other.gef_activity)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
 
 class RasGap(Statement):
@@ -785,13 +783,10 @@ class RasGap(Statement):
                 (self.gap.name, self.gap_activity, self.ras.name))
         return s
 
-    def __eq__(self, other):
-        matches = super(RasGap, self).__eq__(other)
+    def equals(self, other):
+        matches = super(RasGap, self).equals(other)
         matches = matches and (self.gap_activity == other.gap_activity)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
 
 class Complex(Statement):
@@ -845,12 +840,9 @@ class Complex(Statement):
         else:
             return True
 
-    def __eq__(self, other):
-        matches = super(Complex, self).__eq__(other)
+    def equals(self, other):
+        matches = super(Complex, self).equals(other)
         return matches
-
-    def __ne__(self, other):
-        return not self == other
 
 def get_valid_residue(residue):
     if residue is not None and amino_acids.get(residue) is None:
