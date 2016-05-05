@@ -123,6 +123,7 @@ if __name__ == '__main__':
 
     total = 0
     no_text_or_doi = set([])
+    no_cached_doi = set([])
     ref_table = []
     counter = 0
     for gene, refs in pmids_from_gene.iteritems():
@@ -147,6 +148,8 @@ if __name__ == '__main__':
                 doi = pm_doi
             elif pm_doi and not cached_doi:
                 doi = pm_doi
+                print "No cached DOI for", ref
+                no_cached_doi.add(ref)
             elif cached_doi and not pm_doi:
                 doi = cached_doi
             # Don't have DOI from anywhere
@@ -167,6 +170,11 @@ if __name__ == '__main__':
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
             counter += 1
+
+    print "Saving list of non-cached DOIs"
+    with open('no_cached_doi.txt', 'w') as f:
+        for ref in set(no_cached_doi):
+            f.write('%s\n' % ref)
 
     # Remove duplicates by converting to a set
     with open('missing_dois.txt', 'w') as f:
