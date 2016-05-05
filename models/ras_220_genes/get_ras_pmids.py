@@ -125,14 +125,9 @@ if __name__ == '__main__':
     no_text_or_doi = set([])
     ref_table = []
     counter = 0
-    limit = 200
     for gene, refs in pmids_from_gene.iteritems():
-        #if counter > limit:
-        #    break
         print gene
         for ref in refs:
-            #if counter > limit:
-            #    break
             total += 1
             # Look up PMCID
             id_map = pmid_map.get(ref)
@@ -156,11 +151,11 @@ if __name__ == '__main__':
                 doi = cached_doi
             # Don't have DOI from anywhere
             elif not pm_doi and not cached_doi:
-                print counter
-                no_text_or_doi.add(ref)
-                #title = pubmed_client.get_title(ref)
-                #if title:
-                #    no_text_or_doi.add(ref)
+                title = pubmed_client.get_title(ref)
+                if title:
+                    print counter, "no doi for", ref
+                    no_text_or_doi.add(ref)
+                continue
                 #    doi = crossref_client.doi_query(title)
                 #    doi_cache[ref] = doi
                 #    print "%d: Looked %s:%s --> %s" % (counter, gene, ref, doi)
@@ -168,6 +163,7 @@ if __name__ == '__main__':
             else:
                 assert False #?????
 
+            assert doi
             row = (gene, ref, pmcid, doi, oa_xml, oa_txt, auth_xml)
             ref_table.append(row)
             counter += 1
@@ -181,7 +177,40 @@ if __name__ == '__main__':
 
     # Randomly sample the PMIDs with no DOI to see if I can get the DOI
     # from PubMed
-    samples = np.random.choice(no_text_or_doi, size=100, replace=False)
+    #row_indices = range(len(ref_table))
+    #sample_indices = np.random.choice(row_indices, size=100, replace=False)
+
+    # Load whatever metadata we've got
+    if os.path.isfile('xref_metadata.pkl'):
+        with open('xref_metadata.pkl') as f:
+            xref_meta = pickle.load(f)
+    else:
+        xref_meta = {}
+
+    for counter, row in enumerate(ref_table):
+        doi = row[3]
+        # Do we already have metadata for this doi?
+        if xref_meta.get(doi):
+            print "Already have metadata for ", doi
+            continue
+        else:
+            print "%d: querying for %s" % (counter, doi)
+            metadata = crossref_client.get_metadata(doi)
+            if metadata:
+                xref_meta[doi] = metadata
+            else:
+                print "No metadata found for", doi
+                continue
+        if counter % 100 == 0:
+            print "Saving metadata cache"
+            with open('xref_metadata_%.5d.pkl' % counter, 'w') as f:
+                pickle.dump(xref_meta, f)
+
+    print "Final save of metadata cache"
+    with open('xref_metadata_%.5d.pkl' % counter, 'w') as f:
+        pickle.dump(xref_meta, f)
+
+    import sys; sys.exit()
 
     xr_found = []
     xr_not_found = []
