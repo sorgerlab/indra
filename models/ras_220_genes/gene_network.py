@@ -8,7 +8,7 @@ import pickle
 from indra.preassembler.sitemapper import default_mapper as sm
 from indra.statements import *
 from pysb import kappa
-from indra.pysb_assembler import PysbAssembler
+from indra.assemblers import PysbAssembler
 
 
 class GeneNetwork(object):
