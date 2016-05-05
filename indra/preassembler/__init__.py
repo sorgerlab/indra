@@ -122,16 +122,16 @@ class Preassembler(object):
             >>> braf = Agent('BRAF')
             >>> map2k1 = Agent('MAP2K1')
             >>> st1 = Phosphorylation(braf, map2k1)
-            >>> st2 = Phosphorylation(braf, map2k1, position='218')
+            >>> st2 = Phosphorylation(braf, map2k1, residue='S')
             >>> pa = Preassembler(eh, mh, [st1, st2])
             >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
             Combining ...
             >>> combined_stmts
-            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), S)]
             >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF(), MAP2K1(), None, None)]
+            [Phosphorylation(BRAF(), MAP2K1())]
             >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF(), MAP2K1(), None, 218)]
+            [Phosphorylation(BRAF(), MAP2K1(), S)]
         """
 
         # If unique_stmts is not initialized, call combine_duplicates.
