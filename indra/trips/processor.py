@@ -151,6 +151,8 @@ class TripsProcessor(object):
                 continue
             precond_id = precond_event_ref.find('event').attrib['id']
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
+            if precond_event is None:
+                continue
             mods = self._get_mod_site(precond_event)
             if mods is None:
                 warnings.warn('Skipping activity modification with missing' +\
@@ -189,6 +191,7 @@ class TripsProcessor(object):
             # Information on binding site is either attached to the agent term
             # in a features/site tag or attached to the event itself in 
             # a site tag
+            '''
             site_feature = self._find_in_term(arg1.attrib['id'], 'features/site')
             if site_feature is not None:
                 sites, positions = self._get_site_by_id(site_id)
@@ -203,7 +206,7 @@ class TripsProcessor(object):
             if site is not None:
                 sites, positions = self._get_site_by_id(site.attrib['id'])
                 print sites, positions
-
+            '''
             if agent1 is None or agent2 is None:
                 warnings.warn('Complex with missing members')
                 continue
@@ -222,20 +225,28 @@ class TripsProcessor(object):
             enzyme = event.find(".//*[@role=':AGENT']")
             if enzyme is None:
                 enzyme_agent = None
-            enzyme_id = enzyme.attrib['id']
-            enzyme_term = self.tree.find("TERM/[@id='%s']" % enzyme_id)
-            if enzyme_term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-                components = complex_term.find("components")
-                terms = components.findall("term")
-                term_names = []
-                for t in terms:
-                    term_names.append(self._get_name_by_id(t.attrib['id']))
-                enzyme_name = term_names[0]
-                enzyme_bound = Agent(term_names[1])
-                enzyme_agent = Agent(enzyme_name,
-                    bound_conditions=[BoundCondition(enzyme_bound, True)])
             else:
-                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+                enzyme_id = enzyme.attrib['id']
+                enzyme_term = self.tree.find("TERM/[@id='%s']" % enzyme_id)
+                if enzyme_term is None:
+                    enzyme_agent = None
+                else:
+                    if enzyme_term.find("type").text ==\
+                        'ONT::MACROMOLECULAR-COMPLEX':
+                        components = complex_term.find("components")
+                        terms = components.findall("term")
+                        term_names = []
+                        for t in terms:
+                            term_name = self._get_name_by_id(t.attrib['id'])
+                            term_names.append(term_name)
+                        enzyme_name = term_names[0]
+                        enzyme_bound = Agent(term_names[1])
+                        enzyme_agent = Agent(enzyme_name,
+                            bound_conditions=[BoundCondition(enzyme_bound,
+                                              True)])
+                    else:
+                        enzyme_agent = self._get_agent_by_id(enzyme_id,
+                                                             event_id)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 warnings.warn('Skipping phosphorylation event with no '
@@ -528,8 +539,12 @@ class TripsProcessor(object):
             site_type = site_term.find("type").text
             site_name = site_term.find("name").text
             if site_type == 'ONT::MOLECULAR-SITE':
-                residue = site_term.find('features/site/code').text.upper()
-                pos = site_term.find('features/site/pos').text.upper()
+                residue = site_term.find('features/site/code')
+                if residue is not None:
+                    residue = residue.text.upper()
+                pos = site_term.find('features/site/pos')
+                if pos is not None:
+                    pos = pos.text.upper()
             elif site_type == 'ONT::RESIDUE':
                 # Example name: TYROSINE-RESIDUE
                 residue = site_name.split('-')[0]

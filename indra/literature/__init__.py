@@ -1,9 +1,11 @@
 import urllib
+from functools32 import lru_cache
 from indra.literature import pubmed_client
 from indra.literature import pmc_client
 from indra.literature import crossref_client
 from indra.literature import elsevier_client
 
+@lru_cache(maxsize=100)
 def id_lookup(paper_id):
     """This function takes an ID of the form
     PMID*, PMC* or DOI*, uses the Pubmed ID mapping

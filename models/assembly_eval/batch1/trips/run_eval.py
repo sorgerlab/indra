@@ -21,7 +21,7 @@ def print_stmts(stmts, file_name):
             db_refs_str = ', '.join(db_refs)
             fh.write('%s\t%s\t%s\t%s\n' %
                      (s, db_refs_str, 'PMC'+s.evidence[0].pmid,
-                      s.evidence[0].text))
+                      s.evidence[0].text.encode('utf-8')))
 
 if __name__ == '__main__':
     pmc_ids = ['PMC1234335', 'PMC3178447', 'PMC3690480',
