@@ -152,13 +152,46 @@ def test_modification_norefinement_noenz():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras)
-    st2 = Phosphorylation(None, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(None, nras, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
     pa = Preassembler(eh, mh, [st1, st2])
-    #import ipdb; ipdb.set_trace()
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
     assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
+
+def test_modification_norefinement_subsfamily():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    ras = Agent('RAS')
+    st1 = Phosphorylation(src, nras)
+    st2 = Phosphorylation(src, ras, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # Modification is less specific, enzyme more specific in st1, therefore
+    # these statements shouldn't be combined. 
+    assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
+
+def test_modification_norefinement_enzfamily():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    mek = Agent('MEK')
+    raf = Agent('RAF')
+    braf = Agent('BRAF')
+    st1 = Phosphorylation(raf, mek, 'Y', '32',
+                          evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek)
+    pa = Preassembler(eh, mh, [st1, st2])
+    stmts = pa.combine_related()
+    # Modification is less specific, enzyme more specific in st1, therefore
+    # these statements shouldn't be combined. 
+    assert(len(stmts) == 2)
+    assert(len(stmts[1].evidence)==1)
 
 def test_bound_condition_refinement():
     """A statement with more specific bound context should be supported by a
