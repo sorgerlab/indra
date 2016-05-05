@@ -458,9 +458,11 @@ class Modification(Statement):
         return not self == other
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
+        res_str = (', %s' % self.residue) if self.residue is not None else ''
+        pos_str = (', %s' % self.position) if self.position is not None else ''
+        s = ("%s(%s, %s%s%s)" %
                   (type(self).__name__, self.enz, self.sub,
-                   self.residue, self.position))
+                   res_str, pos_str))
         return s
 
 
@@ -683,7 +685,7 @@ class ActiveForm(Statement):
         return s
 
     def __eq__(self, other):
-        matches = super(ActivityActivity, self).__eq__(other)
+        matches = super(ActiveForm, self).__eq__(other)
         matches = matches and\
                   (self.activity == other.activity) and\
                   (self.is_active == other.is_active)

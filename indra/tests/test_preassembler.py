@@ -91,13 +91,13 @@ def test_combine_duplicates():
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0] == p6) # MEK dephos ERK
+    assert(pa.unique_stmts[0].matches(p6)) # MEK dephos ERK
     assert(len(pa.unique_stmts[0].evidence) == 3)
-    assert(pa.unique_stmts[1] == p9) # SRC dephos KRAS
+    assert(pa.unique_stmts[1].matches(p9)) # SRC dephos KRAS
     assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(pa.unique_stmts[2] == p5) # MEK phos ERK
+    assert(pa.unique_stmts[2].matches(p5)) # MEK phos ERK
     assert(len(pa.unique_stmts[2].evidence) == 1)
-    assert(pa.unique_stmts[3] == p1) # RAF phos MEK
+    assert(pa.unique_stmts[3].matches(p1)) # RAF phos MEK
     assert(len(pa.unique_stmts[3].evidence) == 4)
 
 def test_superfamily_refinement():
@@ -158,7 +158,6 @@ def test_modification_norefinement_noenz():
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
-    print stmts
     assert(len(stmts) == 2)
 
 def test_bound_condition_refinement():
