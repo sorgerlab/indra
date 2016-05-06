@@ -63,9 +63,7 @@ if __name__ == '__main__':
 
         print '%d statements collected in total.' % len(pa.stmts)
         pa.add_statements(rp.statements)
-        import ipdb;ipdb.set_trace()
         duplicate_stmts = pa.combine_duplicates()
-        import ipdb;ipdb.set_trace()
         print '%d statements after combining duplicates.' % len(duplicate_stmts)
         related_stmts = pa.combine_related()
         print '%d statements after combining related.' % len(related_stmts)
