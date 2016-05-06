@@ -5,14 +5,14 @@ import shutil
 import argparse
 import gmail_client
 import twitter_client
-from incremental_model import IncrementalModel
 from indra import reach
 from indra.literature import pubmed_client, get_full_text
+from incremental_model import IncrementalModel
 
 model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one']
 
-def get_email_pmids(cred_file):    
+def get_email_pmids(cred_file):
     try:
         fh = open(cred_file, 'rt')
         uname, passwd = [l.strip() for l in fh.readlines()]
@@ -34,8 +34,7 @@ def get_searchterm_pmids(search_terms, num_days=1):
         pmids = pmids.union(ids)
     return list(pmids)
 
-def process_paper(pmid):
-    global model_name
+def process_paper(model_name, pmid):
     abstract_path = os.path.join(model_path, model_name, 
                                  'jsons', 'abstract', 'PMID%s.json' % pmid)
     fulltext_path = os.path.join(model_path, model_name, 
@@ -65,7 +64,7 @@ def process_paper(pmid):
     return rp, txt_format
 
 def make_status_message(stats):
-    ndiff = (stats['new_stmts'] - stats['orig_stmts'])
+    ndiff = (stats['new_top'] - stats['orig_top'])
     msg_str = None
     if (((stats['new_papers'] > 0) or
         (stats['new_abstracts'] > 0)) and 
@@ -93,14 +92,13 @@ def make_status_message(stats):
                     (abstr_str, mech_str)
     return msg_str
 
-def extend_model(model, pmids):
-    global model_name
+def extend_model(model_name, model, pmids):
     npapers = 0
     nabstracts = 0
     for pmid in pmids:
         # If the paper has not been included in the model yet
         if model.stmts.get(pmid) is None:
-            rp, txt_format = process_paper(pmid)
+            rp, txt_format = process_paper(model_name, pmid)
             if rp is not None:
                 if txt_format == 'abstract':
                     nabstracts += 1
@@ -112,6 +110,9 @@ def extend_model(model, pmids):
             else:
                 model.add_statements(pmid, [])
                 print 'No statement extracted from PMID%s' % pmid
+    # Having added new statements, we preassemble the model
+    # to merge duplicated and find related statements
+    model.preassemble()
     return npapers, nabstracts
 
 if __name__ == '__main__':
@@ -122,8 +123,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print time.strftime('%c')
-
-    global model_name
 
     if not args.model:
         print 'Model name must be supplied as --model model_name.'
@@ -170,18 +169,34 @@ if __name__ == '__main__':
     model = IncrementalModel(inc_model_file)
     pysb_model = model.make_model()
     stats = {}
+    model.preassemble()
+
+    # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
+    stats['orig_unique'] = len(model.unique_stmts)
+    stats['orig_top'] = len(model.toplevel_stmts)
     stats['orig_monomers'] = len(pysb_model.monomers)
     stats['orig_rules'] = len(pysb_model.rules)
+
     # Extend the model with PMIDs
-    stats['new_papers'], stats['new_abstracts'] = extend_model(model, pmids)
+    stats['new_papers'], stats['new_abstracts'] =\
+        extend_model(model_name, model, pmids)
+
+    # New statistics
     stats['new_stmts'] = len(model.get_statements())
+    stats['new_unique'] = len(model.unique_stmts)
+    stats['new_top'] = len(model.toplevel_stmts)
+
+    # Build PySB model
     pysb_model = model.make_model()
     stats['new_monomers'] = len(pysb_model.monomers)
     stats['new_rules'] = len(pysb_model.rules)
+
     # Save model
     model.save(inc_model_file)
+
     # Print and tweet the status message
+    print stats
     msg_str = make_status_message(stats)
     if msg_str is not None:
         print msg_str
