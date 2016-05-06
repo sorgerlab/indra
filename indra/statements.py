@@ -84,7 +84,7 @@ class ModCondition(object):
         if self.position is not None:
             ms += ', %s' % self.position
         if not self.is_modified:
-            ms += ', FALSE'
+            ms += ', False'
         ms = '(' + ms + ')'
         return ms
 
