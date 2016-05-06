@@ -1,12 +1,16 @@
 import os
+import io
 import sys
 import time
+import json
 import shutil
 import argparse
 import gmail_client
 import twitter_client
+import ndex.client
 from indra import reach
 from indra.literature import pubmed_client, get_full_text
+from indra.assemblers import CxAssembler
 from incremental_model import IncrementalModel
 
 model_path = os.path.dirname(os.path.abspath(__file__))
@@ -115,11 +119,41 @@ def extend_model(model_name, model, pmids):
     model.preassemble()
     return npapers, nabstracts
 
+def upload_to_ndex(model, cred_file):
+    try:
+        fh = open(cred_file, 'rt')
+        uname, passwd, network_id = [l.strip() for l in fh.readlines()]
+    except IOError:
+        print 'Could not access NDEx credentials.'
+        return []
+    nd = ndex.client.Ndex('http://public.ndexbio.org',
+                            username=uname, password=passwd)
+    ca = CxAssembler()
+    ca.network_name = 'rasmachine'
+    ca.add_statements(model.toplevel_stmts)
+    ca.make_model()
+    cx_str = ca.print_cx()
+
+    summary = nd.get_network_summary(network_id)
+    nd.update_cx_network(cx_str, network_id)
+    ver_str = summary.get('version')
+    if ver_str is None:
+        new_ver = '1.0'
+    else:
+        new_ver = str(float(ver_str) + 0.1)
+    profile = {'name': summary.get('name'),
+               'description': summary.get('description'),
+               'version': new_ver,
+               'visibility': 'PUBLIC'
+               }
+    nd.update_network_profile(network_id, profile)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='Model name', required=True)
     parser.add_argument('--twitter', help='Twitter credentials file')
     parser.add_argument('--gmail', help='Gmail credentials file')
+    parser.add_argument('--ndex', help='NDEx credentials file')
     args = parser.parse_args()
 
     print time.strftime('%c')
@@ -147,6 +181,15 @@ if __name__ == '__main__':
             use_gmail = False
     else:
         use_gmail = False
+
+    if args.ndex:
+        ndex_cred = args.ndex
+        if os.path.exists(ndex_cred):
+            use_ndex = True
+        else:
+            use_ndex = False
+    else:
+        use_ndex = False
 
     pmids = []
     # Get email PMIDs
@@ -194,6 +237,9 @@ if __name__ == '__main__':
 
     # Save model
     model.save(inc_model_file)
+
+    # Upload to NDEx
+    upload_to_ndex(model, ndex_cred)
 
     # Print and tweet the status message
     print stats
