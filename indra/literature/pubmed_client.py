@@ -118,3 +118,87 @@ def get_abstract(pubmed_id):
                                     else abst.text for abst in abstract])
         return abstract_text
 
+
+def get_metadata_for_ids(pmid_list):
+    """
+    PubmedArticleSet
+      PubmedArticle
+        MedlineCitation
+          PMID
+          DateCreated
+          DateCompleted
+          DateRevised
+          MedlineJournalInfo
+          ChemicalList
+          CitationSubset
+          CommentsCorrectionsList
+          MeshHeadingList
+          OtherID
+          Article
+            Journal
+              ISSN
+              JournalIssue
+              Title
+              ISOAbbreviation
+            ArticleTitle
+            Pagination
+              MedlinePgn
+            ELocationID
+            Abstract
+            AuthorList
+              Author
+                LastName
+                ForeName
+                Initials
+                AffiliationInfo
+            Language
+            PublicationTypeList
+              PublicationType
+            ArticleDate
+        PubmedData
+          History
+          PublicationStatus
+          ArticleIdList
+    """
+    if len(pmid_list) > 200:
+        raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
+    query_string=','.join(pmid_list)
+    params = {'db': 'pubmed',
+              'retmode': 'xml',
+              'id': pmid_list}
+    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    if tree is None:
+        return None
+
+    # A function to get the text for the element, or None if not found
+    def find_elem_text(root, xpath_string):
+        elem = root.find(xpath_string)
+        return None if elem is None else elem.text
+
+    # Iterate over the articles and build the results dict
+    results = {}
+    pm_articles = tree.findall('./PubmedArticle')
+    for art_ix, pm_article in enumerate(pm_articles):
+        pmid = find_elem_text(pm_article, './/PMID')
+        doi = find_elem_text(pm_article, './/ELocationID')
+        title = find_elem_text(pm_article, './/ArticleTitle')
+        # Author list
+        author_elems = pm_article.findall('.//AuthorList/Author/LastName')
+        author_names = None if author_elems is None \
+                            else [au.text for au in author_elems]
+        journal_title = find_elem_text(pm_article, './/Journal/Title')
+        journal_abbrev = find_elem_text(pm_article,
+                                        './/Journal/ISOAbbreviation')
+        issn = find_elem_text(pm_article, './/ISSN')
+        page = find_elem_text(pm_article, './/MedlinePgn')
+        # Build the result
+        result = {'doi': doi,
+                  'issn': issn,
+                  'title': title,
+                  'authors': author_names,
+                  'journal_title': journal_title,
+                  'journal_abbrev': journal_abbrev,
+                  'issn': issn,
+                  'page': page}
+        results[pmid] = result
+    return results
