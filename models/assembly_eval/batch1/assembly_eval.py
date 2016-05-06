@@ -4,7 +4,8 @@ from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
-from indra.assemblers import PysbAssembler, IndexCardAssembler
+from indra.assemblers import PysbAssembler, IndexCardAssembler,\
+                             EnglishAssembler
 
 def have_file(fname):
     return os.path.exists(fname)
@@ -45,6 +46,7 @@ def run_assembly(stmts, folder, pmcid):
     
     card_counter = 1
     card_lim = 5
+    top_stmts = []
     for st in sorted(flattened_evidence_stmts,
                      key=lambda x: len(x.evidence), reverse=True):
         print len(st.evidence), st
@@ -55,8 +57,13 @@ def run_assembly(stmts, folder, pmcid):
         if ia.cards:
             ia.save_model(prefix + '-%d.json' % card_counter)
             card_counter += 1
+            top_stmts.append(st)
             if card_counter > card_lim:
                 break
+    ea = EnglishAssembler(top_stmts)
+    print '======================='
+    print ea.make_model()
+    print '======================='
 
     # Print the statement graph
     graph = render_stmt_graph(related_stmts)
