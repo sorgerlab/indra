@@ -133,6 +133,14 @@ def test_modification_refinement():
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
 
+def test_modification_refinement_residue_noenz():
+    erbb3 = Agent('Erbb3')
+    st1 = Phosphorylation(None, erbb3)
+    st2 = Phosphorylation(None, erbb3, 'Y')
+    pa = Preassembler(eh, mh, [st1, st2])
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 1)
+
 def test_modification_refinement_noenz():
     """A more specific modification statement should be supported by a more
     generic modification statement."""

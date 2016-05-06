@@ -448,7 +448,9 @@ class Modification(Statement):
             return False
 
         # Check agent arguments
-        if self.enz is None:
+        if self.enz is None and other.enz is None:
+            enz_refinement = True
+        elif self.enz is None and other.enz is not None:
             enz_refinement = False
         elif self.enz is not None and other.enz is None:
             enz_refinement = True
