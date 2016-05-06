@@ -1,5 +1,6 @@
 import os
 import sys
+import pickle
 import shutil
 from indra import reach
 from indra.literature import pmc_client, get_full_text, id_lookup
@@ -63,10 +64,17 @@ if __name__ == '__main__':
 
         print '%d statements collected in total.' % len(pa.stmts)
         pa.add_statements(rp.statements)
-        duplicate_stmts = pa.combine_duplicates()
-        print '%d statements after combining duplicates.' % len(duplicate_stmts)
+        unique_stmts = pa.combine_duplicates()
+        print '%d statements after combining duplicates.' % len(unique_stmts)
         related_stmts = pa.combine_related()
         print '%d statements after combining related.' % len(related_stmts)
+
+        with open(pmcid + '.pkl', 'wb') as fh:
+            pickle.dump(unique_stmts, fh)
+
+        for st in sorted(unique_stmts, key=lambda x: len(x.evidence),
+                                                     reverse=True):
+            print len(st.evidence), st
 
         # Assemble IndexCards
         ia = IndexCardAssembler(related_stmts)
@@ -78,7 +86,7 @@ if __name__ == '__main__':
         # Print statement diagnostics
         print_stmts(pa.stmts, pmcid + '_statements.tsv')
         print_stmts(related_stmts, pmcid + '_related_statements.tsv')
-
+        
         pya = PysbAssembler()
         pya.add_statements(related_stmts)
         model = pya.make_model()
