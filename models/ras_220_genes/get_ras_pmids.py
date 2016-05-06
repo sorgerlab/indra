@@ -181,13 +181,6 @@ if __name__ == '__main__':
         for ref in set(no_text_or_doi):
             f.write('%s\n' % ref)
 
-    import sys; sys.exit()
-
-    # Randomly sample the PMIDs with no DOI to see if I can get the DOI
-    # from PubMed
-    #row_indices = range(len(ref_table))
-    #sample_indices = np.random.choice(row_indices, size=100, replace=False)
-
     # Load whatever metadata we've got
     if os.path.isfile('xref_metadata.pkl'):
         with open('xref_metadata.pkl') as f:
@@ -209,7 +202,7 @@ if __name__ == '__main__':
             else:
                 print "No metadata found for", doi
                 continue
-        if counter % 100 == 0:
+        if counter % 500 == 0:
             print "Saving metadata cache"
             with open('xref_metadata_%.5d.pkl' % counter, 'w') as f:
                 pickle.dump(xref_meta, f)
@@ -219,6 +212,11 @@ if __name__ == '__main__':
         pickle.dump(xref_meta, f)
 
     import sys; sys.exit()
+
+    # Randomly sample the PMIDs with no DOI to see if I can get the DOI
+    # from PubMed
+    #row_indices = range(len(ref_table))
+    #sample_indices = np.random.choice(row_indices, size=100, replace=False)
 
     xr_found = []
     xr_not_found = []
