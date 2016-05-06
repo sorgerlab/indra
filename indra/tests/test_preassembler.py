@@ -1,5 +1,6 @@
 import os
-from indra.preassembler import Preassembler, render_stmt_graph
+from indra.preassembler import Preassembler, render_stmt_graph, \
+                               flatten_evidence
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
@@ -334,4 +335,24 @@ def test_render_stmt_graph():
     # (p5 and p6 support none--they are top-level)
     # 6 + 5 + 1 + 1 + 2 = 15 edges
     assert len(graph.edges()) == 15
+
+def test_flatten_evidence_hierarchy():
+    braf = Agent('BRAF')
+    mek = Agent('MAP2K1')
+    st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek, 'S', '218',
+                          evidence=[Evidence(text='bar')])
+    pa = Preassembler(eh, mh, [st1, st2])
+    pa.combine_related()
+    assert len(pa.related_stmts) == 1
+    flattened = flatten_evidence(pa.related_stmts)
+    assert len(flattened) == 1
+    top_stmt = flattened[0]
+    assert len(top_stmt.evidence) == 2
+    assert 'bar' in [e.text for e in top_stmt.evidence]
+    assert 'foo' in [e.text for e in top_stmt.evidence]
+    assert len(top_stmt.supported_by) == 1
+    supporting_stmt = top_stmt.supported_by[0]
+    assert len(supporting_stmt.evidence) == 1
+    assert supporting_stmt.evidence[0].text == 'foo'
 

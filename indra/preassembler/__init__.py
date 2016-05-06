@@ -308,3 +308,21 @@ def flatten_stmts(stmts):
             total_stmts = total_stmts.union(children)
     return total_stmts
 
+#def get_evidence(stmt):
+#    child_evidence = set(stmt.evidence)
+
+def _flatten_evidence_for_stmt(stmt):
+    total_evidence = set(stmt.evidence)
+    for supp_stmt in stmt.supported_by:
+        child_evidence = _flatten_evidence_for_stmt(supp_stmt)
+        total_evidence = total_evidence.union(child_evidence)
+    return list(total_evidence)
+
+def flatten_evidence(stmts):
+    # Copy all of the statements--these will be the ones where we update
+    # the evidence lists
+    copied_stmts = deepcopy(stmts)
+    for stmt in stmts:
+        total_evidence = _flatten_evidence_for_stmt(stmt)
+        stmt.evidence = total_evidence
+    return stmts
