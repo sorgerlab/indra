@@ -62,6 +62,14 @@ def test_matches_key():
     st2 = Complex([ras, raf])
     assert(st1.matches_key() == st2.matches_key())
 
+def test_matches_key_unicode():
+    ras = Agent('Ras')
+    rasu = Agent(u'Ras')
+    raf = Agent('Raf')
+    st1 = Complex([ras, raf])
+    st2 = Complex([rasu, raf])
+    assert(st1.matches_key() == st2.matches_key())
+
 def test_matches2():
     raf = Agent('Raf')
     mek = Agent('Mek')
