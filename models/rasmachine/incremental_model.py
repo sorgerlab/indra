@@ -1,5 +1,8 @@
 import pickle
 from indra.assemblers import PysbAssembler
+from indra.preassembler import Preassembler
+from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
+from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 
 class IncrementalModel(object):
     def __init__(self, fname=None):
@@ -11,6 +14,8 @@ class IncrementalModel(object):
             except:
                 print 'Could not load %s' % fname
                 self.stmts = {}
+        self.unique_stmts = []
+        self.toplevel_stmts = []
 
     def save(self, fname='model.pkl'):
         with open(fname, 'wb') as fh:
@@ -74,6 +79,20 @@ class IncrementalModel(object):
                         if all(not a in model_agents for a in agents):
                             stmts_to_add.remove(i)
         self.stmts[pmid] = [stmts[i] for i in stmts_to_add]
+
+    def preassemble(self):
+        '''Preassemble the statements collected in the model
+        and save the unique statements and the top level
+        statements'''
+        stmts = self.get_statements()
+        pa = Preassembler(eh, mh, stmts)
+        self.unique_stmts = pa.combine_duplicates()
+        self.toplevel_stmts = pa.combine_related()
+
+    def load_prior(self, prior_fname):
+        '''Load a set of prior statements from a pickle file'''
+        with open(prior_fname, 'rb') as fh:
+            self.stmts['prior'] = pickle.load(fh)
 
     def get_model_agents(self):
         model_stmts = self.get_statements()

@@ -15,6 +15,7 @@ class CxAssembler():
                    'citations': [], 'edgeCitations': [],
                    'supports': [], 'edgeSupports': [],
                    'networkAttributes': []}
+        self.network_name = 'indra_assembled'
         self.id_counter = 0
 
     def _get_new_id(self):
@@ -40,9 +41,9 @@ class CxAssembler():
                 self.add_rasgef(stmt)
             elif isinstance(stmt, RasGap):
                 self.add_rasgap(stmt)
-        network_name = 'indra_assembled'
         network_description = ''
-        self.cx['networkAttributes'].append({'n': 'name', 'v': network_name})
+        self.cx['networkAttributes'].append({'n': 'name',
+                                             'v': self.network_name})
         self.cx['networkAttributes'].append({'n': 'description',
                                              'v': network_description})
 

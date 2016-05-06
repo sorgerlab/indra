@@ -41,7 +41,6 @@ class Preassembler(object):
         """
 
         unique_stmts = []
-        
         # Remove exact duplicates using a set() call, then make copies:
         st = list(deepcopy(set(stmts)))
         # Group statements according to whether they are matches (differing
@@ -246,9 +245,10 @@ class Preassembler(object):
         self.related_stmts = [stmt for ext_group in ext_groups.values()
                                for stmt in ext_group
                                if not stmt.supports]
-        self.related_stmts = self.combine_duplicate_stmts(self.related_stmts) 
+        self.related_stmts = self.combine_duplicate_stmts(self.related_stmts)
+
         # Make sure we haven't lost any statements!
-        assert len(self.unique_stmts) == \
+        assert len(flatten_stmts(self.unique_stmts)) == \
                len(flatten_stmts(self.related_stmts)), \
                "Statements lost after combining related"
         return self.related_stmts
