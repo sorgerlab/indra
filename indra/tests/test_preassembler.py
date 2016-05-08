@@ -1,6 +1,6 @@
 import os
 from indra.preassembler import Preassembler, render_stmt_graph, \
-                               flatten_evidence
+                               flatten_evidence, flatten_stmts
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
@@ -355,4 +355,17 @@ def test_flatten_evidence_hierarchy():
     supporting_stmt = top_stmt.supported_by[0]
     assert len(supporting_stmt.evidence) == 1
     assert supporting_stmt.evidence[0].text == 'foo'
+
+def test_flatten_stmts():
+    st1 = Phosphorylation(Agent('MAP3K5'), Agent('RAF1'), 'S', '338')
+    st2 = Phosphorylation(None, Agent('RAF1'), 'S', '338')
+    st3 = Phosphorylation(None, Agent('RAF1'))
+    st4 = Phosphorylation(Agent('PAK1'), Agent('RAF1'), 'S', '338')
+    st5 = Phosphorylation(None, Agent('RAF1'), evidence=Evidence(text='foo'))
+    pa = Preassembler(eh, mh, [st1, st2, st3, st4, st5])
+    pa.combine_duplicates()
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 2)
+    assert(len(flatten_stmts(pa.unique_stmts)) == 4)
+    assert(len(flatten_stmts(pa.related_stmts)) == 4)
 
