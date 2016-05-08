@@ -65,8 +65,9 @@ def owl_to_model(fname):
         return
     try:
         biopax_model = io.convertFromOWL(file_is)
-    except JavaException:
-        print 'Could not convert data file %s to BioPax model' % data_file
+    except JavaException as e:
+        print 'Could not convert data file %s to BioPax model' % fname
+        print e
         return
 
     file_is.close()

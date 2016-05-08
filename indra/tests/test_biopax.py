@@ -114,13 +114,13 @@ def test_uniprot_id_pe():
     bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117886.3')
     bpe = cast(bpc.bp('Protein'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(set(['Q15303', 'Q2M1W1', 'Q59EW4']) == set(ids))
+    assert(['Q15303'] == ids)
 
 def test_uniprot_id_er():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc.bp('ProteinReference'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(set(['Q15303', 'Q2M1W1', 'Q59EW4']) == set(ids))
+    assert(['Q15303'] == ids)
 
 def test_get_hgnc_id():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')

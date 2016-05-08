@@ -4,10 +4,11 @@ import pickle
 import warnings
 import itertools
 import collections
+from functools32 import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
 
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
 
@@ -477,13 +478,21 @@ class BiopaxProcessor(object):
         return db_refs
 
     @staticmethod
+    @lru_cache(maxsize=1000)
     def _get_element_name(bpe):
         if is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
+            uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
                 name = BiopaxProcessor._get_hgnc_name(hgnc_id)
                 if name is None:
                     name = bpe.getDisplayName()
+            elif uniprot_id is not None:
+                name = uniprot_client.get_hgnc_name(uniprot_id[0])
+                if name is None:
+                    name = uniprot_client.get_gene_name(uniprot_id[0])
+                    if name is None:
+                        name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
         elif is_small_molecule(bpe):
@@ -511,14 +520,17 @@ class BiopaxProcessor(object):
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
             return None
+        uri = bp_entref.getUri()
+        m = re.match('http://identifiers.org/uniprot/([A-Z0-9]+)', uri)
+        if m:
+            uniprot_ids = [m.groups()[0]]
+            return uniprot_ids
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if 
-                        x.getDb() == 'UniProt Knowledgebase']
+                        x.getDb().lower() == 'uniprot knowledgebase']
         uniprot_ids = [r.getId() for r in uniprot_refs]
         if not uniprot_ids:
             return None
-        elif len(uniprot_ids) == 1:
-            return uniprot_ids[0]
         else:
             return uniprot_ids
 
@@ -544,13 +556,21 @@ class BiopaxProcessor(object):
         if bp_entref is None:
             return None
         xrefs = bp_entref.getXref().toArray()
-        hgnc_refs = [x for x in xrefs if x.getDb() == 'HGNC']
+        hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
+        #hgnc_symbols = [x.getId() for x in xrefs if\
+        #                x.getDb().lower() == 'hgnc symbol']
         hgnc_id = None
-        for r in hgnc_refs:
-            try:
-                hgnc_id = int(r.getId())
-            except ValueError:
-                continue
+        for hgnc_id in hgnc_ids:
+            m = re.match('([0-9]+)', hgnc_id)
+            if m:
+                hgnc_id = int(m.groups()[0])
+            else:
+                m = re.match('hgnc:([0-9]+)', hgnc_id.lower())
+                if m:
+                    hgnc_id = int(m.groups()[0])
+        #if hgnc_id is None:
+        #    print [r.getId() for r in hgnc_ids]
+        #    print [r.getId() for r in hgnc_symbols]
         return hgnc_id
 
     @staticmethod
