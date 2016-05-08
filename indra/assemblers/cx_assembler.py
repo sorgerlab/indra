@@ -100,6 +100,11 @@ class CxAssembler():
         return node_id
 
     def add_node_metadata(self, node_id, agent):
+        agent_type = get_agent_type(agent)
+        node_attribute = {'po': node_id,
+                          'n': 'type',
+                          'v': agent_type}
+        self.cx['nodeAttributes'].append(node_attribute)
         for db_name, db_ids in agent.db_refs.iteritems():
             if isinstance(db_ids, basestring):
                 db_id = db_ids
@@ -139,7 +144,16 @@ class CxAssembler():
                           'n': 'INDRA statement',
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
-
+        # Add the type of statement as the edge type
+        stmt_type, stmt_polarity = get_stmt_type(stmt)
+        edge_attribute = {'po': edge_id,
+                          'n': 'type',
+                          'v': stmt_type}
+        self.cx['edgeAttributes'].append(edge_attribute)
+        edge_attribute = {'po': edge_id,
+                          'n': 'polarity',
+                          'v': stmt_polarity}
+        self.cx['edgeAttributes'].append(edge_attribute)
         # Add the citations for the edge
         pmids = [e.pmid for e in stmt.evidence if e.pmid]
         edge_citations = []
@@ -205,3 +219,46 @@ class CxAssembler():
         with open(fname, 'wt') as fh:
             cx_str = self.print_cx()
             fh.write(cx_str)
+
+def get_stmt_type(stmt):
+    if isinstance(stmt, Modification):
+        edge_type = 'Modification'
+        edge_polarity = 'positive'
+    elif isinstance(stmt, SelfModification):
+        edge_type = 'SelfModification'
+        edge_polarity = 'positive'
+    elif isinstance(stmt, Complex):
+        edge_type = 'Complex'
+        edge_polarity = 'none'
+    elif isinstance(stmt, ActivityActivity):
+        edge_type = 'ActivityActivity'
+        if stmt.relationship == 'increases':
+            edge_polarity = 'positive'
+        else:
+            edge_polarity = 'negative'
+    elif isinstance(stmt, RasGef):
+        edge_type = 'RasGef'
+        edge_polarity = 'positive'
+    elif isinstance(stmt, RasGap):
+        edge_type = 'RasGap'
+        edge_polarity = 'negative'
+    else:
+        edge_type = stmt.__class__.__str__()
+        edge_polarity = 'none'
+    return edge_type, edge_polarity
+
+def get_agent_type(agent):
+    hgnc_id = agent.db_refs.get('HGNC')
+    uniprot_id = agent.db_refs.get('UP')
+    pfam_id = agent.db_refs.get('PF')
+    fa_id = agent.db_refs.get('FA')
+    chebi_id = agent.db_refs.get('CHEBI')
+    if hgnc_id or uniprot_id:
+        agent_type = 'protein'
+    elif pfam_id or fa_id:
+        agent_type = 'proteinfamily'
+    elif chebi_id:
+        agent_type = 'chemical'
+    else:
+        agent_type = 'other'
+    return agent_type
