@@ -18,6 +18,9 @@ brafmut = Agent('BRAF', db_refs={'UP': 'P15056'},
                 bound_conditions=[BoundCondition(Agent('BRAF'), True)])
 stmt_phos2 = Phosphorylation(brafmut, map2k1, evidence=ev)
 stmt_dephos = Dephosphorylation(brafmut, map2k1, evidence=ev)
+stmt_complex = Complex([Agent('HRAS', db_refs={'UP': 'P01112'}),
+                        Agent('GTP', db_refs={'CHEBI': '57600'})],
+                        evidence=ev)
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
@@ -62,3 +65,9 @@ def test_assemble_multiple():
 def test_get_participant():
     participant = get_participant(brafmut)
     print participant
+
+def test_chemical():
+    card = assemble_complex(stmt_complex)
+    jsonschema.validate(card.card, schema)
+    print card.get_string()
+    print

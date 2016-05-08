@@ -1,7 +1,7 @@
 import json
 from indra.statements import *
 from indra.literature import id_lookup
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client
 
 global_submitter = 'cure'
 
@@ -126,8 +126,8 @@ def get_participant(agent):
         participant['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
         participant['entity_type'] = 'protein'
     elif chebi_id:
-        # NOTE: we need to convert to PubChem ID
-        participant['identifier'] = 'CHEBI:%s' % chebi_id
+        pubchem_id = chebi_client.get_pubchem_id(chebi_id)
+        participant['identifier'] = 'PUBCHEM:%s' % pubchem_id
         participant['entity_type'] = 'chemical'
     else:
         participant['identifier'] = ''
