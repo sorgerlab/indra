@@ -2,6 +2,8 @@ import os
 import csv
 from functools32 import lru_cache
 
+# Based on ftp://ftp.ebi.ac.uk/pub/databases/chebi/
+#                Flat_file_tab_delimited/reference.tsv.gz
 chebi_to_pubchem_file = os.path.dirname(os.path.abspath(__file__)) + \
                         '/../resources/chebi_to_pubchem.tsv'
 try:
