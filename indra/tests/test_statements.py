@@ -70,6 +70,20 @@ def test_matches_key_unicode():
     st2 = Complex([rasu, raf])
     assert(st1.matches_key() == st2.matches_key())
 
+def test_matches_key_unicode2():
+    raf = Agent('Raf')
+    mek = Agent('Mek')
+    st1 = Phosphorylation(raf, mek, u'S')
+    st2 = Phosphorylation(raf, mek, 'S')
+    assert(st1.matches_key() == st2.matches_key())
+
+def test_matches_key_unicode3():
+    raf = Agent('Raf')
+    mek = Agent('Mek')
+    st1 = Phosphorylation(raf, mek, 'S', u'222')
+    st2 = Phosphorylation(raf, mek, 'S', '222')
+    assert(st1.matches_key() == st2.matches_key())
+
 def test_matches2():
     raf = Agent('Raf')
     mek = Agent('Mek')

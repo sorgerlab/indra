@@ -34,7 +34,8 @@ class MutCondition(object):
         return (self.matches_key() == other.matches_key())
 
     def matches_key(self):
-        key = (self.position, self.residue_from, self.residue_to)
+        key = (str(self.position), str(self.residue_from),
+               str(self.residue_to))
         return str(key)
 
     def equals(self, other):
@@ -77,7 +78,8 @@ class ModCondition(object):
         return (self.matches_key() == other.matches_key())
 
     def matches_key(self):
-        key = (self.mod_type, self.residue, self.position, self.is_modified)
+        key = (str(self.mod_type), str(self.residue),
+               str(self.position), str(self.is_modified))
         return str(key)
 
     def __str__(self):
@@ -433,7 +435,7 @@ class Modification(Statement):
         else:
             enz_key = self.enz.matches_key()
         key = (type(self), enz_key, self.sub.matches_key(),
-               self.residue, self.position)
+               str(self.residue), str(self.position))
         return str(key)
 
     def agent_list(self):
@@ -510,7 +512,7 @@ class SelfModification(Statement):
 
     def matches_key(self):
         key = (type(self), self.enz.matches_key(),
-               self.residue, self.position)
+               str(self.residue), str(self.position))
         return str(key)
 
     def agent_list(self):
@@ -608,8 +610,8 @@ class ActivityActivity(Statement):
         self.relationship = relationship
 
     def matches_key(self):
-        key = (type(self), self.subj.matches_key(), self.subj_activity,
-                self.obj.matches_key(), self.obj_activity)
+        key = (type(self), self.subj.matches_key(), str(self.subj_activity),
+                self.obj.matches_key(), str(self.obj_activity))
         return str(key)
 
     def agent_list(self):
@@ -666,7 +668,7 @@ class ActiveForm(Statement):
 
     def matches_key(self):
         key = (type(self), self.agent.matches_key(),
-                self.activity, self.is_active)
+                str(self.activity), str(self.is_active))
         return str(key)
 
     def agent_list(self):
@@ -719,7 +721,7 @@ class RasGef(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gef.matches_key(), self.gef_activity,
+        key = (type(self), self.gef.matches_key(), str(self.gef_activity),
                 self.ras.matches_key())
         return str(key)
 
@@ -766,7 +768,7 @@ class RasGap(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gap.matches_key(), self.gap_activity,
+        key = (type(self), self.gap.matches_key(), str(self.gap_activity),
                 self.ras.matches_key())
         return str(key)
 
