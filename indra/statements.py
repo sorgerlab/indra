@@ -48,6 +48,9 @@ class MutCondition(object):
                                self.residue_to)
         return s
 
+    def __repr__(self):
+        return 'MutCondition' + self.__str__()
+
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
