@@ -222,6 +222,26 @@ class MechLinker(object):
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
                                 act_stmt.obj_activity, is_active)
                 print st
+            if act_stmt.subj_activity == 'phosphatase':
+                matching = []
+                for phos_stmt in get_statement_type(self.statements,
+                                                    Dephosphorylation):
+                    if phos_stmt.enz is not None:
+                        if phos_stmt.enz.matches(act_stmt.subj) and \
+                            phos_stmt.sub.matches(act_stmt.obj):
+                            matching.append(phos_stmt)
+                if not matching:
+                    continue
+                mods = [ModCondition('phosphorylation',
+                                     m.residue, m.position, False)
+                       for m in matching]
+                if act_stmt.relationship == 'increases':
+                    is_active = True
+                else:
+                    is_active = False
+                st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
+                                act_stmt.obj_activity, is_active)
+                print st
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
@@ -235,7 +255,6 @@ def get_graph_reductions(edges):
     reverse_edges = {n:[] for n in nodes}
     for s, t in edges:
         reverse_edges[t].append(s)
-    print reverse_edges
     for n in nodes:
         next_nodes = reverse_edges[n]
         reduced_to = None
