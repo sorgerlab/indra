@@ -1,4 +1,6 @@
+import itertools
 from indra.statements import *
+from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
 
 class BaseAgentSet(object):
     """Container for a set of BaseAgents.
@@ -21,6 +23,9 @@ class BaseAgentSet(object):
 
         return base_agent
 
+    def keys(self):
+        return self.agents.keys()
+
     def iteritems(self):
         return self.agents.iteritems()
 
@@ -32,12 +37,30 @@ class BaseAgent(object):
         self.name = name
         self.activities = []
         self.active_states = {}
+        self.activity_graph = None
         self.states = []
+        self.activity_reductions = None
+
+    def get_activity_reduction(self, activity):
+        self.make_activity_reductions()
+        return self.activity_reductions.get(activity)
+
+    def make_activity_reductions(self):
+        self.make_activity_graph()
+        self.activity_reductions = get_graph_reductions(self.activity_graph)
+
+    def make_activity_graph(self):
+        self.activity_graph  = []
+        for a1, a2 in itertools.combinations(self.activities, 2):
+            if ah.isa(a1, a2):
+                self.activity_graph.append((a1, a2))
+            if ah.isa(a2, a1):
+                self.activity_graph.append((a2, a1))
 
     def add_activity(self, activity):
         if activity not in self.activities:
             self.activities.append(activity)
-   
+
     def add_active_state(self, activity, mods):
         if not mods:
             return
@@ -113,7 +136,7 @@ class MechLinker(object):
                     gef_base.add_activity('rasgef')
                     gef_base.add_active_state('rasgef', stmt.gef.mods)
             elif isinstance(stmt, RasGap):
-                if stmt.gef is not None:
+                if stmt.gap is not None:
                     gap_base = self.get_base(stmt.gap)
                     gap_base.add_activity('rasgap')
                     gap_base.add_active_state('rasgap', stmt.gap.mods)
@@ -139,9 +162,69 @@ class MechLinker(object):
         base_agent = self.base_agents.get_create_base_agent(agent)
         return base_agent
 
+    def reduce_activities(self):
+        for stmt in self.statements:
+            if isinstance(stmt, RasGef):
+                if stmt.gef is not None:
+                    gef_base = self.get_base(stmt.gef)
+                    act_red = \
+                        gef_base.get_activity_reduction(stmt.gef_activity)
+                    if act_red is not None:
+                        stmt.gef_activity = act_red
+            elif isinstance(stmt, RasGap):
+                if stmt.gap is not None:
+                    gap_base = self.get_base(stmt.gap)
+                    act_red = \
+                        gap_base.get_activity_reduction(stmt.gap_activity)
+                    if act_red is not None:
+                        stmt.gap_activity = act_red
+            elif isinstance(stmt, ActivityActivity):
+                if stmt.subj is not None:
+                    subj_base =\
+                        self.get_base(stmt.subj)
+                    act_red = \
+                        subj_base.get_activity_reduction(stmt.subj_activity)
+                    if act_red is not None:
+                        stmt.subj_activity = act_red
+                if stmt.obj is not None:
+                    obj_base =\
+                        self.get_base(stmt.obj)
+                    act_red = \
+                        obj_base.get_activity_reduction(stmt.obj_activity)
+                    if act_red is not None:
+                        stmt.obj_activity = act_red
+            elif isinstance(stmt, ActiveForm):
+                agent_base = self.get_base(stmt.agent)
+                act_red = \
+                    agent_base.get_activity_reduction(stmt.activity)
+                if act_red is not None:
+                    stmt.activity = act_red
+
+def get_graph_reductions(edges):
+    reductions = {}
+    nodes = set()
+    for s, t in edges:
+        nodes.add(s)
+        nodes.add(t)
+    reverse_edges = {n:[] for n in nodes}
+    for s, t in edges:
+        reverse_edges[t].append(s)
+    print reverse_edges
+    for n in nodes:
+        next_nodes = reverse_edges[n]
+        reduced_to = None
+        while len(next_nodes) == 1:
+            reduced_to = next_nodes[0]
+            next_nodes = reverse_edges[next_nodes[0]]
+        if reduced_to is not None:
+            reductions[n] = reduced_to
+    return reductions
 
 if __name__ == '__main__':
     import pickle
-    a = pickle.load(open('models/ras_220_genes/ras_genes_results.pkl'))
-    ml = MechLinker(a['related2'])
-    ml.get_activities() 
+    a = pickle.load(open('models/rasmachine/rem/model.pkl'))
+    stmts = [v for k,v in a.iteritems() for v in v]
+    ml = MechLinker(stmts)
+    print len(ml.statements)
+    ml.get_activities()
+    ml.reduce_activities()
