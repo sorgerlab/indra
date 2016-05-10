@@ -35,7 +35,11 @@ def download_article(doi):
         print 'Missing API key, could not download article.'
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
-    res = urllib2.urlopen(url, data=urllib.urlencode(params))
+    try:
+        res = urllib2.urlopen(url, data=urllib.urlencode(params))
+    except urllib2.HTTPError:
+        print 'Cound not download article %s' % doi
+        return None
     xml = res.read()
     return xml
 
@@ -55,6 +59,8 @@ def get_article(doi, output='txt'):
     and returns it as is . In the latter case, downstream code needs to be
     able to interpret Elsever's XML format. """
     xml = download_article(doi)
+    if xml is None:
+        return None
     et = ET.fromstring(xml)
     full_text = et.find('article:originalText', elsevier_ns)
     if full_text is None:
