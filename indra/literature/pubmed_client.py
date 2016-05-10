@@ -193,10 +193,19 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
 
     Parameters
     ----------
+    pmid_list : list of PMIDs as strings
+        Can contain 1-200 PMIDs.
     get_issns_from_nlm : boolean
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to True.
+
+    Returns
+    -------
+    dict
+        Contains the following fields: 'doi', 'title', 'authors',
+        'journal_title', 'journal_abbrev', 'journal_nlm_id', 'issn_list',
+        'page'.
     """
     if len(pmid_list) > 200:
         raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
