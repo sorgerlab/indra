@@ -46,12 +46,12 @@ def id_lookup(paper_id, idtype):
     assert ids.get('pmid') is not None
     assert ids.get('doi') is None
     # Now we try to get the DOI from CrossRef:
-    ids['doi'] = crossref_client.doi_query(pmid)
+    ids['doi'] = crossref_client.doi_query(ids['pmid'])
     # It may still be None, but at this point there's nothing we can do...
     return ids
 
-def get_full_text(paper_id):
-    ids = id_lookup(paper_id)
+def get_full_text(paper_id, idtype):
+    ids = id_lookup(paper_id, idtype)
     pmcid = ids.get('pmcid')
     pmid = ids.get('pmid')
     doi = ids.get('doi')
