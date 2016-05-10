@@ -235,14 +235,14 @@ def test_matches_activityactivity():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityActivity(src, 'Kinase1', 'increases1',
-                           nras1, 'GtpBoundActivity1',
+    st1 = ActivityActivity(src, 'kinase1', 'increases1',
+                           nras1, 'gtpbound1',
                            evidence=Evidence(text='foo'))
-    st2 = ActivityActivity(src, 'Kinase1', 'increases1',
-                           nras1, 'GtpBoundActivity1',
+    st2 = ActivityActivity(src, 'kinase1', 'increases1',
+                           nras1, 'gtpbound1',
                            evidence=Evidence(text='bar'))
-    st3 = ActivityActivity(src, 'Kinase2', 'increases2',
-                           nras2, 'GtpBoundActivity2', 
+    st3 = ActivityActivity(src, 'kinase2', 'increases2',
+                           nras2, 'gtpbound2', 
                            evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -253,11 +253,11 @@ def test_matches_activitymod():
     mc2 = ModCondition('phosphorylation')
     nras1 = Agent('NRAS', mods=[mc], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mods=[mc2], db_refs = {'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st2 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras2, 'GtpBoundActivity2', True,
+    st3 = ActiveForm(nras2, 'gtpbound2', True,
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -269,15 +269,15 @@ def test_matches_activatingsub():
     nras1 = Agent('NRAS', mutations=[mut1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mut2], db_refs = {'HGNC': 'dummy'})
     
-    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st2 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras2, 'GtpBoundActivity2', True,
+    st3 = ActiveForm(nras2, 'gtpbound2', True,
                      evidence=Evidence(text='bar'))
-    st4 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+    st4 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
-    st5 = ActiveForm(nras2, 'GtpBoundActivity3', True,
+    st5 = ActiveForm(nras2, 'gtpbound3', True,
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -290,11 +290,11 @@ def test_matches_rasgef():
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, 'GtpBoundActivity1', nras1,
+    st1 = RasGef(sos1, 'gtpbound1', nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos1, 'GtpBoundActivity1', nras1,
+    st2 = RasGef(sos1, 'gtpbound1', nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGef(sos2, 'GtpBoundActivity2', nras2,
+    st3 = RasGef(sos2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -304,11 +304,11 @@ def test_matches_rasgap():
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, 'GtpBoundActivity1', nras1,
+    st1 = RasGap(rasa1, 'gtpbound1', nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa1, 'GtpBoundActivity1', nras1,
+    st2 = RasGap(rasa1, 'gtpbound1', nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGap(rasa2, 'GtpBoundActivity2', nras2,
+    st3 = RasGap(rasa2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -361,10 +361,10 @@ def test_entities_match_activityactivity():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = ActivityActivity(src, 'Kinase1', 'increases1',
-                           nras1, 'GtpBoundActivity1',
+                           nras1, 'gtpbound1',
                            evidence=Evidence(text='foo'))
     st2 = ActivityActivity(src, 'Kinase2', 'increases2',
-                           nras2, 'GtpBoundActivity2', 
+                           nras2, 'gtpbound2', 
                            evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -374,9 +374,9 @@ def test_entities_match_activitymod():
     mc2 = ModCondition('phosphorylation')
     nras1 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': '7989'})
     nras2 = Agent('NRAS', mods=[mc2], db_refs={'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+    st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -386,9 +386,9 @@ def test_entities_match_activatingsub():
     mc2 = MutCondition('61', 'Q', 'L')
     nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'GtpBoundActivity1', True,
+    st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras2, 'GtpBoundActivity2', False,
+    st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -398,9 +398,9 @@ def test_entities_match_rasgef():
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, 'GtpBoundActivity1', nras1,
+    st1 = RasGef(sos1, 'gtpbound1', nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos2, 'GtpBoundActivity2', nras2,
+    st2 = RasGef(sos2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -410,9 +410,9 @@ def test_entities_match_rasgap():
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, 'GtpBoundActivity1', nras1,
+    st1 = RasGap(rasa1, 'gtpbound1', nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa2, 'GtpBoundActivity2', nras2,
+    st2 = RasGap(rasa2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
@@ -668,16 +668,16 @@ def test_activityactivity_modification_refinement():
     mek = Agent('MEK')
     mek1 = Agent('MAP2K1')
 
-    st1 = ActivityActivity(raf, 'KinaseActivity', 'increases',
-                           mek, 'KinaseActivity')
-    st2 = ActivityActivity(braf, 'KinaseActivity', 'increases',
-                           mek, 'KinaseActivity')
-    st3 = ActivityActivity(raf, 'KinaseActivity', 'increases',
-                           mek1, 'KinaseActivity')
-    st4 = ActivityActivity(braf, 'KinaseActivity', 'increases',
-                           mek1, 'KinaseActivity')
-    st5 = ActivityActivity(braf, 'KinaseActivity', 'increasesX',
-                           mek1, 'KinaseActivity')
+    st1 = ActivityActivity(raf, 'kinase', 'increases',
+                           mek, 'kinase')
+    st2 = ActivityActivity(braf, 'kinase', 'increases',
+                           mek, 'kinase')
+    st3 = ActivityActivity(raf, 'kinase', 'increases',
+                           mek1, 'kinase')
+    st4 = ActivityActivity(braf, 'kinase', 'increases',
+                           mek1, 'kinase')
+    st5 = ActivityActivity(braf, 'kinase', 'increasesX',
+                           mek1, 'kinase')
     # st1
     assert st2.refinement_of(st1, eh, mh)
     assert st3.refinement_of(st1, eh, mh)

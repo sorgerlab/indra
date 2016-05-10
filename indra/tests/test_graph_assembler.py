@@ -34,8 +34,8 @@ def test_dephosphorylation_noenz():
     assert(len(ga.graph.edges()) == 0)
 
 def test_actact():
-    st = [ActivityActivity(Agent('MAP2K1'), 'Activity', 'increases',
-                           Agent('MAPK1'), 'Activity')]
+    st = [ActivityActivity(Agent('MAP2K1'), 'activity', 'increases',
+                           Agent('MAPK1'), 'activity')]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
@@ -43,8 +43,8 @@ def test_actact():
     assert(len(ga.graph.edges()) == 1)
 
 def test_actact_decrease():
-    st = [ActivityActivity(Agent('DUSP4'), 'Activity', 'decreases',
-                           Agent('MAPK1'), 'Activity')]
+    st = [ActivityActivity(Agent('DUSP4'), 'activity', 'decreases',
+                           Agent('MAPK1'), 'activity')]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
