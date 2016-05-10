@@ -1,3 +1,55 @@
+"""
+Search and get metadata for articles in Pubmed.
+
+Note
+----
+
+Structure of the XML output returned by queries to Pubmed database::
+
+    PubmedArticleSet
+      PubmedArticle
+        MedlineCitation
+          PMID
+          DateCreated
+          DateCompleted
+          DateRevised
+          MedlineJournalInfo
+            Country
+            MedlineTA
+            NlmUniqueID
+            ISSNLinking
+          ChemicalList
+          CitationSubset
+          CommentsCorrectionsList
+          MeshHeadingList
+          OtherID
+          Article
+            Journal
+              ISSN
+              JournalIssue
+              Title
+              ISOAbbreviation
+            ArticleTitle
+            Pagination
+              MedlinePgn
+            ELocationID
+            Abstract
+            AuthorList
+              Author
+                LastName
+                ForeName
+                Initials
+                AffiliationInfo
+            Language
+            PublicationTypeList
+              PublicationType
+            ArticleDate
+        PubmedData
+          History
+          PublicationStatus
+          ArticleIdList
+"""
+
 import urllib, urllib2
 from functools32 import lru_cache
 import xml.etree.ElementTree as ET
@@ -6,6 +58,7 @@ from indra.databases import hgnc_client
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 pmid_convert = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
+
 
 @lru_cache(maxsize=100)
 def send_request(url, data):
@@ -54,7 +107,19 @@ def get_ids(search_term, **kwargs):
 
 
 def get_ids_for_gene(hgnc_name, **kwargs):
-    """Get the curated set of articles for a gene in the Entrez database."""
+    """Get the curated set of articles for a gene in the Entrez database.
+
+    Search parameters for the Gene database query can be passed in as
+    keyword arguments. 
+
+    Parameters
+    ----------
+    hgnc_name : string
+        The HGNC name of the gene. This is used to obtain the HGNC ID
+        (using the hgnc_client module) and in turn used to obtain the Entrez
+        ID associated with the gene. Entrez is then queried for that ID.
+    """
+
     # Get the HGNC ID for the HGNC name
     hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
     if hgnc_id is None:
@@ -86,6 +151,8 @@ def get_ids_for_gene(hgnc_name, **kwargs):
 
 
 def get_article_xml(pubmed_id):
+    """Get the XML metadata for a single article from the Pubmed database.
+    """
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
     params = {'db': 'pubmed',
@@ -99,6 +166,7 @@ def get_article_xml(pubmed_id):
 
 
 def get_title(pubmed_id):
+    """Get the title of an article in the Pubmed database."""
     article = get_article_xml(pubmed_id)
     if article is None:
         return None
@@ -107,6 +175,7 @@ def get_title(pubmed_id):
 
 
 def get_abstract(pubmed_id):
+    """Get the abstract of an article in the Pubmed database."""
     article = get_article_xml(pubmed_id)
     if article is None:
         return None
@@ -119,46 +188,16 @@ def get_abstract(pubmed_id):
         return abstract_text
 
 
-def get_metadata_for_ids(pmid_list):
+def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
     """
-    PubmedArticleSet
-      PubmedArticle
-        MedlineCitation
-          PMID
-          DateCreated
-          DateCompleted
-          DateRevised
-          MedlineJournalInfo
-          ChemicalList
-          CitationSubset
-          CommentsCorrectionsList
-          MeshHeadingList
-          OtherID
-          Article
-            Journal
-              ISSN
-              JournalIssue
-              Title
-              ISOAbbreviation
-            ArticleTitle
-            Pagination
-              MedlinePgn
-            ELocationID
-            Abstract
-            AuthorList
-              Author
-                LastName
-                ForeName
-                Initials
-                AffiliationInfo
-            Language
-            PublicationTypeList
-              PublicationType
-            ArticleDate
-        PubmedData
-          History
-          PublicationStatus
-          ArticleIdList
+    Get article metadata for up to 200 PMIDs from the Pubmed database.
+
+    Parameters
+    ----------
+    get_issns_from_nlm : boolean
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to True.
     """
     if len(pmid_list) > 200:
         raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
@@ -186,19 +225,121 @@ def get_metadata_for_ids(pmid_list):
         author_elems = pm_article.findall('.//AuthorList/Author/LastName')
         author_names = None if author_elems is None \
                             else [au.text for au in author_elems]
+        # Journal info
         journal_title = find_elem_text(pm_article, './/Journal/Title')
         journal_abbrev = find_elem_text(pm_article,
                                         './/Journal/ISOAbbreviation')
+        # Add the ISSN from the article record
+        issn_list = []
         issn = find_elem_text(pm_article, './/ISSN')
+        if issn:
+            issn_list.append(issn)
+        # Add the Linking ISSN from the article record
+        issn_linking = find_elem_text(pm_article, './/ISSNLinking')
+        if issn_linking:
+            issn_list.append(issn_linking)
+        # Now get the list of ISSNs from the NLM Catalog
+        nlm_id = find_elem_text(pm_article, './/NlmUniqueID')
+        if nlm_id:
+            nlm_issn_list = get_issns_for_journal(nlm_id)
+            if nlm_issn_list:
+                issn_list += nlm_issn_list
+        # Remove any duplicates
+        issn_list = list(set(issn_list))
+        # Get the page number entry
         page = find_elem_text(pm_article, './/MedlinePgn')
         # Build the result
         result = {'doi': doi,
-                  'issn': issn,
                   'title': title,
                   'authors': author_names,
                   'journal_title': journal_title,
                   'journal_abbrev': journal_abbrev,
-                  'issn': issn,
+                  'journal_nlm_id': nlm_id,
+                  'issn_list': issn_list,
                   'page': page}
         results[pmid] = result
     return results
+
+
+@lru_cache(maxsize=1000)
+def get_issns_for_journal(nlm_id):
+    """Get a list of the ISSN numbers for a journal given its NLM ID.
+
+    Structure of the XML output returned by the NLM Catalog query::
+
+        NLMCatalogRecordSet
+          NLMCatalogRecord
+            NlmUniqueID
+            DateCreated
+            DateRevised
+            DateAuthorized
+            DateCompleted
+            DateRevisedMajor
+            TitleMain
+            MedlineTA
+            TitleAlternate +
+            AuthorList
+            ResourceInfo
+              TypeOfResource
+              Issuance
+              ResourceUnit
+            PublicationTypeList
+            PublicationInfo
+              Country
+              PlaceCode
+              Imprint
+              PublicationFirstYear
+              PublicationEndYear
+            Language
+            PhysicalDescription
+            IndexingSourceList
+              IndexingSource
+                IndexingSourceName
+                Coverage
+            GeneralNote +
+            LocalNote
+            MeshHeadingList
+            Classification
+            ELocationList
+            LCCN
+            ISSN +
+            ISSNLinking
+            Coden
+            OtherID +
+    """
+    params = {'db': 'nlmcatalog',
+              'retmode': 'xml',
+              'id': nlm_id}
+    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    if tree is None:
+        return None
+    issn_list = tree.findall('.//ISSN')
+    issn_linking = tree.findall('.//ISSNLinking')
+    issns = issn_list + issn_linking
+    # No ISSNs found!
+    if not issns:
+        return None
+    else:
+        return [issn.text for issn in issns]
+
+
+def expand_pagination(pages):
+    """Convert a page number to long form, e.g., from 456-7 to 456-457."""
+    # If there is no hyphen, it's a single page, and we're good to go
+    parts = pages.split('-')
+    if len(parts) == 1: # No hyphen, so no split
+        return pages
+    elif len(parts) == 2:
+        start = parts[0]
+        end = parts[1]
+        # If the end is the same number of digits as the start, then we
+        # don't change anything!
+        if len(start) == len(end):
+            return pages
+        # Otherwise, replace the last digits of start with the digits of end
+        num_end_digits = len(end)
+        new_end = start[:-num_end_digits] + end
+        return '%s-%s' % (start, new_end)
+    else: # More than one hyphen, something weird happened
+        warnings.warn("Multiple hyphens in page number: %s" % pages)
+        return pages
