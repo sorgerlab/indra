@@ -110,7 +110,7 @@ class TripsProcessor(object):
 
             if event.find('type').text == 'ONT::ACTIVATE':
                 rel = 'increases'
-                activator_act = 'Activity'
+                activator_act = 'activity'
                 self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::INHIBIT':
                 rel = 'decreases'
@@ -118,11 +118,11 @@ class TripsProcessor(object):
                 self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::DEACTIVATE':
                 rel = 'decreases'
-                activator_act = 'Activity'
+                activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
             self.statements.append(ActivityActivity(activator_agent, activator_act,
-                                    rel, affected_agent, 'Activity',
+                                    rel, affected_agent, 'activity',
                                     evidence=ev))
 
     def get_activating_mods(self):
