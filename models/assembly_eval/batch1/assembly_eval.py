@@ -40,10 +40,10 @@ def run_assembly(stmts, folder, pmcid):
     print '%d statements after combining related.' % len(related_stmts)
 
     with open(prefix + '.pkl', 'wb') as fh:
-        pickle.dump(unique_stmts, fh)
+        pickle.dump(related_stmts, fh)
 
     flattened_evidence_stmts = flatten_evidence(related_stmts)
-    
+
     card_counter = 1
     card_lim = 5
     top_stmts = []
@@ -71,7 +71,7 @@ def run_assembly(stmts, folder, pmcid):
     # Print statement diagnostics
     print_stmts(pa.stmts, prefix + '_statements.tsv')
     print_stmts(related_stmts, prefix + '_related_statements.tsv')
-    
+
     pya = PysbAssembler()
     pya.add_statements(related_stmts)
     model = pya.make_model()
