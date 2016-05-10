@@ -210,18 +210,41 @@ class ReachProcessor(object):
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
-    @staticmethod
-    def _get_context(frame_term):
+    def _get_context(self, frame_term):
         try:
-            context_term = frame_term['context']
+            context_id = frame_term['context']
         except KeyError:
             return {}
-
-        species = context_term.get('Species')
-        cell_type = context_term.get('CellType')
+        # For backwards compatibility with older versions
+        # of REACH
+        if isinstance(context_id, dict):
+            context_term = context_id
+            species = context_term.get('Species')
+            cell_type = context_term.get('CellType')
+            cell_line = None
+            location = None
+            tissue = None
+            organ = None
+        else:
+            qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % context_id[0]
+            res = self.tree.execute(qstr)
+            if res is None:
+                return {}
+            context_frame = res.next()
+            facets = context_frame['facets']
+            cell_line = facets.get('cell-line')
+            cell_type = facets.get('cell-type')
+            species = facets.get('organism')
+            location = facets.get('location')
+            tissue = facets.get('tissue_type')
+            organ = facets.get('organ')
         context = {}
         context['species'] = species
         context['cell_type'] = cell_type
+        context['cell_line'] = cell_line
+        context['location'] = location
+        context['tissue'] = tissue
+        context['organ'] = organ
         return context
 
     @staticmethod
@@ -234,6 +257,9 @@ class ReachProcessor(object):
         hyp = event.get('is_hypothesis')
         if hyp is True:
             epistemics['hypothesis'] = True
+        if event.has_key('is_direct'):
+            direct = event['is_direct']
+            epistemics['direct'] = direct
         return epistemics
 
     @staticmethod
