@@ -57,7 +57,6 @@ from indra.databases import hgnc_client
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
-pmid_convert = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
 
 
 @lru_cache(maxsize=100)
