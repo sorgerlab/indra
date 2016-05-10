@@ -51,6 +51,7 @@ def get_license_links(doi):
     urls = [l.get('URL') for l in licenses]
     return urls
 
+@lru_cache(maxsize=100)
 def doi_query(title):
     url = crossref_search_url + 'dois?q=' + \
           urllib.quote_plus(title.encode('UTF-8')) + \
