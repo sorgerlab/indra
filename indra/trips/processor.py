@@ -14,6 +14,8 @@ mod_names = {
     'PHOSPHORYLATION': 'phosphorylation'
     }
 
+molecule_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
+                 'ONT::PROTEIN', 'ONT::PROTEIN-FAMILY', 'ONT::GENE']
 
 class TripsProcessor(object):
     def __init__(self, xml_string):
@@ -124,6 +126,52 @@ class TripsProcessor(object):
             self.statements.append(ActivityActivity(activator_agent, activator_act,
                                     rel, affected_agent, 'activity',
                                     evidence=ev))
+
+    def get_activations_causal(self):
+        # Search for causal connectives of type ONT::CAUSE
+        ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
+        for cc in ccs:
+            factor = cc.find("arg/[@role=':FACTOR']")
+            outcome = cc.find("arg/[@role=':OUTCOME']")
+            # If either the factor or the outcome is missing, skip
+            if factor is None or outcome is None:
+                continue
+            factor_id = factor.attrib.get('id')
+            # Here, implicitly, we require that the factor is a TERM
+            # and not an EVENT
+            factor_term = self.tree.find("TERM/[@id='%s']" % factor_id)
+            outcome_id = outcome.attrib.get('id')
+            # Here it is implicit that the outcome is an event not
+            # a TERM
+            outcome_event = self.tree.find("EVENT/[@id='%s']" % outcome_id)
+            print factor_id, outcome_id, factor_term, outcome_event
+            if factor_term is None or outcome_event is None:
+                continue
+            factor_term_type = factor_term.find('type')
+            print factor_term_type.text
+            # The factor term must be a molecular entity
+            if factor_term_type is None or \
+                factor_term_type.text not in molecule_types:
+                continue
+            factor_agent = self._get_agent_by_id(factor_id, None)
+            outcome_event_type = outcome_event.find('type')
+            if outcome_event_type is None:
+                continue
+            # Construct evidence
+            sentence = self.get_evidence_text(cc)
+            ev = Evidence(source_api='trips', text=sentence,
+                          pmid=self.doc_id, epistemics={'direct': False})
+            if outcome_event_type.text == 'ONT::ACTIVATE':
+                affected = outcome_event.find(".//*[@role=':AFFECTED']")
+                if affected is None:
+                    continue
+                outcome_agent = self._get_agent_by_id(affected.attrib['id'],
+                                                      outcome_id)
+
+                st = ActivityActivity(factor_agent, 'activity', 'increases',
+                                      outcome_agent, 'activity',
+                                      evidence=[ev])
+                self.statements.append(st)
 
     def get_activating_mods(self):
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
