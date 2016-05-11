@@ -509,9 +509,11 @@ class SelfModification(Statement):
         self.position = position
 
     def __str__(self):
-        s = ("%s(%s, %s, %s)" %
-             (type(self).__name__, self.enz.name,
-              self.residue, self.position))
+        res_str = (', %s' % self.residue) if self.residue is not None else ''
+        pos_str = (', %s' % self.position) if self.position is not None else ''
+        s = ("%s(%s%s%s)" %
+                  (type(self).__name__, self.enz,
+                   res_str, pos_str))
         return s
 
     def matches_key(self):
