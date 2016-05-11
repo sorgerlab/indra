@@ -30,6 +30,10 @@ class IndexCardAssembler(object):
 
     def print_model(self):
         cards = [c.card for c in self.cards]
+        # If there is only one card, print it as a single
+        # card not as a list
+        if len(cards) == 1:
+            cards = cards[0]
         return json.dumps(cards, indent=1)
 
     def save_model(self, file_name='index_cards.json'):
@@ -82,26 +86,42 @@ def assemble_modification(stmt):
     card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
+
     mod_type = stmt.__class__.__name__.lower()
+    interaction = {}
+    interaction['negative_information'] = False
     if mod_type.startswith('de'):
-        card.card['interaction']['interaction_type'] = 'removes_modification'
+        interaction['interaction_type'] = 'removes_modification'
         mod_type = stmt.__class__.__name__.lower()[2:]
     else:
-        card.card['interaction']['interaction_type'] = 'adds_modification'
+        interaction['interaction_type'] = 'adds_modification'
         mod_type = stmt.__class__.__name__.lower()
 
-    card.card['interaction']['modifications'] = [{
-            'feature_type': 'modification_feature',
-            'modification_type': mod_type,
-            }]
+    interaction['modifications'] = [{
+                'feature_type': 'modification_feature',
+                'modification_type': mod_type,
+                }]
     if stmt.position is not None:
         pos = int(stmt.position)
-        card.card['interaction']['modifications'][0]['location'] = pos
+        interaction['modifications'][0]['location'] = pos
     if stmt.residue is not None:
-        card.card['interaction']['modifications'][0]['aa_code'] =  stmt.residue
+        interaction['modifications'][0]['aa_code'] =  stmt.residue
 
-    card.card['interaction']['participant_a'] = get_participant(stmt.enz)
-    card.card['interaction']['participant_b'] = get_participant(stmt.sub)
+    # If the statement is direct or there is no enzyme
+    if get_is_direct(stmt) or stmt.enz is None:
+        interaction['participant_a'] = get_participant(stmt.enz)
+        interaction['participant_b'] = get_participant(stmt.sub)
+        card.card['interaction'] = interaction
+    # If the statement is indirect, we generate an index card:
+    # SUB increases (GENERIC adds_modification ENZ)
+    else:
+        interaction['participant_a'] = get_participant(None)
+        interaction['participant_b'] = get_participant(stmt.sub)
+        card.card['interaction']['interaction_type'] = 'increases'
+        card.card['interaction']['negative_information'] = False
+        card.card['interaction']['participant_a'] = get_participant(stmt.enz)
+        card.card['interaction']['participant_b'] = interaction
+
     return card
 
 def get_participant(agent):
@@ -197,3 +217,21 @@ def get_pmc_id(stmt):
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence]
     return ev_txts
+
+def get_is_direct(stmt):
+    '''Returns true if there is evidence that the statement is a direct
+    interaction. If any of the evidences associated with the statement
+    indicates a direct interatcion then we assume the interaction
+    is direct. If there is no evidence for the interaction being indirect
+    then we default to direct.'''
+    any_indirect = False
+    for ev in stmt.evidence:
+        if ev.epistemics.get('direct') is True:
+            return True
+        elif ev.epistemics.get('direct') is False:
+            # This guarantees that we have seen at least
+            # some evidence that the statement is indirect
+            any_indirect = True
+    if any_indirect:
+        return False
+    return True

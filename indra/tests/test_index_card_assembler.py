@@ -9,7 +9,8 @@ schema = json.load(open(schema_path, 'rt'))
 
 braf = Agent('BRAF', db_refs={'UP': 'P15056'})
 map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-ev = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.', pmid='22833081')
+ev = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
+              pmid='22833081')
 stmt_phos = Phosphorylation(braf, map2k1, 'S', '222', evidence=ev)
 
 brafmut = Agent('BRAF', db_refs={'UP': 'P15056'},
@@ -21,6 +22,9 @@ stmt_dephos = Dephosphorylation(brafmut, map2k1, evidence=ev)
 stmt_complex = Complex([Agent('HRAS', db_refs={'UP': 'P01112'}),
                         Agent('GTP', db_refs={'CHEBI': '57600'})],
                         evidence=ev)
+ev2 = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
+               pmid='22833081', epistemics={'direct': False})
+stmt_phos_indirect = Phosphorylation(brafmut, map2k1, evidence=ev2)
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
@@ -33,27 +37,33 @@ def test_get_evidence_text():
 
 def test_assemble_phosphorylation():
     card = assemble_modification(stmt_phos)
-    jsonschema.validate(card.card, schema)
     print card.get_string()
     print
+    jsonschema.validate(card.card, schema)
 
 def test_assemble_phosphorylation2():
     card = assemble_modification(stmt_phos2)
-    jsonschema.validate(card.card, schema)
     print card.get_string()
     print
+    jsonschema.validate(card.card, schema)
+
+def test_assemble_phosphorylation_indirect():
+    card = assemble_modification(stmt_phos_indirect)
+    print card.get_string()
+    print
+    jsonschema.validate(card.card, schema)
 
 def test_assemble_dephosphorylation():
     card = assemble_modification(stmt_dephos)
-    jsonschema.validate(card.card, schema)
     print card.get_string()
     print
+    jsonschema.validate(card.card, schema)
 
 def test_assemble_complex():
     card = assemble_complex(Complex([braf, brafmut, map2k1], evidence=ev))
-    jsonschema.validate(card.card, schema)
     print card.get_string()
     print
+    jsonschema.validate(card.card, schema)
 
 def test_assemble_multiple():
     ia = IndexCardAssembler()
@@ -68,6 +78,6 @@ def test_get_participant():
 
 def test_chemical():
     card = assemble_complex(stmt_complex)
-    jsonschema.validate(card.card, schema)
     print card.get_string()
     print
+    jsonschema.validate(card.card, schema)
