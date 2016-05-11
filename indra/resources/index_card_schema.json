@@ -1,6 +1,5 @@
 {
-    "$schema": "http://json-schema.org/schema#",
-    "title": "Index Card",
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
         "pmc_id": {
@@ -43,25 +42,35 @@
             }
         },
         "participant_a": {
-            "type": ["object"],
+            "type": "object",
             "oneOf": [
                 { "$ref": "#/definitions/chemical" },
+                { "$ref": "#/definitions/chemical_family" },
                 { "$ref": "#/definitions/protein" },
                 { "$ref": "#/definitions/protein_family" },
                 { "$ref": "#/definitions/complex" },
                 { "$ref": "#/definitions/gene" },
                 { "$ref": "#/definitions/process" },
+                { "$ref": "#/definitions/binds" },
+                { "$ref": "#/definitions/increases" },
+                { "$ref": "#/definitions/decreases" },
+                { "$ref": "#/definitions/adds_modification" },
+                { "$ref": "#/definitions/removes_modification" },
+                { "$ref": "#/definitions/translocates" },
+                { "$ref": "#/definitions/complexes_with" },
                 { "type": "null" }
             ]
         },
         "participant_b": {
-            "type": ["object"],
+            "type": "object",
             "oneOf": [
                 { "$ref": "#/definitions/chemical" },
+                { "$ref": "#/definitions/chemical_family" },
                 { "$ref": "#/definitions/protein" },
-                { "$ref": "#/definitions/protein_family" },                
+                { "$ref": "#/definitions/protein_family" },
                 { "$ref": "#/definitions/complex" },
                 { "$ref": "#/definitions/gene" },
+                { "$ref": "#/definitions/process" },
                 { "$ref": "#/definitions/binds" },
                 { "$ref": "#/definitions/increases" },
                 { "$ref": "#/definitions/decreases" },
@@ -112,7 +121,7 @@
                         "binding_site_a": { "type": "string" },
                         "binding_site_b": { "type": "string" }
                     },
-                    "required": ["participant_a"]
+                    "required": ["participant_a", "participant_b"]
                 }
             ]
         },
@@ -161,10 +170,11 @@
         },
         "complexes_with": {
             "properties": {
+                "interaction_type": { "enum": ["complexes_with"] },
                 "negative_information": {
                     "type": "boolean",
                     "default": false
-                },                   
+                },
                 "participant_a": { "$ref": "#/definitions/complex" }
             },
             "required": ["negative_information", "participant_a"]
@@ -230,6 +240,8 @@
                         "bound_to": {
                             "oneOf": [
                                 { "$ref": "#/definitions/protein" },
+                                { "$ref": "#/definitions/chemical" },
+                                { "$ref": "#/definitions/chemical_family" },
                                 { "$ref": "#/definitions/complex" },
                                 { "$ref": "#/definitions/protein_family" }
                             ]
@@ -275,6 +287,7 @@
                                 "oneOf": [
                                     { "$ref": "#/definitions/protein" },
                                     { "$ref": "#/definitions/chemical" },
+                                    { "$ref": "#/definitions/complex" },
                                     { "$ref": "#/definitions/protein_family" }
                                 ]
                             },
@@ -325,7 +338,7 @@
             "type": "object",
             "properties": { "feature_type": { "type": "string" } },
             "required": ["feature_type"]
-        },        
+        },
         "protein_features": {
             "type": "array",
             "items": {
@@ -358,6 +371,11 @@
                 {
                     "properties": {
                         "entity_type": { "enum": ["protein_family"] },
+                        "entity_text": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "minItems": 1
+                        },
                         "features": { "$ref": "#/definitions/protein_features" },
                         "not_features": { "$ref": "#/definitions/protein_features" },
                         "entities": {
@@ -372,6 +390,30 @@
                     }
                 }
             ]
-        }
+        },
+        "chemical_family": {
+            "allOf": [
+                { "$ref": "#/definitions/entity" },
+                {
+                    "properties": {
+                        "entity_type": { "enum": ["chemical_family"] },
+                        "entity_text": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "minItems": 1
+                        },
+                        "entities": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    { "$ref": "#/definitions/chemical" }
+                                ]
+                            },
+                            "minItems": 2
+                        }
+                    }
+                }
+            ]
+        }        
     }
 }
