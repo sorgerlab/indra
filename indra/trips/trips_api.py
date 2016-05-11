@@ -19,8 +19,8 @@ def process_xml(xml_string):
     tp.get_phosphorylation()
     tp.get_activating_mods()
     tp.get_activations()
+    tp.get_activations_causal()
     return tp
-   
 
 if __name__ == '__main__':
     input_fname = 'phosphorylate.xml'
