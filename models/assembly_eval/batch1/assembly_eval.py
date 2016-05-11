@@ -17,16 +17,26 @@ def print_stmts(stmts, file_name):
             db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
                         for a in agents if a is not None]
             db_refs_str = ', '.join(db_refs)
-            fh.write('%s\t%s\t%s' %
+            fh.write('%s\t%s\t%s\n' %
                      (s, db_refs_str, s.evidence[0].text.encode('utf-8')))
+
+def is_protein_or_chemical(agent):
+    # Default is True if agent is None
+    if agent is None:
+        return True
+    if agent.db_refs.get('UP') is not None or \
+        agent.db_refs.get('HGNC') is not None or \
+        agent.db_refs.get('CHEBI') is not None:
+        return True
+    return False
 
 def run_assembly(stmts, folder, pmcid):
     prefix = folder + '/' + pmcid
+
     # Filter for grounding
     grounded_stmts = []
     for st in stmts:
-        if all([a.db_refs for a in st.agent_list() if\
-                a is not None]):
+        if all([is_protein_or_chemical(a) for a in st.agent_list()]):
             grounded_stmts.append(st)
 
     # Instantiate the Preassembler
@@ -60,6 +70,7 @@ def run_assembly(stmts, folder, pmcid):
             top_stmts.append(st)
             if card_counter > card_lim:
                 break
+
     ea = EnglishAssembler(top_stmts)
     print '======================='
     print ea.make_model()
