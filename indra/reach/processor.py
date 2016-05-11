@@ -35,11 +35,11 @@ class ReachProcessor(object):
             except KeyError:
                 self.all_events[event_type] = [frame_id]
 
-    def get_phosphorylation(self):
-        qstr = "$.events.frames[(@.type is 'protein-modification') " + \
-               "and (@.subtype is 'phosphorylation')]"
+    def get_modifications(self):
+        qstr = "$.events.frames[(@.type is 'protein-modification')]"
         res = self.tree.execute(qstr)
         for r in res:
+            modification_type = r.get('subtype')
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
@@ -68,8 +68,6 @@ class ReachProcessor(object):
                 controller_agent = self._get_agent_from_entity(controller)
             else:
                 controller_agent = None
-            #warnings.warn('Skipping phosphorylation with missing controller.')
-            #continue
 
             theme_agent = self._get_agent_from_entity(theme)
             if site is not None:
@@ -81,8 +79,23 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
-            self.statements.append(Phosphorylation(controller_agent,
-                                   theme_agent, residue, pos, ev))
+            args = [controller_agent, theme_agent, residue, pos, ev]
+            # Other subtypes that exist but we don't handle:
+            # methylation (not PTM), ribosylation, hydrolysis (not PTM)
+            if modification_type == 'phosphorylation':
+                self.statements.append(Phosphorylation(*args))
+            elif modification_type == 'dephosphorylation':
+                self.statements.append(Dephosphorylation(*args))
+            elif modification_type == 'ubiquitination':
+                self.statements.append(Ubiquitination(*args))
+            elif modification_type == 'acetylation':
+                self.statements.append(Acetylation(*args))
+            elif modification_type == 'hydroxylation':
+                self.statements.append(Hydroxylation(*args))
+            elif modification_type == 'sumoylation':
+                self.statements.append(Sumoylation(*args))
+            else:
+                print 'Unhandled modification type: %s' % subtype
 
     def get_complexes(self):
         qstr = "$.events.frames[@.type is 'complex-assembly']"
