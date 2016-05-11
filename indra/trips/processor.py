@@ -144,11 +144,9 @@ class TripsProcessor(object):
             # Here it is implicit that the outcome is an event not
             # a TERM
             outcome_event = self.tree.find("EVENT/[@id='%s']" % outcome_id)
-            print factor_id, outcome_id, factor_term, outcome_event
             if factor_term is None or outcome_event is None:
                 continue
             factor_term_type = factor_term.find('type')
-            print factor_term_type.text
             # The factor term must be a molecular entity
             if factor_term_type is None or \
                 factor_term_type.text not in molecule_types:
@@ -168,6 +166,16 @@ class TripsProcessor(object):
                 outcome_agent = self._get_agent_by_id(affected.attrib['id'],
                                                       outcome_id)
 
+                st = ActivityActivity(factor_agent, 'activity', 'increases',
+                                      outcome_agent, 'activity',
+                                      evidence=[ev])
+                self.statements.append(st)
+            elif outcome_event_type.text == 'ONT::ACTIVITY':
+                agent_tag = outcome_event.find(".//*[@role=':AGENT']")
+                if agent_tag is None:
+                    continue
+                outcome_agent = self._get_agent_by_id(agent_tag.attrib['id'],
+                                                      outcome_id)
                 st = ActivityActivity(factor_agent, 'activity', 'increases',
                                       outcome_agent, 'activity',
                                       evidence=[ev])
