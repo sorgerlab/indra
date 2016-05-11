@@ -30,6 +30,10 @@ class IndexCardAssembler(object):
 
     def print_model(self):
         cards = [c.card for c in self.cards]
+        # If there is only one card, print it as a single
+        # card not as a list
+        if len(cards) == 1:
+            cards = cards[0]
         return json.dumps(cards, indent=1)
 
     def save_model(self, file_name='index_cards.json'):
@@ -113,7 +117,7 @@ def assemble_modification(stmt):
     else:
         interaction['participant_a'] = get_participant(None)
         interaction['participant_b'] = get_participant(stmt.sub)
-        card.card['interaction']['interaction_type'] = get_participant(None)
+        card.card['interaction']['interaction_type'] = 'increases'
         card.card['interaction']['negative_information'] = False
         card.card['interaction']['participant_a'] = get_participant(stmt.enz)
         card.card['interaction']['participant_b'] = interaction
@@ -224,7 +228,7 @@ def get_is_direct(stmt):
     for ev in stmt.evidence:
         if ev.epistemics.get('direct') is True:
             return True
-        elif ev.epistemics.get('indirect') is False:
+        elif ev.epistemics.get('direct') is False:
             # This guarantees that we have seen at least
             # some evidence that the statement is indirect
             any_indirect = True
