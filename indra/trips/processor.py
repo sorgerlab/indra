@@ -289,6 +289,12 @@ class TripsProcessor(object):
                     self.statements.append(Autophosphorylation(enzyme_agent,
                                             m.residue, m.position,
                                             evidence=ev))
+            elif affected_agent is not None and \
+                'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
+                for m in mods:
+                    self.statements.append(Autophosphorylation(affected_agent,
+                                            m.residue, m.position,
+                                            evidence=ev))
             # Regular phosphorylation
             else:
                 if mods is None:
