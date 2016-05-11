@@ -20,10 +20,16 @@ class IndexCardAssembler(object):
         for stmt in self.statements:
             if isinstance(stmt, Modification):
                 card = assemble_modification(stmt)
-                self.cards.append(card)
+                if card is not None:
+                    self.cards.append(card)
+            if isinstance(stmt, SelfModification):
+                card = assemble_selfmodification(stmt)
+                if card is not None:
+                    self.cards.append(card)
             elif isinstance(stmt, Complex):
                 card = assemble_complex(stmt)
-                self.cards.append(card)
+                if card is not None:
+                    self.cards.append(card)
             else:
                 continue
                 #print 'Assembly not defined for %s' % type(stmt)
@@ -121,6 +127,40 @@ def assemble_modification(stmt):
         card.card['interaction']['negative_information'] = False
         card.card['interaction']['participant_a'] = get_participant(stmt.enz)
         card.card['interaction']['participant_b'] = interaction
+
+    return card
+
+def assemble_selfmodification(stmt):
+    card = IndexCard()
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+
+    mod_type = stmt.__class__.__name__.lower()
+    if mod_type.endswith('phosphorylation'):
+        mod_type = 'phosphorylation'
+    else:
+        return None
+
+    interaction = {}
+    interaction['negative_information'] = False
+    interaction['interaction_type'] = 'adds_modification'
+
+    interaction['modifications'] = [{
+                'feature_type': 'modification_feature',
+                'modification_type': mod_type,
+                }]
+    if stmt.position is not None:
+        pos = int(stmt.position)
+        interaction['modifications'][0]['location'] = pos
+    if stmt.residue is not None:
+        interaction['modifications'][0]['aa_code'] =  stmt.residue
+
+    # If the statement is direct or there is no enzyme
+    if get_is_direct(stmt) or stmt.enz is None:
+        interaction['participant_a'] = get_participant(stmt.enz)
+        interaction['participant_b'] = get_participant(stmt.enz)
+        card.card['interaction'] = interaction
 
     return card
 

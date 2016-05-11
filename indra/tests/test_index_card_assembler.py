@@ -25,6 +25,7 @@ stmt_complex = Complex([Agent('HRAS', db_refs={'UP': 'P01112'}),
 ev2 = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
                pmid='22833081', epistemics={'direct': False})
 stmt_phos_indirect = Phosphorylation(brafmut, map2k1, evidence=ev2)
+stmt_autophos = Autophosphorylation(brafmut, 'S', '564', evidence=ev)
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
@@ -55,6 +56,12 @@ def test_assemble_phosphorylation_indirect():
 
 def test_assemble_dephosphorylation():
     card = assemble_modification(stmt_dephos)
+    print card.get_string()
+    print
+    jsonschema.validate(card.card, schema)
+
+def test_assemble_autophosphorylation():
+    card = assemble_selfmodification(stmt_autophos)
     print card.get_string()
     print
     jsonschema.validate(card.card, schema)
