@@ -167,3 +167,21 @@ def test_assemble_more():
     print s
     assert(s ==\
         'PP2A dephosphorylates MAP2K1 on S222. MAP2K1 binds BRAF and RAF1.')
+
+def test_autophos():
+    a = Agent('EGFR')
+    st = Autophosphorylation(a, 'Y')
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print s
+    assert(s == 'EGFR phosphorylates itself on tyrosine.')
+
+def test_activityactivity():
+    st = ActivityActivity(Agent('MEK'), 'activity', 'increases',
+                          Agent('ERK'), 'activity')
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print s
+    assert(s == 'MEK activates ERK.')

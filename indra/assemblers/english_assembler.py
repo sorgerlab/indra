@@ -18,8 +18,12 @@ class EnglishAssembler(object):
                 stmt_strs.append(assemble_phosphorylation(stmt))
             elif isinstance(stmt, ist.Dephosphorylation):
                 stmt_strs.append(assemble_dephosphorylation(stmt))
+            elif isinstance(stmt, ist.Autophosphorylation):
+                stmt_strs.append(assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
                 stmt_strs.append(assemble_complex(stmt))
+            elif isinstance(stmt, ist.ActivityActivity):
+                stmt_strs.append(assemble_activityactivity(stmt))
             else:
                 print 'Unhandled statement type.'
         model = ' '.join(stmt_strs)
@@ -125,6 +129,29 @@ def assemble_dephosphorylation(stmt):
 def assemble_complex(stmt):
     member_strs = [assemble_agent_str(m) for m in stmt.members]
     stmt_str = member_strs[0] + ' binds ' + join_list(member_strs[1:])
+    return make_sentence(stmt_str)
+
+def assemble_autophosphorylation(stmt):
+    enz_str = assemble_agent_str(stmt.enz)
+    stmt_str = enz_str + ' phosphorylates itself'
+    if stmt.residue is not None:
+        if stmt.position is None:
+            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
+        else:
+            mod_str = 'on ' + stmt.residue + stmt.position
+    else:
+        mod_str = ''
+    stmt_str += ' ' + mod_str
+    return make_sentence(stmt_str)
+
+def assemble_activityactivity(stmt):
+    subj_str = assemble_agent_str(stmt.subj)
+    obj_str = assemble_agent_str(stmt.obj)
+    if stmt.relationship == 'increases':
+        rel_str = ' activates '
+    else:
+        rel_str = ' inactivates '
+    stmt_str = subj_str + rel_str + obj_str
     return make_sentence(stmt_str)
 
 def make_sentence(txt):
