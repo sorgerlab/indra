@@ -306,13 +306,14 @@ class Evidence(object):
         String indicating the Pubmed ID of the source of the statement.
     text : string
         Natural language text supporting the statement.
-    annotations : list
-        List containing additional information on the context of the statement,
-        e.g., species, cell line, tissue type, etc. The entries may vary
-        depending on the source of the information.
-    epistemics : string
-        An identifier describing the epistemic certainty associated with the
-        statement.
+    annotations : dictionary
+        Dictionary containing additional information on the
+        context of the statement, e.g., species, cell line,
+        tissue type, etc. The entries may vary depending on
+        the source of the information.
+    epistemics : dictionary
+        A dictionary describing various forms of epistemic
+        certainty associated with the statement.
     """
 
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
@@ -324,8 +325,11 @@ class Evidence(object):
         if annotations:
             self.annotations = annotations
         else:
-            self.annotations = []
-        self.epistemics = epistemics
+            self.annotations = {}
+        if epistemics:
+            self.epistemics = epistemics
+        else:
+            self.epistemics = {}
 
     def equals(self, other):
         matches = (self.source_api == other.source_api) and\
