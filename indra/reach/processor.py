@@ -95,7 +95,7 @@ class ReachProcessor(object):
             elif modification_type == 'sumoylation':
                 self.statements.append(Sumoylation(*args))
             else:
-                print 'Unhandled modification type: %s' % subtype
+                print 'Unhandled modification type: %s' % modification_type
 
     def get_complexes(self):
         qstr = "$.events.frames[@.type is 'complex-assembly']"

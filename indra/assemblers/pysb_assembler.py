@@ -15,7 +15,8 @@ SelfExporter.do_export = False
 # assembled using the PySB assembler. If a type of statement appears
 # in this list then we require that there is at least one default
 # policy implemented to assemble that type of statement.
-statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
+statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
+                       ist.SelfModification, ist.Complex,
                        ist.ActivityActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap]
 

@@ -165,7 +165,8 @@ class TripsProcessor(object):
                     continue
                 outcome_agent = self._get_agent_by_id(affected.attrib['id'],
                                                       outcome_id)
-
+                if outcome_agent is None:
+                    continue
                 st = ActivityActivity(factor_agent, 'activity', 'increases',
                                       outcome_agent, 'activity',
                                       evidence=[ev])
@@ -176,6 +177,8 @@ class TripsProcessor(object):
                     continue
                 outcome_agent = self._get_agent_by_id(agent_tag.attrib['id'],
                                                       outcome_id)
+                if outcome_agent is None:
+                    continue
                 st = ActivityActivity(factor_agent, 'activity', 'increases',
                                       outcome_agent, 'activity',
                                       evidence=[ev])
