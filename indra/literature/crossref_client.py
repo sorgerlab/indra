@@ -1,13 +1,30 @@
+import os
 import requests
 import json
 from functools32 import lru_cache
 import urllib
 import re
 import warnings
-from indra.literature import pubmed_client
+import pubmed_client
 
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/'
+
+# THIS FILE IS NOT UNDER VERSION CONTROL
+# For more information see:
+# http://clickthroughsupport.crossref.org/click-through-service-for-researchers/
+api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'cr_clickthrough_key')
+
+# Read the API key
+api_key = None
+try:
+    with open(api_key_file, 'rt') as fh:
+        api_key = fh.read().strip()
+except IOError:
+    print 'CrossRef Clickthrough API key could not be found.'
+    print api_key_file
+    api_key = None
 
 @lru_cache(maxsize=100)
 def get_metadata(doi):
