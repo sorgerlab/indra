@@ -105,6 +105,11 @@ class MechLinker(object):
 
     def add_statements(self, stmts):
         self.statements.extend(stmts)
+    
+    def link_statements(self):
+        self.get_activities()
+        self.reduce_activities()
+        self.replace_activations()
 
     def get_activities(self):
         for stmt in self.statements:
@@ -202,14 +207,17 @@ class MechLinker(object):
 
     def replace_activations(self):
         for act_stmt in get_statement_type(self.statements, ActivityActivity):
+            # Infer ActiveForm from ActAct + Phosphorylation
             if act_stmt.subj_activity == 'kinase':
                 matching = []
+                ev = act_stmt.evidence
                 for phos_stmt in get_statement_type(self.statements,
                                                     Phosphorylation):
                     if phos_stmt.enz is not None:
                         if phos_stmt.enz.matches(act_stmt.subj) and \
                             phos_stmt.sub.matches(act_stmt.obj):
                             matching.append(phos_stmt)
+                            ev.extend(phos_stmt.evidence)
                 if not matching:
                     continue
                 mods = [ModCondition('phosphorylation',
@@ -220,28 +228,57 @@ class MechLinker(object):
                 else:
                     is_active = False
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
-                                act_stmt.obj_activity, is_active)
-                print st
+                                act_stmt.obj_activity, is_active,
+                                evidence=ev)
+                self.statements.append(st)
+                print 'inferred:', st
+            # Infer ActiveForm from ActAct + Dephosphorylation
             if act_stmt.subj_activity == 'phosphatase':
                 matching = []
+                ev = act_stmt.evidence
                 for phos_stmt in get_statement_type(self.statements,
                                                     Dephosphorylation):
                     if phos_stmt.enz is not None:
                         if phos_stmt.enz.matches(act_stmt.subj) and \
                             phos_stmt.sub.matches(act_stmt.obj):
                             matching.append(phos_stmt)
+                            ev.extend(phos_stmt.evidence)
                 if not matching:
                     continue
                 mods = [ModCondition('phosphorylation',
                                      m.residue, m.position, False)
                        for m in matching]
+                
                 if act_stmt.relationship == 'increases':
                     is_active = True
                 else:
                     is_active = False
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
-                                act_stmt.obj_activity, is_active)
-                print st
+                                act_stmt.obj_activity, is_active,
+                                evidence=ev) 
+                self.statements.append(st)
+                print 'inferred:', st
+        # Infer indirect Phosphorylation from ActAct + ActiveForm
+        for act_stmt in get_statement_type(self.statements, ActivityActivity):
+            for af_stmt in get_statement_type(self.statements, ActiveForm):
+                if not af_stmt.agent.name == act_stmt.obj.name:
+                    continue
+                mods = af_stmt.agent.mods
+                # Make sure the ActiveForm only involves phosphorylated
+                # sites
+                if not af_stmt.agent.mutations and \
+                    not af_stmt.agent.bound_conditions and \
+                    all([m.mod_type == 'phosphorylation' for m in mods]) and \
+                    all([m.is_modified for m in mods]):
+                    for m in mods:
+                        ev = act_stmt.evidence
+                        ev[0].epistemics['direct'] = False
+                        st = Phosphorylation(act_stmt.subj,
+                                             act_stmt.obj, 
+                                             m.residue, m.position,
+                                             evidence=ev)
+                        self.statements.append(st)
+                        print 'inferred:', st
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
@@ -267,10 +304,12 @@ def get_graph_reductions(edges):
 
 if __name__ == '__main__':
     import pickle
-    a = pickle.load(open('models/rasmachine/rem/model.pkl'))
-    stmts = [v for k,v in a.iteritems() for v in v]
+    a = pickle.load(open('models/assembly_eval/batch1/reach/PMC534114.pkl'))
+    #stmts = [v for k,v in a.iteritems() for v in v]
+    stmts = a
     ml = MechLinker(stmts)
     print len(ml.statements)
     ml.get_activities()
     ml.reduce_activities()
+    print stmts
     ml.replace_activations()
