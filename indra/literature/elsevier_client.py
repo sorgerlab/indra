@@ -8,8 +8,8 @@ logger = logging.getLogger('elsevier')
 
 # THIS FILE IS NOT UNDER VERSION CONTROL
 # For more information see http://dev.elsevier.com/
-api_key_file = os.path.dirname(os.path.realpath(__file__)) + '/' + \
-               'elsevier_api_key'
+api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'elsevier_api_key')
 
 # Read the API key
 try:
