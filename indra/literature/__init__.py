@@ -50,6 +50,7 @@ def id_lookup(paper_id, idtype):
     # It may still be None, but at this point there's nothing we can do...
     return ids
 
+
 def get_full_text(paper_id, idtype):
     ids = id_lookup(paper_id, idtype)
     pmcid = ids.get('pmcid')
@@ -60,21 +61,55 @@ def get_full_text(paper_id, idtype):
         nxml = pmc_client.get_xml(pmcid)
         if nxml:
             return nxml, 'nxml'
+    # If we got here, it means we didn't find the full text in PMC, so we'll
+    # need either the DOI (for lookup in CrossRef) and/or the PMID (so we
+    # can fall back on the abstract. If by some strange turn we have neither,
+    # give up now.
+    if not doi and not pmid:
+        return None, None
 
-    # If it does not have PMC NXML then we need to use
-    # a dedicated literature client
+    # If it does not have PMC NXML then we attempt to obtain the full-text
+    # through the CrossRef Click-through API
     if doi:
-        publisher = crossref_client.get_publisher(doi)
+        # Check if there are any full text links
         links = crossref_client.get_fulltext_links(doi)
-        if publisher == 'Elsevier BV':
-            full_text = elsevier_client.get_article(doi, output='txt')
-            if full_text:
-                return full_text, 'txt'
-
-    # If no full text resource is available then return the 
-    # abstract
-    if pmid:
+        # Get publisher
+        publisher = crossref_client.get_publisher(doi)
+        if links:
+            # Utility function to get particular links by content-type
+            def lookup_content_type(link_list, content_type):
+                content_list = [l.get('URL') for l in link_list
+                                if l.get('content-type') == content_type]
+                return None if not content_list else content_list[0]
+            # Check for XML first
+            if lookup_content_type(links, 'text/xml'):
+                pass
+            elif lookup_content_type(links, 'text/plain'):
+                pass
+            elif lookup_content_type(links, 'application/pdf'):
+                pass
+            elif lookup_content_type(links, 'unknown'):
+                pass
+            else:
+                raise Exception("Unknown content type(s): %s" % links)
+        # No full text links :( Check and see if the publisher is one we have
+        # a web scraper for
+        elif publisher in []:
+            pass
+        # No full text links and not a publisher we support. We'll have to
+        # fall back to the abstract.
+        elif pmid:
+            abstract = pubmed_client.get_abstract(pmid)
+            return abstract, 'abstract'
+        # We have a useless DOI and no PMID. Give up.
+        else:
+            return None, None
+    # We don't have a DOI but we're guaranteed to have a PMID at this point,
+    # so we fall back to the abstract:
+    else:
         abstract = pubmed_client.get_abstract(pmid)
         return abstract, 'abstract'
 
-    return None, None
+    # We'll only get here if we've missed a combination of conditions
+    assert False
+
