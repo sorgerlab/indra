@@ -53,6 +53,9 @@ def get_license_links(doi):
 
 @lru_cache(maxsize=100)
 def doi_query(title):
+    # If None or empty string return None
+    if not title:
+        return None
     url = crossref_search_url + 'dois?q=' + \
           urllib.quote_plus(title.encode('UTF-8')) + \
           'sort=score'
