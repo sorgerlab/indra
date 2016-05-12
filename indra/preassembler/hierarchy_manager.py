@@ -60,6 +60,8 @@ entity_file_path = os.path.join(os.path.dirname(__file__),
                     '../resources/entity_hierarchy.rdf')
 mod_file_path = os.path.join(os.path.dirname(__file__),
                     '../resources/modification_hierarchy.rdf')
+act_file_path = os.path.join(os.path.dirname(__file__),
+                    '../resources/activity_hierarchy.rdf')
 entity_hierarchy = HierarchyManager(entity_file_path)
 modification_hierarchy = HierarchyManager(mod_file_path)
-
+activity_hierarchy = HierarchyManager(act_file_path)

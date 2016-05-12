@@ -5,7 +5,7 @@ import csv
 if __name__ == '__main__':
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
     rn = Namespace(indra_ns + 'relations/')
-    en = Namespace(indra_ns + 'entitiess/')
+    en = Namespace(indra_ns + 'entities/')
     g = Graph()
 
     isa = rn.term('isa')
