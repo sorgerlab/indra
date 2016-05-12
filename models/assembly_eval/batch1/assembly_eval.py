@@ -4,6 +4,7 @@ from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
+from indra.mechlinker import MechLinker
 from indra.assemblers import PysbAssembler, IndexCardAssembler,\
                              EnglishAssembler
 
@@ -16,7 +17,7 @@ def print_stmts(stmts, file_name):
             agents = s.agent_list()
             db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
                         for a in agents if a is not None]
-            db_refs_str = ', '.join(db_refs)
+            db_refs_str = (', '.join(db_refs)).encode('utf-8')
             fh.write('%s\t%s\t%s\n' %
                      (s, db_refs_str, s.evidence[0].text.encode('utf-8')))
 
@@ -46,6 +47,10 @@ def run_assembly(stmts, folder, pmcid):
     print '%d statements collected in total.' % len(pa.stmts)
     unique_stmts = pa.combine_duplicates()
     print '%d statements after combining duplicates.' % len(unique_stmts)
+    ml = MechLinker(unique_stmts)
+    ml.link_statements()
+    pa = Preassembler(eh, mh, ml.statements)
+    pa.combine_duplicates()
     related_stmts = pa.combine_related()
     print '%d statements after combining related.' % len(related_stmts)
 
