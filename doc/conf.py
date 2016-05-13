@@ -266,6 +266,9 @@ man_pages = [
 # If true, show URL addresses after external links.
 #man_show_urls = False
 
+# -- Options for numpydoc ------------------------------------------------------
+
+numpydoc_show_class_members = False
 
 # -- Options for Texinfo output -------------------------------------------
 
