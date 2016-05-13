@@ -17,7 +17,7 @@ def main():
                     'indra.preassembler', 'indra.tests'],
           install_requires=['pysb', 'objectpath', 'rdflib',
                             'functools32', 'requests', 'lxml'],
-          tests_require=['jnius-indra', 'jsonschema'],
+          tests_require=['jnius-indra', 'jsonschema', 'coverage'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp',
                     'mechanism', 'biochemistry'],

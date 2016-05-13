@@ -79,3 +79,8 @@ large_corpus.rdf
 
 # JARs
 *.jar
+
+.eggs
+.coverage
+cover
+setuptools*.zip
