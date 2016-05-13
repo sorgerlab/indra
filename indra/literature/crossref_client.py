@@ -60,6 +60,13 @@ def get_publisher(doi):
     publisher = metadata.get('publisher')
     return publisher
 
+def get_url(doi):
+    metadata = get_metadata(doi)
+    if metadata is None:
+        return None
+    url = metadata.get('URL')
+    return url
+
 def get_license_links(doi):
     metadata = get_metadata(doi)
     if metadata is None:
