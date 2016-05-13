@@ -4,6 +4,7 @@ INDRA modules reference
 .. toctree::
    :maxdepth: 3
 
+   statements
    biopax/index
    bel/index
    reach/index

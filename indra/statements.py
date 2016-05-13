@@ -1,8 +1,58 @@
+"""
+Statements representing mechanistic relationships between biological agents.
+
+Statement classes follow an inheritance hierarchy, with all Statement types
+inheriting from the parent class :py:class:`indra.statement.Statement`. At
+the next level in the hierarchy are the following classes:
+
+- :py:class:`indra.statements.Complex`
+- :py:class:`indra.statements.Modification`
+- :py:class:`indra.statements.SelfModification`
+- :py:class:`indra.statements.RasGef`
+- :py:class:`indra.statements.RasGap`
+- :py:class:`indra.statements.ActivityActivity`
+
+There are several types of Statements representing post-translational
+modifications that further inherit from
+:py:class:`indra.statements.Modification`:
+
+- :py:class:`indra.statements.Phosphorylation`
+- :py:class:`indra.statements.Dephosphorylation`
+- :py:class:`indra.statements.Ubiquitination`
+- :py:class:`indra.statements.Sumoylation`
+- :py:class:`indra.statements.Hydroxylation`
+- :py:class:`indra.statements.Acetylation`
+
+There are additional subtypes of :py:class:`indra.statements.SelfModification`:
+
+- :py:class:`indra.statements.Autophosphorylation`
+- :py:class:`indra.statements.Transphosphorylation`
+
+Statements involve one or more biological *Agents*, typically proteins,
+represented by the class :py:class:`indra.statements.Agent`. Agents can have a
+specific post-translational modification state (indicated by one or more
+instances of :py:class:`indra.statements.ModCondition`) and also other bound
+Agents (:py:class:`indra.statements.BoundCondition`). The *active* form of an
+agent (in terms of its post-translational modifications or bound state) is
+indicated by an instance of the class :py:class:`indra.statements.ActiveForm`.
+
+Interactions between proteins are often described in terms of their effect on a
+protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6 inactives
+ERK".  These types of relationships are indicated by the statement
+:py:class:`indra.statements.ActivityActivity`.
+
+The evidence for a given Statement, which could include relevant citations,
+database identifiers, and passages of text from the scientific literature, is
+contained in one or more Evidence objects
+(:py:class:`indra.statements.Evidence`) associated with the Statement.
+"""
+
 import os
 from collections import namedtuple
 import textwrap
 
-def read_amino_acids():
+def _read_amino_acids():
+    """Read the amino acid information from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
     aa_file = this_dir + '/resources/amino_acids.tsv'
     amino_acids = {}
@@ -20,9 +70,14 @@ def read_amino_acids():
             amino_acids_reverse[v] = key
     return amino_acids, amino_acids_reverse
 
-amino_acids, amino_acids_reverse = read_amino_acids()
+amino_acids, amino_acids_reverse = _read_amino_acids()
 
-BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
+
+class BoundCondition(object):
+    def __init__(self, agent, is_bound):
+        self.agent = agent
+        self.is_bound = is_bound
+
 
 class MutCondition(object):
     def __init__(self, position, residue_from, residue_to=None):
@@ -51,6 +106,7 @@ class MutCondition(object):
 
     def __repr__(self):
         return 'MutCondition' + self.__str__()
+
 
 class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
@@ -105,6 +161,7 @@ class ModCondition(object):
 
     def __hash__(self):
         return hash(self.matches_key())
+
 
 class Agent(object):
     def __init__(self, name, mods=None, active=None,
@@ -426,6 +483,7 @@ class Statement(object):
             return False
         return True
 
+
 class Modification(Statement):
     """Generic statement representing the modification of a protein"""
 
@@ -560,6 +618,7 @@ class SelfModification(Statement):
                   (self.residue == other.residue) and\
                   (self.position == other.position)
         return matches
+
 
 class Phosphorylation(Modification):
     """Phosphorylation modification"""
@@ -722,6 +781,7 @@ class ActiveForm(Statement):
                   (self.is_active == other.is_active)
         return matches
 
+
 class RasGef(Statement):
     """Statement representing the activation of a GTP-bound protein
     upon Gef activity."""
@@ -871,6 +931,7 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+
 def get_valid_residue(residue):
     if residue is not None and amino_acids.get(residue) is None:
         res = amino_acids_reverse.get(residue.lower())
@@ -879,6 +940,7 @@ def get_valid_residue(residue):
         else:
             return res
     return residue
+
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
