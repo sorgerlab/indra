@@ -6,7 +6,9 @@ def process_pc_neighborhood(gene_names, neighbor_limit=1):
     """Returns a BiopaxProcessor for a PathwayCommons neighborhood query.
 
     The neighborhood query finds the neighborhood around a set of source genes.
+
     http://www.pathwaycommons.org/pc2/#graph
+
     http://www.pathwaycommons.org/pc2/#graph_kind
 
     Parameters
@@ -41,7 +43,9 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1):
     The paths-between query finds the paths between a set of genes. Here
     source gene names are given in a single list and all directions of paths
     between these genes are considered.
+
     http://www.pathwaycommons.org/pc2/#graph
+
     http://www.pathwaycommons.org/pc2/#graph_kind
 
     Parameters
@@ -75,7 +79,9 @@ def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
 
     The paths-from-to query finds the paths from a set of source genes to
     a set of target genes.
+
     http://www.pathwaycommons.org/pc2/#graph
+
     http://www.pathwaycommons.org/pc2/#graph_kind
 
     Parameters
