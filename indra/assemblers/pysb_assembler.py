@@ -20,30 +20,26 @@ statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
                        ist.ActivityActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap]
 
-def is_whitelisted(stmt):
+def _is_whitelisted(stmt):
+    """Return True if the statement type is in the whitelist."""
     for s in statement_whitelist:
         if isinstance(stmt, s):
             return True
     return False
 
-
 # BaseAgent classes ####################################################
 
-class BaseAgentSet(object):
-    """Container for a set of BaseAgents.
-
-    Wraps a dict of BaseAgent instances.
-    """
-
+class _BaseAgentSet(object):
+    """Container for a dict of BaseAgents with their names as keys."""
     def __init__(self):
         self.agents = {}
 
     def get_create_base_agent(self, agent):
-        """Return agent with given name, creating it if needed."""
+        """Return base agent with given name, creating it if needed."""
         try:
             base_agent = self.agents[agent.name]
         except KeyError:
-            base_agent = BaseAgent(agent.name)
+            base_agent = _BaseAgent(agent.name)
             self.agents[agent.name] = base_agent
 
         # Handle bound conditions
@@ -73,13 +69,23 @@ class BaseAgentSet(object):
         return base_agent
 
     def iteritems(self):
+        """Return iteritems for the set of BaseAgents that this class wraps.
+        """
         return self.agents.iteritems()
 
     def __getitem__(self, name):
         return self.agents[name]
 
 
-class BaseAgent(object):
+class _BaseAgent(object):
+    """A BaseAgent aggregates the global properties of an Agent.
+
+    The BaseAgent class aggregates the name, sites, site states, active forms,
+    inactive forms and database references of Agents from individual INDRA
+    Statements. This allows the PySB Assembler to correctly assemble the
+    Monomer signatures in the model.
+    """
+
     def __init__(self, name):
         self.name = name
         self.sites = []
@@ -92,7 +98,7 @@ class BaseAgent(object):
         self.db_refs = {}
 
     def create_site(self, site, states=None):
-        """Create a new site on an agent if it doesn't already exist"""
+        """Create a new site on an agent if it doesn't already exist."""
         if site not in self.sites:
             self.sites.append(site)
         if states is not None:
@@ -104,14 +110,21 @@ class BaseAgent(object):
             self.add_site_states(site, states)
 
     def add_site_states(self, site, states):
-        """Create new states on a agent site if the site doesn't exist"""
+        """Create new states on an agent site if the state doesn't exist."""
         for state in states:
             if state not in self.site_states[site]:
                 self.site_states[site].append(state)
 
     def add_activity_form(self, activity_pattern, is_active):
-        """Adds the pattern (a dict of site states) as an active
-        or inactive form of an Agent. """
+        """Adds the pattern as an active or inactive form to an Agent.
+
+        Parameters
+        ----------
+        activity_pattern : dict
+            A dictionary of site names and their states.
+        is_active : bool
+            Is True if the given pattern corresponds to an active state.
+        """
         if is_active:
             self.active_forms.append(activity_pattern)
         else:
@@ -169,9 +182,9 @@ default_mod_site_names = {
 
 
 def get_binding_site_name(name):
+    """Return a binding site name from a given agent name."""
     binding_site = name.lower()
     return binding_site
-
 
 def get_mod_site_name(mod_type, residue, position):
     """Return site names for a modification."""
@@ -203,6 +216,7 @@ def get_inactive_forms(agent, agent_set):
 # PySB model elements ##################################################
 
 def get_agent_rule_str(agent):
+    """Construct a string from an Agent as part of a PySB rule name."""
     rule_str_list = [agent.name]
     for mod in agent.mods:
         mstr = abbrevs[mod.mod_type]
@@ -226,6 +240,7 @@ def get_agent_rule_str(agent):
     return rule_str
 
 def add_rule_to_model(model, rule):
+    """Add a Rule to a PySB model and handle duplicate component errors."""
     try:
         model.add_component(rule)
     # If this rule is already in the model, issue a warning and continue
@@ -241,7 +256,6 @@ def get_create_parameter(model, name, value, unique=True):
     it does not exist, it will be created. If unique is true then upon conflict
     a number is added to the end of the parameter name.
     """
-
     parameter = model.parameters.get(name)
 
     if not unique and parameter is not None:
@@ -263,7 +277,7 @@ def get_create_parameter(model, name, value, unique=True):
 
 
 def get_monomer_pattern(model, agent, extra_fields=None):
-    """Constructs a PySB MonomerPattern from an Agent"""
+    """Construct a PySB MonomerPattern from an Agent."""
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
         for k, v in extra_fields.iteritems():
@@ -276,8 +290,10 @@ def get_monomer_pattern(model, agent, extra_fields=None):
     return monomer_pattern
 
 def get_site_pattern(agent):
-    """Constructs a dictionary of site states to be associated
-    with a PySB monomer from an INDRA Agent object."""
+    """Construct a dictionary of Monomer site states from an Agent.
+
+    This crates the mapping to the associated PySB monomer from an
+    INDRA Agent object."""
     pattern = {}
     # Handle bound conditions
     for bc in agent.bound_conditions:
@@ -311,6 +327,7 @@ def get_site_pattern(agent):
 
 
 def set_base_initial_condition(model, monomer, value):
+    """Set an initial condition for a monomer in its 'default' state."""
     # Build up monomer pattern dict
     sites_dict = {}
     for site in monomer.sites:
@@ -330,10 +347,10 @@ def set_base_initial_condition(model, monomer, value):
 
 
 def get_annotation(component, db_name, db_ref):
-    '''
-    Construct Annotation following format guidelines
-    given at http://identifiers.org/.
-    '''
+    """Construct model Annotations for each component.
+
+    Annotation formats follow guidelines at http://identifiers.org/.
+    """
     url = 'http://identifiers.org/'
     subj = component
     if db_name == 'UP':
@@ -361,6 +378,35 @@ class UnknownPolicyError(Exception):
     pass
 
 class PysbAssembler(object):
+    """Assembler creating a PySB model from a set of INDRA Statements.
+
+    Parameters
+    ----------
+    policies : Optional[Union[str, dict]]
+        A string or dictionary that defines one or more assembly policies.
+
+        If policies is a string, it defines a global assembly policy
+        that applies to all Statement types.
+        Example: contact_only, one_step
+
+        A dictionary of policies has keys corresponding to Statement types
+        and values to the policy to be applied to that type of Statement.
+        For Statement types whose policy is undefined, the 'default'
+        policy is applied.
+        Example: {'phosphorylation': 'two_step'}
+
+    Attributes
+    ----------
+    policies : dict
+        A dictionary of policies that defines assembly policies for Statement
+        types. It is assigned in the constructor.
+    statements : list
+        A list of INDRA statements to be assembled.
+    model : pysb.Model
+        A PySB model object that is assembled by this class.
+    agent_set : _BaseAgentSet
+        A set of BaseAgents used during the assembly process.
+    """
     def __init__(self, policies=None):
         self.statements = []
         self.agent_set = None
@@ -373,50 +419,43 @@ class PysbAssembler(object):
             self.policies = {'other': 'default'}
             self.policies.update(policies)
 
-    def statement_exists(self, stmt):
-        for s in self.statements:
-            if stmt.matches(s):
-                return True
-        return False
-
     def add_statements(self, stmts):
+        """Add INDRA Statements to the assembler's list of statements.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of :py:class:`indra.statements.Statement`
+            to be added to the statement list of the assembler.
+        """
         for stmt in stmts:
-            if not self.statement_exists(stmt):
+            if not self._statement_exists(stmt):
                 self.statements.append(stmt)
 
-    def dispatch(self, stmt, stage, *args):
-        class_name = stmt.__class__.__name__
-        try:
-            policy = self.policies[class_name]
-        except KeyError:
-            policy = self.policies['other']
-        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
-        func = globals().get(func_name)
-        if func is None:
-            # The specific policy is not implemented for the
-            # given statement type.
-            # We try to apply a default policy next.
-            func_name = '%s_%s_default' % (class_name.lower(), stage)
-            func = globals().get(func_name)
-            if func is None:
-                # The given statement type doesn't have a default
-                # policy.
-                raise UnknownPolicyError('%s function %s not defined' %
-                                         (stage, func_name))
-        return func(stmt, *args)
-
-    def monomers(self):
-        """Calls the appropriate monomers method based on policies."""
-        for stmt in self.statements:
-            if is_whitelisted(stmt):
-                self.dispatch(stmt, 'monomers', self.agent_set)
-
-    def assemble(self):
-        for stmt in self.statements:
-            if is_whitelisted(stmt):
-                self.dispatch(stmt, 'assemble', self.model, self.agent_set)
-
     def make_model(self, policies=None, initial_conditions=True):
+        """Assemble the PySB model from the collected INDRA Statements.
+
+        This method assembles a PySB model from the set of INDRA Statements.
+        The assembled model is both returned and set as the assembler's
+        model argument.
+
+        Parameters
+        ----------
+        policies : Optional[Union[str, dict]]
+            A string or dictionary of policies, as defined in
+            :py:class:`indra.assemblers.PysbAssembler`. This set of policies
+            locally supersedes the default setting in the assembler. This
+            is useful when this function is called multiple times with
+            different policies.
+        initial_conditions : Optional[bool]
+            If True, default initial conditions are generated for the
+            Monomers in the model.
+
+        Returns
+        -------
+        model : pysb.Model
+            The assembled PySB model object.
+        """
         # Set local policies for this make_model call that overwrite
         # the global policies of the PySB assembler
         if policies is not None:
@@ -428,10 +467,10 @@ class PysbAssembler(object):
                 local_policies.update(policies)
             self.policies = local_policies
         self.model = Model()
-        self.agent_set = BaseAgentSet()
+        self.agent_set = _BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
-        self.monomers()
+        self._monomers()
         # Add the monomers to the model based on our BaseAgentSet
         for agent_name, agent in self.agent_set.iteritems():
             m = Monomer(agent_name, agent.sites, agent.site_states)
@@ -441,7 +480,7 @@ class PysbAssembler(object):
                 if a is not None:
                     self.model.add_annotation(a)
         # Iterate over the statements to generate rules
-        self.assemble()
+        self._assemble()
         # Add initial conditions
         if initial_conditions:
             self.add_default_initial_conditions()
@@ -453,14 +492,27 @@ class PysbAssembler(object):
         return self.model
 
     def add_default_initial_conditions(self):
+        """Set default initial conditions in the PySB model."""
         if self.model is None:
             return
         for m in self.model.monomers:
             set_base_initial_condition(self.model, m, 100.0)
 
     def set_context(self, cell_type):
-        """Uses the INDRA context client to get protein expression
-        for cancer cell lines."""
+        """Set protein expression data as initial conditions.
+
+        This method uses :py:mod:`indra.databases.context_client` to get
+        protein expression levels for a given cell type and set initial
+        conditions for Monomers in the model accordingly.
+
+        Parameters
+        ----------
+        cell_type : str
+            Cell type name for which expression levels are queried.
+            The cell type name follows the CCLE database conventions.
+
+        Example: LOXIMVI_SKIN, BT20_BREAST
+        """
         if self.model is None:
             return
         monomer_names = [m.name for m in self.model.monomers]
@@ -490,18 +542,42 @@ class PysbAssembler(object):
                 print m
 
     def print_model(self):
+        """Print the assembled model as a PySB program string.
+
+        This function is useful when the model needs to be passed as a string
+        to another component.
+        """
         model_str = pysb.export.export(self.model, 'pysb_flat')
         return model_str
 
-    def save_model(self, fname='pysb_model.py'):
+    def save_model(self, file_name='pysb_model.py'):
+        """Save the assembled model as a PySB program file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the model program code in.
+            Default: pysb-model.py
+        """
         if self.model is not None:
             model_str = self.print_model()
-            with open(fname, 'wt') as fh:
+            with open(file_name, 'wt') as fh:
                 fh.write(model_str)
 
-    def print_rst(self, fname='pysb_model.rst', module_name='pysb_module'):
+    def save_rst(self, file_name='pysb_model.rst', module_name='pysb_module'):
+        """Save the assembled model as an RST file for literate modeling.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the RST in.
+            Default: pysb_model.rst
+        module_name : Optional[str]
+            The name of the python function defining the module.
+            Default: pysb_module
+        """
         if self.model is not None:
-            with open(fname, 'wt') as fh:
+            with open(file_name, 'wt') as fh:
                 fh.write('.. _%s:\n\n' % module_name)
                 fh.write('Module\n======\n\n')
                 fh.write('INDRA-assembled model\n---------------------\n\n')
@@ -509,6 +585,53 @@ class PysbAssembler(object):
                 model_str = pysb.export.export(self.model, 'pysb_flat')
                 model_str = '\t' + model_str.replace('\n', '\n\t')
                 fh.write(model_str)
+
+    def _statement_exists(self, stmt):
+        """Return True if the given Statement is in the assembler."""
+        for s in self.statements:
+            if stmt.matches(s):
+                return True
+        return False
+
+    def _dispatch(self, stmt, stage, *args):
+        """Construct and call an assembly function.
+
+        This function constructs the name of the assembly function based on
+        the type of statement, the corresponding policy and the stage
+        of assembly. It then calls that function to perform the assembly
+        task."""
+        class_name = stmt.__class__.__name__
+        try:
+            policy = self.policies[class_name]
+        except KeyError:
+            policy = self.policies['other']
+        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
+        func = globals().get(func_name)
+        if func is None:
+            # The specific policy is not implemented for the
+            # given statement type.
+            # We try to apply a default policy next.
+            func_name = '%s_%s_default' % (class_name.lower(), stage)
+            func = globals().get(func_name)
+            if func is None:
+                # The given statement type doesn't have a default
+                # policy.
+                raise UnknownPolicyError('%s function %s not defined' %
+                                         (stage, func_name))
+        return func(stmt, *args)
+
+    def _monomers(self):
+        """Calls the appropriate monomers method based on policies."""
+        for stmt in self.statements:
+            if _is_whitelisted(stmt):
+                self._dispatch(stmt, 'monomers', self.agent_set)
+
+    def _assemble(self):
+        """Calls the appropriate assemble method based on policies."""
+        for stmt in self.statements:
+            if _is_whitelisted(stmt):
+                self._dispatch(stmt, 'assemble', self.model, self.agent_set)
+
 
 # COMPLEX ############################################################
 
