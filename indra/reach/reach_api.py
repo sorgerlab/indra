@@ -31,7 +31,7 @@ def process_pmc(pmc_id, offline=False):
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -63,7 +63,7 @@ def process_pubmed_abstract(pubmed_id, offline=False):
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -90,7 +90,7 @@ def process_text(text, citation=None, offline=False):
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -142,7 +142,7 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -195,7 +195,7 @@ def process_nxml_file(file_name, citation=None, offline=False):
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -220,7 +220,7 @@ def process_json_file(file_name, citation=None):
         A PubMed ID passed to be used in the evidence for the extracted INDRA
         Statements. Default: None
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
@@ -248,7 +248,7 @@ def process_json_str(json_str, citation=None):
         A PubMed ID passed to be used in the evidence for the extracted INDRA
         Statements. Default: None
 
-    Results
+    Returns
     -------
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
