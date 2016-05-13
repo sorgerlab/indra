@@ -2,25 +2,29 @@
 
 INDRA
 =====
-INDRA (Integrated Dynamical Reasoning Assembler) generates executable models of
-pathway dynamics from natural language (using the TRIPS and REACH parsers),
-BioPAX and BEL sources (including the PathwayCommons database and NDEx).
+
+INDRA (Integrated Network and Dynamical Reasoning Assembler) generates
+executable models of pathway dynamics from natural language (using the TRIPS
+and REACH parsers), BioPAX and BEL sources (including the PathwayCommons
+database and NDEx).
 
 Installing INDRA
 ----------------
-INDRA works with Python 2.7.x (tested with 2.7.3 and higher). Python 3 is 
-currently not supported. When installing INDRA and its dependencies, make 
-sure that the correct version of Python is used.
 
-You can install INDRA by cloning this repository and 
-running setup.py from the terminal as
+INDRA works with Python 2.7.x (tested with 2.7.3 and higher). Python 3 is
+currently not supported. When installing INDRA and its dependencies, make sure
+that the correct version of Python is used.
+
+You can install INDRA by cloning this repository and running setup.py from the
+terminal as
 
     $ git clone https://github.com/sorgerlab/indra.git
     $ cd indra
     $ python setup.py install
 
-Releases of INDRA are also available via [pip](https://pip.pypa.io/en/latest/installing/),
-you can install the latest release as
+Releases of INDRA are also available via
+[pip](https://pip.pypa.io/en/latest/installing/), you can install the latest
+release as
 
     $ pip install indra
 
@@ -28,12 +32,13 @@ INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
 also PySB (for more information on PySB, see https://github.com/pysb/pysb).
 These packages are installed by setup.py.
 
-For using BioPAX, an additional package called [pyjnius](https://github.com/kivy/pyjnius)
-is needed to allow using Java classes from Python.
-This is used only in the BioPAX API and the rest of INDRA will work without
-pyjnius. Pyjnius needs JRE and JDK 1.8 to be installed.
-On Mac, install both [Java for OS X](http://support.apple.com/kb/DL1572)
-and JDK and JRE from [Oracle](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+For using BioPAX, an additional package called
+[pyjnius](https://github.com/kivy/pyjnius) is needed to allow using Java
+classes from Python.  This is used only in the BioPAX API and the rest of INDRA
+will work without pyjnius. Pyjnius needs JRE and JDK 1.8 to be installed.  On
+Mac, install both [Java for OS X](http://support.apple.com/kb/DL1572) and JDK
+and JRE from
+[Oracle](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 Then set JAVA\_HOME to your JDK home directory, for instance
 
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Home
@@ -45,8 +50,10 @@ Then first install cython (tested with version 0.23.5) followed by jnius-indra
 
 Using INDRA
 -----------
-In this example INDRA assembles a PySB model from the natural language description 
-of a mechanism via the [TRIPS parser web service](http://trips.ihmc.us/parser/cgi/drum). 
+
+In this example INDRA assembles a PySB model from the natural language
+description of a mechanism via the [TRIPS parser web
+service](http://trips.ihmc.us/parser/cgi/drum).
 
 ```python
 from indra.assemblers import PysbAssembler
@@ -59,7 +66,12 @@ pa.add_statements(trips_processor.statements)
 # Assemble the model
 model = pa.make_model(policies='two_step')
 ```
-INDRA also provides an interface for the [REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language parser. In this example, a full paper from [PubMed Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). 
+
+INDRA also provides an interface for the
+[REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language
+parser. In this example, a full paper from [PubMed
+Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
+[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
 
 ```python
 from indra import reach
@@ -69,8 +81,8 @@ reach_processor = reach.process_pmc('3717945')
 # extracted from the PMC paper.
 ```
 
-Next we look at an example of reading the 10 most recent PubMed abstracts on BRAF and 
-collecting the results in INDRA statements.
+Next we look at an example of reading the 10 most recent PubMed abstracts on
+BRAF and collecting the results in INDRA statements.
 
 ```python
 from indra import reach
@@ -88,7 +100,10 @@ for pmid in pmids:
 # extracted from the 10 abstracts.
 ```
 
-The next example shows querying the [BEL large corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb) network thorugh [NDEx](http://ndexbio.org) for a neighborhood of a given list of proteins using their HGNC gene names. 
+The next example shows querying the [BEL large
+corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb)
+network thorugh [NDEx](http://ndexbio.org) for a neighborhood of a given list
+of proteins using their HGNC gene names.
 
 ```python
 from indra import bel
@@ -98,8 +113,11 @@ bel_processor = bel.process_ndex_neighborhood(['BRAF', 'MAP2K1'])
 # extracted from the neihborhood query.
 ```
 
-Next, we look at an example of querying the [Pathway Commons database](http://pathwaycommons.org) for paths between two lists of proteins. 
-Note: see installation notes above for installing jnius, which is required for using the BioPAX API of INDRA.
+Next, we look at an example of querying the [Pathway Commons
+database](http://pathwaycommons.org) for paths between two lists of proteins.
+Note: see installation notes above for installing jnius, which is required for
+using the BioPAX API of INDRA.
+
 ```python
 from indra import biopax
 # Process the neighborhood of BRAF and MAP2K1
