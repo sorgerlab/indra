@@ -42,12 +42,52 @@ except IOError:
     entrez_ids = {}
 
 def get_uniprot_id(hgnc_id):
-    return uniprot_ids.get(hgnc_id)
+    """Return the UniProt ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Note that the HGNC ID is a number that is
+        passed as a string. It is not the same as the HGNC gene symbol.
+
+    Returns
+    -------
+    uniprot_id : str
+        The UniProt ID corresponding to the given HGNC ID.
+    """
+    uniprot_id = uniprot_ids.get(hgnc_id)
+    return uniprot_id
 
 def get_entrez_id(hgnc_id):
-    return entrez_ids.get(hgnc_id)
+    """Return the Entrez ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Note that the HGNC ID is a number that is
+        passed as a string. It is not the same as the HGNC gene symbol.
+
+    Returns
+    -------
+    entrez_id : str
+        The Entrez ID corresponding to the given HGNC ID.
+    """
+    entrez_id = entrez_ids.get(hgnc_id)
+    return entrez_id
 
 def get_hgnc_name(hgnc_id):
+    """Return the HGNC symbol corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted.
+
+    Returns
+    -------
+    hgnc_name : str
+        The HGNC symbol corresponding to the given HGNC ID.
+    """
     try:
         hgnc_name = hgnc_names[hgnc_id]
     except KeyError:
@@ -62,12 +102,38 @@ def get_hgnc_name(hgnc_id):
     return hgnc_name
 
 def get_hgnc_id(hgnc_name):
+    """Return the HGNC ID corresponding to the given HGNC symbol.
+
+    Parameters
+    ----------
+    hgnc_name : str
+        The HGNC symbol to be converted. Example: BRAF
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given HGNC symbol.
+    """
     for k, v in hgnc_names.iteritems():
         if v == hgnc_name and k not in hgnc_withdrawn:
-            return k
+            hgnc_id = k
+            return hgnc_id
 
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
+    """Return the HGNC entry for the given HGNC ID from the web service.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted.
+
+    Returns
+    -------
+    xml_tree : ElementTree
+        The XML ElementTree corresponding to the entry for the
+        given HGNC ID.
+    """
     url = hgnc_url + 'hgnc_id/%s' % hgnc_id
     headers = {'Accept': '*/*'}
     req = urllib2.Request(url, headers=headers)
