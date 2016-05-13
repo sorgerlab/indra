@@ -778,27 +778,36 @@ class Transphosphorylation(SelfModification):
 
 
 class Dephosphorylation(Modification):
-    """Dephosphorylation modification"""
+    """Dephosphorylation modification.
+
+    Examples
+    --------
+    DUSP6 dephosphorylates ERK (MAPK1) at T185:
+
+    >>> dusp6 = Agent('DUSP6')
+    >>> erk = Agent('MAPK1')
+    >>> dephos = Dephosphorylation(dusp6, erk, 'T', '185')
+    """
     pass
 
 
 class Hydroxylation(Modification):
-    """Hydroxylation modification"""
+    """Hydroxylation modification."""
     pass
 
 
 class Sumoylation(Modification):
-    """Sumoylation modification"""
+    """Sumoylation modification."""
     pass
 
 
 class Acetylation(Modification):
-    """Acetylation modification"""
+    """Acetylation modification."""
     pass
 
 
 class Ubiquitination(Modification):
-    """Ubiquitination modification"""
+    """Ubiquitination modification."""
     pass
 
 
