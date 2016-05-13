@@ -13,7 +13,7 @@ install:
   - sudo apt-get install graphviz
   - pip install pygraphviz
   - pip install functools32
-  - pip install jsonschema
+  - pip install jsonschema coverage python-coveralls
   # PySB and dependencies
   - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
   - unzip -q BioNetGen-2.2.5-stable.zip
@@ -23,4 +23,8 @@ install:
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
   - pip install .
 script:
-  - nosetests --with-doctest
+  nosetests indra
+     --with-doctest
+     --with-coverage --cover-inclusive --cover-package=indra
+after_success:
+  coveralls
