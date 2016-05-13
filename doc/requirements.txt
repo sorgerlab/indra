@@ -1,3 +1,1 @@
 sphinx_rtd_theme
-pygraphviz
-jnius-indra
