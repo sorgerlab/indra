@@ -1,5 +1,4 @@
 numpydoc
 sphinx_rtd_theme
-cython
 pygraphviz
 jnius-indra
