@@ -15,6 +15,28 @@ reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 reach_reader = ReachReader()
 
 def process_pmc(pmc_id, offline=False):
+    """Return a ReachProcessor by processing a paper with a given PMC id.
+
+    Uses the PMC client to obtain the full text. If it's not available,
+    None is returned.
+
+    Parameters
+    ----------
+    pmc_id : str
+        The ID of a PubmedCentral article. The string may start with PMC but
+        passing just the ID also works.
+        Examples: 3717945, PMC3717945
+        http://www.ncbi.nlm.nih.gov/pmc/
+    offline : Optional[bool]
+        If set to True, the REACH system is ran offline. Otherwise (by default)
+        the web service is called. Default: False
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
@@ -25,6 +47,28 @@ def process_pmc(pmc_id, offline=False):
     return rp
 
 def process_pubmed_abstract(pubmed_id, offline=False):
+    """Return a ReachProcessor by processing an abstract with a given Pubmed id.
+
+    Uses the Pubmed client to get the abstract. If that fails, None is
+    returned.
+
+    Parameters
+    ----------
+    pubmed_id : str
+        The ID of a Pubmed article. The string may start with PMID but
+        passing just the ID also works.
+        Examples: 27168024, PMID27168024
+        http://www.ncbi.nlm.nih.gov/pubmed/
+    offline : Optional[bool]
+        If set to True, the REACH system is ran offline. Otherwise (by default)
+        the web service is called. Default: False
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     abs_txt = pubmed_client.get_abstract(pubmed_id)
     if abs_txt is None:
         return None
@@ -32,11 +76,31 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     return rp
 
 def process_text(text, citation=None, offline=False):
+    """Return a ReachProcessor by processing the given text.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. This is used when the text to be processed comes from
+        a publication that is not otherwise identified. Default: None
+    offline : Optional[bool]
+        If set to True, the REACH system is ran offline. Otherwise (by default)
+        the web service is called. Default: False
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     if offline:
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
-            print 'Cannot read offline because the REACH ApiRuler could not' +\
-                    ' be instantiated.'
+            print 'Cannot read offline because the REACH ApiRuler ' + \
+                   'could not be instantiated.'
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -62,6 +126,28 @@ def process_text(text, citation=None, offline=False):
     return process_json_str(json_str, citation)
 
 def process_nxml_str(nxml_str, citation=None, offline=False):
+    """Return a ReachProcessor by processing the given NXML string.
+
+    NXML is the format used by PubmedCentral for papers in the open
+    access subset.
+
+    Parameters
+    ----------
+    nxml_str : str
+        The NXML string to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. Default: None
+    offline : Optional[bool]
+        If set to True, the REACH system is ran offline. Otherwise (by default)
+        the web service is called. Default: False
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     if offline:
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
@@ -84,7 +170,8 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             print e
             return None
         if res.status_code != 200:
-            print 'Could not process NXML via REACH service. Status code: %d' % res.status_code
+            print 'Could not process NXML via REACH service.' + \
+                  'Status code: %d' % res.status_code
             return None
         json_str = res.text
     with open('reach_output.json', 'wt') as fh:
@@ -92,11 +179,53 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
     return process_json_str(json_str, citation)
 
 def process_nxml_file(file_name, citation=None, offline=False):
+    """Return a ReachProcessor by processing the given NXML file.
+
+    NXML is the format used by PubmedCentral for papers in the open
+    access subset.
+
+    Parameters
+    ----------
+    file_name : str
+        The name of the NXML file to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. Default: None
+    offline : Optional[bool]
+        If set to True, the REACH system is ran offline. Otherwise (by default)
+        the web service is called. Default: False
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     nxml_str = open(file_name, 'rt').read()
     nxml_str = nxml_str.decode('utf-8')
     return process_nxml_str(nxml_str, citation, offline)
 
 def process_json_file(file_name, citation=None):
+    """Return a ReachProcessor by processing the given REACH json file.
+
+    The output from the REACH parser is in this json format. This function is
+    useful if the output is saved as a file and needs to be processed.
+    For more information on the format, see: https://github.com/clulab/reach
+
+    Parameters
+    ----------
+    file_name : str
+        The name of the json file to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. Default: None
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     try:
         with open(file_name, 'rt') as fh:
             json_str = fh.read()
@@ -106,6 +235,25 @@ def process_json_file(file_name, citation=None):
 
 
 def process_json_str(json_str, citation=None):
+    """Return a ReachProcessor by processing the given REACH json string.
+
+    The output from the REACH parser is in this json format.
+    For more information on the format, see: https://github.com/clulab/reach
+
+    Parameters
+    ----------
+    json_str : str
+        The json string to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. Default: None
+
+    Results
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
     json_str = str(json_str)
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
@@ -120,6 +268,3 @@ def process_json_str(json_str, citation=None):
     rp.get_complexes()
     rp.get_activation()
     return rp
-
-if __name__ == '__main__':
-    rp = process_json_file('PMC0000001.uaz.events.json')
