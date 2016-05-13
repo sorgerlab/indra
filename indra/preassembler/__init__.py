@@ -113,8 +113,8 @@ class Preassembler(object):
             concrete/refined versions of the Statements involving particular
             entities.
 
-        Example
-        -------
+        Examples
+        --------
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement::
 
@@ -258,8 +258,8 @@ def render_stmt_graph(statements, agent_style=None):
     """Renders the supports/supported_by relationships of a set of statements
     and returns a pygraphviz graph.
 
-    Example
-    -------
+    Examples
+    --------
     Pattern for getting statements and rendering as a Graphviz graph::
 
         bp = biopax_api.process_pc_pathsfromto(['BRAF'], ['MAP2K1'])
