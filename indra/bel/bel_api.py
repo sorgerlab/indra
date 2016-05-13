@@ -5,18 +5,18 @@ import ndex_client
 from processor import BelProcessor
 
 def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
-    """ Return a BelProcessor for an NDEx network neighborhood.
+    """Return a BelProcessor for an NDEx network neighborhood.
 
     Parameters
     ----------
     gene_names : list
         A list of HGNC gene symbols to search the neighborhood of.
         Example: ['BRAF', 'MAP2K1']
-    rdf_out : string, optional (default: 'bel_output.rdf')
+    rdf_out : Optional[str]
         Name of the output file to save the RDF returned by the web service.
         This is useful for debugging purposes or to repeat the same query
-        on an offline RDF file later.
-    
+        on an offline RDF file later. Default: bel_output.rdf
+
     Returns
     -------
     bp : BelProcessor
@@ -24,11 +24,9 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
 
     Notes
     -----
-    This function calls process_belrdf to the returned RDF string from the 
+    This function calls process_belrdf to the returned RDF string from the
     webservice.
     """
-
-    
     network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     #url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
     url_suffix = '/network/%s/asBELRDF/query' % network_id
@@ -44,11 +42,11 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
 
 
 def process_belrdf(rdf_str):
-    """ Return a BelProcessor for a BEL/RDF string.
+    """Return a BelProcessor for a BEL/RDF string.
 
     Parameters
     ----------
-    rdf_str : string
+    rdf_str : str
         A BEL/RDF string to be processed. This will usually come from reading
         a .rdf file.
 
@@ -60,8 +58,8 @@ def process_belrdf(rdf_str):
     Notes
     -----
     This function calls all the specific get_type_of_mechanism()
-    functions of the newly constructed BelProcessor to extract 
-    INDRA Statements. 
+    functions of the newly constructed BelProcessor to extract
+    INDRA Statements.
     """
     g = rdflib.Graph()
     try:
