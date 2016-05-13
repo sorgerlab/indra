@@ -36,6 +36,21 @@ chebi_pubchem = read_chebi_to_pubchem()
 chebi_chembl = read_chebi_to_chembl()
 
 def get_pubchem_id(chebi_id):
+    """Return the PubChem ID corresponding to a given ChEBI ID.
+
+    Parameters
+    ----------
+    chebi_id : str
+        ChEBI ID to be converted.
+
+    Returns
+    -------
+    pubchem_id : str
+        PubChem ID corresponding to the given ChEBI ID. If the lookup fails,
+        None is returned.
+    """
+    pubchem_id = chebi_pubchem.get(chebi_id)
+    return pubchem_id
     return chebi_pubchem.get(chebi_id)
 
 def get_chembl_id(chebi_id):
