@@ -31,7 +31,7 @@ There are additional subtypes of :py:class:`indra.statements.SelfModification`:
 Statements involve one or more biological *Agents*, typically proteins,
 represented by the class :py:class:`indra.statements.Agent`. Agents can have a
 specific post-translational modification state (indicated by one or more
-instances of :py:class:`indra.statements.ModCondition`) and also other bound
+instances of :py:class:`indra.statements.ModCondition`), other bound
 Agents (:py:class:`indra.statements.BoundCondition`). The *active* form of an
 agent (in terms of its post-translational modifications or bound state) is
 indicated by an instance of the class :py:class:`indra.statements.ActiveForm`.
@@ -74,12 +74,52 @@ amino_acids, amino_acids_reverse = _read_amino_acids()
 
 
 class BoundCondition(object):
-    def __init__(self, agent, is_bound):
+    """Identify Agents bound (or not bound) to a given Agent in a given context.
+
+    Parameters
+    ----------
+    agent : :py:class:`indra.statements.Agent`
+        Instance of Agent.
+    is_bound : bool
+        Specifies whether the given Agent is bound or unbound in the current
+        context. Default is True.
+
+    Examples
+    --------
+
+    EGFR bound to EGF:
+
+    >>> egf = Agent('EGF')
+    >>> egfr = Agent('EGFR', bound_conditions=(BoundCondition(egf)))
+
+    BRAF not bound to a 14-3-3 protein (YWHAB):
+
+    >>> ywhab = Agent('YWHAB')
+    >>> braf = Agent('BRAF', bound_conditions=(BoundCondition(ywhab, False)))
+    """
+    def __init__(self, agent, is_bound=True):
         self.agent = agent
         self.is_bound = is_bound
 
 
 class MutCondition(object):
+    """Mutation state of an amino acid position of an Agent.
+
+    Parameters
+    ----------
+    position : string
+        Residue position of the mutation in the protein sequence.
+    residue_from : string
+        Wild-type (unmodified) amino acid residue at the given position.
+    residue_to : string
+        Amino acid at the position resulting from the mutation.
+
+    Examples
+    --------
+    Represent EGFR with a L858R mutation:
+
+    >>> egfr_mutant = Agent('EGFR', mutations=(MutCondition('858', 'L', 'R')))
+    """
     def __init__(self, position, residue_from, residue_to=None):
         self.position = position
         self.residue_from = get_valid_residue(residue_from)
@@ -109,6 +149,41 @@ class MutCondition(object):
 
 
 class ModCondition(object):
+    """Post-translational modification state at an amino acid position.
+
+    Parameters
+    ----------
+    mod_type : string
+        The type of post-translational modification, e.g., 'phosphorylation'.
+        Valid modification types currently include: 'phosphorylation',
+        'ubiquitination', 'sumoylation', 'hydroxylation', and 'acetylation'.
+        If an invalid modification type is passed an InvalidModTypeError is
+        raised.
+    residue : Union[string, None]
+        String indicating the modified amino acid, e.g., 'Y' or 'tyrosine'.
+        If None, indicates that the residue at the modification site is
+        unknown or unspecified.
+    position : Union[string, None]
+        String indicating the position of the modified amino acid, e.g., '202'.
+        If None, indicates that the position is unknown or unspecified.
+    is_modified : bool
+        Specifies whether the modification is present or absent. Setting the
+        flag specifies that the Agent with the ModCondition is unmodified
+        at the site.
+
+    Examples
+    --------
+    Doubly-phosphorylated MEK (MAP2K1):
+
+    >>> phospho_mek = Agent('MAP2K1', mods=(
+    ... ModCondition('phosphorylation', 'S', '202'),
+    ... ModCondition('phosphorylation', 'S', '204')))
+
+    ERK (MAPK1) unphosphorylated at tyrosine 187:
+
+    >>> unphos_erk = Agent('MAPK1', mods=(
+    ... ModCondition('phosphorylation', 'Y', '187', is_modified=False)))
+    """
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
         self.residue = get_valid_residue(residue)
@@ -164,6 +239,22 @@ class ModCondition(object):
 
 
 class Agent(object):
+    """A molecular entity, e.g., a protein.
+
+    Parameters
+    ----------
+    name : string
+        The name of the agent, preferably a canonicalized name such as an
+        HGNC gene name.
+    mods : list of :py:class:`indra.statements.ModCondition`
+        Modification state of the agent.
+    bound_conditions : list of :py:class:`indra.statements.BoundCondition`
+        Other agents bound to the agent in this context.
+    mutations : list of :py:class:`indra.statements.MutCondition`
+        Amino acid mutations of the agent.
+    db_refs : dict
+        Dictionary of database identifiers associated with this agent.
+    """
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, mutations=None, db_refs=None):
         self.name = name
@@ -418,14 +509,14 @@ class Statement(object):
 
     Attributes
     ----------
-    evidence : list of Evidence objects.
+    evidence : list of :py:class:`indra.statements.Evidence`
         If a list of Evidence objects is passed to the constructor, the
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
         the value is set to an empty list.
-    supports : list of Statements
+    supports : list of :py:class:`indra.statements.Statement`
         Statements that this Statement supports.
-    supported_by : list of Statements
+    supported_by : list of :py:class:`indra.statements.Statement`
         Statements supported by this statement.
     """
 
@@ -485,8 +576,23 @@ class Statement(object):
 
 
 class Modification(Statement):
-    """Generic statement representing the modification of a protein"""
+    """Generic statement representing the modification of a protein.
 
+    Parameters
+    ----------
+    enz : :py:class`indra.statement.Agent`
+        The enzyme involved in the modification.
+    sub : :py:class:`indra.statement.Agent`
+        The substrate of the modification.
+    residue : string or None
+        The amino acid residue being modified, or None if it is unknown or
+        unspecified.
+    position : string or None
+        The position of the modified amino acid, or None if it is unknown or
+        unspecified.
+    evidence : list of :py:class:`indra.statements.Evidence`
+        Evidence objects in support of the modification.
+    """
     def __init__(self, enz, sub, residue=None, position=None, evidence=None):
         super(Modification, self).__init__(evidence)
         self.enz = enz
@@ -561,8 +667,21 @@ class Modification(Statement):
 
 
 class SelfModification(Statement):
-    """Generic statement representing the self modification of a protein"""
+    """Generic statement representing the self-modification of a protein.
 
+    Parameters
+    ----------
+    enz : :py:class`indra.statement.Agent`
+        The enzyme involved in the modification, which is also the substrate.
+    residue : string or None
+        The amino acid residue being modified, or None if it is unknown or
+        unspecified.
+    position : string or None
+        The position of the modified amino acid, or None if it is unknown or
+        unspecified.
+    evidence : list of :py:class:`indra.statements.Evidence`
+        Evidence objects in support of the modification.
+    """
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
@@ -621,14 +740,30 @@ class SelfModification(Statement):
 
 
 class Phosphorylation(Modification):
-    """Phosphorylation modification"""
+    """Phosphorylation modification.
+
+    Examples
+    --------
+    MEK (MAP2K1) phosphorylates ERK (MAPK1) at threonine 185:
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> phos = Phosphorylation(mek, erk, 'T', '185')
+    """
     pass
 
 
 class Autophosphorylation(SelfModification):
-    """Autophosphorylation happens when a protein phosphorylates itself.
+    """Intramolecular autophosphorylation, i.e., in *cis*.
 
-    A more precise name for this is cis-autophosphorylation.
+    Examples
+    --------
+    p38 bound to TAB1 cis-autophosphorylates itself (see
+    http://stke.sciencemag.org.ezp-prod1.hul.harvard.edu/content/2/54/pe4.full):
+
+    >>> tab1 = Agent('TAB1')
+    >>> p38_tab1 = Agent('P38', bound_conditions=(BoundCondition(tab1)))
+    >>> autophos = Autophosphorylation(p38_tab1)
     """
     pass
 
@@ -946,3 +1081,4 @@ class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid residue name: '%s'" % name)
+
