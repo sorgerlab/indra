@@ -31,10 +31,11 @@ There are additional subtypes of :py:class:`indra.statements.SelfModification`:
 Statements involve one or more biological *Agents*, typically proteins,
 represented by the class :py:class:`indra.statements.Agent`. Agents can have a
 specific post-translational modification state (indicated by one or more
-instances of :py:class:`indra.statements.ModCondition`), other bound
-Agents (:py:class:`indra.statements.BoundCondition`). The *active* form of an
-agent (in terms of its post-translational modifications or bound state) is
-indicated by an instance of the class :py:class:`indra.statements.ActiveForm`.
+instances of :py:class:`indra.statements.ModCondition`), other bound Agents
+(:py:class:`indra.statements.BoundCondition`), or amino acid mutations
+(:py:class:`indra.statements.MutCondition`). The *active* form of an agent (in
+terms of its post-translational modifications or bound state) is indicated by
+an instance of the class :py:class:`indra.statements.ActiveForm`.
 
 Interactions between proteins are often described in terms of their effect on a
 protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6 inactives
@@ -448,7 +449,7 @@ class Agent(object):
 class Evidence(object):
     """Container for evidence supporting a given statement.
 
-    Attributes
+    Parameters
     ----------
     source_api : string or None
         String identifying the INDRA API used to capture the statement,
@@ -507,7 +508,7 @@ class Evidence(object):
 class Statement(object):
     """The parent class of all statements.
 
-    Attributes
+    Parameters
     ----------
     evidence : list of :py:class:`indra.statements.Evidence`
         If a list of Evidence objects is passed to the constructor, the
@@ -758,8 +759,7 @@ class Autophosphorylation(SelfModification):
 
     Examples
     --------
-    p38 bound to TAB1 cis-autophosphorylates itself (see
-    http://stke.sciencemag.org.ezp-prod1.hul.harvard.edu/content/2/54/pe4.full):
+    p38 bound to TAB1 cis-autophosphorylates itself (see :pmid:`19155529`).
 
     >>> tab1 = Agent('TAB1')
     >>> p38_tab1 = Agent('P38', bound_conditions=(BoundCondition(tab1)))
