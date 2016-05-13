@@ -20,15 +20,14 @@ def send_request(url, data):
 
 
 def get_ids(search_term, **kwargs):
-    """Search Pubmed for paper IDs given a search term
-    the options are passed as named arguments. For details
-    on parameters that can be used, see
-    http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
-    Some useful parameters to pass are
-    db='pmc' to search PMC instead of pubmed
-    reldate=2 to search for papers within the last 2 days
-    mindate='2016/03/01', maxdate='2016/03/31' to search for papers
-                                               in March 2016
+    """Search Pubmed for paper IDs given a search term.
+
+    The options are passed as named arguments. For details on parameters that
+    can be used, see
+    http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch Some useful
+    parameters to pass are db='pmc' to search PMC instead of pubmed reldate=2
+    to search for papers within the last 2 days mindate='2016/03/01',
+    maxdate='2016/03/31' to search for papers in March 2016.
     """
     params = {'term': search_term,
               'retmax': 1000,
