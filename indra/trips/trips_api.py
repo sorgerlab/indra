@@ -1,7 +1,6 @@
 import trips_client
 from processor import TripsProcessor
 
-
 def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True):
     """Return a TripsProcessor by processing text.
 
