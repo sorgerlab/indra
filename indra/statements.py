@@ -1039,9 +1039,28 @@ class RasGef(Statement):
 
 
 class RasGap(Statement):
-    """Statement representing the inactivation of a GTP-bound protein
-    upon Gap activity."""
+    """Acceleration of a Ras protein's GTP hydrolysis rate by a GAP.
 
+    Represents the generic process by which a GTPase activating protein (GAP)
+    catalyzes GTP hydrolysis by a particular Ras superfamily protein.
+
+    Parameters
+    ----------
+    gap : :py:class:`Agent`
+        The GTPase activating protein.
+    gap_activity : string
+        The biochemical activity of the GAP responsible for hydrolysis.
+    ras : :py:class:`Agent`
+        The Ras superfamily protein.
+
+    Examples
+    --------
+    RASA1 catalyzes GTP hydrolysis on KRAS:
+
+    >>> rasa1 = Agent('RASA1')
+    >>> kras = Agent('KRAS')
+    >>> rasgap = RasGap(rasa1, 'gap', kras)
+    """
     def __init__(self, gap, gap_activity, ras, evidence=None):
         super(RasGap, self).__init__(evidence)
         self.gap = gap
