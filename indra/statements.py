@@ -973,9 +973,28 @@ class ActiveForm(Statement):
 
 
 class RasGef(Statement):
-    """Statement representing the activation of a GTP-bound protein
-    upon Gef activity."""
+    """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
 
+    Represents the generic process by which a guanosine exchange factor (GEF)
+    catalyzes nucleotide exchange on a particular Ras superfamily protein.
+
+    Parameters
+    ----------
+    gef : :py:class:`Agent`
+        The guanosine exchange factor.
+    gef_activity : string
+        The biochemical activity of the GEF responsible for exchange.
+    ras : :py:class:`Agent`
+        The Ras superfamily protein.
+
+    Examples
+    --------
+    SOS1 catalyzes nucleotide exchange on KRAS:
+
+    >>> sos = Agent('SOS1')
+    >>> kras = Agent('KRAS')
+    >>> rasgef = RasGef(sos, 'gef', kras)
+    """
     def __init__(self, gef, gef_activity, ras, evidence=None):
         super(RasGef, self).__init__(evidence)
         self.gef = gef
