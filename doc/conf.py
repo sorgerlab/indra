@@ -15,6 +15,7 @@
 import sys
 import os
 import shlex
+import mock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -296,29 +297,17 @@ texinfo_documents = [
 
 # -- Mock out some problematic modules-------------------------------------
 
-class Mock(object):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, *args, **kwargs):
-        return Mock()
-
-    @classmethod
-    def __getattr__(cls, name):
-        if name in ('__file__', '__path__'):
-            return '/dev/null'
-        elif name[0] == name[0].upper():
-            mockType = type(name, (), {})
-            mockType.__module__ = __name__
-            return mockType
-        else:
-            return Mock()
-
-MOCK_MODULES = ['pygraphviz', 'jnius', 'jnius_config']
+# Note that for sub-modules, all parent modules must be listed explicitly.
+MOCK_MODULES = [
+    'pygraphviz', 'jnius', 'jnius_config', 'requests', 'functools32',
+    'rdflib', 'rdflib.namespace', 'rdflib.plugins', 'rdflib.plugins.parsers',
+    'rdflib.plugins.parsers.ntriples', 'pysb', 'pysb.core', 'pysb.export',
+    'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
+    ]
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
+    sys.modules[mod_name] = mock.MagicMock()
 
-# jnius_config needs a little extra hacking.
+# jnius_config needs a little extra hacking to avoid producing a warning
+# from our code that uses it.
 jnius_config = sys.modules['jnius_config']
-jnius_config.get_options = lambda: []
 jnius_config.vm_running = False
