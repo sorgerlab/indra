@@ -1,5 +1,8 @@
 import urllib, urllib2
+import indra.logger
 from indra.java_vm import autoclass, JavaException
+
+logger = indra.logger.get_logger('biopax/pathway_commons_client')
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
@@ -10,7 +13,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     # Get the "kind" string
     kind_str = kind.lower()
     if kind not in ['neighborhood', 'pathsbetween', 'pathsfromto']:
-        print 'Invalid query type %s' % kind_str
+        logger.warn('Invalid query type %s' % kind_str)
         return None
     params['kind'] = kind_str
     # Get the source string
@@ -22,7 +25,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     try:
         neighbor_limit = int(neighbor_limit)
     except TypeError, ValueError:
-        print 'Invalid neighborhood limit %s' % neighbor_limit
+        logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
         if isinstance(target, basestring):
@@ -31,17 +34,17 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
             target_str = ','.join(target)
         params['target'] = target_str
 
-    print 'Sending Pathway Commons query...'
+    logger.info('Sending Pathway Commons query...')
     try:
         res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
     except urllib2.HTTPError as e:
-        print 'Response is HTTP eror code %d.' % e.code
+        logger.error('Response is HTTP eror code %d.' % e.code)
         return None
 
     owl_str = res.read()
     model = owl_str_to_model(owl_str)
     if model is not None:
-        print 'Pathway Commons query returned a model...'
+        logger.info('Pathway Commons query returned a model...')
     return model
 
 def owl_str_to_model(owl_str):
@@ -61,13 +64,13 @@ def owl_to_model(fname):
     try:
         file_is = autoclass('java.io.FileInputStream')(fname)
     except JavaException:
-        print 'Could not open data file %s' % fname
+        logger.error('Could not open data file %s' % fname)
         return
     try:
         biopax_model = io.convertFromOWL(file_is)
     except JavaException as e:
-        print 'Could not convert data file %s to BioPax model' % fname
-        print e
+        logger.error('Could not convert data file %s to BioPax model' % fname)
+        logger.error(e)
         return
 
     file_is.close()
@@ -81,7 +84,7 @@ def model_to_owl(model, fname):
     try:
         fileOS = autoclass('java.io.FileOutputStream')(fname)
     except JavaException:
-        print 'Could not open data file %s' % fname
+        logger.error('Could not open data file %s' % fname)
         return
     l3_factory = autoclass('org.biopax.paxtools.model.BioPAXLevel').L3.getDefaultFactory()
     model_out = l3_factory.createModel()
