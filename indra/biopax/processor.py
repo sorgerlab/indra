@@ -12,7 +12,7 @@ from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
 
-logger = indra.logger.get_logger('biopax/processor')
+logger = indra.logger.get_logger('biopax')
 
 # TODO:
 # - Extract cellularLocation from each PhysicalEntity

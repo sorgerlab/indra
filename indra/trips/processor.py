@@ -9,7 +9,7 @@ from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
-logger = indra.logger.get_logger('trips/processor')
+logger = indra.logger.get_logger('trips')
 
 mod_names = {
     'PHOSPHORYLATION': 'phosphorylation'

@@ -6,7 +6,7 @@ import urllib2
 import xml.dom.minidom
 import indra.logger
 
-logger = indra.logger.get_logger('trips/trips_client')
+logger = indra.logger.get_logger('trips')
 
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
