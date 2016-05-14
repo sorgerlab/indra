@@ -469,7 +469,6 @@ class Evidence(object):
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
     """
-
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None):
         self.source_api = source_api
@@ -519,7 +518,6 @@ class Statement(object):
     supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
     """
-
     def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
             self.evidence = []
@@ -768,11 +766,14 @@ class Autophosphorylation(SelfModification):
 
 
 class Transphosphorylation(SelfModification):
-    """Transphosphorylation assumes that a kinase is already bound to a
-    substrate (usually of the same molecular species), and phosphorylates it in
-    an intra-molecular fashion. The enz property of the statement must have
+    """Autophosphorylation in *trans.*
+
+    Transphosphorylation assumes that a kinase is already bound to a substrate
+    (usually of the same molecular species), and phosphorylates it in an
+    intra-molecular fashion. The enz property of the statement must have
     exactly one bound_conditions entry, and we assume that enz phosphorylates
-    this molecule. The bound_neg property is ignored here.  """
+    this molecule. The bound_neg property is ignored here.
+    """
     pass
 
 
@@ -903,10 +904,23 @@ class RasGtpActivityActivity(ActivityActivity):
 
 
 class ActiveForm(Statement):
-    """Statement representing the activity of an Agent in a state described by
-    one or more Agent conditions (including modification conditions, 
-    bound-to conditions and mutation conditions)."""
+    """Specifies conditions causing an Agent to be active or inactive.
 
+    Types of conditions influencing a specific type of biochemical activity can
+    include modifications, bound Agents, and mutations.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        The Agent in a particular active or inactive state. The sets
+        of ModConditions, BoundConditions, and MutConditions on the given
+        Agent instance indicate the relevant conditions.
+    activity : string
+        The type of activity influenced by the given set of conditions,
+        e.g., "kinase".
+    is_active : bool
+        Whether the conditions are activating (True) or inactivating (False).
+    """
     def __init__(self, agent, activity, is_active, evidence=None):
         super(ActiveForm, self).__init__(evidence)
         self.agent = agent
