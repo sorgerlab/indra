@@ -122,8 +122,8 @@ class MutCondition(object):
     """
     def __init__(self, position, residue_from, residue_to=None):
         self.position = position
-        self.residue_from = get_valid_residue(residue_from)
-        self.residue_to = get_valid_residue(residue_to)
+        self.residue_from = _get_valid_residue(residue_from)
+        self.residue_to = _get_valid_residue(residue_to)
 
     def matches(self, other):
         return (self.matches_key() == other.matches_key())
@@ -186,7 +186,7 @@ class ModCondition(object):
     """
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
-        self.residue = get_valid_residue(residue)
+        self.residue = _get_valid_residue(residue)
         if not isinstance(position, basestring):
             if position is None:
                 self.position = None
@@ -595,7 +595,7 @@ class Modification(Statement):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
-        self.residue = get_valid_residue(residue)
+        self.residue = _get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -683,7 +683,7 @@ class SelfModification(Statement):
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
-        self.residue = get_valid_residue(residue)
+        self.residue = _get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -1105,8 +1105,21 @@ class RasGap(Statement):
 
 
 class Complex(Statement):
-    """Statement representing complex formation between a set of members"""
+    """A set of proteins observed to be in a complex.
 
+    Parameters
+    ----------
+    members : list of :py:class:`Agent`
+        The set of proteins in the complex.
+
+    Examples
+    --------
+    BRAF is observed to be in a complex with RAF1:
+
+    >>> braf = Agent('BRAF')
+    >>> raf1 = Agent('RAF1')
+    >>> cplx = Complex([braf, raf1])
+    """
     def __init__(self, members, evidence=None):
         super(Complex, self).__init__(evidence)
         self.members = members
@@ -1160,7 +1173,8 @@ class Complex(Statement):
         return matches
 
 
-def get_valid_residue(residue):
+def _get_valid_residue(residue):
+    """Check if the given string represents a valid amino acid residue."""
     if residue is not None and amino_acids.get(residue) is None:
         res = amino_acids_reverse.get(residue.lower())
         if res is None:
