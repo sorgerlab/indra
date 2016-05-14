@@ -2,50 +2,49 @@
 Statements representing mechanistic relationships between biological agents.
 
 Statement classes follow an inheritance hierarchy, with all Statement types
-inheriting from the parent class :py:class:`indra.statement.Statement`. At
+inheriting from the parent class :py:class:`Statement`. At
 the next level in the hierarchy are the following classes:
 
-- :py:class:`indra.statements.Complex`
-- :py:class:`indra.statements.Modification`
-- :py:class:`indra.statements.SelfModification`
-- :py:class:`indra.statements.RasGef`
-- :py:class:`indra.statements.RasGap`
-- :py:class:`indra.statements.ActivityActivity`
+- :py:class:`Complex`
+- :py:class:`Modification`
+- :py:class:`SelfModification`
+- :py:class:`RasGef`
+- :py:class:`RasGap`
+- :py:class:`ActivityActivity`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
-:py:class:`indra.statements.Modification`:
+:py:class:`Modification`:
 
-- :py:class:`indra.statements.Phosphorylation`
-- :py:class:`indra.statements.Dephosphorylation`
-- :py:class:`indra.statements.Ubiquitination`
-- :py:class:`indra.statements.Sumoylation`
-- :py:class:`indra.statements.Hydroxylation`
-- :py:class:`indra.statements.Acetylation`
+- :py:class:`Phosphorylation`
+- :py:class:`Dephosphorylation`
+- :py:class:`Ubiquitination`
+- :py:class:`Sumoylation`
+- :py:class:`Hydroxylation`
+- :py:class:`Acetylation`
 
-There are additional subtypes of :py:class:`indra.statements.SelfModification`:
+There are additional subtypes of :py:class:`SelfModification`:
 
-- :py:class:`indra.statements.Autophosphorylation`
-- :py:class:`indra.statements.Transphosphorylation`
+- :py:class:`Autophosphorylation`
+- :py:class:`Transphosphorylation`
 
 Statements involve one or more biological *Agents*, typically proteins,
-represented by the class :py:class:`indra.statements.Agent`. Agents can have a
-specific post-translational modification state (indicated by one or more
-instances of :py:class:`indra.statements.ModCondition`), other bound Agents
-(:py:class:`indra.statements.BoundCondition`), or amino acid mutations
-(:py:class:`indra.statements.MutCondition`). The *active* form of an agent (in
-terms of its post-translational modifications or bound state) is indicated by
-an instance of the class :py:class:`indra.statements.ActiveForm`.
+represented by the class :py:class:`Agent`. Agents can have a specific
+post-translational modification state (indicated by one or more instances of
+:py:class:`ModCondition`), other bound Agents (:py:class:`BoundCondition`), or
+mutations (:py:class:`MutCondition`). The *active* form of an agent (in terms
+of its post-translational modifications or bound state) is indicated by an
+instance of the class :py:class:`ActiveForm`.
 
-Interactions between proteins are often described in terms of their effect on a
-protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6 inactives
-ERK".  These types of relationships are indicated by the statement
-:py:class:`indra.statements.ActivityActivity`.
+Interactions between proteins are often described simply in terms of their
+effect on a protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6
+inactives ERK".  These types of relationships are indicated by the statement
+:py:class:`ActivityActivity`.
 
 The evidence for a given Statement, which could include relevant citations,
 database identifiers, and passages of text from the scientific literature, is
-contained in one or more Evidence objects
-(:py:class:`indra.statements.Evidence`) associated with the Statement.
+contained in one or more :py:class:`Evidence` objects associated with the
+Statement.
 """
 
 import os
@@ -79,7 +78,7 @@ class BoundCondition(object):
 
     Parameters
     ----------
-    agent : :py:class:`indra.statements.Agent`
+    agent : :py:class:`Agent`
         Instance of Agent.
     is_bound : bool
         Specifies whether the given Agent is bound or unbound in the current
@@ -247,11 +246,11 @@ class Agent(object):
     name : string
         The name of the agent, preferably a canonicalized name such as an
         HGNC gene name.
-    mods : list of :py:class:`indra.statements.ModCondition`
+    mods : list of :py:class:`ModCondition`
         Modification state of the agent.
-    bound_conditions : list of :py:class:`indra.statements.BoundCondition`
+    bound_conditions : list of :py:class:`BoundCondition`
         Other agents bound to the agent in this context.
-    mutations : list of :py:class:`indra.statements.MutCondition`
+    mutations : list of :py:class:`MutCondition`
         Amino acid mutations of the agent.
     db_refs : dict
         Dictionary of database identifiers associated with this agent.
@@ -510,14 +509,14 @@ class Statement(object):
 
     Parameters
     ----------
-    evidence : list of :py:class:`indra.statements.Evidence`
+    evidence : list of :py:class:`Evidence`
         If a list of Evidence objects is passed to the constructor, the
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
         the value is set to an empty list.
-    supports : list of :py:class:`indra.statements.Statement`
+    supports : list of :py:class:`Statement`
         Statements that this Statement supports.
-    supported_by : list of :py:class:`indra.statements.Statement`
+    supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
     """
 
@@ -591,7 +590,7 @@ class Modification(Statement):
     position : string or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
-    evidence : list of :py:class:`indra.statements.Evidence`
+    evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
     def __init__(self, enz, sub, residue=None, position=None, evidence=None):
@@ -680,7 +679,7 @@ class SelfModification(Statement):
     position : string or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
-    evidence : list of :py:class:`indra.statements.Evidence`
+    evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
     def __init__(self, enz, residue=None, position=None, evidence=None):
