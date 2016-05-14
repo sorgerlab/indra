@@ -159,11 +159,11 @@ class ModCondition(object):
         'ubiquitination', 'sumoylation', 'hydroxylation', and 'acetylation'.
         If an invalid modification type is passed an InvalidModTypeError is
         raised.
-    residue : Union[string, None]
+    residue : string or None
         String indicating the modified amino acid, e.g., 'Y' or 'tyrosine'.
         If None, indicates that the residue at the modification site is
         unknown or unspecified.
-    position : Union[string, None]
+    position : string or None
         String indicating the position of the modified amino acid, e.g., '202'.
         If None, indicates that the position is unknown or unspecified.
     is_modified : bool
@@ -811,9 +811,42 @@ class Ubiquitination(Modification):
 
 
 class ActivityActivity(Statement):
-    """Statement representing the activation of a protein as a result of the
-    activity of another protein."""
+    """Indicates that the activity of a protein affects the activity of another.
 
+    This statement is intended to be used for physical interactions where the
+    mechanism of activation is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature. Both
+    activating and inactivating interactions can be represented.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    subj_activity : string
+        The type of biochemical activity responsible for the effect, e.g.,
+        the subject's "kinase" activity.
+    relationship : string
+        Indicates the type of interaction: 'increases' or 'decreases'.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : string
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+
+    Examples
+    --------
+
+    The kinase activity of MEK (MAP2K1) activates the kinase activity of ERK
+    (MAPK1):
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> act = ActivityActivity(mek, 'kinase', 'increases', erk, 'kinase')
+    """
     def __init__(self, subj, subj_activity, relationship, obj,
                  obj_activity, evidence=None):
         super(ActivityActivity, self).__init__(evidence)
