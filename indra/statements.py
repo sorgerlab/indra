@@ -209,19 +209,25 @@ class Agent(object):
         # MODIFICATIONS
         # Similar to the above, we check that self has all of the modifications
         # of other.
-        # Make sure they have the same modifications
         # Here we need to make sure that a mod in self.mods is only matched
         # once to a mod in other.mods. Otherwise ('phoshporylation') would be
         # considered a refinement of ('phosphorylation', 'phosphorylation')
         matched_indices = []
+        # This outer loop checks that each modification in the other Agent
+        # is matched.
         for other_mod in other.mods:
             mod_found = False
+            # We need to keep track of indices for this Agent's modifications
+            # to make sure that each one is used at most once to match
+            # the modification of one of the other Agent's modifications.
             for ix, self_mod in enumerate(self.mods):
                 if self_mod.refinement_of(other_mod, mod_hierarchy):
-                    if ix in matched_indices:
-                        continue
-                    mod_found = True
-                    matched_indices.append(ix)
+                    # If this modification hasn't been used for matching yet
+                    if not ix in matched_indices:
+                        # Set the index as used
+                        matched_indices.append(ix)
+                        mod_found = True
+                        break
             # If we didn't find an exact match for this mod in other, then
             # no refinement
             if not mod_found:

@@ -217,6 +217,32 @@ def test_refinement_agent_mod_same_order():
     assert(hras1.refinement_of(hras2, eh, mh))
     assert(not hras2.refinement_of(hras1, eh, mh))
 
+def test_refinement_agent_mod_multiple():
+    mc1 = ModCondition('phosphorylation', 'S', '218')
+    mc2 = ModCondition('phosphorylation', 'S', '298')
+    mc3 = ModCondition('phosphorylation', 'S', '222')
+    mc4 = ModCondition('phosphorylation')
+    mc5 = ModCondition('phosphorylation')
+
+    mek1 = Agent('MAP2K1', mods=[mc1, mc2, mc3])
+    mek2 = Agent('MAP2K1', mods=[mc4, mc5])
+    erk = Agent('MAPK1')
+
+    st1 = Phosphorylation(mek2, erk)
+    st2 = Phosphorylation(mek1, erk, 'T', '185')
+    st3 = Phosphorylation(mek1, erk, 'Y', '187')
+    assert(st2.refinement_of(st1, eh, mh))
+    assert(st3.refinement_of(st1, eh, mh))
+    assert(not st1.refinement_of(st2, eh, mh))
+    assert(not st1.refinement_of(st3, eh, mh))
+
+def test_refinement_agent_mod_generic():
+    p = ModCondition('phosphorylation')
+    raf3p = Phosphorylation(Agent('RAF', mods=[p,p,p]), Agent('MAP2K1'))
+    raf2p = Phosphorylation(Agent('RAF', mods=[p,p]), Agent('MAP2K1'))
+    assert(raf3p.refinement_of(raf2p, eh, mh))
+    assert(not raf2p.refinement_of(raf3p, eh, mh))
+
 # Check matches implementations for all statement types ---------------------
 def test_matches_selfmod():
     """Test matching of entities only, entities match only on name."""
@@ -268,7 +294,7 @@ def test_matches_activatingsub():
     mut2 = MutCondition('61', 'Q', 'L')
     nras1 = Agent('NRAS', mutations=[mut1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mut2], db_refs = {'HGNC': 'dummy'})
-    
+
     st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
     st2 = ActiveForm(nras1, 'gtpbound1', True,
