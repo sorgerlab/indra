@@ -3,7 +3,7 @@ import csv
 import warnings
 from collections import namedtuple
 from copy import deepcopy
-from indra.databases import uniprot_client
+from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 
 
@@ -87,7 +87,7 @@ class SiteMapper(object):
                 stmt_copy.residue = new_mod_list[0].residue
                 stmt_copy.position = new_mod_list[0].position
 
-            # If the invalid_sites list isn't empty, that means that there were
+            # If the invalid_sites list isneck_agent_mod(self, agent, mods)t empty, that means that there were
             # incorrect residues for this statement; add the statement to
             # the mapped_statements list
             if invalid_sites:
@@ -184,10 +184,19 @@ def update_mod_list(agent_name, mods, invalid_sites):
 
 
 def get_uniprot_id(agent):
-    # If no UniProt ID is found, we don't report a failure
     up_id = agent.db_refs.get('UP')
+    hgnc_id = agent.db_refs.get('HGNC')
     if up_id is None:
-        return None
+        if hgnc_id is None:
+            # If both UniProt and HGNC refs are missing we can't
+            # sequence check and so don't report a failure.
+            return None
+        # Try to get UniProt ID from HGNC
+        up_id = hgnc_client.get_uniprot_id(hgnc_id)
+        # If this fails, again, we can't sequence check
+        if up_id is None:
+            return None
+
     # If the UniProt ID is a list then choose the first one.
     if not isinstance(up_id, basestring) and \
        isinstance(up_id[0], basestring):

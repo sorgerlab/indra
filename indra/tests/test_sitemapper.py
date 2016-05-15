@@ -183,6 +183,14 @@ def test_site_map_activityactivity():
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
+def test_site_map_hgnc():
+    """Make sure site mapping is done even if only HGNC ID is given."""
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+    mapk1_invalid.db_refs = {'HGNC': '6871'}
+    st1 = ActiveForm(mapk1_invalid, 'kinase', True)
+    (valid, mapped) = sm.map_sites([st1])
+    assert len(valid) == 0
+    assert len(mapped) == 1
 
 def get_invalid_mapks():
     """A handy function for getting the invalid MAPK agents we want."""
