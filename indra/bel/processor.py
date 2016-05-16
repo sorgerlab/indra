@@ -555,7 +555,7 @@ class BelProcessor(object):
                         RasGef(subj, subj_activity, obj, evidence))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
-            elif obj_activity == 'gtpnound' and \
+            elif obj_activity == 'gtpbound' and \
                  rel == 'decreases':
                 self.statements.append(
                         RasGap(subj, subj_activity, obj, evidence))

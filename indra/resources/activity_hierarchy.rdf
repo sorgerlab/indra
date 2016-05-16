@@ -3,29 +3,25 @@
    xmlns:ns1="http://sorger.med.harvard.edu/indra/relations/"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Phosphatase">
-    <ns1:hasName>phosphatase</ns1:hasName>
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RasGap">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
-    <ns1:hasName>rasgap</ns1:hasName>
-  </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Catalytic">
     <ns1:hasName>catalytic</ns1:hasName>
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activity"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/RasGef">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
-    <ns1:hasName>rasgef</ns1:hasName>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/GtpBound">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activity"/>
+    <ns1:hasName>gtpbound</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Transcriptional">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activity"/>
     <ns1:hasName>transcriptional</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activity"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Phosphatase">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
+    <ns1:hasName>phosphatase</ns1:hasName>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Kinase">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
     <ns1:hasName>kinase</ns1:hasName>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Catalytic"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activity">
     <ns1:hasName>activity</ns1:hasName>
