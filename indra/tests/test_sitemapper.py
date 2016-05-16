@@ -7,7 +7,7 @@ def test_check_agent_mod():
                         mods=[ModCondition('phosphorylation', 'T', '185'),
                               ModCondition('phosphorylation', 'Y', '187')],
                         db_refs={'UP': 'P28482'})
-    res_valid = sm.map_agent_sites(mapk1_valid)
+    res_valid = sm._map_agent_sites(mapk1_valid)
     assert len(res_valid) == 2
     assert res_valid[0] == []
     assert isinstance(res_valid[1], Agent)
@@ -17,7 +17,7 @@ def test_check_agent_mod():
                           mods=[ModCondition('phosphorylation', 'T', '183'),
                                 ModCondition('phosphorylation', 'Y', '185')],
                           db_refs={'UP': 'P28482'})
-    res_invalid = sm.map_agent_sites(mapk1_invalid)
+    res_invalid = sm._map_agent_sites(mapk1_invalid)
     assert len(res_invalid) == 2
     assert isinstance(res_invalid[0], list)
     assert isinstance(res_invalid[1], Agent)

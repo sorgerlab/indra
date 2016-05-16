@@ -1,6 +1,20 @@
 import indra.statements as ist
 
 class EnglishAssembler(object):
+    """This assembler generates English sentences from INDRA Statements.
+
+    Parameters
+    ----------
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be added to the assembler.
+
+    Attributes
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements to assemble.
+    model : str
+        The assembled sentences as a single string.
+    """
     def __init__(self, stmts=None):
         if stmts is None:
             self.statements = []
@@ -9,27 +23,37 @@ class EnglishAssembler(object):
         self.model = None
 
     def add_statements(self, stmts):
+        """Add INDRA Statements to the assembler's list of statements.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of :py:class:`indra.statements.Statement`
+            to be added to the statement list of the assembler.
+        """
         self.statements += stmts
 
     def make_model(self):
+        """Assemble text from the set of collected INDRA Statements."""
         stmt_strs = []
         for stmt in self.statements:
             if isinstance(stmt, ist.Phosphorylation):
-                stmt_strs.append(assemble_phosphorylation(stmt))
+                stmt_strs.append(_assemble_phosphorylation(stmt))
             elif isinstance(stmt, ist.Dephosphorylation):
-                stmt_strs.append(assemble_dephosphorylation(stmt))
+                stmt_strs.append(_assemble_dephosphorylation(stmt))
             elif isinstance(stmt, ist.Autophosphorylation):
-                stmt_strs.append(assemble_autophosphorylation(stmt))
+                stmt_strs.append(_assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
-                stmt_strs.append(assemble_complex(stmt))
+                stmt_strs.append(_assemble_complex(stmt))
             elif isinstance(stmt, ist.ActivityActivity):
-                stmt_strs.append(assemble_activityactivity(stmt))
+                stmt_strs.append(_assemble_activityactivity(stmt))
             else:
                 print 'Unhandled statement type.'
         model = ' '.join(stmt_strs)
         return model
 
-def assemble_agent_str(agent):
+def _assemble_agent_str(agent):
+    """Assemble an Agent object to text."""
     agent_str = agent.name
     if not agent.mods and not agent.bound_conditions:
         return agent_str
@@ -40,14 +64,14 @@ def assemble_agent_str(agent):
     not_bound_to = [bc.agent.name for bc in
                 agent.bound_conditions if not bc.is_bound]
     if bound_to:
-        agent_str += ' bound to ' + join_list(bound_to)
+        agent_str += ' bound to ' + _join_list(bound_to)
         if not_bound_to:
             agent_str += ' and not bound to ' +\
-                join_list(not_bound_to)
+                _join_list(not_bound_to)
     else:
         if not_bound_to:
             agent_str += ' not bound to ' +\
-                join_list(not_bound_to)
+                _join_list(not_bound_to)
 
     # Handle modification conditions
     if agent.mods:
@@ -74,11 +98,12 @@ def assemble_agent_str(agent):
                         mod_lst.append('an unknown residue')
                 else:
                     mod_lst.append(m.residue + m.position)
-            agent_str += join_list(mod_lst)
+            agent_str += _join_list(mod_lst)
 
     return agent_str
 
-def join_list(lst):
+def _join_list(lst):
+    """Join a list of words in a gramatically correct way."""
     if len(lst) > 2:
         s = ', '.join(lst[:-1])
         s += ' and ' + lst[-1]
@@ -90,10 +115,11 @@ def join_list(lst):
         s = ''
     return s
 
-def assemble_phosphorylation(stmt):
-    sub_str = assemble_agent_str(stmt.sub)
+def _assemble_phosphorylation(stmt):
+    """Assemble Phosphorylation statements into text."""
+    sub_str = _assemble_agent_str(stmt.sub)
     if stmt.enz is not None:
-        enz_str = assemble_agent_str(stmt.enz)
+        enz_str = _assemble_agent_str(stmt.enz)
         stmt_str = enz_str + ' phosphorylates ' + sub_str
     else:
         stmt_str = sub_str + ' is phosphorylated'
@@ -106,12 +132,13 @@ def assemble_phosphorylation(stmt):
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
-    return make_sentence(stmt_str)
+    return _make_sentence(stmt_str)
 
-def assemble_dephosphorylation(stmt):
-    sub_str = assemble_agent_str(stmt.sub)
+def _assemble_dephosphorylation(stmt):
+    """Assemble Dephosphorylation statements into text."""
+    sub_str = _assemble_agent_str(stmt.sub)
     if stmt.enz is not None:
-        enz_str = assemble_agent_str(stmt.enz)
+        enz_str = _assemble_agent_str(stmt.enz)
         stmt_str = enz_str + ' dephosphorylates ' + sub_str
     else:
         stmt_str = sub_str + ' is dephosphorylated'
@@ -124,15 +151,17 @@ def assemble_dephosphorylation(stmt):
     else:
         mod_str = 'on an unknown residue '
     stmt_str += ' ' + mod_str
-    return make_sentence(stmt_str)
+    return _make_sentence(stmt_str)
 
-def assemble_complex(stmt):
-    member_strs = [assemble_agent_str(m) for m in stmt.members]
-    stmt_str = member_strs[0] + ' binds ' + join_list(member_strs[1:])
-    return make_sentence(stmt_str)
+def _assemble_complex(stmt):
+    """Assemble Complex statements into text."""
+    member_strs = [_assemble_agent_str(m) for m in stmt.members]
+    stmt_str = member_strs[0] + ' binds ' + _join_list(member_strs[1:])
+    return _make_sentence(stmt_str)
 
-def assemble_autophosphorylation(stmt):
-    enz_str = assemble_agent_str(stmt.enz)
+def _assemble_autophosphorylation(stmt):
+    """Assemble Autophosphorylation statements into text."""
+    enz_str = _assemble_agent_str(stmt.enz)
     stmt_str = enz_str + ' phosphorylates itself'
     if stmt.residue is not None:
         if stmt.position is None:
@@ -142,19 +171,21 @@ def assemble_autophosphorylation(stmt):
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
-    return make_sentence(stmt_str)
+    return _make_sentence(stmt_str)
 
-def assemble_activityactivity(stmt):
-    subj_str = assemble_agent_str(stmt.subj)
-    obj_str = assemble_agent_str(stmt.obj)
+def _assemble_activityactivity(stmt):
+    """Assemble ActivityActivity statements into text."""
+    subj_str = _assemble_agent_str(stmt.subj)
+    obj_str = _assemble_agent_str(stmt.obj)
     if stmt.relationship == 'increases':
         rel_str = ' activates '
     else:
         rel_str = ' inactivates '
     stmt_str = subj_str + rel_str + obj_str
-    return make_sentence(stmt_str)
+    return _make_sentence(stmt_str)
 
-def make_sentence(txt):
+def _make_sentence(txt):
+    """Make a sentence from a piece of text."""
     #Make sure first letter is capitalized
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'

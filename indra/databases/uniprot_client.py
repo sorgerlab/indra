@@ -61,6 +61,18 @@ except IOError:
 
 @lru_cache(maxsize=1000)
 def query_protein(protein_id):
+    """Return the UniProt entry as an RDF graph for the given UniProt ID.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID to be queried.
+
+    Returns
+    -------
+    g : rdflib.Graph
+        The RDF graph corresponding to the UniProt entry.
+    """
     # Try looking up a primary ID if the given one
     # is a secondary ID
     try:
@@ -90,6 +102,21 @@ def query_protein(protein_id):
     return g
 
 def get_family_members(family_name, human_only=True):
+    """Return the HGNC gene symbols which are the members of a given family.
+
+    Parameters
+    ----------
+    family_name : str
+        Family name to be queried.
+    human_only : bool
+        If True, only human proteins in the family will be returned.
+        Default: True
+
+    Returns
+    -------
+    gene_names : list
+        The HGNC gene symbols corresponding to the given family.
+    """
     data = {'query': 'family:%s' % family_name, 
             'format': 'list'}
     if human_only:
@@ -108,6 +135,18 @@ def get_family_members(family_name, human_only=True):
         return None
 
 def get_mnemonic(protein_id):
+    """Return the UniProt mnemonic for the given UniProt ID.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID to be mapped.
+
+    Returns
+    -------
+    mnemonic : str
+        The UniProt mnemonic corresponding to the given Uniprot ID.
+    """
     try:
         mnemonic = uniprot_mnemonic[protein_id]
         return mnemonic
@@ -128,6 +167,18 @@ def get_mnemonic(protein_id):
         return None
 
 def get_hgnc_name(protein_id):
+    """Return the HGNC symbol for the given UniProt ID.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID to be mapped.
+
+    Returns
+    -------
+    hgnc_name : str
+        The HGNC symbol corresponding to the given Uniprot ID.
+    """
     # Try getting it from the dict first
     try:
         hgnc_name = uniprot_hgnc[protein_id]
@@ -153,9 +204,22 @@ def get_hgnc_name(protein_id):
 
 
 def get_gene_name(protein_id):
-    # This is an alternative to get_hgnc_name and is useful when
-    # HGNC name is not availabe (for instance, when the organism
-    # is not homo sapiens)
+    """Return the gene name for the given UniProt ID.
+
+    This is an alternative to get_hgnc_name and is useful when
+    HGNC name is not availabe (for instance, when the organism
+    is not homo sapiens).
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID to be mapped.
+
+    Returns
+    -------
+    gene_name : str
+        The gene name corresponding to the given Uniprot ID.
+    """
     g = query_protein(protein_id)
     query = rdf_prefixes + """
         SELECT ?name
@@ -217,9 +281,22 @@ def get_modifications(protein_id):
 
 
 def verify_location(protein_id, residue, location):
-    """
-    Verify if a given residue is at the given location
-    acording to the UniProt sequence
+    """Return True if the residue is at the given location in the UP sequence.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein whose sequence is used as reference.
+    residue : str
+        A single character amino acid symbol (Y, S, T, V, etc.)
+    location : str
+        The location on the protein sequence (starting at 1) at which the
+        residue should be checked against the reference sequence.
+
+    Returns
+    -------
+    True if the given residue is at the given position in the sequence
+    corresponding to the given UniProt ID, otherwise False.
     """
     seq = get_sequence(protein_id)
     try:
@@ -236,10 +313,23 @@ def verify_location(protein_id, residue, location):
 
 
 def verify_modification(protein_id, residue, location=None):
-    """
-    Verify if a given residue at the given location
-    has a reported modification. If location is not
-    given, we only check if there is any residue of the
+    """Return True if the residue at the given location has a known modifiation. 
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein whose sequence is used as reference.
+    residue : str
+        A single character amino acid symbol (Y, S, T, V, etc.)
+    location : Optional[str]
+        The location on the protein sequence (starting at 1) at which the
+        modification is checked.
+
+    Returns
+    -------
+    True if the given residue is reported to be modified at the given position 
+    in the sequence corresponding to the given UniProt ID, otherwise False.
+    If location is not given, we only check if there is any residue of the
     given type that is modified.
     """
     mods = get_modifications(protein_id)
@@ -258,10 +348,3 @@ def verify_modification(protein_id, residue, location=None):
             if seq[ml - 1] == residue:
                 return True
         return False
-
-if __name__ == '__main__':
-    g = query_protein('Q02750')
-    seq = get_sequence('Q02750')
-    mods = get_modifications('Q02750')
-    hgnc_name = get_hgnc_name('Q02750')
-    gene_name = get_gene_name('Q02750')

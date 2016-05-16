@@ -6,7 +6,33 @@ from indra.statements import *
 from indra.databases import uniprot_client
 
 class Preassembler(object):
+    """De-duplicates statements and arranges them in a specificity hierarchy.
 
+    Parameters
+    ----------
+    entity_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
+        Hierarchy of entities, primarily specifying relationships between
+        genes and gene families.
+    mod_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
+        Hierarchy of post-translational modifications, e.g., specifying that
+        serine phosphorylation is a subtype of phosphorylation.
+    stmts : list of :py:class:`indra.statements.Statement` or None
+        A set of statements to perform pre-assembly on. If None, statements
+        should be added using the :py:meth:`add_statements` method.
+
+    Attributes
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+        Starting set of statements for preassembly.
+    unique_stmts : list of :py:class:`indra.statements.Statement`
+        Statements resulting from combining duplicates.
+    related_stmts : list of :py:class:`indra.statements.Statement`
+        Top-level statements after building the refinement hierarchy.
+    entity_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
+        Entity hierarchy.
+    mod_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
+        Post-translational modification type hierarchy.
+    """
     def __init__(self, entity_hierarchy, mod_hierarchy, stmts=None):
         self.entity_hierarchy = entity_hierarchy
         self.mod_hierarchy = mod_hierarchy
@@ -18,10 +44,20 @@ class Preassembler(object):
         self.related_stmts = []
 
     def add_statements(self, stmts):
-        """Add to the current list of statements."""
+        """Add to the current list of statements.
+
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            Statements to add to the current list.
+        """
         self.stmts += deepcopy(stmts)
 
     def combine_duplicates(self):
+        """Combine duplicates among `stmts` and save result in `unique_stmts`.
+
+        A wrapper around the static method :py:meth:`combine_duplicate_stmts`.
+        """
         self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
         return self.unique_stmts
 
@@ -30,16 +66,41 @@ class Preassembler(object):
         """Combine evidence from duplicate Statements.
 
         Statements are deemed to be duplicates if they have the same key
-        returned by the matches_key() method of the Statement class.
+        returned by the `matches_key()` method of the Statement class. This
+        generally means that statements must be identical in terms of their
+        arguments and can differ only in their associated `Evidence` objects.
 
         This function keeps the first instance of each set of duplicate
-        statements and merges the evidence lists from all of the other
+        statements and merges the lists of Evidence from all of the other
         statements.
 
-        Returns a list of unique Statements and stores it in
-        self.unique_stmts.
-        """
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            Set of statements to de-duplicate.
 
+        Returns
+        -------
+        list of :py:class:`indra.statements.Statement`
+            Unique statements with accumulated evidence across duplicates.
+
+        Examples
+        --------
+        De-duplicate and combine evidence for two statements differing only
+        in their evidence lists:
+
+        >>> map2k1 = Agent('MAP2K1')
+        >>> mapk1 = Agent('MAPK1')
+        >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
+        ... evidence=[Evidence('evidence 1')])
+        >>> stmt2 = Phosphorylation(map2k1, mapk1, 'T', '185',
+        ... evidence=[Evidence('evidence 2')])
+        >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
+        >>> uniq_stmts
+        [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
+        >>> uniq_stmts[0].evidence
+        [Evidence(evidence 1, None, {}, None), Evidence(evidence 2, None, {}, None)]
+        """
         unique_stmts = []
         # Remove exact duplicates using a set() call, then make copies:
         st = list(deepcopy(set(stmts)))
@@ -69,10 +130,14 @@ class Preassembler(object):
         containing only those statements which do not represent a refinement of
         other existing statements. In other words, the more general versions of
         a given statement do not appear at the top level, but instead are
-        listed in the supports field of the top-level statements.
+        listed in the `supports` field of the top-level statements.
 
-        If self.unique_stmts has not been initialized with the de-duplicated
-        statements, self.combine_duplicates is called.
+        If :py:attr:`unique_stmts` has not been initialized with the
+        de-duplicated statements, :py:meth:`combine_duplicates` is called
+        internally.
+
+        After this function is called the attribute :py:attr:`related_stmts` is
+        set as a side-effect.
 
         The procedure for combining statements in this way involves a series
         of steps:
@@ -87,54 +152,54 @@ class Preassembler(object):
            "extended group."
         3. The statements within each extended group are then compared; if one
            statement represents a refinement of the other (as defined by the
-           refinement_of() method implemented for the Statement), then the more
-           refined statement is added to the `supports` field of the more
+           `refinement_of()` method implemented for the Statement), then the
+           more refined statement is added to the `supports` field of the more
            general statement, and the more general statement is added to the
            `supported_by` field of the more refined statement.
         4. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
-           from the `supported_by` fields of other statements. This list
+           from the `supported_by` fields of other statements). This list
            is returned to the caller.
 
         .. note:: Subfamily relationships must be consistent across arguments
 
-            For now, we will require that merges can only occur if the isa
-            relationships are all in the same direction for all the agents in a
-            Statement. For example, the two statement groups: RAF_family ->
-            MEK1 and BRAF -> MEK_family would not be merged, since BRAF isa
-            RAF_family, but MEK_family is not a MEK1. In the future this
+            For now, we require that merges can only occur if the *isa*
+            relationships are all in the *same direction for all the agents* in
+            a Statement. For example, the two statement groups: `RAF_family ->
+            MEK1` and `BRAF -> MEK_family` would not be merged, since BRAF
+            *isa* RAF_family, but MEK_family is not a MEK1. In the future this
             restriction could be revisited.
 
         Returns
         -------
-        list of Statements.
+        list of :py:class:`indra.statement.Statement`
             The returned list contains Statements representing the more
             concrete/refined versions of the Statements involving particular
-            entities.
+            entities. The attribute :py:attr:`related_stmts` is also set to
+            this list.
 
-        Example
-        -------
+        Examples
+        --------
         A more general statement with no information about a Phosphorylation
-        site is identified as supporting a more specific statement::
+        site is identified as supporting a more specific statement:
 
-            >>> from indra.preassembler.hierarchy_manager import \
-                    entity_hierarchy as eh, modification_hierarchy as mh
-            >>> braf = Agent('BRAF')
-            >>> map2k1 = Agent('MAP2K1')
-            >>> st1 = Phosphorylation(braf, map2k1)
-            >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-            >>> pa = Preassembler(eh, mh, [st1, st2])
-            >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
-            Combining ...
-            >>> combined_stmts
-            [Phosphorylation(BRAF(), MAP2K1(), S)]
-            >>> combined_stmts[0].supported_by
-            [Phosphorylation(BRAF(), MAP2K1())]
-            >>> combined_stmts[0].supported_by[0].supports
-            [Phosphorylation(BRAF(), MAP2K1(), S)]
+        >>> from indra.preassembler.hierarchy_manager import \
+        entity_hierarchy as eh, modification_hierarchy as mh
+        >>> braf = Agent('BRAF')
+        >>> map2k1 = Agent('MAP2K1')
+        >>> st1 = Phosphorylation(braf, map2k1)
+        >>> st2 = Phosphorylation(braf, map2k1, residue='S')
+        >>> pa = Preassembler(eh, mh, [st1, st2])
+        >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
+        Combining ...
+        >>> combined_stmts
+        [Phosphorylation(BRAF(), MAP2K1(), S)]
+        >>> combined_stmts[0].supported_by
+        [Phosphorylation(BRAF(), MAP2K1())]
+        >>> combined_stmts[0].supported_by[0].supports
+        [Phosphorylation(BRAF(), MAP2K1(), S)]
         """
-
         # If unique_stmts is not initialized, call combine_duplicates.
         if not self.unique_stmts:
             self.combine_duplicates()
@@ -255,24 +320,52 @@ class Preassembler(object):
 
 
 def render_stmt_graph(statements, agent_style=None):
-    """Renders the supports/supported_by relationships of a set of statements
-    and returns a pygraphviz graph.
+    """Render the statement hierarchy as a pygraphviz graph.
 
-    Example
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+        A list of top-level statements with associated supporting statements
+        resulting from building a statement hierarchy with
+        :py:meth:`combine_related`.
+    agent_style : dict or None
+        Dict of attributes specifying the visual properties of nodes. If None,
+        the following default attributes are used::
+
+            agent_style = {'color': 'lightgray', 'style': 'filled',
+                           'fontname': 'arial'}
+
+    Returns
     -------
-    Pattern for getting statements and rendering as a Graphviz graph::
+    pygraphviz.AGraph
+        Pygraphviz graph with nodes representing statements and edges pointing
+        from supported statements to supported_by statements.
 
-        bp = biopax_api.process_pc_pathsfromto(['BRAF'], ['MAP2K1'])
-        bp.get_phosphorylation()
+    Examples
+    --------
+    Pattern for getting statements and rendering as a Graphviz graph:
 
-        pa = Preassembler(eh, mh, bp.statements)
-        pa.combine_related()
+    >>> from indra.preassembler.hierarchy_manager import \
+    entity_hierarchy as eh, modification_hierarchy as mh
+    >>> braf = Agent('BRAF')
+    >>> map2k1 = Agent('MAP2K1')
+    >>> st1 = Phosphorylation(braf, map2k1)
+    >>> st2 = Phosphorylation(braf, map2k1, residue='S')
+    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa.combine_related() # doctest:+ELLIPSIS
+    Combining ...
+    [Phosphorylation(BRAF(), MAP2K1(), S)]
+    >>> graph = render_stmt_graph(pa.related_stmts)
+    >>> graph.write('example_graph.dot') # To make the DOT file
+    >>> graph.draw('example_graph.png', prog='dot') # To make an image
 
-        graph = render_stmt_graph(pa.related_stmts)
-        graph.write('braf.dot')
-        graph.draw('braf.pdf', prog='dot')
+    Resulting graph:
+
+    .. image:: /images/example_graph.png
+        :align: center
+        :alt: Example statement graph rendered by Graphviz
+
     """
-
     # Set the default agent formatting properties
     if agent_style is None:
         agent_style = {'color': 'lightgray', 'style': 'filled',
@@ -300,16 +393,49 @@ def render_stmt_graph(statements, agent_style=None):
 
 
 def flatten_stmts(stmts):
-    """Return the full set of unique stmts in a pre-assembled stmt graph."""
+    """Return the full set of unique stms in a pre-assembled stmt graph.
+
+    The flattened list of of statements returned by this function can be
+    compared to the original set of unique statements to make sure no
+    statements have been lost during the preassembly process.
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+        A list of top-level statements with associated supporting statements
+        resulting from building a statement hierarchy with
+        :py:meth:`combine_related`.
+
+    Returns
+    -------
+    stmts : list of :py:class:`indra.statements.Statement`
+        List of all statements contained in the hierarchical statement graph.
+
+    Examples
+    --------
+    Calling :py:meth:`combine_related` on two statements results in one
+    top-level statement; calling :py:func:`flatten_stmts` recovers both:
+
+    >>> from indra.preassembler.hierarchy_manager import \
+    entity_hierarchy as eh, modification_hierarchy as mh
+    >>> braf = Agent('BRAF')
+    >>> map2k1 = Agent('MAP2K1')
+    >>> st1 = Phosphorylation(braf, map2k1)
+    >>> st2 = Phosphorylation(braf, map2k1, residue='S')
+    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa.combine_related() # doctest:+ELLIPSIS
+    Combining ...
+    [Phosphorylation(BRAF(), MAP2K1(), S)]
+    >>> flatten_stmts(pa.related_stmts)
+    [Phosphorylation(BRAF(), MAP2K1(), S), Phosphorylation(BRAF(), MAP2K1())]
+    """
     total_stmts = set(stmts)
     for stmt in stmts:
         if stmt.supported_by:
             children = flatten_stmts(stmt.supported_by)
             total_stmts = total_stmts.union(children)
-    return total_stmts
+    return list(total_stmts)
 
-#def get_evidence(stmt):
-#    child_evidence = set(stmt.evidence)
 
 def _flatten_evidence_for_stmt(stmt):
     total_evidence = set(stmt.evidence)
@@ -318,7 +444,47 @@ def _flatten_evidence_for_stmt(stmt):
         total_evidence = total_evidence.union(child_evidence)
     return list(total_evidence)
 
+
 def flatten_evidence(stmts):
+    """Add evidence from *supporting* stmts to evidence for *supported* stmts.
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+        A list of top-level statements with associated supporting statements
+        resulting from building a statement hierarchy with
+        :py:meth:`combine_related`.
+
+    Returns
+    -------
+    stmts : list of :py:class:`indra.statements.Statement`
+        Statement hierarchy identical to the one passed, but with the
+        evidence lists for each statement now containing all of the evidence
+        associated with the statements they are supported by.
+
+    Examples
+    --------
+    Flattening evidence adds the two pieces of evidence from the supporting
+    statement to the evidence list of the top-level statement:
+
+    >>> from indra.preassembler.hierarchy_manager import \
+    entity_hierarchy as eh, modification_hierarchy as mh
+    >>> braf = Agent('BRAF')
+    >>> map2k1 = Agent('MAP2K1')
+    >>> st1 = Phosphorylation(braf, map2k1,
+    ... evidence=[Evidence(text='foo'), Evidence(text='bar')])
+    >>> st2 = Phosphorylation(braf, map2k1, residue='S',
+    ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
+    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa.combine_related() # doctest:+ELLIPSIS
+    Combining ...
+    [Phosphorylation(BRAF(), MAP2K1(), S)]
+    >>> [e.text for e in pa.related_stmts[0].evidence]
+    ['baz', 'bak']
+    >>> flattened = flatten_evidence(pa.related_stmts)
+    >>> sorted([e.text for e in flattened[0].evidence])
+    ['bak', 'bar', 'baz', 'foo']
+    """
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
     copied_stmts = deepcopy(stmts)

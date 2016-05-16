@@ -1,12 +1,32 @@
-import sys
 import rdflib
 from rdflib.plugins.parsers.ntriples import ParseError
-import json
-import urllib2
-from processor import BelProcessor
+
 import ndex_client
+from processor import BelProcessor
 
 def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
+    """Return a BelProcessor for an NDEx network neighborhood.
+
+    Parameters
+    ----------
+    gene_names : list
+        A list of HGNC gene symbols to search the neighborhood of.
+        Example: ['BRAF', 'MAP2K1']
+    rdf_out : Optional[str]
+        Name of the output file to save the RDF returned by the web service.
+        This is useful for debugging purposes or to repeat the same query
+        on an offline RDF file later. Default: bel_output.rdf
+
+    Returns
+    -------
+    bp : BelProcessor
+        A BelProcessor object which contains INDRA Statements in bp.statements.
+
+    Notes
+    -----
+    This function calls process_belrdf to the returned RDF string from the
+    webservice.
+    """
     network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     #url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
     url_suffix = '/network/%s/asBELRDF/query' % network_id
@@ -22,8 +42,24 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
 
 
 def process_belrdf(rdf_str):
-    """Process a BEL RDF string and process and return a
-    BEL processor.
+    """Return a BelProcessor for a BEL/RDF string.
+
+    Parameters
+    ----------
+    rdf_str : str
+        A BEL/RDF string to be processed. This will usually come from reading
+        a .rdf file.
+
+    Returns
+    -------
+    bp : BelProcessor
+        A BelProcessor object which contains INDRA Statements in bp.statements.
+
+    Notes
+    -----
+    This function calls all the specific get_type_of_mechanism()
+    functions of the newly constructed BelProcessor to extract
+    INDRA Statements.
     """
     g = rdflib.Graph()
     try:
@@ -46,12 +82,3 @@ def process_belrdf(rdf_str):
     print "\n--- Converted INDRA Statements -------------"
     bp.print_statements()
     return bp
-
-if __name__ == '__main__':
-    # Make sure the user passed in an RDF filename
-    if len(sys.argv) < 2:
-        print "Usage: python bel_api.py file.rdf"
-        sys.exit()
-    # We take the RDF filename as the argument
-    rdf_filename = sys.argv[1]
-    bp = process_belrdf(open(rdf_filename).read())

@@ -1,8 +1,58 @@
+"""
+Statements representing mechanistic relationships between biological agents.
+
+Statement classes follow an inheritance hierarchy, with all Statement types
+inheriting from the parent class :py:class:`Statement`. At
+the next level in the hierarchy are the following classes:
+
+- :py:class:`Complex`
+- :py:class:`Modification`
+- :py:class:`SelfModification`
+- :py:class:`RasGef`
+- :py:class:`RasGap`
+- :py:class:`ActivityActivity`
+
+There are several types of Statements representing post-translational
+modifications that further inherit from
+:py:class:`Modification`:
+
+- :py:class:`Phosphorylation`
+- :py:class:`Dephosphorylation`
+- :py:class:`Ubiquitination`
+- :py:class:`Sumoylation`
+- :py:class:`Hydroxylation`
+- :py:class:`Acetylation`
+
+There are additional subtypes of :py:class:`SelfModification`:
+
+- :py:class:`Autophosphorylation`
+- :py:class:`Transphosphorylation`
+
+Statements involve one or more biological *Agents*, typically proteins,
+represented by the class :py:class:`Agent`. Agents can have a specific
+post-translational modification state (indicated by one or more instances of
+:py:class:`ModCondition`), other bound Agents (:py:class:`BoundCondition`), or
+mutations (:py:class:`MutCondition`). The *active* form of an agent (in terms
+of its post-translational modifications or bound state) is indicated by an
+instance of the class :py:class:`ActiveForm`.
+
+Interactions between proteins are often described simply in terms of their
+effect on a protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6
+inactives ERK".  These types of relationships are indicated by the statement
+:py:class:`ActivityActivity`.
+
+The evidence for a given Statement, which could include relevant citations,
+database identifiers, and passages of text from the scientific literature, is
+contained in one or more :py:class:`Evidence` objects associated with the
+Statement.
+"""
+
 import os
 from collections import namedtuple
 import textwrap
 
-def read_amino_acids():
+def _read_amino_acids():
+    """Read the amino acid information from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
     aa_file = this_dir + '/resources/amino_acids.tsv'
     amino_acids = {}
@@ -20,11 +70,55 @@ def read_amino_acids():
             amino_acids_reverse[v] = key
     return amino_acids, amino_acids_reverse
 
-amino_acids, amino_acids_reverse = read_amino_acids()
+amino_acids, amino_acids_reverse = _read_amino_acids()
 
-BoundCondition = namedtuple('BoundCondition', ['agent', 'is_bound'])
+
+class BoundCondition(object):
+    """Identify Agents bound (or not bound) to a given Agent in a given context.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        Instance of Agent.
+    is_bound : bool
+        Specifies whether the given Agent is bound or unbound in the current
+        context. Default is True.
+
+    Examples
+    --------
+    EGFR bound to EGF:
+
+    >>> egf = Agent('EGF')
+    >>> egfr = Agent('EGFR', bound_conditions=(BoundCondition(egf)))
+
+    BRAF *not* bound to a 14-3-3 protein (YWHAB):
+
+    >>> ywhab = Agent('YWHAB')
+    >>> braf = Agent('BRAF', bound_conditions=(BoundCondition(ywhab, False)))
+    """
+    def __init__(self, agent, is_bound=True):
+        self.agent = agent
+        self.is_bound = is_bound
+
 
 class MutCondition(object):
+    """Mutation state of an amino acid position of an Agent.
+
+    Parameters
+    ----------
+    position : string
+        Residue position of the mutation in the protein sequence.
+    residue_from : string
+        Wild-type (unmodified) amino acid residue at the given position.
+    residue_to : string
+        Amino acid at the position resulting from the mutation.
+
+    Examples
+    --------
+    Represent EGFR with a L858R mutation:
+
+    >>> egfr_mutant = Agent('EGFR', mutations=(MutCondition('858', 'L', 'R')))
+    """
     def __init__(self, position, residue_from, residue_to=None):
         self.position = position
         self.residue_from = get_valid_residue(residue_from)
@@ -52,7 +146,43 @@ class MutCondition(object):
     def __repr__(self):
         return 'MutCondition' + self.__str__()
 
+
 class ModCondition(object):
+    """Post-translational modification state at an amino acid position.
+
+    Parameters
+    ----------
+    mod_type : string
+        The type of post-translational modification, e.g., 'phosphorylation'.
+        Valid modification types currently include: 'phosphorylation',
+        'ubiquitination', 'sumoylation', 'hydroxylation', and 'acetylation'.
+        If an invalid modification type is passed an InvalidModTypeError is
+        raised.
+    residue : string or None
+        String indicating the modified amino acid, e.g., 'Y' or 'tyrosine'.
+        If None, indicates that the residue at the modification site is
+        unknown or unspecified.
+    position : string or None
+        String indicating the position of the modified amino acid, e.g., '202'.
+        If None, indicates that the position is unknown or unspecified.
+    is_modified : bool
+        Specifies whether the modification is present or absent. Setting the
+        flag specifies that the Agent with the ModCondition is unmodified
+        at the site.
+
+    Examples
+    --------
+    Doubly-phosphorylated MEK (MAP2K1):
+
+    >>> phospho_mek = Agent('MAP2K1', mods=(
+    ... ModCondition('phosphorylation', 'S', '202'),
+    ... ModCondition('phosphorylation', 'S', '204')))
+
+    ERK (MAPK1) unphosphorylated at tyrosine 187:
+
+    >>> unphos_erk = Agent('MAPK1', mods=(
+    ... ModCondition('phosphorylation', 'Y', '187', is_modified=False)))
+    """
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
         self.residue = get_valid_residue(residue)
@@ -106,7 +236,24 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
+
 class Agent(object):
+    """A molecular entity, e.g., a protein.
+
+    Parameters
+    ----------
+    name : string
+        The name of the agent, preferably a canonicalized name such as an
+        HGNC gene name.
+    mods : list of :py:class:`ModCondition`
+        Modification state of the agent.
+    bound_conditions : list of :py:class:`BoundCondition`
+        Other agents bound to the agent in this context.
+    mutations : list of :py:class:`MutCondition`
+        Amino acid mutations of the agent.
+    db_refs : dict
+        Dictionary of database identifiers associated with this agent.
+    """
     def __init__(self, name, mods=None, active=None,
                  bound_conditions=None, mutations=None, db_refs=None):
         self.name = name
@@ -300,7 +447,7 @@ class Agent(object):
 class Evidence(object):
     """Container for evidence supporting a given statement.
 
-    Attributes
+    Parameters
     ----------
     source_api : string or None
         String identifying the INDRA API used to capture the statement,
@@ -321,7 +468,6 @@ class Evidence(object):
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
     """
-
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None):
         self.source_api = source_api
@@ -359,19 +505,18 @@ class Evidence(object):
 class Statement(object):
     """The parent class of all statements.
 
-    Attributes
+    Parameters
     ----------
-    evidence : list of Evidence objects.
+    evidence : list of :py:class:`Evidence`
         If a list of Evidence objects is passed to the constructor, the
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
         the value is set to an empty list.
-    supports : list of Statements
+    supports : list of :py:class:`Statement`
         Statements that this Statement supports.
-    supported_by : list of Statements
+    supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
     """
-
     def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
             self.evidence = []
@@ -426,9 +571,25 @@ class Statement(object):
             return False
         return True
 
-class Modification(Statement):
-    """Generic statement representing the modification of a protein"""
 
+class Modification(Statement):
+    """Generic statement representing the modification of a protein.
+
+    Parameters
+    ----------
+    enz : :py:class`indra.statement.Agent`
+        The enzyme involved in the modification.
+    sub : :py:class:`indra.statement.Agent`
+        The substrate of the modification.
+    residue : string or None
+        The amino acid residue being modified, or None if it is unknown or
+        unspecified.
+    position : string or None
+        The position of the modified amino acid, or None if it is unknown or
+        unspecified.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
     def __init__(self, enz, sub, residue=None, position=None, evidence=None):
         super(Modification, self).__init__(evidence)
         self.enz = enz
@@ -503,8 +664,21 @@ class Modification(Statement):
 
 
 class SelfModification(Statement):
-    """Generic statement representing the self modification of a protein"""
+    """Generic statement representing the self-modification of a protein.
 
+    Parameters
+    ----------
+    enz : :py:class`indra.statement.Agent`
+        The enzyme involved in the modification, which is also the substrate.
+    residue : string or None
+        The amino acid residue being modified, or None if it is unknown or
+        unspecified.
+    position : string or None
+        The position of the modified amino acid, or None if it is unknown or
+        unspecified.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
@@ -561,57 +735,118 @@ class SelfModification(Statement):
                   (self.position == other.position)
         return matches
 
+
 class Phosphorylation(Modification):
-    """Phosphorylation modification"""
+    """Phosphorylation modification.
+
+    Examples
+    --------
+    MEK (MAP2K1) phosphorylates ERK (MAPK1) at threonine 185:
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> phos = Phosphorylation(mek, erk, 'T', '185')
+    """
     pass
 
 
 class Autophosphorylation(SelfModification):
-    """Autophosphorylation happens when a protein phosphorylates itself.
+    """Intramolecular autophosphorylation, i.e., in *cis*.
 
-    A more precise name for this is cis-autophosphorylation.
+    Examples
+    --------
+    p38 bound to TAB1 cis-autophosphorylates itself (see :pmid:`19155529`).
+
+    >>> tab1 = Agent('TAB1')
+    >>> p38_tab1 = Agent('P38', bound_conditions=(BoundCondition(tab1)))
+    >>> autophos = Autophosphorylation(p38_tab1)
     """
     pass
 
 
 class Transphosphorylation(SelfModification):
-    """Transphosphorylation assumes that a kinase is already bound to a
-    substrate (usually of the same molecular species), and phosphorylates it in
-    an intra-molecular fashion. The enz property of the statement must have
+    """Autophosphorylation in *trans.*
+
+    Transphosphorylation assumes that a kinase is already bound to a substrate
+    (usually of the same molecular species), and phosphorylates it in an
+    intra-molecular fashion. The enz property of the statement must have
     exactly one bound_conditions entry, and we assume that enz phosphorylates
-    this molecule. The bound_neg property is ignored here.  """
+    this molecule. The bound_neg property is ignored here.
+    """
     pass
 
 
 class Dephosphorylation(Modification):
-    """Dephosphorylation modification"""
+    """Dephosphorylation modification.
+
+    Examples
+    --------
+    DUSP6 dephosphorylates ERK (MAPK1) at T185:
+
+    >>> dusp6 = Agent('DUSP6')
+    >>> erk = Agent('MAPK1')
+    >>> dephos = Dephosphorylation(dusp6, erk, 'T', '185')
+    """
     pass
 
 
 class Hydroxylation(Modification):
-    """Hydroxylation modification"""
+    """Hydroxylation modification."""
     pass
 
 
 class Sumoylation(Modification):
-    """Sumoylation modification"""
+    """Sumoylation modification."""
     pass
 
 
 class Acetylation(Modification):
-    """Acetylation modification"""
+    """Acetylation modification."""
     pass
 
 
 class Ubiquitination(Modification):
-    """Ubiquitination modification"""
+    """Ubiquitination modification."""
     pass
 
 
 class ActivityActivity(Statement):
-    """Statement representing the activation of a protein as a result of the
-    activity of another protein."""
+    """Indicates that the activity of a protein affects the activity of another.
 
+    This statement is intended to be used for physical interactions where the
+    mechanism of activation is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature. Both
+    activating and inactivating interactions can be represented.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    subj_activity : string
+        The type of biochemical activity responsible for the effect, e.g.,
+        the subject's "kinase" activity.
+    relationship : string
+        Indicates the type of interaction: 'increases' or 'decreases'.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : string
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+
+    Examples
+    --------
+
+    The kinase activity of MEK (MAP2K1) activates the kinase activity of ERK
+    (MAPK1):
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> act = ActivityActivity(mek, 'kinase', 'increases', erk, 'kinase')
+    """
     def __init__(self, subj, subj_activity, relationship, obj,
                  obj_activity, evidence=None):
         super(ActivityActivity, self).__init__(evidence)
@@ -668,10 +903,23 @@ class RasGtpActivityActivity(ActivityActivity):
 
 
 class ActiveForm(Statement):
-    """Statement representing the activity of an Agent in a state described by
-    one or more Agent conditions (including modification conditions, 
-    bound-to conditions and mutation conditions)."""
+    """Specifies conditions causing an Agent to be active or inactive.
 
+    Types of conditions influencing a specific type of biochemical activity can
+    include modifications, bound Agents, and mutations.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        The Agent in a particular active or inactive state. The sets
+        of ModConditions, BoundConditions, and MutConditions on the given
+        Agent instance indicate the relevant conditions.
+    activity : string
+        The type of activity influenced by the given set of conditions,
+        e.g., "kinase".
+    is_active : bool
+        Whether the conditions are activating (True) or inactivating (False).
+    """
     def __init__(self, agent, activity, is_active, evidence=None):
         super(ActiveForm, self).__init__(evidence)
         self.agent = agent
@@ -722,10 +970,30 @@ class ActiveForm(Statement):
                   (self.is_active == other.is_active)
         return matches
 
-class RasGef(Statement):
-    """Statement representing the activation of a GTP-bound protein
-    upon Gef activity."""
 
+class RasGef(Statement):
+    """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
+
+    Represents the generic process by which a guanosine exchange factor (GEF)
+    catalyzes nucleotide exchange on a particular Ras superfamily protein.
+
+    Parameters
+    ----------
+    gef : :py:class:`Agent`
+        The guanosine exchange factor.
+    gef_activity : string
+        The biochemical activity of the GEF responsible for exchange.
+    ras : :py:class:`Agent`
+        The Ras superfamily protein.
+
+    Examples
+    --------
+    SOS1 catalyzes nucleotide exchange on KRAS:
+
+    >>> sos = Agent('SOS1')
+    >>> kras = Agent('KRAS')
+    >>> rasgef = RasGef(sos, 'gef', kras)
+    """
     def __init__(self, gef, gef_activity, ras, evidence=None):
         super(RasGef, self).__init__(evidence)
         self.gef = gef
@@ -770,9 +1038,28 @@ class RasGef(Statement):
 
 
 class RasGap(Statement):
-    """Statement representing the inactivation of a GTP-bound protein
-    upon Gap activity."""
+    """Acceleration of a Ras protein's GTP hydrolysis rate by a GAP.
 
+    Represents the generic process by which a GTPase activating protein (GAP)
+    catalyzes GTP hydrolysis by a particular Ras superfamily protein.
+
+    Parameters
+    ----------
+    gap : :py:class:`Agent`
+        The GTPase activating protein.
+    gap_activity : string
+        The biochemical activity of the GAP responsible for hydrolysis.
+    ras : :py:class:`Agent`
+        The Ras superfamily protein.
+
+    Examples
+    --------
+    RASA1 catalyzes GTP hydrolysis on KRAS:
+
+    >>> rasa1 = Agent('RASA1')
+    >>> kras = Agent('KRAS')
+    >>> rasgap = RasGap(rasa1, 'gap', kras)
+    """
     def __init__(self, gap, gap_activity, ras, evidence=None):
         super(RasGap, self).__init__(evidence)
         self.gap = gap
@@ -817,8 +1104,21 @@ class RasGap(Statement):
 
 
 class Complex(Statement):
-    """Statement representing complex formation between a set of members"""
+    """A set of proteins observed to be in a complex.
 
+    Parameters
+    ----------
+    members : list of :py:class:`Agent`
+        The set of proteins in the complex.
+
+    Examples
+    --------
+    BRAF is observed to be in a complex with RAF1:
+
+    >>> braf = Agent('BRAF')
+    >>> raf1 = Agent('RAF1')
+    >>> cplx = Complex([braf, raf1])
+    """
     def __init__(self, members, evidence=None):
         super(Complex, self).__init__(evidence)
         self.members = members
@@ -871,7 +1171,9 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+
 def get_valid_residue(residue):
+    """Check if the given string represents a valid amino acid residue."""
     if residue is not None and amino_acids.get(residue) is None:
         res = amino_acids_reverse.get(residue.lower())
         if res is None:
@@ -880,7 +1182,9 @@ def get_valid_residue(residue):
             return res
     return residue
 
+
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid residue name: '%s'" % name)
+
