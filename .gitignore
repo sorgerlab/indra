@@ -72,7 +72,6 @@ large_corpus.rdf
 *.dot
 *.bngl
 *.jpg
-*.png
 
 # Pickle
 *.pkl
