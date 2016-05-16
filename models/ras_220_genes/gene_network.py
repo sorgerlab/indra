@@ -164,6 +164,14 @@ class GeneNetwork(object):
         #pa1.combine_related()
         #profile.disable()
 
+def grounding_filter(stmts):
+    grounded_stmts = []
+    for stmt in stmts:
+        agents = [a for a in stmt.agent_list() if a is not None]
+        if all(a.db_refs for a in agents):
+            grounded_stmts.append(stmt)
+    return grounded_stmts
+
 if __name__ == '__main__':
 
     # STEP 0: Get gene list
@@ -176,7 +184,8 @@ if __name__ == '__main__':
 
     gn = GeneNetwork(gene_list, 'ras_genes')
     stmts = gn.get_statements(filter=True)
-    results = gn.run_preassembly(stmts)
+    grounded_stmts = grounding_filter(stmts)
+    results = gn.run_preassembly(grounded_stmts)
 
     #import cProfile
     #import pstats
