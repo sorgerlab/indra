@@ -450,7 +450,7 @@ def flatten_evidence(stmts):
 
     Parameters
     ----------
-    list of :py:class:`indra.statements.Statement`
+    stmts : list of :py:class:`indra.statements.Statement`
         A list of top-level statements with associated supporting statements
         resulting from building a statement hierarchy with
         :py:meth:`combine_related`.
