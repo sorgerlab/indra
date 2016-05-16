@@ -86,13 +86,12 @@ class BoundCondition(object):
 
     Examples
     --------
-
     EGFR bound to EGF:
 
     >>> egf = Agent('EGF')
     >>> egfr = Agent('EGFR', bound_conditions=(BoundCondition(egf)))
 
-    BRAF not bound to a 14-3-3 protein (YWHAB):
+    BRAF *not* bound to a 14-3-3 protein (YWHAB):
 
     >>> ywhab = Agent('YWHAB')
     >>> braf = Agent('BRAF', bound_conditions=(BoundCondition(ywhab, False)))
@@ -122,8 +121,8 @@ class MutCondition(object):
     """
     def __init__(self, position, residue_from, residue_to=None):
         self.position = position
-        self.residue_from = _get_valid_residue(residue_from)
-        self.residue_to = _get_valid_residue(residue_to)
+        self.residue_from = get_valid_residue(residue_from)
+        self.residue_to = get_valid_residue(residue_to)
 
     def matches(self, other):
         return (self.matches_key() == other.matches_key())
@@ -186,7 +185,7 @@ class ModCondition(object):
     """
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
-        self.residue = _get_valid_residue(residue)
+        self.residue = get_valid_residue(residue)
         if not isinstance(position, basestring):
             if position is None:
                 self.position = None
@@ -595,7 +594,7 @@ class Modification(Statement):
         super(Modification, self).__init__(evidence)
         self.enz = enz
         self.sub = sub
-        self.residue = _get_valid_residue(residue)
+        self.residue = get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -683,7 +682,7 @@ class SelfModification(Statement):
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
-        self.residue = _get_valid_residue(residue)
+        self.residue = get_valid_residue(residue)
         if position is not None:
             if not isinstance(position, basestring):
                 position = str(position)
@@ -1173,7 +1172,7 @@ class Complex(Statement):
         return matches
 
 
-def _get_valid_residue(residue):
+def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
     if residue is not None and amino_acids.get(residue) is None:
         res = amino_acids_reverse.get(residue.lower())
