@@ -471,17 +471,19 @@ def flatten_evidence(stmts):
     entity_hierarchy as eh, modification_hierarchy as mh
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
-    >>> st1 = Phosphorylation(braf, map2k1, evidence=[Evidence('foo'), Evidence('bar')])
-    >>> st2 = Phosphorylation(braf, map2k1, residue='S', evidence=[Evidence('baz'), Evidence('bak')])
+    >>> st1 = Phosphorylation(braf, map2k1,
+    ... evidence=[Evidence(text='foo'), Evidence(text='bar')])
+    >>> st2 = Phosphorylation(braf, map2k1, residue='S',
+    ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
     >>> pa = Preassembler(eh, mh, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> pa.related_stmts[0].evidence
-    [Evidence(baz, None, {}, None), Evidence(bak, None, {}, None)]
+    >>> [e.text for e in pa.related_stmts[0].evidence]
+    ['baz', 'bak']
     >>> flattened = flatten_evidence(pa.related_stmts)
-    >>> flattened[0].evidence
-    [Evidence(foo, None, {}, None), Evidence(baz, None, {}, None), Evidence(bak, None, {}, None), Evidence(bar, None, {}, None)]
+    >>> sorted([e.text for e in flattened[0].evidence])
+    ['bak', 'bar', 'baz', 'foo']
     """
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
