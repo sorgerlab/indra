@@ -29,14 +29,27 @@ class GeneNetwork(object):
         self.gene_list = gene_list
         self.basename = basename
 
-
     def get_bel_stmts(self, filter=False):
         """Get relevant statements from the BEL large corpus.
 
-        Performs a series of neighborhood queries and then takes the union
-        of all the statements.
-        """
+        Performs a series of neighborhood queries and then takes the union of
+        all the statements. Because the query process can take a long time for
+        large gene lists, the resulting list of statements are cached in a
+        pickle file with the filename `<basename>_bel_stmts.pkl`.  If the
+        pickle file is present, it is used by default; if not present, the
+        queries are performed and the results are cached.
 
+        Parameters
+        ----------
+        filter : bool
+            If True, includes only those statements that exclusively mention
+            genes in :py:attr:`gene_list`. Default is False.
+
+        Returns
+        -------
+        list of :py:class:`indra.statements.Statement`
+            List of INDRA statements extracted from the BEL large corpus.
+        """
         bel_stmt_path = '%s_bel_stmts.pkl' % self.basename
         # Check for cached BEL stmt file
         if os.path.isfile(bel_stmt_path):
@@ -55,7 +68,6 @@ class GeneNetwork(object):
             # Save to pickle file
             with open(bel_stmt_path, 'w') as f:
                 pickle.dump(bel_statements, f)
-
         # Optionally filter out statements not involving only our gene set
         if filter:
             print("Filtering statements to match gene list")
@@ -64,10 +76,28 @@ class GeneNetwork(object):
                                       for agent in s.agent_list()])]
         return bel_statements
 
-
     def get_biopax_stmts(self, filter=False):
-        """Get relevant statements from Pathway Commons."""
+        """Get relevant statements from Pathway Commons.
 
+        Performs a "paths between" query for the genes in :py:attr:`gene_list`
+        and uses the results to build statements. This function caches two
+        files: the list of statements built from the query, which is cached in
+        `<basename>_biopax_stmts.pkl`, and the OWL file returned by the Pathway
+        Commons Web API, which is cached in `<basename>_pc_pathsbetween.owl`.
+        If these cached files are found, then the results are returned based
+        on the cached file and Pathway Commons is not queried again.
+
+        Parameters
+        ----------
+        filter : bool
+            If True, includes only those statements that exclusively mention
+            genes in :py:attr:`gene_list`. Default is False.
+
+        Returns
+        -------
+        list of :py:class:`indra.statements.Statement`
+            List of INDRA statements extracted from Pathway Commons.
+        """
         # Check for cached Biopax stmt file
         biopax_stmt_path = '%s_biopax_stmts.pkl' % self.basename
         if os.path.isfile(biopax_stmt_path):
@@ -75,7 +105,6 @@ class GeneNetwork(object):
             with open(biopax_stmt_path) as f:
                 bp_statements = pickle.load(f)
             return bp_statements
-
         # The statement file was not found, so run the query
         print("No Biopax statement file found at %s, running query" %
               biopax_stmt_path)
@@ -89,7 +118,6 @@ class GeneNetwork(object):
             print "Biopax OWL file not found, querying Pathway Commons web API"
             bp = ba.process_pc_pathsbetween(gene_list)
             bp.save_model(biopax_ras_owl_path)
-
         # Extract statements from Biopax model
         bp.get_phosphorylation()
         bp.get_dephosphorylation()
@@ -97,11 +125,9 @@ class GeneNetwork(object):
         bp.get_palmitoylation()
         bp.get_glycosylation()
         bp.get_activity_modification()
-
         # Save to pickle file
         with open(biopax_stmt_path, 'w') as f:
             pickle.dump(bp.statements, f)
-
         # Optionally filter out statements not involving only our gene set
         if filter:
             print("Filtering statements to match gene list")
@@ -112,29 +138,76 @@ class GeneNetwork(object):
         else:
             return bp.statements
 
-
     def get_statements(self, filter=False):
+        """Return the combined list of statements from BEL and Pathway Commons.
+
+        Internally calls :py:meth:`get_biopax_stmts` and
+        :py:meth:`get_bel_stmts`.
+
+        Parameters
+        ----------
+        filter : bool
+            If True, includes only those statements that exclusively mention
+            genes in :py:attr:`gene_list`. Default is False.
+
+        Returns
+        -------
+        list of :py:class:`indra.statements.Statement`
+            List of INDRA statements extracted the BEL large corpus and Pathway
+            Commons.
+        """
         bp_stmts = self.get_biopax_stmts(filter=filter)
         bel_stmts = self.get_bel_stmts(filter=filter)
 
         return bp_stmts + bel_stmts
 
-
     def run_preassembly(self, stmts, print_summary=True):
+        """Run complete preassembly procedure on the given statements.
+
+        Results are returned as a dict and stored in the attribute
+        :py:attr:`results`. They are also saved in the pickle file
+        `<basename>_results.pkl`.
+
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            Statements to preassemble.
+        print_summary : bool
+            If True (default), prints a summary of the preassembly process to
+            the console.
+
+        Returns
+        -------
+        dict
+            A dict containing the following entries:
+
+            - `raw`: the starting set of statements before preassembly.
+            - `duplicates1`: statements after initial de-duplication.
+            - `valid`: statements found to have valid modification sites.
+            - `mapped`: mapped statements (list of
+              :py:class:`indra.preassembler.sitemapper.MappedStatement`).
+            - `mapped_stmts`: combined list of valid statements and statements
+              after mapping.
+            - `duplicates2`: statements resulting from de-duplication of the
+              statements in `mapped_stmts`.
+            - `related2`: top-level statements after combining the statements
+              in `duplicates2`.
+        """
+        # First round of preassembly: remove duplicates before sitemapping
         pa1 = Preassembler(eh, mh, stmts)
         print "Combining duplicates"
         pa1.combine_duplicates()
-
+        # Map sites
         print "Mapping sites"
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
+        # Combine valid and mapped statements into single list
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
-
+        # Second round of preassembly: de-duplicate and combine related
         pa2 = Preassembler(eh, mh, mapped_stmts)
         print "Combining duplicates again"
         pa2.combine_duplicates()
-
         pa2.combine_related()
-
+        # Fill out the results dict
         self.results = {}
         self.results['raw'] = stmts
         self.results['duplicates1'] = pa1.unique_stmts
@@ -143,7 +216,7 @@ class GeneNetwork(object):
         self.results['mapped_stmts'] = mapped_stmts
         self.results['duplicates2'] = pa2.unique_stmts
         self.results['related2'] = pa2.related_stmts
-
+        # Print summary
         if print_summary:
             print
             print("Starting number of statements: %d" % len(stmts))
@@ -154,23 +227,36 @@ class GeneNetwork(object):
                   len(pa2.unique_stmts))
             print("After combining related statements: %d" %
                   len(pa2.related_stmts))
-
+        # Save the results
         results_filename = '%s_results.pkl' % self.basename
         with open(results_filename, 'w') as f:
             pickle.dump(self.results, f)
-
         return self.results
-        #profile.enable()
-        #pa1.combine_related()
-        #profile.disable()
+
 
 def grounding_filter(stmts):
+    """Filter a set of statements to include only those with grounded entities.
+
+    If a statement contains only agents having a non-empty `db_refs` dict,
+    it is included in the result
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+        Statements to filter.
+
+    Returns
+    -------
+    list of :py:class:`indra.statements.Statement`
+        Statements after filtering.
+    """
     grounded_stmts = []
     for stmt in stmts:
         agents = [a for a in stmt.agent_list() if a is not None]
         if all(a.db_refs for a in agents):
             grounded_stmts.append(stmt)
     return grounded_stmts
+
 
 if __name__ == '__main__':
 
