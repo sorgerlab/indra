@@ -13,21 +13,22 @@ class GeneNetwork(object):
     ----------
     gene_list : string
         List of gene names.
-    basename : string
+    basename : string or None (default)
         Filename prefix to be used for caching of intermediates (Biopax OWL
-        file, pickled statement lists, etc.)
+        file, pickled statement lists, etc.). If None, no results are cached
+        and no cached files are used.
 
     Attributes
     ----------
     gene_list : string
         List of gene names
-    basename : string
-        Filename prefix for intermediates.
+    basename : string or None
+        Filename prefix for cached intermediates, or None if no cached used.
     results : dict
         Dict containing results of preassembly (see return type for
         :py:meth:`run_preassembly`.
     """
-    def __init__(self, gene_list, basename):
+    def __init__(self, gene_list, basename=None):
         if not gene_list:
             raise ValueError("Gene list must contain at least one element.")
         self.gene_list = gene_list
@@ -47,31 +48,32 @@ class GeneNetwork(object):
         ----------
         filter : bool
             If True, includes only those statements that exclusively mention
-            genes in :py:attr:`gene_list`. Default is False.
+            genes in :py:attr:`gene_list`. Default is False. Note that the
+            full (unfiltered) set of statements are cached.
 
         Returns
         -------
         list of :py:class:`indra.statements.Statement`
             List of INDRA statements extracted from the BEL large corpus.
         """
-        bel_stmt_path = '%s_bel_stmts.pkl' % self.basename
+        if self.basename is not None:
+            bel_stmt_path = '%s_bel_stmts.pkl' % self.basename
         # Check for cached BEL stmt file
-        if os.path.isfile(bel_stmt_path):
+        if self.basename is not None and os.path.isfile(bel_stmt_path):
             print "Loading BEL statements from %s" % bel_stmt_path
             with open(bel_stmt_path) as f:
                 bel_statements = pickle.load(f)
-        # The file was not found, so run the queries
+        # No cache, so perform the queries
         else:
-            print("No BEL statement file found at %s, running queries" %
-                  bel_stmt_path)
             bel_statements = []
             for gene in self.gene_list:
                 print "Getting BEL statements for gene", gene
                 bel_proc = bel_api.process_ndex_neighborhood([gene])
                 bel_statements += bel_proc.statements
-            # Save to pickle file
-            with open(bel_stmt_path, 'w') as f:
-                pickle.dump(bel_statements, f)
+            # Save to pickle file if we're caching
+            if self.basename is not None:
+                with open(bel_stmt_path, 'w') as f:
+                    pickle.dump(bel_statements, f)
         # Optionally filter out statements not involving only our gene set
         if filter:
             print("Filtering statements to match gene list")
@@ -102,26 +104,27 @@ class GeneNetwork(object):
         list of :py:class:`indra.statements.Statement`
             List of INDRA statements extracted from Pathway Commons.
         """
-        # Check for cached Biopax stmt file
-        biopax_stmt_path = '%s_biopax_stmts.pkl' % self.basename
-        if os.path.isfile(biopax_stmt_path):
+        # If we're using a cache, initialize the appropriate filenames
+        if self.basename is not None:
+            biopax_stmt_path = '%s_biopax_stmts.pkl' % self.basename
+            biopax_ras_owl_path = '%s_pc_pathsbetween.owl' % self.basename
+        # Check for cached Biopax stmt file at the given path
+        # if it's there, return the statements from the cache
+        if self.basename is not None and os.path.isfile(biopax_stmt_path):
             print "Loading Biopax statements from %s" % biopax_stmt_path
             with open(biopax_stmt_path) as f:
                 bp_statements = pickle.load(f)
             return bp_statements
-        # The statement file was not found, so run the query
-        print("No Biopax statement file found at %s, running query" %
-              biopax_stmt_path)
         # Check for cached file before querying Pathway Commons Web API
-        biopax_ras_owl_path = '%s_pc_pathsbetween.owl' % self.basename
-        if os.path.isfile(biopax_ras_owl_path):
+        if self.basename is not None and os.path.isfile(biopax_ras_owl_path):
             print "Loading Biopax from OWL file", biopax_ras_owl_path
             bp = ba.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
         else:
-            print "Biopax OWL file not found, querying Pathway Commons web API"
-            bp = ba.process_pc_pathsbetween(gene_list)
-            bp.save_model(biopax_ras_owl_path)
+            bp = ba.process_pc_pathsbetween(self.gene_list)
+            # Save the file if we're caching
+            if self.basename is not None:
+                bp.save_model(biopax_ras_owl_path)
         # Extract statements from Biopax model
         bp.get_phosphorylation()
         bp.get_dephosphorylation()
@@ -129,9 +132,10 @@ class GeneNetwork(object):
         bp.get_palmitoylation()
         bp.get_glycosylation()
         bp.get_activity_modification()
-        # Save to pickle file
-        with open(biopax_stmt_path, 'w') as f:
-            pickle.dump(bp.statements, f)
+        # Save statements to pickle file if we're caching
+        if self.basename is not None:
+            with open(biopax_stmt_path, 'w') as f:
+                pickle.dump(bp.statements, f)
         # Optionally filter out statements not involving only our gene set
         if filter:
             print("Filtering statements to match gene list")
@@ -231,10 +235,11 @@ class GeneNetwork(object):
                   len(pa2.unique_stmts))
             print("After combining related statements: %d" %
                   len(pa2.related_stmts))
-        # Save the results
-        results_filename = '%s_results.pkl' % self.basename
-        with open(results_filename, 'w') as f:
-            pickle.dump(self.results, f)
+        # Save the results if we're caching
+        if self.basename is not None:
+            results_filename = '%s_results.pkl' % self.basename
+            with open(results_filename, 'w') as f:
+                pickle.dump(self.results, f)
         return self.results
 
 
