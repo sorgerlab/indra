@@ -278,7 +278,7 @@ def get_create_parameter(model, name, value, unique=True):
 def get_uncond_agent(agent):
     """Construct the unconditional state of an Agent.
 
-    The unconditional Aonomer corresponds to the original agent but
+    The unconditional Agent is a copy of the original agent but
     without any bound conditions and modification conditions.
     Mutation conditions, however, are preserved since they are static.
     """
