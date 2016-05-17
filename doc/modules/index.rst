@@ -13,4 +13,4 @@ INDRA modules reference
    literature/index
    preassembler/index
    assemblers/index
-
+   tools/index
