@@ -1,15 +1,10 @@
-import csv
+import pickle
 from indra.bel import bel_api
 from indra.biopax import biopax_api as ba
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh, \
                                                  modification_hierarchy as mh
-import pickle
 from indra.preassembler.sitemapper import default_mapper as sm
-from indra.statements import *
-from pysb import kappa
-from indra.assemblers import PysbAssembler
-
 
 class GeneNetwork(object):
     """Build a set of INDRA statements for a given gene list from databases.
@@ -21,8 +16,17 @@ class GeneNetwork(object):
     basename : string
         Filename prefix to be used for caching of intermediates (Biopax OWL
         file, pickled statement lists, etc.)
-    """
 
+    Attributes
+    ----------
+    gene_list : string
+        List of gene names
+    basename : string
+        Filename prefix for intermediates.
+    results : dict
+        Dict containing results of preassembly (see return type for
+        :py:meth:`run_preassembly`.
+    """
     def __init__(self, gene_list, basename):
         if not gene_list:
             raise ValueError("Gene list must contain at least one element.")
@@ -256,83 +260,4 @@ def grounding_filter(stmts):
         if all(a.db_refs for a in agents):
             grounded_stmts.append(stmt)
     return grounded_stmts
-
-
-if __name__ == '__main__':
-
-    # STEP 0: Get gene list
-    gene_list = []
-    # Get gene list from ras_pathway_proteins.csv
-    with open('../../data/ras_pathway_proteins.csv') as f:
-        csvreader = csv.reader(f, delimiter='\t')
-        for row in csvreader:
-            gene_list.append(row[0].strip())
-
-    gn = GeneNetwork(gene_list, 'ras_genes')
-    stmts = gn.get_statements(filter=True)
-    grounded_stmts = grounding_filter(stmts)
-    results = gn.run_preassembly(grounded_stmts)
-
-    #import cProfile
-    #import pstats
-    #profile = cProfile.Profile()
-    #profile.dump_stats('related_stats')
-    #stats = pstats.Stats('related_stats')
-
-"""
-sublist = ['RAF1', 'MAP2K1', 'MAPK1', 'KSR1', 'DUSP1', 'KRAS', 'AKT1', 'PDPK1']
-
-subgraph = []
-for s in results['related2']:
-    in_sub_list = [agent is None or agent.name in sublist
-                   for agent in s.agent_list()]
-    if all(in_sub_list):
-        subgraph.append(s)
-
-with open('ras_genes_subgraph.pkl', 'w') as f:
-    pickle.dump(subgraph, f)
-
-# STEP 5 Kappa contact map
-with open('ras_genes_subgraph.pkl') as f:
-    stmts = pickle.load(f)
-stmts = [s for s in stmts \
-         if not (s.enz.name == 'MAPK1' and s.sub.name == 'RAF1')]
-stmts = [s for s in stmts \
-         if not (s.enz.name == 'PDPK1' and s.sub.name == 'AKT1')]
-
-
-pya = PysbAssembler(policies='interactions_only')
-pya.add_statements(stmts)
-pya.make_model()
-pya.model.name = 'ras_subgraph'
-g = kappa.contact_map(pya.model)
-g.draw('ras_genes_subgraph_cm.pdf', prog='dot')
-
-# STEP 6
-# Load the results from reading 100 papers
-with open('pmc_papers/preassembler.pkl') as f:
-    braf_stmts = pickle.load(f)
-
-pa3 = Preassembler(eh, mh, braf_stmts)
-pa3.combine_duplicates()
-
-# Filter statements based on whether they were grounded to a gene/protein
-braf_grounded = []
-for s in pa3.unique_stmts:
-    hgnc_grounded = [agent is None or
-                     agent.db_refs.get('HGNC', None) is not None or
-                     agent.db_refs.get('UP', None) is not None
-                     for agent in s.agent_list()]
-    if all(hgnc_grounded):
-        braf_grounded.append(s)
-
-# Filter statements based on whether the entities are in the McCormick list
-braf_filtered = []
-for s in braf_grounded:
-    in_ras_list = [agent is None or agent.name in gene_list
-                   for agent in s.agent_list()]
-    if all(in_ras_list):
-        braf_filtered.append(s)
-"""
-
 
