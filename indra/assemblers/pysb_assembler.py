@@ -275,6 +275,15 @@ def get_create_parameter(model, name, value, unique=True):
     model.add_component(parameter)
     return parameter
 
+def get_uncond_agent(agent):
+    """Construct the unconditional state of an Agent.
+
+    The unconditional Aonomer corresponds to the original agent but
+    without any bound conditions and modification conditions.
+    Mutation conditions, however, are preserved since they are static.
+    """
+    agent_uncond = ist.Agent(agent.name, mutations=agent.mutations)
+    return agent_uncond
 
 def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
@@ -682,13 +691,18 @@ def complex_assemble_one_step(stmt, model, agent_set):
         add_rule_to_model(model, r)
 
         # In reverse reaction, assume that dissocition is unconditional
-        rule_name = '_'.join([a.name for a in pair]) + '_dissociate'
-        agent1_uncond = get_monomer_pattern(model, ist.Agent(agent1.name))
-        agent2_uncond = get_monomer_pattern(model, ist.Agent(agent2.name))
-        r = Rule(rule_name, agent1_uncond(**{agent1_bs: 1}) % \
-                            agent2_uncond(**{agent2_bs: 1}) >>
-                            agent1_uncond(**{agent1_bs: None}) + \
-                            agent2_uncond(**{agent2_bs: None}),
+
+        agent1_uncond = get_uncond_agent(agent1)
+        agent1_rule_str = get_agent_rule_str(agent1_uncond)
+        monomer1_uncond = get_monomer_pattern(model, agent1_uncond)
+        agent2_uncond = get_uncond_agent(agent2)
+        agent2_rule_str = get_agent_rule_str(agent2_uncond)
+        monomer2_uncond = get_monomer_pattern(model, agent2_uncond)
+        rule_name = '%s_%s_dissociate' % (agent1_rule_str, agent2_rule_str)
+        r = Rule(rule_name, monomer1_uncond(**{agent1_bs: 1}) % \
+                            monomer2_uncond(**{agent2_bs: 1}) >>
+                            monomer1_uncond(**{agent1_bs: None}) + \
+                            monomer2_uncond(**{agent2_bs: None}),
                             kr_bind)
         add_rule_to_model(model, r)
 
@@ -937,11 +951,18 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
             kf_phospho)
         add_rule_to_model(model, r)
 
-    rule_name = '%s_dissoc_%s' % (rule_enz_str, rule_sub_str)
-    r = Rule(rule_name, model.monomers[stmt.enz.name](**{sub_bs: 1}) % \
-             model.monomers[stmt.sub.name](**{enz_bs: 1}) >>
-             model.monomers[stmt.enz.name](**{sub_bs: None}) + \
-             model.monomers[stmt.sub.name](**{enz_bs: None}), kr_bind)
+    enz_uncond = get_uncond_agent(stmt.enz)
+    enz_rule_str = get_agent_rule_str(enz_uncond)
+    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
+    sub_uncond = get_uncond_agent(stmt.sub)
+    sub_rule_str = get_agent_rule_str(sub_uncond)
+    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
+
+    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+             sub_mon_uncond(**{enz_bs: 1}) >>
+             enz_mon_uncond(**{sub_bs: None}) + \
+             sub_mon_uncond(**{enz_bs: None}), kr_bind)
     add_rule_to_model(model, r)
 
 phosphorylation_assemble_default = phosphorylation_assemble_one_step
@@ -1269,11 +1290,18 @@ def dephosphorylation_assemble_two_step(stmt, model, agent_set):
             kf_phospho)
         add_rule_to_model(model, r)
 
-    rule_name = '%s_dissoc_%s' % (rule_enz_str, rule_sub_str)
-    r = Rule(rule_name, model.monomers[stmt.enz.name](**{sub_bs: 1}) % \
-             model.monomers[stmt.sub.name](**{phos_bs: 1}) >>
-             model.monomers[stmt.enz.name](**{sub_bs: None}) + \
-             model.monomers[stmt.sub.name](**{phos_bs: None}), kr_bind)
+    enz_uncond = get_uncond_agent(stmt.enz)
+    enz_rule_str = get_agent_rule_str(enz_uncond)
+    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
+    sub_uncond = get_uncond_agent(stmt.sub)
+    sub_rule_str = get_agent_rule_str(sub_uncond)
+    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
+
+    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+             sub_mon_uncond(**{phos_bs: 1}) >>
+             enz_mon_uncond(**{sub_bs: None}) + \
+             sub_mon_uncond(**{phos_bs: None}), kr_bind)
     add_rule_to_model(model, r)
 
 dephosphorylation_assemble_default = dephosphorylation_assemble_one_step
