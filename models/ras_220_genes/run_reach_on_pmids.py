@@ -1,8 +1,8 @@
 # Iterate over the PMIDs
 # Check in S3
 # If present, copy to NXML folder
-
 # Prepare temporary .conf file using appropriate number of cores
+
 # Run reach on NXML files, send to output folder
 # Join the resulting .json files
 # Upload the .json to S3, mark down in a folder as being run
@@ -14,8 +14,9 @@ import tempfile
 import shutil
 import boto3
 import botocore
+import subprocess
 
-cleanup = True
+cleanup = False
 
 # Check the arguments
 usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
@@ -123,6 +124,21 @@ conf_file_path = os.path.join(base_dir, 'indra.conf')
 with open(conf_file_path, 'w') as f:
     f.write(conf_file_text)
 
-#if cleanup:
-#    shutil.rmtree(base_dir)
+# Run REACH!
+path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.2.3.jar'
+args = ['java', '-jar', path_to_reach, conf_file_path]
+
+p = subprocess.Popen(args,
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+verbose = True
+if verbose:
+    for line in iter(p.stdout.readline, b''):
+        print '@@', line
+(p_out, p_err) = p.communicate()
+
+if p.returncode:
+    raise Exception(p_out + '\n' + p_err)
+
+if cleanup:
+    shutil.rmtree(base_dir)
 
