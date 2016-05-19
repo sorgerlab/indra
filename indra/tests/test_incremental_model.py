@@ -1,5 +1,5 @@
 from indra.statements import *
-from incremental_model import IncrementalModel
+from indra.tools.incremental_model import IncrementalModel
 
 stmts = [Complex([Agent('A'), Agent('B')]), Complex([Agent('B'), Agent('C')])]
 stmts2 = [Phosphorylation(None, Agent('B', db_refs={'UP': '123'}))]
@@ -59,21 +59,20 @@ def test_grounding_not_all():
                    Agent('B')])
     im.add_statements('12345', [stmt], filters=['grounding'])
     assert(len(im.get_statements()) == 0)
-    
+
 def test_grounding_all():
     im = IncrementalModel()
     stmt = Complex([Agent('A', db_refs={'UP': 'ABCD'}), 
                    Agent('B', db_refs={'HGNC': '1234'})])
     im.add_statements('12345', [stmt], filters=['grounding'])
     assert(len(im.get_statements()) == 1)
-    
+
 def test_grounding_none():
     im = IncrementalModel()
     im.add_statements('12345', stmts, filters=['grounding'])
     assert(len(im.get_statements()) == 0)
-    
+
 def test_grounding_none_agent():
     im = IncrementalModel()
     im.add_statements('12345', stmts2, filters=['grounding'])
     assert(len(im.get_statements()) == 1)
-    
