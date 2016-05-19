@@ -2,7 +2,6 @@
 # Check in S3
 # If present, copy to NXML folder
 # Prepare temporary .conf file using appropriate number of cores
-
 # Run reach on NXML files, send to output folder
 # Join the resulting .json files
 # Upload the .json to S3, mark down in a folder as being run
@@ -15,8 +14,15 @@ import shutil
 import boto3
 import botocore
 import subprocess
+import glob
+import json
+import cStringIO
+import gzip
 
 cleanup = False
+verbose = True
+reach_version = '1.2.3'
+source_text = 'pmc_oa_xml'
 
 # Check the arguments
 usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
@@ -32,7 +38,7 @@ num_cores = int(num_cores)
 # Load the list of PMIDs from the given file
 with open(pmid_list_file) as f:
     pmid_list = [line.strip('\n') for line in f.readlines()]
-pmids_to_read = pmid_list[start_index:end_index]
+pmids_in_range = pmid_list[start_index:end_index]
 # Create the temp directories for input and output
 base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' % (start_index, end_index),
                             dir=tmp_dir)
@@ -43,8 +49,40 @@ os.makedirs(output_dir)
 # Initialize S3 stuff
 bucket_name ='bigmech'
 client = boto3.client('s3')
-# Iterate over the pmids and download from S3 to the input directory
+pmids_to_read = []
+
+# Check if we've read the PMIDs already
+for pmid in pmids_in_range:
+    # See if we've already read this one
+    reach_key = 'PMID%s_reach' % pmid
+    try:
+        reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
+        print "Found the object, so let's check the metadata"
+        reach_metadata = reach_gz_obj['Metadata']
+        if reach_metadata.get('reach_version') is not None and \
+           reach_metadata.get('reach_version') == reach_version:
+            print "Same version as what we've got, so don't do anything"
+            continue
+        # No version info, or not the same as the current version
+        else:
+            print "Not the same version, so read it!"
+    # Handle a missing object gracefully
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] =='NoSuchKey':
+            print "No object found for key %s, read it!" % reach_key
+        # If there was some other kind of problem, re-raise the exception
+        else:
+            raise e
+    pmids_to_read.append(pmid)
+
+if not pmids_to_read:
+    print "No pmids to read!"
+    sys.exit(0)
+
+# Now iterate over the pmids to read  and download from S3 to the input
+# directory
 for pmid in pmids_to_read:
+    # Look for the full text
     key_prefix = 'papers/PMID%s/fulltext' % pmid
     content_type = 'pmc_oa_xml'
     key_name = '%s/%s' % (key_prefix, content_type)
@@ -128,17 +166,51 @@ with open(conf_file_path, 'w') as f:
 path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.2.3.jar'
 args = ['java', '-jar', path_to_reach, conf_file_path]
 
-p = subprocess.Popen(args,
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-verbose = True
+p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 if verbose:
     for line in iter(p.stdout.readline, b''):
         print '@@', line
 (p_out, p_err) = p.communicate()
-
 if p.returncode:
     raise Exception(p_out + '\n' + p_err)
 
+# At this point, we have a directory full of JSON files
+# Collect all the prefixes into a set, then iterate over the prefixes
+
+def join_parts(prefix):
+    """Join different REACH output JSON files into a single JSON."""
+    entities = json.load(open(prefix + '.uaz.entities.json'))
+    events = json.load(open(prefix + '.uaz.events.json'))
+    sentences = json.load(open(prefix + '.uaz.sentences.json'))
+    full = {'events': events, 'entities': entities, 'sentences': sentences}
+    return full
+
+def gzip_string(content, name):
+    buf = cStringIO.StringIO()
+    gzf = gzip.GzipFile(name, 'wb', 6, buf)
+    gzf.write(content)
+    gzf.close()
+    return buf.getvalue()
+
+# Collect prefixes
+json_files = glob.glob(os.path.join(output_dir, '*.json'))
+json_prefixes = set([])
+for json_file in json_files:
+    filename = os.path.basename(json_file)
+    prefix = filename.split('.')[0]
+    json_prefixes.add(prefix)
+# Now iterate over the collected prefixes, combine the JSON, and send to S3
+for json_prefix in json_prefixes:
+    prefix_with_path = os.path.join(output_dir, json_prefix)
+    full_json = join_parts(prefix_with_path)
+    full_json_gz = gzip_string(json.dumps(full_json), 'reach_output.json')
+    reach_key = '%s_reach' % json_prefix
+    reach_metadata = {'reach_version': reach_version,
+                      'source_text': source_text}
+    client.put_object(Key=reach_key, Body=full_json_gz, Bucket=bucket_name,
+                      Metadata=reach_metadata)
+
 if cleanup:
     shutil.rmtree(base_dir)
+
 
