@@ -21,6 +21,7 @@ import gzip
 
 cleanup = False
 verbose = True
+path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.2.3.jar'
 reach_version = '1.2.3'
 source_text = 'pmc_oa_xml'
 
@@ -54,7 +55,7 @@ pmids_to_read = []
 # Check if we've read the PMIDs already
 for pmid in pmids_in_range:
     # See if we've already read this one
-    reach_key = 'PMID%s_reach' % pmid
+    reach_key = 'papers/PMID%s/reach' % pmid
     try:
         reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
         print "Found the object, so let's check the metadata"
@@ -84,8 +85,7 @@ if not pmids_to_read:
 for pmid in pmids_to_read:
     # Look for the full text
     key_prefix = 'papers/PMID%s/fulltext' % pmid
-    content_type = 'pmc_oa_xml'
-    key_name = '%s/%s' % (key_prefix, content_type)
+    key_name = '%s/%s' % (key_prefix, source_text)
     print key_name
     # Get the content from S3
     try:
@@ -163,9 +163,7 @@ with open(conf_file_path, 'w') as f:
     f.write(conf_file_text)
 
 # Run REACH!
-path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.2.3.jar'
 args = ['java', '-jar', path_to_reach, conf_file_path]
-
 p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 if verbose:
     for line in iter(p.stdout.readline, b''):
@@ -204,7 +202,7 @@ for json_prefix in json_prefixes:
     prefix_with_path = os.path.join(output_dir, json_prefix)
     full_json = join_parts(prefix_with_path)
     full_json_gz = gzip_string(json.dumps(full_json), 'reach_output.json')
-    reach_key = '%s_reach' % json_prefix
+    reach_key = 'papers/%s/reach' % json_prefix
     reach_metadata = {'reach_version': reach_version,
                       'source_text': source_text}
     client.put_object(Key=reach_key, Body=full_json_gz, Bucket=bucket_name,
