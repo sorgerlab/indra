@@ -1,6 +1,9 @@
 import requests
 import json
 import time
+import logging
+
+logger = logging.getLogger('ndex')
 
 ndex_base_url = 'http://bel2rdf.bigmech.ndexbio.org'
 #ndex_base_url = 'http://52.37.175.128'
@@ -21,7 +24,7 @@ def get_result(res):
     elif status != 300:
         return None
     task_id = res.json()['task_id']
-    print 'NDEx task submitted...'
+    logger.info('NDEx task submitted...')
     time_used = 0
     try:
         while status != 200:
@@ -33,5 +36,5 @@ def get_result(res):
     except KeyError:
         next
         return None
-    print 'NDEx task complete.'
+    logger.info('NDEx task complete.')
     return res.text
