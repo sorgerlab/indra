@@ -125,7 +125,7 @@ def upload_to_ndex(model, cred_file):
         uname, passwd, network_id = [l.strip() for l in fh.readlines()]
     except IOError:
         print 'Could not access NDEx credentials.'
-        return []
+        return
     nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=uname, password=passwd)
     ca = CxAssembler()
@@ -134,8 +134,18 @@ def upload_to_ndex(model, cred_file):
     ca.make_model()
     cx_str = ca.print_cx()
 
-    summary = nd.get_network_summary(network_id)
-    nd.update_cx_network(cx_str, network_id)
+    try:
+        summary = nd.get_network_summary(network_id)
+    except Exception as e:
+        print 'Could not get NDEx network summary.'
+        print e
+        return
+    try:
+        nd.update_cx_network(cx_str, network_id)
+    except Exception as e:
+        print 'Could not update NDEx network.'
+        print e
+        return
     ver_str = summary.get('version')
     if ver_str is None:
         new_ver = '1.0'
@@ -146,7 +156,12 @@ def upload_to_ndex(model, cred_file):
                'version': new_ver,
                'visibility': 'PUBLIC'
                }
-    nd.update_network_profile(network_id, profile)
+    try:
+        nd.update_network_profile(network_id, profile)
+    except Exception as e:
+        print 'Could not update NDEx network profile.'
+        print e
+        return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
