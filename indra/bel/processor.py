@@ -135,7 +135,7 @@ class BelProcessor(object):
                 evidence = unicode(stmt[0])
                 citation = unicode(stmt[1])
             except IndexError:
-                logger.warning.('Problem converting evidence/citation string')
+                logger.warning('Problem converting evidence/citation string')
         if citation is not None:
             m = re.match('.*pubmed:([0-9]+)', citation)
             if m is not None:

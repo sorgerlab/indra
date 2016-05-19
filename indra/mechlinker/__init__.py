@@ -1,6 +1,9 @@
+import logging
 import itertools
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
+
+logger = logging.getLogger('mechlinker')
 
 class BaseAgentSet(object):
     """Container for a set of BaseAgents.
@@ -105,7 +108,7 @@ class MechLinker(object):
 
     def add_statements(self, stmts):
         self.statements.extend(stmts)
-    
+
     def link_statements(self):
         self.get_activities()
         self.reduce_activities()
@@ -231,7 +234,7 @@ class MechLinker(object):
                                 act_stmt.obj_activity, is_active,
                                 evidence=ev)
                 self.statements.append(st)
-                print 'inferred:', st
+                logger.info('inferred:', st)
             # Infer ActiveForm from ActAct + Dephosphorylation
             if act_stmt.subj_activity == 'phosphatase':
                 matching = []
@@ -248,7 +251,6 @@ class MechLinker(object):
                 mods = [ModCondition('phosphorylation',
                                      m.residue, m.position, False)
                        for m in matching]
-                
                 if act_stmt.relationship == 'increases':
                     is_active = True
                 else:
@@ -257,7 +259,7 @@ class MechLinker(object):
                                 act_stmt.obj_activity, is_active,
                                 evidence=ev) 
                 self.statements.append(st)
-                print 'inferred:', st
+                logger.info('inferred:', st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
         for act_stmt in get_statement_type(self.statements, ActivityActivity):
             for af_stmt in get_statement_type(self.statements, ActiveForm):
@@ -278,7 +280,7 @@ class MechLinker(object):
                                              m.residue, m.position,
                                              evidence=ev)
                         self.statements.append(st)
-                        print 'inferred:', st
+                        logger.info('inferred:', st)
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
@@ -301,15 +303,3 @@ def get_graph_reductions(edges):
         if reduced_to is not None:
             reductions[n] = reduced_to
     return reductions
-
-if __name__ == '__main__':
-    import pickle
-    a = pickle.load(open('models/assembly_eval/batch1/reach/PMC534114.pkl'))
-    #stmts = [v for k,v in a.iteritems() for v in v]
-    stmts = a
-    ml = MechLinker(stmts)
-    print len(ml.statements)
-    ml.get_activities()
-    ml.reduce_activities()
-    print stmts
-    ml.replace_activations()
