@@ -1,10 +1,11 @@
 import re
+import logging
 import objectpath
-import warnings
 
 from indra.statements import *
 import indra.databases.uniprot_client as up_client
 
+logger = logging.getLogger('reach')
 
 class ReachProcessor(object):
     def __init__(self, json_dict, pmid=None):
@@ -18,11 +19,11 @@ class ReachProcessor(object):
         self.get_all_events()
 
     def print_event_statistics(self):
-        print 'All events by type'
-        print '-------------------'
+        logger.info('All events by type')
+        logger.info('-------------------')
         for k, v in self.all_events.iteritems():
-            print k, len(v)
-        print '-------------------'
+            logger.info('%s, %s' % (k, len(v)))
+        logger.info('-------------------')
 
     def get_all_events(self):
         self.all_events = {}
@@ -95,7 +96,8 @@ class ReachProcessor(object):
             elif modification_type == 'sumoylation':
                 self.statements.append(Sumoylation(*args))
             else:
-                print 'Unhandled modification type: %s' % modification_type
+                logger.warning('Unhandled modification type: %s' %
+                               modification_type)
 
     def get_complexes(self):
         qstr = "$.events.frames[@.type is 'complex-assembly']"
@@ -218,7 +220,8 @@ class ReachProcessor(object):
                 elif m['type'].lower() == 'ubiquitination':
                     mods.append(ModCondition('ubiquitination'))
                 else:
-                    print 'Unhandled entity modification type: %s' % m['type']
+                    logger.warning('Unhandled entity modification type: %s' %
+                                   m['type'])
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
