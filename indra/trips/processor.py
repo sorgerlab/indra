@@ -1,15 +1,15 @@
 import re
 import pickle
 import operator
+import logging
 
 import xml.etree.ElementTree as ET
 
-import indra.logger
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
-logger = indra.logger.get_logger('trips')
+logger = logging.getLogger('trips')
 
 mod_names = {
     'PHOSPHORYLATION': 'phosphorylation'

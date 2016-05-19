@@ -4,9 +4,9 @@ import getopt
 import urllib
 import urllib2
 import xml.dom.minidom
-import indra.logger
+import logging
 
-logger = indra.logger.get_logger('trips')
+logger = logging.getLogger('trips')
 
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 

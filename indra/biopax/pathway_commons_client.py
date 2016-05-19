@@ -1,8 +1,8 @@
 import urllib, urllib2
-import indra.logger
+import logging
 from indra.java_vm import autoclass, JavaException
 
-logger = indra.logger.get_logger('biopax')
+logger = logging.getLogger('biopax')
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 

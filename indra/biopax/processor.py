@@ -1,18 +1,18 @@
 import re
 import sys
 import pickle
+import logging
 import itertools
 import collections
 from functools32 import lru_cache
 
-import indra.logger
 from indra.java_vm import autoclass, JavaException, cast
 
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
 
-logger = indra.logger.get_logger('biopax')
+logger = logging.getLogger('biopax')
 
 # TODO:
 # - Extract cellularLocation from each PhysicalEntity
