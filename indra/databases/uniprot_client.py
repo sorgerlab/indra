@@ -1,8 +1,11 @@
 import os
 import csv
 import rdflib
+import logging
 import urllib, urllib2
 from functools32 import lru_cache
+
+logger = logging.getLogger('uniprot')
 
 uniprot_url = 'http://www.uniprot.org/uniprot/'
 
@@ -85,7 +88,7 @@ def query_protein(protein_id):
     try:
         g.parse(url)
     except urllib2.HTTPError:
-        print 'Could not find protein with id %s' % protein_id
+        logger.warning('Could not find protein with id %s' % protein_id)
         return None
     # Check if the entry has been replaced by a new entry
     query = rdf_prefixes + """
@@ -246,7 +249,7 @@ def get_sequence(protein_id):
     try:
         res = urllib2.urlopen(url)
     except urllib2.HTTPError:
-        print 'Could not find sequence for protein %s' % protein_id
+        logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
     lines = res.readlines()
     seq = (''.join(lines[1:])).replace('\n','')
@@ -302,7 +305,7 @@ def verify_location(protein_id, residue, location):
     try:
         loc_int = int(location)
     except ValueError:
-        print 'Invalid location %s' % location
+        logger.warning('Invalid location %s' % location)
         loc_int = -1
 
     if (loc_int < 1) or (loc_int > len(seq)):

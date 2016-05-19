@@ -1,5 +1,8 @@
 import json
+import logging
 import requests
+
+logger = logging.getLogger('context')
 
 ndexbio_context = 'http://general.bigmech.ndexbio.org:8081/context/'
 
@@ -82,7 +85,8 @@ def send_request(req_type, params=None):
         params = {}
     res = requests.post(ndexbio_context + req_type, json=params)
     if res.status_code != 200:
-        print 'Request to NDEx service returned with status %d' % res.status_code
+        logger.error('Request to NDEx service returned with status %d' %
+                     res.status_code)
         return None
     res_json = res.json()
     return res_json
