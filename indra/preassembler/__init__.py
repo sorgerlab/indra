@@ -1,4 +1,5 @@
 import sys
+import logging
 import pygraphviz as pgv
 import itertools
 from copy import copy, deepcopy

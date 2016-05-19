@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 import tempfile
 import requests
 from indra.java_vm import autoclass, JavaException
@@ -7,6 +8,8 @@ import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from processor import ReachProcessor
 from reach_reader import ReachReader
+
+logger = logging.getLogger('reach')
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
@@ -99,14 +102,14 @@ def process_text(text, citation=None, offline=False):
     if offline:
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
-            print 'Cannot read offline because the REACH ApiRuler ' + \
-                   'could not be instantiated.'
+            logger.error('Cannot read offline because the REACH ApiRuler ' + \
+                         'could not be instantiated.')
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
         except JavaException as e:
-            print 'Could not process text.'
-            print e
+            logger.error('Could not process text.')
+            logger.error(e)
             return None
         json_str = result_map.get('resultJson')
     else:
@@ -114,8 +117,8 @@ def process_text(text, citation=None, offline=False):
         try:
             res = requests.post(reach_text_url, data)
         except requests.exceptions.RequestException as e:
-            print 'Could not connect to REACH service:'
-            print e
+            logger.error('Could not connect to REACH service:')
+            logger.error(e)
             return None
         # TODO: we could use res.json() here to get a dict 
         # directly
@@ -151,14 +154,14 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
     if offline:
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
-            print 'Cannot read offline because the REACH ApiRuler could not' +\
-                    ' be instantiated.'
+            logger.error('Cannot read offline because the REACH ApiRuler' +\
+                         'could not be instantiated.')
             return None
         try:
             #TODO: Test if UTF-8 files are parsed correctly here
             result_map = api_ruler.annotateNxml(nxml_str, 'fries')
         except JavaException:
-            print 'Could not process NXML.'
+            logger.error('Could not process NXML.')
             return None
         json_str = result_map.get('resultJson')
     else:
@@ -166,12 +169,12 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         try:
             res = requests.post(reach_nxml_url, data)
         except requests.exceptions.RequestException as e:
-            print 'Could not connect to REACH service:'
-            print e
+            logger.error('Could not connect to REACH service:')
+            logger.error(e)
             return None
         if res.status_code != 200:
-            print 'Could not process NXML via REACH service.' + \
-                  'Status code: %d' % res.status_code
+            logger.error('Could not process NXML via REACH service.' + \
+                         'Status code: %d' % res.status_code)
             return None
         json_str = res.text
     with open('reach_output.json', 'wt') as fh:
@@ -231,7 +234,7 @@ def process_json_file(file_name, citation=None):
             json_str = fh.read()
             return process_json_str(json_str, citation)
     except IOError:
-        print 'Could not read file %s.' % file_name
+        logger.error('Could not read file %s.' % file_name)
 
 
 def process_json_str(json_str, citation=None):

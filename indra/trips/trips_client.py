@@ -1,9 +1,12 @@
+import re
+import sys
+import getopt
 import urllib
 import urllib2
-import re
-import getopt
-import sys
 import xml.dom.minidom
+import logging
+
+logger = logging.getLogger('trips')
 
 trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
@@ -34,7 +37,7 @@ def save_xml(xml_str, file_name, pretty=True):
     try:
         fh = open(file_name, 'wt')
     except IOError:
-        print 'Could not open %s for writing.' % file_name
+        logger.error('Could not open %s for writing.' % file_name)
         return
     if pretty:
         xmld = xml.dom.minidom.parseString(xml_str)

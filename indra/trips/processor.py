@@ -1,7 +1,7 @@
 import re
-import warnings
 import pickle
 import operator
+import logging
 
 import xml.etree.ElementTree as ET
 
@@ -9,6 +9,7 @@ from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
+logger = logging.getLogger('trips')
 
 mod_names = {
     'PHOSPHORYLATION': 'phosphorylation'
@@ -22,7 +23,7 @@ class TripsProcessor(object):
         try:
             self.tree = ET.fromstring(xml_string)
         except ET.ParseError:
-            print 'Could not parse XML string'
+            logger.error('Could not parse XML string')
             self.tree = None
             return
         # Get the document ID from the EKB tag. This is the PMC ID when available.
@@ -37,11 +38,11 @@ class TripsProcessor(object):
         self._static_events = self._find_static_events()
         self.get_all_events()
         self.extracted_events = {k:[] for k in self.all_events.keys()}
-        print 'All events by type'
-        print '------------------'
+        logger.debug('All events by type')
+        logger.debug('------------------')
         for k, v in self.all_events.iteritems():
-            print k, len(v)
-        print '------------------'
+            logger.debug('%s %s' % (k, len(v)))
+        logger.debug('------------------')
 
     def get_all_events(self):
         self.all_events = {}
@@ -90,7 +91,7 @@ class TripsProcessor(object):
             agent_id = agent.attrib['id']
             agent_name = self._get_name_by_id(agent_id)
             if agent_name is None:
-                warnings.warn(
+                logger.debug(
                     'Skipping activation with missing activator agent')
                 continue
             activator_agent = Agent(agent_name)
@@ -98,13 +99,13 @@ class TripsProcessor(object):
             # Get the activated agent in the event
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                warnings.warn(
+                logger.debug(
                     'Skipping activation with missing affected agent')
                 continue
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
             if affected_name is None:
-                warnings.warn(
+                logger.debug(
                     'Skipping activation with missing affected agent')
                 continue
 
@@ -192,13 +193,13 @@ class TripsProcessor(object):
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 msg = 'Skipping activation event with no affected term.'
-                warnings.warn(msg)
+                logger.debug(msg)
                 continue
 
             affected_id = affected.attrib['id']
             affected_name = self._get_name_by_id(affected_id)
             if affected_name is None:
-                warnings.warn(
+                logger.debug(
                     'Skipping activating modification with missing' +\
                     'affected agent')
                 continue
@@ -214,7 +215,7 @@ class TripsProcessor(object):
                 continue
             mods = self._get_mod_site(precond_event)
             if mods is None:
-                warnings.warn('Skipping activity modification with missing' +\
+                logger.debug('Skipping activity modification with missing' +\
                                 'modification')
                 continue
             affected_agent.mods = mods
@@ -236,14 +237,14 @@ class TripsProcessor(object):
             arg1 = event.find("arg1")
             if arg1 is None:
                 msg = 'Skipping complex missing arg1.'
-                warnings.warn(msg)
+                logger.debug(msg)
                 continue
             agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
 
             arg2 = event.find("arg2")
             if arg2 is None:
                 msg = 'Skipping complex missing arg2.'
-                warnings.warn(msg)
+                logger.debug(msg)
                 continue
             agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
 
@@ -267,7 +268,7 @@ class TripsProcessor(object):
                 print sites, positions
             '''
             if agent1 is None or agent2 is None:
-                warnings.warn('Complex with missing members')
+                logger.debug('Complex with missing members')
                 continue
 
             self.statements.append(Complex([agent1, agent2], evidence=ev))
@@ -308,7 +309,7 @@ class TripsProcessor(object):
                                                              event_id)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                warnings.warn('Skipping phosphorylation event with no '
+                logger.debug('Skipping phosphorylation event with no '
                               'affected term.')
                 continue
             affected_id = affected.attrib['id']
@@ -385,7 +386,7 @@ class TripsProcessor(object):
             complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
             components = complex_term.find("components")
             if components is None:
-                warnings.warn('Complex without components')
+                logger.debug('Complex without components')
                 return None
             terms = components.findall('component')
             term_names = []
@@ -412,7 +413,7 @@ class TripsProcessor(object):
                 for precond in preconds:
                     precond_id = precond.attrib['id']
                     if precond_id == event_id:
-                        warnings.warn('Circular reference to event %s.' %
+                        logger.debug('Circular reference to event %s.' %
                                        precond_id)
                     precond_event = self.tree.find("EVENT[@id='%s']" % 
                                                     precond_id)
@@ -525,16 +526,16 @@ class TripsProcessor(object):
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if entity_term is None:
-            warnings.warn('Term %s for entity not found' % entity_id)
+            logger.debug('Term %s for entity not found' % entity_id)
             return None
         name = entity_term.find("name")
         if name is None:
-            warnings.warn('Entity without a name')
+            logger.debug('Entity without a name')
             return None
         try:
             dbid = entity_term.attrib["dbid"]
         except:
-            #warnings.warn('No grounding information for %s' % name.text)
+            #logger.debug('No grounding information for %s' % name.text)
             return self._get_valid_name(name.text)
 
         dbids = dbid.split('|')
@@ -568,7 +569,7 @@ class TripsProcessor(object):
             return self._get_valid_name(hgnc_name)
         elif up_ids:
             if len(hgnc_ids) > 1:
-                warnings.warn('%d UniProt IDs reported.' % len(up_ids))
+                logger.debug('%d UniProt IDs reported.' % len(up_ids))
             up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
             # First try to get HGNC name
             hgnc_name = up_client.get_hgnc_name(up_id)
@@ -618,10 +619,10 @@ class TripsProcessor(object):
                 residue = site_name
                 pos = None
             elif site_type == 'ONT::MOLECULAR-DOMAIN':
-                print 'Molecular domains not handled yet.'
+                logger.debug('Molecular domains not handled yet.')
                 return None, None
             else:
-                print 'Unhandled site type: %s' % site_type
+                logger.debug('Unhandled site type: %s' % site_type)
                 return None, None
 
             return (residue, ), (pos, )
@@ -663,7 +664,7 @@ class TripsProcessor(object):
         for r, p in zip(residues, mod_pos):
             residue_name = get_valid_residue(r)
             if residue_name is None:
-                warnings.warn('Residue name %s unknown. ' % r)
+                logger.debug('Residue name %s unknown. ' % r)
                 residue_name = None
             mc = ModCondition(mod_type_name, residue_name, p, is_modified)
             mods.append(mc)

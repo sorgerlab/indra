@@ -1,7 +1,7 @@
 import re
 import sys
 import pickle
-import warnings
+import logging
 import itertools
 import collections
 from functools32 import lru_cache
@@ -12,7 +12,7 @@ from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
 
-warnings.simplefilter("always")
+logger = logging.getLogger('biopax')
 
 # TODO:
 # - Extract cellularLocation from each PhysicalEntity
@@ -21,7 +21,6 @@ warnings.simplefilter("always")
 #   be direct)
 # - Implement extracting modifications with Complex enzyme
 # - Implement extracting modifications with Complex substrate
-
 
 class BiopaxProcessor(object):
     def __init__(self, model):
@@ -48,7 +47,7 @@ class BiopaxProcessor(object):
             members = self._get_complex_members(bpe)
             if members is not None:
                 if len(members) > 10:
-                    print 'Skipping complex with more than 10 members.'
+                    logger.info('Skipping complex with more than 10 members.')
                     continue
                 complexes = get_combinations(members)
                 for c in complexes:
@@ -171,8 +170,8 @@ class BiopaxProcessor(object):
         if not member_pes:
             member_pes = cplx.getMemberPhysicalEntity().toArray()
             if not member_pes:
-                warnings.warn('Complex "%s" has no members.' %
-                              cplx.getDisplayName())
+                logger.info('Complex "%s" has no members.' %
+                            cplx.getDisplayName())
                 return None
         members = []
         for m in member_pes:
@@ -242,7 +241,8 @@ class BiopaxProcessor(object):
                 continue
             cat_dir = control.getCatalysisDirection()
             if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                warnings.warn('Unexpected catalysis direction: %s.' % control.getCatalysisDirection())
+                logger.info('Unexpected catalysis direction: %s.' % \
+                    control.getCatalysisDirection())
                 continue
             if is_complex(controller_pe):
                 # Identifying the "real" enzyme in a complex may not always be
@@ -251,13 +251,13 @@ class BiopaxProcessor(object):
                 # active and if it is the only active member then
                 # set this as the enzyme to which all other members of the
                 # complex are bound.
-                warnings.warn('Cannot handle complex enzymes.')
+                logger.info('Cannot handle complex enzymes.')
                 continue
             if is_complex(input_pe):
                 # It is possible to find which member of the complex is 
                 # actually modified. That member will be the substrate and 
                 # all other members of the complex will be bound to it.
-                warnings.warn('Cannot handle complex substrates.')
+                logger.info('Cannot handle complex substrates.')
                 continue
             # TODO: should this be the citation for the control?
             # Sometimes there is an xref within Catalysis which refers to 
@@ -318,7 +318,6 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_evidence(bpe):
         ev = bpe.getEvidence().toArray()
-        print ev
         for e in ev:
             xrefs =  e.getXref().toArray()
             # There are also evidence codes that we could extract.
@@ -423,12 +422,12 @@ class BiopaxProcessor(object):
         if mf_type is None:
             return None
         if len(mf_type.getTerm().toArray()) != 1:
-            warnings.warn('Other than one modification term')
+            logger.info('Other than one modification term')
         mf_type = mf_type.getTerm().toArray()[0]
         try:
             mod_type, residue = BiopaxProcessor._mftype_dict[mf_type]
         except KeyError:
-            warnings.warn('Ignored modification type %s' % mf_type)
+            logger.info('Ignored modification type %s' % mf_type)
             return None
 
         # getFeatureLocation returns SequenceLocation, which is the
@@ -442,8 +441,8 @@ class BiopaxProcessor(object):
             if mf_pos_status is None:
                 mod_pos = None
             elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
-                warnings.warn('Modification site position is %s' %
-                              mf_pos_status.toString())
+                logger.info('Modification site position is %s' %
+                            mf_pos_status.toString())
             else:
                 mod_pos = mf_site.getSequencePosition()
         else:
@@ -500,9 +499,8 @@ class BiopaxProcessor(object):
         elif is_physical_entity(bpe):
             name = bpe.getDisplayName()
         else:
-            warnings.warn('Unhandled entity type %s' %
-                bpe.getModelInterface().getName())
-            import ipdb; ipdb.set_trace()
+            logger.info('Unhandled entity type %s' %
+                        bpe.getModelInterface().getName())
             name = bpe.getDisplayName()
 
         # Canonicalize name
@@ -597,7 +595,7 @@ class BiopaxProcessor(object):
 
     def save_model(self, file_name=None):
         if file_name is None:
-            print 'Missing file name'
+            logger.error('Missing file name')
             return
         pcc.model_to_owl(self.model, file_name)
 
@@ -635,7 +633,7 @@ def autoclass_robust(path):
     try:
         cl = autoclass(path)
     except JavaException:
-        print 'Could not instantiate ' + path
+        logger.error('Could not instantiate ' + path)
         return None
     return cl
 

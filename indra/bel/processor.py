@@ -1,13 +1,15 @@
+import re
+import urllib
+import keyword
+import logging
+import collections
+from rdflib import URIRef, Namespace
+from rdflib.namespace import RDF
+
 from indra.statements import *
 from indra.databases import hgnc_client
 
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF
-import collections
-import urllib
-import re
-import keyword
-import warnings
+logger = logging.getLogger('bel')
 
 BEL = Namespace("http://www.openbel.org/")
 
@@ -133,8 +135,7 @@ class BelProcessor(object):
                 evidence = unicode(stmt[0])
                 citation = unicode(stmt[1])
             except IndexError:
-                import ipdb; ipdb.set_trace()
-                warnings.warn('Problem converting evidence/citation string')
+                logger.warning('Problem converting evidence/citation string')
         if citation is not None:
             m = re.match('.*pubmed:([0-9]+)', citation)
             if m is not None:
@@ -216,13 +217,13 @@ class BelProcessor(object):
                             Ubiquitination(enz, sub, residue, mod_pos,
                                            evidence))
                 else:
-                    print "Warning: Unknown modification type!"
-                    print("Activity: %s, Mod: %s, Mod_Pos: %s" %
-                          (act_type, mod, mod_pos))
+                    logger.warning("Unknown modification type!")
+                    logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
+                                   (act_type, mod, mod_pos))
             else:
-                print "Warning: Unknown modification type!"
-                print("Activity: %s, Mod: %s, Mod_Pos: %s" %
-                      (act_type, mod, mod_pos))
+                logger.warning("Unknown modification type!")
+                logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
+                               (act_type, mod, mod_pos))
 
     @staticmethod
     def _get_residue(mod):
@@ -432,7 +433,7 @@ class BelProcessor(object):
             if len(cmplx_list) < 2:
                 msg = 'Complex %s has less than 2 members! Skipping.' % \
                        cmplx_name
-                warnings.warn(msg)
+                logger.warning(msg)
             else:
                 self.statements.append(Complex(cmplx_list,
                                                evidence=cmplx_ev[cmplx_id]))
@@ -484,8 +485,8 @@ class BelProcessor(object):
                 position = matches[1]
                 sub_residue = matches[2]
             else:
-                print("Warning: Could not parse substitution expression %s" %
-                      sub_expr)
+                logger.warning("Could not parse substitution expression %s" %
+                               sub_expr)
                 continue
             mc = MutCondition(position, wt_residue, sub_residue)
             enz.mutations = [mc]
@@ -589,7 +590,7 @@ class BelProcessor(object):
         """Get all directlyIncreases/Decreases statements in the corpus.
         Stores the results of the query in self.all_stmts.
         """
-        print "Getting all direct statements...\n"
+        logger.info("Getting all direct statements...\n")
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -654,7 +655,7 @@ class BelProcessor(object):
         self.indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_degenerate_statements(self):
-        print "Checking for 'degenerate' statements...\n"
+        logger.info("Checking for 'degenerate' statements...\n")
         # Get rules of type protein X -> activity Y
         q_stmts = prefixes + """
             SELECT ?stmt
@@ -697,11 +698,11 @@ class BelProcessor(object):
         """
         res_stmts = self.g.query(q_stmts)
 
-        print "Protein -> Protein/Activity statements:"
-        print "---------------------------------------"
+        logger.info("Protein -> Protein/Activity statements:")
+        logger.info("---------------------------------------")
         for stmt in res_stmts:
             stmt_str = strip_statement(stmt[0])
-            print stmt_str
+            logger.info(stmt_str)
             self.degenerate_stmts.append(stmt_str)
 
     def print_statement_coverage(self):
@@ -715,22 +716,23 @@ class BelProcessor(object):
         if not self.indirect_stmts:
             self.get_indirect_statements()
 
-        print
-        print("Total indirect statements: %d" % len(self.indirect_stmts))
-        print("Total direct statements: %d" % len(self.all_stmts))
-        print("Converted statements: %d" % len(self.converted_stmts))
-        print("Degenerate statements: %d" % len(self.degenerate_stmts))
-        print(">> Total unhandled statements: %d" %
-              (len(self.all_stmts) - len(self.converted_stmts) -
-               len(self.degenerate_stmts)))
+        logger.info('')
+        logger.info("Total indirect statements: %d" %
+                     len(self.indirect_stmts))
+        logger.info("Total direct statements: %d" % len(self.all_stmts))
+        logger.info("Converted statements: %d" % len(self.converted_stmts))
+        logger.info("Degenerate statements: %d" % len(self.degenerate_stmts))
+        logger.info(">> Total unhandled statements: %d" %
+                     (len(self.all_stmts) - len(self.converted_stmts) -
+                     len(self.degenerate_stmts)))
 
-        print
-        print "--- Unhandled statements ---------"
+        logger.info('')
+        logger.info("--- Unhandled statements ---------")
         for stmt in self.all_stmts:
             if not (stmt in self.converted_stmts or
                     stmt in self.degenerate_stmts):
-                print stmt
+                logger.info(stmt)
 
     def print_statements(self):
         for i, stmt in enumerate(self.statements):
-            print "%s: %s" % (i, stmt)
+            logger.info("%s: %s" % (i, stmt))
