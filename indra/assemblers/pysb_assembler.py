@@ -1,5 +1,5 @@
+import logging
 import itertools
-import warnings
 
 from pysb import (Model, Monomer, Parameter, Rule, Annotation,
         ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY)
@@ -8,6 +8,8 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client
+
+logger = logging.getLogger('pysb_assembler')
 
 SelfExporter.do_export = False
 
@@ -246,7 +248,7 @@ def add_rule_to_model(model, rule):
     # If this rule is already in the model, issue a warning and continue
     except ComponentDuplicateNameError:
         msg = "Rule %s already in model! Skipping." % rule.name
-        warnings.warn(msg)
+        logger.warning(msg)
 
 
 def get_create_parameter(model, name, value, unique=True):
@@ -527,7 +529,8 @@ class PysbAssembler(object):
         monomer_names = [m.name for m in self.model.monomers]
         res = context_client.get_protein_expression(monomer_names, cell_type)
         if not res:
-            print 'Could not get context for %s cell type.' % cell_type
+            logger.warning('Could not get context for %s cell type.' %
+                           cell_type)
             self.add_default_initial_conditions()
         monomers_found = []
         monomers_notfound = []
@@ -539,16 +542,16 @@ class PysbAssembler(object):
             else:
                 set_base_initial_condition(self.model, m, 100.0)
                 monomers_notfound.append(m.name)
-        print 'Monomers set to %s context' % cell_type
-        print '--------------------------------'
+        logger.info('Monomers set to %s context' % cell_type)
+        logger.info('--------------------------------')
         for m in monomers_found:
-            print m
+            logger.info('%s' % m)
         if monomers_notfound:
-            print
-            print 'Monomers not found in %s context' % cell_type
-            print '-----------------------------------------'
+            logger.info('')
+            logger.info('Monomers not found in %s context' % cell_type)
+            logger.info('-----------------------------------------')
             for m in monomers_notfound:
-                print m
+                logger.info('%s' % m)
 
     def print_model(self):
         """Print the assembled model as a PySB program string.

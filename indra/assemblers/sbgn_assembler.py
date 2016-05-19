@@ -1,12 +1,13 @@
-import sys
 import itertools
 import copy
+import logging
 import collections
 import lxml.builder
 import lxml.etree
 from indra.trips import trips_api
 from indra import statements as ist
 
+logger = logging.getLogger('sbgn_assembler')
 
 abbrevs = {
     'phosphorylation': 'phospho',
@@ -112,7 +113,7 @@ class SBGNAssembler(object):
                 class_name = 'association'
                 consumed = s.members
             else:
-                print >>sys.stderr, "WARNING: skipping %s" % type(s)
+                logger.warning("WARNING: skipping %s" % type(s))
                 continue
             produced = [statement_product(s)]
             pg_id = make_id()
@@ -179,7 +180,7 @@ def statement_product(stmt):
             bc = ist.BoundCondition(member, True)
             product.bound_conditions.append(bc)
     else:
-        print >>sys.stderr, "WARNING: skipping %s" % type(stmt)
+        logger.warning("WARNING: skipping %s" % type(stmt))
         product = None
     return product
 

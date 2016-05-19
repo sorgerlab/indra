@@ -1,4 +1,7 @@
+import logging
 import indra.statements as ist
+
+logger = logging.getLogger('english_assembler')
 
 class EnglishAssembler(object):
     """This assembler generates English sentences from INDRA Statements.
@@ -48,7 +51,7 @@ class EnglishAssembler(object):
             elif isinstance(stmt, ist.ActivityActivity):
                 stmt_strs.append(_assemble_activityactivity(stmt))
             else:
-                print 'Unhandled statement type.'
+                logger.warning('Unhandled statement type: %s.' % type(stmt))
         model = ' '.join(stmt_strs)
         return model
 

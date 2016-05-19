@@ -32,7 +32,6 @@ class IndexCardAssembler(object):
                     self.cards.append(card)
             else:
                 continue
-                #print 'Assembly not defined for %s' % type(stmt)
 
     def print_model(self):
         cards = [c.card for c in self.cards]
