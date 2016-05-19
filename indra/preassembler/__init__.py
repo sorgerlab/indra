@@ -93,14 +93,14 @@ class Preassembler(object):
         >>> map2k1 = Agent('MAP2K1')
         >>> mapk1 = Agent('MAPK1')
         >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
-        ... evidence=[Evidence('evidence 1')])
+        ... evidence=[Evidence(text='evidence 1')])
         >>> stmt2 = Phosphorylation(map2k1, mapk1, 'T', '185',
-        ... evidence=[Evidence('evidence 2')])
+        ... evidence=[Evidence(text='evidence 2')])
         >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
-        >>> uniq_stmts[0].evidence
-        [Evidence(evidence 1, None, {}, None), Evidence(evidence 2, None, {}, None)]
+        >>> sorted([e.text for e in uniq_stmts[0].evidence])
+        ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
         # Remove exact duplicates using a set() call, then make copies:
