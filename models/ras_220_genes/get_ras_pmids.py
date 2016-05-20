@@ -1,4 +1,5 @@
 import csv
+import sys
 from indra.literature import pubmed_client
 from collections import OrderedDict
 from matplotlib import pyplot as plt
@@ -9,6 +10,7 @@ import botocore
 import os
 from indra.literature import id_lookup
 from indra.literature import crossref_client
+from texttable import Texttable
 
 def get_ids():
     """Search PubMed for references for the Ras 227 gene set."""
@@ -68,15 +70,17 @@ def plot_counts(refs, ax, **kwargs):
     ax.set_xlabel('Gene index')
 
 
-def plot_parallel_counts(refs1, refs2, ax, **kwargs):
+def plot_parallel_counts(refs1, refs2, ax, labels, **kwargs):
     """Plot the distribution of reference counts, sorting both by the number
     of references for refs1."""
     pmid_counts = []
     for gene, pubs in refs1.iteritems():
         pmid_counts.append((gene, len(pubs), len(refs2[gene])))
+    # Sort by the number of refs for the first arg list
     pmid_counts = sorted(pmid_counts, key=lambda x: x[1])
-    ax.plot([x[1] for x in pmid_counts], color='r', **kwargs)
-    ax.plot([x[2] for x in pmid_counts], color='b', **kwargs)
+    ax.plot([x[2] for x in pmid_counts], color='b', label=labels[1], **kwargs)
+    # Plot the sorted one last so it appears on top
+    ax.plot([x[1] for x in pmid_counts], color='r', label=labels[0], **kwargs)
     ax.set_yscale('log')
     ax.set_ylabel('Publications')
     ax.set_xlabel('Gene index')
@@ -110,11 +114,130 @@ def get_fulltexts(pmids_dict):
         fulltext_counts[gene] = refs_with_fulltext
     return fulltext_counts
 
+def num_unique_refs(pmids_dict):
+    unique_refs = set([ref for gene, refs in pmids_dict.items()
+                           for ref in refs])
+    return len(unique_refs)
+
 if __name__ == '__main__':
     import plot_formatting as pf
 
-    (pmids, pmids_from_gene) = get_ids()
+    # Load the PMIDs
+    (pmids_by_name, pmids_by_gene) = get_ids()
+    plt.ion()
+    pf.set_fig_params()
 
+    # Print some stats on the corpora
+    # - Total and unique references returned
+    total_name = np.sum([len(refs) for refs in pmids_by_name.values()])
+    total_gene = np.sum([len(refs) for refs in pmids_by_gene.values()])
+    refs_table = Texttable()
+    refs_table.add_rows([['', 'By gene name', 'By gene ID'],
+                    ['Total refs', total_name, total_gene],
+                    ['Unique refs', num_unique_refs(pmids_by_name),
+                                   num_unique_refs(pmids_by_gene)]])
+    print refs_table.draw() + '\n'
+    # Sort both reference lists by number of citations
+    pmids_by_name_sorted = sorted([(gene, len(refs))
+                                   for gene, refs in pmids_by_name.items()],
+                                   key=lambda x: x[1], reverse=True)
+    pmids_by_gene_sorted = sorted([(gene, len(refs))
+                                   for gene, refs in pmids_by_gene.items()],
+                                   key=lambda x: x[1], reverse=True)
+    # - Top 10 genes for both searches
+    top_10_table = Texttable()
+    rows = [['Rank', 'By gene name (refs)', 'By gene ID (refs)']]
+    for i in range(10):
+        rank = i + 1
+        by_name_str = '%s (%s)' % (pmids_by_name_sorted[i][0],
+                                   pmids_by_name_sorted[i][1])
+        by_gene_str = '%s (%s)' % (pmids_by_gene_sorted[i][0],
+                                   pmids_by_gene_sorted[i][1])
+
+        rows.append([rank, by_name_str, by_gene_str])
+    top_10_table.add_rows(rows)
+    print top_10_table.draw() + '\n'
+    # - Bottom 10 genes for both searches
+    bottom_10_table = Texttable()
+    rows = [['Rank', 'By gene name (refs)', 'By gene ID (refs)']]
+    for i in reversed(range(1, 11)):
+        rank = len(pmids_by_name_sorted) - i + 1
+        by_name_str = '%s (%s)' % (pmids_by_name_sorted[-i][0],
+                                   pmids_by_name_sorted[-i][1])
+        by_gene_str = '%s (%s)' % (pmids_by_gene_sorted[-i][0],
+                                   pmids_by_gene_sorted[-i][1])
+        rows.append([rank, by_name_str, by_gene_str])
+    bottom_10_table.add_rows(rows)
+    print bottom_10_table.draw() + '\n'
+
+    sys.exit()
+
+    # Plot citation distribution sorted by name search
+    fig = plt.figure(figsize=(2, 2), dpi=300)
+    ax = fig.gca()
+    sorted_counts = plot_parallel_counts(pmids_by_name, pmids_by_gene, ax,
+                                         labels=['By gene name', 'By gene ID'])
+    plt.legend(loc='upper left', fontsize=pf.fontsize, frameon=False)
+    pf.format_axis(ax)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+    plt.savefig('citations_by_gene.png', dpi=150)
+    plt.savefig('citations_by_gene.pdf')
+
+
+    """
+    # Plot citation distribution for both methods
+    fig = plt.figure(figsize=(2, 2), dpi=150)
+    ax = fig.gca()
+    plot_counts(pmids, ax, color='blue')
+    plot_counts(pmids_from_gene, ax, color='red')
+    pf.format_axis(ax)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+    plt.legend(['By Name', 'By Gene ID'], loc='upper left',
+               fontsize=pf.fontsize, frameon=False)
+    plt.savefig('citations_by_gene.png', dpi=150)
+    plt.savefig('citations_by_gene.pdf')
+    """
+
+
+
+    # Figure out how many of the publications have full text in PMC
+    pmids_gene_ft = get_fulltexts(pmids_from_gene)
+    fig = plt.figure(figsize=(2, 2), dpi=300)
+    ax = fig.gca()
+    plot_parallel_counts(pmids_from_gene, pmids_gene_ft, ax)
+    pf.format_axis(ax)
+    plt.legend(['By Gene ID', 'Full Text in PMC'], loc='upper left',
+               fontsize=pf.fontsize, frameon=False)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+
+    total_gene = np.sum([len(refs) for refs in pmids_from_gene.values()])
+    total_gene_ft = np.sum([len(refs) for refs in pmids_gene_ft.values()])
+
+    print "Total (by gene)", total_gene
+    print "Total (by gene) with full text", total_gene_ft
+    print "%.2f%% with full text" % \
+          ((total_gene_ft / float(total_gene)) * 100)
+
+    # Figure out how many of the publications have full text in PMC
+    pmids_ft = get_fulltexts(pmids)
+    fig = plt.figure(figsize=(2, 2), dpi=300)
+    ax = fig.gca()
+    plot_parallel_counts(pmids, pmids_ft, ax)
+    pf.format_axis(ax)
+    plt.legend(['By Name', 'Full Text in PMC'], loc='upper left',
+               fontsize=pf.fontsize, frameon=False)
+    plt.subplots_adjust(left=0.19, bottom=0.16)
+
+    total_pmids = np.sum([len(refs) for refs in pmids.values()])
+    total_pmids_ft = np.sum([len(refs) for refs in pmids_ft.values()])
+
+    print "Total (by gene)", total_pmids
+    print "Total (by gene) with full text", total_pmids_ft
+    print "%.2f%% with full text" % \
+          ((total_pmids_ft / float(total_pmids)) * 100)
+
+
+    """
     doi_cache = {}
     with open('doi_cache.txt') as f:
         csvreader = csv.reader(f, delimiter='\t')
@@ -254,64 +377,7 @@ if __name__ == '__main__':
                 pm_not_found.append(sample)
         else:
             pm_not_found.append(sample)
-
-    plt.ion()
-    pf.set_fig_params()
-
-    # Plot citation distribution for both methods
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    plot_counts(pmids, ax, color='blue')
-    plot_counts(pmids_from_gene, ax, color='red')
-    pf.format_axis(ax)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-    plt.legend(['By Name', 'By Gene ID'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-
-    # Plot citation distribution sorted by name search
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    sorted_counts = plot_parallel_counts(pmids, pmids_from_gene, ax)
-    plt.legend(['By Name', 'By Gene ID'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    pf.format_axis(ax)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-
-    # Figure out how many of the publications have full text in PMC
-    pmids_gene_ft = get_fulltexts(pmids_from_gene)
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    plot_parallel_counts(pmids_from_gene, pmids_gene_ft, ax)
-    pf.format_axis(ax)
-    plt.legend(['By Gene ID', 'Full Text in PMC'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-
-    total_gene = np.sum([len(refs) for refs in pmids_from_gene.values()])
-    total_gene_ft = np.sum([len(refs) for refs in pmids_gene_ft.values()])
-
-    print "Total (by gene)", total_gene
-    print "Total (by gene) with full text", total_gene_ft
-    print "%.2f%% with full text" % \
-          ((total_gene_ft / float(total_gene)) * 100)
-
-    # Figure out how many of the publications have full text in PMC
-    pmids_ft = get_fulltexts(pmids)
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    plot_parallel_counts(pmids, pmids_ft, ax)
-    pf.format_axis(ax)
-    plt.legend(['By Name', 'Full Text in PMC'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-
-    total_pmids = np.sum([len(refs) for refs in pmids.values()])
-    total_pmids_ft = np.sum([len(refs) for refs in pmids_ft.values()])
-
-    print "Total (by gene)", total_pmids
-    print "Total (by gene) with full text", total_pmids_ft
-    print "%.2f%% with full text" % \
-          ((total_pmids_ft / float(total_pmids)) * 100)
+    """
 
 
     # Figure out how many of the publications have xml/txt/auth
