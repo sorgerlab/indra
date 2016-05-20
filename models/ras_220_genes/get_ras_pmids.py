@@ -183,23 +183,6 @@ if __name__ == '__main__':
     plt.savefig('citations_by_gene.png', dpi=150)
     plt.savefig('citations_by_gene.pdf')
 
-
-    """
-    # Plot citation distribution for both methods
-    fig = plt.figure(figsize=(2, 2), dpi=150)
-    ax = fig.gca()
-    plot_counts(pmids, ax, color='blue')
-    plot_counts(pmids_from_gene, ax, color='red')
-    pf.format_axis(ax)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-    plt.legend(['By Name', 'By Gene ID'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    plt.savefig('citations_by_gene.png', dpi=150)
-    plt.savefig('citations_by_gene.pdf')
-    """
-
-
-
     # Figure out how many of the publications have full text in PMC
     pmids_gene_ft = get_fulltexts(pmids_from_gene)
     fig = plt.figure(figsize=(2, 2), dpi=300)
