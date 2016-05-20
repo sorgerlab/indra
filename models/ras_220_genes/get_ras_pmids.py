@@ -78,9 +78,10 @@ def plot_parallel_counts(refs1, refs2, ax, labels, **kwargs):
         pmid_counts.append((gene, len(pubs), len(refs2[gene])))
     # Sort by the number of refs for the first arg list
     pmid_counts = sorted(pmid_counts, key=lambda x: x[1])
-    ax.plot([x[2] for x in pmid_counts], color='b', label=labels[1], **kwargs)
-    # Plot the sorted one last so it appears on top
-    ax.plot([x[1] for x in pmid_counts], color='r', label=labels[0], **kwargs)
+    ax.plot([x[1] for x in pmid_counts], color='r', label=labels[0],
+            zorder=2, **kwargs)
+    ax.plot([x[2] for x in pmid_counts], color='b', label=labels[1],
+            zorder=1, **kwargs)
     ax.set_yscale('log')
     ax.set_ylabel('Publications')
     ax.set_xlabel('Gene index')
@@ -170,8 +171,6 @@ if __name__ == '__main__':
     bottom_10_table.add_rows(rows)
     print bottom_10_table.draw() + '\n'
 
-    sys.exit()
-
     # Plot citation distribution sorted by name search
     fig = plt.figure(figsize=(2, 2), dpi=300)
     ax = fig.gca()
@@ -184,41 +183,50 @@ if __name__ == '__main__':
     plt.savefig('citations_by_gene.pdf')
 
     # Figure out how many of the publications have full text in PMC
-    pmids_gene_ft = get_fulltexts(pmids_from_gene)
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    plot_parallel_counts(pmids_from_gene, pmids_gene_ft, ax)
-    pf.format_axis(ax)
-    plt.legend(['By Gene ID', 'Full Text in PMC'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
+    dict_labels = ['By gene name', 'By gene ID']
+    file_labels = ['pmids_by_name_ft', 'pmids_by_gene_ft']
+    for dict_ix, pmids_dict in enumerate((pmids_by_name, pmids_by_gene)):
+        pmids_dict_ft = get_fulltexts(pmids_dict)
+        fig = plt.figure(figsize=(2, 2), dpi=300)
+        ax = fig.gca()
+        plot_parallel_counts(pmids_dict, pmids_dict_ft, ax,
+                             labels=[dict_labels[dict_ix], 'In PMC OA'])
+        pf.format_axis(ax)
+        plt.legend(loc='upper left', fontsize=pf.fontsize, frameon=False)
+        plt.subplots_adjust(left=0.19, bottom=0.16)
+        plt.savefig('%s_line.png' % file_labels[dict_ix], dpi=150)
+        plt.savefig('%s_line.pdf' % file_labels[dict_ix])
 
-    total_gene = np.sum([len(refs) for refs in pmids_from_gene.values()])
-    total_gene_ft = np.sum([len(refs) for refs in pmids_gene_ft.values()])
+        print "Unique refs (%s): %s" % \
+                (dict_labels[dict_ix], num_unique_refs(pmids_dict))
+        print "Unique refs (%s) in PMC-OA: %s" % \
+                (dict_labels[dict_ix], num_unique_refs(pmids_dict_ft))
+        print "%.2f%% with full text" % \
+              ((num_unique_refs(pmids_dict_ft) /
+                  float(num_unique_refs(pmids_dict))) * 100)
+        print
+        # Get distribution of fractions in PMC
+        pmids_dict_ft_fracs = []
+        for gene in pmids_dict.keys():
+            pmids_dict_ft_fracs.append((gene, len(pmids_dict_ft[gene]) /
+                                          float(len(pmids_dict[gene]))))
+        fig = plt.figure(figsize=(2, 2), dpi=300)
+        ax = fig.gca()
+        fracs = [tup[1] for tup in pmids_dict_ft_fracs]
+        ax.hist(fracs, bins=np.linspace(0, 0.4, 20))
+        ax.set_xlabel('Pct. PMC OA articles in search results')
+        ax.set_xticks(np.linspace(0, 0.4, 5))
+        ax.set_ylabel('Num of gene searches')
+        plt.subplots_adjust(left=0.17, bottom=0.16)
+        pf.format_axis(ax)
+        plt.savefig('%s_hist.png', dpi=150)
+        plt.savefig('%s_hist.pdf')
+        # Expected fraction articles in PMC OA
+        print "Mean %% in PMC OA: %s" % (np.mean(fracs) * 100)
+        print "Stdev of %% in PMC OA: %s" % (np.std(fracs) * 100)
+        print
 
-    print "Total (by gene)", total_gene
-    print "Total (by gene) with full text", total_gene_ft
-    print "%.2f%% with full text" % \
-          ((total_gene_ft / float(total_gene)) * 100)
-
-    # Figure out how many of the publications have full text in PMC
-    pmids_ft = get_fulltexts(pmids)
-    fig = plt.figure(figsize=(2, 2), dpi=300)
-    ax = fig.gca()
-    plot_parallel_counts(pmids, pmids_ft, ax)
-    pf.format_axis(ax)
-    plt.legend(['By Name', 'Full Text in PMC'], loc='upper left',
-               fontsize=pf.fontsize, frameon=False)
-    plt.subplots_adjust(left=0.19, bottom=0.16)
-
-    total_pmids = np.sum([len(refs) for refs in pmids.values()])
-    total_pmids_ft = np.sum([len(refs) for refs in pmids_ft.values()])
-
-    print "Total (by gene)", total_pmids
-    print "Total (by gene) with full text", total_pmids_ft
-    print "%.2f%% with full text" % \
-          ((total_pmids_ft / float(total_pmids)) * 100)
-
+    import sys; sys.exit()
 
     """
     doi_cache = {}
