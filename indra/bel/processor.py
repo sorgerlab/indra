@@ -95,6 +95,31 @@ def strip_statement(uri):
     return uri
 
 class BelProcessor(object):
+    """The BelProcessor extracts INDRA Statements from a BEL RDF model.
+
+    Parameters
+    ----------
+    g : rdflib.Graph
+        An RDF graph object containing the BEL model.
+
+    Attributes
+    ----------
+    g : rdflib.Graph
+        An RDF graph object containing the BEL model.
+    statements : list[indra.statement.Statements]
+        A list of extracted INDRA Statements. This list should be used for
+        assembly in INDRA.
+    all_stmts : list[str]
+        A list of all BEL statements, as strings, in the BEL model.
+    converted_stmts : list[str]
+        A list of all BEL statements, as strings, that were converted into
+        INDRA Statements.
+    degenerate_stmts : list[str]
+        A list of degenerate BEL statements, as strings, in the BEL model.
+    indirect_stmts : list[str]
+        A list of all BEL statements that represent indirect interactions, 
+        as strings, in the BEL model.
+    """
     def __init__(self, g):
         self.g = g
         self.statements = []
@@ -103,61 +128,8 @@ class BelProcessor(object):
         self.degenerate_stmts = []
         self.indirect_stmts = []
 
-    @staticmethod
-    def get_agent(concept, entity):
-        name = gene_name_from_uri(concept)
-        namespace = namespace_from_uri(entity)
-        db_refs = {}
-        if namespace == 'HGNC':
-            hgnc_id = hgnc_client.get_hgnc_id(name)
-            if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
-        agent = Agent(name, db_refs=db_refs)
-        return agent
-
-    def get_evidence(self, statement):
-        evidence = None
-        citation = None
-        annotations = []
-
-        # Query for evidence text and citation
-        q_evidence = prefixes + """
-            SELECT ?evidenceText ?citation
-            WHERE {
-                <%s> belvoc:hasEvidence ?evidence .
-                ?evidence belvoc:hasEvidenceText ?evidenceText .
-                ?evidence belvoc:hasCitation ?citation .
-            }
-        """ % statement.format()
-        res_evidence = self.g.query(q_evidence)
-        for stmt in res_evidence:
-            try:
-                evidence = unicode(stmt[0])
-                citation = unicode(stmt[1])
-            except IndexError:
-                logger.warning('Problem converting evidence/citation string')
-        if citation is not None:
-            m = re.match('.*pubmed:([0-9]+)', citation)
-            if m is not None:
-                citation = m.groups()[0]
-
-        # Query for all annotations of the statement
-        q_annotations = prefixes + """
-            SELECT ?annotation
-            WHERE {
-                <%s> belvoc:hasEvidence ?evidence .
-                ?evidence belvoc:hasAnnotation ?annotation .
-            }
-        """ % statement.format()
-        res_annotations = self.g.query(q_annotations)
-        for stmt in res_annotations:
-            annotations.append(stmt[0].format())
-
-        ev = Evidence(source_api='bel', source_id=statement, pmid=citation,
-                      text=evidence, annotations=annotations)
-        return ev
-
     def get_modifications(self):
+        """Extract INDRA Modification Statements from BEL."""
         q_phospho = prefixes + """
             SELECT ?enzName ?actType ?substrateName ?mod ?pos
                    ?stmt ?enzyme ?substrate
@@ -225,29 +197,8 @@ class BelProcessor(object):
                 logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
                                (act_type, mod, mod_pos))
 
-    @staticmethod
-    def _get_residue(mod):
-        if mod.startswith('Phosphorylation'):
-            if mod == 'Phosphorylation':
-                residue = None
-            else:
-                residue = mod[15:].lower()
-                residue = get_valid_residue(residue)
-        else:
-            residue = None
-        return residue
-
-    @staticmethod
-    def _get_mod_condition(mod, mod_pos):
-        if mod.startswith('Phosphorylation'):
-            mc = ModCondition('phosphorylation')
-        else:
-            mc = ModCondition(mod)
-        mc.residue = BelProcessor._get_residue(mod)
-        mc.position = mod_pos
-        return mc
-
     def get_dephosphorylations(self):
+        """Extract INDRA Dephosphorylation Statements from BEL."""
         q_phospho = prefixes + """
             SELECT ?phosName ?substrateName ?mod ?pos ?stmt
                    ?phosphatase ?substrate
@@ -286,6 +237,7 @@ class BelProcessor(object):
                     Dephosphorylation(phos, sub, residue, mod_pos, evidence))
 
     def get_composite_activating_mods(self):
+        """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
         # To eliminate multiple matches, we use pos1 < pos2 but this will
         # only work if the pos is given, otherwise multiple matches of
         # the same mod combination may appear in the result
@@ -345,6 +297,7 @@ class BelProcessor(object):
                     ActiveForm(species, act_type, is_active, evidence))
 
     def get_activating_mods(self):
+        """Extract INDRA ActiveForm Statements with a single mod from BEL."""
         q_mods = prefixes + """
             SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt ?species
             WHERE {
@@ -389,7 +342,7 @@ class BelProcessor(object):
                     ActiveForm(species, act_type, is_active, evidence))
 
     def get_complexes(self):
-        # Find all complexes described in the corpus
+        """Extract INDRA Complex Statements from BEL."""
         q_cmplx = prefixes + """
             SELECT ?complexTerm ?childName ?child ?stmt
             WHERE {
@@ -439,11 +392,10 @@ class BelProcessor(object):
                                                evidence=cmplx_ev[cmplx_id]))
 
     def get_activating_subs(self):
-        """
-        p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
-        p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
-        p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
-        """
+        """Extract INDRA ActiveForm Statements based on a mutation from BEL."""
+        #p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
+        #p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
+        #p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
         q_mods = prefixes + """
             SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt ?subject
             WHERE {
@@ -503,6 +455,7 @@ class BelProcessor(object):
                     ActiveForm(enz, act_type, is_active, evidence))
 
     def get_activity_activity(self):
+        """Extract INDRA ActivityActivity Statements from BEL."""
         # Query for all statements where the activity of one protein
         # directlyIncreases the activity of another protein, without reference
         # to a modification.
@@ -587,7 +540,8 @@ class BelProcessor(object):
         """
 
     def get_all_direct_statements(self):
-        """Get all directlyIncreases/Decreases statements in the corpus.
+        """Get all directlyIncreases/Decreases BEL statements.
+
         Stores the results of the query in self.all_stmts.
         """
         logger.info("Getting all direct statements...\n")
@@ -639,6 +593,10 @@ class BelProcessor(object):
         self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_indirect_statements(self):
+        """Get all indirect increases/decreases BEL statements.
+
+        Stores the results of the query in self.indirect_stmts.
+        """
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -655,6 +613,10 @@ class BelProcessor(object):
         self.indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_degenerate_statements(self):
+        """Get all degenerate BEL statements.
+
+        Stores the results of the query in self.degenerate_stmts.
+        """
         logger.info("Checking for 'degenerate' statements...\n")
         # Get rules of type protein X -> activity Y
         q_stmts = prefixes + """
@@ -706,8 +668,9 @@ class BelProcessor(object):
             self.degenerate_stmts.append(stmt_str)
 
     def print_statement_coverage(self):
-        """Display how many of the direct statements have been converted,
-        and how many are considered 'degenerate' and not converted."""
+        """Display how many of the direct statements have been converted.
+
+        Also prints how many are considered 'degenerate' and not converted."""
 
         if not self.all_stmts:
             self.get_all_direct_statements()
@@ -734,5 +697,83 @@ class BelProcessor(object):
                 logger.info(stmt)
 
     def print_statements(self):
+        """Print all extracted INDRA Statements."""
         for i, stmt in enumerate(self.statements):
             logger.info("%s: %s" % (i, stmt))
+
+    @staticmethod
+    def get_agent(concept, entity):
+        name = gene_name_from_uri(concept)
+        namespace = namespace_from_uri(entity)
+        db_refs = {}
+        if namespace == 'HGNC':
+            hgnc_id = hgnc_client.get_hgnc_id(name)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+        agent = Agent(name, db_refs=db_refs)
+        return agent
+
+    def get_evidence(self, statement):
+        evidence = None
+        citation = None
+        annotations = []
+
+        # Query for evidence text and citation
+        q_evidence = prefixes + """
+            SELECT ?evidenceText ?citation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasEvidenceText ?evidenceText .
+                ?evidence belvoc:hasCitation ?citation .
+            }
+        """ % statement.format()
+        res_evidence = self.g.query(q_evidence)
+        for stmt in res_evidence:
+            try:
+                evidence = unicode(stmt[0])
+                citation = unicode(stmt[1])
+            except IndexError:
+                logger.warning('Problem converting evidence/citation string')
+        if citation is not None:
+            m = re.match('.*pubmed:([0-9]+)', citation)
+            if m is not None:
+                citation = m.groups()[0]
+
+        # Query for all annotations of the statement
+        q_annotations = prefixes + """
+            SELECT ?annotation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasAnnotation ?annotation .
+            }
+        """ % statement.format()
+        res_annotations = self.g.query(q_annotations)
+        for stmt in res_annotations:
+            annotations.append(stmt[0].format())
+
+        ev = Evidence(source_api='bel', source_id=statement, pmid=citation,
+                      text=evidence, annotations=annotations)
+        return ev
+
+    @staticmethod
+    def _get_residue(mod):
+        if mod.startswith('Phosphorylation'):
+            if mod == 'Phosphorylation':
+                residue = None
+            else:
+                residue = mod[15:].lower()
+                residue = get_valid_residue(residue)
+        else:
+            residue = None
+        return residue
+
+    @staticmethod
+    def _get_mod_condition(mod, mod_pos):
+        if mod.startswith('Phosphorylation'):
+            mc = ModCondition('phosphorylation')
+        else:
+            mc = ModCondition(mod)
+        mc.residue = BelProcessor._get_residue(mod)
+        mc.position = mod_pos
+        return mc
+

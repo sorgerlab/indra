@@ -9,11 +9,26 @@ ndex_base_url = 'http://bel2rdf.bigmech.ndexbio.org'
 #ndex_base_url = 'http://52.37.175.128'
 
 def send_request(url_suffix, params):
+    """Send a request to the NDEx server.
+
+    Parameters
+    ----------
+    url_suffix : str
+        The API endpoint to concatenate with the base URL.
+    params : dict
+        A dictionary of parameters to send with the request. Parameter keys
+        differ based on the type of request.
+
+    Returns
+    -------
+    res_json : str
+        The result of the request.
+    """
     res = requests.post(ndex_base_url + url_suffix, data=json.dumps(params))
-    res_json = get_result(res)
+    res_json = _get_result(res)
     return res_json
 
-def get_result(res):
+def _get_result(res):
     status = res.status_code
     # If response is immediate, we get 200 
     if status == 200:
