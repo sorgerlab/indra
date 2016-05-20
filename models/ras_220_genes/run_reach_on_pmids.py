@@ -39,6 +39,8 @@ num_cores = int(num_cores)
 # Load the list of PMIDs from the given file
 with open(pmid_list_file) as f:
     pmid_list = [line.strip('\n') for line in f.readlines()]
+if end_index > len(pmid_list):
+    end_index = len(pmid_list)
 pmids_in_range = pmid_list[start_index:end_index]
 # Create the temp directories for input and output
 base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' % (start_index, end_index),
