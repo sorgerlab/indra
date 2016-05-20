@@ -12,6 +12,20 @@ trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
 
 
 def send_query(text, query_args=None):
+    """Send a query to the TRIPS web service.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    query_args : Optional[dict]
+        A dictionary of arguments to be passed with the query.
+
+    Returns
+    -------
+    html : str
+        The HTML result returned by the web service.
+    """
     if query_args is None:
         qa = {}
     qa['input'] = text
@@ -23,6 +37,18 @@ def send_query(text, query_args=None):
 
 
 def get_xml(html):
+    """Extract the EKB XML from the HTML output of the TRIPS web service.
+
+    Parameters
+    ----------
+    html : str
+        The HTML output from the TRIPS web service.
+
+    Returns
+    -------
+    The extraction knowledge base (EKB) XML that contains the event and term
+    extractions.
+    """
     ekb = re.findall(r'<ekb.*?>(.*?)</ekb>', html, re.MULTILINE | re.DOTALL)
     if ekb:
         events_terms = ekb[0]
@@ -34,6 +60,17 @@ def get_xml(html):
 
 
 def save_xml(xml_str, file_name, pretty=True):
+    """Save the TRIPS EKB XML in a file.
+
+    Parameters
+    ----------
+    xml_str : str
+        The TRIPS EKB XML string to be saved.
+    file_name : str
+        The name of the file to save the result in.
+    pretty : Optional[bool]
+        If True, the XML is pretty printed.
+    """
     try:
         fh = open(file_name, 'wt')
     except IOError:

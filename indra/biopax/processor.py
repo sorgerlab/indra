@@ -23,14 +23,59 @@ logger = logging.getLogger('biopax')
 # - Implement extracting modifications with Complex substrate
 
 class BiopaxProcessor(object):
+    """The BiopaxProcessor extracts INDRA Statements from a BioPAX model.
+
+    The BiopaxProcessor uses pattern searches in a BioPAX OWL model to
+    extract mechanisms from which it constructs INDRA Statements.
+
+    Parameters
+    ----------
+    model : org.biopax.paxtools.model.Model
+        A BioPAX model object (java object)
+
+    Attributes
+    ----------
+    model : org.biopax.paxtools.model.Model
+        A BioPAX model object (java object) which is queried using Paxtools
+        to extract INDRA Statements
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted from the model.
+    """
     def __init__(self, model):
         self.model = model
         self.statements = []
 
+    def print_statements(self):
+        """Print all INDRA Statements collected by the processors."""
+        for i, stmt in enumerate(self.statements):
+            print "%s: %s" % (i, stmt)
+
+    def save_model(self, file_name=None):
+        """Save the BioPAX model object in an OWL file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the OWL file to save the model in.
+        """
+        if file_name is None:
+            logger.error('Missing file name')
+            return
+        pcc.model_to_owl(self.model, file_name)
+
     def get_complexes(self, force_contains=None):
+        """Extract INDRA Complex statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         for obj in self.model.getObjects().toArray():
-            bpe = cast_biopax_element(obj)
-            if not is_complex(bpe):
+            bpe = _cast_biopax_element(obj)
+            if not _is_complex(bpe):
                 continue
             citations = self._get_citations(bpe) 
             source_id = bpe.getUri()
@@ -49,43 +94,97 @@ class BiopaxProcessor(object):
                 if len(members) > 10:
                     logger.info('Skipping complex with more than 10 members.')
                     continue
-                complexes = get_combinations(members)
+                complexes = _get_combinations(members)
                 for c in complexes:
                     self.statements.append(Complex(c, ev))
 
     def get_phosphorylation(self, force_contains=None):
+        """Extract INDRA Phosphorylation statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         stmts = self._get_generic_modification('phospho',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Phosphorylation(*s))
 
     def get_dephosphorylation(self, force_contains=None):
+        """Extract INDRA Dephosphorylation statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         stmts = self._get_generic_modification('phospho', mod_gain=False,
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Dephosphorylation(*s))
 
     def get_acetylation(self, force_contains=None):
+        """Extract INDRA Acetylation statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         stmts = self._get_generic_modification('acetyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Acetylation(*s))
 
     def get_glycosylation(self, force_contains=None):
+        """Extract INDRA Glycosylation statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         stmts = self._get_generic_modification('glycosyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Glycosylation(*s))
 
     def get_palmitoylation(self, force_contains=None):
+        """Extract INDRA Palmitoylation statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         stmts = self._get_generic_modification('palmitoyl',
                                                force_contains=force_contains)
         for s in stmts:
             self.statements.append(Palmitoylation(*s))
 
     def get_activity_modification(self, force_contains=None):
-        mcc = bpp('constraint.ModificationChangeConstraint')
-        mcct = bpp('constraint.ModificationChangeConstraint$Type')
+        """Extract INDRA ActiveForm statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
+        mcc = _bpp('constraint.ModificationChangeConstraint')
+        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         mod_filter = 'residue modification, active'
         for is_active in [True, False]:
             p = self._construct_modification_pattern()
@@ -96,9 +195,9 @@ class BiopaxProcessor(object):
             p.add(mcc(rel, mod_filter),
                   "input simple PE", "output simple PE")
 
-            s = bpp('Searcher')
+            s = _bpp('Searcher')
             res = s.searchPlain(self.model, p)
-            res_array = [match_to_array(m) for m in res.toArray()]
+            res_array = [_match_to_array(m) for m in res.toArray()]
 
             for r in res_array:
                 reaction = r[p.indexOf('Conversion')]
@@ -130,7 +229,7 @@ class BiopaxProcessor(object):
                           for cit in citations]
 
                 monomers = self._get_agents_from_entity(output_spe)
-                for monomer in listify(monomers):
+                for monomer in _listify(monomers):
                     if force_contains is not None:
                         if momomer not in force_contains:
                             continue
@@ -175,7 +274,7 @@ class BiopaxProcessor(object):
                 return None
         members = []
         for m in member_pes:
-            if is_complex(m):
+            if _is_complex(m):
                 ms = BiopaxProcessor._get_complex_members(m)
                 if ms is None:
                     return None
@@ -196,7 +295,7 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_entity_mods(bpe, get_activity=True):
         """Get all the modifications of an entity in INDRA format"""
-        feats = [f for f in bpe.getFeature().toArray() if is_modification(f)]
+        feats = [f for f in bpe.getFeature().toArray() if _is_modification(f)]
         mods = []
         for f in feats:
             mc = BiopaxProcessor._extract_mod_from_feature(f)
@@ -212,8 +311,8 @@ class BiopaxProcessor(object):
         '''
         Get all modification reactions given a filter
         '''
-        mcc = bpp('constraint.ModificationChangeConstraint')
-        mcct = bpp('constraint.ModificationChangeConstraint$Type')
+        mcc = _bpp('constraint.ModificationChangeConstraint')
+        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         # Start with a generic modification pattern
         p = BiopaxProcessor._construct_modification_pattern()
         # The modification type should contain the filter string
@@ -225,9 +324,9 @@ class BiopaxProcessor(object):
             p.add(mcc(mod_gain_const, mod_filter),
                       "input simple PE", "output simple PE")
 
-        s = bpp('Searcher')
+        s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
-        res_array = [match_to_array(m) for m in res.toArray()]
+        res_array = [_match_to_array(m) for m in res.toArray()]
         stmts = []
         for r in res_array:
             controller_pe = r[p.indexOf('controller PE')]
@@ -237,14 +336,14 @@ class BiopaxProcessor(object):
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
 
-            if not is_catalysis(control):
+            if not _is_catalysis(control):
                 continue
             cat_dir = control.getCatalysisDirection()
             if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
                 logger.info('Unexpected catalysis direction: %s.' % \
                     control.getCatalysisDirection())
                 continue
-            if is_complex(controller_pe):
+            if _is_complex(controller_pe):
                 # Identifying the "real" enzyme in a complex may not always be
                 # possible.
                 # One heuristic here could be to find the member which is
@@ -253,7 +352,7 @@ class BiopaxProcessor(object):
                 # complex are bound.
                 logger.info('Cannot handle complex enzymes.')
                 continue
-            if is_complex(input_pe):
+            if _is_complex(input_pe):
                 # It is possible to find which member of the complex is 
                 # actually modified. That member will be the substrate and 
                 # all other members of the complex will be bound to it.
@@ -277,7 +376,7 @@ class BiopaxProcessor(object):
             enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
-            for enz, sub in itertools.product(listify(enzs), listify(subs)):
+            for enz, sub in itertools.product(listify(enzs), _listify(subs)):
                 # If neither the required enzyme nor the substrate is 
                 # present then skip
                 if force_contains is not None:
@@ -329,26 +428,26 @@ class BiopaxProcessor(object):
         '''
         Constructs the BioPAX pattern to extract modification reactions
         '''
-        pb = bpp('PatternBox')
-        cb = bpp('constraint.ConBox')
-        flop = bpp('constraint.Field$Operation')
-        rt = bpp('util.RelType')
-        tp = bpp('constraint.Type')
-        cs = bpp('constraint.ConversionSide')
-        cst = bpp('constraint.ConversionSide$Type')
-        pt = bpp('constraint.Participant')
+        pb = _bpp('PatternBox')
+        cb = _bpp('constraint.ConBox')
+        flop = _bpp('constraint.Field$Operation')
+        rt = _bpp('util.RelType')
+        tp = _bpp('constraint.Type')
+        cs = _bpp('constraint.ConversionSide')
+        cst = _bpp('constraint.ConversionSide$Type')
+        pt = _bpp('constraint.Participant')
 
         # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation().
-        p = bpp('Pattern')(bpimpl('PhysicalEntity')().getModelInterface(),
+        p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
                            'controller PE')
         # Getting the control itself
         p.add(cb.peToControl(), "controller PE", "Control")
         # Link the control to the conversion that it controls
         p.add(cb.controlToConv(), "Control", "Conversion")
         # The controller shouldn't be a participant of the conversion
-        p.add(bpp('constraint.NOT')(cb.participant()),
+        p.add(_bpp('constraint.NOT')(cb.participant()),
               "Conversion", "controller PE")
         # Get the input participant of the conversion
         p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
@@ -357,21 +456,21 @@ class BiopaxProcessor(object):
         # Link to ER
         p.add(cb.peToER(), "input simple PE", "input simple ER")
         # Make sure the participant is a protein
-        p.add(tp(bpimpl('Protein')().getModelInterface()), "input simple PE")
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "input simple PE")
         # Link to the other side of the conversion
         p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
         # Make sure the two sides are not the same
-        p.add(bpp('constraint.Equality')(False), "input PE", "output PE")
+        p.add(_bpp('constraint.Equality')(False), "input PE", "output PE")
         # Get the specific PhysicalEntity
         p.add(cb.linkToSpecific(), "output PE", "output simple PE")
         # Link to ER
         p.add(cb.peToER(), "output simple PE", "output simple ER")
-        p.add(bpp('constraint.Equality')(True), "input simple ER", "output simple ER")
+        p.add(_bpp('constraint.Equality')(True), "input simple ER", "output simple ER")
         # Make sure the output is a Protein
-        p.add(tp(bpimpl('Protein')().getModelInterface()), "output simple PE")
-        p.add(bpp('constraint.NOT')(cb.linkToSpecific()),
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "output simple PE")
+        p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
               "input PE", "output simple PE")
-        p.add(bpp('constraint.NOT')(cb.linkToSpecific()),
+        p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
               "output PE", "input simple PE")
         return p
 
@@ -436,7 +535,7 @@ class BiopaxProcessor(object):
         # the sequence position.
         mf_pos = mf.getFeatureLocation()
         if mf_pos is not None:
-            mf_site = cast(bp('SequenceSite'), mf_pos)
+            mf_site = cast(_bp('SequenceSite'), mf_pos)
             mf_pos_status = mf_site.getPositionStatus()
             if mf_pos_status is None:
                 mod_pos = None
@@ -453,14 +552,14 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_db_refs(bpe):
         db_refs = {}
-        if is_protein(bpe):
+        if _is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
-        elif is_small_molecule(bpe):
+        elif _is_small_molecule(bpe):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
                 db_refs['CHEBI'] = chebi_id
@@ -479,7 +578,7 @@ class BiopaxProcessor(object):
     @staticmethod
     @lru_cache(maxsize=1000)
     def _get_element_name(bpe):
-        if is_protein(bpe):
+        if _is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
@@ -494,9 +593,9 @@ class BiopaxProcessor(object):
                         name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
-        elif is_small_molecule(bpe):
+        elif _is_small_molecule(bpe):
             name = bpe.getDisplayName()
-        elif is_physical_entity(bpe):
+        elif _is_physical_entity(bpe):
             name = bpe.getDisplayName()
         else:
             logger.info('Unhandled entity type %s' %
@@ -580,7 +679,7 @@ class BiopaxProcessor(object):
     def _get_entref(bpe):
         """Returns the entity reference of an entity if it exists or
         return the entity reference that was passed in as argument."""
-        if not is_reference(bpe):
+        if not _is_reference(bpe):
             try:
                 er = bpe.getEntityReference()
             except AttributeError:
@@ -588,16 +687,6 @@ class BiopaxProcessor(object):
             return er
         else:
             return bpe
-
-    def print_statements(self):
-        for i, stmt in enumerate(self.statements):
-            print "%s: %s" % (i, stmt)
-
-    def save_model(self, file_name=None):
-        if file_name is None:
-            logger.error('Missing file name')
-            return
-        pcc.model_to_owl(self.model, file_name)
 
     _mftype_dict = {
         'phosphorylated residue': ('phosphorylation', None),
@@ -610,26 +699,26 @@ class BiopaxProcessor(object):
         }
 
 # Functions for accessing frequently used java classes with shortened path
-def bp(path):
+def _bp(path):
     prefix = 'org.biopax.paxtools.model.level3'
     classname = prefix + '.' + path
-    return autoclass_robust(classname)
+    return _autoclass_robust(classname)
 
 
-def bpp(path):
+def _bpp(path):
     prefix = 'org.biopax.paxtools.pattern'
     classname = prefix + '.' + path
-    return autoclass_robust(classname)
+    return _autoclass_robust(classname)
 
 
-def bpimpl(path):
+def _bpimpl(path):
     prefix = 'org.biopax.paxtools.impl.level3'
     postfix = 'Impl'
     classname = prefix + '.' + path + postfix
-    return autoclass_robust(classname)
+    return _autoclass_robust(classname)
 
 
-def autoclass_robust(path):
+def _autoclass_robust(path):
     try:
         cl = autoclass(path)
     except JavaException:
@@ -638,86 +727,86 @@ def autoclass_robust(path):
     return cl
 
 
-def cast_biopax_element(bpe):
+def _cast_biopax_element(bpe):
     """ Casts a generic BioPAXElement object into a specific type.
     This is useful when a search only returns generic elements. """
     return cast(bpe.getModelInterface().getName(), bpe)
 
-def match_to_array(m):
+def _match_to_array(m):
     """ Returns an array consisting of the elements obtained from a pattern
     search cast into their appropriate classes. """
-    return [cast_biopax_element(m.get(i)) for i in range(m.varSize())]
+    return [_cast_biopax_element(m.get(i)) for i in range(m.varSize())]
 
-def is_complex(pe):
+def _is_complex(pe):
     """Return True if the physical entity is a complex"""
-    val = isinstance(pe, bp('Complex')) or \
-            isinstance(pe, bpimpl('Complex'))
+    val = isinstance(pe, _bp('Complex')) or \
+            isinstance(pe, _bpimpl('Complex'))
     return val
 
-def is_protein(pe):
+def _is_protein(pe):
     """Return True if the element is a protein"""
-    val = isinstance(pe, bp('Protein')) or \
-            isinstance(pe, bpimpl('Protein')) or \
-            isinstance(pe, bp('ProteinReference')) or \
-            isinstance(pe, bpimpl('ProteinReference'))
+    val = isinstance(pe, _bp('Protein')) or \
+            isinstance(pe, _bpimpl('Protein')) or \
+            isinstance(pe, _bp('ProteinReference')) or \
+            isinstance(pe, _bpimpl('ProteinReference'))
     return val
 
-def is_small_molecule(pe):
+def _is_small_molecule(pe):
     """Return True if the element is a small molecule"""
-    val = isinstance(pe, bp('SmallMolecule')) or \
-            isinstance(pe, bpimpl('SmallMolecule')) or \
-            isinstance(pe, bp('SmallMoleculeReference')) or \
-            isinstance(pe, bpimpl('SmallMoleculeReference'))
+    val = isinstance(pe, _bp('SmallMolecule')) or \
+            isinstance(pe, _bpimpl('SmallMolecule')) or \
+            isinstance(pe, _bp('SmallMoleculeReference')) or \
+            isinstance(pe, _bpimpl('SmallMoleculeReference'))
     return val
 
-def is_physical_entity(pe):
+def _is_physical_entity(pe):
     """Return True if the element is a physical entity"""
-    val = isinstance(pe, bp('PhysicalEntity')) or \
-           isinstance(pe, bpimpl('PhysicalEntity'))
+    val = isinstance(pe, _bp('PhysicalEntity')) or \
+           isinstance(pe, _bpimpl('PhysicalEntity'))
     return val
 
-def is_modification(fe):
+def _is_modification(fe):
     """Return True if the feature is a modification"""
-    val = isinstance(fe, bp('ModificationFeature')) or \
-            isinstance(fe, bpimpl('ModificationFeature'))
+    val = isinstance(fe, _bp('ModificationFeature')) or \
+            isinstance(fe, _bpimpl('ModificationFeature'))
     return val
 
-def is_reference(bpe):
+def _is_reference(bpe):
     """Return True if the element is an entity reference."""
-    if isinstance(bpe, bp('ProteinReference')) or \
-        isinstance(bpe, bpimpl('ProteinReference')) or \
-        isinstance(bpe, bp('SmallMoleculeReference')) or \
-        isinstance(bpe, bpimpl('SmallMoleculeReference')) or \
-        isinstance(bpe, bp('EntityReference')) or \
-        isinstance(bpe, bpimpl('EntityReference')):
+    if isinstance(bpe, _bp('ProteinReference')) or \
+        isinstance(bpe, _bpimpl('ProteinReference')) or \
+        isinstance(bpe, _bp('SmallMoleculeReference')) or \
+        isinstance(bpe, _bpimpl('SmallMoleculeReference')) or \
+        isinstance(bpe, _bp('EntityReference')) or \
+        isinstance(bpe, _bpimpl('EntityReference')):
         return True
     else:
         return False
 
-def is_entity(bpe):
+def _is_entity(bpe):
     """Return True if the element is a physical entity."""
-    if isinstance(bpe, bp('Protein')) or \
-        isinstance(bpe, bpimpl('Protein')) or \
-        isinstance(bpe, bp('SmallMolecule')) or \
-        isinstance(bpe, bpimpl('SmallMolecule')) or \
-        isinstance(bpe, bp('PhysicalEntity')) or \
-        isinstance(bpe, bpimpl('PhysicalEntity')):
+    if isinstance(bpe, _bp('Protein')) or \
+        isinstance(bpe, _bpimpl('Protein')) or \
+        isinstance(bpe, _bp('SmallMolecule')) or \
+        isinstance(bpe, _bpimpl('SmallMolecule')) or \
+        isinstance(bpe, _bp('PhysicalEntity')) or \
+        isinstance(bpe, _bpimpl('PhysicalEntity')):
         return True
     else:
         return False
 
-def is_catalysis(bpe):
+def _is_catalysis(bpe):
     """Return True if the element is Catalysis."""
-    if isinstance(bpe, bp('Catalysis')) or \
-        isinstance(bpe, bpimpl('Catalysis')):
+    if isinstance(bpe, _bp('Catalysis')) or \
+        isinstance(bpe, _bpimpl('Catalysis')):
         return True
     else:
         return False
 
-def has_members(bpe):
-    if is_reference(bpe):
+def _has_members(bpe):
+    if _is_reference(bpe):
         members =  bpe.getMemberEntityReference().toArray()
-    elif is_entity(bpe):
+    elif _is_entity(bpe):
         members =  bpe.getMemberPhysicalEntity().toArray()
     else:
         return False
@@ -726,14 +815,14 @@ def has_members(bpe):
     else:
         return False
 
-def listify(lst):
+def _listify(lst):
     if not isinstance(lst, collections.Iterable):
         return [lst]
     else:
         return lst
 
-def list_listify(lst):
+def _list_listify(lst):
     return [l if isinstance(l, collections.Iterable) else [l] for l in lst]
 
-def get_combinations(lst):
-    return itertools.product(*list_listify(lst))
+def _get_combinations(lst):
+    return itertools.product(*_list_listify(lst))

@@ -19,6 +19,32 @@ molecule_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
                  'ONT::PROTEIN', 'ONT::PROTEIN-FAMILY', 'ONT::GENE']
 
 class TripsProcessor(object):
+    """The TripsProcessor extracts INDRA Statements from a TRIPS XML.
+
+    For more details on the TRIPS EKB XML format, see
+    http://trips.ihmc.us/parser/cgi/drum
+
+    Parameters
+    ----------
+    xml_string : str
+        A TRIPS extraction knowledge base (EKB) in XML format as a string.
+
+    Attributes
+    ----------
+    tree : xml.etree.ElementTree.Element
+        An ElementTree object representation of the TRIPS EKB XML.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted from the EKB.
+    doc_id : str
+        The PubMed ID of the paper that the extractions are from.
+    sentences : dict[str: str]
+        The list of all sentences in the EKB with their IDs
+    paragraphs : dict[str: str]
+        The list of all paragraphs in the EKB with their IDs
+    extracted_events : list[xml.etree.ElementTree.Element]
+        A list of Event elements that have been extracted as INDRA
+        Statements.
+    """
     def __init__(self, xml_string):
         try:
             self.tree = ET.fromstring(xml_string)
@@ -45,6 +71,10 @@ class TripsProcessor(object):
         logger.debug('------------------')
 
     def get_all_events(self):
+        """Make a list of all events in the TRIPS EKB.
+
+        The events are stored in self.all_events.
+        """
         self.all_events = {}
         events = self.tree.findall('EVENT')
         for e in events:
@@ -57,30 +87,13 @@ class TripsProcessor(object):
             except KeyError:
                 self.all_events[event_type] = [event_id]
 
-    def get_evidence_text(self, event_tag):
-        '''
-        Pieces of text linked to an EVENT are fragments of a sentence. The
-        EVENT refers to the paragraph ID and the "uttnum", which corresponds 
-        to a sentence ID. Here we find and return the full sentence from which 
-        the event was taken.
-        '''
-        par_id = event_tag.attrib.get('paragraph')
-        uttnum = event_tag.attrib.get('uttnum')
-        event_text = event_tag.find('text')
-        if self.sentences is not None and uttnum is not None:
-            sentence = self.sentences[uttnum]
-        elif event_text is not None:
-            sentence = event_text.text
-        else:
-            sentence = None
-        return sentence
-
     def get_activations(self):
+        """Extract direct ActivityActivity INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         inact_events = self.tree.findall("EVENT/[type='ONT::DEACTIVATE']")
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
-            sentence = self.get_evidence_text(event)
+            sentence = self._get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence,
                           pmid=self.doc_id)
 
@@ -129,6 +142,7 @@ class TripsProcessor(object):
                                     evidence=ev))
 
     def get_activations_causal(self):
+        """Extract causal ActivityActivity INDRA Statements."""
         # Search for causal connectives of type ONT::CAUSE
         ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
         for cc in ccs:
@@ -157,7 +171,7 @@ class TripsProcessor(object):
             if outcome_event_type is None:
                 continue
             # Construct evidence
-            sentence = self.get_evidence_text(cc)
+            sentence = self._get_evidence_text(cc)
             ev = Evidence(source_api='trips', text=sentence,
                           pmid=self.doc_id, epistemics={'direct': False})
             if outcome_event_type.text == 'ONT::ACTIVATE':
@@ -186,6 +200,7 @@ class TripsProcessor(object):
                 self.statements.append(st)
 
     def get_activating_mods(self):
+        """Extract ActiveForm INDRA Statements based on modifications."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
             if event.attrib['id'] in self._static_events:
@@ -219,19 +234,20 @@ class TripsProcessor(object):
                                 'modification')
                 continue
             affected_agent.mods = mods
-            sentence = self.get_evidence_text(event)
+            sentence = self._get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
             self.statements.append(ActiveForm(affected_agent, 'active', True,
                                               evidence=ev))
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):
+        """Extract Complex INDRA Statements."""
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
         for event in bind_events:
             if event.attrib['id'] in self._static_events:
                 continue
 
-            sentence = self.get_evidence_text(event)
+            sentence = self._get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
 
             arg1 = event.find("arg1")
@@ -275,6 +291,11 @@ class TripsProcessor(object):
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
+        """Extract all types of phosphorylation INDRA Statements.
+
+        The types of statements extracted here are: Phosphorylation,
+        Dephosphorylation, Transphosphorylation, Autophosphorylation.
+        """
         phosphorylation_events = \
             self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
         for event in phosphorylation_events:
@@ -318,7 +339,7 @@ class TripsProcessor(object):
                 continue
             mods = self._get_mod_site(event)
 
-            sentence = self.get_evidence_text(event)
+            sentence = self._get_evidence_text(event)
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
@@ -422,12 +443,12 @@ class TripsProcessor(object):
                         # they are numbered with <id>.1, <id>.2, etc.
                         p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
                         if p is not None:
-                            self.add_condition(agent, p, term)
+                            self._add_condition(agent, p, term)
                         p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
                         if p is not None:
-                            self.add_condition(agent, p, term)
+                            self._add_condition(agent, p, term)
                     else:
-                        self.add_condition(agent, precond_event, term)
+                        self._add_condition(agent, precond_event, term)
             mutations = term.findall('features/mutation')
             for mut in mutations:
                 mut_id = mut.attrib.get('id')
@@ -444,7 +465,7 @@ class TripsProcessor(object):
                 agent.mutations.append(mc)
         return agent
 
-    def add_condition(self, agent, precond_event, agent_term):
+    def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = precond_event.find('type').text
         # Binding precondition
         if precond_event_type == 'ONT::BIND':
@@ -681,6 +702,26 @@ class TripsProcessor(object):
             return pos, aa_from, aa_to
         else:
             return None
+
+    def _get_evidence_text(self, event_tag):
+        """Extract the evidence for an event.
+
+        Pieces of text linked to an EVENT are fragments of a sentence. The
+        EVENT refers to the paragraph ID and the "uttnum", which corresponds 
+        to a sentence ID. Here we find and return the full sentence from which 
+        the event was taken.
+        """
+        par_id = event_tag.attrib.get('paragraph')
+        uttnum = event_tag.attrib.get('uttnum')
+        event_text = event_tag.find('text')
+        if self.sentences is not None and uttnum is not None:
+            sentence = self.sentences[uttnum]
+        elif event_text is not None:
+            sentence = event_text.text
+        else:
+            sentence = None
+        return sentence
+
 
     def _find_static_events(self):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")

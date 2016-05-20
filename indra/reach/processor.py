@@ -8,6 +8,27 @@ import indra.databases.uniprot_client as up_client
 logger = logging.getLogger('reach')
 
 class ReachProcessor(object):
+    """The ReachProcessor extracts INDRA Statements from REACH parser output.
+
+    Parameters
+    ----------
+    json_dict : dict
+        A JSON dictionary containing the REACH extractions.
+    pmid : Optional[str]
+        The PubMed ID associated with the extractions. This can be passed
+        in case the PMID cannot be determined from the extractions alone.`
+
+    Attributes
+    ----------
+    tree : objectpath.Tree
+        The objectpath Tree object representing the extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    citation : str
+        The PubMed ID associated with the extractions.
+    all_events : dict[str, str]
+        The frame IDs of all events by type in the REACH extraction.
+    """
     def __init__(self, json_dict, pmid=None):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
@@ -19,6 +40,7 @@ class ReachProcessor(object):
         self.get_all_events()
 
     def print_event_statistics(self):
+        """Print the number of events in the REACH output by type."""
         logger.info('All events by type')
         logger.info('-------------------')
         for k, v in self.all_events.iteritems():
@@ -26,6 +48,10 @@ class ReachProcessor(object):
         logger.info('-------------------')
 
     def get_all_events(self):
+        """Gather all event IDs in the REACH output by type.
+
+        These IDs are stored in the self.all_events dict.
+        """
         self.all_events = {}
         events = self.tree.execute("$.events.frames")
         for e in events:
@@ -37,6 +63,7 @@ class ReachProcessor(object):
                 self.all_events[event_type] = [frame_id]
 
     def get_modifications(self):
+        """Extract Modification INDRA Statements."""
         qstr = "$.events.frames[(@.type is 'protein-modification')]"
         res = self.tree.execute(qstr)
         for r in res:
@@ -100,6 +127,7 @@ class ReachProcessor(object):
                                modification_type)
 
     def get_complexes(self):
+        """Extract INDRA Complex Statements."""
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
         for r in res:
@@ -120,6 +148,7 @@ class ReachProcessor(object):
             self.statements.append(Complex(members, ev))
 
     def get_activation(self):
+        """Extract INDRA ActivityActivity Statements."""
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
         for r in res:
