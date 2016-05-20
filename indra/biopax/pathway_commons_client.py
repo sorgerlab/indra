@@ -7,6 +7,30 @@ logger = logging.getLogger('biopax')
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
 def graph_query(kind, source, target=None, neighbor_limit=1):
+    """Perform a graph query on PathwayCommons.
+
+    For more information on these queries, see
+    http://www.pathwaycommons.org/pc2/#graph
+
+    Parameters
+    ----------
+    kind : str
+        The kind of graph query to perform. Currently 3 options are
+        implemented, 'neighborhood', 'pathsbetween' and 'pathsfromto'.
+    source : list[str]
+        A list of gene names which are the source set for the graph query.
+    target : Optional[list[str]]
+        A list of gene names which are the target set for the graph query.
+        Only needed for 'pathsfromto' queries.
+    neighbor_limit : Optional[int]
+        This limits the length of the longest path considered in
+        the graph query. Default: 1
+
+    Returns
+    -------
+    model : org.biopax.paxtools.model.Model
+        A BioPAX model (java object).
+    """
     params = {}
     params['format'] = 'BIOPAX'
     params['organism'] = '9606'
@@ -48,6 +72,18 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     return model
 
 def owl_str_to_model(owl_str):
+    """Return a BioPAX model object from an OWL string.
+
+    Parameters
+    ----------
+    owl_str : str
+        The model as an OWL string.
+
+    Returns
+    -------
+    biopax_model : org.biopax.paxtools.model.Model
+        A BioPAX model object (java object).
+    """
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
     io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
     bais = autoclass('java.io.ByteArrayInputStream')
@@ -58,6 +94,18 @@ def owl_str_to_model(owl_str):
     return biopax_model
 
 def owl_to_model(fname):
+    """Return a BioPAX model object from an OWL file.
+
+    Parameters
+    ----------
+    fname : str
+        The name of the OWL file containing the model.
+
+    Returns
+    -------
+    biopax_model : org.biopax.paxtools.model.Model
+        A BioPAX model object (java object).
+    """
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
     io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
 
@@ -78,6 +126,15 @@ def owl_to_model(fname):
     return biopax_model
 
 def model_to_owl(model, fname):
+    """Save a BioPAX model object as an OWL file.
+
+    Parameters
+    ----------
+    model : org.biopax.paxtools.model.Model
+        A BioPAX model object (java object).
+    fname : str
+        The name of the OWL file to save the model in.
+    """
     io_class = autoclass('org.biopax.paxtools.io.SimpleIOHandler')
     io = io_class(autoclass('org.biopax.paxtools.model.BioPAXLevel').L3)
 
