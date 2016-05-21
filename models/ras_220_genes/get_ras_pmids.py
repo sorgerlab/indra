@@ -219,8 +219,8 @@ if __name__ == '__main__':
         ax.set_ylabel('Num of gene searches')
         plt.subplots_adjust(left=0.17, bottom=0.16)
         pf.format_axis(ax)
-        plt.savefig('%s_hist.png', dpi=150)
-        plt.savefig('%s_hist.pdf')
+        plt.savefig('%s_hist.png' % file_labels[dict_ix], dpi=150)
+        plt.savefig('%s_hist.pdf' % file_labels[dict_ix])
         # Expected fraction articles in PMC OA
         print "Mean %% in PMC OA: %s" % (np.mean(fracs) * 100)
         print "Stdev of %% in PMC OA: %s" % (np.std(fracs) * 100)
