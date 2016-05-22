@@ -15,7 +15,7 @@ bucket_name ='bigmech'
 client = boto3.client('s3')
 
 stmts = {}
-for pmid in pmid_list[0:10]:
+for ix, pmid in enumerate(pmid_list):
     # Get the reach output
     reach_key = 'papers/PMID%s/reach' % pmid
     try:
@@ -34,8 +34,20 @@ for pmid in pmid_list[0:10]:
     # Decode the gzipped content
     reach_json = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
     print "Processing"
-    reach_proc = reach.process_json_str(reach_json, citation='PMID%s' % pmid)
+    try:
+        reach_proc = reach.process_json_str(reach_json,
+                                            citation='PMID%s' % pmid)
+    # If there's a problem, skip it
+    except Exception as e:
+        print "Exception processing %s" % pmid
+        print e
+        continue
+
     stmts[pmid] = reach_proc.statements
+
+    if ix % 500 == 0:
+        with open('reach_stmts_%d.pkl' % ix, 'w') as f:
+            pickle.dump(stmts, f)
 
 with open('reach_stmts.pkl', 'w') as f:
     pickle.dump(stmts, f)
