@@ -1,5 +1,11 @@
 import csv
 import pickle
+from collections import Counter
+import plot_formatting as pf
+from matplotlib import pyplot as plt
+from texttable import  Texttable
+
+pf.set_fig_params()
 
 pmid_map = {}
 with open('pmid_pmcid_doi_map.txt') as f:
@@ -151,4 +157,33 @@ for (pmid, doi) in matched:
     xref_meta = xref_metadata.get(doi)
     if xref_meta['publisher'] == 'American Society for Biochemistry & Molecular Biology (ASBMB)':
         jbc.append((pmid, doi, xref_meta))
+
+
+pubs = [t[2] for t in publishers]
+pubs_count = Counter(pubs)
+pubs_count = sorted(pubs_count.items(), key=lambda x: x[1], reverse=True)
+plt.ion()
+fig = plt.figure(figsize=(2, 2), dpi=300)
+ax = fig.gca()
+ax.plot([t[1] for t in pubs_count])
+ax.set_ylabel('No. of papers')
+ax.set_xlabel('Publisher rank')
+ax.set_xticks(range(0, 181, 30))
+pf.format_axis(ax)
+plt.subplots_adjust(left=0.22, bottom=0.16)
+plt.show()
+plt.savefig('publisher_distribution_linear.pdf')
+ax.set_yscale('log')
+plt.show()
+plt.savefig('publisher_distribution_log.pdf')
+
+# Make table of top 20
+top_20_table = Texttable()
+rows = [['Rank', 'Publisher']]
+for i in range(20):
+    rank = i + 1
+    entry = '%s (%s)' % (str(pubs_count[i][0]), pubs_count[i][1])
+    rows.append([rank, entry])
+top_20_table.add_rows(rows)
+print top_20_table.draw() + '\n'
 
