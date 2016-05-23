@@ -254,7 +254,8 @@ if __name__ == '__main__':
     model.save(inc_model_file)
 
     # Upload to NDEx
-    upload_to_ndex(model, ndex_cred)
+    if use_ndex:
+        upload_to_ndex(model, ndex_cred)
 
     # Print and tweet the status message
     print stats
