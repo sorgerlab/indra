@@ -7,7 +7,7 @@ logger = logging.getLogger('ndex')
 
 ndex_base_url = 'http://52.37.175.128'
 
-def send_request(ndex_service_url, params, is_json=True):
+def send_request(ndex_service_url, params, is_json=True, use_get=False):
     """Send a request to the NDEx server.
 
     Parameters
@@ -20,14 +20,19 @@ def send_request(ndex_service_url, params, is_json=True):
     is_json : bool
         True if the response is in json format, otherwise it is assumed to be
         text. Default: False
+    use_get : bool
+        True if the request needs to use GET instead of POST.
 
     Returns
     -------
     res : str
         Depending on the type of service and the is_json parameter, this
-        function either returns a text string or a json string.
+        function either returns a text string or a json dict.
     """
-    res = requests.post(ndex_service_url, json=params)
+    if use_get:
+        res = requests.get(ndex_service_url, json=params)
+    else:
+        res = requests.post(ndex_service_url, json=params)
     status = res.status_code
     # If response is immediate, we get 200
     if status == 200:
