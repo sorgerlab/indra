@@ -2,12 +2,15 @@ import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
-import ndex_client
+from indra.databases import ndex_client
 from processor import BelProcessor
 
 logger = logging.getLogger('bel')
 
-def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
+ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
+
+def process_ndex_neighborhood(gene_names, network_id=None,
+                              rdf_out='bel_output.rdf'):
     """Return a BelProcessor for an NDEx network neighborhood.
 
     Parameters
@@ -15,6 +18,9 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
     gene_names : list
         A list of HGNC gene symbols to search the neighborhood of.
         Example: ['BRAF', 'MAP2K1']
+    network_id : Optional[str]
+        The UUID of the network in NDEx. By default, the BEL Large Corpus
+        network is used.
     rdf_out : Optional[str]
         Name of the output file to save the RDF returned by the web service.
         This is useful for debugging purposes or to repeat the same query
@@ -30,11 +36,11 @@ def process_ndex_neighborhood(gene_names, rdf_out='bel_output.rdf'):
     This function calls process_belrdf to the returned RDF string from the
     webservice.
     """
-    network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
-    #url_suffix = '/bel2rdf/v1/network/%s/asBELRDF/query' % network_id
-    url_suffix = '/network/%s/asBELRDF/query' % network_id
+    if network_id is None:
+        network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
+    url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
-    rdf = ndex_client.send_request(url_suffix, params)
+    rdf = ndex_client.send_request(url, params, is_json=False)
     if rdf is None:
         logger.info('No response for NDEx neighborhood query.')
         return None

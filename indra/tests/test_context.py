@@ -13,7 +13,3 @@ def test_get_mutations():
     assert(res.get('BRAF') is not None)
     assert(res['BRAF'].get('A375_SKIN') is not None)
     assert(res['BRAF']['A375_SKIN'] == 1.0)
-
-def test_send_request_bad():
-    res = context_client.send_request('xyz', None)
-    assert(res is None)
