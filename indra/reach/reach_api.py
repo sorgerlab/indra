@@ -265,7 +265,11 @@ def process_json_str(json_str, citation=None):
     json_str = json_str.replace('is-hypothesis','is_hypothesis')
     json_str = json_str.replace('is-negated','is_negated')
     json_str = json_str.replace('is-direct','is_direct')
-    json_dict = json.loads(json_str)
+    try:
+        json_dict = json.loads(json_str)
+    except ValueError:
+        logging.error('Could not decode JSON string.')
+        return None
     rp = ReachProcessor(json_dict, citation)
     rp.get_modifications()
     rp.get_complexes()
