@@ -5,9 +5,12 @@ import plot_formatting as pf
 from collections import Counter
 from indra.statements import *
 from indra.preassembler import Preassembler
-
+from indra.preassembler.hierarchy_manager import entity_hierarchy as eh, \
+                                              modification_hierarchy as mh
+from copy import deepcopy
 pf.set_fig_params()
 
+"""
 print "Loading REACH results"
 with open('reach_stmts.pkl') as f:
     results = pickle.load(f)
@@ -15,6 +18,52 @@ with open('reach_stmts.pkl') as f:
 counts_per_paper = [(pmid, len(stmts)) for pmid, stmts in results.items()]
 zero_pmids = [pmid for pmid, stmts in results.items() if len(stmts) == 0]
 counts = np.array([tup[1] for tup in counts_per_paper])
+
+# Preassemble to remove duplicates
+
+# Combining duplicates
+pa = Preassembler(eh, mh)
+for paper_stmts in results.values():
+    pa.add_statements(paper_stmts)
+pa.combine_duplicates()
+
+# Sorted by evidence
+sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
+"""
+with open('reach_stmts_sorted.pkl') as f:
+    sorted_stmts = pickle.load(f)
+
+# Distribution of pieces of evidence
+plt.ion()
+plt.figure(figsize=(2, 2), dpi=300)
+plt.plot([len(stmt.evidence) for stmt in sorted_stmts])
+
+# Sorted by unique PMIDs
+def uniq_refs_in_evidence(stmt):
+    refs = set([])
+    for ev in stmt.evidence:
+        refs.add(ev.pmid)
+    return len(refs)
+
+sorted_uniq_pmids = deepcopy(sorted_stmts)
+sorted_uniq_pmids = sorted(sorted_uniq_pmids, key=uniq_refs_in_evidence,
+                           reverse=True)
+
+import sys; sys.exit()
+
+# List of all entities
+agents = []
+for paper_stmts in results.values():
+    for stmt in paper_stmts:
+        for agent in stmt.agent_list():
+            if agent is not None:
+                agents.append(agent.name)
+
+# Agent counter
+agent_counter = Counter(agents)
+agent_counter = sorted(agent_counter.items(), key=lambda x: x[1],
+                       reverse=True)
+
 
 # What fraction of statements grounded?
 grounded_dict = {}
@@ -62,4 +111,5 @@ pf.format_axis(ax)
 ax.set_ylabel('No. of statements')
 plt.subplots_adjust(left=0.29, bottom=0.34)
 plt.savefig('reach_stmt_types.pdf')
+
 
