@@ -4,9 +4,11 @@ INDRA
 =====
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) generates
-executable models of pathway dynamics from natural language (using the TRIPS
-and REACH parsers), BioPAX and BEL sources (including the PathwayCommons
-database and NDEx).
+executable models of pathway dynamics from natural language (using the
+[TRIPS](http://trips.ihmc.us/parser/cgi/drum) and
+[REACH](https://github.com/clulab/reach) parsers), and BioPAX and BEL sources
+(including the [Pathway Commons database](http://pathwaycommons.org/) and
+[NDEx](http://ndexbio.org).
 
 Installing INDRA
 ----------------
@@ -29,8 +31,8 @@ release as
     $ pip install indra
 
 INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
-also PySB (for more information on PySB, see https://github.com/pysb/pysb).
-These packages are installed by setup.py.
+also PySB (for more information on PySB, see http://pysb.org).  These packages
+are installed by setup.py.
 
 For using BioPAX, an additional package called
 [pyjnius](https://github.com/kivy/pyjnius) is needed to allow using Java
@@ -102,7 +104,7 @@ for pmid in pmids:
 
 The next example shows querying the [BEL large
 corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb)
-network thorugh [NDEx](http://ndexbio.org) for a neighborhood of a given list
+network through [NDEx](http://ndexbio.org) for a neighborhood of a given list
 of proteins using their HGNC gene names.
 
 ```python
