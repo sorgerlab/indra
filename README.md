@@ -10,6 +10,11 @@ executable models of pathway dynamics from natural language (using the
 (including the [Pathway Commons database](http://pathwaycommons.org/) and
 [NDEx](http://ndexbio.org).
 
+Documentation
+-------------
+
+Documentation is available at http://indra.readthedocs.io.
+
 Installing INDRA
 ----------------
 
