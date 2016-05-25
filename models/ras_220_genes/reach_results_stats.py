@@ -49,6 +49,14 @@ sorted_uniq_pmids = deepcopy(sorted_stmts)
 sorted_uniq_pmids = sorted(sorted_uniq_pmids, key=uniq_refs_in_evidence,
                            reverse=True)
 
+# List of all ungrounded entities by number of mentions
+ungrounded = [ag.name for s in sorted_stmts for ag in s.agent_list()
+              if ag is not None and not ag.db_refs]
+
+ungroundc = Counter(ungrounded)
+ungroundc = ungroundc.items()
+ungroundc.sort(key=lambda x: x[1], reverse=True)
+
 import sys; sys.exit()
 
 # List of all entities
