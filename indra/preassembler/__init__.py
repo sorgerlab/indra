@@ -427,8 +427,10 @@ def flatten_stmts(stmts):
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> flatten_stmts(pa.related_stmts)
-    [Phosphorylation(BRAF(), MAP2K1(), S), Phosphorylation(BRAF(), MAP2K1())]
+    >>> flattened = flatten_stmts(pa.related_stmts)
+    >>> flattened.sort(key=lambda x: x.matches_key())
+    >>> flattened
+    [Phosphorylation(BRAF(), MAP2K1()), Phosphorylation(BRAF(), MAP2K1(), S)]
     """
     total_stmts = set(stmts)
     for stmt in stmts:
