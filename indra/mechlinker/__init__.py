@@ -234,7 +234,7 @@ class MechLinker(object):
                                 act_stmt.obj_activity, is_active,
                                 evidence=ev)
                 self.statements.append(st)
-                logger.info('inferred:', st)
+                logger.info('inferred: %s' % st)
             # Infer ActiveForm from ActAct + Dephosphorylation
             if act_stmt.subj_activity == 'phosphatase':
                 matching = []
@@ -259,7 +259,7 @@ class MechLinker(object):
                                 act_stmt.obj_activity, is_active,
                                 evidence=ev) 
                 self.statements.append(st)
-                logger.info('inferred:', st)
+                logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
         for act_stmt in get_statement_type(self.statements, ActivityActivity):
             for af_stmt in get_statement_type(self.statements, ActiveForm):
@@ -280,7 +280,7 @@ class MechLinker(object):
                                              m.residue, m.position,
                                              evidence=ev)
                         self.statements.append(st)
-                        logger.info('inferred:', st)
+                        logger.info('inferred: %s' % st)
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
