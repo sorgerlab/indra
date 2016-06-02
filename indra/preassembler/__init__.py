@@ -219,16 +219,24 @@ class Preassembler(object):
         ext_groups = copy(groups)
         # Set up progress bar
         # see http://stackoverflow.com/questions/3160699/python-progress-bar
-        num_comparisons = len(groups.keys()) ** 2
         toolbar_width = 40
         sys.stdout.write("Combining related stmts: [%s]"
                          % (" " * toolbar_width))
         sys.stdout.flush()
         sys.stdout.write("\b" * (toolbar_width+1)) # return to start of bar
-        counter = 0
-        num_cmps_per_step = num_comparisons / int(toolbar_width)
+        dashes_printed = 0
+        comparisons = list(itertools.permutations(groups.keys(), 2))
+        num_comparisons = len(comparisons)
         # We examine pairs of Statement groups, looking for "isa" relationships:
-        for g1_key, g2_key in itertools.permutations(groups.keys(), 2):
+        for counter, (g1_key, g2_key) in enumerate(comparisons):
+            # Update progress bar
+            pct_completed = (counter + 1) / float(num_comparisons)
+            total_dashes = int(pct_completed * toolbar_width)
+            dashes_to_print = total_dashes - dashes_printed
+            sys.stdout.write("-" * dashes_to_print)
+            sys.stdout.flush()
+            dashes_printed += dashes_to_print
+            # Get the groups
             g1 = groups[g1_key]
             g2 = groups[g2_key]
             # If we have two groups G1 and G2, each containing Statements with
@@ -282,13 +290,6 @@ class Preassembler(object):
             if all(g1_is_refinement):
                 g1_ext_list = ext_groups[g1_key]
                 ext_groups[g1_key] = g1_ext_list + g2
-            # Update progress bar
-            if counter >= num_cmps_per_step:
-                sys.stdout.write("-")
-                sys.stdout.flush()
-                counter = 0
-            else:
-                counter += 1
         # Move cursor to next line after progress bar
         print
         # At this point we have, in ext_groups, a dict of lists of Statements
