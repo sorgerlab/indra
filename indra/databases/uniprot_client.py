@@ -156,6 +156,8 @@ def get_mnemonic(protein_id):
     except KeyError:
         pass
     g = query_protein(protein_id)
+    if g is None:
+        return None
     query = rdf_prefixes + """
         SELECT ?mnemonic
         WHERE {
@@ -190,6 +192,8 @@ def get_hgnc_name(protein_id):
         pass
     # If it's not in the dict then call webservice
     g = query_protein(protein_id)
+    if g is None:
+        return None
     query = rdf_prefixes + """
         SELECT ?name
         WHERE {
@@ -224,6 +228,8 @@ def get_gene_name(protein_id):
         The gene name corresponding to the given Uniprot ID.
     """
     g = query_protein(protein_id)
+    if g is None:
+        return None
     query = rdf_prefixes + """
         SELECT ?name
         WHERE {
@@ -258,6 +264,8 @@ def get_sequence(protein_id):
 
 def get_modifications(protein_id):
     g = query_protein(protein_id)
+    if g is None:
+        return None
     query = rdf_prefixes + """
         SELECT ?beg_pos ?comment
         WHERE {
