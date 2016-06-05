@@ -314,8 +314,8 @@ class TripsProcessor(object):
                 else:
                     if enzyme_term.find("type").text ==\
                         'ONT::MACROMOLECULAR-COMPLEX':
-                        components = complex_term.find("components")
-                        terms = components.findall("term")
+                        components = enzyme_term.find("components")
+                        terms = components.findall("component")
                         term_names = []
                         for t in terms:
                             term_name = self._get_name_by_id(t.attrib['id'])
