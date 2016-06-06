@@ -376,7 +376,7 @@ class BiopaxProcessor(object):
             enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
-            for enz, sub in itertools.product(listify(enzs), _listify(subs)):
+            for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
                 # If neither the required enzyme nor the substrate is 
                 # present then skip
                 if force_contains is not None:
