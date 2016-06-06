@@ -231,13 +231,12 @@ class BiopaxProcessor(object):
                 monomers = self._get_agents_from_entity(output_spe)
                 for monomer in _listify(monomers):
                     if force_contains is not None:
-                        if momomer not in force_contains:
+                        if monomer not in force_contains:
                             continue
                     static_mods =\
                         set(monomer.mods).difference(gained_mods)
-                    monomer.mods = static_mods
 
-                    mods = [m for m in gained_mods 
+                    mods = [m for m in gained_mods
                             if m.mod_type not in ['active', 'inactive']]
                     # NOTE: with the ActiveForm representation we cannot
                     # separate static_mods and gained_mods. We assume here
@@ -392,7 +391,7 @@ class BiopaxProcessor(object):
 
                 mod_shared = set(mod_in).intersection(set(mod_out))
 
-                sub.mods = mod_shared
+                sub.mods = list(mod_shared)
 
                 if mod_gain:
                     gained_mods = set(mod_out).difference(set(mod_in))
