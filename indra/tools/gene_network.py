@@ -1,3 +1,4 @@
+import os
 import pickle
 from indra.bel import bel_api
 from indra.biopax import biopax_api as ba
