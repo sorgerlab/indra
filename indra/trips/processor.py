@@ -693,7 +693,7 @@ class TripsProcessor(object):
 
     def _get_mutation(self, term):
         mut = term.find('mutation')
-        if mut is None:
+        if mut is None or mut.find('type') is None:
             return None
         if mut.find('type').text == 'SUBSTITUTION':
             pos = mut.find('pos').text
