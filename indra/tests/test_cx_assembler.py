@@ -8,10 +8,10 @@ dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
-st_actact = Activation(mek, 'activity', erk, 'activity', True)
+st_act = Activation(mek, 'activity', erk, 'activity', True)
 st_rasgef = RasGef(Agent('SOS1'), 'activity', Agent('HRAS'))
 st_rasgap = RasGap(Agent('RASA1'), 'activity', Agent('HRAS'))
-st_actact2 = Activation(dusp, 'activity', erk, 'activity', False)
+st_act2 = Activation(dusp, 'activity', erk, 'activity', False)
 st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
                                               text='MEK phosphorylates ERK'))
 st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',
@@ -38,9 +38,9 @@ def test_complex():
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 3)
 
-def test_actact():
+def test_act():
     cxa = CxAssembler()
-    cxa.add_statements([st_actact, st_actact2])
+    cxa.add_statements([st_act, st_act2])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 2)

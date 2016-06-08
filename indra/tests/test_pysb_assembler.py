@@ -172,7 +172,7 @@ def test_pysb_assembler_transphos1():
     assert(len(model.rules)==1)
     assert(len(model.monomers)==1)
 
-def test_pysb_assembler_actact1():
+def test_pysb_assembler_act1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')

@@ -256,7 +256,7 @@ def test_matches_selfmod():
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
-def test_matches_activityactivity():
+def test_matches_activation():
     """Test matching of entities only, entities match only on name."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
@@ -381,7 +381,7 @@ def test_entities_match_selfmod():
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
-def test_entities_match_activityactivity():
+def test_entities_match_activation():
     """Test matching of entities only, entities match only on name."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
@@ -688,7 +688,7 @@ def test_autophosphorylation_modification_refinement():
     assert not p4.refinement_of(p6, eh, mh)
     assert not p5.refinement_of(p6, eh, mh)
 
-def test_activityactivity_modification_refinement():
+def test_activation_modification_refinement():
     raf = Agent('RAF')
     braf = Agent('BRAF')
     mek = Agent('MEK')

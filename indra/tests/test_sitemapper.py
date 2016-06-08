@@ -176,7 +176,7 @@ def test_site_map_rasgap():
     check_validated_mapks(res, st1)
 
 
-def test_site_map_activityactivity():
+def test_site_map_activation():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
     st1 = Activation(mapk1_invalid, 'kinase',
                      mapk3_invalid, 'kinase', True)
