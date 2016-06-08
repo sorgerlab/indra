@@ -261,15 +261,15 @@ def test_matches_activityactivity():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityActivity(src, 'kinase1', 'increases1',
-                           nras1, 'gtpbound1',
-                           evidence=Evidence(text='foo'))
-    st2 = ActivityActivity(src, 'kinase1', 'increases1',
-                           nras1, 'gtpbound1',
-                           evidence=Evidence(text='bar'))
-    st3 = ActivityActivity(src, 'kinase2', 'increases2',
-                           nras2, 'gtpbound2', 
-                           evidence=Evidence(text='bar'))
+    st1 = Activation(src, 'kinase1',
+                     nras1, 'gtpbound1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = Activation(src, 'kinase1',
+                     nras1, 'gtpbound1', True,
+                     evidence=Evidence(text='bar'))
+    st3 = Activation(src, 'kinase2',
+                     nras2, 'gtpbound2', True,
+                     evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
 
@@ -386,12 +386,12 @@ def test_entities_match_activityactivity():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = ActivityActivity(src, 'Kinase1', 'increases1',
-                           nras1, 'gtpbound1',
-                           evidence=Evidence(text='foo'))
-    st2 = ActivityActivity(src, 'Kinase2', 'increases2',
-                           nras2, 'gtpbound2', 
-                           evidence=Evidence(text='bar'))
+    st1 = Activation(src, 'Kinase1',
+                     nras1, 'gtpbound1', True,
+                     evidence=Evidence(text='foo'))
+    st2 = Activation(src, 'Kinase2',
+                     nras2, 'gtpbound2', True,
+                     evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
 
 def test_entities_match_activitymod():
@@ -694,16 +694,16 @@ def test_activityactivity_modification_refinement():
     mek = Agent('MEK')
     mek1 = Agent('MAP2K1')
 
-    st1 = ActivityActivity(raf, 'kinase', 'increases',
-                           mek, 'kinase')
-    st2 = ActivityActivity(braf, 'kinase', 'increases',
-                           mek, 'kinase')
-    st3 = ActivityActivity(raf, 'kinase', 'increases',
-                           mek1, 'kinase')
-    st4 = ActivityActivity(braf, 'kinase', 'increases',
-                           mek1, 'kinase')
-    st5 = ActivityActivity(braf, 'kinase', 'increasesX',
-                           mek1, 'kinase')
+    st1 = Activation(raf, 'kinase',
+                     mek, 'kinase', True)
+    st2 = Activation(braf, 'kinase',
+                     mek, 'kinase', True)
+    st3 = Activation(raf, 'kinase',
+                     mek1, 'kinase', True)
+    st4 = Activation(braf, 'kinase',
+                     mek1, 'kinase', True)
+    st5 = Activation(braf, 'kinase',
+                     mek1, 'kinase', False)
     # st1
     assert st2.refinement_of(st1, eh, mh)
     assert st3.refinement_of(st1, eh, mh)
@@ -1025,22 +1025,22 @@ def test_eq_stmt():
            Complex([Agent('a'), Agent('b')], evidence=[ev1])))
     assert(not Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
            Complex([Agent('a'), Agent('b')], evidence=[ev2])))
-    assert(ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev1]).equals(
-           ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev1])))
-    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev1]).equals(
-           ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('c'), 'activity', evidence=[ev1])))
-    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev1]).equals(
-           ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'kinase', evidence=[ev1])))
-    assert(not ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev1]).equals(
-           ActivityActivity(Agent('a'), 'activity', 'increases',
-                            Agent('b'), 'activity', evidence=[ev2])))
+    assert(Activation(Agent('a'), 'activity',
+                      Agent('b'), 'activity', True, evidence=[ev1]).equals(
+           Activation(Agent('a'), 'activity',
+                      Agent('b'), 'activity', True, evidence=[ev1])))
+    assert(not Activation(Agent('a'), 'activity',
+                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
+           Activation(Agent('a'), 'activity',
+                      Agent('c'), 'activity', True, evidence=[ev1])))
+    assert(not Activation(Agent('a'), 'activity',
+                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
+           Activation(Agent('a'), 'activity',
+                      Agent('b'), 'kinase', True, evidence=[ev1])))
+    assert(not Activation(Agent('a'), 'activity',
+                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
+           Activation(Agent('a'), 'activity',
+                      Agent('b'), 'activity', True, evidence=[ev2])))
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

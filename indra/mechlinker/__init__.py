@@ -148,7 +148,7 @@ class MechLinker(object):
                     gap_base = self.get_base(stmt.gap)
                     gap_base.add_activity(stmt.gap_activity)
                     gap_base.add_active_state(stmt.gap_activity, stmt.gap.mods)
-            elif isinstance(stmt, ActivityActivity):
+            elif isinstance(stmt, Activation):
                 if stmt.subj is not None:
                     subj_base =\
                         self.get_base(stmt.subj)
@@ -186,7 +186,7 @@ class MechLinker(object):
                         gap_base.get_activity_reduction(stmt.gap_activity)
                     if act_red is not None:
                         stmt.gap_activity = act_red
-            elif isinstance(stmt, ActivityActivity):
+            elif isinstance(stmt, Activation):
                 if stmt.subj is not None:
                     subj_base =\
                         self.get_base(stmt.subj)
@@ -209,7 +209,7 @@ class MechLinker(object):
                     stmt.activity = act_red
 
     def replace_activations(self):
-        for act_stmt in get_statement_type(self.statements, ActivityActivity):
+        for act_stmt in get_statement_type(self.statements, Activation):
             # Infer ActiveForm from ActAct + Phosphorylation
             if act_stmt.subj_activity == 'kinase':
                 matching = []
@@ -226,12 +226,8 @@ class MechLinker(object):
                 mods = [ModCondition('phosphorylation',
                                      m.residue, m.position)
                        for m in matching]
-                if act_stmt.relationship == 'increases':
-                    is_active = True
-                else:
-                    is_active = False
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
-                                act_stmt.obj_activity, is_active,
+                                act_stmt.obj_activity, act_stmt.is_activation,
                                 evidence=ev)
                 self.statements.append(st)
                 logger.info('inferred: %s' % st)
@@ -251,17 +247,13 @@ class MechLinker(object):
                 mods = [ModCondition('phosphorylation',
                                      m.residue, m.position, False)
                        for m in matching]
-                if act_stmt.relationship == 'increases':
-                    is_active = True
-                else:
-                    is_active = False
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
-                                act_stmt.obj_activity, is_active,
+                                act_stmt.obj_activity, act_stmt.is_activation,
                                 evidence=ev) 
                 self.statements.append(st)
                 logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
-        for act_stmt in get_statement_type(self.statements, ActivityActivity):
+        for act_stmt in get_statement_type(self.statements, Activation):
             for af_stmt in get_statement_type(self.statements, ActiveForm):
                 if not af_stmt.agent.name == act_stmt.obj.name:
                     continue

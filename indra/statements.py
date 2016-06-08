@@ -10,7 +10,7 @@ the next level in the hierarchy are the following classes:
 - :py:class:`SelfModification`
 - :py:class:`RasGef`
 - :py:class:`RasGap`
-- :py:class:`ActivityActivity`
+- :py:class:`Activation`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
@@ -39,7 +39,7 @@ instance of the class :py:class:`ActiveForm`.
 Interactions between proteins are often described simply in terms of their
 effect on a protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6
 inactives ERK".  These types of relationships are indicated by the statement
-:py:class:`ActivityActivity`.
+:py:class:`Activation`.
 
 The evidence for a given Statement, which could include relevant citations,
 database identifiers, and passages of text from the scientific literature, is
@@ -810,7 +810,7 @@ class Ubiquitination(Modification):
     pass
 
 
-class ActivityActivity(Statement):
+class Activation(Statement):
     """Indicates that the activity of a protein affects the activity of another.
 
     This statement is intended to be used for physical interactions where the
@@ -826,14 +826,15 @@ class ActivityActivity(Statement):
     subj_activity : string
         The type of biochemical activity responsible for the effect, e.g.,
         the subject's "kinase" activity.
-    relationship : string
-        Indicates the type of interaction: 'increases' or 'decreases'.
     obj : :py:class:`Agent`
         The agent whose activity is influenced by the subject, i.e., the
         "downstream" node.
     obj_activity : string
         The activity of the obj Agent that is affected, e.g., its "kinase"
         activity.
+    is_activation : bool
+        Indicates the type of interaction: True for activation and
+        False for inactivation/inhibition
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
 
@@ -845,16 +846,16 @@ class ActivityActivity(Statement):
 
     >>> mek = Agent('MAP2K1')
     >>> erk = Agent('MAPK1')
-    >>> act = ActivityActivity(mek, 'kinase', 'increases', erk, 'kinase')
+    >>> act = Activation(mek, 'kinase', erk, 'kinase', True)
     """
-    def __init__(self, subj, subj_activity, relationship, obj,
-                 obj_activity, evidence=None):
-        super(ActivityActivity, self).__init__(evidence)
+    def __init__(self, subj, subj_activity, obj, obj_activity, is_activation,
+                 evidence=None):
+        super(Activation, self).__init__(evidence)
         self.subj = subj
         self.subj_activity = subj_activity
         self.obj = obj
         self.obj_activity = obj_activity
-        self.relationship = relationship
+        self.is_activation = is_activation
 
     def matches_key(self):
         key = (type(self), self.subj.matches_key(), str(self.subj_activity),
@@ -866,7 +867,7 @@ class ActivityActivity(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
-            raise ValueError("ActivityActivity has two agents.")
+            raise ValueError("Activation has two agents.")
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
@@ -878,7 +879,7 @@ class ActivityActivity(Statement):
            self.obj.refinement_of(other.obj, eh, mh) and \
            self.subj_activity == other.subj_activity and \
            self.obj_activity == other.obj_activity and \
-           self.relationship == other.relationship:
+           self.is_activation == other.is_activation:
             return True
         else:
             return False
@@ -886,19 +887,19 @@ class ActivityActivity(Statement):
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj, self.subj_activity,
-              self.relationship, self.obj, self.obj_activity))
+              self.is_activation, self.obj, self.obj_activity))
         return s
 
     def equals(self, other):
-        matches = super(ActivityActivity, self).equals(other)
+        matches = super(Activation, self).equals(other)
         matches = matches and\
                   (self.subj_activity == other.subj_activity) and\
                   (self.obj_activity == other.obj_activity) and\
-                  (self.relationship == other.relationship)
+                  (self.is_activation == other.is_activation)
         return matches
 
 
-class RasGtpActivityActivity(ActivityActivity):
+class RasGtpActivation(Activation):
     pass
 
 
