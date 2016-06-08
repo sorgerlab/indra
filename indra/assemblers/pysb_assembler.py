@@ -19,7 +19,7 @@ SelfExporter.do_export = False
 # policy implemented to assemble that type of statement.
 statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
                        ist.SelfModification, ist.Complex,
-                       ist.ActivityActivity, ist.ActiveForm,
+                       ist.Activation, ist.ActiveForm,
                        ist.RasGef, ist.RasGap]
 
 def _is_whitelisted(stmt):
@@ -173,7 +173,7 @@ states = {
 # protein with Kinase activity makes a modification of type "phospho" on its
 # substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
 # "RBD" (Ras binding domain). This comes in handy for specifying
-# ActivityActivity rules, where the modification site mediating the activation
+# Activation rules, where the modification site mediating the activation
 # is not specified.
 default_mod_site_names = {
     'kinase': 'phospho',
@@ -1075,7 +1075,7 @@ transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
 # ACTIVITYACTIVITY ######################################################
 
-def activityactivity_monomers_interactions_only(stmt, agent_set):
+def activation_monomers_interactions_only(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj_activity is not None:
@@ -1087,7 +1087,7 @@ def activityactivity_monomers_interactions_only(stmt, agent_set):
         obj.create_site(active_site_names[stmt.obj_activity])
         obj.create_site(default_mod_site_names[stmt.obj_activity])
 
-def activityactivity_monomers_one_step(stmt, agent_set):
+def activation_monomers_one_step(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj_activity is not None:
@@ -1096,10 +1096,10 @@ def activityactivity_monomers_one_step(stmt, agent_set):
     obj.create_site(active_site_names[stmt.obj_activity],
                     ('inactive', 'active'))
 
-activityactivity_monomers_default = activityactivity_monomers_one_step
+activation_monomers_default = activation_monomers_one_step
 
 
-def activityactivity_assemble_interactions_only(stmt, model, agent_set):
+def activation_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
@@ -1124,7 +1124,7 @@ def activityactivity_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def activityactivity_assemble_one_step(stmt, model, agent_set):
+def activation_assemble_one_step(stmt, model, agent_set):
     if stmt.subj_activity is not None:
         subj_pattern = get_monomer_pattern(model, stmt.subj,
             extra_fields={active_site_names[stmt.subj_activity]: 'active'})
@@ -1147,7 +1147,7 @@ def activityactivity_assemble_one_step(stmt, model, agent_set):
         (rule_subj_str, stmt.subj_activity, rule_obj_str,
          stmt.obj_activity)
 
-    if stmt.relationship == 'increases':
+    if stmt.is_activation:
         r = Rule(rule_name,
             subj_pattern + obj_inactive >> subj_pattern + obj_active,
             kf_one_step_activate)
@@ -1158,7 +1158,7 @@ def activityactivity_assemble_one_step(stmt, model, agent_set):
 
     add_rule_to_model(model, r)
 
-activityactivity_assemble_default = activityactivity_assemble_one_step
+activation_assemble_default = activation_assemble_one_step
 
 # DEPHOSPHORYLATION #####################################################
 
@@ -1450,9 +1450,9 @@ def activeform_assemble_one_step(stmt, model, agent_set):
 activeform_assemble_default = activeform_assemble_one_step
 
 # RASGTPACTIVITIACTIVITY ######################################
-def rasgtpactivityactivity_monomers_default(stmt, agent_set):
+def rasgtpactivation_monomers_default(stmt, agent_set):
     pass
 
-def rasgtpactivityactivity_assemble_default(stmt, model, agent_set):
+def rasgtpactivation_assemble_default(stmt, model, agent_set):
     pass
 

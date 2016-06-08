@@ -454,8 +454,8 @@ class BelProcessor(object):
             self.statements.append(
                     ActiveForm(enz, act_type, is_active, evidence))
 
-    def get_activity_activity(self):
-        """Extract INDRA ActivityActivity Statements from BEL."""
+    def get_activation(self):
+        """Extract INDRA Activation Statements from BEL."""
         # Query for all statements where the activity of one protein
         # directlyIncreases the activity of another protein, without reference
         # to a modification.
@@ -485,9 +485,9 @@ class BelProcessor(object):
             subj_activity = name_from_uri(stmt[1]).lower()
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
-                rel = 'decreases'
+                is_activation = False
             else:
-                rel = 'increases'
+                is_activation = True
             obj = self.get_agent(stmt[3], stmt[7])
             obj_activity = name_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
@@ -498,9 +498,9 @@ class BelProcessor(object):
             # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'gtpbound':
                 self.statements.append(
-                     RasGtpActivityActivity(subj, subj_activity,
-                                            rel, obj, obj_activity,
-                                            evidence))
+                     RasGtpActivation(subj, subj_activity,
+                                      obj, obj_activity, is_activation,
+                                      evidence))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
             elif obj_activity == 'gtpbound' and \
@@ -516,8 +516,8 @@ class BelProcessor(object):
             # Otherwise, create a generic Activity->Activity statement
             else:
                 self.statements.append(
-                     ActivityActivity(subj, subj_activity,
-                                      rel, obj, obj_activity, evidence))
+                     Activation(subj, subj_activity,
+                                obj, obj_activity, is_activation, evidence))
 
             """
             #print "--------------------------------"

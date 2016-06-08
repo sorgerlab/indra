@@ -48,8 +48,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
                 stmt_strs.append(_assemble_complex(stmt))
-            elif isinstance(stmt, ist.ActivityActivity):
-                stmt_strs.append(_assemble_activityactivity(stmt))
+            elif isinstance(stmt, ist.Activation):
+                stmt_strs.append(_assemble_activation(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         model = ' '.join(stmt_strs)
@@ -176,11 +176,11 @@ def _assemble_autophosphorylation(stmt):
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
 
-def _assemble_activityactivity(stmt):
-    """Assemble ActivityActivity statements into text."""
+def _assemble_activation(stmt):
+    """Assemble Activation statements into text."""
     subj_str = _assemble_agent_str(stmt.subj)
     obj_str = _assemble_agent_str(stmt.obj)
-    if stmt.relationship == 'increases':
+    if stmt.is_activation:
         rel_str = ' activates '
     else:
         rel_str = ' inactivates '

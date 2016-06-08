@@ -88,7 +88,7 @@ class TripsProcessor(object):
                 self.all_events[event_type] = [event_id]
 
     def get_activations(self):
-        """Extract direct ActivityActivity INDRA Statements."""
+        """Extract direct Activation INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         inact_events = self.tree.findall("EVENT/[type='ONT::DEACTIVATE']")
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
@@ -125,24 +125,25 @@ class TripsProcessor(object):
             affected_agent = Agent(affected_name)
 
             if event.find('type').text == 'ONT::ACTIVATE':
-                rel = 'increases'
+                is_activation = True
                 activator_act = 'activity'
                 self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::INHIBIT':
-                rel = 'decreases'
+                is_activation = False
                 activator_act = None
                 self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
             elif event.find('type').text == 'ONT::DEACTIVATE':
-                rel = 'decreases'
+                is_activation = False
                 activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
-            self.statements.append(ActivityActivity(activator_agent, activator_act,
-                                    rel, affected_agent, 'activity',
-                                    evidence=ev))
+            self.statements.append(Activation(activator_agent, activator_act,
+                                              affected_agent, 'activity',
+                                              is_activation=is_activation,
+                                              evidence=ev))
 
     def get_activations_causal(self):
-        """Extract causal ActivityActivity INDRA Statements."""
+        """Extract causal Activation INDRA Statements."""
         # Search for causal connectives of type ONT::CAUSE
         ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
         for cc in ccs:
@@ -182,9 +183,9 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = ActivityActivity(factor_agent, 'activity', 'increases',
-                                      outcome_agent, 'activity',
-                                      evidence=[ev])
+                st = Activation(factor_agent, 'activity',
+                                outcome_agent, 'activity', is_activation=True,
+                                evidence=[ev])
                 self.statements.append(st)
             elif outcome_event_type.text == 'ONT::ACTIVITY':
                 agent_tag = outcome_event.find(".//*[@role=':AGENT']")
@@ -194,9 +195,9 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = ActivityActivity(factor_agent, 'activity', 'increases',
-                                      outcome_agent, 'activity',
-                                      evidence=[ev])
+                st = Activation(factor_agent, 'activity',
+                                outcome_agent, 'activity', is_activation=True,
+                                evidence=[ev])
                 self.statements.append(st)
 
     def get_activating_mods(self):

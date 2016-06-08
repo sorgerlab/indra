@@ -177,9 +177,9 @@ def test_autophos():
     print s
     assert(s == 'EGFR phosphorylates itself on tyrosine.')
 
-def test_activityactivity():
-    st = ActivityActivity(Agent('MEK'), 'activity', 'increases',
-                          Agent('ERK'), 'activity')
+def test_activation():
+    st = Activation(Agent('MEK'), 'activity',
+                    Agent('ERK'), 'activity', True)
     e = ea.EnglishAssembler()
     e.add_statements([st])
     s = e.make_model()

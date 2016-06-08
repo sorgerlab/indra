@@ -148,7 +148,7 @@ class ReachProcessor(object):
             self.statements.append(Complex(members, ev))
 
     def get_activation(self):
-        """Extract INDRA ActivityActivity Statements."""
+        """Extract INDRA Activation Statements."""
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
         for r in res:
@@ -181,11 +181,11 @@ class ReachProcessor(object):
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)
             if r['subtype'] == 'positive-activation':
-                rel = 'increases'
+                is_activation = True
             else:
-                rel = 'decreases'
-            st = ActivityActivity(controller_agent, 'activity', rel,
-                                  controlled_agent, 'activity', ev)
+                is_activation = False
+            st = Activation(controller_agent, 'activity',
+                            controlled_agent, 'activity', is_activation, ev)
             self.statements.append(st)
 
     def _get_agent_from_entity(self, entity_id):

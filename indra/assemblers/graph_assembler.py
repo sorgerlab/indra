@@ -61,11 +61,11 @@ class GraphAssembler():
                 self._add_node(stmt.enz)
                 self._add_node(stmt.sub)
                 self._add_dephosphorylation(stmt.enz, stmt.sub)
-            elif isinstance(stmt, ActivityActivity):
+            elif isinstance(stmt, Activation):
                 self._add_node(stmt.subj)
                 self._add_node(stmt.obj)
-                self._add_activityactivity(stmt.subj, stmt.obj,
-                                          stmt.relationship)
+                self._add_activation(stmt.subj, stmt.obj,
+                                     stmt.is_activation)
             elif isinstance(stmt, Complex):
                 for m in stmt.members:
                     self._add_node(m)
@@ -151,16 +151,16 @@ class GraphAssembler():
                   'arrowhead': 'normal'}
         self._add_edge(source, target, **params)
 
-    def _add_activityactivity(self, subj, obj, rel):
-        """Assemble an ActivityActivity statment."""
+    def _add_activation(self, subj, obj, rel):
+        """Assemble an Activation statment."""
         source = subj.name
         target = obj.name
-        edge_key = (source, target, 'activity', rel)
+        edge_key = (source, target, 'activation', rel)
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        color = '#000000' if rel == 'increases' else '#ff0000'
-        arrowhead = 'vee' if rel == 'increases' else 'tee'
+        color = '#000000' if rel else '#ff0000'
+        arrowhead = 'vee' if rel else 'tee'
         params = {'color': color,
                   'arrowhead': arrowhead}
         self._add_edge(source, target, **params)

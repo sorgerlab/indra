@@ -84,7 +84,7 @@ def process_belrdf(rdf_str):
     bp.get_dephosphorylations()
     bp.get_activating_mods()
     bp.get_composite_activating_mods()
-    bp.get_activity_activity()
+    bp.get_activation()
 
     # Print some output about the process
     bp.print_statement_coverage()

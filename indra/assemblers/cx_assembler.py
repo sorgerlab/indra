@@ -66,8 +66,8 @@ class CxAssembler():
                 self._add_modification(stmt)
             if isinstance(stmt, SelfModification):
                 self._add_self_modification(stmt)
-            elif isinstance(stmt, ActivityActivity):
-                self._add_activityactivity(stmt)
+            elif isinstance(stmt, Activation):
+                self._add_activation(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
             elif isinstance(stmt, RasGef):
@@ -129,11 +129,11 @@ class CxAssembler():
             m2_id = self._add_node(m2)
             self._add_edge(m1_id, m2_id, 'Complex', stmt)
 
-    def _add_activityactivity(self, stmt):
+    def _add_activation(self, stmt):
         subj_id = self._add_node(stmt.subj)
         obj_id = self._add_node(stmt.obj)
         # TODO: take into account relation here
-        self._add_edge(subj_id, obj_id, 'ActivityActivity', stmt)
+        self._add_edge(subj_id, obj_id, 'Activation', stmt)
 
     def _add_rasgef(self, stmt):
         gef_id = self._add_node(stmt.gef)
@@ -274,9 +274,9 @@ def get_stmt_type(stmt):
     elif isinstance(stmt, Complex):
         edge_type = 'Complex'
         edge_polarity = 'none'
-    elif isinstance(stmt, ActivityActivity):
-        edge_type = 'ActivityActivity'
-        if stmt.relationship == 'increases':
+    elif isinstance(stmt, Activation):
+        edge_type = 'Activation'
+        if stmt.is_activation:
             edge_polarity = 'positive'
         else:
             edge_polarity = 'negative'
