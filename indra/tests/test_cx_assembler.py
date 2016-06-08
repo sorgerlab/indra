@@ -8,10 +8,10 @@ dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
-st_actact = ActivityActivity(mek, 'activity', 'increases', erk, 'activity')
+st_actact = Activation(mek, 'activity', erk, 'activity', True)
 st_rasgef = RasGef(Agent('SOS1'), 'activity', Agent('HRAS'))
 st_rasgap = RasGap(Agent('RASA1'), 'activity', Agent('HRAS'))
-st_actact2 = ActivityActivity(dusp, 'activity', 'decreases', erk, 'activity')
+st_actact2 = Activation(dusp, 'activity', erk, 'activity', False)
 st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
                                               text='MEK phosphorylates ERK'))
 st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',

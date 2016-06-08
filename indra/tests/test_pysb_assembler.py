@@ -176,7 +176,7 @@ def test_pysb_assembler_actact1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = ActivityActivity(subj, 'activity', 'increase', obj, 'activity')
+    stmt = Activation(subj, 'activity', obj, 'activity', True)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -354,7 +354,7 @@ def test_unspecified_statement_policies():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, 'activity', 'increases', obj, 'activity')
+    stmt = Activation(subj, 'activity', obj, 'activity', True)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -365,7 +365,7 @@ def test_activity_activity():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, 'activity', 'increases', obj, 'activity')
+    stmt = Activation(subj, 'activity', obj, 'activity', True)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -376,7 +376,7 @@ def test_activity_activity():
 def test_activity_activity2():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, None, 'decreases', obj, 'activity')
+    stmt = Activation(subj, None, obj, 'activity', False)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -387,7 +387,7 @@ def test_activity_activity2():
 def test_activity_activity3():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = ActivityActivity(subj, None, 'decreases', obj, 'activity')
+    stmt = Activation(subj, None, obj, 'activity', False)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
