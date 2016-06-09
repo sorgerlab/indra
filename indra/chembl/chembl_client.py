@@ -8,7 +8,6 @@ def query(drug_chemblid, target_chemblid):
 
     r = requests.get(url)
     r.raise_for_status()
-
     js = r.json()
     return js
 
