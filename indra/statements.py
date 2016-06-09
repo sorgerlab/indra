@@ -887,7 +887,7 @@ class Activation(Statement):
     def __str__(self):
         s = ("%s(%s, %s, %s, %s, %s)" %
              (type(self).__name__, self.subj, self.subj_activity,
-              self.is_activation, self.obj, self.obj_activity))
+              self.obj, self.obj_activity, self.is_activation))
         return s
 
     def equals(self, other):
