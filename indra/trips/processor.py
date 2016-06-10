@@ -41,6 +41,8 @@ class TripsProcessor(object):
         The list of all sentences in the EKB with their IDs
     paragraphs : dict[str: str]
         The list of all paragraphs in the EKB with their IDs
+    par_to_sec : dict[str: str]
+        A map from paragraph IDs to their associated section types
     extracted_events : list[xml.etree.ElementTree.Element]
         A list of Event elements that have been extracted as INDRA
         Statements.
@@ -59,6 +61,8 @@ class TripsProcessor(object):
         sentence_tags = self.tree.findall('input/sentences/sentence')
         self.paragraphs = {p.attrib['id']: p.text for p in paragraph_tags}
         self.sentences = {s.attrib['id']: s.text for s in sentence_tags}
+        self.par_to_sec = {p.attrib['id']: p.attrib.get('sec-type')
+                           for p in paragraph_tags}
 
         self.statements = []
         self._static_events = self._find_static_events()
@@ -94,8 +98,10 @@ class TripsProcessor(object):
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
             sentence = self._get_evidence_text(event)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id)
+                          pmid=self.doc_id, epistemics=epi)
 
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
@@ -173,8 +179,10 @@ class TripsProcessor(object):
                 continue
             # Construct evidence
             sentence = self._get_evidence_text(cc)
+            sec = self._get_section(cc)
+            epi = {'section_type': sec, 'direct': False}
             ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics={'direct': False})
+                          pmid=self.doc_id, epistemics=epi)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
                 if affected is None:
@@ -236,7 +244,10 @@ class TripsProcessor(object):
                 continue
             affected_agent.mods = mods
             sentence = self._get_evidence_text(event)
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
+                          epistemics=epi)
             self.statements.append(ActiveForm(affected_agent, 'active', True,
                                               evidence=ev))
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
@@ -249,7 +260,10 @@ class TripsProcessor(object):
                 continue
 
             sentence = self._get_evidence_text(event)
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
+                          epistemics=epi)
 
             arg1 = event.find("arg1")
             if arg1 is None:
@@ -341,7 +355,10 @@ class TripsProcessor(object):
             mods = self._get_mod_site(event)
 
             sentence = self._get_evidence_text(event)
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
+            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
+                          epistemics=epi)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
             # independently
@@ -723,6 +740,10 @@ class TripsProcessor(object):
             sentence = None
         return sentence
 
+    def _get_section(self, event_tag):
+        par_id = event_tag.attrib.get('paragraph')
+        sec = self.par_to_sec.get(par_id)
+        return sec
 
     def _find_static_events(self):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
