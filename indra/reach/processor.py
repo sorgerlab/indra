@@ -292,26 +292,69 @@ class ReachProcessor(object):
         context['organ'] = organ
         return context
 
-    @staticmethod
-    def _get_epistemics(event):
+    def _get_epistemics(self, event):
         epistemics = {}
         # Check whether information is negative
         neg = event.get('is_negated')
         if neg is True:
             epistemics['negative'] = True
+        # Check if it is a hypothesis
         hyp = event.get('is_hypothesis')
         if hyp is True:
             epistemics['hypothesis'] = True
+        # Check if it is direct
         if event.has_key('is_direct'):
             direct = event['is_direct']
             epistemics['direct'] = direct
+        # Get the section of the paper it comes from
+        section = self._get_section(event)
+        epistemics['section_type'] = section
         return epistemics
+
+
+    _section_list = ['title', 'abstract', 'introduction', 'background',
+                     'results', 'methods', 'discussion', 'conclusion',
+                     'supplementary', 'figure']
+
+    def _get_section(self, event):
+        """Get the section of the paper that the event is from."""
+        sentence_id = event.get('sentence')
+        section = None
+        if sentence_id:
+            qstr = "$.sentences.frames[(@.frame_id is \'%s\')]" % sentence_id
+            res = self.tree.execute(qstr)
+            if res:
+                sentence_frame = list(res)[0]
+                passage_id = sentence_frame.get('passage')
+                if passage_id:
+                    qstr = "$.sentences.frames[(@.frame_id is \'%s\')]" % \
+                            passage_id
+                    res = self.tree.execute(qstr)
+                    if res:
+                        passage_frame = list(res)[0]
+                        section = passage_frame.get('section-id')
+        # If the section is in the standard list, return as is
+        if section in self._section_list:
+            return section
+        # Next, handle a few special cases that come up in practice
+        elif section.startswith('fig'):
+            return 'figure'
+        elif section.startswith('supm'):
+            return 'supplementary'
+        elif section == 'article-title':
+            return 'title'
+        elif section in ['subjects|methods', 'methods|subjects']:
+            return 'methods'
+        elif section == 'conclusions':
+            return 'conclusion'
+        elif section == 'intro':
+            return 'introduction'
+        else:
+            return None
 
     @staticmethod
     def _get_valid_name(txt):
-        '''
-        Produce valid agent name from string.
-        '''
+        """Produce valid agent name from string."""
         name = ''.join(ch if ch.isalnum() else '_' for ch in txt)
         if name and name[0].isdigit():
             name = 'p' + name
