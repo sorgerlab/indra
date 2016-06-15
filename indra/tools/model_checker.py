@@ -4,6 +4,8 @@ from pysb import Observable
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from copy import deepcopy
+import networkx
+import itertools
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
@@ -33,12 +35,23 @@ class ModelChecker(object):
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
         sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
-        # Make a copy of the model and add the observable for the modified
-        # substrate
-        new_model = deepcopy(self.model)
-        sub_obs = Observable('target', sub_mp, _export=False)
-        new_model.add_component(sub_obs)
-        return True
+        # Generate the influence map
+        # Find rules in the model corresponding to the inputs and outputs
+        input_rules = match_lhs(enz_mp, self.model.rules)
+        output_rules = match_rhs(sub_mp, self.model.rules)
+        input_rule_names = [r.name for r in input_rules]
+        output_rule_names = [r.name for r in output_rules]
+        if input_rule_names and output_rule_names:
+            # Generate the influence map
+            im = kappa.influence_map(self.model)
+            for input_rule, output_rule in itertools.product(input_rule_names,
+                                                             output_rule_names):
+                sp = networkx.shortest_path(im, input_rule, output_rule)
+                if sp:
+                    print sp
+                    return True
+        else:
+            return False
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
     new_mod = ModCondition(mod_type, residue, position)
