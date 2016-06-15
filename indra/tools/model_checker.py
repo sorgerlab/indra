@@ -1,3 +1,4 @@
+from pysb.core import as_complex_pattern
 from pysb import kappa
 from pysb import Observable
 from indra.statements import *
@@ -63,6 +64,8 @@ def cp_embeds_into(cp1, cp2):
     # If the thing we're matching to is just a monomer pattern, that makes
     # things easier--we just need to find the corresponding monomer pattern
     # in cp1
+    cp1 = as_complex_pattern(cp1)
+    cp2 = as_complex_pattern(cp2)
     if len(cp2.monomer_patterns) == 1:
         mp2 = cp2.monomer_patterns[0]
         # Iterate over the monomer patterns in cp1 and see if there is one
