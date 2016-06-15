@@ -1,5 +1,6 @@
 from indra.statements import *
 from pysb import *
+from indra.tools.model_checker import ModelChecker
 
 def test_simple_phosphorylation():
     # Create the statement
@@ -7,7 +8,7 @@ def test_simple_phosphorylation():
     b = Agent('B')
     st = Phosphorylation(a, b, 'T', '185')
     # Now create the PySB model
-    Model('test_simple_phosphorylation')
+    Model()
     Monomer('A')
     Monomer('B', ['T185'], {'T185':['u', 'p']})
     Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
@@ -25,4 +26,5 @@ def test_simple_phosphorylation():
 
 if __name__ == '__main__':
     test_simple_phosphorylation()
+
 
