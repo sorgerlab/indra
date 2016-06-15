@@ -55,7 +55,16 @@ def match_lhs(cp, rules):
     for rule in rules:
         reactant_pattern = rule.rule_expression.reactant_pattern
         for rule_cp in reactant_pattern.complex_patterns:
-            if embeds_into(rule_cp, cp):
+            if cp_embeds_into(rule_cp, cp):
+                rule_matches.append(rule)
+    return rule_matches
+
+def match_rhs(cp, rules):
+    rule_matches = []
+    for rule in rules:
+        product_pattern = rule.rule_expression.product_pattern
+        for rule_cp in product_pattern.complex_patterns:
+            if cp_embeds_into(rule_cp, cp):
                 rule_matches.append(rule)
     return rule_matches
 

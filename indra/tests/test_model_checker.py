@@ -3,7 +3,7 @@ from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.tools.model_checker import ModelChecker, mp_embeds_into, \
-                                      cp_embeds_into
+                                      cp_embeds_into, match_lhs, match_rhs
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
@@ -55,14 +55,32 @@ def test_cp_embedding():
     #assert not cp_embeds_into(cp5, cp3)
     assert not cp_embeds_into(cp5, cp4)
 
-"""
 @with_model
-def test_match_rules():
-    Monomer('A')
+def test_match_lhs():
+    Monomer('A', ['other'], {'other':['u', 'p']})
     Monomer('B', ['T185'], {'T185':['u', 'p']})
     rule = Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
                 Parameter('k', 1))
-"""
+    matching_rules = match_lhs(A(), model.rules)
+    assert len(matching_rules) == 1
+    assert matching_rules[0] == rule
+    matching_rules = match_lhs(A(other='u'), model.rules)
+    assert len(matching_rules) == 0
+
+@with_model
+def test_match_rhs():
+    Monomer('A', ['other'], {'other':['u', 'p']})
+    Monomer('B', ['T185'], {'T185':['u', 'p']})
+    rule = Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
+                Parameter('k', 1))
+    matching_rules = match_rhs(B(T185='p'), model.rules)
+    assert len(matching_rules) == 1
+    assert matching_rules[0] == rule
+    matching_rules = match_rhs(B(T185='u'), model.rules)
+    assert len(matching_rules) == 0
+    matching_rules = match_rhs(B(), model.rules)
+    assert len(matching_rules) == 1
+    assert matching_rules[0] == rule
 
 @with_model
 def test_one_step_phosphorylation():
@@ -125,6 +143,5 @@ def test_two_step_phosphorylation():
 
 
 if __name__ == '__main__':
-    test_mp_embedding()
-    test_cp_embedding()
+    test_match_rhs()
 
