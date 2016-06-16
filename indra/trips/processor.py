@@ -174,6 +174,8 @@ class TripsProcessor(object):
                 factor_term_type.text not in molecule_types:
                 continue
             factor_agent = self._get_agent_by_id(factor_id, None)
+            if factor_agent is None:
+                continue
             outcome_event_type = outcome_event.find('type')
             if outcome_event_type is None:
                 continue
@@ -415,6 +417,14 @@ class TripsProcessor(object):
         dbid = term.attrib.get('dbid')
         if dbid is None:
             db_refs_dict = {}
+            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                members = term.findall('members/member')
+                dbids = []
+                for m in members:
+                    dbid = m.attrib.get('dbid')
+                    parts = dbid.split(':')
+                    dbids.append({parts[0]: parts[1]})
+                db_refs_dict = {'PFAM-DEF': dbids}
         else:
             dbids = dbid.split('|')
             db_refs_dict = dict([d.split(':') for d in dbids])
@@ -642,7 +652,9 @@ class TripsProcessor(object):
                 all_pos += pos
         else:
             site_type = site_term.find("type").text
-            site_name = site_term.find("name").text
+            site_name_tag = site_term.find("name")
+            if site_name_tag is not None:
+                site_name = site_name_tag.text
             if site_type == 'ONT::MOLECULAR-SITE':
                 residue = site_term.find('features/site/code')
                 if residue is not None:
@@ -652,7 +664,10 @@ class TripsProcessor(object):
                     pos = pos.text.upper()
             elif site_type == 'ONT::RESIDUE':
                 # Example name: TYROSINE-RESIDUE
-                residue = site_name.split('-')[0]
+                if site_name is not None:
+                    residue = site_name.split('-')[0]
+                else:
+                    residue = None
                 pos = None
             elif site_type == 'ONT::AMINO-ACID':
                 residue = site_name
@@ -714,9 +729,21 @@ class TripsProcessor(object):
         if mut is None or mut.find('type') is None:
             return None
         if mut.find('type').text == 'SUBSTITUTION':
-            pos = mut.find('pos').text
-            aa_from = mut.find('aa-from/aa/code').text
-            aa_to = mut.find('aa-to/aa/code').text
+            pos_tag = mut.find('pos')
+            if pos_tag is not None:
+                pos = pos_tag.text
+            else:
+                pos = None
+            aa_from_tag = mut.find('aa-from/aa/code')
+            if aa_from_tag is not None:
+                aa_from = aa_from_tag.text
+            else:
+                aa_from = None
+            aa_to_tag = mut.find('aa-to/aa/code')
+            if aa_to_tag is not None:
+                aa_to = aa_to_tag.text
+            else:
+                aa_to = None
             return pos, aa_from, aa_to
         else:
             return None
