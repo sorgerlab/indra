@@ -178,6 +178,7 @@ def get_participant(agent):
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
     chebi_id = agent.db_refs.get('CHEBI')
+    pfam_def_ids = agent.db_refs.get('PFAM-DEF')
     # If HGNC grounding is available, that is the first choice
     if hgnc_id:
         uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
@@ -189,6 +190,21 @@ def get_participant(agent):
         pubchem_id = chebi_client.get_pubchem_id(chebi_id)
         participant['identifier'] = 'PUBCHEM:%s' % pubchem_id
         participant['entity_type'] = 'chemical'
+    elif pfam_def_ids:
+        participant['entity_type'] = 'protein_family'
+        participant['entities'] = []
+        for pdi in pfam_def_ids:
+            # TODO: handle non-uniprot protein IDs here
+            uniprot_id = pdi.get('UP')
+            if uniprot_id:
+                entity_dict = {}
+                uniprot_mnemonic = \
+                    str(uniprot_client.get_mnemonic(uniprot_id))
+                entity_dict['entity_text'] = \
+                    uniprot_client.get_hgnc_name(uniprot_id)
+                entity_dict['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
+                entity_dict['entity_type'] = 'protein'
+                participant['entities'].append(entity_dict)
     else:
         participant['identifier'] = ''
         participant['entity_type'] = 'protein'
