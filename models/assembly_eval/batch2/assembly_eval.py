@@ -18,8 +18,12 @@ def print_stmts(stmts, file_name):
             db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
                         for a in agents if a is not None]
             db_refs_str = (', '.join(db_refs)).encode('utf-8')
-            fh.write('%s\t%s\t%s\n' %
-                     (s, db_refs_str, s.evidence[0].text.encode('utf-8')))
+            try:
+                fh.write('%s\t%s\t%s\n' %
+                        (s, db_refs_str, s.evidence[0].text.encode('utf-8')))
+            except UnicodeDecodeError:
+                fh.write('%s\t%s\t%s\n' %
+                        (s, db_refs_str, s.evidence[0].text))
 
 def is_protein_or_chemical(agent):
     # Default is True if agent is None
@@ -56,7 +60,8 @@ def is_background_knowledge(stmt):
     return any_background
 
 def run_assembly(stmts, folder, pmcid):
-    prefix = folder + '/' + pmcid
+    indexcard_prefix = folder + '/index_cards/' + pmcid
+    otherout_prefix = folder + '/other_outputs/' + pmcid
 
     # Filter for grounding
     grounded_stmts = []
@@ -78,7 +83,7 @@ def run_assembly(stmts, folder, pmcid):
     related_stmts = pa.combine_related()
     print '%d statements after combining related.' % len(related_stmts)
 
-    with open(prefix + '.pkl', 'wb') as fh:
+    with open(otherout_prefix + '.pkl', 'wb') as fh:
         pickle.dump(related_stmts, fh)
 
     flattened_evidence_stmts = flatten_evidence(related_stmts)
@@ -97,7 +102,7 @@ def run_assembly(stmts, folder, pmcid):
         ia = IndexCardAssembler([st])
         ia.make_model()
         if ia.cards:
-            ia.save_model(prefix + '-%d.json' % card_counter)
+            ia.save_model(indexcard_prefix + '-%d.json' % card_counter)
             card_counter += 1
             top_stmts.append(st)
             if card_counter > card_lim:
@@ -110,10 +115,10 @@ def run_assembly(stmts, folder, pmcid):
 
     # Print the statement graph
     graph = render_stmt_graph(related_stmts)
-    graph.draw(prefix + '_graph.pdf', prog='dot')
+    graph.draw(otherout_prefix + '_graph.pdf', prog='dot')
     # Print statement diagnostics
-    print_stmts(pa.stmts, prefix + '_statements.tsv')
-    print_stmts(related_stmts, prefix + '_related_statements.tsv')
+    print_stmts(pa.stmts, otherout_prefix + '_statements.tsv')
+    print_stmts(related_stmts, otherout_prefix + '_related_statements.tsv')
 
     pya = PysbAssembler()
     pya.add_statements(related_stmts)

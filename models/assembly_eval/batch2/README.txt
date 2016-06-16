@@ -10,8 +10,11 @@ Output folders
 - combined/ - this folder contains the output of assembly based on combined parser outputs
 
 Output files
-- PMC*-*.json - Ranked list of generated index cards
-- PMC*_statements.tsv - A tab separated spreadsheet of all INDRA Statements extracted
-- PMC*_related_statements.tsv - A tab separated spreadsheet of all top-level INDRA Statements after
-                                running assembly
-- PMC*_graph.pdf - A graph showing hierarchical relationships between Statements (duplicates not shown)
+- index_cards/PMC*-*.json - Ranked list of generated index cards
+- other_outputs/PMC*_statements.tsv - A tab separated spreadsheet of all INDRA
+                                      Statements extracted
+- other_outputs/PMC*_related_statements.tsv - A tab separated spreadsheet of 
+                                              all top-level INDRA Statements 
+                                              after running assembly
+- other_outputs/PMC*_graph.pdf - A graph showing hierarchical relationships 
+                                 between Statements (duplicates not shown)
