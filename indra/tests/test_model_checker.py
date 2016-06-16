@@ -1,14 +1,17 @@
+import pickle
 from indra.statements import *
 from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.tools.model_checker import ModelChecker, mp_embeds_into, \
-                                      cp_embeds_into, match_lhs, match_rhs
+                                      cp_embeds_into, match_lhs, match_rhs, \
+                                      positive_path
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
 from pysb.testing import with_model
+import pygraphviz as pgv
 
 @with_model
 def test_mp_embedding():
@@ -173,7 +176,34 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     assert results[0][1] == False
 
+def test_ras_220_network():
+    file_path = os.path.dirname(os.path.abspath(__file__))
+    ras_220_results_path = os.path.join('../../models/ras_220_genes'
+                                        '/ras_genes_results.pkl')
+    with open(ras_220_results_path) as f:
+        results = pickle.load(f)
+    ras220_stmts = results['related2']
+    # Build a PySB model from the Ras 220 statements
+    pa = PysbAssembler()
+    pa.add_statements(ras220_stmts)
+    pa.make_model(policies='one_step')
+    # Now create an indirect statement to check the model against
+    braf = Agent('BRAF')
+    dusp6 = Agent('DUSP6')
+    stmt = Phosphorylation(braf, dusp6, 'S', '159')
+    # Check model
+    mc = ModelChecker(pa.model, [stmt])
+    checks = mc.check_model()
+    print checks
+
+def test_path_polarity():
+    im = pgv.AGraph('im_polarity.dot')
+    path1 = ['BRAF_phospho_MAPK1_T185_1', 'MAPK1_phospho_DUSP6_S159_1']
+    path2 = ['BRAF_phospho_MAPK1_T185_1', 'BRAF_phospho_MAPK1_T185_3',
+             'MAPK1_phospho_DUSP6_S159_1']
+    assert positive_path(im, path1)
+    assert not positive_path(im, path2)
 
 if __name__ == '__main__':
-    test_pysb_assembler_phospho_policies()
+    test_path_polarity()
 

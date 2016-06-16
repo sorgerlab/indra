@@ -6,6 +6,10 @@ from indra.assemblers import pysb_assembler as pa
 from copy import deepcopy
 import networkx
 import itertools
+import logging
+import numpy as np
+
+logger = logging.getLogger('model_checker')
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
@@ -13,6 +17,17 @@ class ModelChecker(object):
     def __init__(self, model, statements):
         self.model = model
         self.statements = statements
+        self._im = None
+
+    def get_im(self):
+        if self._im:
+            return self._im
+        if not self.model:
+            raise Exception("Cannot get influence map if there is no model.")
+        else:
+            self._im = kappa.influence_map(self.model)
+            self._im.is_multigraph = lambda: False
+            return self._im
 
     def check_model(self):
         results = []
@@ -41,15 +56,30 @@ class ModelChecker(object):
         output_rules = match_rhs(sub_mp, self.model.rules)
         input_rule_names = [r.name for r in input_rules]
         output_rule_names = [r.name for r in output_rules]
+        print input_rules
+        print output_rules
         if input_rule_names and output_rule_names:
             # Generate the influence map
-            im = kappa.influence_map(self.model)
             for input_rule, output_rule in itertools.product(input_rule_names,
                                                              output_rule_names):
-                sp = networkx.shortest_path(im, input_rule, output_rule)
-                if sp:
-                    print sp
-                    return True
+                try:
+                    logger.info('Looking for path between %s and %s' %
+                                (input_rule, output_rule))
+                    sp_gen = networkx.shortest_simple_paths(self.get_im(),
+                                                       input_rule,
+                                                       output_rule)
+                    # Iterate over paths until we find one with the desired
+                    # polarity
+                    for path_ix, sp in enumerate(sp_gen):
+                        logger.info('Found simple path %s: %s' %
+                                    (path_ix, str(sp)))
+                        pol = path_polarity(self.get_im(), sp)
+                        logger.info('Path %s has polarity %s' %
+                                    (str(sp), pol))
+                except networkx.NetworkXNoPath as nopath:
+                    logger.info('No path found between %s and %s' %
+                                (input_rule, output_rule))
+            return False
         else:
             return False
 
@@ -108,3 +138,25 @@ def mp_embeds_into(mp1, mp2):
             return False
     return True
 
+def positive_path(im, path):
+    # This doesn't address the effect of the rules themselves on the
+    # observables of interest--just the effects of the rules on each other
+    if len(path) == 1:
+        return True
+    edge_polarities = []
+    for rule_ix in range(len(path) - 1):
+        from_rule = path[rule_ix]
+        to_rule = path[rule_ix + 1]
+        edge = im.get_edge(from_rule, to_rule)
+        if edge.attr.get('color') is None:
+            raise Exception('No color attribute for edge.')
+        elif edge.attr['color'] == 'green':
+            edge_polarities.append(1)
+        elif edge.attr['color'] == 'red':
+            edge_polarities.append(-1)
+        else:
+            raise Exception('Unexpected edge color: %s' % edge.attr['color'])
+    # Compute and return the overall path polarity
+    path_polarity = np.prod(edge_polarities)
+    assert path_polarity == 1 or path_polarity == -1
+    return True if path_polarity == 1 else False
