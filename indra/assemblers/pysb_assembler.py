@@ -59,7 +59,11 @@ class _BaseAgentSet(object):
 
         # Handle mutation conditions
         for mc in agent.mutations:
-            mut_site_name = mc.residue_from + mc.position
+            if mc.residue_from is None:
+                res_from = 'X'
+            else:
+                res_from = mc.residue_from
+            mut_site_name = res_from + mc.position
             base_agent.create_site(mut_site_name, states=['WT'])
             if mc.residue_to is not None:
                 base_agent.add_site_states(mut_site_name, [mc.residue_to])
@@ -228,7 +232,11 @@ def get_agent_rule_str(agent):
             mstr += mod.position
         rule_str_list.append('%s' % mstr)
     for mut in agent.mutations:
-        mstr = mut.residue_from + mut.position
+        if mut.residue_from is None:
+            res_from = 'X'
+        else:
+            res_from = mut.residue_from
+        mstr = res_from + mut.position
         if mut.residue_to is not None:
             mstr += mut.residue_to
         rule_str_list.append(mstr)
@@ -330,7 +338,11 @@ def get_site_pattern(agent):
 
     # Handle mutations
     for mc in agent.mutations:
-        mut_site_name = mc.residue_from + mc.position
+        if mc.residue_from is None:
+            res_from = 'X'
+        else:
+            res_from = mc.residue_from
+        mut_site_name = res_from + mc.position
         mut_site_state = mc.residue_to
         pattern[mut_site_name] = mut_site_state
 
