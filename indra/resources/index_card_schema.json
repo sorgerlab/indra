@@ -348,8 +348,7 @@
                     { "$ref": "#/definitions/binding_feature" },
                     { "$ref": "#/definitions/location_feature" }
                 ]
-            },
-            "minItems": 1
+            }
         },
         "protein": {
             "allOf": [
@@ -373,8 +372,7 @@
                         "entity_type": { "enum": ["protein_family"] },
                         "entity_text": {
                             "type": "array",
-                            "items": { "type": "string" },
-                            "minItems": 1
+                            "items": { "type": "string" }
                         },
                         "features": { "$ref": "#/definitions/protein_features" },
                         "not_features": { "$ref": "#/definitions/protein_features" },
@@ -384,10 +382,10 @@
                                 "oneOf": [
                                     { "$ref": "#/definitions/protein" }
                                 ]
-                            },
-                            "minItems": 2
+                            }
                         }
-                    }
+                    },
+                    "required": ["entities"]
                 }
             ]
         },
@@ -399,8 +397,7 @@
                         "entity_type": { "enum": ["chemical_family"] },
                         "entity_text": {
                             "type": "array",
-                            "items": { "type": "string" },
-                            "minItems": 1
+                            "items": { "type": "string" }
                         },
                         "entities": {
                             "type": "array",
@@ -408,10 +405,10 @@
                                 "oneOf": [
                                     { "$ref": "#/definitions/chemical" }
                                 ]
-                            },
-                            "minItems": 2
+                            }
                         }
-                    }
+                    },
+                    "required": ["entities"]
                 }
             ]
         }        
