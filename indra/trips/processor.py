@@ -724,9 +724,21 @@ class TripsProcessor(object):
         if mut is None or mut.find('type') is None:
             return None
         if mut.find('type').text == 'SUBSTITUTION':
-            pos = mut.find('pos').text
-            aa_from = mut.find('aa-from/aa/code').text
-            aa_to = mut.find('aa-to/aa/code').text
+            pos_tag = mut.find('pos')
+            if pos_tag is not None:
+                pos = pos_tag.text
+            else:
+                pos = None
+            aa_from_tag = mut.find('aa-from/aa/code')
+            if aa_from_tag is not None:
+                aa_from = aa_from_tag.text
+            else:
+                aa_from = None
+            aa_to_tag = mut.find('aa-to/aa/code')
+            if aa_to_tag is not None:
+                aa_to = aa_to_tag.text
+            else:
+                aa_to = None
             return pos, aa_from, aa_to
         else:
             return None
