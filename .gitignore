@@ -83,3 +83,7 @@ large_corpus.rdf
 .coverage
 cover
 setuptools*.zip
+
+indra/data/ras_pathway_proteins.csv
+indra/literature/elsevier_api_key
+indra/literature/cr_clickthrough_key
