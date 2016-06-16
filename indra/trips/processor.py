@@ -430,6 +430,11 @@ class TripsProcessor(object):
             dbids = dbid.split('|')
             db_refs_dict = dict([d.split(':') for d in dbids])
 
+        agent_text_tag = term.find('name')
+        if agent_text_tag is not None:
+            agent_text = agent_text_tag.text
+            db_refs_dict['TEXT'] = agent_text
+
         # If the entity is a complex
         if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
             complex_id = entity_id
