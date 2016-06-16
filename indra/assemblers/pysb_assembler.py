@@ -880,7 +880,7 @@ def phosphorylation_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
-    enz.create_site(active_site_names['Kinase'])
+    enz.create_site(active_site_names['kinase'])
     sub = agent_set.get_create_base_agent(stmt.sub)
     # See NOTE in monomers_one_step, below
     site_name = get_mod_site_name('phosphorylation',
@@ -955,8 +955,8 @@ def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
 
-    rule_name = '%s_phospho_%s_%s' % (rule_enz_str, rule_sub_str, site)
-    active_site = active_site_names['Kinase']
+    rule_name = '%s_phospho_%s_%s' % (rule_enz_str, rule_sub_str, phos_site)
+    active_site = active_site_names['kinase']
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
     lhs = enz(**{active_site: None}) + sub(**{phos_site: None})
