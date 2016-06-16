@@ -188,13 +188,44 @@ def test_ras_220_network():
     pa.add_statements(ras220_stmts)
     pa.make_model(policies='one_step')
     # Now create an indirect statement to check the model against
+    egfr = Agent('EGFR')
     braf = Agent('BRAF')
     dusp6 = Agent('DUSP6')
-    stmt = Phosphorylation(braf, dusp6, 'S', '159')
+    stmt1 = Phosphorylation(braf, dusp6, 'S', '159')
+    stmt2 = Phosphorylation(egfr, dusp6, 'S', '159')
     # Check model
-    mc = ModelChecker(pa.model, [stmt])
+    mc = ModelChecker(pa.model, [stmt1, stmt2])
+    checks = mc.check_model()
+    assert len(checks) == 2
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt1
+    assert checks[0][1] == True
+    assert checks[1][0] == stmt2
+    assert checks[1][1] == False
+    # Now try again, with a two_step policy
+    """
+    # Skip this, building the influence map takes a very long time
+    pa.make_model(policies='two_step')
+    mc = ModelChecker(pa.model, [stmt1, stmt2])
     checks = mc.check_model()
     print checks
+    assert len(checks) == 2
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt1
+    assert checks[0][1] == True
+    assert checks[1][0] == stmt2
+    assert checks[1][1] == False
+    """
+    # Now with an interactions_only policy
+    pa.make_model(policies='interactions_only')
+    mc = ModelChecker(pa.model, [stmt1, stmt2])
+    checks = mc.check_model()
+    assert len(checks) == 2
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt1
+    assert checks[0][1] == False
+    assert checks[1][0] == stmt2
+    assert checks[1][1] == False
 
 def test_path_polarity():
     im = pgv.AGraph('im_polarity.dot')
@@ -206,4 +237,4 @@ def test_path_polarity():
 
 if __name__ == '__main__':
     test_path_polarity()
-
+    test_ras_220_network()

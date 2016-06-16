@@ -56,29 +56,23 @@ class ModelChecker(object):
         output_rules = match_rhs(sub_mp, self.model.rules)
         input_rule_names = [r.name for r in input_rules]
         output_rule_names = [r.name for r in output_rules]
-        print input_rules
-        print output_rules
         if input_rule_names and output_rule_names:
             # Generate the influence map
             for input_rule, output_rule in itertools.product(input_rule_names,
                                                              output_rule_names):
                 try:
-                    logger.info('Looking for path between %s and %s' %
-                                (input_rule, output_rule))
                     sp_gen = networkx.shortest_simple_paths(self.get_im(),
                                                        input_rule,
                                                        output_rule)
-                    # Iterate over paths until we find one with the desired
+                    # Iterate over paths until we find one with positive
                     # polarity
                     for path_ix, sp in enumerate(sp_gen):
-                        logger.info('Found simple path %s: %s' %
-                                    (path_ix, str(sp)))
-                        pol = path_polarity(self.get_im(), sp)
-                        logger.info('Path %s has polarity %s' %
-                                    (str(sp), pol))
+                        if positive_path(self.get_im(), sp):
+                            logger.info('Found simple positive path %s: %s' %
+                                        (path_ix, str(sp)))
+                            return True
                 except networkx.NetworkXNoPath as nopath:
-                    logger.info('No path found between %s and %s' %
-                                (input_rule, output_rule))
+                    pass
             return False
         else:
             return False

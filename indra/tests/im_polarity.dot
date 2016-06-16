@@ -1,0 +1,16 @@
+digraph G {
+	node [fillcolor=palegreen3,
+		shape=ellipse,
+		style=filled
+	];
+	edge [arrowhead=tee,
+		color=red
+	];
+	BRAF_phospho_MAPK1_T185_1	 [fillcolor=lightskyblue, shape=box];
+	BRAF_phospho_MAPK1_T185_3	 [fillcolor=lightskyblue, shape=box];
+	BRAF_phospho_MAPK1_T185_1 -> BRAF_phospho_MAPK1_T185_3	 [label="[1->1]"];
+	MAPK1_phospho_DUSP6_S159_1	 [fillcolor=lightskyblue, shape=box];
+	BRAF_phospho_MAPK1_T185_1 -> MAPK1_phospho_DUSP6_S159_1	 [arrowhead=normal, color=green, label="[1->0]"];
+	BRAF_phospho_MAPK1_T185_3 -> BRAF_phospho_MAPK1_T185_1	 [label="[1->1]"];
+	BRAF_phospho_MAPK1_T185_3 -> MAPK1_phospho_DUSP6_S159_1	 [arrowhead=normal, color=green, label="[1->0]"];
+}
