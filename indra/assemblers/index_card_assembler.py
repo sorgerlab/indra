@@ -173,8 +173,11 @@ def get_participant(agent):
             }
         return participant
     # The Agent is not missing
+    text_name = agent.db_refs.get('TEXT')
+    if text_name is None:
+        text_name = agent.name
     participant = {}
-    participant['entity_text'] = [agent.name]
+    participant['entity_text'] = [text_name]
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
     chebi_id = agent.db_refs.get('CHEBI')
