@@ -652,7 +652,9 @@ class TripsProcessor(object):
                 all_pos += pos
         else:
             site_type = site_term.find("type").text
-            site_name = site_term.find("name").text
+            site_name_tag = site_term.find("name")
+            if site_name_tag is not None:
+                site_name = site_name_tag.text
             if site_type == 'ONT::MOLECULAR-SITE':
                 residue = site_term.find('features/site/code')
                 if residue is not None:
@@ -662,7 +664,10 @@ class TripsProcessor(object):
                     pos = pos.text.upper()
             elif site_type == 'ONT::RESIDUE':
                 # Example name: TYROSINE-RESIDUE
-                residue = site_name.split('-')[0]
+                if site_name is not None:
+                    residue = site_name.split('-')[0]
+                else:
+                    residue = None
                 pos = None
             elif site_type == 'ONT::AMINO-ACID':
                 residue = site_name
