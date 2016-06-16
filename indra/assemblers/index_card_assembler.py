@@ -201,7 +201,7 @@ def get_participant(agent):
                 uniprot_mnemonic = \
                     str(uniprot_client.get_mnemonic(uniprot_id))
                 entity_dict['entity_text'] = \
-                    uniprot_client.get_hgnc_name(uniprot_id)
+                    [uniprot_client.get_hgnc_name(uniprot_id)]
                 entity_dict['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
                 entity_dict['entity_type'] = 'protein'
                 participant['entities'].append(entity_dict)
@@ -243,11 +243,12 @@ def get_participant(agent):
             not_features.append(feature)
     # Mutation features
     for mc in agent.mutations:
-        feature = {
-            'feature_type': 'mutation_feature',
-            'from_aa': mc.residue_from,
-            'to_aa': mc.residue_to
-            }
+        feature = {}
+        feature['feature_type'] = 'mutation_feature'
+        if mc.residue_from is not None:
+            feature['from_aa'] = mc.residue_from
+        if mc.residue_to is not None:
+            feature['to_aa'] = mc.residue_to
         if mc.position is not None:
             pos = int(mc.position)
             feature['location'] = pos
@@ -267,7 +268,7 @@ def get_pmc_id(stmt):
                 pmc_id = 'PMC' + pmc_id
         else:
             pmc_id = ''
-    return pmc_id
+    return str(pmc_id)
 
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence]
