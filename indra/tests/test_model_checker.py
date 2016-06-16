@@ -4,6 +4,7 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.tools.model_checker import ModelChecker, mp_embeds_into, \
                                       cp_embeds_into, match_lhs, match_rhs
+from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
@@ -141,7 +142,38 @@ def test_two_step_phosphorylation():
     assert results[0][0] == st
     assert results[0][1] == True
 
+def test_pysb_assembler_phospho_policies():
+    a = Agent('A')
+    b = Agent('B')
+    st = Phosphorylation(a, b, 'T', '185')
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    # Try two step
+    pa.make_model(policies='two_step')
+    mc = ModelChecker(pa.model, [st])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == True
+    # Try one step
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [st])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == True
+    # Try interactions_only
+    pa.make_model(policies='interactions_only')
+    mc = ModelChecker(pa.model, [st])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == False
+
 
 if __name__ == '__main__':
-    test_match_rhs()
+    test_pysb_assembler_phospho_policies()
 
