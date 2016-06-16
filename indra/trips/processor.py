@@ -97,6 +97,7 @@ class TripsProcessor(object):
         inact_events = self.tree.findall("EVENT/[type='ONT::DEACTIVATE']")
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
+            event_id = event.attrib['id']
             sentence = self._get_evidence_text(event)
             sec = self._get_section(event)
             epi = {'section_type': sec}
@@ -113,7 +114,7 @@ class TripsProcessor(object):
                 logger.debug(
                     'Skipping activation with missing activator agent')
                 continue
-            activator_agent = Agent(agent_name)
+            activator_agent = self._get_agent_by_id(agent_id, event_id)
 
             # Get the activated agent in the event
             affected = event.find(".//*[@role=':AFFECTED']")
@@ -128,7 +129,7 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
-            affected_agent = Agent(affected_name)
+            affected_agent = self._get_agent_by_id(agent_id, event_id)
 
             if event.find('type').text == 'ONT::ACTIVATE':
                 is_activation = True
