@@ -174,6 +174,8 @@ class TripsProcessor(object):
                 factor_term_type.text not in molecule_types:
                 continue
             factor_agent = self._get_agent_by_id(factor_id, None)
+            if factor_agent is None:
+                continue
             outcome_event_type = outcome_event.find('type')
             if outcome_event_type is None:
                 continue
@@ -415,6 +417,14 @@ class TripsProcessor(object):
         dbid = term.attrib.get('dbid')
         if dbid is None:
             db_refs_dict = {}
+            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                members = term.findall('members/member')
+                dbids = []
+                for m in members:
+                    dbid = m.attrib.get('dbid')
+                    parts = dbid.split(':')
+                    dbids.append({parts[0]: parts[1]})
+                db_refs_dict = {'PFAM-DEF': dbids}
         else:
             dbids = dbid.split('|')
             db_refs_dict = dict([d.split(':') for d in dbids])
