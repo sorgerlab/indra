@@ -53,13 +53,13 @@ class ModelChecker(object):
         # Generate the influence map
         # Find rules in the model corresponding to the inputs and outputs
         input_rules = match_lhs(enz_mp, self.model.rules)
-        output_rules = match_rhs(sub_mp, self.model.rules)
+        target_prod_rules = find_production_rules(sub_mp, self.model.rules)
         input_rule_names = [r.name for r in input_rules]
-        output_rule_names = [r.name for r in output_rules]
-        if input_rule_names and output_rule_names:
+        target_prod_rule_names = [r.name for r in target_prod_rules]
+        if input_rule_names and target_prod_rule_names:
             # Generate the influence map
             for input_rule, output_rule in itertools.product(input_rule_names,
-                                                             output_rule_names):
+                                                      target_prod_rule_names):
                 try:
                     sp_gen = networkx.shortest_simple_paths(self.get_im(),
                                                        input_rule,
@@ -104,6 +104,16 @@ def match_rhs(cp, rules):
             if cp_embeds_into(rule_cp, cp):
                 rule_matches.append(rule)
     return rule_matches
+
+def find_production_rules(cp, rules):
+    # Find rules where the CP matches the left hand side
+    lhs_rule_set = set(match_lhs(cp, rules))
+    # Now find rules where the CP matches the right hand side
+    rhs_rule_set = set(match_rhs(cp, rules))
+    # Production rules are rules where there is a match on the right hand
+    # side but not on the left hand side
+    prod_rules = list(rhs_rule_set.difference(lhs_rule_set))
+    return prod_rules
 
 def cp_embeds_into(cp1, cp2):
     # Check that any state in cp2 is matched in cp2

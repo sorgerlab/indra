@@ -235,6 +235,48 @@ def test_path_polarity():
     assert positive_path(im, path1)
     assert not positive_path(im, path2)
 
+@with_model
+def test_consumption_rule():
+    pvd = Agent('Pervanadate')
+    erk = Agent('MAPK1')
+    stmt = Phosphorylation(pvd, erk, 'T', '185')
+    # Now make the model
+    Monomer('Pervanadate', ['b'])
+    Monomer('DUSP', ['b'])
+    Monomer('MAPK1', ['b', 'T185'], {'T185': ['u', 'p']})
+    Rule('Pvd_binds_DUSP',
+         Pervanadate(b=None) + DUSP(b=None) <>
+         Pervanadate(b=1) % DUSP(b=1),
+         Parameter('k1', 1), Parameter('k2', 1))
+    Rule('DUSP_binds_MAPK1_phosT185',
+         DUSP(b=None) + MAPK1(b=None, T185='p') <>
+         DUSP(b=1) % MAPK1(b=1, T185='p'),
+         Parameter('k3', 1), Parameter('k4', 1))
+    Rule('DUSP_dephos_MAPK1_at_T185',
+         DUSP(b=1) % MAPK1(b=1, T185='p') >>
+         DUSP(b=None) % MAPK1(b=None, T185='u'),
+         Parameter('k5', 1))
+    # Now check the model against the statement
+    mc = ModelChecker(model, [stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt
+    assert checks[0][1] == False
+    im = kappa.influence_map(model)
+    im.draw('dusp.pdf', prog='dot')
+
+# TODO
+# Need to handle case where Phosphorylation site is not specified by
+# statement, but is actually handled in the model (i.e., need to know
+# that a particular site name and state corresponds to a phosphorylation.
+# Points to need to have an additional data structure annotating agents,
+# sites, states.
+#
+# Need to handle embeddings of complex patterns where sites can have both
+# modification state and bonds
+
 if __name__ == '__main__':
-    test_path_polarity()
-    test_ras_220_network()
+    #test_path_polarity()
+    #test_consumption_rule()
+    test_one_step_phosphorylation()
