@@ -245,13 +245,21 @@ def test_consumption_rule():
     Monomer('DUSP', ['b'])
     Monomer('MAPK1', ['b', 'T185'], {'T185': ['u', 'p']})
     Rule('Pvd_binds_DUSP',
-         Pervanadate(b=None) + DUSP(b=None) <>
+         Pervanadate(b=None) + DUSP(b=None) >>
          Pervanadate(b=1) % DUSP(b=1),
-         Parameter('k1', 1), Parameter('k2', 1))
+         Parameter('k1', 1))
+    Rule('Pvd_binds_DUSP_rev',
+         Pervanadate(b=1) % DUSP(b=1) >>
+         Pervanadate(b=None) + DUSP(b=None),
+         Parameter('k2', 1))
     Rule('DUSP_binds_MAPK1_phosT185',
-         DUSP(b=None) + MAPK1(b=None, T185='p') <>
+         DUSP(b=None) + MAPK1(b=None, T185='p') >>
          DUSP(b=1) % MAPK1(b=1, T185='p'),
-         Parameter('k3', 1), Parameter('k4', 1))
+         Parameter('k3', 1))
+    Rule('DUSP_binds_MAPK1_phosT185_rev',
+         DUSP(b=1) % MAPK1(b=1, T185='p') >>
+         DUSP(b=None) + MAPK1(b=None, T185='p'),
+         Parameter('k4', 1))
     Rule('DUSP_dephos_MAPK1_at_T185',
          DUSP(b=1) % MAPK1(b=1, T185='p') >>
          DUSP(b=None) % MAPK1(b=None, T185='u'),
@@ -262,7 +270,7 @@ def test_consumption_rule():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == False
+    assert checks[0][1] == True
     im = kappa.influence_map(model)
     im.draw('dusp.pdf', prog='dot')
 
@@ -275,8 +283,10 @@ def test_consumption_rule():
 #
 # Need to handle embeddings of complex patterns where sites can have both
 # modification state and bonds
+#
+# Need to handle reversible rules!
 
 if __name__ == '__main__':
+    test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
-    test_one_step_phosphorylation()

@@ -46,6 +46,7 @@ class ModelChecker(object):
         # Identify the observable we're looking for in the model, which
         # may not exist!
         # The observable is the modified form of the substrate
+        logger.info('Checking stmt: %s' % stmt)
         enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
@@ -53,27 +54,43 @@ class ModelChecker(object):
         # Generate the influence map
         # Find rules in the model corresponding to the inputs and outputs
         input_rules = match_lhs(enz_mp, self.model.rules)
+        logger.info('Found %s input rules matching %s' %
+                    (len(input_rules), str(enz_mp)))
+        # Get the production and consumption rules for the target
         target_prod_rules = find_production_rules(sub_mp, self.model.rules)
-        input_rule_names = [r.name for r in input_rules]
-        target_prod_rule_names = [r.name for r in target_prod_rules]
-        if input_rule_names and target_prod_rule_names:
+        target_cons_rules = find_consumption_rules(sub_mp, self.model.rules)
+        # The final list contains a list of rules along with their "polarities"
+        # (production = 1, consumption = -1)
+        target_rules = zip(target_prod_rules, [1]*len(target_prod_rules)) + \
+                       zip(target_cons_rules, [-1]*len(target_cons_rules))
+        logger.info('Found %s target rules matching %s' %
+                    (len(target_rules), str(sub_mp)))
+        if input_rules and target_rules:
             # Generate the influence map
-            for input_rule, output_rule in itertools.product(input_rule_names,
-                                                      target_prod_rule_names):
+            paths = []
+            for input_rule, target_rule_info in \
+                            itertools.product(input_rules, target_rules):
+                (target_rule, rule_polarity) = target_rule_info
                 try:
                     sp_gen = networkx.shortest_simple_paths(self.get_im(),
-                                                       input_rule,
-                                                       output_rule)
+                                                       input_rule.name,
+                                                       target_rule.name)
                     # Iterate over paths until we find one with positive
                     # polarity
                     for path_ix, sp in enumerate(sp_gen):
-                        if positive_path(self.get_im(), sp):
-                            logger.info('Found simple positive path %s: %s' %
+                        if positive_path(self.get_im(), sp, rule_polarity):
+                            logger.info('Found non-repeating path %s: %s' %
                                         (path_ix, str(sp)))
-                            return True
+                            logger.info('Rule polarity of target: %s' %
+                                        rule_polarity)
+                            paths.append(sp)
+                            break
                 except networkx.NetworkXNoPath as nopath:
                     pass
-            return False
+            if paths:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -94,6 +111,7 @@ def match_lhs(cp, rules):
         for rule_cp in reactant_pattern.complex_patterns:
             if cp_embeds_into(rule_cp, cp):
                 rule_matches.append(rule)
+                break
     return rule_matches
 
 def match_rhs(cp, rules):
@@ -103,6 +121,7 @@ def match_rhs(cp, rules):
         for rule_cp in product_pattern.complex_patterns:
             if cp_embeds_into(rule_cp, cp):
                 rule_matches.append(rule)
+                break
     return rule_matches
 
 def find_production_rules(cp, rules):
@@ -114,6 +133,16 @@ def find_production_rules(cp, rules):
     # side but not on the left hand side
     prod_rules = list(rhs_rule_set.difference(lhs_rule_set))
     return prod_rules
+
+def find_consumption_rules(cp, rules):
+    # Find rules where the CP matches the left hand side
+    lhs_rule_set = set(match_lhs(cp, rules))
+    # Now find rules where the CP matches the right hand side
+    rhs_rule_set = set(match_rhs(cp, rules))
+    # Consumption rules are rules where there is a match on the left hand
+    # side but not on the right hand side
+    cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
+    return cons_rules
 
 def cp_embeds_into(cp1, cp2):
     # Check that any state in cp2 is matched in cp2
@@ -142,11 +171,13 @@ def mp_embeds_into(mp1, mp2):
             return False
     return True
 
-def positive_path(im, path):
+def positive_path(im, path, rule_polarity):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
+    if rule_polarity not in (1, -1):
+        raise ValueError('rule_polarity must be 1 or -1.')
     if len(path) == 1:
-        return True
+        return True if rule_polarity == 1 else False
     edge_polarities = []
     for rule_ix in range(len(path) - 1):
         from_rule = path[rule_ix]
@@ -161,6 +192,8 @@ def positive_path(im, path):
         else:
             raise Exception('Unexpected edge color: %s' % edge.attr['color'])
     # Compute and return the overall path polarity
-    path_polarity = np.prod(edge_polarities)
+    path_polarity = np.prod(edge_polarities) * rule_polarity
     assert path_polarity == 1 or path_polarity == -1
     return True if path_polarity == 1 else False
+
+
