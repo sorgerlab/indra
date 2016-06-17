@@ -232,8 +232,8 @@ def test_path_polarity():
     path1 = ['BRAF_phospho_MAPK1_T185_1', 'MAPK1_phospho_DUSP6_S159_1']
     path2 = ['BRAF_phospho_MAPK1_T185_1', 'BRAF_phospho_MAPK1_T185_3',
              'MAPK1_phospho_DUSP6_S159_1']
-    assert positive_path(im, path1)
-    assert not positive_path(im, path2)
+    assert positive_path(im, path1, 1)
+    assert not positive_path(im, path2, 1)
 
 @with_model
 def test_consumption_rule():
@@ -271,10 +271,54 @@ def test_consumption_rule():
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
     assert checks[0][1] == True
-    im = kappa.influence_map(model)
-    im.draw('dusp.pdf', prog='dot')
+
+def test_dephosphorylation():
+    dusp = Agent('DUSP6')
+    mapk1 = Agent('MAPK1')
+    stmt = Dephosphorylation(dusp, mapk1, 'T', '185')
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt
+    assert checks[0][1] == True
+
+"""
+def test_ubiquitination():
+    xiap = Agent('XIAP')
+    casp3 = Agent('CASP3')
+    stmt = Ubiquitination(xiap, casp3)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt
+    assert checks[0][1] == True
+"""
+
+
 
 # TODO
+# Need to handle complex statements. Would show that one_step approach
+# would not satisfy constraint, but two-step approach could, where the
+# Complex information was specified.
+# Can probably handle all modifications in a generic function.
+# Then need to handle: Complex, Dephosphorylation.
+# Then RasGef/RasGap?
+# Then Activation/ActiveForm.
+# Get the stuff from databases involving the canonical proteins,
+# and show that a simple model satisfies it.
+# Try to build the model using natural language?
+#
+# By tying molecules to biological processes, we can even check that
+# these types of high-level observations are satisfied.
+#
 # Need to handle case where Phosphorylation site is not specified by
 # statement, but is actually handled in the model (i.e., need to know
 # that a particular site name and state corresponds to a phosphorylation.
@@ -285,8 +329,17 @@ def test_consumption_rule():
 # modification state and bonds
 #
 # Need to handle reversible rules!
-
+#
+# Should probably build in some way of returning the paths found
+#
+# Save all the paths that a particular rule is on--then if you're wondering
+# why it's in the model, you look at all of the statements for which that
+# rule provides a path.
+#
+# When Ras machine finds a new finding, it can be checked to see if it's
+# satisfied by the model.
 if __name__ == '__main__':
-    test_ras_220_network()
+    #test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
+    test_dephosphorylation()

@@ -37,17 +37,21 @@ class ModelChecker(object):
         return results
 
     def check_statement(self, stmt):
-        if isinstance(stmt, Phosphorylation):
-            return self.check_phosphorylation(stmt)
+        if isinstance(stmt, Modification):
+            return self.check_modification(stmt)
         else:
             return False
 
-    def check_phosphorylation(self, stmt):
+    def check_modification(self, stmt):
         # Identify the observable we're looking for in the model, which
         # may not exist!
         # The observable is the modified form of the substrate
         logger.info('Checking stmt: %s' % stmt)
         enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
+        if type(stmt) in (Dephosphorylation,):
+            unmodify_stmt = True
+        else:
+            unmodify_stmt = False
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
         sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
@@ -78,7 +82,9 @@ class ModelChecker(object):
                     # Iterate over paths until we find one with positive
                     # polarity
                     for path_ix, sp in enumerate(sp_gen):
-                        if positive_path(self.get_im(), sp, rule_polarity):
+                        need_positive_path = False if unmodify_stmt else True
+                        if need_positive_path == \
+                                positive_path(self.get_im(), sp, rule_polarity):
                             logger.info('Found non-repeating path %s: %s' %
                                         (path_ix, str(sp)))
                             logger.info('Rule polarity of target: %s' %
