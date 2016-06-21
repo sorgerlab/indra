@@ -79,9 +79,9 @@ class ReachProcessor(object):
             controller = None
 
             for a in args:
-                if a['argument_label'] == 'theme':
+                if self._get_arg_type(a) == 'theme':
                     theme = a['arg']
-                elif a['argument_label'] == 'site':
+                elif self._get_arg_type(a) == 'site':
                     site = a['text']
             qstr = "$.events.frames[(@.type is 'regulation') and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
@@ -89,7 +89,7 @@ class ReachProcessor(object):
             controller = None
             for reg in reg_res:
                 for a in reg['arguments']:
-                    if a['argument_label'] == 'controller':
+                    if self._get_arg_type(a) == 'controller':
                         controller = a.get('arg')
 
             if controller is not None:
@@ -163,7 +163,7 @@ class ReachProcessor(object):
             frame_id = r['frame_id']
             args = r['arguments']
             for a in args:
-                if a['argument_label'] == 'controller':
+                if self._get_arg_type(a) == 'controller':
                     controller = a.get('arg')
                     # When the controller is not a simple entity
                     if controller is None:
@@ -177,7 +177,7 @@ class ReachProcessor(object):
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
-                if a['argument_label'] == 'controlled':
+                if self._get_arg_type(a) == 'controlled':
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)
             if r['subtype'] == 'positive-activation':
@@ -352,6 +352,14 @@ class ReachProcessor(object):
             return 'introduction'
         else:
             return None
+
+    @staticmethod
+    def _get_arg_type(arg):
+        """Return the type of the argument with backwards compatibility."""
+        if arg.get('argument_label') is not None:
+            return arg.get('argument_label')
+        else:
+            return arg.get('type')
 
     @staticmethod
     def _get_valid_name(txt):
