@@ -48,8 +48,9 @@ Statement.
 """
 
 import os
-from collections import namedtuple
 import textwrap
+import jsonpickle
+from collections import namedtuple
 
 def _read_amino_acids():
     """Read the amino acid information from a resource file."""
@@ -571,6 +572,12 @@ class Statement(object):
             return False
         return True
 
+    def to_json(self):
+        return jsonpickle.encode(self)
+
+    @staticmethod
+    def from_json(json_str):
+        return jsonpickle.decode(json_str)
 
 class Modification(Statement):
     """Generic statement representing the modification of a protein.
