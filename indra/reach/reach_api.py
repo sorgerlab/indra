@@ -3,19 +3,25 @@ import json
 import logging
 import tempfile
 import requests
-from indra.java_vm import autoclass, JavaException
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from processor import ReachProcessor
-from reach_reader import ReachReader
 
 logger = logging.getLogger('reach')
+
+try:
+    # For offline reading
+    from indra.java_vm import autoclass, JavaException
+    from reach_reader import ReachReader
+    reach_reader = ReachReader()
+    try_offline = True
+except Exception:
+    logger.error('Could not import jnius, offline reading cannot be used.')
+    try_offline = False
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
 
-# For offline reading
-reach_reader = ReachReader()
 
 def process_pmc(pmc_id, offline=False):
     """Return a ReachProcessor by processing a paper with a given PMC id.
@@ -100,6 +106,9 @@ def process_text(text, citation=None, offline=False):
         in rp.statements.
     """
     if offline:
+        if not try_offline:
+            logger.error('Offline reading is not available.')
+            return None
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
             logger.error('Cannot read offline because the REACH ApiRuler ' + \
@@ -152,6 +161,9 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         in rp.statements.
     """
     if offline:
+        if not try_offline:
+            logger.error('Offline reading is not available.')
+            return None
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
             logger.error('Cannot read offline because the REACH ApiRuler' +\
