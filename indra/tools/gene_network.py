@@ -70,7 +70,8 @@ class GeneNetwork(object):
             for gene in self.gene_list:
                 print "Getting BEL statements for gene", gene
                 bel_proc = bel_api.process_ndex_neighborhood([gene])
-                bel_statements += bel_proc.statements
+                if bel_proc is not None:
+                    bel_statements += bel_proc.statements
             # Save to pickle file if we're caching
             if self.basename is not None:
                 with open(bel_stmt_path, 'w') as f:
