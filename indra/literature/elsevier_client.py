@@ -1,7 +1,10 @@
 import os
+import logging
 import urllib, urllib2
 from functools32 import lru_cache
 import xml.etree.ElementTree as ET
+
+logger = logging.getLogger('elsevier')
 
 # THIS FILE IS NOT UNDER VERSION CONTROL
 # For more information see http://dev.elsevier.com/
@@ -13,8 +16,6 @@ try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    print 'Elsevier API key could not be found.'
-    print api_key_file
     api_key = None
 
 elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
@@ -32,13 +33,14 @@ def download_article(doi):
         doi = doi[4:]
     url = 'http://api.elsevier.com/content/article/doi/%s' % doi
     if api_key is None:
-        print 'Missing API key, could not download article.'
+        logging.error('Missing API key at %s, could not download article.' %
+                      api_key_file)
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
     try:
         res = urllib2.urlopen(url, data=urllib.urlencode(params))
     except urllib2.HTTPError:
-        print 'Cound not download article %s' % doi
+        logging.error('Cound not download article %s' % doi)
         return None
     xml = res.read()
     return xml
@@ -64,7 +66,7 @@ def get_article(doi, output='txt'):
     et = ET.fromstring(xml)
     full_text = et.find('article:originalText', elsevier_ns)
     if full_text is None:
-        print 'Could not find full text for %s.' % doi
+        logging.info('Could not find full text for %s.' % doi)
         return None
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
@@ -91,7 +93,7 @@ def get_article(doi, output='txt'):
                                      else '' for c in p.getchildren()])
                 full_txt += '\n'
     else:
-        print 'Unknown output format %s.' % output
+        logging.error('Unknown output format %s.' % output)
         return None
     return full_txt
 
@@ -104,7 +106,8 @@ def get_dois(query_str, count=100):
     """
     url = 'http://api.elsevier.com/content/search/scidir'
     if api_key is None:
-        print 'Missing API key, could not perform search.'
+        logging.error('Missing API key at %s, could not perform search.' %
+                      api_key_file)
         return None
     params = {'APIKey': api_key,
               'query': query_str,
