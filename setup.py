@@ -16,7 +16,7 @@ def main():
                     'indra.reach', 'indra.trips', 'indra.databases',
                     'indra.preassembler', 'indra.tests'],
           install_requires=['pysb', 'objectpath', 'rdflib',
-                            'functools32', 'requests', 'lxml'],
+                            'functools32', 'requests', 'lxml', 'jsonpickle'],
           tests_require=['jnius-indra', 'jsonschema', 'coverage'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp',

@@ -48,8 +48,12 @@ Statement.
 """
 
 import os
-from collections import namedtuple
+import logging
 import textwrap
+import jsonpickle
+from collections import namedtuple
+
+logger = logging.getLogger('indra_statements')
 
 def _read_amino_acids():
     """Read the amino acid information from a resource file."""
@@ -570,6 +574,29 @@ class Statement(object):
         else:
             return False
         return True
+
+    def to_json(self):
+        """Return serialized Statement as a json string."""
+        return jsonpickle.encode(self)
+
+    @classmethod
+    def from_json(cls, json_str):
+        """Return Statement object by deserializing json string."""
+        try:
+            stmt = jsonpickle.decode(json_str)
+            if isinstance(stmt, cls):
+                return stmt
+            else:
+                logger.error('Could not construct Statement from json: ' + 
+                             'Deserialized object is of type %s' % 
+                             type(stmt).__name__)
+                return None
+        except ValueError as e:
+            logger.error('Could not construct Statement from json: %s' % e)
+            return None
+        except IndexError as e:
+            logger.error('Could not construct Statement from json: %s' % e)
+            return None
 
 
 class Modification(Statement):

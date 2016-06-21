@@ -1042,6 +1042,23 @@ def test_eq_stmt():
            Activation(Agent('a'), 'activity',
                       Agent('b'), 'activity', True, evidence=[ev2])))
 
+def test_serialize():
+    ev1 = Evidence(text='1')
+    st = Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1])
+    jstr = st.to_json()
+    st2 = Phosphorylation.from_json(jstr)
+    assert(st.equals(st2))
+
+def test_serialize_errors():
+    st = Phosphorylation(Agent('a'), Agent('b'))
+    jstr = st.to_json()
+    st2 = Complex.from_json(jstr)
+    assert(st2 is None)
+    st3 = Phosphorylation.from_json('{}')
+    assert(st3 is None)
+    st4 = Phosphorylation.from_json('xyz' + jstr)
+    assert(st4 is None)
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 
