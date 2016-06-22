@@ -27,8 +27,30 @@ class HierarchyManager(object):
         """Initialize with the path to an RDF file"""
         self.graph = rdflib.Graph()
         self.graph.parse(rdf_file)
+        self.transitive_closure = {}
 
-    @functools32.lru_cache(maxsize=1000)
+    def build_transitive_closure(self):
+        """Build the transitive closure of the hierarchy.
+
+        This method constructs a dictionary which contains terms in the
+        hierarchy as keys and all the "isa+" related terms as values.
+        """
+        qstr = self.prefixes + """
+            SELECT ?x ?y WHERE {{
+                {{?x rn:isa+ ?y .}}
+                }}
+            """
+        res = self.graph.query(qstr)
+        self.transitive_closure = {}
+        for x, y in res:
+            xs = x.toPython()
+            ys = y.toPython()
+            try:
+                self.transitive_closure[xs].append(ys)
+            except KeyError:
+                self.transitive_closure[xs] = [ys]
+
+    @functools32.lru_cache(maxsize=100000)
     def find_entity(self, x):
         """Get the entity that has the specified name (or synonym).
 
@@ -76,6 +98,13 @@ class HierarchyManager(object):
         if en1 is None or en2 is None:
             return None
 
+        if self.transitive_closure:
+            ec = self.transitive_closure.get(en1)
+            if ec and en2 in ec:
+                return True
+            else:
+                return False
+
         qstr = self.prefixes + """ 
             SELECT (COUNT(*) as ?s) WHERE {{
                 <{}> rn:isa+ <{}> .
@@ -96,12 +125,15 @@ mod_file_path = os.path.join(os.path.dirname(__file__),
 act_file_path = os.path.join(os.path.dirname(__file__),
                     '../resources/activity_hierarchy.rdf')
 entity_hierarchy = HierarchyManager(entity_file_path)
+entity_hierarchy.build_transitive_closure()
 """Default entity hierarchy loaded from the RDF file at
 `resources/entity_hierarchy.rdf`."""
 modification_hierarchy = HierarchyManager(mod_file_path)
+modification_hierarchy.build_transitive_closure()
 """Default modification hierarchy loaded from the RDF file at
 `resources/modification_hierarchy.rdf`."""
 activity_hierarchy = HierarchyManager(act_file_path)
+activity_hierarchy.build_transitive_closure()
 """Default activity hierarchy loaded from the RDF file at
 `resources/activity_hierarchy.rdf`."""
 
