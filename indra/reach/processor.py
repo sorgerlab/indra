@@ -193,7 +193,11 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         if res is None:
             return None
-        entity_term = res.next()
+        try:
+            entity_term = res.next()
+        except StopIteration:
+            logger.debug(' %s is not an entity' % entity_id)
+            return None
         # This is the default name, which can be overwritten 
         # below for specific database entries
         agent_name = self._get_valid_name(entity_term['text'])
