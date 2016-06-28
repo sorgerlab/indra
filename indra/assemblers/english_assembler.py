@@ -135,10 +135,10 @@ def _assemble_activeform(stmt):
         stmt_str = subj_str + ' is phosphatase-' + is_active_str
     elif stmt.activity == 'catalytic':
         stmt_str = subj_str + ' is catalytically ' + is_active_str
-    elif stmt.activity == 'transcriptional':
-        stmt_str = subj_str + 'is transcriptionally ' + is_active_str
+    elif stmt.activity == 'transcription':
+        stmt_str = subj_str + ' is transcriptionally ' + is_active_str
     elif stmt.activity == 'gtpbound':
-        stmt_str = subj_str + 'is GTP-bound ' + is_active_str
+        stmt_str = subj_str + ' is GTP-bound ' + is_active_str
     return _make_sentence(stmt_str)
 
 def _assemble_phosphorylation(stmt):
@@ -146,7 +146,11 @@ def _assemble_phosphorylation(stmt):
     sub_str = _assemble_agent_str(stmt.sub)
     if stmt.enz is not None:
         enz_str = _assemble_agent_str(stmt.enz)
-        stmt_str = enz_str + ' phosphorylates ' + sub_str
+        if _get_is_direct(stmt):
+            phos_str = ' phosphorylates '
+        else:
+            phos_str = ' leads to the phosphorylation of '
+        stmt_str = enz_str + phos_str + sub_str
     else:
         stmt_str = sub_str + ' is phosphorylated'
 
@@ -165,7 +169,11 @@ def _assemble_dephosphorylation(stmt):
     sub_str = _assemble_agent_str(stmt.sub)
     if stmt.enz is not None:
         enz_str = _assemble_agent_str(stmt.enz)
-        stmt_str = enz_str + ' dephosphorylates ' + sub_str
+        if _get_is_direct(stmt):
+            phos_str = ' dephosphorylates '
+        else:
+            phos_str = ' leads to the dephosphorylation of '
+        stmt_str = enz_str + phos_str + sub_str
     else:
         stmt_str = sub_str + ' is dephosphorylated'
 
@@ -216,6 +224,24 @@ def _make_sentence(txt):
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'
     return txt
+
+def _get_is_direct(stmt):
+    '''Returns true if there is evidence that the statement is a direct
+    interaction. If any of the evidences associated with the statement
+    indicates a direct interatcion then we assume the interaction
+    is direct. If there is no evidence for the interaction being indirect
+    then we default to direct.'''
+    any_indirect = False
+    for ev in stmt.evidence:
+        if ev.epistemics.get('direct') is True:
+            return True
+        elif ev.epistemics.get('direct') is False:
+            # This guarantees that we have seen at least
+            # some evidence that the statement is indirect
+            any_indirect = True
+    if any_indirect:
+        return False
+    return True
 
 abbrev_prefix = {
     'phosphorylation': 'phosphorylated',
