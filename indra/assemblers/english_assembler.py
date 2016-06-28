@@ -50,6 +50,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_complex(stmt))
             elif isinstance(stmt, ist.Activation):
                 stmt_strs.append(_assemble_activation(stmt))
+            elif isinstance(stmt, ist.ActiveForm):
+                stmt_strs.append(_assemble_activeform(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         model = ' '.join(stmt_strs)
@@ -117,6 +119,27 @@ def _join_list(lst):
     else:
         s = ''
     return s
+
+def _assemble_activeform(stmt):
+    """Assemble ActiveForm statements into text."""
+    subj_str = _assemble_agent_str(stmt.agent)
+    if stmt.is_active:
+        is_active_str = 'active'
+    else:
+        is_active_str = 'inactive'
+    if stmt.activity == 'activity':
+        stmt_str = subj_str + ' is ' + is_active_str
+    elif stmt.activity == 'kinase':
+        stmt_str = subj_str + ' is kinase-' + is_active_str
+    elif stmt.activity == 'phosphatase':
+        stmt_str = subj_str + ' is phosphatase-' + is_active_str
+    elif stmt.activity == 'catalytic':
+        stmt_str = subj_str + ' is catalytically ' + is_active_str
+    elif stmt.activity == 'transcriptional':
+        stmt_str = subj_str + 'is transcriptionally ' + is_active_str
+    elif stmt.activity == 'gtpbound':
+        stmt_str = subj_str + 'is GTP-bound ' + is_active_str
+    return _make_sentence(stmt_str)
 
 def _assemble_phosphorylation(stmt):
     """Assemble Phosphorylation statements into text."""
