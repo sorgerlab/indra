@@ -5,98 +5,6 @@ from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
 
 logger = logging.getLogger('mechlinker')
 
-class BaseAgentSet(object):
-    """Container for a set of BaseAgents.
-    Wraps a dict of BaseAgent instances.
-    """
-    def __init__(self):
-        self.agents = {}
-
-    def get_create_base_agent(self, agent):
-        """Return agent with given name, creating it if needed."""
-        try:
-            base_agent = self.agents[agent.name]
-        except KeyError:
-            base_agent = BaseAgent(agent.name)
-            self.agents[agent.name] = base_agent
-
-        # Handle modification conditions
-        for mc in agent.mods:
-            base_agent.states.append(mc)
-
-        return base_agent
-
-    def keys(self):
-        return self.agents.keys()
-
-    def iteritems(self):
-        return self.agents.iteritems()
-
-    def __getitem__(self, name):
-        return self.agents[name]
-
-class BaseAgent(object):
-    def __init__(self, name):
-        self.name = name
-        self.activities = []
-        self.active_states = {}
-        self.activity_graph = None
-        self.states = []
-        self.activity_reductions = None
-
-    def get_activity_reduction(self, activity):
-        self.make_activity_reductions()
-        return self.activity_reductions.get(activity)
-
-    def make_activity_reductions(self):
-        self.make_activity_graph()
-        self.activity_reductions = get_graph_reductions(self.activity_graph)
-
-    def make_activity_graph(self):
-        self.activity_graph  = []
-        for a1, a2 in itertools.combinations(self.activities, 2):
-            if ah.isa(a1, a2):
-                self.activity_graph.append((a1, a2))
-            if ah.isa(a2, a1):
-                self.activity_graph.append((a2, a1))
-
-    def add_activity(self, activity):
-        if activity not in self.activities:
-            self.activities.append(activity)
-
-    def add_active_state(self, activity, mods):
-        if not mods:
-            return
-        try:
-            if not self.hasmod(self.active_states[activity], mods):
-                self.active_states[activity].append(mods)
-        except KeyError:
-            self.active_states[activity] = [mods]
-
-    @staticmethod
-    def hasmod(mods_list, mods):
-        for ml in mods_list:
-            found_ix = []
-            for m1 in ml:
-                for ix, m2 in enumerate(mods):
-                    if m1.equals(m2) and ix not in found_ix:
-                        found_ix.append(ix)
-                        break
-            if len(found_ix) == len(mods):
-                return True
-        return False
-
-    def __str__(self):
-        s = '%s(' % self.name
-        if self.activities:
-            s += 'activities: %s, ' % self.activities
-        for k, v in self.active_states.iteritems():
-            s += '%s: %s' % (k, v)
-        s += ')'
-        return s
-
-    def __repr__(self):
-        return self.__str__()
 
 class MechLinker(object):
     def __init__(self, stmts=None):
@@ -112,7 +20,10 @@ class MechLinker(object):
     def link_statements(self):
         self.get_activities()
         self.reduce_activities()
-        self.replace_activations()
+        linked_stmts = self.replace_activations()
+        for ls in linked_stmts:
+            self.statements.append(ls.inferred_stmt)
+        return linked_stmts
 
     def get_activities(self):
         for stmt in self.statements:
@@ -209,6 +120,7 @@ class MechLinker(object):
                     stmt.activity = act_red
 
     def replace_activations(self):
+        linked_stmts = []
         for act_stmt in get_statement_type(self.statements, Activation):
             # Infer ActiveForm from ActAct + Phosphorylation
             if act_stmt.subj_activity == 'kinase':
@@ -226,10 +138,11 @@ class MechLinker(object):
                 mods = [ModCondition('phosphorylation',
                                      m.residue, m.position)
                        for m in matching]
+                source_stmts = [act_stmt] + [m for m in matching]
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
                                 act_stmt.obj_activity, act_stmt.is_activation,
                                 evidence=ev)
-                self.statements.append(st)
+                linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
             # Infer ActiveForm from ActAct + Dephosphorylation
             if act_stmt.subj_activity == 'phosphatase':
@@ -249,8 +162,9 @@ class MechLinker(object):
                        for m in matching]
                 st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
                                 act_stmt.obj_activity, act_stmt.is_activation,
-                                evidence=ev) 
-                self.statements.append(st)
+                                evidence=ev)
+                source_stmts = [act_stmt] + [m for m in matching]
+                linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
         for act_stmt in get_statement_type(self.statements, Activation):
@@ -267,12 +181,120 @@ class MechLinker(object):
                     for m in mods:
                         ev = act_stmt.evidence
                         ev[0].epistemics['direct'] = False
-                        st = Phosphorylation(act_stmt.subj,
-                                             act_stmt.obj, 
-                                             m.residue, m.position,
-                                             evidence=ev)
-                        self.statements.append(st)
+                        if (act_stmt.is_activation and af_stmt.is_active) or \
+                            (not act_stmt.is_activation and not
+                             af_stmt.is_active):
+                            st = Phosphorylation(act_stmt.subj,
+                                                 act_stmt.obj,
+                                                 m.residue, m.position,
+                                                 evidence=ev)
+                        elif (not act_stmt.is_activation and af_stmt.is_active) or \
+                              (act_stmt.is_activation and not af_stmt.is_active):
+                            st = Dephosphorylation(act_stmt.subj,
+                                                   act_stmt.obj,
+                                                   m.residue, m.position,
+                                                   evidence=ev)
+                        linked_stmts.append(LinkedStatement([act_stmt, af_stmt], st))
                         logger.info('inferred: %s' % st)
+        return linked_stmts
+
+class BaseAgentSet(object):
+    """Container for a set of BaseAgents.
+    Wraps a dict of BaseAgent instances.
+    """
+    def __init__(self):
+        self.agents = {}
+
+    def get_create_base_agent(self, agent):
+        """Return agent with given name, creating it if needed."""
+        try:
+            base_agent = self.agents[agent.name]
+        except KeyError:
+            base_agent = BaseAgent(agent.name)
+            self.agents[agent.name] = base_agent
+
+        # Handle modification conditions
+        for mc in agent.mods:
+            base_agent.states.append(mc)
+
+        return base_agent
+
+    def keys(self):
+        return self.agents.keys()
+
+    def iteritems(self):
+        return self.agents.iteritems()
+
+    def __getitem__(self, name):
+        return self.agents[name]
+
+class BaseAgent(object):
+    def __init__(self, name):
+        self.name = name
+        self.activities = []
+        self.active_states = {}
+        self.activity_graph = None
+        self.states = []
+        self.activity_reductions = None
+
+    def get_activity_reduction(self, activity):
+        self.make_activity_reductions()
+        return self.activity_reductions.get(activity)
+
+    def make_activity_reductions(self):
+        self.make_activity_graph()
+        self.activity_reductions = get_graph_reductions(self.activity_graph)
+
+    def make_activity_graph(self):
+        self.activity_graph  = []
+        for a1, a2 in itertools.combinations(self.activities, 2):
+            if ah.isa(a1, a2):
+                self.activity_graph.append((a1, a2))
+            if ah.isa(a2, a1):
+                self.activity_graph.append((a2, a1))
+
+    def add_activity(self, activity):
+        if activity not in self.activities:
+            self.activities.append(activity)
+
+    def add_active_state(self, activity, mods):
+        if not mods:
+            return
+        try:
+            if not self.hasmod(self.active_states[activity], mods):
+                self.active_states[activity].append(mods)
+        except KeyError:
+            self.active_states[activity] = [mods]
+
+    @staticmethod
+    def hasmod(mods_list, mods):
+        for ml in mods_list:
+            found_ix = []
+            for m1 in ml:
+                for ix, m2 in enumerate(mods):
+                    if m1.equals(m2) and ix not in found_ix:
+                        found_ix.append(ix)
+                        break
+            if len(found_ix) == len(mods):
+                return True
+        return False
+
+    def __str__(self):
+        s = '%s(' % self.name
+        if self.activities:
+            s += 'activities: %s, ' % self.activities
+        for k, v in self.active_states.iteritems():
+            s += '%s: %s' % (k, v)
+        s += ')'
+        return s
+
+    def __repr__(self):
+        return self.__str__()
+
+class LinkedStatement(object):
+    def __init__(self, source_stmts, inferred_stmt):
+        self.source_stmts = source_stmts
+        self.inferred_stmt = inferred_stmt
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
