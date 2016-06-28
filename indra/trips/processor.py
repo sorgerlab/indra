@@ -130,6 +130,10 @@ class TripsProcessor(object):
                 continue
 
             affected_agent = self._get_agent_by_id(affected_id, event_id)
+            if affected_agent is None:
+                logger.debug(
+                    'Skipping activation with missing affected agent')
+                continue
 
             if event.find('type').text == 'ONT::ACTIVATE':
                 is_activation = True
