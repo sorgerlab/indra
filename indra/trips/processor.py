@@ -235,12 +235,11 @@ class TripsProcessor(object):
                     'affected agent')
                 continue
             affected_agent = Agent(affected_name)
-            precond_event_ref = \
-                self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
-            if precond_event_ref is None:
+            precond_ids = self._get_precond_event_ids(affected_id)
+            if not precond_ids:
                 # This means that it is not an activating modification
                 continue
-            precond_id = precond_event_ref.find('event').attrib['id']
+            precond_id = precond_ids[0]
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             if precond_event is None:
                 continue
@@ -463,14 +462,9 @@ class TripsProcessor(object):
             if agent_name is None:
                 return None
             agent = Agent(agent_name, db_refs=db_refs_dict)
-            precond_event_ref = \
-                self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
-            # Extract preconditions of the agent
-            if precond_event_ref is not None:
-                # Find the event describing the precondition
-                preconds = precond_event_ref.findall('event')
-                for precond in preconds:
-                    precond_id = precond.attrib['id']
+            precond_ids = self._get_precond_event_ids(entity_id)
+            if precond_ids:
+                for precond_id in precond_ids:
                     if precond_id == event_id:
                         logger.debug('Circular reference to event %s.' %
                                        precond_id)
@@ -782,11 +776,25 @@ class TripsProcessor(object):
         sec = self.par_to_sec.get(par_id)
         return sec
 
+    def _get_precond_event_ids(self, term_id):
+        precond_ids = []
+        precond_event_ref = \
+            self.tree.find("TERM/[@id='%s']/features/inevent" % term_id)
+        if precond_event_ref is not None:
+            preconds = precond_event_ref.findall('event')
+            precond_ids += [p.attrib.get('id') for p in preconds]
+        precond_event_refs = \
+            self.tree.findall("TERM/[@id='%s']/features/ptm" % term_id)
+        precond_ids += [p.attrib.get('event') for p in precond_event_refs]
+        return precond_ids
+
     def _find_static_events(self):
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
+        event_ids = [t.attrib.get('id') for t in inevent_tags]
+        ptm_tags = self.tree.findall("TERM/features/ptm")
+        event_ids += [t.attrib.get('event') for t in ptm_tags]
         static_events = []
-        for ie in inevent_tags:
-            event_id = ie.attrib['id']
+        for event_id in event_ids:
             if self.tree.find("EVENT[@id='%s']" % event_id) is not None:
                 static_events.append(event_id)
             else:
