@@ -87,3 +87,12 @@ setuptools*.zip
 indra/data/ras_pathway_proteins.csv
 indra/literature/elsevier_api_key
 indra/literature/cr_clickthrough_key
+
+# Other
+*.txt
+*.cx
+*.zip
+*.csv
+*.java
+*.xbel
+*.tsv
