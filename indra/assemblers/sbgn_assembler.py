@@ -47,12 +47,14 @@ class SBGNAssembler(object):
 
     def add_statements(self, stmts):
         for stmt in stmts:
+            if any([a is None for a in stmt.agent_list()]):
+                continue
             stmt = copy.deepcopy(stmt)
             uppercase_agents(stmt)
             if not self.statement_exists(stmt):
                 self.statements.append(stmt)
 
-    def make_sbgn(self):
+    def make_model(self):
 
         def make_id(_counter=[0]):
             id_ = 'id_%d' % _counter[0]
@@ -115,7 +117,11 @@ class SBGNAssembler(object):
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
-            produced = [statement_product(s)]
+            st_prod = statement_product(s)
+            if st_prod is None:
+                logger.warning("WARNING: skipping %s" % type(s))
+                continue
+            produced = [st_prod]
             pg_id = make_id()
             process_glyph = E.glyph(E.bbox(x='0', y='0', w='20', h='20'),
                                     class_(class_name), id=pg_id)
@@ -174,6 +180,14 @@ def statement_product(stmt):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
         product.mods.append(mc)
+    elif isinstance(stmt, ist.Ubiquitination):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
+        product.mods.append(mc)
+    elif isinstance(stmt, ist.Acetylation):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('acetylation', stmt.residue, stmt.position)
+        product.mods.append(mc)
     elif isinstance(stmt, ist.Complex):
         product = copy.deepcopy(stmt.members[0])
         for member in stmt.members[1:]:
@@ -220,5 +234,5 @@ def text_to_sbgn(text=None, trips_xml=None):
         raise RuntimeError("Unexpected or impossible combination of arguments")
     sa = SBGNAssembler()
     sa.add_statements(tp.statements)
-    sbgn_output = sa.make_sbgn()
+    sbgn_output = sa.make_model()
     return sbgn_output
