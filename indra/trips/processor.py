@@ -789,14 +789,28 @@ class TripsProcessor(object):
         return precond_ids
 
     def _find_static_events(self):
+        # Find sub-EVENTs that TERMs refer to
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
-        event_ids = [t.attrib.get('id') for t in inevent_tags]
         ptm_tags = self.tree.findall("TERM/features/ptm")
-        event_ids += [t.attrib.get('event') for t in ptm_tags]
+        notptm_tags = self.tree.findall("TERM/features/not-ptm")
+        sub_event_ids = [t.attrib.get('id') for t in inevent_tags]
+        sub_event_ids += [t.attrib.get('event') for t in ptm_tags]
+        sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
-        for event_id in event_ids:
-            if self.tree.find("EVENT[@id='%s']" % event_id) is not None:
-                static_events.append(event_id)
+        for event_id in sub_event_ids:
+            event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
+            if event_tag is not None:
+                # If an affected TERM in the primary event has the same event
+                # specified as a not-ptm, that doesn't count as a static
+                # event. Therefore we let these events go through.
+                affected = event_tag.find(".//*[@role=':AFFECTED']")
+                affected_id = affected.attrib.get('id')
+                enp = self.tree.find("TERM[@id='%s']/not-features/ptm" %
+                                     affected_id)
+                if (enp is not None and enp.attrib.get('event') == event_id):
+                    continue
+                else:
+                    static_events.append(event_id)
             else:
                 # Check for events that have numbering <id>.1, <id>.2, etc.
                 if self.tree.find("EVENT[@id='%s.1']" % event_id) is not None:
