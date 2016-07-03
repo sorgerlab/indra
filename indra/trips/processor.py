@@ -1,7 +1,9 @@
 import re
 import pickle
-import operator
 import logging
+import operator
+import itertools
+import collections
 
 import xml.etree.ElementTree as ET
 
@@ -148,10 +150,12 @@ class TripsProcessor(object):
                 activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
-            self.statements.append(Activation(activator_agent, activator_act,
-                                              affected_agent, 'activity',
-                                              is_activation=is_activation,
-                                              evidence=ev))
+            for a1, a2 in _agent_list_product((activator_agent,
+                                               affected_agent)):
+                self.statements.append(Activation(a1, activator_act,
+                                                  a2, 'activity',
+                                                  is_activation=is_activation,
+                                                  evidence=ev))
 
     def get_activations_causal(self):
         """Extract causal Activation INDRA Statements."""
@@ -198,10 +202,12 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = Activation(factor_agent, 'activity',
-                                outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
-                self.statements.append(st)
+                for a1, a2 in _agent_list_product((factor_agent,
+                                                   outcome_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    self.statements.append(st)
             elif outcome_event_type.text == 'ONT::ACTIVITY':
                 agent_tag = outcome_event.find(".//*[@role=':AGENT']")
                 if agent_tag is None:
@@ -210,10 +216,12 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = Activation(factor_agent, 'activity',
-                                outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
-                self.statements.append(st)
+                for a1, a2 in _agent_list_product((factor_agent,
+                                                   outcome_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    self.statements.append(st)
 
     def get_activating_mods(self):
         """Extract ActiveForm INDRA Statements based on modifications."""
@@ -333,22 +341,7 @@ class TripsProcessor(object):
                 if enzyme_term is None:
                     enzyme_agent = None
                 else:
-                    if enzyme_term.find("type").text ==\
-                        'ONT::MACROMOLECULAR-COMPLEX':
-                        components = enzyme_term.find("components")
-                        terms = components.findall("component")
-                        term_names = []
-                        for t in terms:
-                            term_name = self._get_name_by_id(t.attrib['id'])
-                            term_names.append(term_name)
-                        enzyme_name = term_names[0]
-                        enzyme_bound = Agent(term_names[1])
-                        enzyme_agent = Agent(enzyme_name,
-                            bound_conditions=[BoundCondition(enzyme_bound,
-                                              True)])
-                    else:
-                        enzyme_agent = self._get_agent_by_id(enzyme_id,
-                                                             event_id)
+                    enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 logger.debug('Skipping phosphorylation event with no '
@@ -383,11 +376,12 @@ class TripsProcessor(object):
                                             evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
-                for m in mods:
-                    self.statements.append(Dephosphorylation(enzyme_agent,
-                                            affected_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                for ea, aa in _agent_list_product((enzyme_agent,
+                                                   affected_agent)):
+                    for m in mods:
+                        self.statements.append(Dephosphorylation(ea, aa,
+                                               m.residue, m.position,
+                                               evidence=ev))
             # Autophosphorylation
             elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
@@ -404,11 +398,12 @@ class TripsProcessor(object):
             else:
                 if mods is None:
                     continue
-                for m in mods:
-                    self.statements.append(Phosphorylation(enzyme_agent,
-                                            affected_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                for ea, aa in _agent_list_product((enzyme_agent,
+                                                   affected_agent)):
+                    for m in mods:
+                        self.statements.append(Phosphorylation(ea, aa,
+                                               m.residue, m.position,
+                                               evidence=ev))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
 
@@ -416,6 +411,19 @@ class TripsProcessor(object):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if term is None:
             return None
+
+        # Check if the term is an aggregate
+        members = term.findall('aggregate/member')
+        if members:
+            operator = term.find('aggregate').attrib.get('operator')
+            if operator != 'AND':
+                logger.debug('Skipping aggregate with operator %s' % 
+                             operator)
+                return None
+            member_ids = [m.attrib.get('id') for m in members]
+            member_agents = [self._get_agent_by_id(m, event_id) 
+                             for m in member_ids]
+            return member_agents
 
         # Extract database references
         dbid = term.attrib.get('dbid')
@@ -614,7 +622,8 @@ class TripsProcessor(object):
                             score = re.findall(':SCORE ([^ ]+)', p)[0]
                             scores[hgnc_id] = float(score)
                     if scores:
-                        sorted_ids = sorted(scores.items(), key=operator.itemgetter(1))
+                        sorted_ids = sorted(scores.items(),
+                                            key=operator.itemgetter(1))
                         hgnc_id = sorted_ids[-1][0]
             else:
                 hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
@@ -819,3 +828,12 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+def _agent_list_product(lists):
+    def _listify(lst):
+        if not isinstance(lst, collections.Iterable):
+            return [lst]
+        else:
+            return lst
+    ll = [_listify(l) for l in lists]
+    return itertools.product(*ll)
