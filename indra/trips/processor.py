@@ -729,9 +729,10 @@ class TripsProcessor(object):
         # Collect mods in a list
         mods = []
         for r, p in zip(residues, mod_pos):
-            residue_name = get_valid_residue(r)
-            if residue_name is None:
-                logger.debug('Residue name %s unknown. ' % r)
+            try:
+                residue_name = get_valid_residue(r)
+            except InvalidResidueError:
+                logger.debug('Invalid residue name %s' % r)
                 residue_name = None
             mc = ModCondition(mod_type_name, residue_name, p, is_modified)
             mods.append(mc)

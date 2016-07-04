@@ -5,14 +5,6 @@ import indra.statements
 import sys
 import os
 
-
-
-NRAS-bound BRAF that is not bound to Vemurafenib binds NRAS-bound BRAF that is not bound to Vemurafenib.
-
-BRAF that is bound to Vemurafenib binds BRAF that is not bound to Vemurafenib and NRAS.
-BRAF that is bound to NRAS and Vemurafenib binds NRAS-bound BRAF that is not bound to Vemurafenib.
-
-
 def test_bind():
     fname = sys._getframe().f_code.co_name + '.xml'
     txt = 'The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.'
@@ -223,7 +215,7 @@ def test_bound_to4():
 
 def test_bound_to5():
     fname = sys._getframe().f_code.co_name + '.xml'
-    txt = 'BRAF that is bound to NRAS and Vemurafenib binds' +\
+    txt = 'BRAF that is bound to NRAS and Vemurafenib binds ' +\
           'BRAF that is bound to NRAS and Vemurafenib.'
     tp = trips.process_text(txt, fname, False)
     assert(len(tp.statements) == 1)
@@ -273,10 +265,10 @@ def test_act_mod():
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(is_actmod(st))
-    assert(st.monomer is not None)
-    assert(st.monomer.name == 'MAP2K1')
-    residues = [m.residue for m in st.mod]
-    positions = [m.position for m in st.mod]
+    assert(st.agent is not None)
+    assert(st.agent.name == 'MAP2K1')
+    residues = [m.residue for m in st.agent.mods]
+    positions = [m.position for m in st.agent.mods]
     assert(residues == ['S', 'S'])
     assert(positions == ['218', '222'])
     assert(st.relationship == 'increases')
