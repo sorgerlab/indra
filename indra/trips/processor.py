@@ -1,7 +1,9 @@
 import re
 import pickle
-import operator
 import logging
+import operator
+import itertools
+import collections
 
 import xml.etree.ElementTree as ET
 
@@ -148,10 +150,12 @@ class TripsProcessor(object):
                 activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
-            self.statements.append(Activation(activator_agent, activator_act,
-                                              affected_agent, 'activity',
-                                              is_activation=is_activation,
-                                              evidence=ev))
+            for a1, a2 in _agent_list_product((activator_agent,
+                                               affected_agent)):
+                self.statements.append(Activation(a1, activator_act,
+                                                  a2, 'activity',
+                                                  is_activation=is_activation,
+                                                  evidence=ev))
 
     def get_activations_causal(self):
         """Extract causal Activation INDRA Statements."""
@@ -198,10 +202,12 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = Activation(factor_agent, 'activity',
-                                outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
-                self.statements.append(st)
+                for a1, a2 in _agent_list_product((factor_agent,
+                                                   outcome_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    self.statements.append(st)
             elif outcome_event_type.text == 'ONT::ACTIVITY':
                 agent_tag = outcome_event.find(".//*[@role=':AGENT']")
                 if agent_tag is None:
@@ -210,10 +216,12 @@ class TripsProcessor(object):
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
-                st = Activation(factor_agent, 'activity',
-                                outcome_agent, 'activity', is_activation=True,
-                                evidence=[ev])
-                self.statements.append(st)
+                for a1, a2 in _agent_list_product((factor_agent,
+                                                   outcome_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    self.statements.append(st)
 
     def get_activating_mods(self):
         """Extract ActiveForm INDRA Statements based on modifications."""
@@ -235,12 +243,11 @@ class TripsProcessor(object):
                     'affected agent')
                 continue
             affected_agent = Agent(affected_name)
-            precond_event_ref = \
-                self.tree.find("TERM/[@id='%s']/features/inevent" % affected_id)
-            if precond_event_ref is None:
+            precond_ids = self._get_precond_event_ids(affected_id)
+            if not precond_ids:
                 # This means that it is not an activating modification
                 continue
-            precond_id = precond_event_ref.find('event').attrib['id']
+            precond_id = precond_ids[0]
             precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
             if precond_event is None:
                 continue
@@ -334,22 +341,7 @@ class TripsProcessor(object):
                 if enzyme_term is None:
                     enzyme_agent = None
                 else:
-                    if enzyme_term.find("type").text ==\
-                        'ONT::MACROMOLECULAR-COMPLEX':
-                        components = enzyme_term.find("components")
-                        terms = components.findall("component")
-                        term_names = []
-                        for t in terms:
-                            term_name = self._get_name_by_id(t.attrib['id'])
-                            term_names.append(term_name)
-                        enzyme_name = term_names[0]
-                        enzyme_bound = Agent(term_names[1])
-                        enzyme_agent = Agent(enzyme_name,
-                            bound_conditions=[BoundCondition(enzyme_bound,
-                                              True)])
-                    else:
-                        enzyme_agent = self._get_agent_by_id(enzyme_id,
-                                                             event_id)
+                    enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 logger.debug('Skipping phosphorylation event with no '
@@ -384,11 +376,12 @@ class TripsProcessor(object):
                                             evidence=ev))
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
-                for m in mods:
-                    self.statements.append(Dephosphorylation(enzyme_agent,
-                                            affected_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                for ea, aa in _agent_list_product((enzyme_agent,
+                                                   affected_agent)):
+                    for m in mods:
+                        self.statements.append(Dephosphorylation(ea, aa,
+                                               m.residue, m.position,
+                                               evidence=ev))
             # Autophosphorylation
             elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
@@ -405,11 +398,12 @@ class TripsProcessor(object):
             else:
                 if mods is None:
                     continue
-                for m in mods:
-                    self.statements.append(Phosphorylation(enzyme_agent,
-                                            affected_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                for ea, aa in _agent_list_product((enzyme_agent,
+                                                   affected_agent)):
+                    for m in mods:
+                        self.statements.append(Phosphorylation(ea, aa,
+                                               m.residue, m.position,
+                                               evidence=ev))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
 
@@ -417,6 +411,19 @@ class TripsProcessor(object):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if term is None:
             return None
+
+        # Check if the term is an aggregate
+        members = term.findall('aggregate/member')
+        if members:
+            operator = term.find('aggregate').attrib.get('operator')
+            if operator != 'AND':
+                logger.debug('Skipping aggregate with operator %s' % 
+                             operator)
+                return None
+            member_ids = [m.attrib.get('id') for m in members]
+            member_agents = [self._get_agent_by_id(m, event_id) 
+                             for m in member_ids]
+            return member_agents
 
         # Extract database references
         dbid = term.attrib.get('dbid')
@@ -463,14 +470,9 @@ class TripsProcessor(object):
             if agent_name is None:
                 return None
             agent = Agent(agent_name, db_refs=db_refs_dict)
-            precond_event_ref = \
-                self.tree.find("TERM/[@id='%s']/features/inevent" % entity_id)
-            # Extract preconditions of the agent
-            if precond_event_ref is not None:
-                # Find the event describing the precondition
-                preconds = precond_event_ref.findall('event')
-                for precond in preconds:
-                    precond_id = precond.attrib['id']
+            precond_ids = self._get_precond_event_ids(entity_id)
+            if precond_ids:
+                for precond_id in precond_ids:
                     if precond_id == event_id:
                         logger.debug('Circular reference to event %s.' %
                                        precond_id)
@@ -620,7 +622,8 @@ class TripsProcessor(object):
                             score = re.findall(':SCORE ([^ ]+)', p)[0]
                             scores[hgnc_id] = float(score)
                     if scores:
-                        sorted_ids = sorted(scores.items(), key=operator.itemgetter(1))
+                        sorted_ids = sorted(scores.items(),
+                                            key=operator.itemgetter(1))
                         hgnc_id = sorted_ids[-1][0]
             else:
                 hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
@@ -726,9 +729,10 @@ class TripsProcessor(object):
         # Collect mods in a list
         mods = []
         for r, p in zip(residues, mod_pos):
-            residue_name = get_valid_residue(r)
-            if residue_name is None:
-                logger.debug('Residue name %s unknown. ' % r)
+            try:
+                residue_name = get_valid_residue(r)
+            except InvalidResidueError:
+                logger.debug('Invalid residue name %s' % r)
                 residue_name = None
             mc = ModCondition(mod_type_name, residue_name, p, is_modified)
             mods.append(mc)
@@ -782,13 +786,41 @@ class TripsProcessor(object):
         sec = self.par_to_sec.get(par_id)
         return sec
 
+    def _get_precond_event_ids(self, term_id):
+        precond_ids = []
+        precond_event_ref = \
+            self.tree.find("TERM/[@id='%s']/features/inevent" % term_id)
+        if precond_event_ref is not None:
+            preconds = precond_event_ref.findall('event')
+            precond_ids += [p.attrib.get('id') for p in preconds]
+        precond_event_refs = \
+            self.tree.findall("TERM/[@id='%s']/features/ptm" % term_id)
+        precond_ids += [p.attrib.get('event') for p in precond_event_refs]
+        return precond_ids
+
     def _find_static_events(self):
+        # Find sub-EVENTs that TERMs refer to
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
+        ptm_tags = self.tree.findall("TERM/features/ptm")
+        notptm_tags = self.tree.findall("TERM/features/not-ptm")
+        sub_event_ids = [t.attrib.get('id') for t in inevent_tags]
+        sub_event_ids += [t.attrib.get('event') for t in ptm_tags]
+        sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
-        for ie in inevent_tags:
-            event_id = ie.attrib['id']
-            if self.tree.find("EVENT[@id='%s']" % event_id) is not None:
-                static_events.append(event_id)
+        for event_id in sub_event_ids:
+            event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
+            if event_tag is not None:
+                # If an affected TERM in the primary event has the same event
+                # specified as a not-ptm, that doesn't count as a static
+                # event. Therefore we let these events go through.
+                affected = event_tag.find(".//*[@role=':AFFECTED']")
+                affected_id = affected.attrib.get('id')
+                enp = self.tree.find("TERM[@id='%s']/not-features/ptm" %
+                                     affected_id)
+                if (enp is not None and enp.attrib.get('event') == event_id):
+                    continue
+                else:
+                    static_events.append(event_id)
             else:
                 # Check for events that have numbering <id>.1, <id>.2, etc.
                 if self.tree.find("EVENT[@id='%s.1']" % event_id) is not None:
@@ -797,3 +829,12 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+def _agent_list_product(lists):
+    def _listify(lst):
+        if not isinstance(lst, collections.Iterable):
+            return [lst]
+        else:
+            return lst
+    ll = [_listify(l) for l in lists]
+    return itertools.product(*ll)
