@@ -316,7 +316,8 @@ class TripsProcessor(object):
                 logger.debug('Complex with missing members')
                 continue
 
-            self.statements.append(Complex([agent1, agent2], evidence=ev))
+            for a1, a2 in _agent_list_product((agent1, agent2)):
+                self.statements.append(Complex([a1, a2], evidence=ev))
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
@@ -814,13 +815,14 @@ class TripsProcessor(object):
                 # specified as a not-ptm, that doesn't count as a static
                 # event. Therefore we let these events go through.
                 affected = event_tag.find(".//*[@role=':AFFECTED']")
-                affected_id = affected.attrib.get('id')
-                enp = self.tree.find("TERM[@id='%s']/not-features/ptm" %
-                                     affected_id)
-                if (enp is not None and enp.attrib.get('event') == event_id):
-                    continue
-                else:
-                    static_events.append(event_id)
+                if affected is not None:
+                    affected_id = affected.attrib.get('id')
+                    enp = self.tree.find("TERM[@id='%s']/not-features/ptm" %
+                                         affected_id)
+                    if (enp is not None and
+                        enp.attrib.get('event') == event_id):
+                        continue
+                static_events.append(event_id)
             else:
                 # Check for events that have numbering <id>.1, <id>.2, etc.
                 if self.tree.find("EVENT[@id='%s.1']" % event_id) is not None:
