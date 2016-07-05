@@ -1,4 +1,5 @@
 from rasmachine import make_status_message
+from rasmachine import _increment_ndex_ver
 
 stats = {}
 stats['new_abstracts'] = 0
@@ -7,6 +8,13 @@ stats['orig_stmts'] = 10
 stats['new_stmts'] = 10
 stats['orig_top'] = 10
 stats['new_top'] = 10
+
+def test_ndex_ver():
+    assert(_increment_ndex_ver(None) == '1.0')
+    assert(_increment_ndex_ver('') == '1.0')
+    assert(_increment_ndex_ver('1.0') == '1.1')
+    assert(_increment_ndex_ver('1.9') == '1.10')
+    assert(_increment_ndex_ver('2.10') == '2.11')
 
 def test_noabs_nopaper():
     s = stats.copy()

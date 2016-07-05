@@ -119,6 +119,15 @@ def extend_model(model_name, model, pmids):
     model.preassemble()
     return npapers, nabstracts
 
+def _increment_ndex_ver(ver_str):
+    if not ver_str:
+        new_ver = '1.0'
+    else:
+        major_ver, minor_ver = ver_str.split('.')
+        new_minor_ver = str(int(minor_ver) + 1)
+        new_ver = major_ver + '.' + new_minor_ver
+    return new_ver
+
 def upload_to_ndex(model, cred_file):
     try:
         fh = open(cred_file, 'rt')
@@ -147,10 +156,7 @@ def upload_to_ndex(model, cred_file):
         print e
         return
     ver_str = summary.get('version')
-    if ver_str is None:
-        new_ver = '1.0'
-    else:
-        new_ver = str(float(ver_str) + 0.1)
+    new_ver = _increment_ndex_ver(ver_str)
     profile = {'name': summary.get('name'),
                'description': summary.get('description'),
                'version': new_ver,
