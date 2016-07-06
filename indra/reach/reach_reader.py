@@ -8,7 +8,7 @@ class ReachReader(object):
 
     Attributes
     ----------
-    api_ruler : edu.arizona.sista.reach.apis.ApiRuler
+    api_ruler : org.clulab.reach.apis.ApiRuler
         An instance of the REACH ApiRuler class (java object).
     """
     def __init__(self):
@@ -19,13 +19,13 @@ class ReachReader(object):
 
         Returns
         -------
-        api_ruler : edu.arizona.sista.reach.apis.ApiRuler
+        api_ruler : org.clulab.reach.apis.ApiRuler
             An instance of the REACH ApiRuler class (java object).
         """
         if self.api_ruler is None:
             try:
                 self.api_ruler =\
-                    autoclass('edu.arizona.sista.reach.apis.ApiRuler')
+                    autoclass('org.clulab.reach.apis.ApiRuler')
             except JavaException:
                 try:
                     autoclass('java.lang.String')
