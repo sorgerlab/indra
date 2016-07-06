@@ -1199,6 +1199,63 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+class Translocation(Statement):
+    """The translocation of a molecular agent from one location to another.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        The agent which translocates.
+    from_location : Optional[str]
+        The location from which the agent translocates.
+    to_location : Optional[str]
+        The location to which the agent translocates.
+    """
+    def __init__(self, agent, from_location=None, to_location=None,
+                 evidence=None):
+        super(Translocation, self).__init__(evidence)
+        self.agent = agent
+        self.from_location = from_location
+        self.to_location = to_location
+
+    def agent_list(self):
+        return [self.agent]
+
+    def set_agent_list(self, agent_list):
+        if(len(agent_list) != 1):
+            raise ValueError("Translocation has 1 agent")
+        self.agent = agent_list[0]
+
+    def __str__(self):
+        s = ("Translocation(%s, %s, %s)" %
+                (self.agent.name, self.from_location, self.to_location))
+        return s
+
+    def refinement_of(self, other, eh, mh):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check the agent
+        if self.agent.refinement_of(other.agent, eh, mh) and \
+           (self.from_location is None or
+            self.from_location == other.from_location) and \
+           (self.to_location is None or
+            self.to_location == other.to_location):
+            return True
+        else:
+            return False
+
+    def equals(self, other):
+        matches = super(Translocation, self).equals(other)
+        matches = matches and (self.from_location == other.from_location)
+        matches = matches and (self.to_location == other.to_location)
+        return matches
+
+    def matches_key(self):
+        key = (type(self), self.agent.matches_key(), str(self.from_location),
+                str(self.to_location))
+        return str(key)
+
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
