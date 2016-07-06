@@ -188,6 +188,36 @@ class ReachProcessor(object):
                             controlled_agent, 'activity', is_activation, ev)
             self.statements.append(st)
 
+    def get_translocation(self):
+        """Extract INDRA Translocation Statements."""
+        qstr = "$.events.frames[@.type is 'translocation']"
+        res = self.tree.execute(qstr)
+        for r in res:
+            epistemics = self._get_epistemics(r)
+            if epistemics.get('negative'):
+                continue
+            sentence = r['verbose-text']
+            context = self._get_context(r)
+            ev = Evidence(source_api='reach', text=sentence,
+                          pmid=self.citation, annotations=context,
+                          epistemics=epistemics)
+            frame_id = r['frame_id']
+            args = r['arguments']
+            from_location = None
+            to_location = None
+            for a in args:
+                if self._get_arg_type(a) == 'theme':
+                    agent = self._get_agent_from_entity(a['arg'])
+                    if agent is None:
+                        continue
+                elif self._get_arg_type(a) == 'source':
+                    from_location = a['text']
+                elif self._get_arg_type(a) == 'destination':
+                    to_location = a['text']
+            st = Translocation(agent, from_location, to_location,
+                               evidence = ev)
+            self.statements.append(st)
+
     def _get_agent_from_entity(self, entity_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
         res = self.tree.execute(qstr)
