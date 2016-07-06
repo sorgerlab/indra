@@ -424,6 +424,61 @@ class TripsProcessor(object):
                                                evidence=ev))
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
+    def get_translocation(self):
+        translocation_events = \
+            self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
+        for event in translocation_events:
+            event_id = event.attrib['id']
+            # Get Agent which translocates
+            agent_tag = event.find(".//*[@role=':AGENT']")
+            if agent_tag is None:
+                continue
+            agent_id = agent_tag.attrib.get('id')
+            agent = self._get_agent_by_id(agent_id, event_id)
+            if agent is None:
+                continue
+            # Get from location
+            from_loc_tag = event.find("from-location")
+            if from_loc_tag is None:
+                from_location = None
+            else:
+                from_loc_id = from_loc_tag.attrib.get('id')
+                from_location = self._get_cell_loc_by_id(from_loc_id)
+            # Get to location
+            to_loc_tag = event.find("to-location")
+            if to_loc_tag is None:
+                to_location = None
+            else:
+                to_loc_id = to_loc_tag.attrib.get('id')
+                to_location = self._get_cell_loc_by_id(to_loc_id)
+            # Get evidence
+            sentence = self._get_evidence_text(event)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
+            ev = Evidence(source_api='trips', text=sentence,
+                          pmid=self.doc_id, epistemics=epi)
+
+            st = Translocation(agent, from_location, to_location, evidence=ev)
+            self.statements.append(st)
+
+    def _get_cell_loc_by_id(self, term_id):
+        term = self.tree.find("TERM/[@id='%s']" % term_id)
+        if term is None:
+            return None
+        term_type = term.find("type").text
+        name = term.find("name").text
+        if term_type != 'ONT::CELL-PART':
+            return name
+        # If it is a cellular location, try to look up and return
+        # the standard name from UniProt
+        dbid = term.attrib.get('dbid')
+        dbids = dbid.split('|')
+        db_refs_dict = dict([d.split(':') for d in dbids])
+        upid = db_refs_dict.get('UP')
+        if upid is not None and upid.startswith('SL'):
+            loc_name = up_client.uniprot_subcell_loc.get(upid)
+            return loc_name
+        return name
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
