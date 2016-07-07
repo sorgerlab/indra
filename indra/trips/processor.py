@@ -827,6 +827,8 @@ class TripsProcessor(object):
         sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
         for event_id in sub_event_ids:
+            if event_id == 'V2260949':
+                import ipdb; ipdb.set_trace()
             event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
             if event_tag is not None:
                 # If an affected TERM in the primary event has the same event
