@@ -55,27 +55,6 @@ from collections import namedtuple
 
 logger = logging.getLogger('indra_statements')
 
-def _read_amino_acids():
-    """Read the amino acid information from a resource file."""
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    aa_file = this_dir + '/resources/amino_acids.tsv'
-    amino_acids = {}
-    amino_acids_reverse = {}
-    with open(aa_file, 'rt') as fh:
-        lines = fh.readlines()
-    for lin in lines[1:]:
-        terms = lin.strip().split('\t')
-        key = terms[2]
-        val = {'full_name': terms[0],
-               'short_name': terms[1],
-               'indra_name': terms[3]}
-        amino_acids[key] = val
-        for v in val.values():
-            amino_acids_reverse[v] = key
-    return amino_acids, amino_acids_reverse
-
-amino_acids, amino_acids_reverse = _read_amino_acids()
-
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
@@ -240,7 +219,6 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
-
 class Agent(object):
     """A molecular entity, e.g., a protein.
 
@@ -255,11 +233,15 @@ class Agent(object):
         Other agents bound to the agent in this context.
     mutations : list of :py:class:`MutCondition`
         Amino acid mutations of the agent.
+    location : str
+        Cellular location of the agent. Must be a valid name (e.g. "nucleus")
+        or identifier (e.g. "GO:0005634")for a GO cellular compartment.
     db_refs : dict
         Dictionary of database identifiers associated with this agent.
     """
     def __init__(self, name, mods=None, active=None,
-                 bound_conditions=None, mutations=None, db_refs=None):
+                 bound_conditions=None, mutations=None,
+                 location=None, db_refs=None):
         self.name = name
 
         if mods is None:
@@ -286,6 +268,7 @@ class Agent(object):
             self.mutations = mutations
 
         self.active = active
+        self.location = get_valid_location(location)
 
         if db_refs is None:
             self.db_refs = {}
@@ -303,7 +286,7 @@ class Agent(object):
         key = (name_str,
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
-               self.active,
+               self.active, self.location,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
                      for bc in sorted(self.bound_conditions,
@@ -316,7 +299,8 @@ class Agent(object):
     def entity_matches_key(self):
         return self.name
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+    def refinement_of(self, other, entity_hierarchy, mod_hierarchy,
+                      cc_hierarchy=None):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -396,6 +380,17 @@ class Agent(object):
             # If we didn't find an exact match for this mut in other, then
             # no refinement
             if not mut_found:
+                return False
+
+        # LOCATION
+        # If the other location is specified and this one is not then self
+        # it cannot be a refinement
+        if self.location is None and other.location is not None:
+            return False
+        # If the other location is part of this location then self.location is
+        # not a refinement
+        if cc_hierarchy is not None:
+            if not cc_hierarchy.partof(other.location, self.location):
                 return False
 
         # Everything checks out
@@ -1215,8 +1210,8 @@ class Translocation(Statement):
                  evidence=None):
         super(Translocation, self).__init__(evidence)
         self.agent = agent
-        self.from_location = from_location
-        self.to_location = to_location
+        self.from_location = _get_valid_location(from_location)
+        self.to_location = _get_valid_location(to_location)
 
     def agent_list(self):
         return [self.agent]
@@ -1267,9 +1262,60 @@ def get_valid_residue(residue):
             return res
     return residue
 
+def get_valid_location(location):
+    """Check if the given location represents a valid cellular component."""
+    if location is not None and cellular_components.get(location) is None:
+        loc = cellular_components_reverse.get(loc.lower())
+        if loc is None:
+            raise InvalidLocationError(location)
+        else:
+            return loc
+    return location
+
+def _read_cellular_components():
+    """Read cellular components from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    cc_file = this_dir + '/resources/cellular_components.tsv'
+    cellular_components = {}
+    cellular_components_reverse = {}
+    with open(cc_file, 'rt') as fh:
+        lines = fh.readlines()
+    for lin in lines[1:]:
+        terms = lin.strip().split('\t')
+        cellular_components[terms[1]] = terms[0]
+        cellular_components_reverse[terms[0]] = terms[1]
+    return cellular_components, cellular_components_reverse
+
+cellular_components, cellular_components_reverse = _read_cellular_components()
+
+def _read_amino_acids():
+    """Read the amino acid information from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    aa_file = this_dir + '/resources/amino_acids.tsv'
+    amino_acids = {}
+    amino_acids_reverse = {}
+    with open(aa_file, 'rt') as fh:
+        lines = fh.readlines()
+    for lin in lines[1:]:
+        terms = lin.strip().split('\t')
+        key = terms[2]
+        val = {'full_name': terms[0],
+               'short_name': terms[1],
+               'indra_name': terms[3]}
+        amino_acids[key] = val
+        for v in val.values():
+            amino_acids_reverse[v] = key
+    return amino_acids, amino_acids_reverse
+
+amino_acids, amino_acids_reverse = _read_amino_acids()
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid residue name: '%s'" % name)
+
+class InvalidLocationError(ValueError):
+    """Invalid cellular component name."""
+    def __init__(self, name):
+        ValueError.__init__(self, "Invalid location name: '%s'" % name)
 
