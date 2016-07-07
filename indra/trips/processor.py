@@ -110,13 +110,15 @@ class TripsProcessor(object):
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
                 continue
-            agent_id = agent.attrib['id']
-            agent_name = self._get_name_by_id(agent_id)
-            if agent_name is None:
+            agent_id = agent.attrib.get('id')
+            if agent_id is None:
                 logger.debug(
                     'Skipping activation with missing activator agent')
                 continue
+            agent_name = self._get_name_by_id(agent_id)
             activator_agent = self._get_agent_by_id(agent_id, event_id)
+            if activator_agent is None:
+                continue
 
             # Get the activated agent in the event
             affected = event.find(".//*[@role=':AFFECTED']")
@@ -124,7 +126,12 @@ class TripsProcessor(object):
                 logger.debug(
                     'Skipping activation with missing affected agent')
                 continue
-            affected_id = affected.attrib['id']
+            affected_id = affected.attrib.get('id')
+            if affected_id is None:
+                logger.debug(
+                    'Skipping activation with missing affected agent')
+                continue
+
             affected_name = self._get_name_by_id(affected_id)
             if affected_name is None:
                 logger.debug(
@@ -235,7 +242,13 @@ class TripsProcessor(object):
                 logger.debug(msg)
                 continue
 
-            affected_id = affected.attrib['id']
+            affected_id = affected.attrib.get('id')
+            if affected_id is None:
+                logger.debug(
+                    'Skipping activating modification with missing' +\
+                    'affected agent')
+                continue
+
             affected_name = self._get_name_by_id(affected_id)
             if affected_name is None:
                 logger.debug(
@@ -280,14 +293,14 @@ class TripsProcessor(object):
                           epistemics=epi)
 
             arg1 = event.find("arg1")
-            if arg1 is None:
+            if arg1 is None or arg1.attrib.get('id') is None:
                 msg = 'Skipping complex missing arg1.'
                 logger.debug(msg)
                 continue
             agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
 
             arg2 = event.find("arg2")
-            if arg2 is None:
+            if arg2 is None or arg2.attrib.get('id') is None:
                 msg = 'Skipping complex missing arg2.'
                 logger.debug(msg)
                 continue
@@ -337,7 +350,9 @@ class TripsProcessor(object):
             if enzyme is None:
                 enzyme_agent = None
             else:
-                enzyme_id = enzyme.attrib['id']
+                enzyme_id = enzyme.attrib.get('id')
+                if enzyme_id is None:
+                    continue
                 enzyme_term = self.tree.find("TERM/[@id='%s']" % enzyme_id)
                 if enzyme_term is None:
                     enzyme_agent = None
@@ -348,7 +363,9 @@ class TripsProcessor(object):
                 logger.debug('Skipping phosphorylation event with no '
                               'affected term.')
                 continue
-            affected_id = affected.attrib['id']
+            affected_id = affected.attrib.get('id')
+            if affected_id is None:
+                continue
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
                 continue
@@ -582,6 +599,7 @@ class TripsProcessor(object):
     @staticmethod
     def _get_valid_name(name):
         name = name.replace('-', '_')
+        name = name.replace('/', '_')
         name = str(name.encode('utf-8').decode('ascii', 'ignore'))
         return name
 
