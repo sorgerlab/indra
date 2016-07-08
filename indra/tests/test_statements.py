@@ -2,6 +2,7 @@ from indra.statements import *
 import pkg_resources
 import os
 from indra.preassembler.hierarchy_manager import HierarchyManager
+from indra.preassembler.hierarchy_manager import ccomp_hierarchy as ch
 from nose.tools import raises
 
 # Load the hierarchy manager data
@@ -1058,6 +1059,21 @@ def test_serialize_errors():
     assert(st3 is None)
     st4 = Phosphorylation.from_json('xyz' + jstr)
     assert(st4 is None)
+
+def test_location1():
+    a1 = Agent('a', location='plasma membrane')
+    a2 = Agent('a', location='cell')
+    a3 = Agent('a', location='cytoplasm')
+    a4 = Agent('a')
+    a5 = Agent('a')
+
+    assert(a1.refinement_of(a2, eh, mh, ch))
+    assert(not a2.refinement_of(a3, eh, mh, ch))
+    assert(not a4.refinement_of(a5, eh, mh, ch))
+    assert(not a1.refinement_of(a3, eh, mh, ch))
+    assert(not a3.refinement_of(a1, eh, mh, ch))
+    assert(a2.refinement_of(a4, eh, mh, ch))
+    assert(a3.refinement_of(a4, eh, mh, ch))
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

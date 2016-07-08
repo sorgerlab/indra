@@ -387,11 +387,15 @@ class Agent(object):
         # it cannot be a refinement
         if self.location is None and other.location is not None:
             return False
-        # If the other location is part of this location then self.location is
-        # not a refinement
-        if cc_hierarchy is not None:
-            if not cc_hierarchy.partof(other.location, self.location):
-                return False
+        # If this location is specified but the other is not then
+        # self.location is a refinement. Otherwise we check the
+        # hierarchy.
+        if not (self.location is not None and other.location is None):
+            # If the other location is part of this location then
+            # self.location is not a refinement
+            if cc_hierarchy is not None:
+                if not cc_hierarchy.partof(self.location, other.location):
+                    return False
 
         # Everything checks out
         return True
@@ -399,6 +403,7 @@ class Agent(object):
     def equals(self, other):
         matches = (self.name == other.name) and\
                   (self.active == other.active) and\
+                  (self.location == other.location) and\
                   (self.db_refs == other.db_refs)
         if len(self.mods) == len(other.mods):
             for s, o in zip(self.mods, other.mods):
@@ -434,6 +439,8 @@ class Agent(object):
         if self.bound_conditions:
             attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
                           for b in self.bound_conditions]
+        if self.location:
+            attr_strs += ['location: %s' % self.location]
         #if self.db_refs:
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
