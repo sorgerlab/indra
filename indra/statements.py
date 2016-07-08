@@ -1209,16 +1209,19 @@ class Translocation(Statement):
     agent : :py:class:`Agent`
         The agent which translocates.
     from_location : Optional[str]
-        The location from which the agent translocates.
+        The location from which the agent translocates. This must
+        be a valid GO cellular component name (e.g. "cytoplasm")
+        or ID (e.g. "GO:0005737").
     to_location : Optional[str]
-        The location to which the agent translocates.
+        The location to which the agent translocates. This must
+        be a valid GO cellular component name or ID.
     """
     def __init__(self, agent, from_location=None, to_location=None,
                  evidence=None):
         super(Translocation, self).__init__(evidence)
         self.agent = agent
-        self.from_location = _get_valid_location(from_location)
-        self.to_location = _get_valid_location(to_location)
+        self.from_location = get_valid_location(from_location)
+        self.to_location = get_valid_location(to_location)
 
     def agent_list(self):
         return [self.agent]
@@ -1233,19 +1236,21 @@ class Translocation(Statement):
                 (self.agent.name, self.from_location, self.to_location))
         return s
 
-    def refinement_of(self, other, eh, mh):
+    def refinement_of(self, other, eh, mh, ch):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
-        # Check the agent
-        if self.agent.refinement_of(other.agent, eh, mh) and \
-           (self.from_location is None or
-            self.from_location == other.from_location) and \
-           (self.to_location is None or
-            self.to_location == other.to_location):
-            return True
-        else:
-            return False
+        # Check several conditions for refinement
+        ref1 = self.agent.refinement_of(other.agent, eh, mh)
+        ref2 = (other.from_location is None or
+                self.from_location == other.from_location or
+                (ch is not None and
+                 ch.partof(self.from_location, other.from_location)))
+        ref3 = (other.to_location is None or
+                self.to_location == other.to_location or
+                (ch is not None and
+                 ch.partof(self.to_location, other.to_location)))
+        return (ref1 and ref2 and ref3)
 
     def equals(self, other):
         matches = super(Translocation, self).equals(other)
@@ -1272,7 +1277,7 @@ def get_valid_residue(residue):
 def get_valid_location(location):
     """Check if the given location represents a valid cellular component."""
     if location is not None and cellular_components.get(location) is None:
-        loc = cellular_components_reverse.get(loc.lower())
+        loc = cellular_components_reverse.get(location)
         if loc is None:
             raise InvalidLocationError(location)
         else:

@@ -1060,7 +1060,7 @@ def test_serialize_errors():
     st4 = Phosphorylation.from_json('xyz' + jstr)
     assert(st4 is None)
 
-def test_location1():
+def test_location_refinement():
     a1 = Agent('a', location='plasma membrane')
     a2 = Agent('a', location='cell')
     a3 = Agent('a', location='cytoplasm')
@@ -1074,6 +1074,24 @@ def test_location1():
     assert(not a3.refinement_of(a1, eh, mh, ch))
     assert(a2.refinement_of(a4, eh, mh, ch))
     assert(a3.refinement_of(a4, eh, mh, ch))
+
+def test_tranlocation_refinement():
+    st1 = Translocation(Agent('a'), 'plasma membrane', 'cytoplasm')
+    st2 = Translocation(Agent('a'), 'plasma membrane', None)
+    st3 = Translocation(Agent('a'), None, 'cytoplasm')
+    st4 = Translocation(Agent('a'), 'cell', 'cytoplasm')
+    st5 = Translocation(Agent('a'), 'cell', 'cell')
+    st6 = Translocation(Agent('a'), 'plasma membrane', 'cell')
+    st7 = Translocation(Agent('a'), 'nucleus', 'cytoplasm')
+    assert(st1.refinement_of(st2, eh, mh, ch))
+    assert(st1.refinement_of(st3, eh, mh, ch))
+    assert(not st2.refinement_of(st3, eh, mh, ch))
+    assert(st1.refinement_of(st4, eh, mh, ch))
+    assert(not st2.refinement_of(st4, eh, mh, ch))
+    assert(st4.refinement_of(st5, eh, mh, ch))
+    assert(st6.refinement_of(st5, eh, mh, ch))
+    assert(not st1.refinement_of(st7, eh, mh, ch))
+    assert(st7.refinement_of(st4, eh, mh, ch))
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
