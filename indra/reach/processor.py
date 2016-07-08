@@ -211,12 +211,43 @@ class ReachProcessor(object):
                     if agent is None:
                         continue
                 elif self._get_arg_type(a) == 'source':
-                    from_location = a['text']
+                    from_location = self._get_location_by_id(a['arg'])
                 elif self._get_arg_type(a) == 'destination':
-                    to_location = a['text']
+                    to_location = self._get_location_by_id(a['arg'])
             st = Translocation(agent, from_location, to_location,
                                evidence = ev)
             self.statements.append(st)
+
+    def _get_location_by_id(self, loc_id):
+        qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % loc_id
+        res = self.tree.execute(qstr)
+        if res is None:
+            return None
+        try:
+            entity_term = res.next()
+        except StopIteration:
+            logger.debug(' %s is not an entity' % entity_id)
+            return None
+        name = entity_term.get('text')
+        go_id = None
+        for xr in entity_term['xrefs']:
+            ns = xr['namespace']
+            if ns == 'go':
+                go_id = xr['id']
+        # Try to get valid location based on GO id
+        if go_id is not None:
+            try:
+                loc = get_valid_location(go_id)
+                return loc
+            except InvalidLocationError:
+                pass
+        # See if the raw name is a valid cellular component
+        try:
+            loc = get_valid_location(name.lower())
+            return loc
+        except InvalidLocationError:
+            pass
+        return None
 
     def _get_agent_from_entity(self, entity_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
