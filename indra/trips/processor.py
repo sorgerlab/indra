@@ -468,17 +468,39 @@ class TripsProcessor(object):
         term_type = term.find("type").text
         name = term.find("name").text
         if term_type != 'ONT::CELL-PART':
-            return name
+            return None
         # If it is a cellular location, try to look up and return
-        # the standard name from UniProt
+        # the standard name from GO
         dbid = term.attrib.get('dbid')
         dbids = dbid.split('|')
         db_refs_dict = dict([d.split(':') for d in dbids])
+        goid = db_refs_dict.get('GO')
+        if goid is not None:
+            try:
+                loc_name = get_valid_location('GO:' + goid)
+                return loc_name
+            except InvalidLocationError:
+                pass
+        # Try to get the same from UP
         upid = db_refs_dict.get('UP')
         if upid is not None and upid.startswith('SL'):
             loc_name = up_client.uniprot_subcell_loc.get(upid)
-            return loc_name
-        return name
+            if loc_name is not None:
+                try:
+                    loc_name = get_valid_location(loc_name.lower())
+                    return loc_name
+                except InvalidLocationError:
+                    pass
+        # Check if the raw name is a valid cellular component
+        if name is not None:
+            try:
+                loc_name = get_valid_location(name.lower())
+                return loc_name
+            except InvalidLocationError:
+                pass
+        msg = 'Location %s is not a valid GO cellular component' % name
+        logger.debug(msg)
+        return None
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
