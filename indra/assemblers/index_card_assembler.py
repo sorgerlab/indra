@@ -178,8 +178,14 @@ def assemble_translocation(stmt):
     interaction['from_location_text'] = stmt.from_location
     interaction['to_location_text'] = stmt.to_location
     # TODO: get GO IDs for location here
-    interaction['from_location_id'] = ''
-    interaction['to_location_id'] = ''
+    from_loc_id = cellular_components.get(stmt.from_location)
+    if from_loc_id is None:
+        from_loc_id = ''
+    interaction['from_location_id'] = from_loc_id
+    to_loc_id = cellular_components.get(stmt.to_location)
+    if to_loc_id is None:
+        to_loc_id = ''
+    interaction['to_location_id'] = to_loc_id
     interaction['participant_a'] = get_participant(None)
     interaction['participant_b'] = get_participant(stmt.agent)
     card.card['interaction'] = interaction
