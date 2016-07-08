@@ -191,4 +191,3 @@ activity_hierarchy.build_transitive_closure()
 """Default cellular_component hierarchy loaded from the RDF file at
 `resources/cellular_component_hierarchy.rdf`."""
 ccomp_hierarchy = HierarchyManager(ccomp_file_path)
-ccomp_hierarchy.build_transitive_closure('partof')
