@@ -4,7 +4,7 @@ from indra.bel import bel_api
 from indra.biopax import biopax_api as ba
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh, \
-                                                 modification_hierarchy as mh \
+                                                 modification_hierarchy as mh, \
                                                  ccomp_hierarchy as ch
 from indra.preassembler.sitemapper import default_mapper as sm
 

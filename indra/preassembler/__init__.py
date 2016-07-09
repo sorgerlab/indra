@@ -190,7 +190,8 @@ class Preassembler(object):
         site is identified as supporting a more specific statement:
 
         >>> from indra.preassembler.hierarchy_manager import \
-        entity_hierarchy as eh, modification_hierarchy as mh
+        entity_hierarchy as eh, modification_hierarchy as mh, \ 
+        ccomp_hierarchy as ch
         >>> braf = Agent('BRAF')
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
@@ -353,7 +354,8 @@ def render_stmt_graph(statements, agent_style=None):
     Pattern for getting statements and rendering as a Graphviz graph:
 
     >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh
+    entity_hierarchy as eh, modification_hierarchy as mh, \
+    ccomp_hierarchy as ch
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
@@ -424,7 +426,8 @@ def flatten_stmts(stmts):
     top-level statement; calling :py:func:`flatten_stmts` recovers both:
 
     >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh
+    entity_hierarchy as eh, modification_hierarchy as mh, \
+    ccomp_hierarchy as ch
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
@@ -477,7 +480,8 @@ def flatten_evidence(stmts):
     statement to the evidence list of the top-level statement:
 
     >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh
+    entity_hierarchy as eh, modification_hierarchy as mh \
+    ccomp_hierarchy as ch
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1,
