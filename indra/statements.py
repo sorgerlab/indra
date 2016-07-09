@@ -299,8 +299,7 @@ class Agent(object):
     def entity_matches_key(self):
         return self.name
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy,
-                      cc_hierarchy=None):
+    def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -309,7 +308,7 @@ class Agent(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         if not (self.entity_matches(other) or \
-                entity_hierarchy.isa(self.name, other.name)):
+                hierarchies['entity'].isa(self.name, other.name)):
             return False
 
         # BOUND CONDITIONS
@@ -332,8 +331,8 @@ class Agent(object):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.agent.entity_matches(bc_other.agent) or
-                    entity_hierarchy.isa(bc_self.agent.name,
-                                         bc_other.agent.name)) and \
+                    hierarchies['entity'].isa(bc_self.agent.name,
+                                              bc_other.agent.name)) and \
                     bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
@@ -356,7 +355,8 @@ class Agent(object):
             # to make sure that each one is used at most once to match
             # the modification of one of the other Agent's modifications.
             for ix, self_mod in enumerate(self.mods):
-                if self_mod.refinement_of(other_mod, mod_hierarchy):
+                if self_mod.refinement_of(other_mod,
+                                          hierarchies['modification']):
                     # If this modification hasn't been used for matching yet
                     if not ix in matched_indices:
                         # Set the index as used
@@ -393,9 +393,9 @@ class Agent(object):
         elif other.location is not None:
             # If the other location is part of this location then
             # self.location is not a refinement
-            if cc_hierarchy is not None:
-                if not cc_hierarchy.partof(self.location, other.location):
-                    return False
+            if not hierarchies['cellular_component'].partof(
+                self.location, other.location):
+                return False
 
         # Everything checks out
         return True
@@ -647,8 +647,7 @@ class Modification(Statement):
         self.enz = agent_list[0]
         self.sub = agent_list[1]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy,
-                      ccomp_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
@@ -661,11 +660,8 @@ class Modification(Statement):
         elif self.enz is not None and other.enz is None:
             enz_refinement = True
         else:
-            enz_refinement = self.enz.refinement_of(other.enz, entity_hierarchy,
-                                                    mod_hierarchy,
-                                                    ccomp_hierarchy)
-        sub_refinement = self.sub.refinement_of(other.sub, entity_hierarchy,
-                                                mod_hierarchy, ccomp_hierarchy)
+            enz_refinement = self.enz.refinement_of(other.enz, hierarchies)
+        sub_refinement = self.sub.refinement_of(other.sub, hierarchies)
         if not (enz_refinement and sub_refinement):
             return False
         # For this to be a refinement of the other, the modifications either
@@ -740,15 +736,13 @@ class SelfModification(Statement):
             raise ValueError("SelfModification has one agent.")
         self.enz = agent_list[0]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy,
-                      ccomp_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
 
         # Check agent arguments
-        if not self.enz.refinement_of(other.enz, entity_hierarchy,
-                                      mod_hierarchy, ccomp_hierarchy):
+        if not self.enz.refinement_of(other.enz, hierarchies):
             return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
@@ -903,12 +897,12 @@ class Activation(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def refinement_of(self, other, eh, mh, ch):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
-        if self.subj.refinement_of(other.subj, eh, mh, ch) and \
-           self.obj.refinement_of(other.obj, eh, mh, ch) and \
+        if self.subj.refinement_of(other.subj, hierarchies) and \
+           self.obj.refinement_of(other.obj, hierarchies) and \
            self.subj_activity == other.subj_activity and \
            self.obj_activity == other.obj_activity and \
            self.is_activation == other.is_activation:
@@ -972,15 +966,13 @@ class ActiveForm(Statement):
             raise ValueError("ActivityForm has one agent.")
         self.agent = agent_list[0]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy,
-                      ccomp_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
 
         # Check agent arguments
-        if not self.agent.refinement_of(other.agent, entity_hierarchy,
-                                          mod_hierarchy, ccomp_hierarchy):
+        if not self.agent.refinement_of(other.agent, hierarchies):
             return False
 
         # Make sure that the relationships and activities match
@@ -1053,13 +1045,13 @@ class RasGef(Statement):
                 (self.gef.name, self.gef_activity, self.ras.name))
         return s
 
-    def refinement_of(self, other, eh, mh, ch):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
         # Check the GEF
-        if self.gef.refinement_of(other.gef, eh, mh, ch) and \
-           self.ras.refinement_of(other.ras, eh, mh, ch) and \
+        if self.gef.refinement_of(other.gef, hierarchies) and \
+           self.ras.refinement_of(other.ras, hierarchies) and \
            self.gef_activity == other.gef_activity:
             return True
         else:
@@ -1114,13 +1106,13 @@ class RasGap(Statement):
         self.gap = agent_list[0]
         self.ras = agent_list[1]
 
-    def refinement_of(self, other, eh, mh, ch):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
         # Check the GAP
-        if self.gap.refinement_of(other.gap, eh, mh, ch) and \
-           self.ras.refinement_of(other.ras, eh, mh, ch) and \
+        if self.gap.refinement_of(other.gap, hierarchies) and \
+           self.ras.refinement_of(other.ras, hierarchies) and \
            self.gap_activity == other.gap_activity:
             return True
         else:
@@ -1178,7 +1170,7 @@ class Complex(Statement):
         s = "Complex(%s)" % (', '.join([('%s' % m) for m in self.members]))
         return s
 
-    def refinement_of(self, other, eh, mh, ch):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
@@ -1193,7 +1185,7 @@ class Complex(Statement):
             for self_agent_ix, self_agent in enumerate(self.members):
                 if self_agent_ix in self_match_indices:
                     continue
-                if self_agent.refinement_of(other_agent, eh, mh, ch):
+                if self_agent.refinement_of(other_agent, hierarchies):
                     self_match_indices.add(self_agent_ix)
                     break
         if len(self_match_indices) != len(other.members):
@@ -1240,20 +1232,19 @@ class Translocation(Statement):
                 (self.agent.name, self.from_location, self.to_location))
         return s
 
-    def refinement_of(self, other, eh, mh, ch=None):
+    def refinement_of(self, other, hierarchies=None):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
         # Check several conditions for refinement
-        ref1 = self.agent.refinement_of(other.agent, eh, mh, ch)
+        ch = hierarchies['cellular_component']
+        ref1 = self.agent.refinement_of(other.agent, hierarchies)
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-                (ch is not None and
-                 ch.partof(self.from_location, other.from_location)))
+                ch.partof(self.from_location, other.from_location))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-                (ch is not None and
-                 ch.partof(self.to_location, other.to_location)))
+                ch.partof(self.to_location, other.to_location))
         return (ref1 and ref2 and ref3)
 
     def equals(self, other):
