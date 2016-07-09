@@ -271,7 +271,7 @@ def test_act_mod():
     positions = [m.position for m in st.agent.mods]
     assert(residues == ['S', 'S'])
     assert(positions == ['218', '222'])
-    assert(st.relationship == 'increases')
+    assert(st.is_active)
     os.remove(fname)
 
 def test_bound_phosphorylate():
