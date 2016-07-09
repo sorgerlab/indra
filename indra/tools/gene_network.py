@@ -4,7 +4,8 @@ from indra.bel import bel_api
 from indra.biopax import biopax_api as ba
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import entity_hierarchy as eh, \
-                                                 modification_hierarchy as mh
+                                                 modification_hierarchy as mh \
+                                                 ccomp_hierarchy as ch
 from indra.preassembler.sitemapper import default_mapper as sm
 
 class GeneNetwork(object):
@@ -204,7 +205,7 @@ class GeneNetwork(object):
               in `duplicates2`.
         """
         # First round of preassembly: remove duplicates before sitemapping
-        pa1 = Preassembler(eh, mh, stmts)
+        pa1 = Preassembler(eh, mh, ch, stmts)
         print "Combining duplicates"
         pa1.combine_duplicates()
         # Map sites
@@ -213,7 +214,7 @@ class GeneNetwork(object):
         # Combine valid and mapped statements into single list
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
         # Second round of preassembly: de-duplicate and combine related
-        pa2 = Preassembler(eh, mh, mapped_stmts)
+        pa2 = Preassembler(eh, mh, ch, mapped_stmts)
         print "Combining duplicates again"
         pa2.combine_duplicates()
         pa2.combine_related()

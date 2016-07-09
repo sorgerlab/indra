@@ -33,10 +33,14 @@ class Preassembler(object):
         Entity hierarchy.
     mod_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
         Post-translational modification type hierarchy.
+    ccomp_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
+        Cellular component hierarchy.
     """
-    def __init__(self, entity_hierarchy, mod_hierarchy, stmts=None):
+    def __init__(self, entity_hierarchy, mod_hierarchy, ccomp_hierarchy=None,
+                 stmts=None):
         self.entity_hierarchy = entity_hierarchy
         self.mod_hierarchy = mod_hierarchy
+        self.ccomp_hierarchy = ccomp_hierarchy
         if stmts:
             self.stmts = deepcopy(stmts)
         else:
@@ -191,7 +195,7 @@ class Preassembler(object):
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
         >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-        >>> pa = Preassembler(eh, mh, [st1, st2])
+        >>> pa = Preassembler(eh, mh, ch, [st1, st2])
         >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
         Combining ...
         >>> combined_stmts
@@ -304,7 +308,8 @@ class Preassembler(object):
             # Iterate over pairs of statements in the group:
             for stmt1, stmt2 in itertools.permutations(ext_group, 2):
                 if stmt1.refinement_of(stmt2, self.entity_hierarchy,
-                                       self.mod_hierarchy):
+                                       self.mod_hierarchy,
+                                       self.ccomp_hierarchy):
                     stmt1.supported_by.append(stmt2)
                     stmt2.supports.append(stmt1)
         # Now that the groups have been processed, we need to find the
@@ -353,7 +358,7 @@ def render_stmt_graph(statements, agent_style=None):
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
@@ -424,7 +429,7 @@ def flatten_stmts(stmts):
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
@@ -479,7 +484,7 @@ def flatten_evidence(stmts):
     ... evidence=[Evidence(text='foo'), Evidence(text='bar')])
     >>> st2 = Phosphorylation(braf, map2k1, residue='S',
     ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
-    >>> pa = Preassembler(eh, mh, [st1, st2])
+    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
