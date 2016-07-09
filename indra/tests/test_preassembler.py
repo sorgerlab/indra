@@ -5,17 +5,7 @@ from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex
-from indra.preassembler.hierarchy_manager import HierarchyManager
-
-entity_file_path = os.path.join(os.path.dirname(__file__),
-                    '..', 'resources', 'entity_hierarchy.rdf')
-mod_file_path = os.path.join(os.path.dirname(__file__),
-                    '..', 'resources', 'modification_hierarchy.rdf')
-ccomp_file_path = os.path.join(os.path.dirname(__file__),
-                    '..', 'resources', 'cellular_component_hierarchy.rdf')
-eh = HierarchyManager(entity_file_path)
-mh = HierarchyManager(mod_file_path)
-ch = HierarchyManager(ccomp_file_path)
+from indra.preassembler.hierarchy_manager import hierarchies
 
 """
 def test_from_text():
@@ -33,7 +23,7 @@ def test_duplicates():
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     st1 = Phosphorylation(src, ras)
     st2 = Phosphorylation(src, ras)
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
 
@@ -43,7 +33,7 @@ def test_duplicates_copy():
     st1 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 1')])
     st2 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 2')])
     stmts = [st1, st2]
-    pa = Preassembler(eh, mh, stmts=stmts)
+    pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
     assert(len(stmts) == 2)
@@ -64,7 +54,7 @@ def test_duplicates_sorting():
     st2 = Phosphorylation(map2k1_2, mapk3)
     st3 = Phosphorylation(map2k1_1, mapk3, position='218')
     stmts = [st1, st2, st3]
-    pa = Preassembler(eh, mh, stmts=stmts)
+    pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 2)
 
@@ -91,7 +81,7 @@ def test_combine_duplicates():
     p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
                            evidence=Evidence(text='beep'))
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
-    pa = Preassembler(eh, mh, stmts=stmts)
+    pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert(len(pa.unique_stmts) == 4)
@@ -112,7 +102,7 @@ def test_superfamily_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, ras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras, 'tyrosine', '32')
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
@@ -128,7 +118,7 @@ def test_modification_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras)
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
@@ -141,7 +131,7 @@ def test_modification_refinement_residue_noenz():
     erbb3 = Agent('Erbb3')
     st1 = Phosphorylation(None, erbb3)
     st2 = Phosphorylation(None, erbb3, 'Y')
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
 
@@ -152,7 +142,7 @@ def test_modification_refinement_noenz():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(None, nras, 'tyrosine', '32')
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
@@ -170,7 +160,7 @@ def test_modification_norefinement_noenz():
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(None, nras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -186,7 +176,7 @@ def test_modification_norefinement_subsfamily():
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(src, ras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -202,7 +192,7 @@ def test_modification_norefinement_enzfamily():
     st1 = Phosphorylation(raf, mek, 'Y', '32',
                           evidence=[Evidence(text='foo')])
     st2 = Phosphorylation(braf, mek)
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -221,7 +211,7 @@ def test_bound_condition_refinement():
     st2 = Phosphorylation(src, nrasgtp, 'tyrosine', '32')
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     assert(len(stmts) == 1)
     assert (stmts[0].equals(st2))
@@ -238,7 +228,7 @@ def test_bound_condition_norefinement():
         bound_conditions=[BoundCondition(gtp, True)])
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nrasgtp)
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
@@ -250,7 +240,7 @@ def test_complex_refinement():
     mek = Agent('MEK')
     st1 = Complex([ras, raf])
     st2 = Complex([mek, ras, raf])
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
     assert(len(pa.unique_stmts) == 2)
     assert(len(pa.related_stmts) == 2)
@@ -286,30 +276,30 @@ def test_activating_substitution_refinement():
                      evidence=Evidence(text='bar'))
     st5 = ActiveForm(nras1, 'gtpbound1', False,
                      evidence=Evidence(text='bar'))
-    assert(st2.refinement_of(st1, eh, mh, ch))
-    assert(not st3.refinement_of(st1, eh, mh, ch))
-    assert(not st4.refinement_of(st1, eh, mh, ch))
-    assert(not st5.refinement_of(st1, eh, mh, ch))
+    assert(st2.refinement_of(st1, hierarchies))
+    assert(not st3.refinement_of(st1, hierarchies))
+    assert(not st4.refinement_of(st1, hierarchies))
+    assert(not st5.refinement_of(st1, hierarchies))
 
-    assert(not st1.refinement_of(st2, eh, mh, ch))
-    assert(not st3.refinement_of(st2, eh, mh, ch))
-    assert(not st4.refinement_of(st2, eh, mh, ch))
-    assert(not st5.refinement_of(st2, eh, mh, ch))
+    assert(not st1.refinement_of(st2, hierarchies))
+    assert(not st3.refinement_of(st2, hierarchies))
+    assert(not st4.refinement_of(st2, hierarchies))
+    assert(not st5.refinement_of(st2, hierarchies))
 
-    assert(not st1.refinement_of(st3, eh, mh, ch))
-    assert(not st2.refinement_of(st3, eh, mh, ch))
-    assert(not st4.refinement_of(st3, eh, mh, ch))
-    assert(not st5.refinement_of(st3, eh, mh, ch))
+    assert(not st1.refinement_of(st3, hierarchies))
+    assert(not st2.refinement_of(st3, hierarchies))
+    assert(not st4.refinement_of(st3, hierarchies))
+    assert(not st5.refinement_of(st3, hierarchies))
 
-    assert(not st1.refinement_of(st4, eh, mh, ch))
-    assert(not st2.refinement_of(st4, eh, mh, ch))
-    assert(not st3.refinement_of(st4, eh, mh, ch))
-    assert(not st5.refinement_of(st4, eh, mh, ch))
+    assert(not st1.refinement_of(st4, hierarchies))
+    assert(not st2.refinement_of(st4, hierarchies))
+    assert(not st3.refinement_of(st4, hierarchies))
+    assert(not st5.refinement_of(st4, hierarchies))
 
-    assert(not st1.refinement_of(st5, eh, mh, ch))
-    assert(not st2.refinement_of(st5, eh, mh, ch))
-    assert(not st3.refinement_of(st5, eh, mh, ch))
-    assert(not st4.refinement_of(st5, eh, mh, ch))
+    assert(not st1.refinement_of(st5, hierarchies))
+    assert(not st2.refinement_of(st5, hierarchies))
+    assert(not st3.refinement_of(st5, hierarchies))
+    assert(not st4.refinement_of(st5, hierarchies))
 
 def test_render_stmt_graph():
     braf = Agent('BRAF')
@@ -324,7 +314,7 @@ def test_render_stmt_graph():
     p5 = Phosphorylation(braf, mek1, 'serine', '218')
     p6 = Phosphorylation(braf, mek1, 'serine', '222')
     stmts = [p0, p1, p2, p3, p4, p5, p6]
-    pa = Preassembler(eh, mh, stmts=stmts)
+    pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_related()
     graph = render_stmt_graph(pa.related_stmts)
     # One node for each statement
@@ -345,7 +335,7 @@ def test_flatten_evidence_hierarchy():
     st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
     st2 = Phosphorylation(braf, mek, 'S', '218',
                           evidence=[Evidence(text='bar')])
-    pa = Preassembler(eh, mh, stmts=[st1, st2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
     assert len(pa.related_stmts) == 1
     flattened = flatten_evidence(pa.related_stmts)
@@ -365,7 +355,7 @@ def test_flatten_stmts():
     st3 = Phosphorylation(None, Agent('RAF1'))
     st4 = Phosphorylation(Agent('PAK1'), Agent('RAF1'), 'S', '338')
     st5 = Phosphorylation(None, Agent('RAF1'), evidence=Evidence(text='foo'))
-    pa = Preassembler(eh, mh, stmts=[st1, st2, st3, st4, st5])
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4, st5])
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)

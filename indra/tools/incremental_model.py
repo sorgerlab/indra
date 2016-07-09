@@ -2,9 +2,7 @@ import pickle
 import logging
 from indra.assemblers import PysbAssembler
 from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
-from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
-from indra.preassembler.hierarchy_manager import ccomp_hierarchy as ch
+from indra.preassembler.hierarchy_manager import hierarchies
 
 logger = logging.getLogger('incremental_model')
 
@@ -129,7 +127,7 @@ class IncrementalModel(object):
         attributes.
         """
         stmts = self.get_statements()
-        pa = Preassembler(eh, mh, ch, stmts)
+        pa = Preassembler(hierarchies, stmts)
         self.unique_stmts = pa.combine_duplicates()
         self.toplevel_stmts = pa.combine_related()
 

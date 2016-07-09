@@ -11,12 +11,10 @@ class Preassembler(object):
 
     Parameters
     ----------
-    entity_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
-        Hierarchy of entities, primarily specifying relationships between
-        genes and gene families.
-    mod_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
-        Hierarchy of post-translational modifications, e.g., specifying that
-        serine phosphorylation is a subtype of phosphorylation.
+    hierarchies : dict[:py:class:`indra.preassembler.hierarchy_manager`]
+        A dictionary of hierarchies with keys such as 'entity' (hierarchy of
+        entities, primarily specifying relationships between genes and their
+        families) and 'modification' pointing to HierarchyManagers
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements
         should be added using the :py:meth:`add_statements` method.
@@ -29,18 +27,12 @@ class Preassembler(object):
         Statements resulting from combining duplicates.
     related_stmts : list of :py:class:`indra.statements.Statement`
         Top-level statements after building the refinement hierarchy.
-    entity_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
-        Entity hierarchy.
-    mod_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
-        Post-translational modification type hierarchy.
-    ccomp_hierarchy : :py:class:`indra.preassembler.hierarchy_manager`
-        Cellular component hierarchy.
+    hierarchies : dict[:py:class:`indra.preassembler.hierarchy_manager`]
+        A dictionary of hierarchies with keys such as 'entity' and
+        'modification' pointing to HierarchyManagers
     """
-    def __init__(self, entity_hierarchy, mod_hierarchy, ccomp_hierarchy=None,
-                 stmts=None):
-        self.entity_hierarchy = entity_hierarchy
-        self.mod_hierarchy = mod_hierarchy
-        self.ccomp_hierarchy = ccomp_hierarchy
+    def __init__(self, hierarchies, stmts=None):
+        self.hierarchies = hierarchies
         if stmts:
             self.stmts = deepcopy(stmts)
         else:
@@ -189,14 +181,12 @@ class Preassembler(object):
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement:
 
-        >>> from indra.preassembler.hierarchy_manager import \
-        entity_hierarchy as eh, modification_hierarchy as mh, \ 
-        ccomp_hierarchy as ch
+        >>> from indra.preassembler.hierarchy_manager import hierarchies\
         >>> braf = Agent('BRAF')
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
         >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-        >>> pa = Preassembler(eh, mh, ch, [st1, st2])
+        >>> pa = Preassembler(hierarchies, [st1, st2])
         >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
         Combining ...
         >>> combined_stmts
@@ -288,7 +278,7 @@ class Preassembler(object):
                     val = False
                 else:
                     val = ag1.entity_matches(ag2) or\
-                          self.entity_hierarchy.isa(ag1.name, ag2.name)
+                          self.hierarchies['entity'].isa(ag1.name, ag2.name)
                 g1_is_refinement.append(val)
             # If g1_is_refinement is all True values, that means everything in
             # the group1 statements isa thing in the group2 statements.
@@ -308,9 +298,7 @@ class Preassembler(object):
         for ext_group in ext_groups.values():
             # Iterate over pairs of statements in the group:
             for stmt1, stmt2 in itertools.permutations(ext_group, 2):
-                if stmt1.refinement_of(stmt2, self.entity_hierarchy,
-                                       self.mod_hierarchy,
-                                       self.ccomp_hierarchy):
+                if stmt1.refinement_of(stmt2, self.hierarchies):
                     stmt1.supported_by.append(stmt2)
                     stmt2.supports.append(stmt1)
         # Now that the groups have been processed, we need to find the
@@ -353,14 +341,12 @@ def render_stmt_graph(statements, agent_style=None):
     --------
     Pattern for getting statements and rendering as a Graphviz graph:
 
-    >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh, \
-    ccomp_hierarchy as ch
+    >>> from indra.preassembler.hierarchy_manager import hierarchies
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
+    >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
@@ -425,14 +411,12 @@ def flatten_stmts(stmts):
     Calling :py:meth:`combine_related` on two statements results in one
     top-level statement; calling :py:func:`flatten_stmts` recovers both:
 
-    >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh, \
-    ccomp_hierarchy as ch
+    >>> from indra.preassembler.hierarchy_manager import hierarchies
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
+    >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
@@ -479,16 +463,14 @@ def flatten_evidence(stmts):
     Flattening evidence adds the two pieces of evidence from the supporting
     statement to the evidence list of the top-level statement:
 
-    >>> from indra.preassembler.hierarchy_manager import \
-    entity_hierarchy as eh, modification_hierarchy as mh \
-    ccomp_hierarchy as ch
+    >>> from indra.preassembler.hierarchy_manager import hierarchies
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1,
     ... evidence=[Evidence(text='foo'), Evidence(text='bar')])
     >>> st2 = Phosphorylation(braf, map2k1, residue='S',
     ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
-    >>> pa = Preassembler(eh, mh, ch, [st1, st2])
+    >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]

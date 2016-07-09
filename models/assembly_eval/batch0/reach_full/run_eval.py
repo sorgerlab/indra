@@ -2,8 +2,7 @@ import os
 import shutil
 from indra import reach
 from indra.literature import pmc_client
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
-from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
+from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.assemblers import PysbAssembler
 
@@ -26,7 +25,7 @@ if __name__ == '__main__':
                'PMC4345513', 'PMC534114']
     rerun = False
 
-    pa = Preassembler(eh, mh)
+    pa = Preassembler(hierarchies)
 
     for pi in pmc_ids:
         print 'Reading %s...' % pi

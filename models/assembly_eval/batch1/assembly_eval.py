@@ -1,7 +1,6 @@
 import os
 import pickle
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
-from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
+from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
 from indra.mechlinker import MechLinker
@@ -41,7 +40,7 @@ def run_assembly(stmts, folder, pmcid):
             grounded_stmts.append(st)
 
     # Instantiate the Preassembler
-    pa = Preassembler(eh, mh)
+    pa = Preassembler(hierarchies)
 
     pa.add_statements(grounded_stmts)
     print '%d statements collected in total.' % len(pa.stmts)
@@ -49,7 +48,7 @@ def run_assembly(stmts, folder, pmcid):
     print '%d statements after combining duplicates.' % len(unique_stmts)
     ml = MechLinker(unique_stmts)
     ml.link_statements()
-    pa = Preassembler(eh, mh, ml.statements)
+    pa = Preassembler(hierarchies, ml.statements)
     pa.combine_duplicates()
     related_stmts = pa.combine_related()
     print '%d statements after combining related.' % len(related_stmts)
