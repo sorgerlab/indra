@@ -52,6 +52,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_activation(stmt))
             elif isinstance(stmt, ist.ActiveForm):
                 stmt_strs.append(_assemble_activeform(stmt))
+            elif isinstance(stmt, ist.Translocation):
+                stmt_strs.append(_assemble_translocation(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         model = ' '.join(stmt_strs)
@@ -60,6 +62,10 @@ class EnglishAssembler(object):
 def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
     agent_str = agent.name
+    # Handle location
+    if agent.location is not None:
+        agent_str += ' in the ' + agent.location
+
     if not agent.mods and not agent.bound_conditions:
         return agent_str
 
@@ -216,6 +222,16 @@ def _assemble_activation(stmt):
     else:
         rel_str = ' inactivates '
     stmt_str = subj_str + rel_str + obj_str
+    return _make_sentence(stmt_str)
+
+def _assemble_translocation(stmt):
+    """Assemble Translocation statements into text."""
+    agent_str = _assemble_agent_str(stmt.agent)
+    stmt_str = agent_str + ' translocates'
+    if stmt.from_location is not None:
+        stmt_str += ' from the ' + stmt.from_location
+    if stmt.to_location is not None:
+        stmt_str += ' to the ' + stmt.to_location
     return _make_sentence(stmt_str)
 
 def _make_sentence(txt):

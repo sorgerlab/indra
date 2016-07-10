@@ -185,3 +185,30 @@ def test_activation():
     s = e.make_model()
     print s
     assert(s == 'MEK activates ERK.')
+
+def test_agent_loc():
+    a = Agent('BRAF', location='cytoplasm')
+    print ea._assemble_agent_str(a) 
+    assert(ea._assemble_agent_str(a) == 'BRAF in the cytoplasm')
+
+def test_translocation():
+    st1 = Translocation(Agent('FOXO3A'))
+    st2 = Translocation(Agent('FOXO3A'), 'cytoplasm')
+    st3 = Translocation(Agent('FOXO3A'), None, 'nucleus')
+    st4 = Translocation(Agent('FOXO3A'), 'cytoplasm', 'nucleus')
+    e = ea.EnglishAssembler()
+    e.add_statements([st1])
+    s = e.make_model()
+    assert(s == 'FOXO3A translocates.')
+    e = ea.EnglishAssembler()
+    e.add_statements([st2])
+    s = e.make_model()
+    assert(s == 'FOXO3A translocates from the cytoplasm.')
+    e = ea.EnglishAssembler()
+    e.add_statements([st3])
+    s = e.make_model()
+    assert(s == 'FOXO3A translocates to the nucleus.')
+    e = ea.EnglishAssembler()
+    e.add_statements([st4])
+    s = e.make_model()
+    assert(s == 'FOXO3A translocates from the cytoplasm to the nucleus.')
