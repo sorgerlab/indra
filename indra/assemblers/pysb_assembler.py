@@ -20,7 +20,7 @@ SelfExporter.do_export = False
 statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
                        ist.SelfModification, ist.Complex,
                        ist.Activation, ist.ActiveForm,
-                       ist.RasGef, ist.RasGap]
+                       ist.RasGef, ist.RasGap, ist.Translocation]
 
 def _is_whitelisted(stmt):
     """Return True if the statement type is in the whitelist."""
@@ -67,6 +67,10 @@ class _BaseAgentSet(object):
             base_agent.create_site(mut_site_name, states=['WT'])
             if mc.residue_to is not None:
                 base_agent.add_site_states(mut_site_name, [mc.residue_to])
+
+        # Handle location condition
+        if agent.location is not None:
+            base_agent.create_site('loc', [agent.location])
 
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.iteritems():
@@ -246,6 +250,8 @@ def get_agent_rule_str(agent):
                 rule_str_list.append(b.agent.name)
             else:
                 rule_str_list.append('n' + b.agent.name)
+    if agent.location is not None:
+        rule_str_list.append(agent.location.replace(' ', '_'))
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
@@ -345,6 +351,10 @@ def get_site_pattern(agent):
         mut_site_name = res_from + mc.position
         mut_site_state = mc.residue_to
         pattern[mut_site_name] = mut_site_state
+
+    # Handle location
+    if agent.location is not None:
+        pattern['loc'] = agent.location
 
     return pattern
 
@@ -1467,4 +1477,27 @@ def rasgtpactivation_monomers_default(stmt, agent_set):
 
 def rasgtpactivation_assemble_default(stmt, model, agent_set):
     pass
+
+# TRANSLOCATION ###############################################
+def translocation_monomers_default(stmt, agent_set):
+    # Skip if either from or to locations are missing
+    if stmt.from_location is None or stmt.to_location is None:
+        return
+    agent = agent_set.get_create_base_agent(stmt.agent)
+    agent.create_site('loc', [stmt.from_location, stmt.to_location])
+
+def translocation_assemble_default(stmt, model, agent_set):
+    kf_trans = get_create_parameter(model, 'kf_trans', 1.0, unique=False)
+    monomer = model.monomers[stmt.agent.name]
+    rule_agent_str = get_agent_rule_str(stmt.agent)
+    rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
+                                              stmt.from_location,
+                                              stmt.to_location)
+    agent_from = get_monomer_pattern(model, stmt.agent,
+                                     extra_fields={'loc': stmt.from_location})
+    agent_to = get_monomer_pattern(model, stmt.agent,
+                                   extra_fields={'loc': stmt.to_location})
+    r = Rule(rule_name, agent_to >> agent_from, kf_trans)
+    add_rule_to_model(model, r)
+
 

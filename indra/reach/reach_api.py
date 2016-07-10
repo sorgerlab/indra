@@ -286,4 +286,5 @@ def process_json_str(json_str, citation=None):
     rp.get_modifications()
     rp.get_complexes()
     rp.get_activation()
+    rp.get_translocation()
     return rp

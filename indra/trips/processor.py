@@ -105,6 +105,7 @@ class TripsProcessor(object):
             epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence,
                           pmid=self.doc_id, epistemics=epi)
+            location = self._get_event_location(event)
 
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
@@ -159,10 +160,10 @@ class TripsProcessor(object):
 
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
-                self.statements.append(Activation(a1, activator_act,
-                                                  a2, 'activity',
-                                                  is_activation=is_activation,
-                                                  evidence=ev))
+                st = Activation(a1, activator_act, a2, 'activity',
+                                is_activation=is_activation, evidence=ev)
+                _stmt_location_to_agents(st, location)
+                self.statements.append(st)
 
     def get_activations_causal(self):
         """Extract causal Activation INDRA Statements."""
@@ -201,6 +202,7 @@ class TripsProcessor(object):
             epi = {'section_type': sec, 'direct': False}
             ev = Evidence(source_api='trips', text=sentence,
                           pmid=self.doc_id, epistemics=epi)
+            location = self._get_event_location(outcome_event)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
                 if affected is None:
@@ -214,6 +216,7 @@ class TripsProcessor(object):
                     st = Activation(a1, 'activity',
                                     a2, 'activity', is_activation=True,
                                     evidence=[ev])
+                    _stmt_location_to_agents(st, location)
                     self.statements.append(st)
             elif outcome_event_type.text == 'ONT::ACTIVITY':
                 agent_tag = outcome_event.find(".//*[@role=':AGENT']")
@@ -228,6 +231,7 @@ class TripsProcessor(object):
                     st = Activation(a1, 'activity',
                                     a2, 'activity', is_activation=True,
                                     evidence=[ev])
+                    _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
     def get_activating_mods(self):
@@ -275,8 +279,10 @@ class TripsProcessor(object):
             epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
                           epistemics=epi)
-            self.statements.append(ActiveForm(affected_agent, 'active', True,
-                                              evidence=ev))
+            location = self._get_event_location(event)
+            st = ActiveForm(affected_agent, 'active', True, evidence=ev)
+            _stmt_location_to_agents(st, location)
+            self.statements.append(st)
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
 
     def get_complexes(self):
@@ -291,6 +297,7 @@ class TripsProcessor(object):
             epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
                           epistemics=epi)
+            location = self._get_event_location(event)
 
             arg1 = event.find("arg1")
             if arg1 is None or arg1.attrib.get('id') is None:
@@ -330,7 +337,9 @@ class TripsProcessor(object):
                 continue
 
             for a1, a2 in _agent_list_product((agent1, agent2)):
-                self.statements.append(Complex([a1, a2], evidence=ev))
+                st = Complex([a1, a2], evidence=ev)
+                _stmt_location_to_agents(st, location)
+                self.statements.append(st)
             self.extracted_events['ONT::BIND'].append(event.attrib['id'])
 
     def get_phosphorylation(self):
@@ -376,6 +385,7 @@ class TripsProcessor(object):
             epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
                           epistemics=epi)
+            location = self._get_event_location(event)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
             # independently
@@ -389,29 +399,35 @@ class TripsProcessor(object):
                 enzyme_agent.bound_conditions = \
                                            [BoundCondition(agent_bound, True)]
                 for m in mods:
-                    self.statements.append(Transphosphorylation(enzyme_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                    st = Transphosphorylation(enzyme_agent, m.residue,
+                                              m.position, evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
             # Dephosphorylation
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for ea, aa in _agent_list_product((enzyme_agent,
                                                    affected_agent)):
                     for m in mods:
-                        self.statements.append(Dephosphorylation(ea, aa,
-                                               m.residue, m.position,
-                                               evidence=ev))
+                        st = Dephosphorylation(ea, aa, m.residue, m.position,
+                                               evidence=ev)
+                        _stmt_location_to_agents(st, location)
+                        self.statements.append(st)
             # Autophosphorylation
             elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
-                    self.statements.append(Autophosphorylation(enzyme_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                    st = Autophosphorylation(enzyme_agent,
+                                             m.residue, m.position,
+                                             evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
             elif affected_agent is not None and \
                 'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                 for m in mods:
-                    self.statements.append(Autophosphorylation(affected_agent,
-                                            m.residue, m.position,
-                                            evidence=ev))
+                    st = Autophosphorylation(affected_agent,
+                                             m.residue, m.position,
+                                             evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
             # Regular phosphorylation
             else:
                 if mods is None:
@@ -419,11 +435,97 @@ class TripsProcessor(object):
                 for ea, aa in _agent_list_product((enzyme_agent,
                                                    affected_agent)):
                     for m in mods:
-                        self.statements.append(Phosphorylation(ea, aa,
-                                               m.residue, m.position,
-                                               evidence=ev))
+                        st = Phosphorylation(ea, aa, m.residue, m.position,
+                                             evidence=ev)
+                        _stmt_location_to_agents(st, location)
+                        self.statements.append(st)
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
+    def get_translocation(self):
+        translocation_events = \
+            self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
+        for event in translocation_events:
+            event_id = event.attrib['id']
+            # Get Agent which translocates
+            agent_tag = event.find(".//*[@role=':AGENT']")
+            if agent_tag is None:
+                continue
+            agent_id = agent_tag.attrib.get('id')
+            agent = self._get_agent_by_id(agent_id, event_id)
+            if agent is None:
+                continue
+            # Get from location
+            from_loc_tag = event.find("from-location")
+            if from_loc_tag is None:
+                from_location = None
+            else:
+                from_loc_id = from_loc_tag.attrib.get('id')
+                from_location = self._get_cell_loc_by_id(from_loc_id)
+            # Get to location
+            to_loc_tag = event.find("to-location")
+            if to_loc_tag is None:
+                to_location = None
+            else:
+                to_loc_id = to_loc_tag.attrib.get('id')
+                to_location = self._get_cell_loc_by_id(to_loc_id)
+            # Get evidence
+            sentence = self._get_evidence_text(event)
+            sec = self._get_section(event)
+            epi = {'section_type': sec}
+            ev = Evidence(source_api='trips', text=sentence,
+                          pmid=self.doc_id, epistemics=epi)
+
+            st = Translocation(agent, from_location, to_location, evidence=ev)
+            self.statements.append(st)
+
+    def _get_cell_loc_by_id(self, term_id):
+        term = self.tree.find("TERM/[@id='%s']" % term_id)
+        if term is None:
+            return None
+        term_type = term.find("type").text
+        name = term.find("name").text
+        if term_type != 'ONT::CELL-PART':
+            return None
+        # If it is a cellular location, try to look up and return
+        # the standard name from GO
+        dbid = term.attrib.get('dbid')
+        dbids = dbid.split('|')
+        db_refs_dict = dict([d.split(':') for d in dbids])
+        goid = db_refs_dict.get('GO')
+        if goid is not None:
+            try:
+                loc_name = get_valid_location('GO:' + goid)
+                return loc_name
+            except InvalidLocationError:
+                pass
+        # Try to get the same from UP
+        upid = db_refs_dict.get('UP')
+        if upid is not None and upid.startswith('SL'):
+            loc_name = up_client.uniprot_subcell_loc.get(upid)
+            if loc_name is not None:
+                try:
+                    loc_name = get_valid_location(loc_name.lower())
+                    return loc_name
+                except InvalidLocationError:
+                    pass
+        # Check if the raw name is a valid cellular component
+        if name is not None:
+            try:
+                loc_name = get_valid_location(name.lower())
+                return loc_name
+            except InvalidLocationError:
+                pass
+        msg = 'Location %s is not a valid GO cellular component' % name
+        logger.debug(msg)
+        return None
+
+    def _get_event_location(self, event_term):
+        location = event_term.find('location')
+        if location is None:
+            return None
+        loc_id = location.get('id')
+        loc = self._get_cell_loc_by_id(loc_id)
+        return loc
 
     def _get_agent_by_id(self, entity_id, event_id):
         term = self.tree.find("TERM/[@id='%s']" % entity_id)
@@ -507,6 +609,7 @@ class TripsProcessor(object):
                             self._add_condition(agent, p, term)
                     else:
                         self._add_condition(agent, precond_event, term)
+            # Get mutations
             mutations = term.findall('features/mutation')
             for mut in mutations:
                 mut_id = mut.attrib.get('id')
@@ -521,6 +624,12 @@ class TripsProcessor(object):
                     continue
                 mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
                 agent.mutations.append(mc)
+        # Get location
+        location = term.find('features/location')
+        if location is not None:
+            loc_id = location.attrib.get('id')
+            loc = self._get_cell_loc_by_id(loc_id)
+            agent.location = loc
         return agent
 
     def _add_condition(self, agent, precond_event, agent_term):
@@ -827,6 +936,8 @@ class TripsProcessor(object):
         sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
         for event_id in sub_event_ids:
+            if event_id == 'V2260949':
+                import ipdb; ipdb.set_trace()
             event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
             if event_tag is not None:
                 # If an affected TERM in the primary event has the same event
@@ -849,6 +960,17 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+def _stmt_location_to_agents(stmt, location):
+    """Apply an event location to the Agents in the corresponding Statement.
+
+    If a Statement is in a given location we represent that by requiring all
+    Agents in the Statement to be in that location.
+    """
+    agents = stmt.agent_list()
+    for a in agents:
+        if a is not None:
+            a.location = location
 
 def _agent_list_product(lists):
     def _listify(lst):

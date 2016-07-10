@@ -22,12 +22,16 @@ class IndexCardAssembler(object):
                 card = assemble_modification(stmt)
                 if card is not None:
                     self.cards.append(card)
-            if isinstance(stmt, SelfModification):
+            elif isinstance(stmt, SelfModification):
                 card = assemble_selfmodification(stmt)
                 if card is not None:
                     self.cards.append(card)
             elif isinstance(stmt, Complex):
                 card = assemble_complex(stmt)
+                if card is not None:
+                    self.cards.append(card)
+            elif isinstance(stmt, Translocation):
+                card = assemble_translocation(stmt)
                 if card is not None:
                     self.cards.append(card)
             else:
@@ -161,6 +165,30 @@ def assemble_selfmodification(stmt):
         interaction['participant_b'] = get_participant(stmt.enz)
         card.card['interaction'] = interaction
 
+    return card
+
+def assemble_translocation(stmt):
+    card = IndexCard()
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    interaction = {}
+    interaction['negative_information'] = False
+    interaction['interaction_type'] = 'translocates'
+    interaction['from_location_text'] = stmt.from_location
+    interaction['to_location_text'] = stmt.to_location
+    # TODO: get GO IDs for location here
+    from_loc_id = cellular_components.get(stmt.from_location)
+    if from_loc_id is None:
+        from_loc_id = ''
+    interaction['from_location_id'] = from_loc_id
+    to_loc_id = cellular_components.get(stmt.to_location)
+    if to_loc_id is None:
+        to_loc_id = ''
+    interaction['to_location_id'] = to_loc_id
+    interaction['participant_a'] = get_participant(None)
+    interaction['participant_b'] = get_participant(stmt.agent)
+    card.card['interaction'] = interaction
     return card
 
 def get_participant(agent):

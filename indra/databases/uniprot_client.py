@@ -16,51 +16,6 @@ rdf_prefixes = """
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
 
-hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../resources/hgnc_entries.txt'
-mnemonic_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../resources/uniprot_mnemonics.txt'
-try:
-    fh = open(hgnc_file, 'rt')
-    rd = csv.reader(fh, delimiter='\t')
-    uniprot_hgnc = {}
-    for row in rd:
-        hgnc_name = row[1]
-        uniprot_id = row[5]
-        if uniprot_id:
-            uniprot_hgnc[uniprot_id] = hgnc_name
-except IOError:
-    uniprot_hgnc = {}
-
-try:
-    fh = open(mnemonic_file, 'rt')
-    rd = csv.reader(fh, delimiter='\t')
-    uniprot_mnemonic = {}
-    for row in rd:
-        uniprot_mnemonic[row[0]] = row[1]
-except IOError:
-    uniprot_mnemonic = {}
-
-
-# File containing secondary accession numbers mapped
-# to primary accession numbers
-sec_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../resources/uniprot_sec_ac.txt'
-try:
-    uniprot_sec = {}
-    lines = open(sec_file, 'rt').readlines()
-    for i, l in enumerate(lines):
-        if l.startswith('Secondary AC'):
-            entry_lines = lines[i+2:]
-
-    for l in entry_lines:
-        sec_id, prim_id = l.split()
-        try:
-            uniprot_sec[sec_id].append(prim_id)
-        except KeyError:
-            uniprot_sec[sec_id] = [prim_id]
-except IOError:
-    uniprot_sec = {}
 
 @lru_cache(maxsize=1000)
 def query_protein(protein_id):
@@ -359,3 +314,74 @@ def verify_modification(protein_id, residue, location=None):
             if seq[ml - 1] == residue:
                 return True
         return False
+
+def _build_uniprot_hgnc():
+    hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/hgnc_entries.txt'
+    try:
+        fh = open(hgnc_file, 'rt')
+        rd = csv.reader(fh, delimiter='\t')
+        uniprot_hgnc = {}
+        for row in rd:
+            hgnc_name = row[1]
+            uniprot_id = row[5]
+            if uniprot_id:
+                uniprot_hgnc[uniprot_id] = hgnc_name
+    except IOError:
+        uniprot_hgnc = {}
+    return uniprot_hgnc
+
+def _build_uniprot_mnemonic():
+    mnemonic_file = os.path.dirname(os.path.abspath(__file__)) +\
+                    '/../resources/uniprot_mnemonics.txt'
+    try:
+        fh = open(mnemonic_file, 'rt')
+        rd = csv.reader(fh, delimiter='\t')
+        uniprot_mnemonic = {}
+        for row in rd:
+            uniprot_mnemonic[row[0]] = row[1]
+    except IOError:
+        uniprot_mnemonic = {}
+    return uniprot_mnemonic
+
+def _build_uniprot_sec():
+    # File containing secondary accession numbers mapped
+    # to primary accession numbers
+    sec_file = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/uniprot_sec_ac.txt'
+    try:
+        uniprot_sec = {}
+        lines = open(sec_file, 'rt').readlines()
+        for i, l in enumerate(lines):
+            if l.startswith('Secondary AC'):
+                entry_lines = lines[i+2:]
+
+        for l in entry_lines:
+            sec_id, prim_id = l.split()
+            try:
+                uniprot_sec[sec_id].append(prim_id)
+            except KeyError:
+                uniprot_sec[sec_id] = [prim_id]
+    except IOError:
+        uniprot_sec = {}
+    return uniprot_sec
+
+def _build_uniprot_subcell_loc():
+    fname = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/uniprot_subcell_loc.tsv'
+    try:
+        subcell_loc = {}
+        lines = open(fname, 'rt').readlines()
+        for l in lines[1:]:
+            cols = l.strip().split('\t')
+            loc_id = cols[0]
+            loc_alias = cols[3]
+            subcell_loc[loc_id] = loc_alias
+    except IOError:
+        subcell_loc = {}
+    return subcell_loc
+
+uniprot_hgnc = _build_uniprot_hgnc()
+uniprot_mnemonic = _build_uniprot_mnemonic()
+uniprot_sec = _build_uniprot_sec()
+uniprot_subcell_loc = _build_uniprot_subcell_loc()

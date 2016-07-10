@@ -474,6 +474,28 @@ def test_mut():
     assert(braf.monomer.name == 'BRAF')
     assert(braf.site_conditions == {'V600': 'E'})
 
+def test_agent_loc():
+    st = Phosphorylation(Agent('BRAF', location='cytoplasm'), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.site_conditions == {'loc': 'cytoplasm'})
+
+def test_translocation():
+    st = Translocation(Agent('FOXO3A'), 'nucleus', 'cytoplasm')
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f1.site_conditions == {'loc': 'cytoplasm'})
+    f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f2.site_conditions == {'loc': 'nucleus'})
+
 def test_set_context():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
     pa = PysbAssembler()
@@ -524,4 +546,3 @@ def test_save_rst():
     pa.add_statements([st])
     pa.make_model()
     pa.save_rst('/dev/null')
-

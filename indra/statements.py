@@ -55,27 +55,6 @@ from collections import namedtuple
 
 logger = logging.getLogger('indra_statements')
 
-def _read_amino_acids():
-    """Read the amino acid information from a resource file."""
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    aa_file = this_dir + '/resources/amino_acids.tsv'
-    amino_acids = {}
-    amino_acids_reverse = {}
-    with open(aa_file, 'rt') as fh:
-        lines = fh.readlines()
-    for lin in lines[1:]:
-        terms = lin.strip().split('\t')
-        key = terms[2]
-        val = {'full_name': terms[0],
-               'short_name': terms[1],
-               'indra_name': terms[3]}
-        amino_acids[key] = val
-        for v in val.values():
-            amino_acids_reverse[v] = key
-    return amino_acids, amino_acids_reverse
-
-amino_acids, amino_acids_reverse = _read_amino_acids()
-
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
@@ -240,7 +219,6 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
-
 class Agent(object):
     """A molecular entity, e.g., a protein.
 
@@ -255,11 +233,15 @@ class Agent(object):
         Other agents bound to the agent in this context.
     mutations : list of :py:class:`MutCondition`
         Amino acid mutations of the agent.
+    location : str
+        Cellular location of the agent. Must be a valid name (e.g. "nucleus")
+        or identifier (e.g. "GO:0005634")for a GO cellular compartment.
     db_refs : dict
         Dictionary of database identifiers associated with this agent.
     """
     def __init__(self, name, mods=None, active=None,
-                 bound_conditions=None, mutations=None, db_refs=None):
+                 bound_conditions=None, mutations=None,
+                 location=None, db_refs=None):
         self.name = name
 
         if mods is None:
@@ -286,6 +268,7 @@ class Agent(object):
             self.mutations = mutations
 
         self.active = active
+        self.location = get_valid_location(location)
 
         if db_refs is None:
             self.db_refs = {}
@@ -303,7 +286,7 @@ class Agent(object):
         key = (name_str,
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
-               self.active,
+               self.active, self.location,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
                      for bc in sorted(self.bound_conditions,
@@ -316,7 +299,7 @@ class Agent(object):
     def entity_matches_key(self):
         return self.name
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -325,7 +308,7 @@ class Agent(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         if not (self.entity_matches(other) or \
-                entity_hierarchy.isa(self.name, other.name)):
+                hierarchies['entity'].isa(self.name, other.name)):
             return False
 
         # BOUND CONDITIONS
@@ -348,8 +331,8 @@ class Agent(object):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.agent.entity_matches(bc_other.agent) or
-                    entity_hierarchy.isa(bc_self.agent.name,
-                                         bc_other.agent.name)) and \
+                    hierarchies['entity'].isa(bc_self.agent.name,
+                                              bc_other.agent.name)) and \
                     bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
@@ -372,7 +355,8 @@ class Agent(object):
             # to make sure that each one is used at most once to match
             # the modification of one of the other Agent's modifications.
             for ix, self_mod in enumerate(self.mods):
-                if self_mod.refinement_of(other_mod, mod_hierarchy):
+                if self_mod.refinement_of(other_mod,
+                                          hierarchies['modification']):
                     # If this modification hasn't been used for matching yet
                     if not ix in matched_indices:
                         # Set the index as used
@@ -398,12 +382,28 @@ class Agent(object):
             if not mut_found:
                 return False
 
+        # LOCATION
+        # If the other location is specified and this one is not then self
+        # cannot be a refinement
+        if self.location is None:
+            if other.location is not None:
+                return False
+        # If both this location and the other one is specified, we check the
+        # hierarchy.
+        elif other.location is not None:
+            # If the other location is part of this location then
+            # self.location is not a refinement
+            if not hierarchies['cellular_component'].partof(
+                self.location, other.location):
+                return False
+
         # Everything checks out
         return True
 
     def equals(self, other):
         matches = (self.name == other.name) and\
                   (self.active == other.active) and\
+                  (self.location == other.location) and\
                   (self.db_refs == other.db_refs)
         if len(self.mods) == len(other.mods):
             for s, o in zip(self.mods, other.mods):
@@ -439,6 +439,8 @@ class Agent(object):
         if self.bound_conditions:
             attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
                           for b in self.bound_conditions]
+        if self.location:
+            attr_strs += ['location: %s' % self.location]
         #if self.db_refs:
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
@@ -645,7 +647,7 @@ class Modification(Statement):
         self.enz = agent_list[0]
         self.sub = agent_list[1]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
@@ -658,10 +660,8 @@ class Modification(Statement):
         elif self.enz is not None and other.enz is None:
             enz_refinement = True
         else:
-            enz_refinement = self.enz.refinement_of(other.enz, entity_hierarchy,
-                                                    mod_hierarchy)
-        sub_refinement = self.sub.refinement_of(other.sub, entity_hierarchy,
-                                                mod_hierarchy)
+            enz_refinement = self.enz.refinement_of(other.enz, hierarchies)
+        sub_refinement = self.sub.refinement_of(other.sub, hierarchies)
         if not (enz_refinement and sub_refinement):
             return False
         # For this to be a refinement of the other, the modifications either
@@ -736,14 +736,13 @@ class SelfModification(Statement):
             raise ValueError("SelfModification has one agent.")
         self.enz = agent_list[0]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
 
         # Check agent arguments
-        if not self.enz.refinement_of(other.enz, entity_hierarchy,
-                                      mod_hierarchy):
+        if not self.enz.refinement_of(other.enz, hierarchies):
             return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
@@ -898,12 +897,12 @@ class Activation(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def refinement_of(self, other, eh, mh):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
-        if self.subj.refinement_of(other.subj, eh, mh) and \
-           self.obj.refinement_of(other.obj, eh, mh) and \
+        if self.subj.refinement_of(other.subj, hierarchies) and \
+           self.obj.refinement_of(other.obj, hierarchies) and \
            self.subj_activity == other.subj_activity and \
            self.obj_activity == other.obj_activity and \
            self.is_activation == other.is_activation:
@@ -967,14 +966,13 @@ class ActiveForm(Statement):
             raise ValueError("ActivityForm has one agent.")
         self.agent = agent_list[0]
 
-    def refinement_of(self, other, entity_hierarchy, mod_hierarchy):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
 
         # Check agent arguments
-        if not self.agent.refinement_of(other.agent, entity_hierarchy,
-                                          mod_hierarchy):
+        if not self.agent.refinement_of(other.agent, hierarchies):
             return False
 
         # Make sure that the relationships and activities match
@@ -1047,13 +1045,13 @@ class RasGef(Statement):
                 (self.gef.name, self.gef_activity, self.ras.name))
         return s
 
-    def refinement_of(self, other, eh, mh):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
         # Check the GEF
-        if self.gef.refinement_of(other.gef, eh, mh) and \
-           self.ras.refinement_of(other.ras, eh, mh) and \
+        if self.gef.refinement_of(other.gef, hierarchies) and \
+           self.ras.refinement_of(other.ras, hierarchies) and \
            self.gef_activity == other.gef_activity:
             return True
         else:
@@ -1108,13 +1106,13 @@ class RasGap(Statement):
         self.gap = agent_list[0]
         self.ras = agent_list[1]
 
-    def refinement_of(self, other, eh, mh):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
         # Check the GAP
-        if self.gap.refinement_of(other.gap, eh, mh) and \
-           self.ras.refinement_of(other.ras, eh, mh) and \
+        if self.gap.refinement_of(other.gap, hierarchies) and \
+           self.ras.refinement_of(other.ras, hierarchies) and \
            self.gap_activity == other.gap_activity:
             return True
         else:
@@ -1172,7 +1170,7 @@ class Complex(Statement):
         s = "Complex(%s)" % (', '.join([('%s' % m) for m in self.members]))
         return s
 
-    def refinement_of(self, other, eh, mh):
+    def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
@@ -1187,7 +1185,7 @@ class Complex(Statement):
             for self_agent_ix, self_agent in enumerate(self.members):
                 if self_agent_ix in self_match_indices:
                     continue
-                if self_agent.refinement_of(other_agent, eh, mh):
+                if self_agent.refinement_of(other_agent, hierarchies):
                     self_match_indices.add(self_agent_ix)
                     break
         if len(self_match_indices) != len(other.members):
@@ -1198,6 +1196,67 @@ class Complex(Statement):
     def equals(self, other):
         matches = super(Complex, self).equals(other)
         return matches
+
+class Translocation(Statement):
+    """The translocation of a molecular agent from one location to another.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        The agent which translocates.
+    from_location : Optional[str]
+        The location from which the agent translocates. This must
+        be a valid GO cellular component name (e.g. "cytoplasm")
+        or ID (e.g. "GO:0005737").
+    to_location : Optional[str]
+        The location to which the agent translocates. This must
+        be a valid GO cellular component name or ID.
+    """
+    def __init__(self, agent, from_location=None, to_location=None,
+                 evidence=None):
+        super(Translocation, self).__init__(evidence)
+        self.agent = agent
+        self.from_location = get_valid_location(from_location)
+        self.to_location = get_valid_location(to_location)
+
+    def agent_list(self):
+        return [self.agent]
+
+    def set_agent_list(self, agent_list):
+        if(len(agent_list) != 1):
+            raise ValueError("Translocation has 1 agent")
+        self.agent = agent_list[0]
+
+    def __str__(self):
+        s = ("Translocation(%s, %s, %s)" %
+                (self.agent.name, self.from_location, self.to_location))
+        return s
+
+    def refinement_of(self, other, hierarchies=None):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check several conditions for refinement
+        ch = hierarchies['cellular_component']
+        ref1 = self.agent.refinement_of(other.agent, hierarchies)
+        ref2 = (other.from_location is None or
+                self.from_location == other.from_location or
+                ch.partof(self.from_location, other.from_location))
+        ref3 = (other.to_location is None or
+                self.to_location == other.to_location or
+                ch.partof(self.to_location, other.to_location))
+        return (ref1 and ref2 and ref3)
+
+    def equals(self, other):
+        matches = super(Translocation, self).equals(other)
+        matches = matches and (self.from_location == other.from_location)
+        matches = matches and (self.to_location == other.to_location)
+        return matches
+
+    def matches_key(self):
+        key = (type(self), self.agent.matches_key(), str(self.from_location),
+                str(self.to_location))
+        return str(key)
 
 
 def get_valid_residue(residue):
@@ -1210,9 +1269,60 @@ def get_valid_residue(residue):
             return res
     return residue
 
+def get_valid_location(location):
+    """Check if the given location represents a valid cellular component."""
+    if location is not None and cellular_components.get(location) is None:
+        loc = cellular_components_reverse.get(location)
+        if loc is None:
+            raise InvalidLocationError(location)
+        else:
+            return loc
+    return location
+
+def _read_cellular_components():
+    """Read cellular components from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    cc_file = this_dir + '/resources/cellular_components.tsv'
+    cellular_components = {}
+    cellular_components_reverse = {}
+    with open(cc_file, 'rt') as fh:
+        lines = fh.readlines()
+    for lin in lines[1:]:
+        terms = lin.strip().split('\t')
+        cellular_components[terms[1]] = terms[0]
+        cellular_components_reverse[terms[0]] = terms[1]
+    return cellular_components, cellular_components_reverse
+
+cellular_components, cellular_components_reverse = _read_cellular_components()
+
+def _read_amino_acids():
+    """Read the amino acid information from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    aa_file = this_dir + '/resources/amino_acids.tsv'
+    amino_acids = {}
+    amino_acids_reverse = {}
+    with open(aa_file, 'rt') as fh:
+        lines = fh.readlines()
+    for lin in lines[1:]:
+        terms = lin.strip().split('\t')
+        key = terms[2]
+        val = {'full_name': terms[0],
+               'short_name': terms[1],
+               'indra_name': terms[3]}
+        amino_acids[key] = val
+        for v in val.values():
+            amino_acids_reverse[v] = key
+    return amino_acids, amino_acids_reverse
+
+amino_acids, amino_acids_reverse = _read_amino_acids()
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid residue name: '%s'" % name)
+
+class InvalidLocationError(ValueError):
+    """Invalid cellular component name."""
+    def __init__(self, name):
+        ValueError.__init__(self, "Invalid location name: '%s'" % name)
 

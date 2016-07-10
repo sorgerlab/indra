@@ -3,8 +3,7 @@ import glob
 import shutil
 from indra import trips
 from indra.literature import pmc_client
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
-from indra.preassembler.hierarchy_manager import modification_hierarchy as mh
+from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.assemblers import PysbAssembler
 
@@ -26,7 +25,7 @@ def print_stmts(stmts, file_name):
 if __name__ == '__main__':
     fnames = glob.glob('*.ekb')
 
-    pa = Preassembler(eh, mh)
+    pa = Preassembler(hierarchies)
 
     for fn in fnames:
         print '\n\n----------------------------'
