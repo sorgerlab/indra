@@ -181,7 +181,7 @@ class Preassembler(object):
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement:
 
-        >>> from indra.preassembler.hierarchy_manager import hierarchies\
+        >>> from indra.preassembler.hierarchy_manager import hierarchies
         >>> braf = Agent('BRAF')
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
