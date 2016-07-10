@@ -4,23 +4,26 @@ from setuptools import setup
 
 def main():
     setup(name='indra',
-          version='1.1.1',
+          version='1.2.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
-              'for assembling rule-based mathematical models of biochemical '
-              'systems from natural language and pathway databases.',
+              'for assembling rule-based mathematical models and '
+              'mechanistic networks of biochemical systems from natural '
+              'language and pathway databases.',
           author='Benjamin Gyori',
           author_email='benjamin_gyori@hms.harvard.edu',
           url='http://github.com/sorgerlab/indra',
-          packages=['indra', 'indra.bel', 'indra.biopax',
+          packages=['indra', 'indra.assemblers', 'indra.bel', 'indra.biopax',
                     'indra.reach', 'indra.trips', 'indra.databases',
-                    'indra.preassembler', 'indra.tests'],
+                    'indra.preassembler', 'indra.mechlinker',
+                    'indra.tools', 'indra.tests', 'indra.resources',
+                    'indra.literature'],
           install_requires=['pysb', 'objectpath', 'rdflib',
                             'functools32', 'requests', 'lxml', 'jsonpickle'],
           tests_require=['jnius-indra', 'jsonschema', 'coverage'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp',
-                    'mechanism', 'biochemistry'],
+                    'mechanism', 'biochemistry', 'network'],
           classifiers=[
             'Development Status :: 4 - Beta',
             'Environment :: Console',
