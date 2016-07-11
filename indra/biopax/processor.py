@@ -173,6 +173,21 @@ class BiopaxProcessor(object):
         for s in stmts:
             self.statements.append(Palmitoylation(*s))
 
+    def get_ubiquitination(self, force_contains=None):
+        """Extract INDRA Ubiquitination statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
+        stmts = self._get_generic_modification('ubiq',
+                                               force_contains=force_contains)
+        for s in stmts:
+            self.statements.append(Ubiquitination(*s))
+
     def get_activity_modification(self, force_contains=None):
         """Extract INDRA ActiveForm statements from the model.
 
@@ -693,6 +708,7 @@ class BiopaxProcessor(object):
         'O-phospho-L-threonine': ('phosphorylation', 'T'),
         'O-phospho-L-tyrosine': ('phosphorylation', 'Y'),
         'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
+        'ubiquitinated lysine': ('ubiquitination', 'K'),
         'residue modification, active': ('active', None),
         'residue modification, inactive': ('inactive', None)
         }
