@@ -296,6 +296,15 @@ class LinkedStatement(object):
         self.source_stmts = source_stmts
         self.inferred_stmt = inferred_stmt
 
+    def __str__(self):
+        source_str = ', '.join([str(st) for st in self.source_stmts])
+        inferred_str = str(self.inferred_stmt)
+        s = 'LinkedStatement((%s), %s)' % (source_str, inferred_str)
+        return s
+
+    def __repr__(self):
+        return self.__str__()
+
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
 
