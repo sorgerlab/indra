@@ -722,6 +722,27 @@ def test_activation_modification_refinement():
     assert not st3.refinement_of(st5, hierarchies)
     assert not st4.refinement_of(st5, hierarchies)
 
+def test_activation_activity_hierarchy_refinement():
+    raf = Agent('RAF')
+    mek = Agent('MEK')
+
+    st1 = Activation(raf, 'kinase', mek, 'kinase', True)
+    st2 = Activation(raf, 'kinase', mek, 'kinase', False)
+    st3 = Activation(raf, 'catalytic', mek, 'kinase', True)
+    st4 = Activation(raf, 'kinase', mek, 'catalytic', True)
+    st5 = Activation(raf, 'catalytic', mek, 'activity', True)
+    st6 = Activation(raf, 'activity', mek, 'activity', True)
+
+    assert(not st1.refinement_of(st2, hierarchies))
+    assert(not st2.refinement_of(st1, hierarchies))
+    assert(st1.refinement_of(st3, hierarchies))
+    assert(st1.refinement_of(st4, hierarchies))
+    assert(st5.refinement_of(st6, hierarchies))
+    assert(st1.refinement_of(st6, hierarchies))
+    assert(not st3.refinement_of(st4, hierarchies))
+    assert(not st4.refinement_of(st3, hierarchies))
+
+
 def test_activitymod_refinement():
     mc1 = ModCondition('phosphorylation')
     mc2 = ModCondition('phosphorylation', 'S')
@@ -785,6 +806,18 @@ def test_activitymod_refinement():
     assert not p4.refinement_of(p7, hierarchies)
     assert not p5.refinement_of(p7, hierarchies)
     assert not p6.refinement_of(p7, hierarchies)
+
+def test_activeform_activity_hierarchy_refinement():
+    p1 = ActiveForm(Agent('MEK'), 'kinase', True)
+    p2 = ActiveForm(Agent('MEK'), 'kinase', False)
+    p3 = ActiveForm(Agent('MEK'), 'catalytic', True)
+    p4 = ActiveForm(Agent('MEK'), 'activity', True)
+
+    assert(not p1.refinement_of(p2, hierarchies))
+    assert(p1.refinement_of(p3, hierarchies))
+    assert(p1.refinement_of(p4, hierarchies))
+    assert(p3.refinement_of(p4, hierarchies))
+    assert(not p4.refinement_of(p3, hierarchies))
 
 def test_activatingsub_family_refinement():
     mc = MutCondition('12', 'G', 'D')
@@ -1065,6 +1098,21 @@ def test_location_refinement():
     assert(not a3.refinement_of(a1, hierarchies))
     assert(a2.refinement_of(a4, hierarchies))
     assert(a3.refinement_of(a4, hierarchies))
+
+def test_activity_refinement():
+    a1 = Agent('a', active='kinase')
+    a2 = Agent('a', active='activity')
+    a3 = Agent('a', active='catalytic')
+    a4 = Agent('a')
+
+    assert(a1.refinement_of(a2, hierarchies))
+    assert(not a2.refinement_of(a3, hierarchies))
+    assert(not a4.refinement_of(a1, hierarchies))
+    assert(a1.refinement_of(a3, hierarchies))
+    assert(a3.refinement_of(a2, hierarchies))
+    assert(not a3.refinement_of(a1, hierarchies))
+    assert(a1.refinement_of(a4, hierarchies))
+    assert(a2.refinement_of(a4, hierarchies))
 
 def test_tranlocation_refinement():
     st1 = Translocation(Agent('a'), 'plasma membrane', 'cytoplasm')

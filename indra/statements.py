@@ -397,6 +397,14 @@ class Agent(object):
                 self.location, other.location):
                 return False
 
+        # ACTIVITY
+        if self.active is None:
+            if other.active is not None:
+                return False
+        elif other.active is not None:
+            if not hierarchies['activity'].isa(self.active, other.active):
+                return False
+
         # Everything checks out
         return True
 
@@ -820,19 +828,32 @@ class Hydroxylation(Modification):
     """Hydroxylation modification."""
     pass
 
+class Dehydroxylation(Modification):
+    """Dehydroxylation modification."""
+    pass
 
 class Sumoylation(Modification):
     """Sumoylation modification."""
     pass
 
+class Desumoylation(Modification):
+    """Desumoylation modification."""
+    pass
 
 class Acetylation(Modification):
     """Acetylation modification."""
     pass
 
+class Deacetylation(Modification):
+    """Deacetylation modification."""
+    pass
 
 class Ubiquitination(Modification):
     """Ubiquitination modification."""
+    pass
+
+class Deubiquitination(Modification):
+    """Deubiquitination modification."""
     pass
 
 
@@ -902,11 +923,19 @@ class Activation(Statement):
         if type(self) != type(other):
             return False
         if self.subj.refinement_of(other.subj, hierarchies) and \
-           self.obj.refinement_of(other.obj, hierarchies) and \
-           self.subj_activity == other.subj_activity and \
-           self.obj_activity == other.obj_activity and \
-           self.is_activation == other.is_activation:
-            return True
+            self.obj.refinement_of(other.obj, hierarchies):
+            if self.is_activation != other.is_activation:
+                return False
+            subj_act_match = (self.subj_activity == other.subj_activity) or \
+                hierarchies['activity'].isa(self.subj_activity,
+                                            other.subj_activity)
+            obj_act_match = (self.obj_activity == other.obj_activity) or \
+                hierarchies['activity'].isa(self.obj_activity,
+                                            other.obj_activity)
+            if subj_act_match and obj_act_match:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -976,10 +1005,9 @@ class ActiveForm(Statement):
             return False
 
         # Make sure that the relationships and activities match
-        # TODO: Develop an activity hierarchy? In which kinaseactivity is a
-        # refinement of activity, for example.
-        if self.activity == other.activity and \
-           self.is_active == other.is_active:
+        if (self.is_active == other.is_active) and \
+            (self.activity == other.activity or \
+            hierarchies['activity'].isa(self.activity, other.activity)):
                return True
         else:
             return False
