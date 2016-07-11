@@ -93,21 +93,21 @@ def test_agent_bound_mixed():
 def test_phos_noenz():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a)
-    s = ea._assemble_phosphorylation(st)
+    s = ea._assemble_modification(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated.')
 
 def test_phos_noenz2():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a, 'serine')
-    s = ea._assemble_phosphorylation(st)
+    s = ea._assemble_modification(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated on serine.')
 
 def test_phos_noenz3():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a, 'serine', '222')
-    s = ea._assemble_phosphorylation(st)
+    s = ea._assemble_modification(st)
     print s
     assert(s == 'MAP2K1 is phosphorylated on S222.')
 
@@ -115,7 +115,7 @@ def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('BRAF')
     st = Phosphorylation(b, a, 'serine', '222')
-    s = ea._assemble_phosphorylation(st)
+    s = ea._assemble_modification(st)
     print s
     assert(s == 'BRAF phosphorylates MAP2K1 on S222.')
 
@@ -123,9 +123,27 @@ def test_phos_enz():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
     st = Dephosphorylation(b, a, 'serine', '222')
-    s = ea._assemble_dephosphorylation(st)
+    s = ea._assemble_modification(st)
     print s
     assert(s == 'PP2A dephosphorylates MAP2K1 on S222.')
+
+def test_ubiq_stmt():
+    st = Ubiquitination(Agent('X'), Agent('Y'))
+    s = ea._assemble_modification(st)
+    print s
+    assert(s == 'X ubiquitinates Y.')
+
+def test_deubiq_stmt():
+    st = Deubiquitination(Agent('X'), Agent('Y'))
+    s = ea._assemble_modification(st)
+    print s
+    assert(s == 'X deubiquitinates Y.')
+
+def test_deubiq_noenz():
+    st = Deubiquitination(None, Agent('Y'))
+    s = ea._assemble_modification(st)
+    print s
+    assert(s == 'Y is deubiquitinated.')
 
 def test_complex_one():
     a = Agent('MAP2K1')

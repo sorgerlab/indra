@@ -40,10 +40,8 @@ class EnglishAssembler(object):
         """Assemble text from the set of collected INDRA Statements."""
         stmt_strs = []
         for stmt in self.statements:
-            if isinstance(stmt, ist.Phosphorylation):
-                stmt_strs.append(_assemble_phosphorylation(stmt))
-            elif isinstance(stmt, ist.Dephosphorylation):
-                stmt_strs.append(_assemble_dephosphorylation(stmt))
+            if isinstance(stmt, ist.Modification):
+                stmt_strs.append(_assemble_modification(stmt))
             elif isinstance(stmt, ist.Autophosphorylation):
                 stmt_strs.append(_assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
@@ -88,7 +86,7 @@ def _assemble_agent_str(agent):
     if agent.mods:
         # Special case
         if len(agent.mods) == 1 and agent.mods[0].position is None:
-            prefix = abbrev_prefix[agent.mods[0].mod_type]
+            prefix = _mod_state_str(agent.mods[0].mod_type)
             if agent.mods[0].residue is not None:
                 residue_str =\
                     ist.amino_acids[agent.mods[0].residue]['full_name']
@@ -97,7 +95,7 @@ def _assemble_agent_str(agent):
         else:
             if agent.bound_conditions:
                 agent_str += ' and'
-            agent_str += ' %s on ' % abbrev_prefix[agent.mods[0].mod_type]
+            agent_str += ' %s on ' % _mod_state_str(agent.mods[0].mod_type)
             mod_lst = []
             for m in agent.mods:
                 if m.position is None:
@@ -147,18 +145,18 @@ def _assemble_activeform(stmt):
         stmt_str = subj_str + ' is GTP-bound ' + is_active_str
     return _make_sentence(stmt_str)
 
-def _assemble_phosphorylation(stmt):
-    """Assemble Phosphorylation statements into text."""
+def _assemble_modification(stmt):
+    """Assemble Modification statements into text."""
     sub_str = _assemble_agent_str(stmt.sub)
     if stmt.enz is not None:
         enz_str = _assemble_agent_str(stmt.enz)
         if _get_is_direct(stmt):
-            phos_str = ' phosphorylates '
+            mod_str = ' ' + _mod_process_verb(stmt) + ' '
         else:
-            phos_str = ' leads to the phosphorylation of '
-        stmt_str = enz_str + phos_str + sub_str
+            mod_str = ' leads to the ' + _mod_process_noun(stmt) + ' of '
+        stmt_str = enz_str + mod_str + sub_str
     else:
-        stmt_str = sub_str + ' is phosphorylated'
+        stmt_str = sub_str + ' is ' + _mod_state_stmt(stmt)
 
     if stmt.residue is not None:
         if stmt.position is None:
@@ -169,7 +167,7 @@ def _assemble_phosphorylation(stmt):
         mod_str = ''
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
-
+'''
 def _assemble_dephosphorylation(stmt):
     """Assemble Dephosphorylation statements into text."""
     sub_str = _assemble_agent_str(stmt.sub)
@@ -192,7 +190,7 @@ def _assemble_dephosphorylation(stmt):
         mod_str = 'on an unknown residue '
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
-
+'''
 def _assemble_complex(stmt):
     """Assemble Complex statements into text."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
@@ -259,7 +257,43 @@ def _get_is_direct(stmt):
         return False
     return True
 
-abbrev_prefix = {
+def _mod_process_verb(stmt):
+    mod_name = stmt.__class__.__name__.lower()
+    return mod_process_prefix.get(mod_name)
+
+def _mod_process_noun(stmt):
+    mod_name = stmt.__class__.__name__.lower()
+    return mod_name
+
+def _mod_state_stmt(stmt):
+    mod_name = stmt.__class__.__name__.lower()
+    return mod_state_prefix.get(mod_name)
+
+def _mod_state_str(s):
+    return mod_state_prefix.get(s)
+
+mod_state_prefix = {
     'phosphorylation': 'phosphorylated',
-    'ubiquitination': 'ubiquitinated'
+    'dephosphorylation': 'dephosphorylated',
+    'ubiquitination': 'ubiquitinated',
+    'deubiquitination': 'deubiquitinated',
+    'acetylation': 'acetylated',
+    'deacetylation': 'deacetylated',
+    'hydroxylation': 'hydroxylated',
+    'dehydroxylation': 'dehydroxylated',
+    'sumoylation': 'sumoylated',
+    'desumoylation': 'desumoylated'
 }
+
+mod_process_prefix = {
+    'phosphorylation': 'phosphorylates',
+    'dephosphorylation': 'dephosphorylates',
+    'ubiquitination': 'ubiquitinates',
+    'deubiquitination': 'deubiquitinates',
+    'acetylation': 'acetylates',
+    'deacetylation': 'deacetylates',
+    'hydroxylation': 'hydroxylates',
+    'dehydroxylation': 'dehydroxylates',
+    'sumoylation': 'sumoylates',
+    'desumoylation': 'desumoylates'
+    }
