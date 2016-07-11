@@ -116,12 +116,20 @@ class ReachProcessor(object):
                 self.statements.append(Dephosphorylation(*args))
             elif modification_type == 'ubiquitination':
                 self.statements.append(Ubiquitination(*args))
+            elif modification_type == 'deubiquitination':
+                self.statements.append(Deubiquitination(*args))
             elif modification_type == 'acetylation':
                 self.statements.append(Acetylation(*args))
+            elif modification_type == 'deacetylation':
+                self.statements.append(Deacetylation(*args))
             elif modification_type == 'hydroxylation':
                 self.statements.append(Hydroxylation(*args))
+            elif modification_type == 'dehydroxylation':
+                self.statements.append(Dehydroxylation(*args))
             elif modification_type == 'sumoylation':
                 self.statements.append(Sumoylation(*args))
+            elif modification_type == 'desumoylation':
+                self.statements.append(Desumoylation(*args))
             else:
                 logger.warning('Unhandled modification type: %s' %
                                modification_type)
