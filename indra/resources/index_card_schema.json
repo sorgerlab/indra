@@ -90,7 +90,7 @@
                 "participant_a": { "$ref": "#/definitions/participant_a" },
                 "participant_b": { "$ref": "#/definitions/participant_b" }
             },
-            "required": ["interaction_type", "negative_information", "participant_b"]
+            "required": ["interaction_type", "negative_information", "participant_a", "participant_b"]
         },
         "increases": {
             "allOf": [
