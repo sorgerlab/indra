@@ -4,7 +4,7 @@ from indra.preassembler import Preassembler, render_stmt_graph, \
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition, Complex
+                             ActiveForm, MutCondition, Complex, Translocation
 from indra.preassembler.hierarchy_manager import hierarchies
 
 """
@@ -300,6 +300,14 @@ def test_activating_substitution_refinement():
     assert(not st2.refinement_of(st5, hierarchies))
     assert(not st3.refinement_of(st5, hierarchies))
     assert(not st4.refinement_of(st5, hierarchies))
+
+def test_translocation():
+    st1 = Translocation(Agent('AKT'), None, None)
+    st2 = Translocation(Agent('AKT'), None, 'plasma membrane')
+    st3 = Translocation(Agent('AKT'), None, 'nucleus')
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 2)
 
 def test_render_stmt_graph():
     braf = Agent('BRAF')

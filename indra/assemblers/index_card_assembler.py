@@ -168,6 +168,9 @@ def assemble_selfmodification(stmt):
     return card
 
 def assemble_translocation(stmt):
+    # Index cards don't allow missing to_location
+    if stmt.to_location is None:
+        return None
     card = IndexCard()
     card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
@@ -175,16 +178,12 @@ def assemble_translocation(stmt):
     interaction = {}
     interaction['negative_information'] = False
     interaction['interaction_type'] = 'translocates'
-    interaction['from_location_text'] = stmt.from_location
+    if stmt.from_location is not None:
+        interaction['from_location_text'] = stmt.from_location
+        from_loc_id = cellular_components.get(stmt.from_location)
+        interaction['from_location_id'] = from_loc_id
     interaction['to_location_text'] = stmt.to_location
-    # TODO: get GO IDs for location here
-    from_loc_id = cellular_components.get(stmt.from_location)
-    if from_loc_id is None:
-        from_loc_id = ''
-    interaction['from_location_id'] = from_loc_id
     to_loc_id = cellular_components.get(stmt.to_location)
-    if to_loc_id is None:
-        to_loc_id = ''
     interaction['to_location_id'] = to_loc_id
     interaction['participant_a'] = get_participant(None)
     interaction['participant_b'] = get_participant(stmt.agent)
@@ -231,8 +230,10 @@ def get_participant(agent):
                 entity_dict = {}
                 uniprot_mnemonic = \
                     str(uniprot_client.get_mnemonic(uniprot_id))
-                entity_dict['entity_text'] = \
-                    [uniprot_client.get_hgnc_name(uniprot_id)]
+                hgnc_name = uniprot_client.get_hgnc_name(uniprot_id)
+                if hgnc_name is None:
+                    hgnc_name = ""
+                entity_dict['entity_text'] = [hgnc_name]
                 entity_dict['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
                 entity_dict['entity_type'] = 'protein'
                 participant['entities'].append(entity_dict)

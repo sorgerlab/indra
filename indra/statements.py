@@ -1257,7 +1257,7 @@ class Translocation(Statement):
 
     def __str__(self):
         s = ("Translocation(%s, %s, %s)" %
-                (self.agent.name, self.from_location, self.to_location))
+                (self.agent, self.from_location, self.to_location))
         return s
 
     def refinement_of(self, other, hierarchies=None):
