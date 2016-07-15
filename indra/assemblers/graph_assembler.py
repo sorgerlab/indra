@@ -1,6 +1,13 @@
 import itertools
 from indra.statements import *
-import pygraphviz
+import logging
+
+logger = logging.getLogger('pysb_assembler')
+try:
+    import pygraphviz
+except ImportError:
+    logger.error('Cannot use graph assembler because '
+                 'pygraphviz could not be imported.')
 
 class GraphAssembler():
     """The Graph assembler assembles INDRA Statements into a

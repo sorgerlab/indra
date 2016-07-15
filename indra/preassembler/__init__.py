@@ -1,6 +1,9 @@
 import sys
 import logging
-import pygraphviz as pgv
+try:
+    import pygraphviz as pgv
+except ImportError:
+    pass
 import itertools
 from copy import copy, deepcopy
 from indra.statements import *
@@ -380,7 +383,12 @@ def render_stmt_graph(statements, agent_style=None):
     for stmt in statements:
         process_stmt(stmt)
     # Add the nodes and edges to the graph
-    graph = pgv.AGraph(name='statements', directed=True, rankdir='LR')
+    try:
+        graph = pgv.AGraph(name='statements', directed=True, rankdir='LR')
+    except NameError:
+        logger.error('Cannot generate graph because '
+                     'pygraphviz could not be imported.')
+        return None
     for node in nodes:
         graph.add_node(str(node.matches_key()), label=str(node), **agent_style)
     graph.add_edges_from(edges)

@@ -541,7 +541,7 @@ class TripsProcessor(object):
                              operator)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
-            member_agents = [self._get_agent_by_id(m, event_id) 
+            member_agents = [self._get_agent_by_id(m, event_id)
                              for m in member_ids]
             return member_agents
 
@@ -630,6 +630,12 @@ class TripsProcessor(object):
             loc_id = location.attrib.get('id')
             loc = self._get_cell_loc_by_id(loc_id)
             agent.location = loc
+        # Get activity
+        activity = term.find('features/active')
+        if activity is not None:
+            if activity.text.lower() == 'true':
+                agent.active = 'activity'
+
         return agent
 
     def _add_condition(self, agent, precond_event, agent_term):
