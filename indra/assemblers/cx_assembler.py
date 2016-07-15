@@ -175,9 +175,26 @@ class CxAssembler():
                 db_id = str(db_ids)
             else:
                 db_id = db_ids[0]
+            if db_name == 'UP':
+                name = 'UniProt'
+                val = 'http://identifiers.org/uniprot/%s' % db_id
+            elif db_name == 'HGNC':
+                name = 'HGNC'
+                val = 'http://identifiers.org/hgnc/HGNC:%s' % db_id
+            elif db_name == 'CHEBI':
+                name = 'CHEBI'
+                val = 'http://identifiers.org/chebi/CHEBI:%s' % db_id
+            elif db_name == 'HMDB':
+                val = 'http://identifiers.org/hmdb/HMDB:%s' % db_id
+            elif db_name == 'TEXT':
+                continue
+            else:
+                val = db_id
+                name = db_name
+
             node_attribute = {'po': node_id,
-                              'n': db_name,
-                              'v': db_id}
+                              'n': name,
+                              'v': val}
             self.cx['nodeAttributes'].append(node_attribute)
 
     def _add_edge(self, source, target, interaction, stmt):
