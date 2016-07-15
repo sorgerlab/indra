@@ -848,12 +848,24 @@ class Deacetylation(Modification):
     """Deacetylation modification."""
     pass
 
+class Glycosylation(Modification):
+    """Glycosylation modification."""
+    pass
+
+class Deglycosylation(Modification):
+    """Deglycosylation modification."""
+    pass
+
 class Ubiquitination(Modification):
     """Ubiquitination modification."""
     pass
 
 class Deubiquitination(Modification):
     """Deubiquitination modification."""
+    pass
+
+class Farnesylation(Modification):
+    """Farnesylation modification."""
     pass
 
 

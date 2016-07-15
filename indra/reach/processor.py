@@ -62,6 +62,14 @@ class ReachProcessor(object):
             except KeyError:
                 self.all_events[event_type] = [frame_id]
 
+    def print_regulations(self):
+        qstr = "$.events.frames[(@.type is 'regulation')]"
+        res = self.tree.execute(qstr)
+        for r in res:
+            print r['subtype']
+            for a in r['arguments']:
+                print a['type'], '/', a['argument-type'], ':', a['text']
+
     def get_modifications(self):
         """Extract Modification INDRA Statements."""
         qstr = "$.events.frames[(@.type is 'protein-modification')]"
@@ -130,6 +138,12 @@ class ReachProcessor(object):
                 self.statements.append(Sumoylation(*args))
             elif modification_type == 'desumoylation':
                 self.statements.append(Desumoylation(*args))
+            elif modification_type == 'glycosylation':
+                self.statements.append(Glycosylation(*args))
+            elif modification_type == 'deglycosylation':
+                self.statements.append(Deglycosylation(*args))
+            elif modification_type == 'farnesylation':
+                self.statements.append(Farnesylation(*args))
             else:
                 logger.warning('Unhandled modification type: %s' %
                                modification_type)
