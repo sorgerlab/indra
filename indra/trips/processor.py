@@ -234,6 +234,75 @@ class TripsProcessor(object):
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
+    def get_activations_stimulate(self):
+        """Extract Activation INDRA Statements via stimulation."""
+        # Search for stimulation event
+        stim_events = self.tree.findall("EVENT/[type='ONT::STIMULATE']")
+        for event in stim_events:
+            controller = event.find("arg1/[@role=':AGENT']")
+            affected = event.find("arg2/[@role=':AFFECTED']")
+            # If either the controller or the affected is missing, skip
+            if controller is None or affected is None:
+                continue
+            controller_id = controller.attrib.get('id')
+            # Here, implicitly, we require that the controller is a TERM
+            # and not an EVENT
+            controller_term = self.tree.find("TERM/[@id='%s']" % controller_id)
+            affected_id = affected.attrib.get('id')
+            # Here it is implicit that the affected is an event not
+            # a TERM
+            affected_event = self.tree.find("EVENT/[@id='%s']" % affected_id)
+            if controller_term is None or affected_event is None:
+                continue
+            controller_term_type = controller_term.find('type')
+            # The controller term must be a molecular entity
+            if controller_term_type is None or \
+                controller_term_type.text not in molecule_types:
+                continue
+            controller_agent = self._get_agent_by_id(controller_id, None)
+            if controller_agent is None:
+                continue
+            affected_event_type = affected_event.find('type')
+            if affected_event_type is None:
+                continue
+            # Construct evidence
+            sentence = self._get_evidence_text(event)
+            sec = self._get_section(event)
+            epi = {'section_type': sec, 'direct': False}
+            ev = Evidence(source_api='trips', text=sentence,
+                          pmid=self.doc_id, epistemics=epi)
+            location = self._get_event_location(affected_event)
+            if affected_event_type.text == 'ONT::ACTIVATE':
+                affected = affected_event.find(".//*[@role=':AFFECTED']")
+                if affected is None:
+                    continue
+                affected_agent = self._get_agent_by_id(affected.attrib['id'],
+                                                      affected_id)
+                if affected_agent is None:
+                    continue
+                for a1, a2 in _agent_list_product((controller_agent,
+                                                   affected_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
+            elif affected_event_type.text == 'ONT::ACTIVITY':
+                agent_tag = affected_event.find(".//*[@role=':AGENT']")
+                if agent_tag is None:
+                    continue
+                affected_agent = self._get_agent_by_id(agent_tag.attrib['id'],
+                                                      affected_id)
+                if affected_agent is None:
+                    continue
+                for a1, a2 in _agent_list_product((controller_agent,
+                                                   affected_agent)):
+                    st = Activation(a1, 'activity',
+                                    a2, 'activity', is_activation=True,
+                                    evidence=[ev])
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
+
     def get_activating_mods(self):
         """Extract ActiveForm INDRA Statements based on modifications."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
