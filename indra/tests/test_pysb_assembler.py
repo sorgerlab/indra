@@ -496,6 +496,13 @@ def test_translocation():
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
     assert(f2.site_conditions == {'loc': 'nucleus'})
 
+def test_phos_atpdep():
+    st = Phosphorylation(Agent('BRAF'), Agent('MEK'), 'S', '222')
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model(policies='atp_dependent')
+    assert(len(pa.model.rules) == 5)
+
 def test_set_context():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
     pa = PysbAssembler()

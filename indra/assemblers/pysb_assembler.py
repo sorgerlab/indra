@@ -867,6 +867,25 @@ def phosphorylation_monomers_two_step(stmt, agent_set):
     enz.create_site(get_binding_site_name(sub.name))
     sub.create_site(get_binding_site_name(enz.name))
 
+def phosphorylation_monomers_atp_dependent(stmt, agent_set):
+    if stmt.enz is None:
+        return
+    enz = agent_set.get_create_base_agent(stmt.enz)
+    sub = agent_set.get_create_base_agent(stmt.sub)
+    site_name = get_mod_site_name('phosphorylation',
+                                  stmt.residue, stmt.position)
+    sub.create_site(site_name, ('u', 'p'))
+
+    # Create site for binding the substrate
+    enz.create_site(get_binding_site_name(sub.name))
+    sub.create_site(get_binding_site_name(enz.name))
+
+    # Make ATP base agent and create binding sites
+    atp = agent_set.get_create_base_agent(ist.Agent('ATP'))
+    atp.create_site('b')
+    enz.create_site('ATP')
+
+
 phosphorylation_monomers_default = phosphorylation_monomers_one_step
 
 
@@ -983,6 +1002,111 @@ def phosphorylation_assemble_two_step(stmt, model, agent_set):
     sub_rule_str = get_agent_rule_str(sub_uncond)
     sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
 
+    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+             sub_mon_uncond(**{enz_bs: 1}) >>
+             enz_mon_uncond(**{sub_bs: None}) + \
+             sub_mon_uncond(**{enz_bs: None}), kr_bind)
+    add_rule_to_model(model, r)
+
+def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
+    # ATP
+    atp = model.monomers['ATP']
+    atp_bs = 'ATP'
+    # ATP-bound enzyme
+    enz_atp_bound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={atp_bs: 1})
+    # ATP-free enzyme
+    enz_atp_unbound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={atp_bs: None})
+    # Substrate-bound enzyme
+    sub_bs = get_binding_site_name(stmt.sub.name)
+    enz_sub_bound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: 1})
+    # Substrte and ATP-bound enzyme
+    enz_sub_atp_bound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: 1, atp_bs: 2})
+    enz_sub_atp_unbound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: None, atp_bs: None})
+    # Substrate-free enzyme
+    enz_sub_unbound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: None})
+    # Enzyme active forms
+    enz_act_forms = get_active_forms(stmt.enz, agent_set)
+    enz_bs = get_binding_site_name(stmt.enz.name)
+    # Unconditional enzyme
+    enz_uncond = get_uncond_agent(stmt.enz)
+    enz_rule_str = get_agent_rule_str(enz_uncond)
+    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
+    # Substrate
+    sub_uncond = get_uncond_agent(stmt.sub)
+    sub_rule_str = get_agent_rule_str(sub_uncond)
+    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
+    sub_pattern = get_monomer_pattern(model, stmt.sub)
+
+    # Enzyme binding ATP
+    param_name = ('kf_' + stmt.enz.name[0].lower() + '_atp_bind')
+    kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
+    param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
+    kr_bind_atp = get_create_parameter(model, param_name, 1e-6)
+    for i, am in enumerate(enz_act_forms):
+        rule_name = '%s_phospho_bind_atp_%d' % \
+            (enz_rule_str, i + 1)
+        r = Rule(rule_name,
+            enz_atp_unbound(am) + atp(b=None) >>
+            enz_atp_bound(am) %  atp(b=1), kf_bind_atp)
+        add_rule_to_model(model, r)
+
+    # Enzyme releasing ATP
+    rule_name = '%s_phospho_dissoc_atp_%d' % \
+        (enz_rule_str, i + 1)
+    r = Rule(rule_name,
+        enz_mon_uncond({atp_bs: 1}) % atp(b=1) >>
+        enz_mon_uncond({atp_bs: None}) + atp(b=None), kr_bind_atp)
+    add_rule_to_model(model, r)
+
+    # Enzyme binding substrate
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_phos')
+    kf_phospho = get_create_parameter(model, param_name, 1e-3)
+
+    phos_site = get_mod_site_name('phosphorylation',
+                                  stmt.residue, stmt.position)
+
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+    for i, am in enumerate(enz_act_forms):
+        rule_name = '%s_phospho_bind_%s_%s_%d' % \
+            (rule_enz_str, rule_sub_str, phos_site, i + 1)
+        r = Rule(rule_name,
+            enz_sub_unbound(am) + \
+            sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
+            enz_sub_bound(am) % \
+            sub_pattern(**{phos_site: 'u', enz_bs: 1}),
+            kf_bind)
+        add_rule_to_model(model, r)
+
+    # Enzyme phosphorylating substrate
+    for i, am in enumerate(enz_act_forms):
+        rule_name = '%s_phospho_%s_%s_%d' % \
+            (rule_enz_str, rule_sub_str, phos_site, i + 1)
+        r = Rule(rule_name,
+            enz_sub_atp_bound(am) % atp(b=2) % \
+                sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
+            enz_sub_atp_unbound(am) + atp(b=None) + \
+                sub_pattern(**{phos_site: 'p', enz_bs: None}),
+            kf_phospho)
+        add_rule_to_model(model, r)
+
+    # Enzyme dissodiating from substrate
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
     r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
              sub_mon_uncond(**{enz_bs: 1}) >>
