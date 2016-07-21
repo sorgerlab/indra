@@ -2,7 +2,8 @@ import logging
 import itertools
 
 from pysb import (Model, Monomer, Parameter, Rule, Annotation,
-        ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY)
+        ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY,
+        InvalidInitialConditionError)
 from pysb.core import SelfExporter
 import pysb.export
 
@@ -400,7 +401,10 @@ def set_extended_initial_condition(model, monomer, value=0):
     except KeyError:
         p = Parameter(pname, value)
         model.add_component(p)
-        model.initial(mp, p)
+        try:
+            model.initial(mp, p)
+        except InvalidInitialConditionError:
+            pass
 
 def get_annotation(component, db_name, db_ref):
     """Construct model Annotations for each component.
