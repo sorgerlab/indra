@@ -392,7 +392,7 @@ def set_extended_initial_condition(model, monomer, value=0):
         if site in monomer.site_states:
             sites_dict[site] = monomer.site_states[site][-1]
         else:
-            sites_dict[site] = ANY
+            sites_dict[site] = None
     mp = monomer(**sites_dict)
     pname = monomer.name + '_0_mod'
     try:
