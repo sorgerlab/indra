@@ -2,12 +2,31 @@ import itertools
 from indra.statements import *
 import logging
 
-logger = logging.getLogger('pysb_assembler')
+logger = logging.getLogger('graph_assembler')
 try:
     import pygraphviz
 except ImportError:
     logger.error('Cannot use graph assembler because '
                  'pygraphviz could not be imported.')
+
+default_graph_properties = {
+    'directed': True,
+    'fixedsize': True,
+    'fontname': 'arial',
+    'splines': 'spline',
+    'rankdir': 'LR'
+    }
+
+default_node_properties = {
+    'color': '#FBAF3F',
+    'shape': 'Mrecord',
+    'fontsize': 8
+    }
+
+default_edge_properties = {
+    'arrowsize': 0.5
+    }
+
 
 class GraphAssembler():
     """The Graph assembler assembles INDRA Statements into a
@@ -18,6 +37,12 @@ class GraphAssembler():
     stmts : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to be added to the assembler's list
         of Statements.
+    graph_properties : Optional[dict[str: str]]
+        A dictionary of graphviz graph properties overriding the default ones.
+    node_properties : Optional[dict[str: str]]
+        A dictionary of graphviz node properties overriding the default ones.
+    edge_properties : Optional[dict[str: str]]
+        A dictionary of graphviz edge properties overriding the default ones.
 
     Attributes
     ----------
@@ -31,16 +56,37 @@ class GraphAssembler():
     existing_edges : list[tuple]
         The list of edges (identified by edge key tuples) that are
         already in the graph.
+    graph_properties : dict[str: str]
+        A dictionary of graphviz graph properties used for assembly.
+    node_properties : dict[str: str]
+        A dictionary of graphviz node properties used for assembly.
+    edge_properties : dict[str: str]
+        A dictionary of graphviz edge properties used for assembly.
+        Note that most edge properties are determined based on the type of
+        the edge by the assembler (e.g. color, arrowhead).
+        These settings cannot be directly controlled through the API.
     """
-    def __init__(self, stmts=None):
+    def __init__(self, stmts=None, graph_properties=None,
+                 node_properties=None, edge_properties=None):
         if stmts is None:
             self.statements = []
         else:
             self.statements = stmts
+        self.graph_properties = default_graph_properties
+        self.node_properties = default_node_properties
+        self.edge_properties = default_edge_properties
+        if graph_properties:
+            for k, v in graph_properties.iteritems():
+                self.graph_properties[k] = v
+        if node_properties:
+            for k, v in node_properties.iteritems():
+                self.node_properties[k] = v
+        if edge_properties:
+            for k, v in edge_properties.iteritems():
+                self.edge_properties[k] = v
         self.existing_nodes = []
         self.existing_edges = []
-        self.graph = pygraphviz.AGraph(directed=True, rankdir='LR',
-                                       splines='spline')
+        self.graph = pygraphviz.AGraph(**self.graph_properties)
 
     def add_statements(self, stmts):
         """Add a list of statements to be assembled.
@@ -86,7 +132,7 @@ class GraphAssembler():
         graph_string : str
             The assembled graph as a string.
         """
-        graph_string = self.graph.string()
+        graph_string = self.graph.to_string()
         graph_string = graph_string.replace('\\N', '\\n')
         return graph_string
 
@@ -102,7 +148,7 @@ class GraphAssembler():
         with open(file_name, 'wt') as fh:
             fh.write(s)
 
-    def save_pdf(self, file_name='graph.pdf', prog='circo'):
+    def save_pdf(self, file_name='graph.pdf', prog='dot'):
         """Draw the graph and save as an image or pdf file.
 
         Parameters
@@ -116,8 +162,12 @@ class GraphAssembler():
 
     def _add_edge(self, source, target, **kwargs):
         """Add an edge to the graph."""
-        style = 'solid'
-        self.graph.add_edge(source, target, **kwargs)
+        # Start with default edge properties
+        edge_properties = self.edge_properties
+        # Overwrite ones that are given in function call explicitly
+        for k, v in kwargs.iteritems():
+            edge_properties[k] = v
+        self.graph.add_edge(source, target, **edge_properties)
 
     def _add_node(self, agent):
         """Add an Agent as a node to the graph."""
@@ -126,13 +176,9 @@ class GraphAssembler():
             return
         self.existing_nodes.append(node_name)
         node_label = agent.name
-        color = "#ffeeee"
         self.graph.add_node(node_name,
                         label=node_label,
-                        shape='Mrecord',
-                        fillcolor=color, style="filled", color="transparent",
-                        fontsize="12",
-                        margin="0.06,0")
+                        **self.node_properties)
 
     def _add_phosphorylation(self, enz, sub):
         """Assemble a Phosphorylation statement."""
@@ -174,8 +220,10 @@ class GraphAssembler():
 
     def _add_complex(self, members):
         """Assemble a Complex statement."""
-        params = {'color': '#000000',
-                  'arrowhead': 'none'}
+        params = {'color': '#0000ff',
+                  'arrowhead': 'dot',
+                  'arrowtail': 'dot',
+                  'dir': 'both'}
         for m1, m2 in itertools.combinations(members, 2):
             edge_key = (set([m1.name, m2.name]), 'complex')
             if edge_key in self.existing_edges:
