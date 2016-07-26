@@ -171,43 +171,50 @@ class GraphAssembler():
 
     def _add_node(self, agent):
         """Add an Agent as a node to the graph."""
-        node_name = agent.name
-        if node_name in self.existing_nodes:
+        if not agent.bound_conditions:
+            node_label = agent.name
+        else:
+            all_bound = [bc.agent.name for bc in agent.bound_conditions if
+                         bc.is_bound]
+            node_label = agent.name + '/' + '/'.join(all_bound)
+        node_key = _get_node_key(agent)
+        if node_key in self.existing_nodes:
             return
-        self.existing_nodes.append(node_name)
-        node_label = agent.name
-        self.graph.add_node(node_name,
+        self.existing_nodes.append(node_key)
+        self.graph.add_node(node_key,
                         label=node_label,
                         **self.node_properties)
 
     def _add_phosphorylation(self, enz, sub):
         """Assemble a Phosphorylation statement."""
-        source = enz.name
-        target = sub.name
+        source = _get_node_key(enz)
+        target = _get_node_key(sub)
         edge_key = (source, target, 'phosphorylation')
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
         params = {'color': '#000000',
-                  'arrowhead': 'normal'}
+                  'arrowhead': 'normal',
+                  'dir': 'forward'}
         self._add_edge(source, target, **params)
 
     def _add_dephosphorylation(self, enz, sub):
         """Assemble a Dephosphorylation statement."""
-        source = enz.name
-        target = sub.name
+        source = _get_node_key(enz)
+        target = _get_node_key(sub)
         edge_key = (source, target, 'dephosphorylation')
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
         params = {'color': '#ff0000',
-                  'arrowhead': 'normal'}
+                  'arrowhead': 'normal',
+                  'dir': 'forward'}
         self._add_edge(source, target, **params)
 
     def _add_activation(self, subj, obj, rel):
         """Assemble an Activation statment."""
-        source = subj.name
-        target = obj.name
+        source = _get_node_key(subj)
+        target = _get_node_key(obj)
         edge_key = (source, target, 'activation', rel)
         if edge_key in self.existing_edges:
             return
@@ -215,7 +222,8 @@ class GraphAssembler():
         color = '#000000' if rel else '#ff0000'
         arrowhead = 'vee' if rel else 'tee'
         params = {'color': color,
-                  'arrowhead': arrowhead}
+                  'arrowhead': arrowhead,
+                  'dir': 'fowrard'}
         self._add_edge(source, target, **params)
 
     def _add_complex(self, members):
@@ -225,8 +233,13 @@ class GraphAssembler():
                   'arrowtail': 'dot',
                   'dir': 'both'}
         for m1, m2 in itertools.combinations(members, 2):
-            edge_key = (set([m1.name, m2.name]), 'complex')
+            m1_key = _get_node_key(m1)
+            m2_key = _get_node_key(m2)
+            edge_key = (set([m1_key, m2_key]), 'complex')
             if edge_key in self.existing_edges:
                 return
             self.existing_edges.append(edge_key)
-            self._add_edge(m1.name, m2.name, **params)
+            self._add_edge(m1_key, m2_key, **params)
+
+def _get_node_key(agent):
+    return agent.matches_key()
