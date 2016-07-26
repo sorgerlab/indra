@@ -193,9 +193,13 @@ class ReachProcessor(object):
                             controllers = a.get('args').values()
                             controller_agent =\
                                 self._get_agent_from_entity(controllers[0])
-                            bound_contr = [self._get_agent_from_entity(c) 
-                                           for c in controllers[1:]]
-                            controller_agent.bound_to = bound_contr
+                            bound_agents = [self._get_agent_from_entity(c) 
+                                            for c in controllers[1:]]
+                            bound_conditions = [BoundCondition(ba, True) for
+                                                ba in bound_agents]
+                            controller_agent.bound_conditions = \
+                                    bound_conditions
+                            print controller_agent
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
