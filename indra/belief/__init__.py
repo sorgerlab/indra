@@ -1,20 +1,24 @@
 import numpy
 import indra.preassembler.sitemapper as sm
 
-class EpistemicEngine(object):
+class BeliefEngine(object):
     def __init__(self, statements):
         self.statements = statements
         self.prior_probs_rand = {
             'biopax': 0.2,
             'bel': 0.1,
             'trips': 0.4,
-            'reach': 0.5
+            'reach': 0.5,
+            'biogrid': 0.01,
+            'assertion': 0.0
             }
         self.prior_probs_syst = {
             'biopax': 0.01,
             'bel': 0.01,
             'trips': 0.2,
-            'reach': 0.2
+            'reach': 0.2,
+            'biogrid': 0.01,
+            'assertion': 0.0
             }
 
     def set_prior_probs(self, statements):
