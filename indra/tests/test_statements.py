@@ -1132,6 +1132,13 @@ def test_tranlocation_refinement():
     assert(not st1.refinement_of(st7, hierarchies))
     assert(st7.refinement_of(st4, hierarchies))
 
+def test_complex_refinement_order():
+    st1 = Complex([Agent('MED23'), Agent('ELK1')])
+    st2 = Complex([Agent('ELK1', mods=[ModCondition('phosphorylation')]),
+                   Agent('MED23')])
+    assert(st2.refinement_of(st1, hierarchies))
+    assert(not st1.refinement_of(st2, hierarchies))
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 

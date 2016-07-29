@@ -370,3 +370,11 @@ def test_flatten_stmts():
     assert(len(flatten_stmts(pa.unique_stmts)) == 4)
     assert(len(flatten_stmts(pa.related_stmts)) == 4)
 
+def test_complex_refinement_order():
+    st1 = Complex([Agent('MED23'), Agent('ELK1')])
+    st2 = Complex([Agent('ELK1', mods=[ModCondition('phosphorylation')]),
+                   Agent('MED23')])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_duplicates()
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 1)
