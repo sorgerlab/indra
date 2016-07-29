@@ -109,9 +109,13 @@ class SiteMapper(object):
             invalid_sites = []
             new_agent_list = []
             for agent in stmt.agent_list():
-                (agent_invalid_sites, new_agent) = self._map_agent_sites(agent)
-                new_agent_list.append(new_agent)
-                invalid_sites += agent_invalid_sites
+                if agent is not None:
+                    (agent_invalid_sites, new_agent) = \
+                        self._map_agent_sites(agent)
+                    invalid_sites += agent_invalid_sites
+                    new_agent_list.append(new_agent)
+                else:
+                    new_agent_list.append(agent)
             if invalid_sites:
                 stmt_copy.set_agent_list(new_agent_list)
 
@@ -176,6 +180,8 @@ class SiteMapper(object):
             map). If mappings were not found in the site map, the original
             (incorrect) agent is returned.
         """
+        if agent is None:
+            return ([], agent)
         new_agent = deepcopy(agent)
         # If there are no modifications on this agent, then we can return the
         # copy of the agent
