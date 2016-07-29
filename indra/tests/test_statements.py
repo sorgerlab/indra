@@ -1139,6 +1139,22 @@ def test_complex_refinement_order():
     assert(st2.refinement_of(st1, hierarchies))
     assert(not st1.refinement_of(st2, hierarchies))
 
+def test_homodimer_bound_to():
+    KRAS = Agent('KRAS')
+    HRAS = Agent('HRAS')
+    NRAS = Agent('NRAS')
+    BRAFK = Agent('BRAF', bound_conditions=[BoundCondition(KRAS, True)])
+    BRAFH = Agent('BRAF', bound_conditions=[BoundCondition(HRAS, True)])
+    BRAFN = Agent('BRAF', bound_conditions=[BoundCondition(NRAS, True)])
+
+    st1 = Complex([BRAFK, BRAFN])
+    st2 = Complex([BRAFN, BRAFK])
+    st3 = Complex([BRAFK, BRAFH])
+    assert st1.matches(st2)
+    assert st2.matches(st1)
+    assert not st1.matches(st3)
+    assert not st3.matches(st2)
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 

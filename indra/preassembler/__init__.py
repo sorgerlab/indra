@@ -312,9 +312,16 @@ class Preassembler(object):
         self.related_stmts = self.combine_duplicate_stmts(self.related_stmts)
 
         # Make sure we haven't lost any statements!
-        assert len(flatten_stmts(self.unique_stmts)) == \
-               len(flatten_stmts(self.related_stmts)), \
-               "Statements lost after combining related"
+        if len(flatten_stmts(self.unique_stmts)) != \
+            len(flatten_stmts(self.related_stmts)):
+            logger.error("Statements lost after combining related")
+            for s1 in flatten_stmts(self.unique_stmts):
+                found = False
+                for s2 in flatten_stmts(self.related_stmts):
+                    if s1.matches(s2):
+                        found = True
+                if not found:
+                    logger.error('Lost: %s' % s1)
         return self.related_stmts
 
 

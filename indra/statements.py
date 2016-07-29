@@ -1191,13 +1191,13 @@ class Complex(Statement):
 
     def matches_key(self):
         key = (type(self), tuple(m.matches_key() for m in sorted(self.members,
-                                                 key=lambda x: x.name)))
+                                                 key=lambda x: x.matches_key())))
         return str(key)
 
     def entities_match_key(self):
         key = (type(self), tuple(a.entity_matches_key() if a is not None
                                   else None for a in sorted(self.members,
-                                                key=lambda x: x.name)))
+                                                key=lambda x: x.matches_key())))
         return str(key)
 
     def agent_list(self):
