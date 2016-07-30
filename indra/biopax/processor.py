@@ -602,6 +602,10 @@ class BiopaxProcessor(object):
         # the sequence position.
         mf_pos = mf.getFeatureLocation()
         if mf_pos is not None:
+            # If it is not a SequenceSite we can't handle it
+            if not mf_pos.modelInterface.getName() == \
+                'org.biopax.paxtools.model.level3.SequenceSite':
+                return None
             mf_site = cast(_bp('SequenceSite'), mf_pos)
             mf_pos_status = mf_site.getPositionStatus()
             if mf_pos_status is None:
@@ -712,6 +716,10 @@ class BiopaxProcessor(object):
                 # Special handling of common entities
                 if xr.getId() == '86-01-1':
                     chebi_ids.append('15996')
+                elif xr.getId() == '24696-26-2':
+                    chebi_ids.append('17761')
+                else:
+                    logging.info('Unknown cas id: %s' % xr.getId())
         if not chebi_ids:
             return None
         elif len(chebi_ids) == 1:
@@ -774,7 +782,13 @@ class BiopaxProcessor(object):
         'optyr': ('phosphorylation', 'Y'),
         'ubiquitinated lysine': ('ubiquitination', 'K'),
         'residue modification, active': ('active', None),
-        'residue modification, inactive': ('inactive', None)
+        'residue modification, inactive': ('inactive', None),
+        'N4-glycosyl-L-asparagine': ('glycosylation', 'N'),
+        'n4glycoasn': ('glycosylation', 'N'),
+        'O-glycosyl-L-threonine': ('glycosylation', 'T'),
+        'S-palmitoyl-L-cysteine': ('palmitoylation', 'C'),
+        'N6-acetyl-L-lysine' : ('acetylation', 'K'),
+        'n6aclys': ('acetylation', 'K')
         }
 
 # Functions for accessing frequently used java classes with shortened path
