@@ -534,14 +534,19 @@ class BiopaxProcessor(object):
         mf_type = mf.getModificationType()
         if mf_type is None:
             return None
-        if len(mf_type.getTerm().toArray()) != 1:
-            logger.info('Other than one modification term')
-        mf_type = mf_type.getTerm().toArray()[0]
-        try:
-            mod_type, residue = BiopaxProcessor._mftype_dict[mf_type]
-        except KeyError:
-            logger.info('Ignored modification type %s' % mf_type)
+        mf_type_terms = mf_type.getTerm().toArray()
+        known_mf_type = None
+        for t in mf_type_terms:
+            mf_type_indra = BiopaxProcessor._mftype_dict.get(t)
+            if mf_type_indra is None:
+                logger.info('Unknown modification type term: %s' % t)
+            else:
+                known_mf_type = mf_type_indra
+        if not known_mf_type:
+            logger.info('Ignored modification type %s' % mf_type_terms[0])
             return None
+        else:
+            mod_type, residue = known_mf_type
 
         # getFeatureLocation returns SequenceLocation, which is the
         # generic parent class of SequenceSite and SequenceInterval.
@@ -703,11 +708,17 @@ class BiopaxProcessor(object):
             return bpe
 
     _mftype_dict = {
+        'phosres': ('phosphorylation', None),
+        'phosphorylation': ('phosphorylation', None),
         'phosphorylated residue': ('phosphorylation', None),
+        'phosphorylated': ('phosphorylation', None),
         'O-phospho-L-serine': ('phosphorylation', 'S'),
+        'opser': ('phosphorylation', 'S'),
         'O-phospho-L-threonine': ('phosphorylation', 'T'),
+        'opthr': ('phosphorylation', 'T'),
         'O-phospho-L-tyrosine': ('phosphorylation', 'Y'),
         'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
+        'optyr': ('phosphorylation', 'Y'),
         'ubiquitinated lysine': ('ubiquitination', 'K'),
         'residue modification, active': ('active', None),
         'residue modification, inactive': ('inactive', None)
