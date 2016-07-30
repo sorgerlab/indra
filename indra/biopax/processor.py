@@ -364,8 +364,57 @@ class BiopaxProcessor(object):
                 # active and if it is the only active member then
                 # set this as the enzyme to which all other members of the
                 # complex are bound.
-                logger.info('Cannot handle complex enzymes.')
-                continue
+                # Get complex members
+                members = self._get_complex_members(controller_pe)
+                if members is None:
+                    continue
+                # Separate out protein and non-protein members
+                protein_members = []
+                non_protein_members = []
+                for m in members:
+                    if isinstance(m, Agent):
+                        if m.db_refs.get('UP') or \
+                            m.db_refs.get('HGNC'):
+                            protein_members.append(m)
+                        else:
+                            non_protein_members.append(m)
+                    else:
+                        all_protein = True
+                        for subm in m:
+                            if not (subm.db_refs.get('UP') or \
+                                    subm.db_refs.get('HGNC')):
+                                all_protein = False
+                                break
+                        if all_protein:
+                            protein_members.append(m)
+                        else:
+                            non_protein_members.append(m)
+                # If there is only one protein member, we can assume that
+                # it is the enzyme, and everything else is just bound
+                # to it.
+                if len(protein_members) == 1:
+                    enzs = protein_members[0]
+                    # Iterate over non-protein members
+                    for bound in non_protein_members:
+                        if isinstance(bound, Agent):
+                            bc = BoundCondition(bound, True)
+                            if isinstance(enzs, Agent):
+                                enzs.bound_conditions.append(bc)
+                            else:
+                                for enz in enzs:
+                                    enz.bound_conditions.append(bc)
+                        else:
+                            msg = 'Cannot handle complex enzymes with ' + \
+                                    'aggregate non-protein binding partners.'
+                            logger.info(msg)
+                            continue
+                else:
+                    msg = 'Cannot handle complex enzymes with ' + \
+                            'multiple protein members.'
+                    logger.info(msg)
+                    continue
+            else:
+                enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             if _is_complex(input_pe):
                 # It is possible to find which member of the complex is 
                 # actually modified. That member will be the substrate and 
@@ -387,7 +436,6 @@ class BiopaxProcessor(object):
                                source_id=source_id)
                       for cit in citations]
 
-            enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
@@ -656,9 +704,14 @@ class BiopaxProcessor(object):
         if bp_entref is None:
             return None
         xrefs = bp_entref.getXref().toArray()
-        chebi_refs = [x for x in xrefs if 
-                        x.getDb() == 'ChEBI']
-        chebi_ids = [r.getId().replace('CHEBI:', '') for r in chebi_refs]
+        chebi_ids = []
+        for xr in xrefs:
+            if xr.getDb().upper() == 'CHEBI':
+                chebi_ids.append(xr.getId().replace('CHEBI:', ''))
+            elif xr.getDb().upper() == 'CAS':
+                # Special handling of common entities
+                if xr.getId() == '86-01-1':
+                    chebi_ids.append('15996')
         if not chebi_ids:
             return None
         elif len(chebi_ids) == 1:
