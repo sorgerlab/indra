@@ -5,7 +5,7 @@ import requests
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
-logger = logging.getLogger('biopax')
+logger = logging.getLogger('biogrid')
 
 # THIS FILE IS NOT UNDER VERSION CONTROL
 # For more information see http://wiki.thebiogrid.org/doku.php/biogridrest
@@ -16,65 +16,83 @@ try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    logging.error('BioGRID API key could not be found.')
-    logging.error(api_key_file)
+    logger.error('BioGRID API key could not be found.')
+    logger.error(api_key_file)
     api_key = None
 
-def process_query(statement, save_json_name='biogrid_output.json'):
-    agent_names = [agent.name for agent in statement.agent_list() \
-                    if agent is not None]
-    if len(agent_names) < 2:
-        return None
-    res_dict = _send_request(agent_names)
-    with open(save_json_name, 'wt') as fh:
-        json.dump(res_dict, fh, indent=1)
-    return process_json(res_dict, agent_names)
+def get_publications(gene_names, save_json_name=None):
+    """Return evidence publications for interaction between the given genes.
 
-def get_biogrid_interactors(dict):
-    b_list = [dict['OFFICIAL_SYMBOL_A'], dict['OFFICIAL_SYMBOL_B']]
-    return b_list
+    Parameters
+    ----------
+    gene_names : list[str]
+        A list of gene names (HGNC symbols) to query interactions between.
+        Currently supports exactly two genes only.
+    save_json_name : Optional[str]
+        A file name to save the raw BioGRID web service output in. By default,
+        the raw output is not saved.
 
-def get_subset(dict, agent_list):
-    new_dict = {}
-    for id in dict.keys():
-        b_list = get_biogrid_interactors(dict[id])
-        if set(b_list) == set(agent_list):
-            new_dict[id] = dict[id]
-    return new_dict
-
-def process_json(dict, agent_list):
-    agent_subset = get_subset(dict, agent_list)
-    publications = []
-    for paper in agent_subset.keys():
-        publications.append(Publication(agent_subset[paper]))
+    Return
+    ------
+    publications : list[Publication]
+        A list of Publication objects that provide evidence for interactions
+        between the given list of genes.
+    """
+    if len(gene_names) != 2:
+        logger.warning('Other than 2 gene names given.')
+        return []
+    res_dict = _send_request(gene_names)
+    if not res_dict:
+        return []
+    if save_json_name is not None:
+        with open(save_json_name, 'wt') as fh:
+            json.dump(res_dict, fh, indent=1)
+    publications = _extract_publications(res_dict, gene_names)
     return publications
 
-def _send_request(agent_list):
+class Publication(object):
+    def __init__(self, interaction, interaction_id):
+        self.pmid = "PMID" + str(interaction['PUBMED_ID'])
+        self.modification = interaction['MODIFICATION']
+        self.experimental_system = interaction['EXPERIMENTAL_SYSTEM']
+        self.experimental_system_type = interaction['EXPERIMENTAL_SYSTEM_TYPE']
+        self.throughput = interaction['THROUGHPUT']
+        self.interaction_id = interaction_id
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return "Publication(%s)" % self.pmid
+
+def _extract_publications(res_dict, gene_names):
+    res_filtered = _filter_results(res_dict, gene_names)
+    publications = []
+    for interaction_id in res_filtered.keys():
+        pub = Publication(res_filtered[interaction_id], interaction_id)
+        publications.append(pub)
+    return publications
+
+def _filter_results(res_dict, gene_names):
+    filtered_dict = {}
+    for interaction_id in res_dict.keys():
+        interactors = [res_dict[interaction_id]['OFFICIAL_SYMBOL_A'],
+                       res_dict[interaction_id]['OFFICIAL_SYMBOL_B']]
+        if set(interactors) == set(gene_names):
+            filtered_dict[interaction_id] = res_dict[interaction_id]
+    return filtered_dict
+
+def _send_request(gene_names):
+    if api_key is None:
+        logger.error('BioGRID cannot be used without API key')
+        return None
     params = {'searchNames': 'true',
-              'geneList': '|'.join(agent_list),
+              'geneList': '|'.join(gene_names),
               'taxId': '9606',
-              'format': 'jsonExtended',
+              'format': 'json',
+              'includeInteractors': False,
               'accesskey': api_key}
     res = requests.get(biogrid_url, params)
     res.raise_for_status()
     res_dict = res.json()
     return res_dict
-
-class Publication(object):
-    def __init__(self, interaction):
-        self.pmid = "PMID" + str(interaction['PUBMED_ID'])
-        self.modification = interaction['MODIFICATION']
-        self.experimental_system = interaction[
-            'EXPERIMENTAL_SYSTEM']
-        self.experimental_system_type = interaction[
-            'EXPERIMENTAL_SYSTEM_TYPE']
-        self.throughput = interaction['THROUGHPUT']
-
-
-    def __str__(self):
-        return ("PMID:" + self.pmid)
-
-
-    def __repr__(self):
-        return ("<pmid: %s at 0x%x>" %
-                (self.pmid, id(self)))
