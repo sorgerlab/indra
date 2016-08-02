@@ -77,7 +77,7 @@ class BiopaxProcessor(object):
             bpe = _cast_biopax_element(obj)
             if not _is_complex(bpe):
                 continue
-            citations = self._get_citations(bpe) 
+            citations = self._get_citations(bpe)
             source_id = bpe.getUri()
             if not citations:
                 ev = Evidence(source_api='biopax',
@@ -268,8 +268,8 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_complex_members(cplx):
-        # Get the members of a complex. This is returned as a list 
-        # of lists since complexes can contain other complexes. The 
+        # Get the members of a complex. This is returned as a list
+        # of lists since complexes can contain other complexes. The
         # list of lists solution allows us to preserve this.
         member_pes = cplx.getComponent().toArray()
 
@@ -320,7 +320,7 @@ class BiopaxProcessor(object):
                 mods.append(mc)
         return mods
 
-    def _get_generic_modification(self, mod_filter=None, mod_gain=True, 
+    def _get_generic_modification(self, mod_filter=None, mod_gain=True,
                                   force_contains=None):
         '''
         Get all modification reactions given a filter
@@ -416,13 +416,13 @@ class BiopaxProcessor(object):
             else:
                 enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
             if _is_complex(input_pe):
-                # It is possible to find which member of the complex is 
-                # actually modified. That member will be the substrate and 
+                # It is possible to find which member of the complex is
+                # actually modified. That member will be the substrate and
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
                 continue
             # TODO: should this be the citation for the control?
-            # Sometimes there is an xref within Catalysis which refers to 
+            # Sometimes there is an xref within Catalysis which refers to
             # a pubmed article in a bp:PublicationXref tag.
             citations = BiopaxProcessor._get_citations(control)
             source_id = control.getUri()
@@ -439,7 +439,7 @@ class BiopaxProcessor(object):
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
-                # If neither the required enzyme nor the substrate is 
+                # If neither the required enzyme nor the substrate is
                 # present then skip
                 if force_contains is not None:
                     if (enz.name not in force_contains) and \
@@ -472,7 +472,12 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_citations(bpe):
         xrefs = bpe.getXref().toArray()
-        refs = [x.getId() for x in xrefs if x.getDb() == 'PUBMED']
+        refs = []
+        for xr in xrefs:
+            db_name = xr.getDb()
+            if db_name is not None and db_name.upper() == 'PUBMED':
+                refs.append(xr.getId())
+            print db_name
         # TODO: handle non-pubmed evidence
         return refs
 
@@ -694,7 +699,7 @@ class BiopaxProcessor(object):
             uniprot_ids = [m.groups()[0]]
             return uniprot_ids
         xrefs = bp_entref.getXref().toArray()
-        uniprot_refs = [x for x in xrefs if 
+        uniprot_refs = [x for x in xrefs if
                         x.getDb().lower() == 'uniprot knowledgebase']
         uniprot_ids = [r.getId() for r in uniprot_refs]
         if not uniprot_ids:
