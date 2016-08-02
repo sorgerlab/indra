@@ -84,9 +84,10 @@ class GraphAssembler():
         if edge_properties:
             for k, v in edge_properties.iteritems():
                 self.edge_properties[k] = v
+        self.graph = pygraphviz.AGraph(**self.graph_properties)
         self.existing_nodes = []
         self.existing_edges = []
-        self.graph = pygraphviz.AGraph(**self.graph_properties)
+        self._complex_nodes = []
 
     def add_statements(self, stmts):
         """Add a list of statements to be assembled.
@@ -101,27 +102,39 @@ class GraphAssembler():
 
     def make_model(self):
         """Assemble the graph from the assembler's list of INDRA Statements."""
+        # Assemble in two stages.
+        # First, create the nodes of the graph
         for stmt in self.statements:
             if isinstance(stmt, Phosphorylation):
                 if stmt.enz is None:
                     continue
                 self._add_node(stmt.enz)
                 self._add_node(stmt.sub)
-                self._add_phosphorylation(stmt.enz, stmt.sub)
             elif isinstance(stmt, Dephosphorylation):
                 if stmt.enz is None:
                     continue
                 self._add_node(stmt.enz)
                 self._add_node(stmt.sub)
-                self._add_dephosphorylation(stmt.enz, stmt.sub)
             elif isinstance(stmt, Activation):
                 self._add_node(stmt.subj)
                 self._add_node(stmt.obj)
-                self._add_activation(stmt.subj, stmt.obj,
-                                     stmt.is_activation)
             elif isinstance(stmt, Complex):
                 for m in stmt.members:
                     self._add_node(m)
+        # Second, create the edges of the graph
+        for stmt in self.statements:
+            if isinstance(stmt, Phosphorylation):
+                if stmt.enz is None:
+                    continue
+                self._add_phosphorylation(stmt.enz, stmt.sub)
+            elif isinstance(stmt, Dephosphorylation):
+                if stmt.enz is None:
+                    continue
+                self._add_dephosphorylation(stmt.enz, stmt.sub)
+            elif isinstance(stmt, Activation):
+                self._add_activation(stmt.subj, stmt.obj,
+                                     stmt.is_activation)
+            elif isinstance(stmt, Complex):
                 self._add_complex(stmt.members)
 
     def get_string(self):
@@ -156,7 +169,7 @@ class GraphAssembler():
         file_name : Optional[str]
             The name of the file to save the graph as. Default: graph.pdf
         prog : Optional[str]
-            The graphviz program to use for graph layout. Default: circo
+            The graphviz program to use for graph layout. Default: dot
         """
         self.graph.draw(file_name, prog=prog)
 
@@ -171,12 +184,20 @@ class GraphAssembler():
 
     def _add_node(self, agent):
         """Add an Agent as a node to the graph."""
+        if agent is None:
+            return
         if not agent.bound_conditions:
-            node_label = agent.name
+            node_label = _get_node_label(agent)
         else:
-            all_bound = [bc.agent.name for bc in agent.bound_conditions if
-                         bc.is_bound]
-            node_label = agent.name + '/' + '/'.join(all_bound)
+            bound_agents = [bc.agent for bc in agent.bound_conditions if
+                            bc.is_bound]
+            if bound_agents:
+                bound_names = [_get_node_label(a) for a in bound_agents]
+                node_label = _get_node_label(agent) + '/' + \
+                             '/'.join(bound_names)
+                self._complex_nodes.append([agent] + bound_agents)
+            else:
+                node_label = _get_node_label(agent)
         node_key = _get_node_key(agent)
         if node_key in self.existing_nodes:
             return
@@ -233,6 +254,8 @@ class GraphAssembler():
                   'arrowtail': 'dot',
                   'dir': 'both'}
         for m1, m2 in itertools.combinations(members, 2):
+            if self._has_complex_node(m1, m2):
+                continue
             m1_key = _get_node_key(m1)
             m2_key = _get_node_key(m2)
             edge_key = (set([m1_key, m2_key]), 'complex')
@@ -240,6 +263,27 @@ class GraphAssembler():
                 return
             self.existing_edges.append(edge_key)
             self._add_edge(m1_key, m2_key, **params)
+
+    def _has_complex_node(self, m1, m2):
+        for cplx in self._complex_nodes:
+            names = [m.name for m in cplx]
+            if m1.name in names and m2.name in names:
+                return True
+            else:
+                return False
+
+def _get_node_label(agent):
+    # If the agent doesn't have grounding in a known
+    # database, try to use the original text as a node name.
+    # otherwise return the agent name.
+    if not (agent.db_refs.get('UP') or
+            agent.db_refs.get('HGNC') or
+            agent.db_refs.get('CHEBI')):
+        if agent.db_refs.get('TEXT'):
+            name_for_node = agent.db_refs['TEXT']
+            return name_for_node
+    name_for_node = agent.name
+    return name_for_node
 
 def _get_node_key(agent):
     return agent.matches_key()
