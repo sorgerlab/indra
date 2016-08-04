@@ -5,6 +5,8 @@ import pickle
 import sys
 
 pmid_list_file = sys.argv[1]
+start_ix = int(sys.argv[2])
+end_ix = int(sys.argv[3])
 
 # Load the list of PMIDs from the given file
 with open(pmid_list_file) as f:
@@ -15,7 +17,7 @@ bucket_name ='bigmech'
 client = boto3.client('s3')
 
 stmts = {}
-for ix, pmid in enumerate(pmid_list):
+for ix, pmid in enumerate(pmid_list[start_ix:end_ix]):
     # Get the reach output
     reach_key = 'papers/PMID%s/reach' % pmid
     try:
@@ -46,8 +48,8 @@ for ix, pmid in enumerate(pmid_list):
     stmts[pmid] = reach_proc.statements
 
     if ix % 500 == 0:
-        with open('reach_stmts_%d.pkl' % ix, 'w') as f:
+        with open('reach_stmts_%d_%d.pkl' % (start_ix, ix), 'w') as f:
             pickle.dump(stmts, f)
 
-with open('reach_stmts.pkl', 'w') as f:
+with open('reach_stmts_%d_%d.pkl' % (start_ix, end_ix), 'w') as f:
     pickle.dump(stmts, f)
