@@ -23,7 +23,6 @@ Structure of the XML output returned by queries to Pubmed database::
           CommentsCorrectionsList
           MeshHeadingList
           OtherID
-            
           Article
             Journal
               ISSN
@@ -188,7 +187,7 @@ def get_abstract(pubmed_id):
         return abstract_text
 
 
-def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
+def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     """
     Get article metadata for up to 200 PMIDs from the Pubmed database.
 
@@ -199,7 +198,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
     get_issns_from_nlm : boolean
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
-        Defaults to True.
+        Defaults to False, since it slows down performance.
 
     Returns
     -------
@@ -227,42 +226,55 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
     for art_ix, pm_article in enumerate(pm_articles):
-        pmid = find_elem_text(pm_article, './/PMID')
+        pmid = find_elem_text(pm_article, 'MedlineCitation/PMID')
         # Look for the DOI in the ELocationID field...
-        doi = find_elem_text(pm_article, './/ELocationID')
+        doi = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID')
         # ...and if that doesn't work, look in the ArticleIdList
         if doi is None:
             doi = find_elem_text(pm_article, './/ArticleId[@IdType="doi"]')
-        title = find_elem_text(pm_article, './/ArticleTitle')
+        # Try to get the PMCID
+        pmcid = find_elem_text(pm_article, './/ArticleId[@IdType="pmc"]')
+        # Title
+        title = find_elem_text(pm_article,
+                               'MedlineCitation/Article/ArticleTitle')
         # Author list
-        author_elems = pm_article.findall('.//AuthorList/Author/LastName')
+        author_elems = pm_article.findall('MedlineCitation/Article/'
+                                          'AuthorList/Author/LastName')
         author_names = None if author_elems is None \
                             else [au.text for au in author_elems]
         # Journal info
-        journal_title = find_elem_text(pm_article, './/Journal/Title')
-        journal_abbrev = find_elem_text(pm_article,
-                                        './/Journal/ISOAbbreviation')
+        journal_title = find_elem_text(pm_article, 'MedlineCitation/Article/'
+                                                   'Journal/Title')
+        journal_abbrev = find_elem_text(pm_article, 'MedlineCitation/Article/'
+                                                   'Journal/ISOAbbreviation')
         # Add the ISSN from the article record
         issn_list = []
-        issn = find_elem_text(pm_article, './/ISSN')
+        issn = find_elem_text(pm_article, 'MedlineCitation/Article/'
+                                                   'Journal/ISSN')
         if issn:
             issn_list.append(issn)
         # Add the Linking ISSN from the article record
-        issn_linking = find_elem_text(pm_article, './/ISSNLinking')
+        issn_linking = find_elem_text(pm_article,
+                                      'MedlineCitation/MedlineJournalInfo/'
+                                      'ISSNLinking')
         if issn_linking:
             issn_list.append(issn_linking)
         # Now get the list of ISSNs from the NLM Catalog
-        nlm_id = find_elem_text(pm_article, './/NlmUniqueID')
-        if nlm_id:
+        nlm_id = find_elem_text(pm_article,
+                                'MedlineCitation/MedlineJournalInfo/'
+                                'NlmUniqueID')
+        if nlm_id and get_issns_from_nlm:
             nlm_issn_list = get_issns_for_journal(nlm_id)
             if nlm_issn_list:
                 issn_list += nlm_issn_list
         # Remove any duplicates
         issn_list = list(set(issn_list))
         # Get the page number entry
-        page = find_elem_text(pm_article, './/MedlinePgn')
+        page = find_elem_text(pm_article, 'MedlineCitation/Article/Pagination/'
+                                          'MedlinePgn')
         # Build the result
         result = {'doi': doi,
+                  'pmcid': pmcid,
                   'title': title,
                   'authors': author_names,
                   'journal_title': journal_title,

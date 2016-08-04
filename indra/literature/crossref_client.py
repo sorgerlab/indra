@@ -85,7 +85,8 @@ def doi_query(pmid, search_limit=10):
     from the Pubmed database.
     """
     # Get article metadata from PubMed
-    pubmed_meta_dict = pubmed_client.get_metadata_for_ids([pmid])
+    pubmed_meta_dict = pubmed_client.get_metadata_for_ids([pmid],
+                                                        get_issns_from_nlm=True)
     if pubmed_meta_dict is None or pubmed_meta_dict.get(pmid) is None:
         warnings.warn('No metadata found in Pubmed for PMID %s' % pmid)
         return None
