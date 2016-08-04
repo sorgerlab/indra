@@ -1,3 +1,4 @@
+#!/bin/bash
 model_name=$1
 export CLASSPATH="$HOME/src/reach/*"
 platform=`uname`

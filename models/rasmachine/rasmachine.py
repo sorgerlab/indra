@@ -26,8 +26,8 @@ def get_email_pmids(cred_file):
 
     M = gmail_client.gmail_login(uname, passwd)
     gmail_client.select_mailbox(M, 'INBOX')
-
-    pmids = gmail_client.get_message_pmids(M)
+    day_limit = 10
+    pmids = gmail_client.get_message_pmids(M, day_limit)
     print 'Collected %d PMIDs' % len(pmids)
     return pmids
 
@@ -56,13 +56,16 @@ def process_paper(model_name, pmid):
         txt, txt_format = get_full_text(pmid)
         if txt_format == 'nxml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
-            shutil.move('reach_output.json', fulltext_path)
+            if os.path.exists('reach_output.json'):
+                shutil.move('reach_output.json', fulltext_path)
         elif txt_format == 'txt':
             rp = reach.process_text(txt, citation=pmid, offline=True)
-            shutil.move('reach_output.json', fulltext_path)
+            if os.path.exists('reach_output.json'):
+                shutil.move('reach_output.json', fulltext_path)
         elif txt_format == 'abstract':
             rp = reach.process_text(txt, citation=pmid, offline=True)
-            shutil.move('reach_output.json', abstract_path)
+            if os.path.exists('reach_output.json'):
+                shutil.move('reach_output.json', fulltext_path)
         else:
             rp = None
     return rp, txt_format
@@ -177,6 +180,7 @@ if __name__ == '__main__':
     parser.add_argument('--ndex', help='NDEx credentials file')
     args = parser.parse_args()
 
+    print '-------------------------'
     print time.strftime('%c')
 
     if not args.model:
@@ -214,7 +218,9 @@ if __name__ == '__main__':
 
     pmids = []
     # Get email PMIDs
-    if use_gmail: 
+    if use_gmail:
+        print 'Getting PMIDs from emails'
+        print time.strftime('%c')
         pmids += get_email_pmids(gmail_cred)
 
     # Get search PMIDs
@@ -229,10 +235,14 @@ if __name__ == '__main__':
         sys.exit()
 
     # Load the model
+    print 'Loading model'
+    print time.strftime('%c')
     inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
     model = IncrementalModel(inc_model_file)
     pysb_model = model.make_model()
     stats = {}
+    print 'Preassembling model'
+    print time.strftime('%c')
     model.preassemble()
 
     # Original statistics
@@ -243,6 +253,8 @@ if __name__ == '__main__':
     stats['orig_rules'] = len(pysb_model.rules)
 
     # Extend the model with PMIDs
+    print 'Extending model'
+    print time.strftime('%c')
     stats['new_papers'], stats['new_abstracts'] =\
         extend_model(model_name, model, pmids)
 
@@ -257,10 +269,14 @@ if __name__ == '__main__':
     stats['new_rules'] = len(pysb_model.rules)
 
     # Save model
+    print 'Saving model'
+    print time.strftime('%c')
     model.save(inc_model_file)
 
     # Upload to NDEx
     if use_ndex:
+        print 'Uploading to NDEx'
+        print time.strftime('%c')
         upload_to_ndex(model, ndex_cred)
 
     # Print and tweet the status message

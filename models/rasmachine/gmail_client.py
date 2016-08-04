@@ -66,8 +66,14 @@ def print_msg(msg):
     print 'Message:'
     print text
 
-def get_message_pmids(M):
-    res, data = M.search(None, 'ALL')
+def get_message_pmids(M, day_limit=10):
+    if day_limit is not None:
+        date_now = datetime.datetime.now()
+        date_rel = date_now - datetime.timedelta(days=10)
+        date_str = date_rel.strftime('%d-%b-%Y')
+        res, data = M.search(None, '(SINCE "%s")' % date_str)
+    else:
+        res, data = M.search(None, 'ALL')
     # Data here is a space-separated list of message IDs
     # like ['1 2 3']
     msg_ids = data[0].split(' ')
@@ -80,7 +86,6 @@ def get_message_pmids(M):
         pmids += subject_pmids
         if headers['From'] == 'Sent by NCBI <nobody@ncbi.nlm.nih.gov>' or\
             headers['From'] == 'My NCBI <efback@ncbi.nlm.nih.gov>':
-            print subject
             text = get_text(msg)
             ncbi_pmids = pmids_from_ncbi_email(text)
             pmids += ncbi_pmids
