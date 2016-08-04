@@ -47,7 +47,9 @@ def id_lookup(paper_id, idtype):
     # To clarify the state of things at this point:
     assert ids.get('pmid') is not None
     assert ids.get('doi') is None
-    # Now we try to get the DOI from CrossRef:
+    # As a last result, we try to get the DOI from CrossRef (which internally
+    # tries to get the DOI from Pubmed in the process of collecting the
+    # necessary metadata for the lookup):
     ids['doi'] = crossref_client.doi_query(ids['pmid'])
     # It may still be None, but at this point there's nothing we can do...
     return ids

@@ -23,6 +23,7 @@ Structure of the XML output returned by queries to Pubmed database::
           CommentsCorrectionsList
           MeshHeadingList
           OtherID
+            
           Article
             Journal
               ISSN
@@ -227,7 +228,11 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=True):
     pm_articles = tree.findall('./PubmedArticle')
     for art_ix, pm_article in enumerate(pm_articles):
         pmid = find_elem_text(pm_article, './/PMID')
+        # Look for the DOI in the ELocationID field...
         doi = find_elem_text(pm_article, './/ELocationID')
+        # ...and if that doesn't work, look in the ArticleIdList
+        if doi is None:
+            doi = find_elem_text(pm_article, './/ArticleId[@IdType="doi"]')
         title = find_elem_text(pm_article, './/ArticleTitle')
         # Author list
         author_elems = pm_article.findall('.//AuthorList/Author/LastName')

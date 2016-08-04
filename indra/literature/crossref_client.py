@@ -91,6 +91,9 @@ def doi_query(pmid, search_limit=10):
         return None
     # The test above ensures we've got this now
     pubmed_meta = pubmed_meta_dict[pmid]
+    # Check if we already got a DOI from Pubmed itself!
+    if pubmed_meta.get('doi'):
+        return pubmed_meta.get('doi')
     # Check for the title, which we'll need for the CrossRef search
     pm_article_title = pubmed_meta.get('title')
     if pm_article_title is None:
