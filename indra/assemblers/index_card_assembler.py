@@ -294,7 +294,7 @@ def get_participant(agent):
 def get_pmc_id(stmt):
     pmc_id = ''
     for ev in stmt.evidence:
-        pmc_id = id_lookup(ev.pmid)['pmcid']
+        pmc_id = id_lookup(ev.pmid, 'pmid')['pmcid']
         if pmc_id is not None:
             if not pmc_id.startswith('PMC'):
                 pmc_id = 'PMC' + pmc_id
