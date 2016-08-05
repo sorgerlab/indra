@@ -111,25 +111,41 @@ for pmid in pmids_to_read:
 
 # Create the REACH configuration file
 conf_file_text = """
-# this is the directory that stores the raw nxml files
+#
+# Configuration file for reach
+#
+
+# this is the directory that stores the raw nxml, .csv, and/or .tsv files
 # this directory *must* exist
-nxmlDir = {input_dir}
-# this is where the output files containing the extracted mentions will be
-# stored
+papersDir = {input_dir}
+
+# this is where the output files containing the extracted mentions will be stored
 # if this directory doesn't exist it will be created
-friesDir = {output_dir}
+outDir = {output_dir}
+
+# the output format for mentions: text, fries, indexcard, or assembly-csv (default is 'fries')
+outputType = "fries"
+
+# whether or not assembly should be run
+withAssembly = false
+
 # this is where the context files will be stored
 # if this directory doesn't exist it will be created
 contextDir = {output_dir}
+
 # this is where the brat standoff and text files are dumped
 bratDir = {output_dir}
+
+# verbose logging
+verbose = true
+
 # the encoding of input and output files
 encoding = "utf-8"
-# nxml2fries configuration
-nxml2fries {{
-  # this is a list of sections that we should ignore
-  ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
-}}
+
+
+# this is a list of sections that we should ignore
+ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
+
 # context engine config
 contextEngine {{
     type = Policy4
@@ -137,28 +153,33 @@ contextEngine {{
         bound = 3
     }}
 }}
-# the output format for mentions: text, fries, indexcard (default is 'text')
-outputType = "fries"
+
 # this log file gets overwritten every time ReachCLI is executed
 # so you should copy it if you want to keep it around
 logFile = {base_dir}/log.txt
+
 # grounding configuration
 grounding: {{
-  # List of AdHoc grounding files to insert, in order, into the grounding
-  # search sequence. Each element of the list is a map of KB filename and
-  # optional meta info (not yet used):
+  # List of AdHoc grounding files to insert, in order, into the grounding search sequence.
+  # Each element of the list is a map of KB filename and optional meta info (not yet used):
   #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
   adHocFiles: [
-#     {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
+#    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
   ]
+
+  # flag to turn off the influence of species on grounding
+  overrideSpecies = true
 }}
+
 # number of simultaneous threads to use for parallelization
 threadLimit = {num_cores}
+
 # ReadPapers
 ReadPapers.papersDir = src/test/resources/inputs/nxml/
 ReadPapers.serializedPapers = mentions.ser
 """.format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
            num_cores=num_cores)
+
 # Write the configuration file to the temp directory
 conf_file_path = os.path.join(base_dir, 'indra.conf')
 with open(conf_file_path, 'w') as f:
