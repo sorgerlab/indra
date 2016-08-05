@@ -21,8 +21,8 @@ import gzip
 
 cleanup = False
 verbose = True
-path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.2.3.jar'
-reach_version = '1.2.3'
+path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
+reach_version = '1.3.2'
 source_text = 'pmc_oa_xml'
 
 # Check the arguments
