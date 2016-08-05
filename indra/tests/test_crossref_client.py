@@ -7,7 +7,6 @@ example_ids = {'pmid': '25361007',
                'doi': '10.18632/oncotarget.2555'}
 def test_doi_query():
     mapped_doi = crossref_client.doi_query(example_ids['pmid'])
-    import ipdb; ipdb.set_trace()
     assert mapped_doi == example_ids['doi']
 
 def test_get_metadata():
