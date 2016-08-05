@@ -83,6 +83,11 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         links = crossref_client.get_fulltext_links(doi)
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
+        # First check for whether this is Elsevier--if so, use the Elsevier
+        # client directly, because the Clickthrough API key seems unreliable
+        if publisher == 'Elsevier BV':
+            xml = elsevier_client.download_article(doi)
+            return (xml, 'text/xml')
         if links:
             headers = {}
             # Set the Cross Ref Clickthrough API key in the header, if we've
@@ -154,15 +159,14 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     return (None, None)
             else:
                 raise Exception("Unknown content type(s): %s" % links)
-        elif publisher == 'American Society for Biochemistry & Molecular ' \
-                          'Biology (ASBMB)':
-            url = crossref_client.get_url(doi)
-            return get_asbmb_full_text(url)
-
+        #elif publisher == 'American Society for Biochemistry & Molecular ' \
+        #                  'Biology (ASBMB)':
+        #    url = crossref_client.get_url(doi)
+        #    return get_asbmb_full_text(url)
         # No full text links :( Check and see if the publisher is one we have
         # a web scraper for
-        elif publisher in []:
-            pass
+        #elif publisher in []:
+        #    pass
         # No full text links and not a publisher we support. We'll have to
         # fall back to the abstract.
         elif pmid:
@@ -182,7 +186,6 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
 
 def get_asbmb_full_text(url):
     # Get the location of the full text PDF from the target URL
-    import ipdb; ipdb.set_trace()
     req = requests.get(url)
     if req.status_code != 200:
         warnings.warn('ASBMB full text query returned status code %s: URL %s'
