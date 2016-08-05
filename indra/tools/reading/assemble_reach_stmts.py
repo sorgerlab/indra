@@ -1,13 +1,7 @@
+import sys
 import pickle
 
-file_list = [
-	'reach_stmts_0_1500.pkl',
-	'reach_stmts_1500_2500.pkl',
-	'reach_stmts_2500_3500.pkl',
-	'reach_stmts_3500_4500.pkl',
-	'reach_stmts_4500_5500.pkl',
-	'reach_stmts_5500_6671.pkl',
-]
+file_list = sys.argv[1:]
 
 all_stmts = {}
 
