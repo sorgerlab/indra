@@ -634,8 +634,14 @@ class TripsProcessor(object):
                     dbid_str = dt.attrib.get('dbid')
                     match_score = dt.attrib.get('match-score')
                     scores[dbid_str] = float(match_score)
+                    xr_tags = dt.findall('xrefs/xref')
+                    for xrt in xr_tags:
+                        dbid_str = xrt.attrib.get('dbid')
+                        scores[dbid_str] = float(match_score)
                 sorted_db_refs = sorted(scores.items(),
-                                        key=operator.itemgetter(1))
+                                        key=operator.itemgetter(1),
+                                        reverse=True)
+                print sorted_db_refs
                 db_refs_dict = {}
                 for dbid_str, _ in sorted_db_refs:
                     dbname, dbid = dbid_str.split(':')
@@ -837,7 +843,8 @@ class TripsProcessor(object):
                             match_score = dt.attrib.get('match-score')
                             scores[dbid] = float(match_score)
                     sorted_ids = sorted(scores.items(),
-                                        key=operator.itemgetter(1))
+                                        key=operator.itemgetter(1),
+                                        reverse=True)
                     hgnc_id = sorted_ids[-1][0]
                 else:
                     hgnc_id = re.match(r'HGNC\:([0-9]*)',
@@ -858,7 +865,8 @@ class TripsProcessor(object):
                             match_score = dt.attrib.get('match-score')
                             scores[dbid] = float(match_score)
                     sorted_ids = sorted(scores.items(),
-                                        key=operator.itemgetter(1))
+                                        key=operator.itemgetter(1),
+                                        reverse=True)
                     hgnc_id = sorted_ids[-1][0]
                 else:
                     up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
