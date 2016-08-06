@@ -545,6 +545,7 @@ class Statement(object):
         # Initialize supports/supported_by fields, which should be lists
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
+        self.belief = 1
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
