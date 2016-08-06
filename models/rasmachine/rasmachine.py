@@ -221,7 +221,12 @@ if __name__ == '__main__':
     if use_gmail:
         print 'Getting PMIDs from emails'
         print time.strftime('%c')
-        pmids += get_email_pmids(gmail_cred)
+        try:
+            email_pmids = get_email_pmids(gmail_cred)
+            pmids += email_pmids
+        except Exception as e:
+            print 'Could not get email PMIDs, continuing'
+            print e
 
     # Get search PMIDs
     search_terms_file = os.path.join(model_path, model_name, 'search_terms.txt')
