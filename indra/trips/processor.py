@@ -604,10 +604,10 @@ class TripsProcessor(object):
         # Check if the term is an aggregate
         members = term.findall('aggregate/member')
         if members:
-            operator = term.find('aggregate').attrib.get('operator')
-            if operator != 'AND':
+            op = term.find('aggregate').attrib.get('operator')
+            if op != 'AND':
                 logger.debug('Skipping aggregate with operator %s' % 
-                             operator)
+                             op)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
             member_agents = [self._get_agent_by_id(m, event_id)
@@ -627,8 +627,24 @@ class TripsProcessor(object):
                     dbids.append({parts[0]: parts[1]})
                 db_refs_dict = {'PFAM-DEF': dbids}
         else:
-            dbids = dbid.split('|')
-            db_refs_dict = dict([d.split(':') for d in dbids])
+            drum_terms = term.findall('drum-terms/drum-term')
+            if drum_terms:
+                scores = {}
+                for dt in drum_terms:
+                    dbid_str = dt.attrib.get('dbid')
+                    match_score = dt.attrib.get('match-score')
+                    scores[dbid_str] = float(match_score)
+                sorted_db_refs = sorted(scores.items(),
+                                        key=operator.itemgetter(1))
+                db_refs_dict = {}
+                for dbid_str, _ in sorted_db_refs:
+                    dbname, dbid = dbid_str.split(':')
+                    if not db_refs_dict.get(dbname):
+                        db_refs_dict[dbname] = dbid
+
+            else:
+                dbids = dbid.split('|')
+                db_refs_dict = dict([d.split(':') for d in dbids])
 
         agent_text_tag = term.find('name')
         if agent_text_tag is not None:
@@ -811,29 +827,41 @@ class TripsProcessor(object):
         # XFAM:PF00244.15, FA:00007
         if hgnc_ids:
             if len(hgnc_ids) > 1:
-                lisp_str = entity_term.attrib.get('lisp')
-                if lisp_str is None:
+                drum_terms = entity_term.findall('drum-terms/drum-term')
+                if drum_terms:
+                    scores = {}
+                    for dt in drum_terms:
+                        dbid_str = dt.attrib.get('dbid')
+                        dbname, dbid = dbid_str.split(':')
+                        if dbname == 'HGNC':
+                            match_score = dt.attrib.get('match-score')
+                            scores[dbid] = float(match_score)
+                    sorted_ids = sorted(scores.items(),
+                                        key=operator.itemgetter(1))
+                    hgnc_id = sorted_ids[-1][0]
+                else:
                     hgnc_id = re.match(r'HGNC\:([0-9]*)',
                                        hgnc_ids[0]).groups()[0]
-                else:
-                    parts = lisp_str.split('(TERM :ID ')
-                    scores = {}
-                    for p in parts:
-                        res = re.findall('HGNC::\|(.*)\|', p)
-                        if res:
-                            hgnc_id = res[0]
-                            score = re.findall(':SCORE ([^ ]+)', p)[0]
-                            scores[hgnc_id] = float(score)
-                    if scores:
-                        sorted_ids = sorted(scores.items(),
-                                            key=operator.itemgetter(1))
-                        hgnc_id = sorted_ids[-1][0]
             else:
                 hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return self._get_valid_name(hgnc_name)
         elif up_ids:
-            if len(hgnc_ids) > 1:
+            if len(up_ids) > 1:
+                drum_terms = entity_term.findall('drum-terms/drum-term')
+                if drum_terms:
+                    scores = {}
+                    for dt in drum_terms:
+                        dbid_str = dt.attrib.get('dbid')
+                        dbname, dbid = dbid_str.split(':')
+                        if dbname == 'UP':
+                            match_score = dt.attrib.get('match-score')
+                            scores[dbid] = float(match_score)
+                    sorted_ids = sorted(scores.items(),
+                                        key=operator.itemgetter(1))
+                    hgnc_id = sorted_ids[-1][0]
+                else:
+                    up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
                 logger.debug('%d UniProt IDs reported.' % len(up_ids))
             up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
             # First try to get HGNC name
