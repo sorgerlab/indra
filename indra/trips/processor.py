@@ -633,7 +633,18 @@ class TripsProcessor(object):
                 for dt in drum_terms:
                     dbid_str = dt.attrib.get('dbid')
                     match_score = dt.attrib.get('match-score')
-                    scores[dbid_str] = float(match_score)
+                    if dbid_str is None:
+                        db_refs_dict = {}
+                        if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                            members = term.findall('members/member')
+                            dbids = []
+                            for m in members:
+                                dbid = m.attrib.get('dbid')
+                                dbids.append(dbid)
+                            key_name = 'PFAM-DEF:' + '|'.join(dbids)
+                            scores[key_name] = float(match_score)
+                    else:
+                        scores[dbid_str] = float(match_score)
                     xr_tags = dt.findall('xrefs/xref')
                     for xrt in xr_tags:
                         dbid_str = xrt.attrib.get('dbid')
@@ -646,7 +657,11 @@ class TripsProcessor(object):
                 for dbid_str, _ in sorted_db_refs:
                     dbname, dbid = dbid_str.split(':')
                     if not db_refs_dict.get(dbname):
-                        db_refs_dict[dbname] = dbid
+                        if dbname == 'PFAM-DEF':
+                            dbids = [{p[0]: p[1]} for p in dbid.split('|')]
+                            db_refs_dict[dbname] = dbids
+                        else:
+                            db_refs_dict[dbname] = dbid
 
             else:
                 dbids = dbid.split('|')
