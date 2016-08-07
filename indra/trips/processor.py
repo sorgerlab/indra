@@ -744,7 +744,10 @@ class TripsProcessor(object):
 
             else:
                 dbids = dbid.split('|')
-                db_refs_dict = dict([d.split(':') for d in dbids])
+                db_refs_dict = {}
+                for dbname, dbid in [d.split(':') for d in dbids]:
+                    if not db_refs_dict.get(dbname):
+                        db_refs_dict[dbname] = dbid
         return db_refs_dict
 
     def _add_condition(self, agent, precond_event, agent_term):
