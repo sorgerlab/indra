@@ -860,7 +860,7 @@ class TripsProcessor(object):
                     sorted_ids = sorted(scores.items(),
                                         key=operator.itemgetter(1),
                                         reverse=True)
-                    hgnc_id = sorted_ids[-1][0]
+                    hgnc_id = sorted_ids[0][0]
                 else:
                     hgnc_id = re.match(r'HGNC\:([0-9]*)',
                                        hgnc_ids[0]).groups()[0]
@@ -882,7 +882,7 @@ class TripsProcessor(object):
                     sorted_ids = sorted(scores.items(),
                                         key=operator.itemgetter(1),
                                         reverse=True)
-                    hgnc_id = sorted_ids[-1][0]
+                    hgnc_id = sorted_ids[0][0]
                 else:
                     up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
                 logger.debug('%d UniProt IDs reported.' % len(up_ids))
