@@ -606,66 +606,14 @@ class TripsProcessor(object):
         if members:
             op = term.find('aggregate').attrib.get('operator')
             if op != 'AND':
-                logger.debug('Skipping aggregate with operator %s' % 
-                             op)
+                logger.debug('Skipping aggregate with operator %s' % op)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
             member_agents = [self._get_agent_by_id(m, event_id)
                              for m in member_ids]
             return member_agents
 
-        # Extract database references
-        dbid = term.attrib.get('dbid')
-        if dbid is None:
-            db_refs_dict = {}
-            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
-                members = term.findall('members/member')
-                dbids = []
-                for m in members:
-                    dbid = m.attrib.get('dbid')
-                    parts = dbid.split(':')
-                    dbids.append({parts[0]: parts[1]})
-                db_refs_dict = {'PFAM-DEF': dbids}
-        else:
-            drum_terms = term.findall('drum-terms/drum-term')
-            if drum_terms:
-                scores = {}
-                for dt in drum_terms:
-                    dbid_str = dt.attrib.get('dbid')
-                    match_score = dt.attrib.get('match-score')
-                    if dbid_str is None:
-                        db_refs_dict = {}
-                        if term.find('type').text == 'ONT::PROTEIN-FAMILY':
-                            members = term.findall('members/member')
-                            dbids = []
-                            for m in members:
-                                dbid = m.attrib.get('dbid')
-                                dbids.append(dbid)
-                            key_name = 'PFAM-DEF:' + '|'.join(dbids)
-                            scores[key_name] = float(match_score)
-                    else:
-                        scores[dbid_str] = float(match_score)
-                    xr_tags = dt.findall('xrefs/xref')
-                    for xrt in xr_tags:
-                        dbid_str = xrt.attrib.get('dbid')
-                        scores[dbid_str] = float(match_score)
-                sorted_db_refs = sorted(scores.items(),
-                                        key=operator.itemgetter(1),
-                                        reverse=True)
-                print sorted_db_refs
-                db_refs_dict = {}
-                for dbid_str, _ in sorted_db_refs:
-                    dbname, dbid = dbid_str.split(':')
-                    if not db_refs_dict.get(dbname):
-                        if dbname == 'PFAM-DEF':
-                            dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                            db_refs_dict[dbname] = dbids
-                        else:
-                            db_refs_dict[dbname] = dbid
-
-            else:
-                dbids = dbid.split('|')
-                db_refs_dict = dict([d.split(':') for d in dbids])
+        db_refs_dict = self._get_db_refs(term)
 
         agent_text_tag = term.find('name')
         if agent_text_tag is not None:
@@ -743,6 +691,61 @@ class TripsProcessor(object):
                 agent.active = 'activity'
 
         return agent
+
+    @staticmethod
+    def _get_db_refs(term):
+        # Extract database references
+        dbid = term.attrib.get('dbid')
+        if dbid is None:
+            db_refs_dict = {}
+            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                members = term.findall('members/member')
+                dbids = []
+                for m in members:
+                    dbid = m.attrib.get('dbid')
+                    parts = dbid.split(':')
+                    dbids.append({parts[0]: parts[1]})
+                db_refs_dict = {'PFAM-DEF': dbids}
+        else:
+            drum_terms = term.findall('drum-terms/drum-term')
+            if drum_terms:
+                scores = {}
+                for dt in drum_terms:
+                    dbid_str = dt.attrib.get('dbid')
+                    match_score = dt.attrib.get('match-score')
+                    if dbid_str is None:
+                        db_refs_dict = {}
+                        if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                            members = term.findall('members/member')
+                            dbids = []
+                            for m in members:
+                                dbid = m.attrib.get('dbid')
+                                dbids.append(dbid)
+                            key_name = 'PFAM-DEF:' + '|'.join(dbids)
+                            scores[key_name] = float(match_score)
+                    else:
+                        scores[dbid_str] = float(match_score)
+                    xr_tags = dt.findall('xrefs/xref')
+                    for xrt in xr_tags:
+                        dbid_str = xrt.attrib.get('dbid')
+                        scores[dbid_str] = float(match_score)
+                sorted_db_refs = sorted(scores.items(),
+                                        key=operator.itemgetter(1),
+                                        reverse=True)
+                db_refs_dict = {}
+                for dbid_str, _ in sorted_db_refs:
+                    dbname, dbid = dbid_str.split(':')
+                    if not db_refs_dict.get(dbname):
+                        if dbname == 'PFAM-DEF':
+                            dbids = [{p[0]: p[1]} for p in dbid.split('|')]
+                            db_refs_dict[dbname] = dbids
+                        else:
+                            db_refs_dict[dbname] = dbid
+
+            else:
+                dbids = dbid.split('|')
+                db_refs_dict = dict([d.split(':') for d in dbids])
+        return db_refs_dict
 
     def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = precond_event.find('type').text
@@ -833,60 +836,18 @@ class TripsProcessor(object):
         if name is None:
             logger.debug('Entity without a name')
             return None
-        try:
-            dbid = entity_term.attrib["dbid"]
-        except:
-            #logger.debug('No grounding information for %s' % name.text)
+        db_refs = self._get_db_refs(entity_term)
+        if not db_refs:
             return self._get_valid_name(name.text)
-
-        dbids = dbid.split('|')
-        hgnc_ids = [i for i in dbids if i.startswith('HGNC')]
-        up_ids = [i for i in dbids if i.startswith('UP')]
-
 
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
-        if hgnc_ids:
-            if len(hgnc_ids) > 1:
-                drum_terms = entity_term.findall('drum-terms/drum-term')
-                if drum_terms:
-                    scores = {}
-                    for dt in drum_terms:
-                        dbid_str = dt.attrib.get('dbid')
-                        dbname, dbid = dbid_str.split(':')
-                        if dbname == 'HGNC':
-                            match_score = dt.attrib.get('match-score')
-                            scores[dbid] = float(match_score)
-                    sorted_ids = sorted(scores.items(),
-                                        key=operator.itemgetter(1),
-                                        reverse=True)
-                    hgnc_id = sorted_ids[0][0]
-                else:
-                    hgnc_id = re.match(r'HGNC\:([0-9]*)',
-                                       hgnc_ids[0]).groups()[0]
-            else:
-                hgnc_id = re.match(r'HGNC\:([0-9]*)', hgnc_ids[0]).groups()[0]
+        hgnc_id = db_refs.get('HGNC')
+        up_id = db_refs.get('UP')
+        if hgnc_id:
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return self._get_valid_name(hgnc_name)
-        elif up_ids:
-            if len(up_ids) > 1:
-                drum_terms = entity_term.findall('drum-terms/drum-term')
-                if drum_terms:
-                    scores = {}
-                    for dt in drum_terms:
-                        dbid_str = dt.attrib.get('dbid')
-                        dbname, dbid = dbid_str.split(':')
-                        if dbname == 'UP':
-                            match_score = dt.attrib.get('match-score')
-                            scores[dbid] = float(match_score)
-                    sorted_ids = sorted(scores.items(),
-                                        key=operator.itemgetter(1),
-                                        reverse=True)
-                    hgnc_id = sorted_ids[0][0]
-                else:
-                    up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
-                logger.debug('%d UniProt IDs reported.' % len(up_ids))
-            up_id = re.match(r'UP\:([A-Z0-9]*)', up_ids[0]).groups()[0]
+        elif up_id:
             # First try to get HGNC name
             hgnc_name = up_client.get_hgnc_name(up_id)
             if hgnc_name is not None:
