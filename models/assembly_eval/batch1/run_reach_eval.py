@@ -15,14 +15,14 @@ if __name__ == '__main__':
         prefix = folder + '/' + pmcid
         if not have_file(prefix + '.nxml') and\
            not have_file(prefix + '.txt'):
-            txt, txt_format = get_full_text(pmcid)
+            txt, txt_format = get_full_text(pmcid, 'pmcid')
             if txt_format == 'nxml':
                 fname = prefix + '.nxml'
             else:
                 fname = prefix + '.txt'
             with open(fname, 'wt') as fh:
                 fh.write(txt.encode('utf-8'))
-        pmids.append(id_lookup(pmcid)['pmid'])
+        pmids.append(id_lookup(pmcid, 'pmcid')['pmid'])
 
 
     # Read each paper if it hasn't been read yet.

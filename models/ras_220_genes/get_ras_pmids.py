@@ -360,7 +360,7 @@ if __name__ == '__main__':
     pm_found = []
     pm_not_found = []
     for sample in samples:
-        ids = id_lookup('PMID%s' % sample)
+        ids = id_lookup('PMID%s' % sample, 'pmid')
         if ids:
             if ids.get('doi'):
                 pm_found.append(sample)

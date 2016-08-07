@@ -5,7 +5,7 @@ from assembly_eval import have_file, run_assembly
 if __name__ == '__main__':
     pmc_ids = ['PMC1234335', 'PMC3178447', 'PMC3690480',
                'PMC4345513', 'PMC534114']
-    pmids = [id_lookup(pmcid)['pmid'] for pmcid in pmc_ids]
+    pmids = [id_lookup(pmcid, 'pmcid')['pmid'] for pmcid in pmc_ids]
 
     for pmid, pmcid in zip(pmids, pmc_ids):
         print 'Processing %s...' % pmcid
