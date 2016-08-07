@@ -114,7 +114,7 @@ def run_assembly(stmts, folder, pmcid):
     # Print linked statements for debugging purposes
     print 'Linked\n====='
     for ls in linked_stmts:
-        print ls.inferred_stmt, ls.inferred_stmt.belief
+        print ls.inferred_stmt.belief, ls.inferred_stmt
     print '============='
 
     # Combine all statements including linked ones
@@ -146,10 +146,10 @@ def run_assembly(stmts, folder, pmcid):
     # Sort by amount of evidence
     for st in sorted(flattened_evidence_stmts,
                      key=lambda x: x.belief, reverse=True):
-        if belief >= belief_cutoff:
-            print belief, st
-        if belief < belief_cutoff:
-            print 'SKIP', belief, st
+        if st.belief >= belief_cutoff:
+            print st.belief, st
+        if st.belief < belief_cutoff:
+            print 'SKIP', st.belief, st
 
         # If it's background knowledge, we skip the statement
         if is_background_knowledge(st):
