@@ -1,7 +1,7 @@
 from indra.literature import *
 
 # Pick an example gene
-gene = 'SOS2'
+gene = 'AKT1'
 
 # Get a list of PMIDs for the gene
 pmids = pubmed_client.get_ids_for_gene(gene)
