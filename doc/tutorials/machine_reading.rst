@@ -1,6 +1,25 @@
 Large-Scale Machine Reading
 ===========================
 
+The following doc describes the steps involved in reading a large numbers of
+papers in parallel on Amazon EC2 using REACH, caching the JSON output on Amazon
+S3, then processing the REACH output into INDRA Statements. Prerequisites for
+doing the following are
+
+* A cluster of Amazon EC2 nodes configured using Starcluster, with INDRA
+  installed and in the PYTHONPATH
+* An Amazon S3 bucket containing full text contents for papers, keyed by
+  Pubmed ID (creation of this S3 repository will be described in another
+  tutorial).
+
+This tutorial goes through the individual steps involved before describing how
+all of them can be run through the use of a single submission script,
+submit_reading_pipeline.py.
+
+Note also that the prerequisite installation steps can be streamlined by
+putting them in a setup script that can be re-run upon instantiating a new
+Amazon cluster or by using them to configure a custom Amazon EC2 AMI.
+
 Install REACH
 -------------
 
@@ -12,9 +31,8 @@ http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html)::
     sudo apt-get update
     sudo apt-get install sbt
 
-Clone REACH from https://github.com/clulab/reach.
-
-Add the following lines to build.sbt::
+Clone REACH from https://github.com/clulab/reach. Add the following lines to
+build.sbt::
 
     test in assembly := {}
     mainClass in assembly := Some("org.clulab.reach.ReachCLI")
@@ -30,16 +48,17 @@ containing the REACH build.sbt file (e.g., /pmc/reach).::
     sbt -Dsbt.ivy.home=/pmc/reach/.ivy2 compile
     sbt -Dsbt.ivy.home=/pmc/reach/.ivy2 assembly
 
-Once you've got the fat jar, you can run with::
-
-    java -jar /path/to/reach.jar conf_file.conf
-
 Install Amazon S3 support
 -------------------------
 
 Install boto3::
 
     pip install boto3
+
+.. note::
+
+    If using EC2, make sure to install boto3, jsonpickle, and Amazon
+    credentials on all nodes, not just the master node.
 
 Add Amazon credentials to access the S3 bucket. First create the .aws directory
 on the EC2 instance::
@@ -51,13 +70,14 @@ using StarCluster::
 
     starcluster put mycluster ~/.aws/credentials /home/sgeadmin/.aws
 
-Prepare content and content metadata
-------------------------------------
+Install other dependencies
+--------------------------
 
-(This section of the tutorial not yet completed)
+::
 
-* Download the Pubmed Central OA Subset
-* Upload to Amazon S3 with associated identifiers
+    pip install jsonpickle # Necessary to process JSON from S3
+    pip install --upgrade jnius-indra # Necessary for REACH
+    export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64
 
 Assemble a Corpus of PMIDs
 --------------------------
@@ -96,8 +116,8 @@ Process the papers with REACH
 
 The next step is to read the content of the papers with REACH in a
 parallelizable, high-throughput way. To do this, run the script
-indra/tools/reading/run_reach_on_pmids.py. If necessary update the lines
-at the top of the script with the REACH settings, e.g.::
+indra/tools/reading/run_reach_on_pmids.py. If necessary update the lines at the
+top of the script with the REACH settings, e.g.::
 
     cleanup = False
     verbose = True
@@ -105,15 +125,20 @@ at the top of the script with the REACH settings, e.g.::
     reach_version = '1.3.2'
     source_text = 'pmc_oa_xml'
 
+The reach_version is important because it is used to determine whether the
+paper has already been read with this version of REACH (in which case it will
+be skipped), or if the REACH output needs to be updated.
+
 Next, create a top-level temporary directory to use during reading. This will
 be used to store the input files and the JSON output::
 
     mkdir my_temp_dir
 
 Run run_reach_on_pmids.py, passing arguments for the PMID list file, the temp
-directory, the number of cores to use on the machine, the PMID start index
-(in the PMID list file) and the end index. If the end index is greater than the
-total number of PMIDs, it will process up to the last one in the list. For
+directory, the number of cores to use on the machine, the PMID start index (in
+the PMID list file) and the end index. The start and end indices are used to
+subdivide the job into parallelizable chunks. If the end index is greater than
+the total number of PMIDs, it will process up to the last one in the list. For
 example::
 
     python run_reach_on_pmids.py SOS2_pmids.txt my_temp_dir 8 0 10
@@ -125,14 +150,26 @@ files together, and upload the results to S3. If you attempt to process the
 files again with the same version of REACH, the script will detect that the
 JSON output from that version is already on S3 and skip those papers.
 
+This can be submitted to run offline using the job scheduler on EC2 with, e.g.::
+
+    qsub -b y -cwd -V -pe orte 8 python run_reach_on_pmids.py SOS2_pmids.txt my_temp_dir 8 0 10
+
+.. note:: Setting the num_cores argument correctly
+
+    The number of cores requested in the qsub call (8) should match the number
+    of cores that REACH will attempt to use, and should also match the total
+    number of nodes on the Amazon EC2 node (e.g., 8 cores for c3.2xlarge). This
+    way the job scheduler will schedule the job to run on all the cores of a
+    single node, and REACH will use them all.
+
 Extract INDRA Statements from the REACH output on S3
 ----------------------------------------------------
 
-The script indra/tools/reading/read_reach_from_s3.py is used to extract INDRA
-Statements from the REACH output uploaded to S3 in the previous step.  This
-process can also be parallelized by submitting chunks of papers to be processed
-by different cores. The INDRA statements for each chunk of papers are pickled
-and can be assembled into a single pickle file in a subsequent step.
+The script indra/tools/reading/process_reach_from_s3.py is used to extract
+INDRA Statements from the REACH output uploaded to S3 in the previous step.
+This process can also be parallelized by submitting chunks of papers to be
+processed by different cores. The INDRA statements for each chunk of papers are
+pickled and can be assembled into a single pickle file in a subsequent step.
 
 Following the example above, run the following to process the REACH output
 for the SOS2 papers into INDRA statements. We'll do this in two chunks to
@@ -148,10 +185,30 @@ reach_stmts_5_7.pkl (with statements from the last two). Note that the results
 are pickled as a dict (rather than a list), with PMIDs as keys and lists of
 Statements as values.
 
-Of course, what we really want is a single pickle file containing all of the
+Of course, what we really want is a single file containing all of the
 statements for the entire corpus. To get this, run::
 
     python assemble_reach_stmts.py reach_stmts_*.pkl
 
 The results will be stored in reach_stmts.pkl.
+
+Running the whole pipeline with one script
+------------------------------------------
+
+If you want to run the whole pipeline in one go, you can run the script
+submit_reading_pipeline.py (in indra/tools/reading). On an cluster of Amazon
+EC2 nodes. The script divides up the jobs evenly among the nodes and cores.
+Usage::
+
+    python submit_reading_pipeline.py pmid_list tmp_dir num_nodes num_cores_per_node
+
+For example if you have a cluster with 8 c3.8xlarge nodes with 32 VCPUs each,
+you would call it with::
+
+    python submit_reading_pipeline.py SOS2_pmids.txt my_tmp_dir 8 32
+
+The script submits the jobs to the scheduler with appropriate dependencies
+such that the REACH reading step completes first, then the INDRA processing
+step, and then the finaly assembly into a single pickle file.
+
 
