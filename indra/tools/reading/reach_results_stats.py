@@ -1,16 +1,14 @@
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
-import plot_formatting as pf
+from indra.tools import plot_formatting as pf
 from collections import Counter
 from indra.statements import *
 from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh, \
-                                              modification_hierarchy as mh
+from indra.preassembler.hierarchy_manager import hierarchies
 from copy import deepcopy
 pf.set_fig_params()
 
-"""
 print "Loading REACH results"
 with open('reach_stmts.pkl') as f:
     results = pickle.load(f)
@@ -22,21 +20,28 @@ counts = np.array([tup[1] for tup in counts_per_paper])
 # Preassemble to remove duplicates
 
 # Combining duplicates
-pa = Preassembler(eh, mh)
+pa = Preassembler(hierarchies)
 for paper_stmts in results.values():
     pa.add_statements(paper_stmts)
 pa.combine_duplicates()
 
 # Sorted by evidence
 sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
-"""
-with open('reach_stmts_sorted.pkl') as f:
-    sorted_stmts = pickle.load(f)
+
+#with open('reach_stmts_sorted.pkl') as f:
+#    sorted_stmts = pickle.load(f)
 
 # Distribution of pieces of evidence
 plt.ion()
 plt.figure(figsize=(2, 2), dpi=300)
+ax = plt.gca()
 plt.plot([len(stmt.evidence) for stmt in sorted_stmts])
+pf.format_axis(ax)
+ax.set_xlabel('Statement index')
+ax.set_ylabel('No. of papers')
+ax.set_yscale('log')
+plt.subplots_adjust(left=0.23, bottom=0.16)
+plt.savefig('reach_evidence_dist.pdf')
 
 # Sorted by unique PMIDs
 def uniq_refs_in_evidence(stmt):
@@ -50,14 +55,12 @@ sorted_uniq_pmids = sorted(sorted_uniq_pmids, key=uniq_refs_in_evidence,
                            reverse=True)
 
 # List of all ungrounded entities by number of mentions
-ungrounded = [ag.name for s in sorted_stmts for ag in s.agent_list()
-              if ag is not None and not ag.db_refs]
+ungrounded = [ag.db_refs['TEXT'] for s in sorted_stmts for ag in s.agent_list()
+              if ag is not None and ag.db_refs.keys() == ['TEXT']]
 
 ungroundc = Counter(ungrounded)
 ungroundc = ungroundc.items()
 ungroundc.sort(key=lambda x: x[1], reverse=True)
-
-import sys; sys.exit()
 
 # List of all entities
 agents = []
@@ -65,13 +68,12 @@ for paper_stmts in results.values():
     for stmt in paper_stmts:
         for agent in stmt.agent_list():
             if agent is not None:
-                agents.append(agent.name)
+                agents.append(agent.db_refs['TEXT'])
 
 # Agent counter
 agent_counter = Counter(agents)
 agent_counter = sorted(agent_counter.items(), key=lambda x: x[1],
                        reverse=True)
-
 
 # What fraction of statements grounded?
 grounded_dict = {}
@@ -88,8 +90,6 @@ for paper_stmts in results.values():
 phos = [s for paper_stmts in results.values()
           for s in paper_stmts
           if isinstance(s, Phosphorylation)]
-
-plt.ion()
 
 # FIG 1: Distribution of numbers of statements
 plt.figure(figsize=(2, 2), dpi=300)
