@@ -31,8 +31,12 @@ http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html)::
     sudo apt-get update
     sudo apt-get install sbt
 
-Clone REACH from https://github.com/clulab/reach. Add the following lines to
-build.sbt::
+Clone REACH from https://github.com/clulab/reach. Under reach/project, create a
+file, assembly.sbt, containing the following line::
+
+    addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
+
+Add the following lines to reach/build.sbt::
 
     test in assembly := {}
     mainClass in assembly := Some("org.clulab.reach.ReachCLI")
