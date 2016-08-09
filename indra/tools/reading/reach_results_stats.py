@@ -7,10 +7,18 @@ from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from copy import deepcopy
+import sys
+
 pf.set_fig_params()
 
+if len(sys.argv) < 2:
+    print "Usage: %s reach_stmts_file" % sys.argv[0]
+    sys.exit(1)
+
+stmts_file = sys.argv[1]
+
 print "Loading REACH results"
-with open('reach_stmts.pkl') as f:
+with open(stmts_file) as f:
     results = pickle.load(f)
 
 counts_per_paper = [(pmid, len(stmts)) for pmid, stmts in results.items()]
