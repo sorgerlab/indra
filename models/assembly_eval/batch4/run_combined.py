@@ -5,7 +5,7 @@ import rasmodel
 
 if __name__ == '__main__':
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
-    pmids = [id_lookup(pmcid)['pmid'] for pmcid in pmc_ids]
+    pmids = [id_lookup(pmcid, 'pmcid')['pmid'] for pmcid in pmc_ids]
 
     for pmid, pmcid in zip(pmids, pmc_ids):
         print 'Processing %s...' % pmcid

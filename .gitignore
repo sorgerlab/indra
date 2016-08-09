@@ -1,3 +1,7 @@
+# INDRA specific ignores
+elsevier_api_key
+cr_clickthrough_key
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

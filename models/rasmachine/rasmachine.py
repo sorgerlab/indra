@@ -53,7 +53,7 @@ def process_paper(model_name, pmid):
         txt_format = 'txt'
     # If the paper has not been parsed, download the text and parse
     else:
-        txt, txt_format = get_full_text(pmid)
+        txt, txt_format = get_full_text(pmid, 'pmid')
         if txt_format == 'nxml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):

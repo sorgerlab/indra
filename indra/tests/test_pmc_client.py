@@ -1,4 +1,55 @@
 from indra.literature import pmc_client
+from nose.tools import raises
+
+example_ids = {'pmid': '25361007',
+               'pmcid': 'PMC4322985',
+               'doi': '10.18632/oncotarget.2555'}
+
+def test_id_lookup_pmid_no_prefix_no_idtype():
+    ids = pmc_client.id_lookup('25361007')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_pmid_with_prefix_no_idtype():
+    ids = pmc_client.id_lookup('PMID25361007')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_pmcid_no_idtype():
+    ids = pmc_client.id_lookup('PMC4322985')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_pmcid_idtype():
+    ids = pmc_client.id_lookup('PMC4322985', idtype='pmcid')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_pmcid_no_prefix_idtype():
+    ids = pmc_client.id_lookup('4322985', idtype='pmcid')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_doi_no_prefix_no_idtype():
+    ids = pmc_client.id_lookup('10.18632/oncotarget.2555')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+def test_id_lookup_doi_prefix_no_idtype():
+    ids = pmc_client.id_lookup('DOI10.18632/oncotarget.2555')
+    assert(ids['doi'] == example_ids['doi'])
+    assert(ids['pmid'] == example_ids['pmid'])
+    assert(ids['pmcid'] == example_ids['pmcid'])
+
+@raises(ValueError)
+def test_invalid_idtype():
+    ids = pmc_client.id_lookup('DOI10.18632/oncotarget.2555', idtype='foo')
 
 def test_get_xml():
     pmc_id = '4322985'

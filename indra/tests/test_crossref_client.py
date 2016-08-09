@@ -2,6 +2,13 @@ from indra.literature import crossref_client
 
 test_doi = '10.1016/j.ccell.2016.02.010'
 
+example_ids = {'pmid': '25361007',
+               'pmcid': 'PMC4322985',
+               'doi': '10.18632/oncotarget.2555'}
+def test_doi_query():
+    mapped_doi = crossref_client.doi_query(example_ids['pmid'])
+    assert mapped_doi == example_ids['doi']
+
 def test_get_metadata():
     metadata = crossref_client.get_metadata(test_doi)
     assert(metadata['DOI'] == test_doi)
