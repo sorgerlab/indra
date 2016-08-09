@@ -75,6 +75,3 @@ def test_fulltext_asbmb():
     #(content, type) = get_full_text('14761976', 'pmid')
     pass
 
-if __name__ == '__main__':
-    test_fulltext_asbmb()
-

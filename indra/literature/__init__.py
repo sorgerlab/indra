@@ -84,10 +84,19 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
         # First check for whether this is Elsevier--if so, use the Elsevier
-        # client directly, because the Clickthrough API key seems unreliable
+        # client directly, because the Clickthrough API key seems unreliable.
+        # For now, return as text.
         if publisher == 'Elsevier BV':
-            xml = elsevier_client.download_article(doi)
-            return (xml, 'text/xml')
+            article = elsevier_client.get_article(doi, output='txt')
+            if article is None:
+                return (None, None)
+            else:
+                return (article, 'txt')
+        # FIXME FIXME FIXME
+        # Because we don't yet have a way to process non-Elsevier content
+        # obtained from CrossRef, which includes both XML of unknown format
+        # and PDFs, we just comment this section out for now
+        """
         if links:
             headers = {}
             # Set the Cross Ref Clickthrough API key in the header, if we've
@@ -159,17 +168,16 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     return (None, None)
             else:
                 raise Exception("Unknown content type(s): %s" % links)
-        #elif publisher == 'American Society for Biochemistry & Molecular ' \
-        #                  'Biology (ASBMB)':
-        #    url = crossref_client.get_url(doi)
-        #    return get_asbmb_full_text(url)
-        # No full text links :( Check and see if the publisher is one we have
-        # a web scraper for
-        #elif publisher in []:
-        #    pass
+        elif publisher == 'American Society for Biochemistry & Molecular ' \
+                          'Biology (ASBMB)':
+            url = crossref_client.get_url(doi)
+            return get_asbmb_full_text(url)
+        """
+        # end FIXME FIXME FIXME
         # No full text links and not a publisher we support. We'll have to
         # fall back to the abstract.
-        elif pmid:
+        #elif pmid:
+        if pmid:
             abstract = pubmed_client.get_abstract(pmid)
             return abstract, 'abstract'
         # We have a useless DOI and no PMID. Give up.
