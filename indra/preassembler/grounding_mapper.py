@@ -12,7 +12,7 @@ class GroundingMapper(object):
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter=',')
+        mapreader = csv.reader(f, delimiter='\t')
         for row in mapreader:
             key = row[0]
             db_refs = {'TEXT': key}
@@ -29,7 +29,7 @@ def load_grounding_map(path):
     return g_map
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
-                                  '../resources/grounding_map.csv')
+                                  '../resources/grounding_map.tsv')
 default_grounding_map = load_grounding_map(default_grounding_map_path)
 gm = default_grounding_map
 
