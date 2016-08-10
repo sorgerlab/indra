@@ -17,7 +17,9 @@ def test_simple_mapping():
     akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'XXXXXX'})
     stmt = Phosphorylation(None, akt)
     gm = GroundingMapper(default_grounding_map)
-    gm.map_agents([stmt])
-
-
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_akt = mapped_stmts[0].sub
+    assert mapped_akt.db_refs['TEXT'] == 'Akt'
+    assert mapped_akt.db_refs['INDRA'] == 'AKT'
 
