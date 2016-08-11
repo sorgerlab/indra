@@ -18,11 +18,16 @@ import glob
 import json
 import cStringIO
 import gzip
+import logging
+from indra.literature import pmc_client
+from indra.literature import s3_client
 
 cleanup = False
 verbose = True
-path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
+#path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
+path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
 reach_version = '1.3.2'
+force_read = True
 source_text = 'pmc_oa_xml'
 
 # Check the arguments
@@ -36,12 +41,17 @@ if len(sys.argv) < 6:
 start_index = int(start_index)
 end_index = int(end_index)
 num_cores = int(num_cores)
+
+# Logger
+logger = logging.getLogger('runreach')
+
 # Load the list of PMIDs from the given file
 with open(pmid_list_file) as f:
     pmid_list = [line.strip('\n') for line in f.readlines()]
 if end_index > len(pmid_list):
     end_index = len(pmid_list)
 pmids_in_range = pmid_list[start_index:end_index]
+
 # Create the temp directories for input and output
 base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' % (start_index, end_index),
                             dir=tmp_dir)
@@ -49,40 +59,36 @@ input_dir = os.path.join(base_dir, 'input')
 output_dir = os.path.join(base_dir, 'output')
 os.makedirs(input_dir)
 os.makedirs(output_dir)
+
 # Initialize S3 stuff
 bucket_name ='bigmech'
 client = boto3.client('s3')
 pmids_to_read = []
 
-# Check if we've read the PMIDs already
-for pmid in pmids_in_range:
-    # See if we've already read this one
-    reach_key = 'papers/PMID%s/reach' % pmid
-    try:
-        reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
-        print "Found the object, so let's check the metadata"
-        reach_metadata = reach_gz_obj['Metadata']
-        if reach_metadata.get('reach_version') is not None and \
-           reach_metadata.get('reach_version') == reach_version:
-            print "Same version as what we've got, so don't do anything"
-            continue
-        # No version info, or not the same as the current version
+# If we're re-reading no matter what, we don't have to check for existing
+# REACH output
+if force_read:
+    pmids_to_read = pmids_in_range
+# Otherwise, check if we've read the PMIDs already
+else:
+    for pmid in pmids_in_range:
+        found_reach_version = s3_client.get_reach_version(pmid)
+        # Found it, same version
+        if found_reach_version is not None and \
+           found_reach_version == reach_version:
+            logger.info('%s: found same version (%s), skipping' %
+                        (pmid, found_reach_version))
+        # Found it, different version
         else:
-            print "Not the same version, so read it!"
-    # Handle a missing object gracefully
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] =='NoSuchKey':
-            print "No object found for key %s, read it!" % reach_key
-        # If there was some other kind of problem, re-raise the exception
-        else:
-            raise e
-    pmids_to_read.append(pmid)
+            logger.info('%s: found %s, current %s; will re-read' %
+                        (pmid, found_reach_version, reach_version))
+            pmids_to_read.append(pmid)
 
 if not pmids_to_read:
-    print "No pmids to read!"
+    logger.info('no pmids to read!')
     sys.exit(0)
 
-# Now iterate over the pmids to read  and download from S3 to the input
+# Now iterate over the pmids to read and download from S3 to the input
 # directory
 for pmid in pmids_to_read:
     # Look for the full text
