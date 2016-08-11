@@ -8,7 +8,6 @@
 
 import os
 import sys
-import zlib
 import tempfile
 import shutil
 import boto3
@@ -16,18 +15,15 @@ import botocore
 import subprocess
 import glob
 import json
-import cStringIO
-import gzip
 import logging
-from indra.literature import pmc_client
-from indra.literature import s3_client
+from indra.literature import pmc_client, s3_client
 
 cleanup = False
 verbose = True
 #path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
 path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-reach_version = '1.3.2'
-force_read = True
+reach_version = '1.3.2-test'
+force_read = False
 source_text = 'pmc_oa_xml'
 
 # Check the arguments
@@ -60,9 +56,6 @@ output_dir = os.path.join(base_dir, 'output')
 os.makedirs(input_dir)
 os.makedirs(output_dir)
 
-# Initialize S3 stuff
-bucket_name ='bigmech'
-client = boto3.client('s3')
 pmids_to_read = []
 
 # If we're re-reading no matter what, we don't have to check for existing
@@ -85,35 +78,32 @@ else:
             pmids_to_read.append(pmid)
 
 if not pmids_to_read:
-    logger.info('no pmids to read!')
+    logger.info('No pmids to read!')
     sys.exit(0)
+else:
+    logger.info('Preparing to run REACH on %d PMIDs' % len(pmids_to_read))
 
 # Now iterate over the pmids to read and download from S3 to the input
 # directory
+num_found_s3 = 0
+num_found_not_s3 = 0
 for pmid in pmids_to_read:
     # Look for the full text
-    key_prefix = 'papers/PMID%s/fulltext' % pmid
-    key_name = '%s/%s' % (key_prefix, source_text)
-    print key_name
-    # Get the content from S3
-    try:
-        xml_gz_obj = client.get_object(Key=key_name, Bucket=bucket_name)
-    # Handle a missing object gracefully
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] =='NoSuchKey':
-            print "No object found for key %s" % key_name
-            continue
-        # If there was some other kind of problem, re-raise the exception
-        else:
-            raise e
-    # Get the content from the object
-    xml_gz = xml_gz_obj['Body'].read()
-    # Decode the gzipped content
-    xml = zlib.decompress(xml_gz, 16+zlib.MAX_WBITS)
+    xml = s3_client.get_full_text(pmid)
+    # If we don't find the XML on S3, look for it using the PMC client
+    if xml:
+        num_found_s3 += 1
+    else:
+        logger.info('No full text found for %s' % pmid)
     # Write the contents to a file
-    xml_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
-    with open(xml_path, 'w') as f:
-        f.write(xml)
+    if xml:
+        xml_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
+        with open(xml_path, 'w') as f:
+            f.write(xml)
+logger.info('Found full text for %d PMIDs (%d S3, %d other)' %
+            ((num_found_s3 + num_found_not_s3), num_found_s3,
+              num_found_not_s3))
+
 
 # Create the REACH configuration file
 conf_file_text = """
@@ -196,14 +186,13 @@ args = ['java', '-jar', path_to_reach, conf_file_path]
 p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 if verbose:
     for line in iter(p.stdout.readline, b''):
-        print '@@', line
+        logger.info(line)
 (p_out, p_err) = p.communicate()
 if p.returncode:
     raise Exception(p_out + '\n' + p_err)
 
 # At this point, we have a directory full of JSON files
 # Collect all the prefixes into a set, then iterate over the prefixes
-
 def join_parts(prefix):
     """Join different REACH output JSON files into a single JSON."""
     entities = json.load(open(prefix + '.uaz.entities.json'))
@@ -211,13 +200,6 @@ def join_parts(prefix):
     sentences = json.load(open(prefix + '.uaz.sentences.json'))
     full = {'events': events, 'entities': entities, 'sentences': sentences}
     return full
-
-def gzip_string(content, name):
-    buf = cStringIO.StringIO()
-    gzf = gzip.GzipFile(name, 'wb', 6, buf)
-    gzf.write(content)
-    gzf.close()
-    return buf.getvalue()
 
 # Collect prefixes
 json_files = glob.glob(os.path.join(output_dir, '*.json'))
@@ -230,12 +212,9 @@ for json_file in json_files:
 for json_prefix in json_prefixes:
     prefix_with_path = os.path.join(output_dir, json_prefix)
     full_json = join_parts(prefix_with_path)
-    full_json_gz = gzip_string(json.dumps(full_json), 'reach_output.json')
-    reach_key = 'papers/%s/reach' % json_prefix
-    reach_metadata = {'reach_version': reach_version,
-                      'source_text': source_text}
-    client.put_object(Key=reach_key, Body=full_json_gz, Bucket=bucket_name,
-                      Metadata=reach_metadata)
+    s3_client.put_reach_output(full_json, json_prefix, reach_version,
+                               source_text)
+logger.info('Uploaded REACH JSON for %d files to S3' % len(json_prefixes))
 
 if cleanup:
     shutil.rmtree(base_dir)
