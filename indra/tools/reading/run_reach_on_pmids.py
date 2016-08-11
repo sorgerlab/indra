@@ -207,11 +207,14 @@ if p.returncode:
 # Collect all the prefixes into a set, then iterate over the prefixes
 def join_parts(prefix):
     """Join different REACH output JSON files into a single JSON."""
-    entities = json.load(open(prefix + '.uaz.entities.json'))
-    events = json.load(open(prefix + '.uaz.events.json'))
-    sentences = json.load(open(prefix + '.uaz.sentences.json'))
-    full = {'events': events, 'entities': entities, 'sentences': sentences}
-    return full
+    try:
+        entities = json.load(open(prefix + '.uaz.entities.json'))
+        events = json.load(open(prefix + '.uaz.events.json'))
+        sentences = json.load(open(prefix + '.uaz.sentences.json'))
+    except IOError as e:
+        logging.error('Failed to open JSON files for %s; REACH error?' % prefix)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
 
 # Collect prefixes
 json_files = glob.glob(os.path.join(output_dir, '*.json'))
@@ -221,12 +224,19 @@ for json_file in json_files:
     prefix = filename.split('.')[0]
     json_prefixes.add(prefix)
 # Now iterate over the collected prefixes, combine the JSON, and send to S3
+num_uploaded = 0
 for json_prefix in json_prefixes:
     prefix_with_path = os.path.join(output_dir, json_prefix)
     full_json = join_parts(prefix_with_path)
-    s3_client.put_reach_output(full_json, json_prefix, reach_version,
-                               source_text)
-logger.info('Uploaded REACH JSON for %d files to S3' % len(json_prefixes))
+    if full_json is None:
+        num_failures += 1
+    else:
+        s3_client.put_reach_output(full_json, json_prefix, reach_version,
+                                   source_text)
+        num_uploaded += 1
+
+logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
+            (num_uploaded, num_failures))
 
 if cleanup:
     shutil.rmtree(base_dir)
