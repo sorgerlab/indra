@@ -23,3 +23,21 @@ def test_simple_mapping():
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
     assert mapped_akt.db_refs['INDRA'] == 'AKT'
 
+def test_renaming():
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'INDRA':'AKT family',
+                                        'UP': 'P31749'})
+    akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'P31749'})
+    akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
+    tat_up_no_hgnc = Agent('foo', db_refs={'TEXT': 'bar', 'UP':'P04608'})
+    stmts = [Phosphorylation(None, akt_indra),
+             Phosphorylation(None, akt_hgnc_from_up),
+             Phosphorylation(None, akt_other),
+             Phosphorylation(None, tat_up_no_hgnc), ]
+    gm = GroundingMapper(default_grounding_map)
+    renamed_stmts = gm.rename_agents(stmts)
+    assert len(renamed_stmts) == 4
+    assert renamed_stmts[0].sub.name == 'AKT family'
+    assert renamed_stmts[1].sub.name == 'AKT1'
+    assert renamed_stmts[2].sub.name == 'Akt'
+    assert renamed_stmts[3].sub.name == 'tat'
+

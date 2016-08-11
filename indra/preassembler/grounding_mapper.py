@@ -1,6 +1,7 @@
 import os
 import csv
 from copy import deepcopy
+from indra.databases import uniprot_client
 
 class GroundingMapper(object):
     def __init__(self, gm):
@@ -25,6 +26,47 @@ class GroundingMapper(object):
                 agent.db_refs = agent_map_entry
         return mapped_stmts
 
+    def rename_agents(self, stmts):
+        # Make a copy of the stmts
+        mapped_stmts = deepcopy(stmts)
+        # Iterate over the statements
+        for stmt_ix, stmt in enumerate(mapped_stmts):
+            # Iterate over the agents
+            for agent in stmt.agent_list():
+                if agent is None:
+                    continue
+                old_name = agent.name
+                # If there's an INDRA ID, prefer that for the name
+                if agent.db_refs.get('INDRA'):
+                    agent.name = agent.db_refs.get('INDRA')
+                # Take a HGNC name from Uniprot next
+                elif agent.db_refs.get('UP'):
+                    # Try for the HGNC name
+                    hgnc_name = uniprot_client.get_hgnc_name(
+                                                    agent.db_refs.get('UP'))
+                    if hgnc_name is not None:
+                        agent.name = hgnc_name
+                        continue
+                    # Fall back on the Uniprot gene name
+                    up_gene_name = uniprot_client.get_gene_name(
+                                                    agent.db_refs.get('UP'))
+                    if up_gene_name is not None:
+                        agent.name = up_gene_name
+                        continue
+                    # Take the text string
+                    if agent.db_refs.get('TEXT'):
+                        agent.name = agent.db_refs.get('TEXT')
+                    # If this fails, then we continue with no change
+                # Fall back to the text string
+                elif agent.db_refs.get('TEXT'):
+                    agent.name = agent.db_refs.get('TEXT')
+                if old_name != agent.name:
+                    print "Map %d of %d: %s --> %s" % \
+                                (stmt_ix+1, len(stmts), old_name, agent.name)
+        return mapped_stmts
+
+# TODO: handle the cases when there is more than one entry for the same
+# key (e.g., ROS, ER)
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
