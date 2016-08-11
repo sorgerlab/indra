@@ -126,6 +126,7 @@ def get_mnemonic(protein_id):
     else:
         return None
 
+@lru_cache(maxsize=10000)
 def get_hgnc_name(protein_id):
     """Return the HGNC symbol for the given UniProt ID.
 
@@ -165,6 +166,7 @@ def get_hgnc_name(protein_id):
         return None
 
 
+@lru_cache(maxsize=10000)
 def get_gene_name(protein_id):
     """Return the gene name for the given UniProt ID.
 
