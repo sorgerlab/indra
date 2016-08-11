@@ -24,6 +24,7 @@ def check_pmid(pmid):
         pmid = 'PMID' + str(pmid)
     return pmid
 
+
 def get_full_text(pmid, full_text_type='pmc_oa_xml'):
     pmid = check_pmid(pmid)
     oa_xml_key = prefix + pmid + '/fulltext/' + full_text_type
@@ -43,7 +44,14 @@ def get_full_text(pmid, full_text_type='pmc_oa_xml'):
     xml_gz = xml_gz_obj['Body'].read()
     # Decode the gzipped content
     xml = zlib.decompress(xml_gz, 16+zlib.MAX_WBITS)
-    return xml
+    return xml.decode('utf8')
+
+
+def put_full_text(pmid, text, full_text_type='pmc_oa_xml'):
+    pmid = check_pmid(pmid)
+    xml_key = prefix + pmid + '/fulltext/' + full_text_type
+    xml_gz = gzip_string(text, '%s.nxml' % pmid)
+    client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
 def get_reach_version(pmid):
@@ -86,7 +94,7 @@ def put_reach_output(reach_output, pmid_key, reach_version, source_text):
 def gzip_string(content, name):
     buf = cStringIO.StringIO()
     gzf = gzip.GzipFile(name, 'wb', 6, buf)
-    gzf.write(content)
+    gzf.write(content.encode('utf8'))
     gzf.close()
     return buf.getvalue()
 

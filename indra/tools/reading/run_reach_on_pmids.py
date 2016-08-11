@@ -16,14 +16,14 @@ import subprocess
 import glob
 import json
 import logging
-from indra.literature import pmc_client, s3_client
+from indra.literature import pmc_client, s3_client, get_full_text
 
 cleanup = False
 verbose = True
 #path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
 path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-reach_version = '1.3.2-test'
-force_read = False
+reach_version = '1.3.2'
+force_read = True
 source_text = 'pmc_oa_xml'
 
 # Check the arguments
@@ -94,16 +94,28 @@ for pmid in pmids_to_read:
     if xml:
         num_found_s3 += 1
     else:
-        logger.info('No full text found for %s' % pmid)
+        logger.info('No content for %s from S3' % pmid)
+        (content, content_type) = get_full_text(pmid, 'pmid')
+        if content_type == 'nxml':
+            logger.info('Found nxml for %s from PMC web service' % pmid)
+            xml = content
+            num_found_not_s3 += 1
+            # Upload the xml to S3 for next time
+            logger.info('Uploading full text for %s to S3' % pmid)
+            s3_client.put_full_text(pmid, xml, full_text_type='pmc_oa_xml')
+        else:
+            logger.info('No full text found for %s' % pmid)
     # Write the contents to a file
     if xml:
         xml_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
         with open(xml_path, 'w') as f:
-            f.write(xml)
+            # The XML string is Unicode
+            enc = xml.encode('utf8')
+            f.write(enc)
+
 logger.info('Found full text for %d PMIDs (%d S3, %d other)' %
             ((num_found_s3 + num_found_not_s3), num_found_s3,
               num_found_not_s3))
-
 
 # Create the REACH configuration file
 conf_file_text = """
