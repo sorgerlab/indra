@@ -4,7 +4,7 @@ Large-Scale Machine Reading
 The following doc describes the steps involved in reading a large numbers of
 papers in parallel on Amazon EC2 using REACH, caching the JSON output on Amazon
 S3, then processing the REACH output into INDRA Statements. Prerequisites for
-doing the following are
+doing the following are:
 
 * A cluster of Amazon EC2 nodes configured using Starcluster, with INDRA
   installed and in the PYTHONPATH
@@ -41,7 +41,7 @@ Add the following lines to reach/build.sbt::
     test in assembly := {}
     mainClass in assembly := Some("org.clulab.reach.ReachCLI")
 
-This prevents scala from running all the tests during the SBT assembly step,
+This prevents Scala from running all the tests during the SBT assembly step,
 and assigns ReachCLI as the main class.
 
 Compile and assemble REACH. Note that the path to the .ivy2 directory must be
@@ -128,10 +128,13 @@ top of the script with the REACH settings, e.g.::
     path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
     reach_version = '1.3.2'
     source_text = 'pmc_oa_xml'
+    force_read = False
 
 The reach_version is important because it is used to determine whether the
 paper has already been read with this version of REACH (in which case it will
-be skipped), or if the REACH output needs to be updated.
+be skipped), or if the REACH output needs to be updated. Alternatively, if you
+want to read all the papers regardless of whether they've been read before with
+the given version of REACH, set the force_read variable to True.
 
 Next, create a top-level temporary directory to use during reading. This will
 be used to store the input files and the JSON output::
@@ -158,13 +161,15 @@ This can be submitted to run offline using the job scheduler on EC2 with, e.g.::
 
     qsub -b y -cwd -V -pe orte 8 python run_reach_on_pmids.py SOS2_pmids.txt my_temp_dir 8 0 10
 
-.. note:: Setting the num_cores argument correctly
+.. note::
 
-    The number of cores requested in the qsub call (8) should match the number
-    of cores that REACH will attempt to use, and should also match the total
-    number of nodes on the Amazon EC2 node (e.g., 8 cores for c3.2xlarge). This
-    way the job scheduler will schedule the job to run on all the cores of a
-    single node, and REACH will use them all.
+    The number of cores requested in the qsub call ('-pe orte 8') should match
+    the number of cores passed to the run_reach_on_pmids.py script, which
+    determines the number of threads that REACH will attempt to use (the
+    third-to-last argument above). This should also match the total number of
+    nodes on the Amazon EC2 node (e.g., 8 cores for c3.2xlarge). This way the
+    job scheduler will schedule the job to run on all the cores of a single EC2
+    node, and REACH will use them all.
 
 Extract INDRA Statements from the REACH output on S3
 ----------------------------------------------------
@@ -200,7 +205,7 @@ Running the whole pipeline with one script
 ------------------------------------------
 
 If you want to run the whole pipeline in one go, you can run the script
-submit_reading_pipeline.py (in indra/tools/reading). On an cluster of Amazon
+submit_reading_pipeline.py (in indra/tools/reading) on a cluster of Amazon
 EC2 nodes. The script divides up the jobs evenly among the nodes and cores.
 Usage::
 
@@ -213,6 +218,6 @@ you would call it with::
 
 The script submits the jobs to the scheduler with appropriate dependencies
 such that the REACH reading step completes first, then the INDRA processing
-step, and then the finaly assembly into a single pickle file.
+step, and then the final assembly into a single pickle file.
 
 

@@ -225,6 +225,7 @@ for json_file in json_files:
     json_prefixes.add(prefix)
 # Now iterate over the collected prefixes, combine the JSON, and send to S3
 num_uploaded = 0
+num_failures = 0
 for json_prefix in json_prefixes:
     prefix_with_path = os.path.join(output_dir, json_prefix)
     full_json = join_parts(prefix_with_path)
