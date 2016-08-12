@@ -476,6 +476,8 @@ class TripsProcessor(object):
             elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 for ea, aa in _agent_list_product((enzyme_agent,
                                                    affected_agent)):
+                    if aa is None:
+                        continue
                     for m in mods:
                         st = Dephosphorylation(ea, aa, m.residue, m.position,
                                                evidence=ev)
@@ -484,25 +486,44 @@ class TripsProcessor(object):
             # Autophosphorylation
             elif enzyme_agent is not None and (enzyme_id == affected_id):
                 for m in mods:
-                    st = Autophosphorylation(enzyme_agent,
-                                             m.residue, m.position,
-                                             evidence=ev)
-                    _stmt_location_to_agents(st, location)
-                    self.statements.append(st)
+                    if isinstance(enzyme_agent, list):
+                        for ea in enzyme_agent:
+                            st = Autophosphorylation(ea,
+                                                 m.residue, m.position,
+                                                 evidence=ev)
+                            _stmt_location_to_agents(st, location)
+                            self.statements.append(st)
+                    else:
+                        st = Autophosphorylation(enzyme_agent,
+                                                 m.residue, m.position,
+                                                 evidence=ev)
+                        _stmt_location_to_agents(st, location)
+                        self.statements.append(st)
             elif affected_agent is not None and \
                 'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                 for m in mods:
-                    st = Autophosphorylation(affected_agent,
-                                             m.residue, m.position,
-                                             evidence=ev)
-                    _stmt_location_to_agents(st, location)
-                    self.statements.append(st)
+                    if isinstance(affected_agent, list):
+                        for aa in affected_agent:
+                            st = Autophosphorylation(aa,
+                                                     m.residue, m.position,
+                                                     evidence=ev)
+                            _stmt_location_to_agents(st, location)
+                            self.statements.append(st)
+                    else:
+                        st = Autophosphorylation(affected_agent,
+                                                 m.residue, m.position,
+                                                 evidence=ev)
+                        _stmt_location_to_agents(st, location)
+                        self.statements.append(st)
+
             # Regular phosphorylation
             else:
                 if mods is None:
                     continue
                 for ea, aa in _agent_list_product((enzyme_agent,
                                                    affected_agent)):
+                    if aa is None:
+                        continue
                     for m in mods:
                         st = Phosphorylation(ea, aa, m.residue, m.position,
                                              evidence=ev)
@@ -543,16 +564,26 @@ class TripsProcessor(object):
             epi = {'section_type': sec}
             ev = Evidence(source_api='trips', text=sentence,
                           pmid=self.doc_id, epistemics=epi)
-
-            st = Translocation(agent, from_location, to_location, evidence=ev)
-            self.statements.append(st)
+            if isinstance(agent, list):
+                for aa in agent:
+                    st = Translocation(aa, from_location,
+                                       to_location, evidence=ev)
+                    self.statements.append(st)
+            else:
+                st = Translocation(agent, from_location,
+                                   to_location, evidence=ev)
+                self.statements.append(st)
 
     def _get_cell_loc_by_id(self, term_id):
         term = self.tree.find("TERM/[@id='%s']" % term_id)
         if term is None:
             return None
         term_type = term.find("type").text
-        name = term.find("name").text
+        name = term.find("name")
+        if name is None:
+            return None
+        else:
+            name = name.text
         if term_type != 'ONT::CELL-PART':
             return None
         # If it is a cellular location, try to look up and return
@@ -676,7 +707,11 @@ class TripsProcessor(object):
                 mut_values = self._get_mutation(mut_term)
                 if mut_values is None:
                     continue
-                mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
+                try:
+                    mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
+                except InvalidResidueError:
+                    logger.error('Invalid residue in mutation condition.')
+                    continue
                 agent.mutations.append(mc)
         # Get location
         location = term.find('features/location')
@@ -710,9 +745,23 @@ class TripsProcessor(object):
             drum_terms = term.findall('drum-terms/drum-term')
             if drum_terms:
                 scores = {}
+                score_started = False
                 for dt in drum_terms:
                     dbid_str = dt.attrib.get('dbid')
                     match_score = dt.attrib.get('match-score')
+                    if not score_started:
+                        if match_score is not None:
+                            score_started = True
+                        else:
+                            # This is a match before other scored terms so we
+                            # default to 1.0
+                            match_score = 1.0
+                    else:
+                        if match_score is None:
+                            # This is a match after other scored matches
+                            # default to a small value
+                            match_score = 0.1
+
                     if dbid_str is None:
                         db_refs_dict = {}
                         if term.find('type').text == 'ONT::PROTEIN-FAMILY':
@@ -759,24 +808,31 @@ class TripsProcessor(object):
             mod = precond_event.findall('mods/mod')
             bound_to_term_id = None
             if arg1 is None:
-                bound_to_term_id = arg2.attrib['id']
+                bound_to_term_id = arg2.attrib.get('id')
             elif arg2 is None:
-                bound_to_term_id = arg1.attrib['id']
+                bound_to_term_id = arg1.attrib.get('id')
             else:
-                if arg1.attrib['id'] == agent_term.attrib['id']:
-                    bound_to_term_id = arg2.attrib['id']
+                arg1_id = arg1.attrib.get('id')
+                arg2_id = arg2.attrib.get('id')
+                if arg1_id == agent_term.attrib['id']:
+                    bound_to_term_id = arg2_id
                 else:
-                    bound_to_term_id = arg1.attrib['id']
+                    bound_to_term_id = arg1_id
 
             bound_agents = []
-            bound_to_term = self.tree.find("TERM/[@id='%s']" % bound_to_term_id)
-            if bound_to_term.find('type').text == 'ONT::MOLECULAR-PART':
-                components = bound_to_term.findall('components/component')
-                for c in components:
-                    bound_agent = Agent(self._get_name_by_id(c.attrib['id']))
-                    bound_agents.append(bound_agent)
-            else:
-                bound_agents = [Agent(self._get_name_by_id(bound_to_term_id))]
+            if bound_to_term_id is not None:
+                bound_to_term = self.tree.find("TERM/[@id='%s']" % bound_to_term_id)
+                if bound_to_term.find('type').text == 'ONT::MOLECULAR-PART':
+                    components = bound_to_term.findall('components/component')
+                    for c in components:
+                        bound_agent_name = self._get_name_by_id(c.attrib['id'])
+                        if bound_agent_name is not None:
+                            bound_agent = Agent(bound_agent_name)
+                            bound_agents.append(bound_agent)
+                else:
+                    bound_agent_name = self._get_name_by_id(bound_to_term_id)
+                    if bound_agent_name is not None:
+                        bound_agents = [Agent(bound_agent_name)]
 
             # Look for negative flag either in precondition event
             # predicate tag or in the term itself
