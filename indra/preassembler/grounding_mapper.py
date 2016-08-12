@@ -12,21 +12,32 @@ class GroundingMapper(object):
 
     def map_agents(self, stmts):
         # Make a copy of the stmts
-        mapped_stmts = deepcopy(stmts)
+        mapped_stmts = []
         # Iterate over the statements
-        for stmt in mapped_stmts:
+        for stmt in stmts:
+            mapped_stmt = deepcopy(stmt)
             # Iterate over the agents
-            for agent in stmt.agent_list():
+            skip_stmt = False
+            for agent in mapped_stmt.agent_list():
                 if agent is None or agent.db_refs.get('TEXT') is None:
                     continue
                 agent_text = agent.db_refs.get('TEXT')
                 # Look this string up in the grounding map
-                agent_map_entry = self.gm.get(agent_text)
-                # If not in the map, continue
-                if agent_map_entry is None:
-                    continue
-                # Otherwise, update the agent's db_refs field
-                agent.db_refs = agent_map_entry
+                # If not in the map, leave agent alone and continue
+                if agent_text not in self.gm.keys():
+                    pass
+                # If it's in the map but it maps to None, then filter out
+                # this statement by skipping it
+                elif self.gm.get(agent_text) is None:
+                    print "Skipping %s" % agent_text
+                    skip_stmt = True
+                # If it has a value that's not None, map it and add it
+                else:
+                    # Otherwise, update the agent's db_refs field
+                    agent.db_refs = self.gm.get(agent_text)
+            # Check if we should skip the statement
+            if not skip_stmt:
+                mapped_stmts.append(mapped_stmt)
         return mapped_stmts
 
     def rename_agents(self, stmts):
@@ -64,8 +75,9 @@ class GroundingMapper(object):
                 #elif agent.db_refs.get('TEXT'):
                 #    agent.name = agent.db_refs.get('TEXT')
                 if old_name != agent.name:
-                    print "Map %d of %d: %s --> %s" % \
-                                (stmt_ix+1, len(stmts), old_name, agent.name)
+                    print "Map %d of %d: %s (%s) --> %s" % \
+                                (stmt_ix+1, len(stmts), old_name,
+                                 agent.db_refs.get('TEXT'), agent.name)
         return mapped_stmts
 
 # TODO: handle the cases when there is more than one entry for the same
@@ -87,6 +99,8 @@ def load_grounding_map(path):
                     db_refs[db] = db_id
             if len(db_refs.keys()) > 1:
                 g_map[key] = db_refs
+            else:
+                g_map[key] = None
     return g_map
 
 # Some useful functions for analyzing the grounding of sets of statements
@@ -115,6 +129,10 @@ def get_sentences_for_agent(text, stmts):
 
 def agent_texts_with_grounding(stmts):
     allag = all_agents(stmts)
+    for ag in allag:
+        pfam_def = ag.db_refs.get('PFAM-DEF')
+        if pfam_def is not None:
+            ag.db_refs['PFAM-DEF'] = tuple(pfam_def)
     refs = [tuple(ag.db_refs.items()) for ag in allag]
     refs_counter = Counter(refs)
     refs_counter_dict = [(dict(entry[0]), entry[1])
@@ -159,6 +177,11 @@ def ungrounded_texts(stmts):
     return ungroundc
 
 
+def get_agents_with_name(name, stmts):
+    return [ag for stmt in stmts for ag in stmt.agent_list()
+               if ag is not None and ag.name == name]
+
+
 def save_base_map(filename, grouped_by_text):
     with open(filename, 'w') as f:
         for group in grouped_by_text:
@@ -170,7 +193,7 @@ def save_base_map(filename, grouped_by_text):
                     name = ''
                 line = '%s\t%s\t%s\t%s\t%s\n' % \
                         (text_string, db, id, count, name)
-                f.write(line)
+                f.write(line.encode('utf8'))
 
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
@@ -182,7 +205,7 @@ gm = default_grounding_map
 if __name__ == '__main__':
     import pickle
 
-    with open('reach_stmts.pkl') as f:
+    with open('trips_b4_stmts.pkl') as f:
         st = pickle.load(f)
 
     stmts = []
@@ -195,5 +218,5 @@ if __name__ == '__main__':
     filtered_twg = [entry for entry in twg
                     if entry[0] not in default_grounding_map.keys()]
 
-    #save_base_map('eval_batch4_base_map.txt', filtered_twg)
+    #save_base_map('trips_batch4_base_map.txt', filtered_twg)
 

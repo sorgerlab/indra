@@ -282,7 +282,9 @@ mod_state_prefix = {
     'hydroxylation': 'hydroxylated',
     'dehydroxylation': 'dehydroxylated',
     'sumoylation': 'sumoylated',
-    'desumoylation': 'desumoylated'
+    'desumoylation': 'desumoylated',
+    'farnesylation': 'farnesylated',
+    'glycosylation': 'glycosylated',
 }
 
 mod_process_prefix = {
@@ -295,5 +297,7 @@ mod_process_prefix = {
     'hydroxylation': 'hydroxylates',
     'dehydroxylation': 'dehydroxylates',
     'sumoylation': 'sumoylates',
-    'desumoylation': 'desumoylates'
+    'desumoylation': 'desumoylates',
+    'farnesylation': 'farnesylates',
+    'glycosylation': 'glycosylates',
     }

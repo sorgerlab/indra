@@ -3,6 +3,8 @@ import pickle
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
+from indra.preassembler.grounding_mapper import GroundingMapper, \
+                                default_grounding_map, load_grounding_map
 from indra.mechlinker import MechLinker
 from indra.assemblers import PysbAssembler, IndexCardAssembler,\
                              EnglishAssembler
@@ -30,10 +32,10 @@ def is_protein_or_chemical(agent):
     # Default is True if agent is None
     if agent is None:
         return True
-    if agent.db_refs.get('UP') is not None or \
-        agent.db_refs.get('HGNC') is not None or \
-        agent.db_refs.get('CHEBI') is not None or \
-        agent.db_refs.get('PFAM-DEF') is not None:
+    dbs = set(['UP', 'HGNC', 'CHEBI', 'PFAM-DEF', 'IP', 'INDRA', 'PUBCHEM',
+               'CHEMBL'])
+    agent_refs = set(agent.db_refs.keys())
+    if agent_refs.intersection(dbs):
         return True
     return False
 
@@ -41,7 +43,7 @@ def is_protein_or_chemical(agent):
 background_secs = ['abstract', 'introduction', 'background']
 
 def is_background_knowledge(stmt):
-    '''Return True if the Statement is only supported by background knowledge.'''
+    '''Return True if Statement is only supported by background knowledge.'''
     any_background = False
     # Iterate over all evidence for the statement
     for ev in stmt.evidence:
@@ -73,16 +75,26 @@ def multiple_sources(stmt):
         return True
     return False
 
-def run_assembly(stmts, folder, pmcid):
+def run_assembly(stmts, folder, pmcid, background_assertions=None):
     '''Run assembly on a list of statements, for a given PMCID.'''
     # Folder for index card output (scored submission)
     indexcard_prefix = folder + '/index_cards/' + pmcid
     # Folder for other outputs (for analysis, debugging)
     otherout_prefix = folder + '/other_outputs/' + pmcid
 
+    # Do grounding mapping here
+    # Load the TRIPS-specific grounding map and add to the default
+    # (REACH-oriented) grounding map:
+    trips_gm = load_grounding_map('trips_grounding_map.txt')
+    default_grounding_map.update(trips_gm)
+    gm = GroundingMapper(default_grounding_map)
+
+    mapped_agent_stmts = gm.map_agents(stmts)
+    renamed_agent_stmts = gm.rename_agents(mapped_agent_stmts)
+
     # Filter for grounding
     grounded_stmts = []
-    for st in stmts:
+    for st in renamed_agent_stmts:
         if all([is_protein_or_chemical(a) for a in st.agent_list()]):
             grounded_stmts.append(st)
 
@@ -127,12 +139,19 @@ def run_assembly(stmts, folder, pmcid):
     # Choose the top-level statements
     related_stmts = pa.combine_related()
 
+    # Remove top-level statements that came only from the prior
+    if background_assertions is not None:
+        nonbg_stmts = [stmt for stmt in related_stmts
+                       if stmt not in background_assertions]
+    else:
+        nonbg_stmts = related_stmts
+
     # Dump top-level statements in a pickle
     with open(otherout_prefix + '.pkl', 'wb') as fh:
-        pickle.dump(related_stmts, fh)
+        pickle.dump(nonbg_stmts, fh)
 
     # Flatten evidence for statements
-    flattened_evidence_stmts = flatten_evidence(related_stmts)
+    flattened_evidence_stmts = flatten_evidence(nonbg_stmts)
 
     # Start a card counter
     card_counter = 1
@@ -177,7 +196,7 @@ def run_assembly(stmts, folder, pmcid):
     print '======================='
 
     # Print the statement graph
-    graph = render_stmt_graph(related_stmts)
+    graph = render_stmt_graph(nonbg_stmts)
     graph.draw(otherout_prefix + '_graph.pdf', prog='dot')
     # Print statement diagnostics
     print_stmts(pa.stmts, otherout_prefix + '_statements.tsv')

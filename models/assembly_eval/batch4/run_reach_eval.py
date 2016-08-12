@@ -3,45 +3,29 @@ import shutil
 from indra import reach
 from indra.literature import pmc_client, get_full_text, id_lookup
 from assembly_eval import have_file, run_assembly
+import csv
+import os
+import pickle
 
 if __name__ == '__main__':
+    # This script assumes that the papers have been processed offline,
+    # e.g., using the submit_reading_pipeline.py script on Amazon,
+    # and the results placed in a dict (mapping PMID -> lists of statements)
+    # and put in the folder reach/reach_stmts_batch_4_eval.pkl.
     folder = 'reach'
-    pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
-    pmids = [id_lookup(pmcid, 'pmcid')['pmid'] for pmcid in pmc_ids]
-    # Set to True only if reading should be ran again
-    rerun = False
 
-    # Download the papers if they are not available yet
-    for pmcid in pmc_ids:
-        prefix = folder + '/' + pmcid
-        if not have_file(prefix + '.nxml') and\
-           not have_file(prefix + '.txt'):
-            txt, txt_format = get_full_text(pmcid, 'pmcid')
-            if txt_format == 'nxml':
-                fname = prefix + '.nxml'
-            else:
-                fname = prefix + '.txt'
-            with open(fname, 'wt') as fh:
-                fh.write(txt.encode('utf-8'))
+    # Load the PMID to PMCID map
+    pmid_to_pmcid = {}
+    with open('pmc_batch_4_id_map.txt') as f:
+        csvreader = csv.reader(f, delimiter='\t')
+        for row in csvreader:
+            pmid_to_pmcid[row[1]] = row[0]
 
-    # Read each paper if it hasn't been read yet.
-    # Otherwise use the existing json extractions.
-    for pmcid, pmid in zip(pmc_ids, pmids):
-        prefix = folder + '/' + pmcid
-        print 'Processing %s...' % pmcid
-        # If REACH already processed it then don't run it again
-        if rerun or not have_file(prefix + '.json'):
-            if have_file(prefix + '.txt'):
-                txt = open(prefix + '.txt').read().decode('utf-8')
-                rp = reach.process_text(txt, citation=pmid, offline=True)
-            elif have_file(prefix + '.nxml'):
-                print 'FOUND'
-                rp = reach.process_nxml_file(prefix + '.nxml', citation=pmid,
-                                             offline=True)
-            if rp is None:
-                print 'Reading with offline REACH failed.'
-                continue
-            shutil.move('reach_output.json', prefix + '.json')
-        else:
-            rp = reach.process_json_file(prefix + '.json', citation=pmid)
-        run_assembly(rp.statements, folder, pmcid)
+    # Load the REACH reading output
+    with open(os.path.join(folder, 'reach_stmts_batch_4_eval.pkl')) as f:
+        stmts = pickle.load(f)
+
+    # Iterate over all of the PMIDs
+    for pmid, stmts in stmts.items():
+        pmcid = pmid_to_pmcid[pmid]
+        run_assembly(stmts, folder, pmcid)
