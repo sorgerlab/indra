@@ -4,6 +4,7 @@ from copy import deepcopy
 from indra.databases import uniprot_client
 from itertools import groupby
 from collections import Counter
+import logging
 
 class GroundingMapper(object):
     def __init__(self, gm):
@@ -56,12 +57,12 @@ class GroundingMapper(object):
                         agent.name = up_gene_name
                         continue
                     # Take the text string
-                    if agent.db_refs.get('TEXT'):
-                        agent.name = agent.db_refs.get('TEXT')
+                    #if agent.db_refs.get('TEXT'):
+                    #    agent.name = agent.db_refs.get('TEXT')
                     # If this fails, then we continue with no change
                 # Fall back to the text string
-                elif agent.db_refs.get('TEXT'):
-                    agent.name = agent.db_refs.get('TEXT')
+                #elif agent.db_refs.get('TEXT'):
+                #    agent.name = agent.db_refs.get('TEXT')
                 if old_name != agent.name:
                     print "Map %d of %d: %s --> %s" % \
                                 (stmt_ix+1, len(stmts), old_name, agent.name)
