@@ -56,6 +56,21 @@ if __name__ == '__main__':
     # Further BEL family names added manually
     g.add((en.term('ERK'), has_synonym, Literal('MAPK_ERK1_2_FAMILY')))
 
+    # Add in makeshift hierarchies for families and complexes
+    g.add((en.term('p85'), isa, en.term('PI3K')))
+    g.add((en.term('p110'), isa, en.term('PI3K')))
+    g.add((en.term('4EBP1'), isa, en.term('4EBP')))
+    # MAP3K
+    g.add((en.term('MAP3K1'), isa, en.term('MAP3K')))
+    g.add((en.term('MAP3K2'), isa, en.term('MAP3K')))
+    # MAP2K
+    g.add((en.term('MAP2K1'), isa, en.term('MAP2K')))
+    g.add((en.term('MAP2K2'), isa, en.term('MAP2K')))
+    # MAPK
+    g.add((en.term('MAPK1'), isa, en.term('ERK')))
+    g.add((en.term('MAPK3'), isa, en.term('ERK')))
+    g.add((en.term('ERK'), isa, en.term('MAPK')))
+
     with open('entity_hierarchy.rdf', 'wt') as out_file:
         out_file.write(g.serialize(format='xml'))
 
