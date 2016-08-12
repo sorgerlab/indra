@@ -7,13 +7,16 @@ from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from copy import deepcopy
+from indra.databases import uniprot_client
 import sys
-
+from indra.preassembler.grounding_mapper import GroundingMapper, \
+                                                default_grounding_map
 pf.set_fig_params()
+
 
 if len(sys.argv) < 2:
     print "Usage: %s reach_stmts_file" % sys.argv[0]
-    sys.exit(1)
+    sys.exit()
 
 stmts_file = sys.argv[1]
 
@@ -27,10 +30,61 @@ counts = np.array([tup[1] for tup in counts_per_paper])
 
 # Preassemble to remove duplicates
 
+all_stmts = [stmt for paper_stmts in results.values()
+                  for stmt in paper_stmts]
+
+gm = GroundingMapper(default_grounding_map)
+map_stmts = gm.map_agents(all_stmts)
+
+ren_stmts = gm.rename_agents(map_stmts)
+
 # Combining duplicates
-pa = Preassembler(hierarchies)
-for paper_stmts in results.values():
-    pa.add_statements(paper_stmts)
+pa = Preassembler(hierarchies, ren_stmts)
+pa.combine_duplicates()
+
+# Sorted by evidence
+sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
+
+
+sys.exit()
+
+
+sys.exit()
+
+
+"""
+with open('grounding_results.csv', 'w') as f:
+    for group in grouped_by_text:
+        text_string = group[0]
+        line = [text_string]
+        for db, id, count in group[1]:
+            if db == 'UP':
+                name = uniprot_client.get_mnemonic(id)
+            else:
+                name = ''
+            line = '%s\t%s\t%s\t%s\t%s\n' % (text_string, db, id, count, name)
+            f.write(line)
+"""
+
+with open('grounding_human.csv', 'w') as f:
+    for group in grouped_by_text:
+        text_string = group[0]
+        for db, id, count in group[1]:
+            if db == 'UP':
+                name = uniprot_client.get_mnemonic(id)
+
+            else:
+                name = ''
+            line = '%s\t%s\t%s\t%s\t%s\n' % (text_string, db, id, count, name)
+            f.write(line)
+
+
+
+sys.exit()
+
+
+# Combining duplicates
+pa = Preassembler(hierarchies, all_stmts)
 pa.combine_duplicates()
 
 # Sorted by evidence
@@ -62,21 +116,7 @@ sorted_uniq_pmids = deepcopy(sorted_stmts)
 sorted_uniq_pmids = sorted(sorted_uniq_pmids, key=uniq_refs_in_evidence,
                            reverse=True)
 
-# List of all ungrounded entities by number of mentions
-ungrounded = [ag.db_refs['TEXT'] for s in sorted_stmts for ag in s.agent_list()
-              if ag is not None and ag.db_refs.keys() == ['TEXT']]
-
-ungroundc = Counter(ungrounded)
-ungroundc = ungroundc.items()
-ungroundc.sort(key=lambda x: x[1], reverse=True)
-
 # List of all entities
-agents = []
-for paper_stmts in results.values():
-    for stmt in paper_stmts:
-        for agent in stmt.agent_list():
-            if agent is not None:
-                agents.append(agent.db_refs['TEXT'])
 
 # Agent counter
 agent_counter = Counter(agents)
