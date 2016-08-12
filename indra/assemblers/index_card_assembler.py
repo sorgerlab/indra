@@ -6,12 +6,13 @@ from indra.databases import hgnc_client, uniprot_client, chebi_client
 global_submitter = 'cure'
 
 class IndexCardAssembler(object):
-    def __init__(self, statements=None):
+    def __init__(self, statements=None, pmc_override=None):
         if statements is None:
             self.statements =  []
         else:
             self.statements = statements
         self.cards = []
+        self.pmc_override = pmc_override
 
     def add_statements(self, statements):
         self.statements.extend(statements)
@@ -20,22 +21,21 @@ class IndexCardAssembler(object):
         for stmt in self.statements:
             if isinstance(stmt, Modification):
                 card = assemble_modification(stmt)
-                if card is not None:
-                    self.cards.append(card)
             elif isinstance(stmt, SelfModification):
                 card = assemble_selfmodification(stmt)
-                if card is not None:
-                    self.cards.append(card)
             elif isinstance(stmt, Complex):
                 card = assemble_complex(stmt)
-                if card is not None:
-                    self.cards.append(card)
             elif isinstance(stmt, Translocation):
                 card = assemble_translocation(stmt)
-                if card is not None:
-                    self.cards.append(card)
             else:
                 continue
+            if card is not None:
+                if self.pmc_override is not None:
+                    card.card['pmc_id'] = self.pmc_override
+                else:
+                    card.card['pmc_id'] = get_pmc_id(stmt)
+                    print 'a'
+                self.cards.append(card)
 
     def print_model(self):
         cards = [c.card for c in self.cards]
@@ -75,7 +75,6 @@ class IndexCard(object):
 
 def assemble_complex(stmt):
     card = IndexCard()
-    card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
     card.card['interaction']['interaction_type'] = 'complexes_with'
@@ -92,7 +91,6 @@ def assemble_complex(stmt):
 
 def assemble_modification(stmt):
     card = IndexCard()
-    card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
 
@@ -135,7 +133,6 @@ def assemble_modification(stmt):
 
 def assemble_selfmodification(stmt):
     card = IndexCard()
-    card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
 
@@ -172,7 +169,6 @@ def assemble_translocation(stmt):
     if stmt.to_location is None:
         return None
     card = IndexCard()
-    card.card['pmc_id'] = get_pmc_id(stmt)
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
     interaction = {}

@@ -157,7 +157,7 @@ def run_assembly(stmts, folder, pmcid):
             continue
 
         # Assemble IndexCards
-        ia = IndexCardAssembler([st])
+        ia = IndexCardAssembler([st], pmc_override=pmcid)
         ia.make_model()
         # If the index card was actually made 
         # (not all statements can be assembled into index cards to
