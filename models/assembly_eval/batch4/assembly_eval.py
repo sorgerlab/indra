@@ -3,6 +3,8 @@ import pickle
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
+from indra.preassembler.grounding_mapper import GroundingMapper, \
+                                default_grounding_map, load_grounding_map
 from indra.mechlinker import MechLinker
 from indra.assemblers import PysbAssembler, IndexCardAssembler,\
                              EnglishAssembler
@@ -30,10 +32,10 @@ def is_protein_or_chemical(agent):
     # Default is True if agent is None
     if agent is None:
         return True
-    if agent.db_refs.get('UP') is not None or \
-        agent.db_refs.get('HGNC') is not None or \
-        agent.db_refs.get('CHEBI') is not None or \
-        agent.db_refs.get('PFAM-DEF') is not None:
+    dbs = set(['UP', 'HGNC', 'CHEBI', 'PFAM-DEF', 'IP', 'INDRA', 'PUBCHEM',
+               'CHEMBL'])
+    agent_refs = set(agent.db_refs.keys())
+    if agent_refs.intersection(dbs):
         return True
     return False
 
@@ -41,7 +43,7 @@ def is_protein_or_chemical(agent):
 background_secs = ['abstract', 'introduction', 'background']
 
 def is_background_knowledge(stmt):
-    '''Return True if the Statement is only supported by background knowledge.'''
+    '''Return True if Statement is only supported by background knowledge.'''
     any_background = False
     # Iterate over all evidence for the statement
     for ev in stmt.evidence:
@@ -80,9 +82,19 @@ def run_assembly(stmts, folder, pmcid):
     # Folder for other outputs (for analysis, debugging)
     otherout_prefix = folder + '/other_outputs/' + pmcid
 
+    # Do grounding mapping here
+    # Load the TRIPS-specific grounding map and add to the default
+    # (REACH-oriented) grounding map:
+    trips_gm = load_grounding_map('trips_grounding_map.txt')
+    default_grounding_map.update(trips_gm)
+    gm = GroundingMapper(default_grounding_map)
+
+    mapped_agent_stmts = gm.map_agents(stmts)
+    renamed_agent_stmts = gm.rename_agents(mapped_agent_stmts)
+
     # Filter for grounding
     grounded_stmts = []
-    for st in stmts:
+    for st in renamed_agent_stmts:
         if all([is_protein_or_chemical(a) for a in st.agent_list()]):
             grounded_stmts.append(st)
 
