@@ -75,8 +75,9 @@ class GroundingMapper(object):
                 #elif agent.db_refs.get('TEXT'):
                 #    agent.name = agent.db_refs.get('TEXT')
                 if old_name != agent.name:
-                    print "Map %d of %d: %s --> %s" % \
-                                (stmt_ix+1, len(stmts), old_name, agent.name)
+                    print "Map %d of %d: %s (%s) --> %s" % \
+                                (stmt_ix+1, len(stmts), old_name,
+                                 agent.db_refs.get('TEXT'), agent.name)
         return mapped_stmts
 
 # TODO: handle the cases when there is more than one entry for the same
@@ -174,6 +175,11 @@ def ungrounded_texts(stmts):
     ungroundc = ungroundc.items()
     ungroundc.sort(key=lambda x: x[1], reverse=True)
     return ungroundc
+
+
+def get_agents_with_name(name, stmts):
+    return [ag for stmt in stmts for ag in stmt.agent_list()
+               if ag is not None and ag.name == name]
 
 
 def save_base_map(filename, grouped_by_text):
