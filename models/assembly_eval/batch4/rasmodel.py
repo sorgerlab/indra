@@ -1,4 +1,6 @@
 from indra.statements import *
+from indra.preassembler.grounding_mapper import GroundingMapper, \
+                                                default_grounding_map
 
 def get_statements():
     statements = []
@@ -108,4 +110,21 @@ def get_statements():
     for st in statements:
         st.belief = 1
         st.evidence.append(Evidence(source_api='assertion'))
-    return statements
+
+    # Update the statements with grounding info. To do this, we set the "text"
+    # field of the db_refs to copy from the agent name, then run the grounding
+    # mapper
+    for st in statements:
+        for ag in st.agent_list():
+            if ag is None:
+                continue
+            else:
+                ag.db_refs = {'TEXT': ag.name}
+    # Now load the grounding map and run
+    gm = GroundingMapper(default_grounding_map)
+    mapped_stmts = gm.map_agents(statements)
+    # This shouldn't change anything, but just in case...
+    renamed_stmts = gm.rename_agents(mapped_stmts)
+    return renamed_stmts
+
+
