@@ -75,7 +75,7 @@ def multiple_sources(stmt):
         return True
     return False
 
-def run_assembly(stmts, folder, pmcid):
+def run_assembly(stmts, folder, pmcid, background_assertions=None):
     '''Run assembly on a list of statements, for a given PMCID.'''
     # Folder for index card output (scored submission)
     indexcard_prefix = folder + '/index_cards/' + pmcid
@@ -139,12 +139,19 @@ def run_assembly(stmts, folder, pmcid):
     # Choose the top-level statements
     related_stmts = pa.combine_related()
 
+    # Remove top-level statements that came only from the prior
+    if background_assertions is not None:
+        nonbg_stmts = [stmt for stmt in related_stmts
+                       if stmt not in background_assertions]
+    else:
+        nonbg_stmts = related_stmts
+
     # Dump top-level statements in a pickle
     with open(otherout_prefix + '.pkl', 'wb') as fh:
-        pickle.dump(related_stmts, fh)
+        pickle.dump(nonbg_stmts, fh)
 
     # Flatten evidence for statements
-    flattened_evidence_stmts = flatten_evidence(related_stmts)
+    flattened_evidence_stmts = flatten_evidence(nonbg_stmts)
 
     # Start a card counter
     card_counter = 1
@@ -189,7 +196,7 @@ def run_assembly(stmts, folder, pmcid):
     print '======================='
 
     # Print the statement graph
-    graph = render_stmt_graph(related_stmts)
+    graph = render_stmt_graph(nonbg_stmts)
     graph.draw(otherout_prefix + '_graph.pdf', prog='dot')
     # Print statement diagnostics
     print_stmts(pa.stmts, otherout_prefix + '_statements.tsv')
