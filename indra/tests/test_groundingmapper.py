@@ -36,8 +36,11 @@ def test_renaming():
     gm = GroundingMapper(default_grounding_map)
     renamed_stmts = gm.rename_agents(stmts)
     assert len(renamed_stmts) == 4
+    # Should draw on INDRA first
     assert renamed_stmts[0].sub.name == 'AKT family'
+    # Then on the HGNC lookup from Uniprot
     assert renamed_stmts[1].sub.name == 'AKT1'
-    assert renamed_stmts[2].sub.name == 'Akt'
+    # Don't fall back on text if there's no grounding
+    assert renamed_stmts[2].sub.name == 'pkbA'
     assert renamed_stmts[3].sub.name == 'tat'
 
