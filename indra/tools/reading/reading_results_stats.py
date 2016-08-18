@@ -102,17 +102,21 @@ def report_grounding(stmts, list_length=10, bin_interval=10, plot=True):
     all_ungrounded = 0
     any_ungrounded = 0
     for stmt in stmts:
-        if all([True if (ag is not None and ag.db_refs.keys() != ['TEXT'])
-                     else False for ag in stmt.agent_list()]):
+        agents_ungrounded = []
+        for ag in stmt.agent_list():
+            if ag is not None and ag.db_refs.keys() == ['TEXT']:
+                agents_ungrounded.append(True)
+            else:
+                agents_ungrounded.append(False)
+        if all(agents_ungrounded):
             all_ungrounded += 1
-        if any([True if (ag is not None and ag.db_refs.keys() != ['TEXT'])
-                     else False for ag in stmt.agent_list()]):
+        if any(agents_ungrounded):
             any_ungrounded += 1
 
-    logger.info('%d of %d (%.1f%%) of statements with all agents ungrounded' %
+    logger.info('%d of %d (%.1f%%) statements with all agents ungrounded' %
                 (all_ungrounded, len(stmts),
                  100 * (all_ungrounded / float(len(stmts)))))
-    logger.info('%d of %d (%.1f%%) of statements with any agents ungrounded' %
+    logger.info('%d of %d (%.1f%%) statements with any agents ungrounded' %
                 (any_ungrounded, len(stmts),
                  100 * (any_ungrounded / float(len(stmts)))))
 
@@ -143,6 +147,15 @@ def report_stmt_types(stmts, plot=True):
         plt.savefig('stmt_types.pdf')
 
 
+def report_stmt_participants(stmts):
+    missing_participants = 0
+    for stmt in stmts:
+        if any([True if ag is None else False for ag in stmt.agent_list()]):
+            missing_participants += 1
+    logger.info('%d of %d (%.1f%%) statements missing participants' %
+                (missing_participants, len(stmts),
+                 100 * (missing_participants / float(len(stmts)))))
+
 
 if __name__ == '__main__':
     # Load the statements
@@ -150,27 +163,19 @@ if __name__ == '__main__':
         print "Usage: %s reach_stmts_file" % sys.argv[0]
         sys.exit()
     results = load_file(sys.argv[1])
-
-    #report_stmt_counts(results)
-
     all_stmts = [stmt for paper_stmts in results.values()
                       for stmt in paper_stmts]
 
+    #report_stmt_counts(results)
     report_grounding(all_stmts)
     #report_stmt_types(all_stmts)
+    #report_stmt_participants(all_stmts)
 
+    gmap = gm.GroundingMapper(gm.default_grounding_map)
+    map_stmts = gmap.map_agents(all_stmts)
+    #ren_stmts = gmap.rename_agents(map_stmts)
 
-sys.exit()
-
-
-phos = [s for paper_stmts in results.values()
-          for s in paper_stmts
-          if isinstance(s, Phosphorylation)]
-
-
-
-
-
+    report_grounding(map_stmts)
 
 sys.exit()
 
@@ -181,10 +186,6 @@ sys.exit()
 #=----------------------
 
 
-gm = GroundingMapper(default_grounding_map)
-map_stmts = gm.map_agents(all_stmts)
-
-ren_stmts = gm.rename_agents(map_stmts)
 
 # Combining duplicates
 pa = Preassembler(hierarchies, ren_stmts)
@@ -199,33 +200,6 @@ sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
 sys.exit()
 
 
-"""
-with open('grounding_results.csv', 'w') as f:
-    for group in grouped_by_text:
-        text_string = group[0]
-        line = [text_string]
-        for db, id, count in group[1]:
-            if db == 'UP':
-                name = uniprot_client.get_mnemonic(id)
-            else:
-                name = ''
-            line = '%s\t%s\t%s\t%s\t%s\n' % (text_string, db, id, count, name)
-            f.write(line)
-
-with open('grounding_human.csv', 'w') as f:
-    for group in grouped_by_text:
-        text_string = group[0]
-        for db, id, count in group[1]:
-            if db == 'UP':
-                name = uniprot_client.get_mnemonic(id)
-
-            else:
-                name = ''
-            line = '%s\t%s\t%s\t%s\t%s\n' % (text_string, db, id, count, name)
-            f.write(line)
-"""
-
-
 
 
 
@@ -235,9 +209,6 @@ pa.combine_duplicates()
 
 # Sorted by evidence
 sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
-
-#with open('reach_stmts_sorted.pkl') as f:
-#    sorted_stmts = pickle.load(f)
 
 # Distribution of pieces of evidence
 plt.ion()
