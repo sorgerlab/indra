@@ -13,14 +13,13 @@ from indra.preassembler.grounding_mapper import GroundingMapper, \
                                                 default_grounding_map
 pf.set_fig_params()
 
-
+# Load the statements
 if len(sys.argv) < 2:
     print "Usage: %s reach_stmts_file" % sys.argv[0]
     sys.exit()
-
 stmts_file = sys.argv[1]
 
-print "Loading REACH results"
+print "Loading results..."
 with open(stmts_file) as f:
     results = pickle.load(f)
 
@@ -29,6 +28,8 @@ zero_pmids = [pmid for pmid, stmts in results.items() if len(stmts) == 0]
 counts = np.array([tup[1] for tup in counts_per_paper])
 
 # Preassemble to remove duplicates
+
+# 1. Count number of statements extracted per paper
 
 all_stmts = [stmt for paper_stmts in results.values()
                   for stmt in paper_stmts]
