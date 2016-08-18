@@ -25,7 +25,7 @@ def load_file(stmts_file):
     return results
 
 
-def report_stmt_counts(paper_stmts, plot=True):
+def report_stmt_counts(paper_stmts, plot_prefix=None):
     counts_per_paper = [(pmid, len(stmts)) for pmid, stmts in results.items()]
     counts = np.array([tup[1] for tup in counts_per_paper])
     logger.info("%.2f +/- %.2f statements per paper" % 
@@ -36,8 +36,8 @@ def report_stmt_counts(paper_stmts, plot=True):
     logger.info('%s papers with no statements' % len(zero_pmids))
 
     # Distribution of numbers of statements
-    if plot:
-        plot_filename = 'stmts_per_paper.pdf'
+    if plot_prefix:
+        plot_filename = '%s_stmts_per_paper.pdf' % plot_prefix
         logger.info('Plotting distribution of statements per paper in %s' %
                     plot_filename)
         fig = plt.figure(figsize=(2, 2), dpi=300)
@@ -74,15 +74,15 @@ def plot_frequencies(counts, plot_filename, bin_interval):
     plt.savefig(plot_filename)
 
 
-def report_grounding(stmts, list_length=10, bin_interval=10, plot=True):
+def report_grounding(stmts, list_length=10, bin_interval=10, plot_prefix=None):
     # All agents
     agents = gm.agent_texts_with_grounding(stmts)
     logger.info('Top %d agent strings, with frequencies:' % list_length)
     for i in range(list_length):
         logger.info('%s: %d' % (agents[i][0], agents[i][2]))
     agent_counts = [t[2] for t in agents]
-    if plot:
-        plot_filename = 'agent_distribution.pdf'
+    if plot_prefix:
+        plot_filename = '%s_agent_distribution.pdf' % plot_prefix
         logger.info('Plotting occurrences of agent strings in %s' %
                     plot_filename)
         plot_frequencies(agent_counts, plot_filename, bin_interval)
@@ -92,8 +92,8 @@ def report_grounding(stmts, list_length=10, bin_interval=10, plot=True):
     for i in range(list_length):
         logger.info('%s: %d' % (ungrounded[i][0], ungrounded[i][1]))
     ungr_counts = [t[1] for t in ungrounded]
-    if plot:
-        plot_filename = 'ungrounded_distribution.pdf'
+    if plot_prefix:
+        plot_filename = '%s_ungrounded_distribution.pdf' % plot_prefix
         logger.info('Plotting occurrences of ungrounded agents in %s' %
                     plot_filename)
         plot_frequencies(ungr_counts, plot_filename, bin_interval)
@@ -121,7 +121,7 @@ def report_grounding(stmts, list_length=10, bin_interval=10, plot=True):
                  100 * (any_ungrounded / float(len(stmts)))))
 
 
-def report_stmt_types(stmts, plot=True):
+def report_stmt_types(stmts, plot_prefix=None):
     # Number of statements of different types
     stmt_types = [type(stmt) for stmt in stmts]
     stmt_type_counter = Counter(stmt_types)
@@ -136,7 +136,7 @@ def report_stmt_types(stmts, plot=True):
     for stmt_type, count in sorted_counts:
         logger.info('%s: %d' % (stmt_type.__name__, count))
 
-    if plot:
+    if plot_prefix:
         x_coords = np.arange(len(sorted_counts))
         ax.bar(x_coords, [x[1] for x in sorted_counts])
         ax.set_xticks(x_coords + 0.4)
@@ -144,7 +144,7 @@ def report_stmt_types(stmts, plot=True):
         pf.format_axis(ax)
         ax.set_ylabel('No. of statements')
         plt.subplots_adjust(left=0.29, bottom=0.34)
-        plt.savefig('stmt_types.pdf')
+        plt.savefig('%s_stmt_types.pdf' % plot_prefix)
 
 
 def report_stmt_participants(stmts):
@@ -157,6 +157,27 @@ def report_stmt_participants(stmts):
                  100 * (missing_participants / float(len(stmts)))))
 
 
+def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
+    # Sort by evidence
+    sorted_stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)
+    logger.info('Top %d statements by evidence:' % list_length)
+    for i in range(list_length):
+        logger.info('%s: %d' % (sorted_stmts[i], len(sorted_stmts[i].evidence)))
+
+    # Distribution of pieces of evidence
+    if plot_prefix:
+        fig = plt.figure(figsize=(2, 2), dpi=300)
+        ax = fig.gca()
+        ax.plot([len(stmt.evidence) for stmt in sorted_stmts])
+        pf.format_axis(ax)
+        ax.set_xlabel('Statement index')
+        ax.set_ylabel('No. of sentences')
+        ax.set_yscale('log')
+        plt.subplots_adjust(left=0.23, bottom=0.16)
+        plt.savefig('%s_evidence_dist.pdf' % plot_prefix)
+    return sorted_stmts
+
+
 if __name__ == '__main__':
     # Load the statements
     if len(sys.argv) < 2:
@@ -166,70 +187,22 @@ if __name__ == '__main__':
     all_stmts = [stmt for paper_stmts in results.values()
                       for stmt in paper_stmts]
 
-    #report_stmt_counts(results)
-    report_grounding(all_stmts)
-    #report_stmt_types(all_stmts)
-    #report_stmt_participants(all_stmts)
+    report_stmt_counts(results, plot_prefix='raw')
+    report_grounding(all_stmts, plot_prefix='raw')
+    report_stmt_types(all_stmts, plot_prefix='raw')
+    report_stmt_participants(all_stmts)
 
+    # Map grounding
+    logger.info('Mapping grounding...')
     gmap = gm.GroundingMapper(gm.default_grounding_map)
     map_stmts = gmap.map_agents(all_stmts)
-    #ren_stmts = gmap.rename_agents(map_stmts)
 
-    report_grounding(map_stmts)
+    report_grounding(map_stmts, plot_prefix='preassembled')
 
-sys.exit()
+    # Combine duplicates
+    logger.info('Removing duplicates...')
+    pa = Preassembler(hierarchies, map_stmts)
+    pa.combine_duplicates()
 
-
-
-
-
-#=----------------------
-
-
-
-# Combining duplicates
-pa = Preassembler(hierarchies, ren_stmts)
-pa.combine_duplicates()
-
-# Sorted by evidence
-sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
-
-
-
-
-sys.exit()
-
-
-
-
-
-# Combining duplicates
-pa = Preassembler(hierarchies, all_stmts)
-pa.combine_duplicates()
-
-# Sorted by evidence
-sorted_stmts = sorted(pa.unique_stmts, key=lambda x: len(x.evidence))
-
-# Distribution of pieces of evidence
-plt.ion()
-plt.figure(figsize=(2, 2), dpi=300)
-ax = plt.gca()
-plt.plot([len(stmt.evidence) for stmt in sorted_stmts])
-pf.format_axis(ax)
-ax.set_xlabel('Statement index')
-ax.set_ylabel('No. of papers')
-ax.set_yscale('log')
-plt.subplots_adjust(left=0.23, bottom=0.16)
-plt.savefig('reach_evidence_dist.pdf')
-
-# Sorted by unique PMIDs
-def uniq_refs_in_evidence(stmt):
-    refs = set([])
-    for ev in stmt.evidence:
-        refs.add(ev.pmid)
-    return len(refs)
-
-sorted_uniq_pmids = deepcopy(sorted_stmts)
-sorted_uniq_pmids = sorted(sorted_uniq_pmids, key=uniq_refs_in_evidence,
-                           reverse=True)
+    report_evidence_distribution(pa.unique_stmts, plot_prefix='preassembled')
 
