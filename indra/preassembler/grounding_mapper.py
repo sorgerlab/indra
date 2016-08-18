@@ -10,7 +10,7 @@ class GroundingMapper(object):
     def __init__(self, gm):
         self.gm = gm
 
-    def map_agents(self, stmts):
+    def map_agents(self, stmts, do_rename=True):
         # Make a copy of the stmts
         mapped_stmts = []
         # Iterate over the statements
@@ -35,6 +35,25 @@ class GroundingMapper(object):
                 else:
                     # Otherwise, update the agent's db_refs field
                     agent.db_refs = self.gm.get(agent_text)
+                    # Are we renaming right now?
+                    if do_rename:
+                        # If there's an INDRA ID, prefer that for the name
+                        if agent.db_refs.get('INDRA'):
+                            agent.name = agent.db_refs.get('INDRA')
+                        # Take a HGNC name from Uniprot next
+                        elif agent.db_refs.get('UP'):
+                            # Try for the HGNC name
+                            hgnc_name = uniprot_client.get_hgnc_name(
+                                                      agent.db_refs.get('UP'))
+                            if hgnc_name is not None:
+                                agent.name = hgnc_name
+                                continue
+                            # Fall back on the Uniprot gene name
+                            up_gene_name = uniprot_client.get_gene_name(
+                                                       agent.db_refs.get('UP'))
+                            if up_gene_name is not None:
+                                agent.name = up_gene_name
+                                continue
             # Check if we should skip the statement
             if not skip_stmt:
                 mapped_stmts.append(mapped_stmt)
