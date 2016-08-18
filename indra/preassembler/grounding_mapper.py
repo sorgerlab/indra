@@ -6,6 +6,8 @@ from itertools import groupby
 from collections import Counter
 import logging
 
+logger = logging.getLogger('grounding_mapper')
+
 class GroundingMapper(object):
     def __init__(self, gm):
         self.gm = gm
@@ -29,7 +31,7 @@ class GroundingMapper(object):
                 # If it's in the map but it maps to None, then filter out
                 # this statement by skipping it
                 elif self.gm.get(agent_text) is None:
-                    print "Skipping %s" % agent_text
+                    logger.debug("Skipping %s" % agent_text)
                     skip_stmt = True
                 # If it has a value that's not None, map it and add it
                 else:
@@ -93,10 +95,6 @@ class GroundingMapper(object):
                 # Fall back to the text string
                 #elif agent.db_refs.get('TEXT'):
                 #    agent.name = agent.db_refs.get('TEXT')
-                if old_name != agent.name:
-                    print "Map %d of %d: %s (%s) --> %s" % \
-                                (stmt_ix+1, len(stmts), old_name,
-                                 agent.db_refs.get('TEXT'), agent.name)
         return mapped_stmts
 
 # TODO: handle the cases when there is more than one entry for the same
