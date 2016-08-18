@@ -326,7 +326,7 @@ def _build_uniprot_hgnc():
         uniprot_hgnc = {}
         for row in rd:
             hgnc_name = row[1]
-            uniprot_id = row[5]
+            uniprot_id = row[6]
             if uniprot_id:
                 uniprot_hgnc[uniprot_id] = hgnc_name
     except IOError:
