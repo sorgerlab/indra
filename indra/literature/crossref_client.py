@@ -136,11 +136,12 @@ def doi_query(pmid, search_limit=10):
         xref_page = xref_meta.get('page')
         # If there's no ISSN info for this article, skip to the next result
         if not xref_issn_list:
-            warnings.warn('No ISSN found for DOI %s, skipping' % doi_url)
+            warnings.warn('No ISSN found for DOI %s, skipping' % xref_doi_url)
             continue
         # If there's no page info for this article, skip to the next result
         if not xref_page:
-            warnings.warn('No page number found for DOI %s, skipping' % doi_url)
+            warnings.warn('No page number found for DOI %s, skipping' %
+                          xref_doi_url)
             continue
         # Now check for an ISSN match by looking for the set intersection
         # between the Pubmed ISSN list and the CrossRef ISSN list.
