@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 from collections import Counter
+from indra.statements import Complex, Agent, Evidence
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
@@ -21,6 +22,7 @@ except IOError:
     logger.error(api_key_file)
     api_key = None
 
+
 def get_interactors(gene_name):
     res_dict = _send_request([gene_name], include_interactors=True)
     interaction_list = []
@@ -38,6 +40,25 @@ def get_interactors(gene_name):
     interaction_counter = sorted(interaction_counter.items(),
                                  key=lambda x: x[1], reverse=True)
     return interaction_counter
+
+
+def get_statements(gene_list):
+    res_dict = _send_request(gene_list, include_interactors=False)
+    statements = []
+    for int_id, interaction in res_dict.items():
+        agent_a_name = interaction['OFFICIAL_SYMBOL_A']
+        agent_b_name = interaction['OFFICIAL_SYMBOL_B']
+        agent_a = Agent(agent_a_name, db_refs={'HGNC': agent_a_name})
+        agent_b = Agent(agent_b_name, db_refs={'HGNC': agent_b_name})
+        ev = Evidence(source_api='biogrid',
+                      source_id=int_id,
+                      pmid=interaction['PUBMED_ID'],
+                      text=None,
+                      annotations=interaction)
+        stmt = Complex([agent_a, agent_b], evidence=ev)
+        statements.append(stmt)
+    return statements
+
 
 def get_publications(gene_names, save_json_name=None):
     """Return evidence publications for interaction between the given genes.
@@ -69,6 +90,7 @@ def get_publications(gene_names, save_json_name=None):
     publications = _extract_publications(res_dict, gene_names)
     return publications
 
+
 class Publication(object):
     def __init__(self, interaction, interaction_id):
         self.pmid = "PMID" + str(interaction['PUBMED_ID'])
@@ -84,6 +106,7 @@ class Publication(object):
     def __repr__(self):
         return "Publication(%s)" % self.pmid
 
+
 def _extract_publications(res_dict, gene_names):
     res_filtered = _filter_results(res_dict, gene_names)
     publications = []
@@ -91,6 +114,7 @@ def _extract_publications(res_dict, gene_names):
         pub = Publication(res_filtered[interaction_id], interaction_id)
         publications.append(pub)
     return publications
+
 
 def _filter_results(res_dict, gene_names):
     filtered_dict = {}
@@ -100,6 +124,7 @@ def _filter_results(res_dict, gene_names):
         if set(interactors) == set(gene_names):
             filtered_dict[interaction_id] = res_dict[interaction_id]
     return filtered_dict
+
 
 def _send_request(gene_names, include_interactors=False):
     if api_key is None:
