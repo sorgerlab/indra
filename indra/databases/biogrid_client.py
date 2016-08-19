@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import requests
+from collections import Counter
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
@@ -19,6 +20,24 @@ except IOError:
     logger.error('BioGRID API key could not be found.')
     logger.error(api_key_file)
     api_key = None
+
+def get_interactors(gene_name):
+    res_dict = _send_request([gene_name], include_interactors=True)
+    interaction_list = []
+    for result in res_dict.values():
+        if result['OFFICIAL_SYMBOL_A'] == gene_name and \
+           result['OFFICIAL_SYMBOL_B'] == gene_name:
+            interaction_list.append(gene_name)
+        elif result['OFFICIAL_SYMBOL_A'] == gene_name:
+            interaction_list.append(result['OFFICIAL_SYMBOL_B'])
+        elif result['OFFICIAL_SYMBOL_B'] == gene_name:
+            interaction_list.append(result['OFFICIAL_SYMBOL_A'])
+        else:
+            assert False, "Interaction doesn't contain target gene!"
+    interaction_counter = Counter(interaction_list)
+    interaction_counter = sorted(interaction_counter.items(),
+                                 key=lambda x: x[1], reverse=True)
+    return interaction_counter
 
 def get_publications(gene_names, save_json_name=None):
     """Return evidence publications for interaction between the given genes.
@@ -82,7 +101,7 @@ def _filter_results(res_dict, gene_names):
             filtered_dict[interaction_id] = res_dict[interaction_id]
     return filtered_dict
 
-def _send_request(gene_names):
+def _send_request(gene_names, include_interactors=False):
     if api_key is None:
         logger.error('BioGRID cannot be used without API key')
         return None
@@ -90,7 +109,7 @@ def _send_request(gene_names):
               'geneList': '|'.join(gene_names),
               'taxId': '9606',
               'format': 'json',
-              'includeInteractors': False,
+              'includeInteractors': include_interactors,
               'accesskey': api_key}
     res = requests.get(biogrid_url, params)
     res.raise_for_status()
