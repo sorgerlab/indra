@@ -27,9 +27,12 @@ def id_lookup(paper_id, idtype):
 
     ids = {'doi': None, 'pmid': None, 'pmcid': None}
     pmc_id_results = pmc_client.id_lookup(paper_id, idtype)
+    # Start with the results of the PMC lookup and then override with the
+    # provided ID
     ids['pmid'] = pmc_id_results.get('pmid')
     ids['pmcid'] = pmc_id_results.get('pmcid')
     ids['doi'] = pmc_id_results.get('doi')
+    ids[idtype] = paper_id
     # If we gave a DOI, then our work is done after looking for PMID and PMCID
     if idtype == 'doi':
         return ids
