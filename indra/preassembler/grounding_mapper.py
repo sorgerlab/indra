@@ -49,6 +49,7 @@ class GroundingMapper(object):
                                                       agent.db_refs.get('UP'))
                             if hgnc_name is not None:
                                 agent.name = hgnc_name
+                                agent.db_refs['HGNC'] = hgnc_name
                                 continue
                             # Fall back on the Uniprot gene name
                             up_gene_name = uniprot_client.get_gene_name(
@@ -81,6 +82,7 @@ class GroundingMapper(object):
                                                     agent.db_refs.get('UP'))
                     if hgnc_name is not None:
                         agent.name = hgnc_name
+                        agent.db_refs['HGNC'] = hgnc_name
                         continue
                     # Fall back on the Uniprot gene name
                     up_gene_name = uniprot_client.get_gene_name(
