@@ -28,6 +28,7 @@ if __name__ == '__main__':
         print "Usage: %s reach_stmts_file" % sys.argv[0]
         sys.exit()
     results = load_file(sys.argv[1])
+
     all_stmts = [stmt for paper_stmts in results.values()
                       for stmt in paper_stmts]
 
@@ -53,28 +54,51 @@ if __name__ == '__main__':
                                          for ag in stmt.members]))
 
     # Get complexes from BioGrid and combine duplicates
-    bg_complexes = bg.get_statements(genes)
-    pa_bg = Preassembler(hierarchies, bg_complexes)
-    pa_bg.combine_duplicates()
-    bg_complexes = pa_bg.unique_stmts
+    num_genes_per_query = 50
+    start_indices = range(0, len(genes), num_genes_per_query)
+    end_indices = [i + num_genes_per_query
+                   if i + num_genes_per_query < len(genes) else len(genes)
+                   for i in start_indices]
+    bg_complexes = []
+    for i in range(len(start_indices)):
+        logger.info("Querying biogrid for %s" %
+                    str(genes[start_indices[i]:end_indices[i]]))
+        bg_complexes += (bg.get_statements(
+                                genes[start_indices[i]:end_indices[i]]))
 
-    reach_bg_matches = []
-    for reach_stmt in protein_complexes:
-        bg_matches = []
-        for bg_stmt in bg_complexes:
-            if bg_stmt.refinement_of(reach_stmt, hierarchies):
-                bg_matches.append(bg_stmt.evidence[0].source_id)
-                print 'BG %s refines/matches REACH %s' % (bg_stmt, reach_stmt)
-        if bg_matches:
-            reach_bg_matches.append((reach_stmt, bg_matches))
+    # Filter out Biogrid statements not involving genes in the gene list
+    # (this will make duplicate removal more efficient
+    bg_filt = []
+    for stmt in bg_complexes:
+        if stmt.members[0].name in genes and \
+           stmt.members[1].name in genes:
+            bg_filt.append(stmt)
+    # Might as well free up some memory
+    del bg_complexes
 
-    not_matched = set(protein_complexes).difference(
-                        set([t[0] for t in reach_bg_matches]))
-    not_matched = sorted(not_matched, key=lambda x: len(x.evidence),
-                         reverse=True)
+    logger.info("Combining duplicates with biogrid...")
+    pa = Preassembler(hierarchies, bg_filt + protein_complexes)
+    pa.combine_duplicates()
+
+    reach_only = []
+    bg_only = []
+    reach_and_bg = []
+    for stmt in pa.unique_stmts:
+        evidence_source_list = set([])
+        for e in stmt.evidence:
+            evidence_source_list.add(e.source_api)
+        if 'reach' in evidence_source_list and \
+           'biogrid' in evidence_source_list:
+            reach_and_bg.append(stmt)
+        elif 'reach' in evidence_source_list and \
+             'biogrid' not in evidence_source_list:
+            reach_only.append(stmt)
+        elif 'reach' not in evidence_source_list and \
+             'biogrid' in evidence_source_list:
+            bg_only.append(stmt)
 
     rows = []
-    for stmt in not_matched:
+    for stmt in reach_only:
         rows.append([stmt.members[0].name, stmt.members[1].name,
                      len(stmt.evidence)])
     with open('unmatched_complexes.tsv', 'w') as f:

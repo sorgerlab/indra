@@ -43,7 +43,7 @@ def get_interactors(gene_name):
 
 
 def get_statements(gene_list):
-    res_dict = _send_request(gene_list, include_interactors=False)
+    res_dict = _send_request(gene_list, include_interactors=True)
     statements = []
     for int_id, interaction in res_dict.items():
         agent_a_name = interaction['OFFICIAL_SYMBOL_A']
