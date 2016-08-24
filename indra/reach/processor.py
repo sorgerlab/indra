@@ -348,10 +348,12 @@ class ReachProcessor(object):
         return agent
 
     def _get_context(self, frame_term):
+        context = {}
+        context['found_by'] = frame_term['found_by']
         try:
             context_id = frame_term['context']
         except KeyError:
-            return {}
+            return context
         # For backwards compatibility with older versions
         # of REACH
         if isinstance(context_id, dict):
@@ -366,7 +368,7 @@ class ReachProcessor(object):
             qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % context_id[0]
             res = self.tree.execute(qstr)
             if res is None:
-                return {}
+                return context
             context_frame = res.next()
             facets = context_frame['facets']
             cell_line = facets.get('cell-line')
@@ -375,7 +377,6 @@ class ReachProcessor(object):
             location = facets.get('location')
             tissue = facets.get('tissue_type')
             organ = facets.get('organ')
-        context = {}
         context['species'] = species
         context['cell_type'] = cell_type
         context['cell_line'] = cell_line
