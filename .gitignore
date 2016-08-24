@@ -1,6 +1,7 @@
 # INDRA specific ignores
 elsevier_api_key
 cr_clickthrough_key
+biogrid_api_key
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
