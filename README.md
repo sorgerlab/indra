@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sorgerlab/indra.svg?branch=travis_ci)](https://travis-ci.org/sorgerlab/indra)
+[![Build Status](https://travis-ci.org/sorgerlab/indra.svg?branch=travis_ci)](https://travis-ci.org/sorgerlab/indra) [![Documentation Status](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
 
 INDRA
 =====
@@ -134,4 +134,5 @@ biopax_processor.get_phosphorylation()
 # At this point, biopax_processor.statements contains a list of INDRA 
 # Phosphorylation statements extracted from the paths-from-to query.
 ```
+
 
