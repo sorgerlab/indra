@@ -6,18 +6,24 @@ import xml.etree.ElementTree as ET
 
 logger = logging.getLogger('elsevier')
 
-# THIS FILE IS NOT UNDER VERSION CONTROL
+# THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
 # For more information see http://dev.elsevier.com/
 api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'elsevier_api_key')
 
-# Read the API key
+# Read the API key from the file
 try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
     api_key = None
 
+# THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
+elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
+elsevier_article_url = '%s/article/doi' % elsevier_api_url
+elsevier_search_url = '%s/search/scidir' % elsevier_api_url
+
+# Namespaces for Elsevier XML elements
 elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'article': 'http://www.elsevier.com/xml/svapi/article/dtd',
                'ja': 'http://www.elsevier.com/xml/ja/dtd',
@@ -26,12 +32,13 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'atom': 'http://www.w3.org/2005/Atom',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 
+
 @lru_cache(maxsize=100)
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
-    url = 'http://api.elsevier.com/content/article/doi/%s' % doi
+    url = '%s/%s' % (elsevier_article_url, doi)
     if api_key is None:
         logging.error('Missing API key at %s, could not download article.' %
                       api_key_file)
@@ -45,6 +52,7 @@ def download_article(doi):
     xml = res.read()
     return xml
 
+
 def get_abstract(doi):
     """Get the abstract of an article from Elsevier."""
     xml = download_article(doi)
@@ -53,6 +61,7 @@ def get_abstract(doi):
     abstract = coredata.find('dc:description', elsevier_ns)
     abs_text = abstract.text
     return abs_text
+
 
 def get_article(doi, output='txt'):
     """Get the full body of an article from Elsevier. There are two output
@@ -75,7 +84,8 @@ def get_article(doi, output='txt'):
     if output == 'xml':
         return main_body
     elif output == 'txt':
-        sections = main_body.findall('common:sections/common:section', elsevier_ns)
+        sections = main_body.findall('common:sections/common:section',
+                                     elsevier_ns)
         full_txt = ''
         for s in sections:
             # Paragraphs that are directly under the section
@@ -97,14 +107,16 @@ def get_article(doi, output='txt'):
         return None
     return full_txt
 
+
 @lru_cache(maxsize=100)
 def get_dois(query_str, count=100):
-    """Search ScienceDirect through the API for articles. See 
-    http://api.elsevier.com/content/search/fields/scidir 
-    for constructing a query string to pass here.
-    Example: 'abstract(BRAF) AND all("colorectal cancer")'
+    """Search ScienceDirect through the API for articles.
+
+    See http://api.elsevier.com/content/search/fields/scidir for constructing a
+    query string to pass here.  Example: 'abstract(BRAF) AND all("colorectal
+    cancer")'
     """
-    url = 'http://api.elsevier.com/content/search/scidir'
+    url = '%s/%s' % (elsevier_search_url, query_str)
     if api_key is None:
         logging.error('Missing API key at %s, could not perform search.' %
                       api_key_file)
