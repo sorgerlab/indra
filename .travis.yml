@@ -15,8 +15,8 @@ install:
   - pip install functools32
   - pip install jsonschema coverage python-coveralls boto3
   # PySB and dependencies
-  - wget http://bionetgen.googlecode.com/files/BioNetGen-2.2.5-stable.zip
-  - unzip -q BioNetGen-2.2.5-stable.zip
+  - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
+  - unzip -q 2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
