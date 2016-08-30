@@ -1,0 +1,6 @@
+Growth-factor proteins activate EGFR, ERBB2 and FGFR.
+Growth-factor proteins activate PDGFR.
+Growth-factor proteins activate MET, ROS1 and ALK.
+Growth-factor proteins activate HPK1, which activates TAK1.
+TAK1 activates MKK4 and MKK7. MKK4 and MKK7 activate JNK1 and JNK2.
+JNK1 and JNK2 activates JUN .
