@@ -7,6 +7,10 @@ try:
 except ImportError:
     pass
 try:
+    from sif_assembler import SifAssembler
+except ImportError:
+    pass
+try:
     from cx_assembler import CxAssembler
 except ImportError:
     pass
