@@ -1,0 +1,2 @@
+< MTOR-RPTOR-MLST8 activates RPS6KA.
+> MAPK1 and MAPK3 activate RPS6KA.
