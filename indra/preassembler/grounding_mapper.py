@@ -104,7 +104,7 @@ class GroundingMapper(object):
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter='\t')
+        mapreader = csv.reader(f, delimiter=',', quotechar='"')
         for row in mapreader:
             key = row[0]
             db_refs = {'TEXT': key}
@@ -202,21 +202,23 @@ def get_agents_with_name(name, stmts):
 
 
 def save_base_map(filename, grouped_by_text):
+    rows = []
+    for group in grouped_by_text:
+        text_string = group[0]
+        for db, id, count in group[1]:
+            if db == 'UP':
+                name = uniprot_client.get_mnemonic(id)
+            else:
+                name = ''
+            rows.append([text_string.encode('utf8'), db, id, count, name])
     with open(filename, 'w') as f:
-        for group in grouped_by_text:
-            text_string = group[0]
-            for db, id, count in group[1]:
-                if db == 'UP':
-                    name = uniprot_client.get_mnemonic(id)
-                else:
-                    name = ''
-                line = '%s\t%s\t%s\t%s\t%s\n' % \
-                        (text_string, db, id, count, name)
-                f.write(line.encode('utf8'))
+        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerows(rows)
 
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
-                                  '../resources/grounding_map_curated.txt')
+                                  '../../bioentities/grounding_map.csv')
 default_grounding_map = load_grounding_map(default_grounding_map_path)
 gm = default_grounding_map
 
