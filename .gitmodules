@@ -1,0 +1,3 @@
+[submodule "bioentities"]
+	path = bioentities
+	url = git@github.com:sorgerlab/bioentities.git
