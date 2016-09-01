@@ -349,7 +349,7 @@ class TripsProcessor(object):
             ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
                           epistemics=epi)
             location = self._get_event_location(event)
-            st = ActiveForm(affected_agent, 'active', True, evidence=ev)
+            st = ActiveForm(affected_agent, 'activity', True, evidence=ev)
             _stmt_location_to_agents(st, location)
             self.statements.append(st)
             self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
