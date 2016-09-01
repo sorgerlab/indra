@@ -105,7 +105,9 @@ class GroundingMapper(object):
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter='\t')
+        mapreader = csv.reader(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL,
+                               lineterminator='\r\n')
         rows = [row for row in mapreader]
 
     for row in rows:
