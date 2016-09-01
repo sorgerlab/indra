@@ -19,6 +19,7 @@ abbrevs = {
     'glycosylation': 'glycosyl',
     'methylation': 'methyl',
     'modification': 'mod',
+    'active': 'act'
 }
 
 states = {
@@ -31,6 +32,7 @@ states = {
     'glycosylation': ['n', 'y'],
     'methylation': ['n', 'y'],
     'modification': ['n', 'y'],
+    'active': ['i', 'a']
 }
 
 class SBGNAssembler(object):
@@ -114,6 +116,9 @@ class SBGNAssembler(object):
             elif isinstance(s, ist.Complex):
                 class_name = 'association'
                 consumed = s.members
+            elif isinstance(s, ist.Activation):
+                class_name = 'process'
+                consumed = [s.obj]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
@@ -146,6 +151,14 @@ class SBGNAssembler(object):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.enz.matches_key()],
+                          target=pg_id,
+                          id=make_id(),
+                          )
+                    )
+            if isinstance(s, ist.Activation):
+                map.append(
+                    E.arc(class_('catalysis'),
+                          source=agent_ids[s.subj.matches_key()],
                           target=pg_id,
                           id=make_id(),
                           )
@@ -193,6 +206,10 @@ def statement_product(stmt):
         for member in stmt.members[1:]:
             bc = ist.BoundCondition(member, True)
             product.bound_conditions.append(bc)
+    elif isinstance(stmt, ist.Activation):
+        product = copy.deepcopy(stmt.obj)
+        mc = ist.ModCondition('active')
+        product.mods.append(mc)
     else:
         logger.warning("WARNING: skipping %s" % type(stmt))
         product = None
