@@ -120,7 +120,7 @@ class SBGNAssembler(object):
                 class_name = 'process'
                 consumed = [s.obj]
             elif isinstance(s, ist.ActiveForm):
-                class_name = 'proccess'
+                class_name = 'process'
                 consumed = [s.agent]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
