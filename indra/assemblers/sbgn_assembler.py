@@ -120,7 +120,7 @@ class SBGNAssembler(object):
                 class_name = 'process'
                 consumed = [s.obj]
             elif isinstance(s, ist.ActiveForm):
-                class_name = 'proccess'
+                class_name = 'process'
                 consumed = [s.agent]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
@@ -162,14 +162,6 @@ class SBGNAssembler(object):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.subj.matches_key()],
-                          target=pg_id,
-                          id=make_id(),
-                          )
-                    )
-            if isinstance(s, ist.ActiveForm):
-                map.append(
-                    E.arc(class_('catalysis'),
-                          source=agent_ids[s.agent.matches_key()],
                           target=pg_id,
                           id=make_id(),
                           )

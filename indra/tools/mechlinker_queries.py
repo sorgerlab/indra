@@ -17,6 +17,7 @@ def print_linked_stmt(stmt):
             final_txt = final_txt[:-2] + ', and '
     final_txt += 'Is it therefore true that ' + query_txt[:-1] + '?'
     print final_txt
+    return final_txt
 
 if __name__ == '__main__':
     fname = 'models/rasmachine/rem/model.pkl'
