@@ -119,6 +119,9 @@ class SBGNAssembler(object):
             elif isinstance(s, ist.Activation):
                 class_name = 'process'
                 consumed = [s.obj]
+            elif isinstance(s, ist.ActiveForm):
+                class_name = 'proccess'
+                consumed = [s.agent]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
@@ -159,6 +162,14 @@ class SBGNAssembler(object):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.subj.matches_key()],
+                          target=pg_id,
+                          id=make_id(),
+                          )
+                    )
+            if isinstance(s, ist.ActiveForm):
+                map.append(
+                    E.arc(class_('catalysis'),
+                          source=agent_ids[s.agent.matches_key()],
                           target=pg_id,
                           id=make_id(),
                           )
@@ -208,6 +219,10 @@ def statement_product(stmt):
             product.bound_conditions.append(bc)
     elif isinstance(stmt, ist.Activation):
         product = copy.deepcopy(stmt.obj)
+        mc = ist.ModCondition('active')
+        product.mods.append(mc)
+    elif isinstance(stmt, ist.ActiveForm):
+        product = copy.deepcopy(stmt.agent)
         mc = ist.ModCondition('active')
         product.mods.append(mc)
     else:
