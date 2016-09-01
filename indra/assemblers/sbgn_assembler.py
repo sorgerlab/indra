@@ -166,14 +166,6 @@ class SBGNAssembler(object):
                           id=make_id(),
                           )
                     )
-            if isinstance(s, ist.ActiveForm):
-                map.append(
-                    E.arc(class_('catalysis'),
-                          source=agent_ids[s.agent.matches_key()],
-                          target=pg_id,
-                          id=make_id(),
-                          )
-                    )
         return lxml.etree.tostring(root, pretty_print=True)
 
 SBGNState = collections.namedtuple('SBGNState', 'variable value')
