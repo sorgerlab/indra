@@ -255,10 +255,11 @@ if __name__ == '__main__':
         stmts += stmt_list
 
     twg = agent_texts_with_grounding(stmts)
+    save_base_map('%s_twg.csv' % statement_file, twg)
 
     # Filter out those entries that are NOT already in the grounding map
     filtered_twg = [entry for entry in twg
                     if entry[0] not in default_grounding_map.keys()]
 
-    save_base_map('%s_filtered_twg.csv' % statement_file, filtered_twg)
+    save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
 
