@@ -148,7 +148,7 @@ def get_sentences_for_agent(text, stmts):
     for stmt in stmts:
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
-                sentences.append(stmt.evidence[0].text)
+                sentences.append((stmt.evidence[0].pmid, stmt.evidence[0].text))
     return sentences
 
 
@@ -232,6 +232,28 @@ def save_base_map(filename, grouped_by_text):
         csvwriter.writerows(rows)
         f.write('\r\n')
 
+def protein_map_from_twg(twg):
+    pass
+
+def save_sentences(twg, stmts, filename, agent_limit=4000):
+    sentences = []
+    unmapped_texts = [t[0] for t in twg]
+    counter = 0
+    logger.info('Getting sentences for top %d unmapped agent texts.' %
+                agent_limit)
+    for text in unmapped_texts:
+        agent_sentences = get_sentences_for_agent(text, stmts)
+        sentences += map(lambda tup: (text,) + tup, agent_sentences)
+        counter += 1
+        if counter >= agent_limit:
+            break
+    # Write sentences to CSV file
+    with open(filename, 'w') as f:
+        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL,
+                               lineterminator='\r\n')
+        csvwriter.writerows(sentences)
+
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
                                   '../../bioentities/grounding_map.csv')
 default_grounding_map = load_grounding_map(default_grounding_map_path)
@@ -255,6 +277,9 @@ if __name__ == '__main__':
         stmts += stmt_list
 
     twg = agent_texts_with_grounding(stmts)
+
+    prot_map = protein_map_from_twg(twg)
+
     save_base_map('%s_twg.csv' % statement_file, twg)
 
     # Filter out those entries that are NOT already in the grounding map
@@ -263,3 +288,6 @@ if __name__ == '__main__':
 
     save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
 
+    # For each unmapped string, get sentences and write to file
+    save_sentences(filtered_twg, stmts,
+                   '%s_unmapped_sentences.csv' % statement_file)
