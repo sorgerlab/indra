@@ -1,5 +1,6 @@
 import os
 import csv
+import sys
 from copy import deepcopy
 from indra.databases import uniprot_client
 from itertools import groupby
@@ -104,23 +105,28 @@ class GroundingMapper(object):
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter='\t')
-        for row in mapreader:
-            key = row[0]
-            db_refs = {'TEXT': key}
-            for pair_ix in range(0, 2):
-                col_ix = (pair_ix * 2) + 1
-                db = row[col_ix]
-                db_id = row[col_ix + 1]
-                if db == '' or db == 'None' or db_id == '' or db_id == 'None':
-                    continue
-                else:
-                    db_refs[db] = db_id
+        mapreader = csv.reader(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL,
+                               lineterminator='\r\n')
+        rows = [row for row in mapreader]
+
+    for row in rows:
+        key = row[0]
+        db_refs = {'TEXT': key}
+        keys = [entry for entry in row[1::2] if entry != '']
+        values = [entry for entry in row[2::2] if entry != '']
+        if len(keys) != len(values):
+            logger.info('ERROR: Mismatched keys and values in row %s' %
+                        str(row))
+            continue
+        else:
+            db_refs.update(dict(zip(keys, values)))
             if len(db_refs.keys()) > 1:
                 g_map[key] = db_refs
             else:
                 g_map[key] = None
     return g_map
+
 
 # Some useful functions for analyzing the grounding of sets of statements
 # Put together all agent texts along with their grounding
@@ -142,7 +148,7 @@ def get_sentences_for_agent(text, stmts):
     for stmt in stmts:
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
-                sentences.append(stmt.evidence[0].text)
+                sentences.append((stmt.evidence[0].pmid, stmt.evidence[0].text))
     return sentences
 
 
@@ -156,11 +162,14 @@ def agent_texts_with_grounding(stmts):
     refs_counter = Counter(refs)
     refs_counter_dict = [(dict(entry[0]), entry[1])
                          for entry in refs_counter.items()]
+    # First, sort by text
     refs_counter_dict_sorted = \
             refs_counter_dict.sort(key=lambda x: x[0].get('TEXT'))
 
+    # Then group by text
     grouped_by_text = []
     for k, g in groupby(refs_counter_dict, key=lambda x: x[0].get('TEXT')):
+        # Total occurrences of this agent text
         total = 0
         entry = [k]
         db_ref_list = []
@@ -175,11 +184,14 @@ def agent_texts_with_grounding(stmts):
                 else:
                     db_ref_list.append((db, id, count))
             total += count
+        # Sort the db_ref_list by the occurrences of each grounding
         entry.append(tuple(sorted(db_ref_list, key=lambda x: x[2],
                      reverse=True)))
+        # Now add the total frequency to the entry
         entry.append(total)
+        # And add the entry to the overall list
         grouped_by_text.append(tuple(entry))
-
+    # Sort the list by the total number of occurrences of each unique key
     grouped_by_text.sort(key=lambda x: x[2], reverse=True)
     return grouped_by_text
 
@@ -202,21 +214,84 @@ def get_agents_with_name(name, stmts):
 
 
 def save_base_map(filename, grouped_by_text):
-    with open(filename, 'w') as f:
-        for group in grouped_by_text:
-            text_string = group[0]
-            for db, id, count in group[1]:
-                if db == 'UP':
-                    name = uniprot_client.get_mnemonic(id)
-                else:
-                    name = ''
-                line = '%s\t%s\t%s\t%s\t%s\n' % \
-                        (text_string, db, id, count, name)
-                f.write(line.encode('utf8'))
+    rows = []
+    for group in grouped_by_text:
+        text_string = group[0]
+        for db, id, count in group[1]:
+            if db == 'UP':
+                name = uniprot_client.get_mnemonic(id)
+            else:
+                name = ''
+            row = [text_string.encode('utf8'), db, id, count, name]
+            rows.append(row)
 
+    with open(filename, 'w') as f:
+        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL,
+                               lineterminator='\r\n')
+        csvwriter.writerows(rows)
+        f.write('\r\n')
+
+def protein_map_from_twg(twg):
+    """Build map of entity texts to validated protein grounding.
+
+    Looks at the grounding of the entity texts extracted from the statements
+    and finds proteins where there is grounding to a human protein that maps to
+    an HGNC name that is an exact match to the entity text. Returns a dict that
+    can be used to update/expand the grounding map.
+    """
+
+    protein_map = {}
+    for agent_text, grounding_list, total_count in twg:
+        # If 'UP' (Uniprot) not one of the grounding entries for this text,
+        # then we skip it.
+        if not 'UP' in [entry[0] for entry in grounding_list]:
+            continue
+        # Otherwise, collect all the Uniprot IDs for this protein.
+        uniprot_ids = [entry[1] for entry in grounding_list
+                                if entry[0] == 'UP']
+        # For each Uniprot ID, look up the species
+        for uniprot_id in uniprot_ids:
+            # If it's not a human protein, skip it
+            mnemonic = uniprot_client.get_mnemonic(uniprot_id)
+            if mnemonic is None or not mnemonic.endswith('_HUMAN'):
+                continue
+            # Otherwise, look up the gene name in HGNC and match against the
+            # agent text
+            gene_name = uniprot_client.get_hgnc_name(uniprot_id)
+            if gene_name is None:
+                logger.info('No gene name found for %s/%s' %
+                            (uniprot_id, mnemonic))
+                continue
+            logger.info('gene_name for %s: %s' % (uniprot_id, gene_name))
+            if agent_text.upper() == gene_name.upper():
+                logger.info('%s exact match for %s' % (agent_text, gene_name))
+                protein_map[agent_text] = {'TEXT': agent_text, 'UP': uniprot_id}
+            else:
+                logger.info('%s not match for %s' % (agent_text, gene_name))
+    return protein_map
+
+def save_sentences(twg, stmts, filename, agent_limit=300):
+    sentences = []
+    unmapped_texts = [t[0] for t in twg]
+    counter = 0
+    logger.info('Getting sentences for top %d unmapped agent texts.' %
+                agent_limit)
+    for text in unmapped_texts:
+        agent_sentences = get_sentences_for_agent(text, stmts)
+        sentences += map(lambda tup: (text,) + tup, agent_sentences)
+        counter += 1
+        if counter >= agent_limit:
+            break
+    # Write sentences to CSV file
+    with open(filename, 'w') as f:
+        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
+                               quoting=csv.QUOTE_MINIMAL,
+                               lineterminator='\r\n')
+        csvwriter.writerows(sentences)
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
-                                  '../resources/grounding_map_curated.txt')
+                                  '../../bioentities/grounding_map.csv')
 default_grounding_map = load_grounding_map(default_grounding_map_path)
 gm = default_grounding_map
 
@@ -224,7 +299,13 @@ gm = default_grounding_map
 if __name__ == '__main__':
     import pickle
 
-    with open('trips_b4_stmts.pkl') as f:
+    if len(sys.argv) != 2:
+        print "Usage: %s stmt_file" % sys.argv[0]
+        sys.exit()
+    statement_file = sys.argv[1]
+
+    logger.info("Opening statement file %s" % statement_file)
+    with open(statement_file) as f:
         st = pickle.load(f)
 
     stmts = []
@@ -233,9 +314,20 @@ if __name__ == '__main__':
 
     twg = agent_texts_with_grounding(stmts)
 
+    save_base_map('%s_twg.csv' % statement_file, twg)
+
     # Filter out those entries that are NOT already in the grounding map
     filtered_twg = [entry for entry in twg
                     if entry[0] not in default_grounding_map.keys()]
 
-    #save_base_map('trips_batch4_base_map.txt', filtered_twg)
+    # For proteins that aren't explicitly grounded in the grounding map,
+    # check for trivial corrections by building the protein map
+    prot_map = protein_map_from_twg(twg)
+    filtered_twg = [entry for entry in filtered_twg
+                    if entry[0] not in prot_map.keys()]
 
+    save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
+
+    # For each unmapped string, get sentences and write to file
+    save_sentences(filtered_twg, stmts,
+                   '%s_unmapped_sentences.csv' % statement_file)

@@ -305,11 +305,11 @@ class ReachProcessor(object):
             elif ns == 'interpro':
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':
-                db_refs['CHEBI'] = xr['id'][6:]
+                db_refs['CHEBI'] = xr['id']
             elif ns == 'go':
-                db_refs['GO'] = xr['id'][3:]
+                db_refs['GO'] = xr['id']
             elif ns == 'hmdb':
-                db_refs['HMDB'] = xr['id'][4:]
+                db_refs['HMDB'] = xr['id']
         db_refs['TEXT'] = entity_term['text']
 
         mod_terms = entity_term.get('modifications')
