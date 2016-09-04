@@ -233,9 +233,45 @@ def save_base_map(filename, grouped_by_text):
         f.write('\r\n')
 
 def protein_map_from_twg(twg):
-    pass
+    """Build map of entity texts to validated protein grounding.
 
-def save_sentences(twg, stmts, filename, agent_limit=4000):
+    Looks at the grounding of the entity texts extracted from the statements
+    and finds proteins where there is grounding to a human protein that maps to
+    an HGNC name that is an exact match to the entity text. Returns a dict that
+    can be used to update/expand the grounding map.
+    """
+
+    protein_map = {}
+    for agent_text, grounding_list, total_count in twg:
+        # If 'UP' (Uniprot) not one of the grounding entries for this text,
+        # then we skip it.
+        if not 'UP' in [entry[0] for entry in grounding_list]:
+            continue
+        # Otherwise, collect all the Uniprot IDs for this protein.
+        uniprot_ids = [entry[1] for entry in grounding_list
+                                if entry[0] == 'UP']
+        # For each Uniprot ID, look up the species
+        for uniprot_id in uniprot_ids:
+            # If it's not a human protein, skip it
+            mnemonic = uniprot_client.get_mnemonic(uniprot_id)
+            if mnemonic is None or not mnemonic.endswith('_HUMAN'):
+                continue
+            # Otherwise, look up the gene name in HGNC and match against the
+            # agent text
+            gene_name = uniprot_client.get_hgnc_name(uniprot_id)
+            if gene_name is None:
+                logger.info('No gene name found for %s/%s' %
+                            (uniprot_id, mnemonic))
+                continue
+            logger.info('gene_name for %s: %s' % (uniprot_id, gene_name))
+            if agent_text.upper() == gene_name.upper():
+                logger.info('%s exact match for %s' % (agent_text, gene_name))
+                protein_map[agent_text] = {'TEXT': agent_text, 'UP': uniprot_id}
+            else:
+                logger.info('%s not match for %s' % (agent_text, gene_name))
+    return protein_map
+
+def save_sentences(twg, stmts, filename, agent_limit=300):
     sentences = []
     unmapped_texts = [t[0] for t in twg]
     counter = 0
@@ -268,7 +304,7 @@ if __name__ == '__main__':
         sys.exit()
     statement_file = sys.argv[1]
 
-    print "Opening statement file", statement_file
+    logger.info("Opening statement file %s" % statement_file)
     with open(statement_file) as f:
         st = pickle.load(f)
 
@@ -278,13 +314,17 @@ if __name__ == '__main__':
 
     twg = agent_texts_with_grounding(stmts)
 
-    prot_map = protein_map_from_twg(twg)
-
     save_base_map('%s_twg.csv' % statement_file, twg)
 
     # Filter out those entries that are NOT already in the grounding map
     filtered_twg = [entry for entry in twg
                     if entry[0] not in default_grounding_map.keys()]
+
+    # For proteins that aren't explicitly grounded in the grounding map,
+    # check for trivial corrections by building the protein map
+    prot_map = protein_map_from_twg(twg)
+    filtered_twg = [entry for entry in filtered_twg
+                    if entry[0] not in prot_map.keys()]
 
     save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
 
