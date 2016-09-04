@@ -15,6 +15,11 @@ if __name__ == '__main__':
         stmts_by_paper = pickle.load(f)
 
     pmids = stmts_by_paper.keys()
+    if sample_size >= len(pmids):
+        print "Sample size exceeds the total number of papers."
+        print "No need to sample."
+        sys.exit()
+
     sample_ids = np.random.choice(pmids, sample_size, replace=False)
     print "Building subset..."
     subset = {paper_id: stmts_by_paper[paper_id] for paper_id in sample_ids}
