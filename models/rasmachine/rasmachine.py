@@ -234,10 +234,12 @@ if __name__ == '__main__':
         search_terms = [l.strip() for l in
                     open(search_terms_file, 'rt').readlines()]
         if search_terms:
-            pmids += get_searchterm_pmids(search_terms) 
+            pmids += get_searchterm_pmids(search_terms, num_days=1)
     if not pmids:
         print 'No PMIDs found.'
         sys.exit()
+    else:
+        print '%s PMIDs found.' % len(pmids)
 
     # Load the model
     print 'Loading model'
