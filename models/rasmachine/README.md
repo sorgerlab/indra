@@ -24,6 +24,10 @@ credentials in the model folder.
 Extending a model
 =================
 
+First, install the machine-specific dependencies::
+
+    pip install -r requirements.txt
+
 To extend a model, run
 
     ./run_machine.sh model_name
