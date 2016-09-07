@@ -117,21 +117,16 @@ class SBGNAssembler(object):
                 glyph = glyph_for_complex(a)
             map.append(glyph)
         for s in self.statements:
-            if isinstance(s, ist.Modification):
+            if isinstance(s, ist.Modification) or \
+                isinstance(s, ist.Activation) or \
+                isinstance(s, ist.ActiveForm):
                 class_name = 'process'
-                consumed = [s.sub]
             elif isinstance(s, ist.Complex):
                 class_name = 'association'
-                consumed = s.members
-            elif isinstance(s, ist.Activation):
-                class_name = 'process'
-                consumed = [s.obj]
-            elif isinstance(s, ist.ActiveForm):
-                class_name = 'process'
-                consumed = [s.agent]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
+            consumed = statement_consumed(s)
             st_prod = statement_product(s)
             if st_prod is None:
                 logger.warning("WARNING: skipping %s" % type(s))
@@ -141,6 +136,8 @@ class SBGNAssembler(object):
             process_glyph = E.glyph(E.bbox(x='0', y='0', w='20', h='20'),
                                     class_(class_name), id=pg_id)
             map.append(process_glyph)
+            print consumed
+            print produced
             for c in consumed:
                 map.append(
                     E.arc(class_('consumption'),
@@ -194,8 +191,13 @@ def agents_for_statements(statements):
     return [a for stmt in statements for a in stmt.agent_list()]
 
 def transformed_agents(statements):
-    agents = [statement_product(s) for s in statements]
     # Following filter not needed once all statement types are implemented.
+    agents = []
+    for s in statements:
+        cs = statement_consumed(s)
+        if cs is not None:
+            agents += cs
+    agents += [statement_product(s) for s in statements]
     return [a for a in agents if a is not None]
 
 def statement_product(stmt):
@@ -203,6 +205,15 @@ def statement_product(stmt):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
         product.mods.append(mc)
+    elif isinstance(stmt, ist.Dephosphorylation):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
+        product.mods = []
+        stmt_mc = ist.ModCondition('phosphorylation',
+                                   stmt.residue, stmt.position)
+        for mod in stmt.sub.mods:
+            if not mod.matches(stmt_mc):
+                product.mods.append(mc)
     elif isinstance(stmt, ist.Ubiquitination):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
@@ -228,6 +239,30 @@ def statement_product(stmt):
         logger.warning("WARNING: skipping %s" % type(stmt))
         product = None
     return product
+
+def statement_consumed(stmt):
+    if isinstance(stmt, ist.Phosphorylation):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Ubiquitination):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Acetylation):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Dephosphorylation):
+        stmt_mc = ist.ModCondition('phosphorylation',
+                                   stmt.residue, stmt.position)
+        consumed1 = copy.deepcopy(stmt.sub)
+        consumed1.mods.append(stmt_mc)
+        consumed = [consumed1]
+    elif isinstance(stmt, ist.Complex):
+        consumed = stmt.members
+    elif isinstance(stmt, ist.Activation):
+        consumed = [copy.deepcopy(stmt.obj)]
+    elif isinstance(stmt, ist.ActiveForm):
+        consumed = [copy.deepcopy(stmt.agent)]
+    else:
+        logger.warning("WARNING: skipping %s" % type(stmt))
+        consumed = None
+    return consumed
 
 def distinct_agents(agents):
     agents = sorted(agents, key=ist.Agent.matches_key)
