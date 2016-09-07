@@ -16,6 +16,8 @@ logger = logging.getLogger('s3_client')
 bucket_name ='bigmech'
 client = boto3.client('s3')
 prefix = 'papers/'
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(bucket_name)
 
 def check_pmid(pmid):
     if isinstance(pmid, int):
@@ -23,6 +25,28 @@ def check_pmid(pmid):
     if not pmid.startswith('PMID'):
         pmid = 'PMID' + str(pmid)
     return pmid
+
+
+def get_pmid_key(pmid):
+    pmid = check_pmid(pmid)
+    return prefix + pmid
+
+
+def filter_keys(prefix):
+    return list(bucket.objects.filter(Prefix=prefix))
+
+
+def check_key(key):
+    try:
+        s3.Object(bucket_name, key).load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            exists = False
+        else:
+            raise e
+    else:
+        exists = True
+    return exists
 
 
 def get_full_text(pmid, full_text_type='pmc_oa_xml'):
@@ -50,6 +74,12 @@ def get_full_text(pmid, full_text_type='pmc_oa_xml'):
 def put_full_text(pmid, text, full_text_type='pmc_oa_xml'):
     pmid = check_pmid(pmid)
     xml_key = prefix + pmid + '/fulltext/' + full_text_type
+    xml_gz = gzip_string(text, '%s.nxml' % pmid)
+    client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
+
+
+def put_abstract(pmid, text):
+    xml_key = get_pmid_key(pmid) + '/abstract'
     xml_gz = gzip_string(text, '%s.nxml' % pmid)
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
