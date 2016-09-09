@@ -95,7 +95,7 @@ BRAF and collecting the results in INDRA statements.
 from indra import reach
 from indra.literature import pubmed_client
 # Search for 10 most recent abstracts in PubMed on 'BRAF'
-pmids = pubmed_client.get_ids('BRAF', 10)
+pmids = pubmed_client.get_ids('BRAF', retmax=10)
 all_statements = []
 for pmid in pmids:
     abs = pubmed_client.get_abstract(pmid)
