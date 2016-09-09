@@ -54,6 +54,8 @@ class ReachProcessor(object):
         """
         self.all_events = {}
         events = self.tree.execute("$.events.frames")
+        if events is None:
+            return
         for e in events:
             event_type = e.get('type')
             frame_id = e.get('frame_id')
@@ -65,6 +67,8 @@ class ReachProcessor(object):
     def print_regulations(self):
         qstr = "$.events.frames[(@.type is 'regulation')]"
         res = self.tree.execute(qstr)
+        if res is None:
+            return
         for r in res:
             print r['subtype']
             for a in r['arguments']:
@@ -74,6 +78,8 @@ class ReachProcessor(object):
         """Extract Modification INDRA Statements."""
         qstr = "$.events.frames[(@.type is 'protein-modification')]"
         res = self.tree.execute(qstr)
+        if res is None:
+            return
         for r in res:
             modification_type = r.get('subtype')
             epistemics = self._get_epistemics(r)
@@ -152,6 +158,8 @@ class ReachProcessor(object):
         """Extract INDRA Complex Statements."""
         qstr = "$.events.frames[@.type is 'complex-assembly']"
         res = self.tree.execute(qstr)
+        if res is None:
+            return
         for r in res:
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
@@ -173,6 +181,8 @@ class ReachProcessor(object):
         """Extract INDRA Activation Statements."""
         qstr = "$.events.frames[@.type is 'activation']"
         res = self.tree.execute(qstr)
+        if res is None:
+            return
         for r in res:
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
@@ -218,6 +228,8 @@ class ReachProcessor(object):
         """Extract INDRA Translocation Statements."""
         qstr = "$.events.frames[@.type is 'translocation']"
         res = self.tree.execute(qstr)
+        if res is None:
+            return
         for r in res:
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
