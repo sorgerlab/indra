@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
     cleanup = False
     verbose = True
-    #path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-    path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
+    path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
+    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
     reach_version = '1.3.2'
     force_read = True
 
@@ -42,6 +42,9 @@ if __name__ == '__main__':
 
     # Logger
     logger = logging.getLogger('runreach')
+    logging.getLogger('boto3').setLevel(logging.CRITICAL)
+    logging.getLogger('botocore').setLevel(logging.CRITICAL)
+    logging.getLogger('requests').setLevel(logging.CRITICAL)
 
     # Load the list of PMIDs from the given file
     with open(pmid_list_file) as f:

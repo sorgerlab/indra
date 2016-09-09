@@ -56,7 +56,7 @@ def get_gz_object(key):
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
             logger.info('get_full_text: no object found for key %s' %
-                        oa_xml_key)
+                        key)
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
@@ -103,8 +103,10 @@ def get_full_text(pmid):
         abstract_key = get_pmid_key(pmid) + '/abstract'
         abstract = get_gz_object(abstract_key)
         if abstract is None:
+            logger.info('No abstract found for %s' % pmid)
             return (None, None)
         else:
+            logger.info('Found abstract for %s' % pmid)
             return (abstract, 'abstract')
 
 
