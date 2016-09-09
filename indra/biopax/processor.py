@@ -477,7 +477,6 @@ class BiopaxProcessor(object):
             db_name = xr.getDb()
             if db_name is not None and db_name.upper() == 'PUBMED':
                 refs.append(xr.getId())
-            print db_name
         # TODO: handle non-pubmed evidence
         return refs
 
