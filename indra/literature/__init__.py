@@ -91,9 +91,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         # For now, return as text.
         if publisher == 'Elsevier BV':
             article = elsevier_client.get_article(doi, output='txt')
-            if article is None:
-                return (None, None)
-            else:
+            if article is not None:
                 return (article, 'txt')
         # FIXME FIXME FIXME
         # Because we don't yet have a way to process non-Elsevier content
