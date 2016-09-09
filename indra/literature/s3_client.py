@@ -49,12 +49,9 @@ def check_key(key):
     return exists
 
 
-def get_full_text(pmid, full_text_type='pmc_oa_xml'):
-    pmid = check_pmid(pmid)
-    oa_xml_key = prefix + pmid + '/fulltext/' + full_text_type
-    # Check for Open Access nxml source
+def get_gz_object(key):
     try:
-        xml_gz_obj = client.get_object(Bucket=bucket_name, Key=oa_xml_key)
+        gz_obj = client.get_object(Bucket=bucket_name, Key=key)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
@@ -65,10 +62,50 @@ def get_full_text(pmid, full_text_type='pmc_oa_xml'):
         else:
             raise e
     # Get the content from the object
-    xml_gz = xml_gz_obj['Body'].read()
+    gz_body = gz_obj['Body'].read()
     # Decode the gzipped content
-    xml = zlib.decompress(xml_gz, 16+zlib.MAX_WBITS)
-    return xml.decode('utf8')
+    content = zlib.decompress(gz_body, 16+zlib.MAX_WBITS)
+    return content.decode('utf8')
+
+
+def get_full_text(pmid):
+    pmid = check_pmid(pmid)
+    # Check for Open Access nxml source
+    ft_prefix = get_pmid_key(pmid) + '/fulltext/'
+    ft_objs = filter_keys(ft_prefix)
+    # We have at least one full text
+    if len(ft_objs) > 0:
+        ft_keys = [ft_obj.key for ft_obj in ft_objs]
+        # Look for full texts in order of desirability
+        for content_type in ('pmc_oa_xml', 'pmc_auth_xml', 'pmc_oa_txt',
+                             'txt'):
+            ft_key = ft_prefix + content_type
+            # We don't have this type of full text, move on
+            if ft_key not in ft_keys:
+                continue
+            # We have this type of full text, so get it and return
+            else:
+                content = get_gz_object(ft_key)
+                if content:
+                    logger.info('Found %s for %s' % (content_type, pmid))
+                    return (content, content_type)
+                else:
+                    logger.info('Error getting %s for %s' %
+                                (content_type, pmid))
+                    return (None, None)
+        # If we've gotten here, it means there were full text keys not
+        # included in the above
+        logger.info('Unrecognized full text key %s for %s' %
+                    (ft_keys, pmid))
+        return (None, None)
+    else:
+        logger.info('No full texts found for %s, trying abstract' % pmid)
+        abstract_key = get_pmid_key(pmid) + '/abstract'
+        abstract = get_gz_object(abstract_key)
+        if abstract is None:
+            return (None, None)
+        else:
+            return (abstract, 'abstract')
 
 
 def put_full_text(pmid, text, full_text_type='pmc_oa_xml'):

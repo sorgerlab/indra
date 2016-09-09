@@ -26,7 +26,6 @@ if __name__ == '__main__':
     path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
     reach_version = '1.3.2'
     force_read = True
-    source_text = 'pmc_oa_xml'
 
     # Check the arguments
     usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
@@ -88,37 +87,74 @@ if __name__ == '__main__':
 
     # Now iterate over the pmids to read and download from S3 to the input
     # directory
-    num_found_s3 = 0
-    num_found_not_s3 = 0
+    num_pmc_oa_xml = 0
+    num_pmc_auth_xml = 0
+    num_txt = 0
+    num_abstract = 0
+    num_not_found = 0
+    # Keep a map of the content type we've downloaded for each PMID
+    text_sources = {}
     for pmid in pmids_to_read:
+        full_pmid = s3_client.check_pmid(pmid)
         # Look for the full text
-        xml = s3_client.get_full_text(pmid)
+        (content, content_type) = s3_client.get_full_text(pmid)
         # If we don't find the XML on S3, look for it using the PMC client
-        if xml:
-            num_found_s3 += 1
-        else:
-            logger.info('No content for %s from S3' % pmid)
-            (content, content_type) = get_full_text(pmid, 'pmid')
-            if content_type == 'nxml':
-                logger.info('Found nxml for %s from PMC web service' % pmid)
-                xml = content
-                num_found_not_s3 += 1
-                # Upload the xml to S3 for next time
-                logger.info('Uploading full text for %s to S3' % pmid)
-                s3_client.put_full_text(pmid, xml, full_text_type='pmc_oa_xml')
-            else:
-                logger.info('No full text found for %s' % pmid)
+        #if xml:
+        #    num_found_s3 += 1
+        #else:
+        #    logger.info('No content for %s from S3' % pmid)
+        #    (content, content_type) = get_full_text(pmid, 'pmid')
+        #    if content_type == 'nxml':
+        #        logger.info('Found nxml for %s from PMC web service' % pmid)
+        #        xml = content
+        #        num_found_not_s3 += 1
+        #        # Upload the xml to S3 for next time
+        #        logger.info('Uploading full text for %s to S3' % pmid)
+        #        s3_client.put_full_text(pmid, xml, full_text_type='pmc_oa_xml')
+        #    #elif content_type == 'abstract':
+        #    #    logger.info('Found abstract for %s' % pmid)
+        #    #    s3_client.put_abstract(pmid, content)
+        #    else:
+        #        logger.info('No full text found for %s' % pmid)
         # Write the contents to a file
-        if xml:
-            xml_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
-            with open(xml_path, 'w') as f:
-                # The XML string is Unicode
-                enc = xml.encode('utf8')
-                f.write(enc)
-
-    logger.info('Found full text for %d PMIDs (%d S3, %d other)' %
-                ((num_found_s3 + num_found_not_s3), num_found_s3,
-                  num_found_not_s3))
+        if content_type is None or content is None:
+            num_not_found += 1
+            logger.info('No content found on S3 for %s, skipping' % pmid)
+            continue
+        elif content_type == 'pmc_oa_xml':
+            num_pmc_oa_xml += 1
+            text_sources[full_pmid] = 'pmc_oa_xml'
+            content_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
+        elif content_type == 'pmc_auth_xml':
+            num_pmc_auth_xml += 1
+            text_sources[full_pmid] = 'pmc_auth_xml'
+            content_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
+        elif content_type == 'pmc_oa_txt':
+            num_txt += 1
+            text_sources[full_pmid] = 'pmc_oa_txt'
+            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+        elif content_type == 'txt':
+            num_txt += 1
+            text_sources[full_pmid] = 'txt'
+            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+        elif content_type == 'abstract':
+            num_abstract += 1
+            text_sources[full_pmid] = 'abstract'
+            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+        else:
+            num_not_found += 1
+            logger.info('Unhandled content type %s for %s, skipping' %
+                        (content_type, pmid))
+            continue
+        # Write the content to a file with the appropriate extension
+        with open(content_path, 'w') as f:
+            # The XML string is Unicode
+            enc = content.encode('utf8')
+            f.write(enc)
+    logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
+                '%d txt (incl. Elsevier), %d abstract, %d no content' %
+                (num_pmc_oa_xml, num_pmc_auth_xml, num_txt, num_abstract,
+                 num_not_found))
 
     # Create the REACH configuration file
     conf_file_text = """
@@ -215,7 +251,8 @@ if __name__ == '__main__':
             events = json.load(open(prefix + '.uaz.events.json'))
             sentences = json.load(open(prefix + '.uaz.sentences.json'))
         except IOError as e:
-            logging.error('Failed to open JSON files for %s; REACH error?' % prefix)
+            logging.error('Failed to open JSON files for %s; REACH error?' %
+                          prefix)
             return None
         return {'events': events, 'entities': entities, 'sentences': sentences}
 
@@ -229,12 +266,15 @@ if __name__ == '__main__':
     # Now iterate over the collected prefixes, combine the JSON, and send to S3
     num_uploaded = 0
     num_failures = 0
-    for json_prefix in json_prefixes:
+    for json_prefix in json_prefixes: # The prefixes should be PMIDs
         prefix_with_path = os.path.join(output_dir, json_prefix)
         full_json = join_parts(prefix_with_path)
         if full_json is None:
             num_failures += 1
         else:
+            # Look up the paper source type
+            source_text = text_sources.get(json_prefix)
+            logger.info('%s: source %s' % (json_prefix, source_text))
             s3_client.put_reach_output(full_json, json_prefix, reach_version,
                                        source_text)
             num_uploaded += 1
