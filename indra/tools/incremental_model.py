@@ -87,10 +87,13 @@ class IncrementalModel(object):
         # Filter for grounding
         if 'grounding' in filters:
             for i, stmt in enumerate(stmts):
-                agents = [a for a in stmt.agent_list() if a is not None]
                 # Check that all agents are grounded
-                if any(not a.db_refs for a in agents):
-                    stmts_to_add.remove(i)
+                for ag in stmt.agent_list():
+                    if ag is None:
+                        continue
+                    if not ag.db_refs or ag.db_refs.keys() == ['TEXT']:
+                        stmts_to_add.remove(i)
+                        break
 
         if ('prior_all' in filters) or ('prior_one' in filters):
             prior_agents = self.get_prior_agents()
