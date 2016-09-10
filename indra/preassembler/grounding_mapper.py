@@ -143,12 +143,16 @@ def agent_texts(agents):
     return [ag.db_refs.get('TEXT') for ag in agents]
 
 
-def get_sentences_for_agent(text, stmts):
+def get_sentences_for_agent(text, stmts, max_sentences=None):
     sentences = []
     for stmt in stmts:
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
-                sentences.append((stmt.evidence[0].pmid, stmt.evidence[0].text))
+                sentences.append((stmt.evidence[0].pmid,
+                                  stmt.evidence[0].text.encode('utf8')))
+                if max_sentences is not None and \
+                   len(sentences) >= max_sentences:
+                    return sentences
     return sentences
 
 
