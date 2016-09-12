@@ -8,7 +8,7 @@ class BeliefEngine(object):
             'biopax': 0.2,
             'bel': 0.1,
             'trips': 0.4,
-            'reach': 0.5,
+            'reach': 0.3,
             'biogrid': 0.01,
             'assertion': 0.0
             }
@@ -16,7 +16,7 @@ class BeliefEngine(object):
             'biopax': 0.01,
             'bel': 0.01,
             'trips': 0.2,
-            'reach': 0.2,
+            'reach': 0.,
             'biogrid': 0.01,
             'assertion': 0.0
             }
