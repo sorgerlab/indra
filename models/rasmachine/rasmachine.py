@@ -10,7 +10,7 @@ import twitter_client
 import ndex.client
 from indra import reach
 from indra.literature import pubmed_client, get_full_text
-from indra.assemblers import CxAssembler
+from indra.assemblers import CxAssembler, PysbAssembler
 from indra.tools.incremental_model import IncrementalModel
 
 model_path = os.path.dirname(os.path.abspath(__file__))
@@ -131,7 +131,7 @@ def _increment_ndex_ver(ver_str):
         new_ver = major_ver + '.' + new_minor_ver
     return new_ver
 
-def upload_to_ndex(model, cred_file):
+def upload_to_ndex(stmts, cred_file):
     try:
         fh = open(cred_file, 'rt')
         uname, passwd, network_id = [l.strip() for l in fh.readlines()]
@@ -142,7 +142,7 @@ def upload_to_ndex(model, cred_file):
                             username=uname, password=passwd)
     ca = CxAssembler()
     ca.network_name = 'rasmachine'
-    ca.add_statements(model.toplevel_stmts)
+    ca.add_statements(stmts)
     ca.make_model()
     cx_str = ca.print_cx()
 
@@ -179,6 +179,9 @@ if __name__ == '__main__':
     parser.add_argument('--gmail', help='Gmail credentials file')
     parser.add_argument('--ndex', help='NDEx credentials file')
     args = parser.parse_args()
+
+    # Probability cutoff for filtering statements
+    BELIEF_THRESHOLD = 0.95
 
     print '-------------------------'
     print time.strftime('%c')
@@ -234,7 +237,7 @@ if __name__ == '__main__':
         search_terms = [l.strip() for l in
                     open(search_terms_file, 'rt').readlines()]
         if search_terms:
-            pmids += get_searchterm_pmids(search_terms, num_days=1)
+            pmids += get_searchterm_pmids(search_terms, num_days=5)
     if not pmids:
         print 'No PMIDs found.'
         sys.exit()
@@ -246,7 +249,6 @@ if __name__ == '__main__':
     print time.strftime('%c')
     inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
     model = IncrementalModel(inc_model_file)
-    pysb_model = model.make_model()
     stats = {}
     print 'Preassembling model'
     print time.strftime('%c')
@@ -256,8 +258,18 @@ if __name__ == '__main__':
     stats['orig_stmts'] = len(model.get_statements())
     stats['orig_unique'] = len(model.unique_stmts)
     stats['orig_top'] = len(model.toplevel_stmts)
-    stats['orig_monomers'] = len(pysb_model.monomers)
-    stats['orig_rules'] = len(pysb_model.rules)
+    # Filter the top level statements with a probability cutoff
+    orig_likely = [s for s in model.toplevel_stmts
+                   if s.belief > BELIEF_THRESHOLD]
+    stats['orig_likely'] = len(orig_likely)
+
+    # Make a PySB model from filtered statements
+    pysb_assmb = PysbAssembler()
+    pysb_assmb.add_statements(orig_likely)
+    pysb_assmb.make_model()
+    # Stats for Pysb assembled model
+    stats['orig_monomers'] = len(pysb_assmb.model.monomers)
+    stats['orig_rules'] = len(pysb_assmb.model.rules)
 
     # Extend the model with PMIDs
     print 'Extending model'
@@ -269,22 +281,28 @@ if __name__ == '__main__':
     stats['new_stmts'] = len(model.get_statements())
     stats['new_unique'] = len(model.unique_stmts)
     stats['new_top'] = len(model.toplevel_stmts)
+    new_likely = [s for s in model.toplevel_stmts
+                  if s.belief > BELIEF_THRESHOLD]
+    stats['new_likely'] = len(new_likely)
 
-    # Build PySB model
-    pysb_model = model.make_model()
-    stats['new_monomers'] = len(pysb_model.monomers)
-    stats['new_rules'] = len(pysb_model.rules)
+    # Make a PySB model from filtered statements
+    pysb_assmb = PysbAssembler()
+    pysb_assmb.add_statements(new_likely)
+    pysb_assmb.make_model()
+    # Stats for Pysb assembled model
+    stats['new_monomers'] = len(pysb_assmb.model.monomers)
+    stats['new_rules'] = len(pysb_assmb.model.rules)
 
     # Save model
     print 'Saving model'
     print time.strftime('%c')
     model.save(inc_model_file)
 
-    # Upload to NDEx
+    # Upload the new, highly likely statements to NDEx
     if use_ndex:
         print 'Uploading to NDEx'
         print time.strftime('%c')
-        upload_to_ndex(model, ndex_cred)
+        upload_to_ndex(new_likely, ndex_cred)
 
     # Print and tweet the status message
     print stats
