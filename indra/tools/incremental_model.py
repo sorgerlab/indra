@@ -3,6 +3,8 @@ import logging
 from indra.assemblers import PysbAssembler
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler import grounding_mapper as gm
+from indra.belief import BeliefEngine
 
 logger = logging.getLogger('incremental_model')
 
@@ -130,9 +132,25 @@ class IncrementalModel(object):
         attributes.
         """
         stmts = self.get_statements()
-        pa = Preassembler(hierarchies, stmts)
+        # Fix grounding
+        twg = gm.agent_texts_with_grounding(stmts)
+        prot_map = gm.protein_map_from_twg(twg)
+        gm.default_grounding_map.update(prot_map)
+        gmap = gm.GroundingMapper(gm.default_grounding_map)
+        gmapped_stmts = gmap.map_agents(stmts)
+
+        # Combine duplicates
+        pa = Preassembler(hierarchies, gmapped_stmts)
         self.unique_stmts = pa.combine_duplicates()
+
+        # Run BeliefEngine on unique statements
+        be = BeliefEngine(self.unique_stmts)
+        be.set_prior_probs(self.unique_stmts)
+
+        # Build statement hierarchy
         self.toplevel_stmts = pa.combine_related()
+        # Run BeliefEngine on hierarchy
+        be.set_hierarchy_probs(self.toplevel_stmts)
 
     def load_prior(self, prior_fname):
         """Load a set of prior statements from a pickle file.
@@ -173,9 +191,3 @@ class IncrementalModel(object):
             stmts += s
         return stmts
 
-    def make_model(self):
-        """Assemble a PySB model from all Statements."""
-        pa = PysbAssembler()
-        pa.add_statements(self.get_statements())
-        pa.make_model()
-        return pa.model
