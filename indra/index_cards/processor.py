@@ -132,6 +132,14 @@ class IndexCardProcessor(object):
             'phosphorylation': Phosphorylation,
             'dephosphorylation': Dephosphorylation,
             'ubiquitination': Ubiquitination,
-            'deubiquitination': Deubiquitination
-            # TODO: complete this dict
+            'deubiquitination': Deubiquitination,
+            'acetylation': Acetylation,
+            'deacetylation': Deacetylation,
+            'farnesylation': Farnesylation,
+            'glycosylation': Glycosylation,
+            'deglycosylation': Deglycosylation,
+            'hydorxylation': Hydroxylation,
+            'dehydroxylatoni': Dehydroxylation,
+            'sumoylation': Sumoylation,
+            'desumoylation': Desumoylation
             }
