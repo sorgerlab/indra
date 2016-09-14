@@ -11,21 +11,35 @@ class IndexCardProcessor(object):
     def get_modifications(self): 
         for card in self.index_cards:
             inter = card.get('interaction')
-            if inter['interaction_type'] in \
+            if inter['interaction_type'] not in \
                 ('adds_modification', 'removes_modification'):
-                enz = self._get_agent(inter.get('participant_a'))
-                sub = self._get_agent(inter.get('participant_b'))
-                mods = inter.get('modifications')
-                mcs = [self._get_mod_condition(mod) for mod in mods]
-                ev = self._get_evidence(card)
-                for mc in mcs:
-                    stmt_class = self._mod_type_map.get(mc.mod_type)
-                    stmt = stmt_class(enz, sub, mc.residue, mc.position,
-                                      evidence=ev)
-                    self.statements.append(stmt)
+                continue
+            enz = self._get_agent(inter.get('participant_a'))
+            sub = self._get_agent(inter.get('participant_b'))
+            mods = inter.get('modifications')
+            mcs = [self._get_mod_condition(mod) for mod in mods]
+            ev = self._get_evidence(card)
+            for mc in mcs:
+                stmt_class = self._mod_type_map.get(mc.mod_type)
+                stmt = stmt_class(enz, sub, mc.residue, mc.position,
+                                  evidence=ev)
+                self.statements.append(stmt)
 
     def get_complexes(self):
-        pass
+        for card in self.index_cards:
+            inter = card.get('interaction')
+            if inter['interaction_type'] != 'complexes_with':
+                continue
+            print  'found complex'
+            ev = self._get_evidence(card)
+            participant = inter.get('participant_a')
+            entities = participant.get('entities')
+            members = []
+            for entity in entities:
+                agent = self._get_agent(entity)
+                members.append(agent)
+            stmt = Complex(members, evidence=ev)
+            self.statements.append(stmt)
 
     def _get_agent(self, participant):
         dbid = participant.get('identifier')
@@ -35,6 +49,7 @@ class IndexCardProcessor(object):
         db_refs = {}
         entity_type = participant.get('entity_type')
         if entity_type in ['protein', 'chemical']:
+            # TODO: standardize name here
             name = participant.get('entity_text')[0]
             db_name, db_id = dbid.split(':')
             if db_name.lower() == 'uniprot':
@@ -44,10 +59,12 @@ class IndexCardProcessor(object):
                 # TODO: get ChEBI ID from PUBCHEM
                 db_refs['CHEBI'] = db_id
             db_refs['TEXT'] = participant.get('entity_text')[0]
-            agent = Agent(name, db_refs=db_refs)
+        elif entity_type == 'protein_family':
+            name = participant.get('entity_text')[0]
         else:
             return None
         # TODO: handle other participant types
+        agent = Agent(name, db_refs=db_refs)
 
         features = participant.get('features')
         if features:
@@ -61,9 +78,21 @@ class IndexCardProcessor(object):
                     agent.bound_conditions.append(bc)
                 elif feature_type == 'mutation_feature':
                     mc = self._get_mut_condition(feature)
-                    agent.mut_conditions.append(mc)
+                    agent.mutations.append(mc)
                 elif feature_type == 'location_feature':
                     agent.location = feature.get('location')
+        not_features = participant.get('features')
+        if not_features:
+            for feature in not_features:
+                feature_type = feature.get('feature_type')
+                if feature_type == 'modification_feature':
+                    mc = self._get_mod_condition(feature)
+                    mc.is_modified = False
+                    agent.mods.append(mc)
+                elif feature_type == 'binding_feature':
+                    bc = self._get_bound_condition(feature)
+                    bc.is_bound = False
+                    agent.bound_conditions.append(bc)
         return agent
 
     def _get_mod_condition(self, mod):

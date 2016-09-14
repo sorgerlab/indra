@@ -15,4 +15,5 @@ def process_json(json_dict, source_api):
         json_dict = [json_dict]
     icp = IndexCardProcessor(json_dict, source_api)
     icp.get_modifications()
+    icp.get_complexes()
     return icp
