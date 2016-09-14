@@ -30,7 +30,6 @@ class IndexCardProcessor(object):
             inter = card.get('interaction')
             if inter['interaction_type'] != 'complexes_with':
                 continue
-            print  'found complex'
             ev = self._get_evidence(card)
             participant = inter.get('participant_a')
             entities = participant.get('entities')
@@ -39,6 +38,30 @@ class IndexCardProcessor(object):
                 agent = self._get_agent(entity)
                 members.append(agent)
             stmt = Complex(members, evidence=ev)
+            self.statements.append(stmt)
+
+    def get_increase_decrease(self):
+        for card in self.index_cards:
+            inter = card.get('interaction')
+            if inter['interaction_type'] not in ('decreases', 'increases'):
+                continue
+            ev = self._get_evidence(card)
+            participant = inter.get('participant_a')
+            controller = self._get_agent(participant)
+            process = inter.get('participant_b')
+
+    def get_translocates(self):
+        for card in self.index_cards:
+            inter = card.get('interaction')
+            if inter['interaction_type'] != 'translocates':
+                continue
+            ev = self._get_evidence(card)
+            participant = inter.get('participant_b')
+            agent = self._get_agent(participant)
+            from_location = inter.get('from_location_id')
+            to_location = inter.get('to_location_id')
+            stmt = Translocation(agent, from_location, to_location,
+                                 evidence=ev)
             self.statements.append(stmt)
 
     def _get_agent(self, participant):
@@ -124,7 +147,7 @@ class IndexCardProcessor(object):
         all_evidence = []
         if evidence is not None:
             for text in evidence:
-                e = Evidence(self.source_api, pmid, text=text)
+                e = Evidence(self.source_api, pmid=pmid, text=text)
                 all_evidence.append(e)
         return all_evidence
 
