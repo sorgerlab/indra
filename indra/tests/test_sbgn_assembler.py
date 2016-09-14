@@ -8,4 +8,5 @@ test_small_file = join(dirname(__file__), 'test_small.xml')
 def test_assembler():
     sbgn_output = text_to_sbgn(trips_xml=open(test_small_file).read())
     assert (sha1(sbgn_output).hexdigest() ==
-            'cf5436f3687db9ff61da73af76595b3836dd65de')
+            '99f74446e6e5f0be4a37666c7ac6b74afe5290d0')
+
