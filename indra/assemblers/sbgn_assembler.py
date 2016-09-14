@@ -73,8 +73,15 @@ class SBGNAssembler(object):
                 agent_id = agent_ids[agent.matches_key()]
             glyph = E.glyph(
                 E.label(text=agent.name),
-                E.bbox(x='0', y='0', w='120', h='60'),
+                E.bbox(x='0', y='0', w='140', h='60'),
                 class_('macromolecule'), id=agent_id,
+                )
+            glyph.append(
+                E.glyph(
+                    E.label(text='mt:prot'),
+                    class_('unit of information'),
+                    E.bbox(x='0', y='0', w='53', h='18'),
+                    id=make_id())
                 )
             for st in sbgn_states_for_agent(agent):
                 glyph.append(
