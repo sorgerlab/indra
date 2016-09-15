@@ -40,9 +40,9 @@ class GroundingMapper(object):
                     agent.db_refs = self.gm.get(agent_text)
                     # Are we renaming right now?
                     if do_rename:
-                        # If there's an INDRA ID, prefer that for the name
-                        if agent.db_refs.get('INDRA'):
-                            agent.name = agent.db_refs.get('INDRA')
+                        # If there's a Bioentities ID, prefer that for the name
+                        if agent.db_refs.get('BE'):
+                            agent.name = agent.db_refs.get('BE')
                         # Take a HGNC name from Uniprot next
                         elif agent.db_refs.get('UP'):
                             # Try for the HGNC name
@@ -73,9 +73,9 @@ class GroundingMapper(object):
                 if agent is None:
                     continue
                 old_name = agent.name
-                # If there's an INDRA ID, prefer that for the name
-                if agent.db_refs.get('INDRA'):
-                    agent.name = agent.db_refs.get('INDRA')
+                # If there's a Bioentities ID, prefer that for the name
+                if agent.db_refs.get('BE'):
+                    agent.name = agent.db_refs.get('BE')
                 # Take a HGNC name from Uniprot next
                 elif agent.db_refs.get('UP'):
                     # Try for the HGNC name

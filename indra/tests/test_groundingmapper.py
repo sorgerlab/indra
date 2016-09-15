@@ -21,10 +21,10 @@ def test_simple_mapping():
     assert len(mapped_stmts) == 1
     mapped_akt = mapped_stmts[0].sub
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
-    assert mapped_akt.db_refs['INDRA'] == 'AKT'
+    assert mapped_akt.db_refs['BE'] == 'AKT'
 
 def test_renaming():
-    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'INDRA':'AKT family',
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'BE':'AKT family',
                                         'UP': 'P31749'})
     akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'P31749'})
     akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
@@ -36,7 +36,7 @@ def test_renaming():
     gm = GroundingMapper(default_grounding_map)
     renamed_stmts = gm.rename_agents(stmts)
     assert len(renamed_stmts) == 4
-    # Should draw on INDRA first
+    # Should draw on BE first
     assert renamed_stmts[0].sub.name == 'AKT family'
     # Then on the HGNC lookup from Uniprot
     assert renamed_stmts[1].sub.name == 'AKT1'
