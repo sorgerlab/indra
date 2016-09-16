@@ -126,6 +126,25 @@ def get_mnemonic(protein_id):
     else:
         return None
 
+def get_id_from_mnemonic(uniprot_mnemonic):
+    """Return the UniProt ID for the given UniProt mnemonic.
+
+    Parameters
+    ----------
+    uniprot_mnemonic : str
+        UniProt mnemonic to be mapped.
+
+    Returns
+    -------
+    uniprot_id : str
+        The UniProt ID corresponding to the given Uniprot mnemonic.
+    """
+    try:
+        uniprot_id = uniprot_mnemonic_reverse[uniprot_mnemonic]
+        return uniprot_id
+    except KeyError:
+        return None
+
 @lru_cache(maxsize=10000)
 def get_hgnc_name(protein_id):
     """Return the HGNC symbol for the given UniProt ID.
@@ -340,11 +359,14 @@ def _build_uniprot_mnemonic():
         fh = open(mnemonic_file, 'rt')
         rd = csv.reader(fh, delimiter='\t')
         uniprot_mnemonic = {}
+        uniprot_mnemonic_reverse = {}
         for row in rd:
             uniprot_mnemonic[row[0]] = row[1]
+            uniprot_mnemonic_reverse[row[1]] = row[0]
     except IOError:
         uniprot_mnemonic = {}
-    return uniprot_mnemonic
+        uniprot_mnemonic_reverse = {}
+    return uniprot_mnemonic, uniprot_mnemonic_reverse
 
 def _build_uniprot_sec():
     # File containing secondary accession numbers mapped
@@ -384,6 +406,6 @@ def _build_uniprot_subcell_loc():
     return subcell_loc
 
 uniprot_hgnc = _build_uniprot_hgnc()
-uniprot_mnemonic = _build_uniprot_mnemonic()
+uniprot_mnemonic, uniprot_mnemonic_reverse = _build_uniprot_mnemonic()
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
