@@ -1,5 +1,7 @@
 import json
 import objectpath
+from indra.databases import uniprot_client, chebi_client
+from indra.literature import id_lookup
 from indra.statements import *
 
 class IndexCardProcessor(object):
@@ -74,14 +76,15 @@ class IndexCardProcessor(object):
         if entity_type in ['protein', 'chemical']:
             # TODO: standardize name here
             name = participant.get('entity_text')[0]
-            db_name, db_id = dbid.split(':')
-            if db_name.lower() == 'uniprot':
-                # TODO: get UP ID from menmonic
-                db_refs['UP'] = db_id
-            elif db_name.lower() == 'pubchem':
-                # TODO: get ChEBI ID from PUBCHEM
-                db_refs['CHEBI'] = db_id
             db_refs['TEXT'] = participant.get('entity_text')[0]
+            if dbid:
+                db_name, db_id = dbid.split(':')
+                if db_name.lower() == 'uniprot':
+                    uniprot_id = uniprot_client.get_id_from_mnemonic(db_id)
+                    db_refs['UP'] = uniprot_id
+                elif db_name.lower() == 'pubchem':
+                    chebi_id = chebi_client.get_chebi_id_from_pubchem(db_id)
+                    db_refs['CHEBI'] = chebi_id
         elif entity_type == 'protein_family':
             name = participant.get('entity_text')[0]
         else:
@@ -141,8 +144,8 @@ class IndexCardProcessor(object):
 
     def _get_evidence(self, card):
         pmcid = card.get('pmc_id')
-        # TODO: PMCID to PMID conversion
-        pmid = pmcid
+        ids = id_lookup(pmcid, 'pmcid')
+        pmid = ids.get('pmid')
         evidence = card.get('evidence')
         all_evidence = []
         if evidence is not None:
