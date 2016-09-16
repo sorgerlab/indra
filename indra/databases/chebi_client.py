@@ -11,11 +11,14 @@ def read_chebi_to_pubchem():
         fh = open(chebi_to_pubchem_file, 'rt')
         rd = csv.reader(fh, delimiter='\t')
         chebi_pubchem = {}
+        pubchem_chebi = {}
         for row in rd:
             chebi_pubchem[row[0]] = row[1]
+            pubchem_chebi[row[1]] = row[0]
     except IOError:
         chebi_pubchem = {}
-    return chebi_pubchem
+        pubchem_chebi = {}
+    return chebi_pubchem, pubchem_chebi
 
 def read_chebi_to_chembl():
     # Based on ftp://ftp.ebi.ac.uk/pub/databases/chebi/
@@ -32,7 +35,7 @@ def read_chebi_to_chembl():
         chebi_chembl = {}
     return chebi_chembl
 
-chebi_pubchem = read_chebi_to_pubchem()
+chebi_pubchem, pubchem_chebi = read_chebi_to_pubchem()
 chebi_chembl = read_chebi_to_chembl()
 
 def get_pubchem_id(chebi_id):
@@ -51,7 +54,23 @@ def get_pubchem_id(chebi_id):
     """
     pubchem_id = chebi_pubchem.get(chebi_id)
     return pubchem_id
-    return chebi_pubchem.get(chebi_id)
+
+def get_chebi_id_from_pubchem(pubchem_id):
+    """Return the ChEBI ID corresponding to a given Pubchem ID.
+
+    Parameters
+    ----------
+    pubchem_id : str
+        Pubchem ID to be converted.
+
+    Returns
+    -------
+    chebi_id : str
+        ChEBI ID corresponding to the given Pubchem ID. If the lookup fails,
+        None is returned.
+    """
+    chebi_id = pubchem_chebi.get(pubchem_id)
+    return chebi_id
 
 def get_chembl_id(chebi_id):
     return chebi_chembl.get(chebi_id)
