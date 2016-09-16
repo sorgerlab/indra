@@ -452,7 +452,11 @@ class Agent(object):
         #if self.db_refs:
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
-        return '%s(%s)' % (self.name, attr_str)
+        if isinstance(self.name, unicode):
+            agent_name = self.name.encode('utf-8')
+        else:
+            agent_name = self.name
+        return '%s(%s)' % (agent_name, attr_str)
 
     def __repr__(self):
         return self.__str__()
