@@ -135,14 +135,18 @@ class HierarchyManager(object):
             return False
 
     @functools32.lru_cache(maxsize=100000)
-    def partof(self, t1, t2):
+    def partof(self, ns1, id1, ns2, id2):
         """Indicate whether one entity is physically part of another.
 
         Parameters
         ----------
-        t1 : string
+        ns1 : string
+            Namespace code for an entity.
+        id1 : string
             URI for an entity.
-        t2 : string
+        ns2 : string
+            Namespace code for an entity.
+        id2 : string
             URI for an entity.
 
         Returns
@@ -151,15 +155,12 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        en1 = self.find_entity(t1)
-        en2 = self.find_entity(t2)
+        term1 = get_term(ns1, id1)
+        term2 = get_term(ns2, id2)
 
-        if en1 is None or en2 is None:
-            return None
-
-        if self.transitive_closure:
-            ec = self.transitive_closure.get(en1)
-            if ec and en2 in ec:
+        if self.partof_closure:
+            ec = self.partof_closure.get(term1)
+            if ec is not None and term2 in ec:
                 return True
             else:
                 return False
@@ -168,7 +169,7 @@ class HierarchyManager(object):
             SELECT (COUNT(*) as ?s) WHERE {{
                 <{}> rn:partof+ <{}> .
                 }}
-            """.format(en1, en2)
+            """.format(term1, term2)
         res = self.graph.query(qstr)
         count = [r[0] for r in res][0]
         if count.toPython() == 1:
