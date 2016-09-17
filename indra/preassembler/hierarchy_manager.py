@@ -63,6 +63,29 @@ class HierarchyManager(object):
                     tc_dict[xs] = [ys]
 
     @functools32.lru_cache(maxsize=100000)
+    def find_entity(self, x):
+        """
+        Get the entity that has the specified name (or synonym).
+
+        Parameters
+        ----------
+        x : string
+            Name or synonym for the target entity.
+        """
+
+        qstr = self.prefixes + """
+            SELECT ?x WHERE {{
+                ?x rn:hasName "{0}" .
+            }}
+            """.format(x)
+        res = self.graph.query(qstr)
+        if list(res):
+            en = list(res)[0][0].toPython()
+            return en
+        else:
+            return None
+
+    @functools32.lru_cache(maxsize=100000)
     def isa(self, ns1, id1, ns2, id2):
         """Indicate whether one entity has an "isa" relationship to another.
 
@@ -83,16 +106,18 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        term1 = get_term(ns1, id1)
-        term2 = get_term(ns2, id2)
 
         if self.isa_closure:
+            term1 = get_term(ns1, id1)
+            term2 = get_term(ns2, id2)
             ec = self.isa_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
             else:
                 return False
 
+        term1 = self.find_entity(id1)
+        term2 = self.find_entity(id2)
         qstr = self.prefixes + """ 
             SELECT (COUNT(*) as ?s) WHERE {{
                 <{}> rn:isa+ <{}> .
@@ -126,16 +151,18 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        term1 = get_term(ns1, id1)
-        term2 = get_term(ns2, id2)
 
         if self.partof_closure:
+            term1 = get_term(ns1, id1)
+            term2 = get_term(ns2, id2)
             ec = self.partof_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
             else:
                 return False
 
+        term1 = self.find_entity(id1)
+        term2 = self.find_entity(id2)
         qstr = self.prefixes + """ 
             SELECT (COUNT(*) as ?s) WHERE {{
                 <{}> rn:partof+ <{}> .
