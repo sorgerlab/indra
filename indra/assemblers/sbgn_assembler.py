@@ -19,7 +19,8 @@ abbrevs = {
     'glycosylation': 'glycosyl',
     'methylation': 'methyl',
     'modification': 'mod',
-    'active': 'act'
+    'activity': 'act',
+    'kinase': 'kin'
 }
 
 states = {
@@ -32,7 +33,8 @@ states = {
     'glycosylation': ['n', 'y'],
     'methylation': ['n', 'y'],
     'modification': ['n', 'y'],
-    'active': ['i', 'a']
+    'activity': ['i', 'a'],
+    'kinase': ['i', 'a']
 }
 
 class SBGNAssembler(object):
@@ -117,21 +119,16 @@ class SBGNAssembler(object):
                 glyph = glyph_for_complex(a)
             map.append(glyph)
         for s in self.statements:
-            if isinstance(s, ist.Modification):
+            if isinstance(s, ist.Modification) or \
+                isinstance(s, ist.Activation) or \
+                isinstance(s, ist.ActiveForm):
                 class_name = 'process'
-                consumed = [s.sub]
             elif isinstance(s, ist.Complex):
                 class_name = 'association'
-                consumed = s.members
-            elif isinstance(s, ist.Activation):
-                class_name = 'process'
-                consumed = [s.obj]
-            elif isinstance(s, ist.ActiveForm):
-                class_name = 'process'
-                consumed = [s.agent]
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
+            consumed = statement_consumed(s)
             st_prod = statement_product(s)
             if st_prod is None:
                 logger.warning("WARNING: skipping %s" % type(s))
@@ -194,23 +191,47 @@ def agents_for_statements(statements):
     return [a for stmt in statements for a in stmt.agent_list()]
 
 def transformed_agents(statements):
-    agents = [statement_product(s) for s in statements]
     # Following filter not needed once all statement types are implemented.
+    agents = []
+    for s in statements:
+        cs = statement_consumed(s)
+        if cs is not None:
+            agents += cs
+    agents += [statement_product(s) for s in statements]
     return [a for a in agents if a is not None]
+
+def remove_agent_mod(agent, mc):
+    agent.mods = []
+    for mod in agent.mods:
+        if not mod.matches(mc):
+            agent.mods.append(mc)
+    return agent
 
 def statement_product(stmt):
     if isinstance(stmt, ist.Phosphorylation):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
         product.mods.append(mc)
+    elif isinstance(stmt, ist.Dephosphorylation):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
+        product = remove_agent_mod(product, mc)
     elif isinstance(stmt, ist.Ubiquitination):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
         product.mods.append(mc)
+    elif isinstance(stmt, ist.Deubiquitination):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
+        product = remove_agent_mod(product, mc)
     elif isinstance(stmt, ist.Acetylation):
         product = copy.deepcopy(stmt.sub)
         mc = ist.ModCondition('acetylation', stmt.residue, stmt.position)
         product.mods.append(mc)
+    elif isinstance(stmt, ist.Deacetylation):
+        product = copy.deepcopy(stmt.sub)
+        mc = ist.ModCondition('acetylation', stmt.residue, stmt.position)
+        product = remove_agent_mod(product, mc)
     elif isinstance(stmt, ist.Complex):
         product = copy.deepcopy(stmt.members[0])
         for member in stmt.members[1:]:
@@ -218,16 +239,45 @@ def statement_product(stmt):
             product.bound_conditions.append(bc)
     elif isinstance(stmt, ist.Activation):
         product = copy.deepcopy(stmt.obj)
-        mc = ist.ModCondition('active')
-        product.mods.append(mc)
+        if stmt.is_activation:
+            mc = ist.ModCondition(stmt.obj_activity)
+            product.mods.append(mc)
     elif isinstance(stmt, ist.ActiveForm):
         product = copy.deepcopy(stmt.agent)
-        mc = ist.ModCondition('active')
+        mc = ist.ModCondition(stmt.activity)
         product.mods.append(mc)
     else:
         logger.warning("WARNING: skipping %s" % type(stmt))
         product = None
     return product
+
+def statement_consumed(stmt):
+    if isinstance(stmt, ist.Phosphorylation):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Ubiquitination):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Acetylation):
+        consumed = [copy.deepcopy(stmt.sub)]
+    elif isinstance(stmt, ist.Dephosphorylation):
+        stmt_mc = ist.ModCondition('phosphorylation',
+                                   stmt.residue, stmt.position)
+        consumed1 = copy.deepcopy(stmt.sub)
+        consumed1.mods.append(stmt_mc)
+        consumed = [consumed1]
+    elif isinstance(stmt, ist.Complex):
+        consumed = stmt.members
+    elif isinstance(stmt, ist.Activation):
+        consumed1 = copy.deepcopy(stmt.obj)
+        if not stmt.is_activation:
+            mc = ist.ModCondition(stmt.obj_activity)
+            consumed1.mods.append(mc)
+        consumed = [consumed1]
+    elif isinstance(stmt, ist.ActiveForm):
+        consumed = [copy.deepcopy(stmt.agent)]
+    else:
+        logger.warning("WARNING: skipping %s" % type(stmt))
+        consumed = None
+    return consumed
 
 def distinct_agents(agents):
     agents = sorted(agents, key=ist.Agent.matches_key)
