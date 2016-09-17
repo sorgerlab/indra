@@ -267,10 +267,11 @@ def statement_consumed(stmt):
     elif isinstance(stmt, ist.Complex):
         consumed = stmt.members
     elif isinstance(stmt, ist.Activation):
-        consumed = [copy.deepcopy(stmt.obj)]
+        consumed1 = copy.deepcopy(stmt.obj)
         if not stmt.is_activation:
             mc = ist.ModCondition(stmt.obj_activity)
-            consumed.mods.append(mc)
+            consumed1.mods.append(mc)
+        consumed = [consumed1]
     elif isinstance(stmt, ist.ActiveForm):
         consumed = [copy.deepcopy(stmt.agent)]
     else:
