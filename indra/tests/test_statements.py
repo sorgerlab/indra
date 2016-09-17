@@ -452,8 +452,8 @@ def test_entities_match_complex():
 def test_agent_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    ras = Agent('RAS', db_refs = {'FA': '03663'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
+    nras = Agent('NRAS', db_refs = {'HGNC': 'NRAS'})
     assert nras.refinement_of(ras, hierarchies)
     assert not ras.refinement_of(nras, hierarchies)
     # The top-level list should contain only one statement, the gene-level
@@ -462,16 +462,16 @@ def test_agent_superfamily_refinement():
 def test_agent_boundcondition_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    bc1 = BoundCondition(Agent('BRAF', db_refs = {'HGNC': 'braf1'}), True)
-    bc2 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'braf2'}), True)
-    bc3 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'braf2'}), False)
-    bc4 = BoundCondition(Agent('RAF', db_refs = {'HGNC': 'raf'}), True)
+    bc1 = BoundCondition(Agent('BRAF', db_refs = {'HGNC': 'BRAF'}), True)
+    bc2 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'RAF1'}), True)
+    bc3 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': 'RAF1'}), False)
+    bc4 = BoundCondition(Agent('RAF', db_refs = {'BE': 'RAF'}), True)
 
-    nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc1])
-    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc2])
-    nras3 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc3])
-    nras4 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras5 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+    nras1 = Agent('NRAS', db_refs = {'HGNC': 'NRAS'}, bound_conditions=[bc1])
+    nras2 = Agent('NRAS', db_refs = {'HGNC': 'NRAS'}, bound_conditions=[bc2])
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'NRAS'}, bound_conditions=[bc3])
+    nras4 = Agent('NRAS', db_refs = {'HGNC': 'NRAS'})
+    nras5 = Agent('NRAS', db_refs = {'HGNC': 'NRAS'},
                   bound_conditions=[bc4])
 
     # nras1 (bound to BRAF)
@@ -681,10 +681,10 @@ def test_autophosphorylation_modification_refinement():
     assert not p5.refinement_of(p6, hierarchies)
 
 def test_activation_modification_refinement():
-    raf = Agent('RAF')
-    braf = Agent('BRAF')
-    mek = Agent('MEK')
-    mek1 = Agent('MAP2K1')
+    raf = Agent('RAF', db_refs={'BE': 'RAF'})
+    braf = Agent('BRAF', db_refs={'HGNC': 'BRAF'})
+    mek = Agent('MEK', db_refs={'BE': 'MEK'})
+    mek1 = Agent('MAP2K1', db_refs={'HGNC': 'MAP2K1'})
 
     st1 = Activation(raf, 'kinase',
                      mek, 'kinase', True)
@@ -723,8 +723,8 @@ def test_activation_modification_refinement():
     assert not st4.refinement_of(st5, hierarchies)
 
 def test_activation_activity_hierarchy_refinement():
-    raf = Agent('RAF')
-    mek = Agent('MEK')
+    raf = Agent('RAF', db_refs={'BE': 'RAF'})
+    mek = Agent('MEK', db_refs={'BE': 'MEK'})
 
     st1 = Activation(raf, 'kinase', mek, 'kinase', True)
     st2 = Activation(raf, 'kinase', mek, 'kinase', False)
@@ -750,13 +750,20 @@ def test_activitymod_refinement():
     mc4 = ModCondition('phosphorylation', 'S', '222')
     mek_fam = Agent('MEK')
     mek1 = Agent('MAP2K1')
-    p1 = ActiveForm(Agent('MEK', mods=[mc1]), 'kinase', True)
-    p2 = ActiveForm(Agent('MEK', mods=[mc3]), 'kinase', True)
-    p3 = ActiveForm(Agent('MAP2K1', mods=[mc1]), 'kinase', True)
-    p4 = ActiveForm(Agent('MAP2K1', mods=[mc2]), 'kinase', True)
-    p5 = ActiveForm(Agent('MAP2K1', mods=[mc3]), 'kinase', True)
-    p6 = ActiveForm(Agent('MAP2K1', mods=[mc4]), 'kinase', True)
-    p7 = ActiveForm(Agent('MAP2K1', mods=[mc3, mc4]), 'kinase', True)
+    p1 = ActiveForm(Agent('MEK', mods=[mc1], db_refs={'BE':'MEK'}),
+                    'kinase', True)
+    p2 = ActiveForm(Agent('MEK', mods=[mc3], db_refs={'BE':'MEK'}),
+                    'kinase', True)
+    p3 = ActiveForm(Agent('MAP2K1', mods=[mc1], db_refs={'HGNC':'MAP2K1'}),
+                    'kinase', True)
+    p4 = ActiveForm(Agent('MAP2K1', mods=[mc2], db_refs={'HGNC':'MAP2K1'}),
+                    'kinase', True)
+    p5 = ActiveForm(Agent('MAP2K1', mods=[mc3], db_refs={'HGNC':'MAP2K1'}),
+                    'kinase', True)
+    p6 = ActiveForm(Agent('MAP2K1', mods=[mc4], db_refs={'HGNC':'MAP2K1'}),
+                    'kinase', True)
+    p7 = ActiveForm(Agent('MAP2K1', mods=[mc3, mc4], db_refs={'HGNC':'MAP2K1'}),
+                    'kinase', True)
     # p1
     assert p2.refinement_of(p1, hierarchies)
     assert p3.refinement_of(p1, hierarchies)
@@ -821,9 +828,9 @@ def test_activeform_activity_hierarchy_refinement():
 
 def test_activatingsub_family_refinement():
     mc = MutCondition('12', 'G', 'D')
-    ras = Agent('RAS', mutations=[mc])
-    kras = Agent('KRAS', mutations=[mc])
-    nras = Agent('NRAS', mutations=[mc])
+    ras = Agent('RAS', mutations=[mc], db_refs={'BE':'RAS'})
+    kras = Agent('KRAS', mutations=[mc], db_refs={'HGNC':'KRAS'})
+    nras = Agent('NRAS', mutations=[mc], db_refs={'HGNC':'NRAS'})
     st1 = ActiveForm(ras, 'activity', True)
     st2 = ActiveForm(kras, 'activity', True)
     st3 = ActiveForm(nras, 'activity', True)
@@ -846,10 +853,10 @@ def test_activatingsub_family_refinement():
     assert not st3.refinement_of(st4, hierarchies)
 
 def test_rasgef_family_refinement():
-    sos = Agent('SOS')
-    sos1 = Agent('SOS1')
-    ras = Agent('RAS')
-    kras = Agent('KRAS')
+    sos = Agent('SOS', db_refs={'BE':'SOS'})
+    sos1 = Agent('SOS1', db_refs={'HGNC':'SOS1'})
+    ras = Agent('RAS', db_refs={'BE':'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC':'KRAS'})
     # Statements
     st1 = RasGef(sos, 'activity', ras)
     st2 = RasGef(sos1, 'activity', ras)
@@ -883,10 +890,10 @@ def test_rasgef_family_refinement():
     assert not st4.refinement_of(st5, hierarchies)
 
 def test_rasgap_family_refinement():
-    rasa = Agent('RASA')
-    rasa1 = Agent('RASA1')
-    ras = Agent('RAS')
-    kras = Agent('KRAS')
+    rasa = Agent('RASA', db_refs={'BE':'RASA'})
+    rasa1 = Agent('RASA1', db_refs={'HGNC':'RASA1'})
+    ras = Agent('RAS', db_refs={'BE':'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC':'KRAS'})
     # Statements
     st1 = RasGap(rasa, 'activity', ras)
     st2 = RasGap(rasa1, 'activity', ras)
@@ -920,11 +927,11 @@ def test_rasgap_family_refinement():
     assert not st4.refinement_of(st5, hierarchies)
 
 def test_complex_family_refinement():
-    raf = Agent('RAF')
-    braf = Agent('BRAF')
-    raf1 = Agent('RAF1')
-    mek = Agent('MEK')
-    mek1 = Agent('MAP2K1')
+    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    braf = Agent('BRAF', db_refs={'HGNC':'BRAF'})
+    raf1 = Agent('RAF1', db_refs={'HGNC':'RAF1'})
+    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek1 = Agent('MAP2K1', db_refs={'HGNC':'MAP2K1'})
 
     st1 = Complex([raf, mek])
     st2 = Complex([braf, mek])
