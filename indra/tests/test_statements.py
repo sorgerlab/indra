@@ -1114,7 +1114,7 @@ def test_activity_refinement():
     assert(a1.refinement_of(a4, hierarchies))
     assert(a2.refinement_of(a4, hierarchies))
 
-def test_tranlocation_refinement():
+def test_translocation_refinement():
     st1 = Translocation(Agent('a'), 'plasma membrane', 'cytoplasm')
     st2 = Translocation(Agent('a'), 'plasma membrane', None)
     st3 = Translocation(Agent('a'), None, 'cytoplasm')
@@ -1122,6 +1122,9 @@ def test_tranlocation_refinement():
     st5 = Translocation(Agent('a'), 'cell', 'cell')
     st6 = Translocation(Agent('a'), 'plasma membrane', 'cell')
     st7 = Translocation(Agent('a'), 'nucleus', 'cytoplasm')
+    st8 = Translocation(Agent('a'), None, 'cell')
+    st9 = Translocation(Agent('a'), None, None)
+    assert(st3.refinement_of(st8, hierarchies))
     assert(st1.refinement_of(st2, hierarchies))
     assert(st1.refinement_of(st3, hierarchies))
     assert(not st2.refinement_of(st3, hierarchies))
@@ -1131,6 +1134,8 @@ def test_tranlocation_refinement():
     assert(st6.refinement_of(st5, hierarchies))
     assert(not st1.refinement_of(st7, hierarchies))
     assert(st7.refinement_of(st4, hierarchies))
+    assert(st8.refinement_of(st9, hierarchies))
+    assert(st7.refinement_of(st9, hierarchies))
 
 def test_complex_refinement_order():
     st1 = Complex([Agent('MED23'), Agent('ELK1')])
