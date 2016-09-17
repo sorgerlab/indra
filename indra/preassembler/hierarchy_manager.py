@@ -62,35 +62,6 @@ class HierarchyManager(object):
                 except KeyError:
                     tc_dict[xs] = [ys]
 
-    """
-    @functools32.lru_cache(maxsize=100000)
-    def find_entity(self, x):
-        Get the entity that has the specified name (or synonym).
-
-        Parameters
-        ----------
-        x : string
-            Name or synonym for the target entity.
-
-        qstr = self.prefixes +
-            SELECT ?x WHERE {{
-                {{
-                {{ ?x rn:hasName "{0}" . }}
-                UNION
-                {{ ?x rn:hasSynonym "{0}" . }}
-                UNION
-                {{ ?x rn:hasId "{0}" . }}
-                }}
-            }}
-            .format(x)
-        res = self.graph.query(qstr)
-        if list(res):
-            en = list(res)[0][0].toPython()
-            return en
-        else:
-            return None
-    """
-
     @functools32.lru_cache(maxsize=100000)
     def isa(self, ns1, id1, ns2, id2):
         """Indicate whether one entity has an "isa" relationship to another.
