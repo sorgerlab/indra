@@ -146,7 +146,11 @@ class IncrementalModel(object):
         gmap = gm.GroundingMapper(gm.default_grounding_map)
         gmapped_stmts = gmap.map_agents(stmts)
 
+        # Merge the prior and the mapped non-prior
         stmts = gmapped_stmts + self.get_statements_prior()
+
+        # Filter out ungrounded statements
+        relevant_stmts = self._relevance_filter(stmts, ['grounding'])
 
         # Combine duplicates
         pa = Preassembler(hierarchies, stmts)
