@@ -65,4 +65,12 @@ def test_partof_comp_not():
 
 def test_partof_comp_none():
     cyto_loc = get_valid_location('cytoplasm')
+    assert comp_hierarchy.partof('INDRA', cyto_loc, 'INDRA', None)
+
+def test_partof_comp_none_none():
+    assert comp_hierarchy.partof('INDRA', None, 'INDRA', None)
+
+def test_partof_comp_none_not():
+    cyto_loc = get_valid_location('cytoplasm')
+    assert not comp_hierarchy.partof('INDRA', None, 'INDRA', cyto_loc)
 
