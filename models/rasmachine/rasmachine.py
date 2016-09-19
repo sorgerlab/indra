@@ -112,14 +112,13 @@ def extend_model(model_name, model, pmids):
                 else:
                     npapers += 1
                 print pmid, len(rp.statements)
-                model.add_statements(pmid, rp.statements,
-                                     filters=global_filters)
+                model.add_statements(pmid, rp.statements)
             else:
                 model.add_statements(pmid, [])
                 print 'No statement extracted from PMID%s' % pmid
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
-    model.preassemble()
+    model.preassemble(filters=global_filters)
     return npapers, nabstracts
 
 def _increment_ndex_ver(ver_str):
