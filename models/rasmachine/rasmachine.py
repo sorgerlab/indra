@@ -177,10 +177,8 @@ if __name__ == '__main__':
     parser.add_argument('--twitter', help='Twitter credentials file')
     parser.add_argument('--gmail', help='Gmail credentials file')
     parser.add_argument('--ndex', help='NDEx credentials file')
+    parser.add_argument('--belief', help='Belief threshold (between 0 and 1')
     args = parser.parse_args()
-
-    # Probability cutoff for filtering statements
-    BELIEF_THRESHOLD = 0.95
 
     print '-------------------------'
     print time.strftime('%c')
@@ -217,6 +215,16 @@ if __name__ == '__main__':
             use_ndex = False
     else:
         use_ndex = False
+
+    # Probability cutoff for filtering statements
+    if args.belief:
+        if not os.path.exists(args.belief):
+            BELIEF_THRESHOLD = 0.95
+        belief_str = open(args.belief, 'rt').read().strip()
+        BELIEF_THRESHOLD = float(belief_str)
+    else:
+        BELIEF_THRESHOLD = 0.95
+
 
     pmids = []
     # Get email PMIDs
