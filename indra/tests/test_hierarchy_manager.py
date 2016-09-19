@@ -1,5 +1,6 @@
 import os
 from indra.preassembler.hierarchy_manager import HierarchyManager
+from indra.statements import get_valid_location, InvalidLocationError
 
 entity_file = os.path.join(os.path.dirname(__file__), 
         '../resources/entity_hierarchy.rdf')
@@ -7,50 +8,61 @@ entity_file = os.path.join(os.path.dirname(__file__),
 mod_file = os.path.join(os.path.dirname(__file__), 
         '../resources/modification_hierarchy.rdf')
 
-def test_find_entity():
-    hm = HierarchyManager(entity_file)
-    assert(hm.find_entity('BRAF'))
+act_file = os.path.join(os.path.dirname(__file__), 
+        '../resources/activity_hierarchy.rdf')
 
-def test_find_entity2():
-    hm = HierarchyManager(entity_file)
-    assert(hm.find_entity('abcdefghxyz') is None)
+comp_file = os.path.join(os.path.dirname(__file__), 
+        '../resources/cellular_component_hierarchy.rdf')
 
-def test_find_entity3():
-    hm = HierarchyManager(entity_file)
-    assert(hm.find_entity('RAF_FAMILY'))
+ent_hierarchy = HierarchyManager(entity_file)
+mod_hierarchy = HierarchyManager(mod_file)
+act_hierarchy = HierarchyManager(act_file)
+comp_hierarchy = HierarchyManager(comp_file)
 
-def test_find_entity4():
-    hm = HierarchyManager(entity_file)
-    assert(hm.find_entity('B-RAF1'))
+def test_isa_entity():
+    assert(ent_hierarchy.isa('HGNC', 'BRAF', 'BE', 'RAF'))
 
-def test_find_mod():
-    hm = HierarchyManager(mod_file)
-    assert(hm.find_entity('phosphorylation'))
+def test_isa_entity2():
+    assert(not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF'))
 
-def test_find_mod2():
-    hm = HierarchyManager(mod_file)
-    assert(hm.find_entity('sumoylation'))
+def test_isa_entity3():
+    assert(not ent_hierarchy.isa('BE', 'RAF', 'HGNC', 'BRAF'))
 
-def test_isa():
-    hm = HierarchyManager(entity_file)
-    assert(hm.isa('BRAF', 'RAF'))
+def test_partof_entity():
+    assert ent_hierarchy.partof('BE', 'HIF1_alpha', 'BE', 'HIF1')
 
-def test_isa2():
-    hm = HierarchyManager(entity_file)
-    assert(hm.isa('B-RAF1', 'RAF_FAMILY'))
-
-def test_isa3():
-    hm = HierarchyManager(entity_file)
-    assert(not hm.isa('BRAF', 'ARAF'))
-
-def test_isa4():
-    hm = HierarchyManager(entity_file)
-    assert(not hm.isa('RAF', 'BRAF'))
+def test_partof_entity_not():
+    assert not ent_hierarchy.partof('BE', 'HIF1', 'BE', 'HIF1_alpha')
 
 def test_isa_mod():
-    hm = HierarchyManager(mod_file)
-    assert(hm.isa('phosphorylation', 'modification'))
+    assert(mod_hierarchy.isa('INDRA', 'phosphorylation',
+                             'INDRA', 'modification'))
 
 def test_isa_mod_not():
-    hm = HierarchyManager(mod_file)
-    assert(not hm.isa('phosphorylation', 'ubiquitination'))
+    assert(not mod_hierarchy.isa('INDRA', 'phosphorylation',
+                                 'INDRA', 'ubiquitination'))
+
+def test_isa_activity():
+    assert act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'activity')
+
+def test_isa_activity_not():
+    assert not act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'phosphatase')
+
+def test_partof_comp():
+    cyto_loc = get_valid_location('cytoplasm')
+    cell_loc = get_valid_location('cell')
+    assert comp_hierarchy.partof('INDRA', cyto_loc, 'INDRA', cell_loc)
+
+def test_partof_comp_go_id():
+    cyto_loc = get_valid_location('GO:0005737')
+    cell_loc = get_valid_location('GO:0005623')
+    assert comp_hierarchy.partof('INDRA', cyto_loc, 'INDRA', cell_loc)
+
+def test_partof_comp_not():
+    cyto_loc = get_valid_location('cytoplasm')
+    cell_loc = get_valid_location('cell')
+    assert not comp_hierarchy.partof('INDRA', cell_loc, 'INDRA', cyto_loc)
+
+def test_partof_comp_none():
+    cyto_loc = get_valid_location('cytoplasm')
+
