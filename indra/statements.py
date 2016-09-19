@@ -309,9 +309,9 @@ class Agent(object):
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):
-                return ('HGNC', get_hgnc_name(hgnc[0]))
+                return ('HGNC', get_hgnc_name(str(hgnc[0])))
             else:
-                return ('HGNC', get_hgnc_name(hgnc))
+                return ('HGNC', get_hgnc_name(str(hgnc)))
         up = self.db_refs.get('UP')
         if up:
             if isinstance(up, list):
