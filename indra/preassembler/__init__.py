@@ -225,6 +225,22 @@ class Preassembler(object):
         dashes_printed = 0
         comparisons = list(itertools.permutations(groups.keys(), 2))
         num_comparisons = len(comparisons)
+        # Put together a list of all entity families
+        entity_tc = self.hierarchies['entity'].isa_closure
+        # FIXME This is done to avoid the find_entity lookup step in
+        # the hierarchy manager
+        indra_prefix = 'http://sorger.med.harvard.edu/indra/entities/'
+        entity_families = set([family_name[len(indra_prefix):]
+                               for isa_lists in entity_tc.values()
+                               for family_name in isa_lists
+                               if family_name.startswith(indra_prefix)])
+        # A handy function for checking if an agent has any family-level
+        # agents
+        def _has_family_agent(stmt):
+            for ag in stmt.agent_list():
+                if ag is None or ag.name in entity_families:
+                    return True
+            return False
         # We examine pairs of Statement groups, looking for "isa" relationships:
         for counter, (g1_key, g2_key) in enumerate(comparisons):
             # Update progress bar
@@ -264,6 +280,14 @@ class Preassembler(object):
             if type(g1_stmt) is Complex and \
                len(g1_stmt.members) != len(g2_stmt.members):
                 continue
+
+            # Check if any of the agents in the second statement group,
+            # g2_stmt, are families of some kind. If not, then the g1_stmt
+            # group cannot be a refinement of the g2_stmt group at the entity
+            # level, and we can skip the comparison.
+            if not _has_family_agent(g2_stmt):
+                continue
+
             # Check that all of the agents match or have an isa relationship.
             # Because the statements are of the same type, they should have the
             # same number of agents as arguments.  First, let's keep track of
@@ -322,6 +346,7 @@ class Preassembler(object):
                         found = True
                 if not found:
                     logger.error('Lost: %s' % s1)
+
         return self.related_stmts
 
 

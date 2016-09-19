@@ -300,20 +300,23 @@ class Agent(object):
     def entity_matches_key(self):
         return self.name
 
+    # Function to get the namespace to look in
+    def get_grounding(self):
+        be = self.db_refs.get('BE')
+        if be:
+            return ('BE', be)
+        hgnc = self.db_refs.get('HGNC')
+        if hgnc:
+            return ('HGNC', hgnc)
+        up = self.db_refs.get('UP')
+        if up:
+            return ('UP', up)
+        return (None, None)
+
     def isa(self, other, hierarchies):
-        # Function to get the namespace to look in
-        def get_grounding(db_refs):
-            if db_refs.get('BE'):
-                return ('BE', db_refs.get('BE'))
-            elif db_refs.get('HGNC'):
-                return ('HGNC', db_refs.get('HGNC'))
-            elif db_refs.get('UP'):
-                return ('UP', db_refs.get('UP'))
-            else:
-                return (None, None)
         # Get the namespaces for the comparison
-        (self_ns, self_id) = get_grounding(self.db_refs)
-        (other_ns, other_id) = get_grounding(other.db_refs)
+        (self_ns, self_id) = self.get_grounding()
+        (other_ns, other_id) = other.get_grounding()
         # If one of the agents isn't grounded to a relevant namespace,
         # there can't be an isa relationship
         if not all((self_ns, self_id, other_ns, other_id)):
