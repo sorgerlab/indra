@@ -143,12 +143,16 @@ def agent_texts(agents):
     return [ag.db_refs.get('TEXT') for ag in agents]
 
 
-def get_sentences_for_agent(text, stmts):
+def get_sentences_for_agent(text, stmts, max_sentences=None):
     sentences = []
     for stmt in stmts:
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
-                sentences.append((stmt.evidence[0].pmid, stmt.evidence[0].text))
+                sentences.append((stmt.evidence[0].pmid,
+                                  stmt.evidence[0].text.encode('utf8')))
+                if max_sentences is not None and \
+                   len(sentences) >= max_sentences:
+                    return sentences
     return sentences
 
 
@@ -242,6 +246,9 @@ def protein_map_from_twg(twg):
     """
 
     protein_map = {}
+    unmatched = 0
+    matched = 0
+    logger.info('Building grounding map for human proteins')
     for agent_text, grounding_list, total_count in twg:
         # If 'UP' (Uniprot) not one of the grounding entries for this text,
         # then we skip it.
@@ -260,15 +267,15 @@ def protein_map_from_twg(twg):
             # agent text
             gene_name = uniprot_client.get_hgnc_name(uniprot_id)
             if gene_name is None:
-                logger.info('No gene name found for %s/%s' %
-                            (uniprot_id, mnemonic))
+                unmatched += 1
                 continue
-            logger.info('gene_name for %s: %s' % (uniprot_id, gene_name))
             if agent_text.upper() == gene_name.upper():
-                logger.info('%s exact match for %s' % (agent_text, gene_name))
+                matched += 1
                 protein_map[agent_text] = {'TEXT': agent_text, 'UP': uniprot_id}
             else:
-                logger.info('%s not match for %s' % (agent_text, gene_name))
+                unmatched += 1
+    logger.info('Exact matches for %d proteins' % matched)
+    logger.info('No match (or no gene name) for %d proteins' % unmatched)
     return protein_map
 
 def save_sentences(twg, stmts, filename, agent_limit=300):

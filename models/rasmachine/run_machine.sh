@@ -9,7 +9,7 @@ else
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $DIR
+cd "$DIR"
 export PYTHONPATH=../../../indra:..
 twitter_cred="$model_name/twitter_cred.txt"
 gmail_cred="$model_name/gmail_cred.txt"
