@@ -102,11 +102,24 @@ class IncrementalModel(object):
                     agents = [a for a in stmts[i].agent_list()
                               if a is not None]
                     if 'model_all' in filters:
-                        if any(not a in model_agents for a in agents):
-                            stmts_to_add.remove(i)
+                        for st_agent in agents:
+                            found = False
+                            for mo_agent in model_agents:
+                                if self._agent_related(st_agent, mo_agent):
+                                    found = True
+                                    break
+                            if not found:
+                                stmts_to_add.remove(i)
+                                break
                     if 'model_one' in filters:
-                        if all(not a in model_agents for a in agents):
-                            stmts_to_add.remove(i)
+                        found = False
+                        for st_agent in agents:
+                            for mo_agent in model_agents:
+                                if self._agent_related(st_agent, mo_agent):
+                                    found = True
+                                    break
+                            if found:
+                                break
         relevant_stmts = [stmts[i] for i in stmts_to_add]
         return relevant_stmts
 
