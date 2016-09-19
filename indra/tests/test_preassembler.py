@@ -97,9 +97,9 @@ def test_combine_duplicates():
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'FA': '03663'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs = {'HGNC': 'SRC'})
+    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
+    nras = Agent('NRAS', db_refs = {'HGNC': 'NRAS'})
     st1 = Phosphorylation(src, ras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras, 'tyrosine', '32')
     pa = Preassembler(hierarchies, stmts=[st1, st2])
@@ -263,9 +263,9 @@ def test_activating_substitution_refinement():
     fields match."""
     mc1 = MutCondition('12', 'G', 'D')
     mc2 = MutCondition('61', 'Q', 'L')
-    nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS', mutations=[mc1])
+    nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': 'NRAS'})
+    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': 'NRAS'})
+    ras = Agent('RAS', mutations=[mc1], db_refs={'BE': 'RAS'})
     st1 = ActiveForm(ras, 'gtpbound1', True,
                      evidence=Evidence(text='bar'))
     st2 = ActiveForm(nras1, 'gtpbound1', True,
@@ -310,9 +310,9 @@ def test_translocation():
     assert(len(pa.related_stmts) == 2)
 
 def test_render_stmt_graph():
-    braf = Agent('BRAF')
-    mek1 = Agent('MAP2K1')
-    mek = Agent('MEK')
+    braf = Agent('BRAF', db_refs={'HGNC':'BRAF'})
+    mek1 = Agent('MAP2K1', db_refs={'HGNC':'MAP2K1'})
+    mek = Agent('MEK', db_refs={'BE':'MEK'})
     # Statements
     p0 = Phosphorylation(braf, mek)
     p1 = Phosphorylation(braf, mek1)
@@ -378,3 +378,8 @@ def test_complex_refinement_order():
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
+
+if __name__ == '__main__':
+    test_modification_refinement_residue_noenz()
+
+

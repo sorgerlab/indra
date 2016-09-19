@@ -280,8 +280,8 @@ class Preassembler(object):
                 elif ag2 is not None and ag1 is None:
                     val = False
                 else:
-                    val = ag1.entity_matches(ag2) or\
-                          self.hierarchies['entity'].isa(ag1.name, ag2.name)
+                    val = ag1.entity_matches(ag2) or \
+                          ag1.isa(ag2, self.hierarchies)
                 g1_is_refinement.append(val)
             # If g1_is_refinement is all True values, that means everything in
             # the group1 statements isa thing in the group2 statements.
