@@ -3,74 +3,50 @@ from rdflib import Graph, Namespace, Literal
 import csv
 import urllib2
 
+
+def make_term(ns_name, id):
+    if ns_name == 'HGNC':
+        term = hgnc_ns.term(id)
+    elif ns_name == 'UP':
+        term = up_ns.term(id)
+    elif ns_name == 'BE':
+        term = en.term(id)
+    else:
+        raise ValueError("Unknown namespace %s" % ns)
+    return term
+
+
 if __name__ == '__main__':
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
     if len(sys.argv) > 1:
-        proteins_file = sys.argv[1]
+        relations_file = sys.argv[1]
     else:
-        proteins_file = '../../data/ras_pathway_proteins.csv'
+        relations_file = '../../bioentities/relations.csv'
     rn = Namespace(indra_ns + 'relations/')
     en = Namespace(indra_ns + 'entities/')
+    hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
+    up_ns = Namespace('http://identifiers.org/uniprot/')
     g = Graph()
 
-    has_name = rn.term('hasName')
-    has_long_name = rn.term('hasLongName')
-    has_synonym = rn.term('hasSynonym')
     isa = rn.term('isa')
+    partof = rn.term('partof')
 
-    # Read BEL family names
-    res = urllib2.urlopen('http://resource.belframework.org/belframework/'+\
-        'latest-release/namespace/selventa-protein-families.belns')
-    belns_text = res.read()
-    start = belns_text.find('[Values]')
-    lines = belns_text[start:].split('\n')
-    bel_family_names = []
-    for l in lines:
-        if l.endswith(' Family|P'):
-            family_name = l[:-2].replace(' ', '_').replace('/', '_')
-            bel_family_names.append(family_name)
 
     family_names = set([])
-    with open(proteins_file) as tsv:
-        for line in csv.reader(tsv, dialect="excel-tab"):
-            print line
-            symbol, name, synonyms_str, family = line
-            g.add((en.term(symbol), has_long_name, Literal(name.strip())))
-            g.add((en.term(symbol), has_name, Literal(symbol)))
-            synonyms = synonyms_str.split(', ')
-            for s in synonyms:
-                if s != '':
-                    g.add((en.term(symbol), has_synonym, Literal(s)))
-            family_name = family.strip()
-            if family_name != '':
-                print family_name
-                g.add((en.term(symbol), isa, en.term(family_name)))
-                g.add((en.term(family), has_name, Literal(family_name)))
-                family_names.add(family_name)
-    for fn in family_names:
-        bel_synonyms = [bn for bn in bel_family_names 
-                        if bn.find(fn) != -1]
-        for b in bel_synonyms:
-            g.add((en.term(fn), has_synonym, Literal(b.upper())))
+    with open(relations_file) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL,
+                                lineterminator='\r\n')
+        for line in csv_reader:
+            ns1, id1, rel, ns2, id2 = line
+            term1 = make_term(ns1, id1)
+            term2 = make_term(ns2, id2)
+            if rel in ('isa', 'partof'):
+                rel_term = rn.term(rel)
+            else:
+                raise ValueError("Invalid relation %s" % rel)
+            g.add((term1, rel_term, term2))
 
-    # Further BEL family names added manually
-    g.add((en.term('ERK'), has_synonym, Literal('MAPK_ERK1_2_FAMILY')))
-
-    # Add in makeshift hierarchies for families and complexes
-    g.add((en.term('p85'), isa, en.term('PI3K')))
-    g.add((en.term('p110'), isa, en.term('PI3K')))
-    g.add((en.term('4EBP1'), isa, en.term('4EBP')))
-    # MAP3K
-    g.add((en.term('MAP3K1'), isa, en.term('MAP3K')))
-    g.add((en.term('MAP3K2'), isa, en.term('MAP3K')))
-    # MAP2K
-    g.add((en.term('MAP2K1'), isa, en.term('MAP2K')))
-    g.add((en.term('MAP2K2'), isa, en.term('MAP2K')))
-    # MAPK
-    g.add((en.term('MAPK1'), isa, en.term('ERK')))
-    g.add((en.term('MAPK3'), isa, en.term('ERK')))
-    g.add((en.term('ERK'), isa, en.term('MAPK')))
-
-    with open('entity_hierarchy.rdf', 'wt') as out_file:
+    with open('../resources/entity_hierarchy.rdf', 'wt') as out_file:
         out_file.write(g.serialize(format='xml'))
 

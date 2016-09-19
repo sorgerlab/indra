@@ -92,9 +92,9 @@ def make_component_hierarchy(component_map, component_part_map):
 if __name__ == '__main__':
     # This file can be donwloaded from:
     # http://purl.obolibrary.org/obo/go.owl
-    fname = '/home/beni/data/go.owl'
+    fname = '../../data/go.owl'
     g = rdflib.Graph()
-    pkl_name = '/home/beni/data/go.pkl'
+    pkl_name = '../../data/go.pkl'
     if not os.path.exists(pkl_name):
         print 'Parsing %s' % fname
         g.parse(fname)
@@ -106,5 +106,6 @@ if __name__ == '__main__':
     print 'Getting cellular components'
     component_map, component_part_map = get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
-    with open('cellular_component_hierarchy.rdf', 'wt') as out_file:
+    with open('../resources/cellular_component_hierarchy.rdf', 'wt') \
+                                                                as out_file:
         out_file.write(gg.serialize(format='xml'))
