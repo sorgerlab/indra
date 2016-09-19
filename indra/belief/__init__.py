@@ -43,7 +43,6 @@ class BeliefEngine(object):
         for st in statements:
             prob = self.get_rolling_prob(st)
             st.belief = prob
-            print st, prob
 
     def set_linked_probs(self, linked_statements):
         for st in linked_statements:
