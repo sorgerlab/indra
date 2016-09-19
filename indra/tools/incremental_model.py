@@ -192,10 +192,11 @@ class IncrementalModel(object):
         prot_map = gm.protein_map_from_twg(twg)
         gm.default_grounding_map.update(prot_map)
         gmap = gm.GroundingMapper(gm.default_grounding_map)
-        gmapped_stmts = gmap.map_agents(stmts)
+        gmapped_stmts = gmap.map_agents(stmts, do_rename=True)
 
         # Merge the prior and the mapped non-prior
-        stmts = stmts + self.get_statements_prior()
+        stmts = gmapped_stmts + self.get_statements_prior()
+        logger.info('%d unfiltered Statements' % len(stmts))
 
         if filters:
             if 'grounding' in filters:
@@ -211,6 +212,7 @@ class IncrementalModel(object):
                     logger.info('%s Statements after filter' % len(stmts))
 
         # Combine duplicates
+        logger.info('Preassembling %d Statements' % len(stmts))
         pa = Preassembler(hierarchies, stmts)
         self.unique_stmts = pa.combine_duplicates()
 
