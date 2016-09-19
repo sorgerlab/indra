@@ -1052,7 +1052,7 @@ class ActiveForm(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
-            raise ValueError("ActivityForm has one agent.")
+            raise ValueError("ActiveForm has one agent.")
         self.agent = agent_list[0]
 
     def refinement_of(self, other, hierarchies):
@@ -1085,6 +1085,72 @@ class ActiveForm(Statement):
                   (self.is_active == other.is_active)
         return matches
 
+class HasActivity(Statement):
+    """States that an Agent has or doesn't have a given activity type.
+
+    With this Statement, one cane express that a given protein is a kinase, or,
+    for instance, that it is a transcription factor. It is also possible to
+    construct negative statements with which one epxresses, for instance,
+    that a given protein is not a kinase.
+
+    Parameters
+    ----------
+    agent : :py:class:`Agent`
+        The Agent that that statement is about. Note that the detailed state
+        of the Agent is not relevant for this type of statement.
+    activity : string
+        The type of activity, e.g., "kinase".
+    has_activity : bool
+        Whether the given Agent has the given activity (True) or
+        not (False).
+    """
+    def __init__(self, agent, activity, has_activity, evidence=None):
+        super(HasActivity, self).__init__(evidence)
+        self.agent = agent
+        self.activity = activity
+        self.has_activity = has_activity
+
+    def matches_key(self):
+        key = (type(self), self.agent.matches_key(),
+                str(self.activity), str(self.has_activity))
+        return str(key)
+
+    def agent_list(self):
+        return [self.agent]
+
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 1:
+            raise ValueError("HasActivity has one agent.")
+        self.agent = agent_list[0]
+
+    def refinement_of(self, other, hierarchies):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        if not self.agent.refinement_of(other.agent, hierarchies):
+            return False
+
+        # Make sure that the relationships and activities match
+        if (self.has_activity == other.has_activity) and \
+            (self.activity == other.activity or \
+            hierarchies['activity'].isa(self.activity, other.activity)):
+               return True
+        else:
+            return False
+
+    def __str__(self):
+        s = ("HasActivity(%s, %s, %s)" %
+                (self.agent, self.activity, self.has_activity))
+        return s
+
+    def equals(self, other):
+        matches = super(HasActivity, self).equals(other)
+        matches = matches and\
+                  (self.activity == other.activity) and\
+                  (self.has_activity == other.has_activity)
+        return matches
 
 class RasGef(Statement):
     """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
