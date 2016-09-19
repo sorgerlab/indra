@@ -1341,13 +1341,25 @@ def get_valid_residue(residue):
 
 def get_valid_location(location):
     """Check if the given location represents a valid cellular component."""
-    if location is not None and cellular_components.get(location) is None:
-        loc = cellular_components_reverse.get(location)
-        if loc is None:
+    # If we're given None, return None
+    if location is None:
+        return None
+    # If we're given a valid location name, get it
+    valid_loc = cellular_components.get(location)
+    if valid_loc is not None:
+        return valid_loc
+    # If the lookup fails, it's possible that we were already given a GO ID;
+    # so check to see if the key is in the reverse dictionary
+    else:
+        valid_loc = cellular_components_reverse.get(location)
+        # If they key is not found in the reverse lookup dict, then it's not
+        # valid
+        if valid_loc is None:
             raise InvalidLocationError(location)
+        # If the key was found, then the original location we were given is
+        # valid as an identifier
         else:
-            return loc
-    return location
+            return location
 
 def _read_cellular_components():
     """Read cellular components from a resource file."""
