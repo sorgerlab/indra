@@ -219,6 +219,7 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
+
 class Agent(object):
     """A molecular entity, e.g., a protein.
 
@@ -855,41 +856,51 @@ class Hydroxylation(Modification):
     """Hydroxylation modification."""
     pass
 
+
 class Dehydroxylation(Modification):
     """Dehydroxylation modification."""
     pass
+
 
 class Sumoylation(Modification):
     """Sumoylation modification."""
     pass
 
+
 class Desumoylation(Modification):
     """Desumoylation modification."""
     pass
+
 
 class Acetylation(Modification):
     """Acetylation modification."""
     pass
 
+
 class Deacetylation(Modification):
     """Deacetylation modification."""
     pass
+
 
 class Glycosylation(Modification):
     """Glycosylation modification."""
     pass
 
+
 class Deglycosylation(Modification):
     """Deglycosylation modification."""
     pass
+
 
 class Ubiquitination(Modification):
     """Ubiquitination modification."""
     pass
 
+
 class Deubiquitination(Modification):
     """Deubiquitination modification."""
     pass
+
 
 class Farnesylation(Modification):
     """Farnesylation modification."""
@@ -1265,6 +1276,7 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+
 class Translocation(Statement):
     """The translocation of a molecular agent from one location to another.
 
@@ -1339,6 +1351,7 @@ def get_valid_residue(residue):
             return res
     return residue
 
+
 def get_valid_location(location):
     """Check if the given location represents a valid cellular component."""
     # If we're given None, return None
@@ -1361,6 +1374,7 @@ def get_valid_location(location):
         else:
             return location
 
+
 def _read_cellular_components():
     """Read cellular components from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1375,7 +1389,9 @@ def _read_cellular_components():
         cellular_components_reverse[terms[0]] = terms[1]
     return cellular_components, cellular_components_reverse
 
+
 cellular_components, cellular_components_reverse = _read_cellular_components()
+
 
 def _read_amino_acids():
     """Read the amino acid information from a resource file."""
@@ -1398,10 +1414,12 @@ def _read_amino_acids():
 
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
+
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid residue name: '%s'" % name)
+
 
 class InvalidLocationError(ValueError):
     """Invalid cellular component name."""
