@@ -180,7 +180,7 @@ class ModCondition(object):
 
     def refinement_of(self, other, mod_hierarchy):
         type_match = (self.mod_type == other.mod_type or \
-            mod_hierarchy.isa(self.mod_type, other.mod_type))
+            mod_hierarchy.isa('INDRA', self.mod_type, 'INDRA', other.mod_type))
         residue_match = (self.residue == other.residue or \
             (self.residue is not None and other.residue is None))
         pos_match = (self.position == other.position or \
@@ -279,7 +279,7 @@ class Agent(object):
         return self.matches_key() == other.matches_key()
 
     def matches_key(self):
-        # NOTE: Making a set of the mod matches_keys mat break if
+        # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
         name_str = self.name.encode('utf-8')
@@ -299,6 +299,27 @@ class Agent(object):
     def entity_matches_key(self):
         return self.name
 
+    def isa(self, other, hierarchies):
+        # Function to get the namespace to look in
+        def get_grounding(db_refs):
+            if db_refs.get('BE'):
+                return ('BE', db_refs.get('BE'))
+            elif db_refs.get('HGNC'):
+                return ('HGNC', db_refs.get('HGNC'))
+            elif db_refs.get('UP'):
+                return ('UP', db_refs.get('UP'))
+            else:
+                return (None, None)
+        # Get the namespaces for the comparison
+        (self_ns, self_id) = get_grounding(self.db_refs)
+        (other_ns, other_id) = get_grounding(other.db_refs)
+        # If one of the agents isn't grounded to a relevant namespace,
+        # there can't be an isa relationship
+        if not all((self_ns, self_id, other_ns, other_id)):
+            return False
+        # Check for isa relationship
+        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+
     def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
         if type(self) != type(other):
@@ -307,8 +328,9 @@ class Agent(object):
         # ENTITIES
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
-        if not (self.entity_matches(other) or \
-                hierarchies['entity'].isa(self.name, other.name)):
+
+        # If the entities, match, then we can continue
+        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
             return False
 
         # BOUND CONDITIONS
@@ -331,8 +353,7 @@ class Agent(object):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.agent.entity_matches(bc_other.agent) or
-                    hierarchies['entity'].isa(bc_self.agent.name,
-                                              bc_other.agent.name)) and \
+                    bc_self.agent.isa(bc_other.agent, hierarchies)) and \
                     bc_self.is_bound == bc_other.is_bound:
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
@@ -394,7 +415,7 @@ class Agent(object):
             # If the other location is part of this location then
             # self.location is not a refinement
             if not hierarchies['cellular_component'].partof(
-                self.location, other.location):
+                'INDRA', self.location, 'INDRA', other.location):
                 return False
 
         # ACTIVITY
@@ -402,7 +423,8 @@ class Agent(object):
             if other.active is not None:
                 return False
         elif other.active is not None:
-            if not hierarchies['activity'].isa(self.active, other.active):
+            if not hierarchies['activity'].isa('INDRA', self.active,
+                                               'INDRA', other.active):
                 return False
 
         # Everything checks out
@@ -944,11 +966,11 @@ class Activation(Statement):
             if self.is_activation != other.is_activation:
                 return False
             subj_act_match = (self.subj_activity == other.subj_activity) or \
-                hierarchies['activity'].isa(self.subj_activity,
-                                            other.subj_activity)
+                hierarchies['activity'].isa('INDRA', self.subj_activity,
+                                            'INDRA', other.subj_activity)
             obj_act_match = (self.obj_activity == other.obj_activity) or \
-                hierarchies['activity'].isa(self.obj_activity,
-                                            other.obj_activity)
+                hierarchies['activity'].isa('INDRA', self.obj_activity,
+                                            'INDRA', other.obj_activity)
             if subj_act_match and obj_act_match:
                 return True
             else:
@@ -1024,7 +1046,8 @@ class ActiveForm(Statement):
         # Make sure that the relationships and activities match
         if (self.is_active == other.is_active) and \
             (self.activity == other.activity or \
-            hierarchies['activity'].isa(self.activity, other.activity)):
+            hierarchies['activity'].isa('INDRA', self.activity,
+                                        'INDRA', other.activity)):
                return True
         else:
             return False
@@ -1286,10 +1309,12 @@ class Translocation(Statement):
         ref1 = self.agent.refinement_of(other.agent, hierarchies)
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-                ch.partof(self.from_location, other.from_location))
+                ch.partof('INDRA', self.from_location,
+                          'INDRA', other.from_location))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-                ch.partof(self.to_location, other.to_location))
+                ch.partof('INDRA', self.to_location,
+                          'INDRA', other.to_location))
         return (ref1 and ref2 and ref3)
 
     def equals(self, other):
