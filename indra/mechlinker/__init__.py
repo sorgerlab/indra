@@ -248,9 +248,9 @@ class BaseAgent(object):
     def make_activity_graph(self):
         self.activity_graph  = []
         for a1, a2 in itertools.combinations(self.activities, 2):
-            if ah.isa(a1, a2):
+            if ah.isa('INDRA', a1, 'INDRA', a2):
                 self.activity_graph.append((a1, a2))
-            if ah.isa(a2, a1):
+            if ah.isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.append((a2, a1))
 
     def add_activity(self, activity):
