@@ -2,7 +2,7 @@ import os
 import rdflib
 import functools32
 
-def get_term(ns, id):
+def get_uri(ns, id):
     if ns == 'HGNC':
         return 'http://identifiers.org/hgnc.symbol/' + id
     elif ns == 'UP':
@@ -62,30 +62,6 @@ class HierarchyManager(object):
                 except KeyError:
                     tc_dict[xs] = [ys]
 
-    @functools32.lru_cache(maxsize=100000)
-    def find_entity(self, x):
-        """
-        Get the entity that has the specified name (or synonym).
-
-        Parameters
-        ----------
-        x : string
-            Name or synonym for the target entity.
-        """
-
-        qstr = self.prefixes + """
-            SELECT ?x WHERE {{
-                ?x rn:hasName "{0}" .
-            }}
-            """.format(x)
-        res = self.graph.query(qstr)
-        if list(res):
-            en = list(res)[0][0].toPython()
-            return en
-        else:
-            return None
-
-    @functools32.lru_cache(maxsize=100000)
     def isa(self, ns1, id1, ns2, id2):
         """Indicate whether one entity has an "isa" relationship to another.
 
@@ -106,31 +82,25 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        # if id2 is None, or both are None, then it's by definition isa:
+        if id2 is None or (id2 is None and id1 is None):
+            return True
+        # If only id1 is None, then it cannot be isa
+        elif id1 is None:
+            return False
+
+        term1 = get_uri(ns1, id1)
+        term2 = get_uri(ns2, id2)
 
         if self.isa_closure:
-            term1 = get_term(ns1, id1)
-            term2 = get_term(ns2, id2)
             ec = self.isa_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
             else:
                 return False
-
-        term1 = self.find_entity(id1)
-        term2 = self.find_entity(id2)
-        qstr = self.prefixes + """ 
-            SELECT (COUNT(*) as ?s) WHERE {{
-                <{}> rn:isa+ <{}> .
-                }}
-            """.format(term1, term2)
-        res = self.graph.query(qstr)
-        count = [r[0] for r in res][0]
-        if count.toPython() == 1:
-            return True
         else:
-            return False
+            return self.query_rdf(term1, 'rn:isa+', term2)
 
-    @functools32.lru_cache(maxsize=100000)
     def partof(self, ns1, id1, ns2, id2):
         """Indicate whether one entity is physically part of another.
 
@@ -151,23 +121,32 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        # if id2 is None, or both are None, then it's by definition isa:
+        if id2 is None or (id2 is None and id1 is None):
+            return True
+        # If only id1 is None, then it cannot be isa
+        elif id1 is None:
+            return False
+
+        term1 = get_uri(ns1, id1)
+        term2 = get_uri(ns2, id2)
 
         if self.partof_closure:
-            term1 = get_term(ns1, id1)
-            term2 = get_term(ns2, id2)
             ec = self.partof_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
             else:
                 return False
+        else:
+            return self.query_rdf(term1, 'rn:partof+', term2)
 
-        term1 = self.find_entity(id1)
-        term2 = self.find_entity(id2)
+    @functools32.lru_cache(maxsize=100000)
+    def query_rdf(self, term1, rel, term2):
         qstr = self.prefixes + """ 
             SELECT (COUNT(*) as ?s) WHERE {{
-                <{}> rn:partof+ <{}> .
+                <{}> {} <{}> .
                 }}
-            """.format(term1, term2)
+            """.format(term1, rel, term2)
         res = self.graph.query(qstr)
         count = [r[0] for r in res][0]
         if count.toPython() == 1:
