@@ -1,5 +1,6 @@
 import pickle
 import logging
+from indra.statements import Agent
 from indra.assemblers import PysbAssembler
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -70,21 +71,36 @@ class IncrementalModel(object):
             prior_agents = self.get_prior_agents()
             if prior_agents:
                 for i in stmts_to_add:
-                    agents = set([a.name for a in stmts[i].agent_list()
-                                  if a is not None])
+                    agents = [a for a in stmts[i].agent_list()
+                              if a is not None]
                     if 'prior_all' in filters:
-                        if any(not a in prior_agents for a in agents):
-                            stmts_to_add.remove(i)
+                        for st_agent in agents:
+                            found = False
+                            for pr_agent in prior_agents:
+                                if self._agent_related(st_agent, pr_agent):
+                                    found = True
+                                    break
+                            if not found:
+                                stmts_to_add.remove(i)
+                                break
                     if 'prior_one' in filters:
-                        if all(not a in prior_agents for a in agents):
-                            stmts_to_add.remove(i)
+                        found = False
+                        for st_agent in agents:
+                            for pr_agent in prior_agents:
+                                if self._agent_related(st_agent, pr_agent):
+                                    found = True
+                                    break
+                            if found:
+                                break
+                        if not found:
+                                stmts_to_add.remove(i)
 
         if ('model_all' in filters) or ('model_one' in filters):
             model_agents = self.get_model_agents()
             if model_agents:
                 for i in stmts_to_add:
-                    agents = set([a.name for a in stmts[i].agent_list()
-                                  if a is not None])
+                    agents = [a for a in stmts[i].agent_list()
+                              if a is not None]
                     if 'model_all' in filters:
                         if any(not a in model_agents for a in agents):
                             stmts_to_add.remove(i)
@@ -131,15 +147,34 @@ class IncrementalModel(object):
         self.stmts[pmid] = relevant_stmts
 
 
-    def preassemble(self):
+    def preassemble(self, filters=None):
         """Preassemble the Statements collected in the model.
 
-        Use INDRA's Preassembler on the IncrementalModel and save the
-        unique statements and the top level statements in class
-        attributes.
+        Use INDRA's GroundingMapper, Preassembler and BeliefEngine
+        on the IncrementalModel and save the unique statements and
+        the top level statements in class attributes.
+
+        Currently the following filter options are implemented:
+        - grounding: require that all Agents in statements are grounded
+        - model_one: require that at least one Agent is in the incremental
+                      model
+        - model_all: require that all Agents are in the incremental model
+        - prior_one: require that at least one Agent is in the
+                      prior model
+        - prior_all: require that all Agents are in the prior model
+        Note that model_one -> prior_all are increasingly more restrictive
+        options.
+
+        Parameters
+        ----------
+        filter : Optional[list[str]]
+            A list of filter options to apply when choosing the statements.
+            See description above for more details. Default: None
         """
         stmts = self.get_statements_noprior()
+
         # Fix grounding
+        logger.info('Running grounding map')
         twg = gm.agent_texts_with_grounding(stmts)
         prot_map = gm.protein_map_from_twg(twg)
         gm.default_grounding_map.update(prot_map)
@@ -147,10 +182,20 @@ class IncrementalModel(object):
         gmapped_stmts = gmap.map_agents(stmts)
 
         # Merge the prior and the mapped non-prior
-        stmts = gmapped_stmts + self.get_statements_prior()
+        stmts = stmts + self.get_statements_prior()
 
-        # Filter out ungrounded statements
-        relevant_stmts = self._relevance_filter(stmts, ['grounding'])
+        if filters:
+            if 'grounding' in filters:
+                # Filter out ungrounded statements
+                logger.info('Running grounding filter')
+                stmts = self._relevance_filter(stmts, ['grounding'])
+                logger.info('%s Statements after filter' % len(stmts))
+            for rel_key in ('prior_one', 'model_one',
+                             'prior_all', 'model_all'):
+                if rel_key in filters:
+                    logger.info('Running relevance filter')
+                    stmts = self._relevance_filter(stmts, [rel_key])
+                    logger.info('%s Statements after filter' % len(stmts))
 
         # Combine duplicates
         pa = Preassembler(hierarchies, stmts)
@@ -176,25 +221,38 @@ class IncrementalModel(object):
 
     def get_model_agents(self):
         """Return a list of all Agents from all Statements."""
-        model_stmts = self.get_statements()
+        model_stmts = self.get_statements_noprior()
+        # First, get all unique name/db_refs pairs
         agents = set()
         for stmt in model_stmts:
             for a in stmt.agent_list():
                 if a is not None:
-                    agents.add(a.name)
+                    agents.add((a.name, a.get_grounding()))
+        # Then construct sateless name/db_refs Agents
+        agents = [Agent(n, db_refs={g[0]: g[1]}) for n, g in agents]
         return agents
 
     def get_prior_agents(self):
         """Return a list of all Agents from the prior Statements."""
-        prior_stmts = self.stmts.get('prior')
+        prior_stmts = self.get_statements_prior()
+        # First, get all unique name/db_refs pairs
         agents = set()
         if prior_stmts is None:
             return agents
         for stmt in prior_stmts:
             for a in stmt.agent_list():
                 if a is not None:
-                    agents.add(a.name)
+                    agents.add((a.name, a.get_grounding()))
+        agents = [Agent(n, db_refs={g[0]: g[1]}) for n, g in agents]
         return agents
+
+    @staticmethod
+    def _agent_related(a1, a2):
+        if a1.matches(a2) or \
+            a1.isa(a2, hierarchies) or \
+            a2.isa(a1, hierarchies):
+            return True
+        return False
 
     def get_statements(self):
         """Return a list of all Statements in a single list."""
