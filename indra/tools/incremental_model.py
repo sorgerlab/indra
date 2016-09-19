@@ -131,7 +131,7 @@ class IncrementalModel(object):
         unique statements and the top level statements in class
         attributes.
         """
-        stmts = self.get_statements()
+        stmts = self.get_statements_noprior()
         # Fix grounding
         twg = gm.agent_texts_with_grounding(stmts)
         prot_map = gm.protein_map_from_twg(twg)
@@ -139,8 +139,10 @@ class IncrementalModel(object):
         gmap = gm.GroundingMapper(gm.default_grounding_map)
         gmapped_stmts = gmap.map_agents(stmts)
 
+        stmts = gmapped_stmts + self.get_statements_prior()
+
         # Combine duplicates
-        pa = Preassembler(hierarchies, gmapped_stmts)
+        pa = Preassembler(hierarchies, stmts)
         self.unique_stmts = pa.combine_duplicates()
 
         # Run BeliefEngine on unique statements
@@ -191,3 +193,17 @@ class IncrementalModel(object):
             stmts += s
         return stmts
 
+    def get_statements_noprior(self):
+        """Return a list of all non-prior Statements in a single list."""
+        stmt_lists = [v for k, v in self.stmts.iteritems() if k != 'prior']
+        stmts = []
+        for s in stmt_lists:
+            stmts += s
+        return stmts
+
+    def get_statements_prior(self):
+        """Return a list of all prior Statements in a single list."""
+        if self.stmts.get('prior') is not None:
+            return self.stmts['prior']
+        else:
+            return []
