@@ -39,6 +39,7 @@ class IncrementalModel(object):
                 logger.warning('Could not load %s, starting new model.' %
                                model_fname)
                 self.stmts = {}
+        self.relevant_stmts = []
         self.unique_stmts = []
         self.toplevel_stmts = []
 
@@ -52,39 +53,7 @@ class IncrementalModel(object):
         with open(model_fname, 'wb') as fh:
             pickle.dump(self.stmts, fh)
 
-    def add_statements(self, pmid, stmts, filters=None):
-        """Add INDRA Statements to the incremental model indexed by PMID.
-
-        Currently the following filter options are implemented:
-        - grounding: require that all Agents in statements are grounded
-        - model_one: require that at least one Agent is in the incremental
-                      model
-        - model_all: require that all Agents are in the incremental model
-        - prior_one: require that at least one Agent is in the
-                      prior model
-        - prior_all: require that all Agents are in the prior model
-        Note that model_one -> prior_all are increasingly more restrictive
-        options.
-
-        Parameters
-        ----------
-        pmid : str
-            The PMID of the paper from which statements were extracted.
-        stmts : list[indra.statements.Statement]
-            A list of INDRA Statements to be added to the model.
-        filter : Optional[list[str]]
-            A list of filter options to apply when adding the statements.
-            See description above for more details. Default: None
-        """
-        # If no filter is used, we add all statements to the model
-        if not filters:
-            self.stmts[pmid] = stmts
-            return
-        # If the statements are empty in the first place
-        if not stmts:
-            self.stmts[pmid] = []
-            return
-
+    def _relevance_filter(self, stmts, filters=None):
         stmts_to_add = range(len(stmts))
         # Filter for grounding
         if 'grounding' in filters:
@@ -122,7 +91,45 @@ class IncrementalModel(object):
                     if 'model_one' in filters:
                         if all(not a in model_agents for a in agents):
                             stmts_to_add.remove(i)
-        self.stmts[pmid] = [stmts[i] for i in stmts_to_add]
+        relevant_stmts = [stmts[i] for i in stmts_to_add]
+        return relevant_stmts
+
+    def add_statements(self, pmid, stmts, filters=None):
+        """Add INDRA Statements to the incremental model indexed by PMID.
+
+        Currently the following filter options are implemented:
+        - grounding: require that all Agents in statements are grounded
+        - model_one: require that at least one Agent is in the incremental
+                      model
+        - model_all: require that all Agents are in the incremental model
+        - prior_one: require that at least one Agent is in the
+                      prior model
+        - prior_all: require that all Agents are in the prior model
+        Note that model_one -> prior_all are increasingly more restrictive
+        options.
+
+        Parameters
+        ----------
+        pmid : str
+            The PMID of the paper from which statements were extracted.
+        stmts : list[indra.statements.Statement]
+            A list of INDRA Statements to be added to the model.
+        filter : Optional[list[str]]
+            A list of filter options to apply when adding the statements.
+            See description above for more details. Default: None
+        """
+        # If no filter is used, we add all statements to the model
+        if not filters:
+            self.stmts[pmid] = stmts
+            return
+        # If the statements are empty in the first place
+        if not stmts:
+            self.stmts[pmid] = []
+            return
+
+        relevant_stmts = self._relevance_filter(stmts, filters)
+        self.stmts[pmid] = relevant_stmts
+
 
     def preassemble(self):
         """Preassemble the Statements collected in the model.
