@@ -18,11 +18,16 @@ class IndexCardProcessor(object):
                 continue
             enz = self._get_agent(inter.get('participant_a'))
             sub = self._get_agent(inter.get('participant_b'))
+            if sub is None:
+                continue
             mods = inter.get('modifications')
             mcs = [self._get_mod_condition(mod) for mod in mods]
             ev = self._get_evidence(card)
             for mc in mcs:
                 stmt_class = self._mod_type_map.get(mc.mod_type)
+                if stmt_class is None:
+                    print '%s not found in mod type map' % mc.mod_type
+                    continue
                 stmt = stmt_class(enz, sub, mc.residue, mc.position,
                                   evidence=ev)
                 self.statements.append(stmt)
@@ -187,7 +192,7 @@ class IndexCardProcessor(object):
             'farnesylation': Farnesylation,
             'glycosylation': Glycosylation,
             'deglycosylation': Deglycosylation,
-            'hydorxylation': Hydroxylation,
+            'hydroxylation': Hydroxylation,
             'dehydroxylatoni': Dehydroxylation,
             'sumoylation': Sumoylation,
             'desumoylation': Desumoylation
