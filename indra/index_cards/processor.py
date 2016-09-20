@@ -27,6 +27,17 @@ class IndexCardProcessor(object):
                                   evidence=ev)
                 self.statements.append(stmt)
 
+    def get_binds(self): 
+        for card in self.index_cards:
+            inter = card.get('interaction')
+            if inter['interaction_type'] != 'binds':
+                continue
+            a1 = self._get_agent(inter.get('participant_a'))
+            a2 = self._get_agent(inter.get('participant_b'))
+            ev = self._get_evidence(card)
+            stmt = Complex([a1, a2], evidence=ev)
+            self.statements.append(stmt)
+
     def get_complexes(self):
         for card in self.index_cards:
             inter = card.get('interaction')
