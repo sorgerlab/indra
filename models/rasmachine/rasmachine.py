@@ -259,7 +259,7 @@ if __name__ == '__main__':
     stats = {}
     print 'Preassembling model'
     print time.strftime('%c')
-    model.preassemble()
+    model.preassemble(filters=global_filters)
 
     # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
