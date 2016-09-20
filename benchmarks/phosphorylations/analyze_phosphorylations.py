@@ -7,9 +7,11 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
+psite_fname = 'phosphosite_kin_sub_2016.csv'
+rasmachine_stmts_fname = 'model.pkl'
+
 def phosphosite_to_indra():
-    fname = 'phosphosite_kin_sub_2016.csv'
-    df = pandas.DataFrame.from_csv(fname, index_col=None)
+    df = pandas.DataFrame.from_csv(psite_fname, index_col=None)
     df = df[df['KIN_ORGANISM']=='human']
     dt = df[df['SUB_ORGANISM']=='human']
     stmts = []
@@ -39,7 +41,7 @@ def phosphosite_to_indra():
     return stmts
 
 def rasmachine_extract_phos():
-    with open('model.pkl', 'rb') as fh:
+    with open(rasmachine_stmts_fname, 'rb') as fh:
         model = pickle.load(fh)
 
     stmts = []
