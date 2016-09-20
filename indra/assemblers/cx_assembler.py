@@ -183,10 +183,19 @@ class CxAssembler():
                 val = 'http://identifiers.org/hgnc/HGNC:%s' % db_id
             elif db_name == 'CHEBI':
                 name = 'ChEBI'
-                val = 'http://identifiers.org/chebi/CHEBI:%s' % db_id
+                val = 'http://identifiers.org/chebi/%s' % db_id
+            elif db_name == 'PUBCHEM':
+                name = 'PubChem'
+                val = 'http://identifiers.org/pubchem.compound/%s' % db_id
             elif db_name == 'HMDB':
                 name = 'HMDB'
-                val = 'http://identifiers.org/hmdb/HMDB:%s' % db_id
+                val = 'http://identifiers.org/hmdb/%s' % db_id
+            elif db_name == 'GO':
+                name = 'GO'
+                val = 'http://identifiers.org/go/%s' % db_id
+            elif db_name == 'MESH':
+                name = 'MESH'
+                val = 'http://identifiers.org/mesh/%s' % db_id
             elif db_name == 'TEXT':
                 continue
             else:
