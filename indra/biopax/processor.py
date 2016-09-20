@@ -631,7 +631,7 @@ class BiopaxProcessor(object):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
+                db_refs['HGNC'] = str(hgnc_id)
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
         elif _is_small_molecule(bpe):
@@ -644,7 +644,7 @@ class BiopaxProcessor(object):
                 db_refs['CHEBI'] = chebi_id
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
+                db_refs['HGNC'] = str(hgnc_id)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id

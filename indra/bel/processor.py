@@ -709,7 +709,7 @@ class BelProcessor(object):
         if namespace == 'HGNC':
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
+                db_refs['HGNC'] = str(hgnc_id)
         agent = Agent(name, db_refs=db_refs)
         return agent
 
