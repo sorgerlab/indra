@@ -34,6 +34,8 @@ class IndexCardProcessor(object):
                 continue
             a1 = self._get_agent(inter.get('participant_a'))
             a2 = self._get_agent(inter.get('participant_b'))
+            if a1 is None or a2 is None:
+                continue
             ev = self._get_evidence(card)
             stmt = Complex([a1, a2], evidence=ev)
             self.statements.append(stmt)
@@ -49,7 +51,10 @@ class IndexCardProcessor(object):
             members = []
             for entity in entities:
                 agent = self._get_agent(entity)
-                members.append(agent)
+                if agent is not None:
+                    members.append(agent)
+            if len(members) < 2:
+                continue
             stmt = Complex(members, evidence=ev)
             self.statements.append(stmt)
 
@@ -79,15 +84,20 @@ class IndexCardProcessor(object):
 
     def _get_agent(self, participant):
         dbid = participant.get('identifier')
+        text = participant.get('entity_text')[0]
+
         if dbid == 'GENERIC':
-            return None
+            if not text:
+                return None
+            else:
+                return Agent(text)
 
         db_refs = {}
         entity_type = participant.get('entity_type')
         if entity_type in ['protein', 'chemical', 'gene']:
             # TODO: standardize name here
             name = participant.get('entity_text')[0]
-            db_refs['TEXT'] = participant.get('entity_text')[0]
+            db_refs['TEXT'] = text
             if dbid:
                 db_name, db_id = dbid.split(':')
                 if db_name.lower() == 'uniprot':
@@ -99,7 +109,7 @@ class IndexCardProcessor(object):
                 elif db_name.lower() == 'hgnc':
                     db_refs['HGNC'] = db_id
         elif entity_type == 'protein_family':
-            name = participant.get('entity_text')[0]
+            name = text
         else:
             return None
         # TODO: handle other participant types
