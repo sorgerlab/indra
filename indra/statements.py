@@ -52,7 +52,8 @@ import logging
 import textwrap
 import jsonpickle
 from collections import namedtuple
-from indra.databases.hgnc_client import get_hgnc_name
+import indra.databases.hgnc_client as hgc
+import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
 
@@ -309,13 +310,15 @@ class Agent(object):
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):
-                return ('HGNC', get_hgnc_name(str(hgnc[0])))
-            else:
-                return ('HGNC', get_hgnc_name(str(hgnc)))
+                hgnc = hgnc[0]
+            return ('HGNC', hgc.get_hgnc_name(str(hgnc)))
         up = self.db_refs.get('UP')
         if up:
             if isinstance(up, list):
-                return ('UP', up[0])
+                up = up[0]
+            hgnc_name = upc.get_hgnc_name(up, True)
+            if hgnc_name:
+                return ('HGNC', hgnc_name)
             else:
                 return ('UP', up)
         return (None, None)
