@@ -146,7 +146,7 @@ def get_id_from_mnemonic(uniprot_mnemonic):
         return None
 
 @lru_cache(maxsize=10000)
-def get_hgnc_name(protein_id):
+def get_hgnc_name(protein_id, no_web_fallback=False):
     """Return the HGNC symbol for the given UniProt ID.
 
     Parameters
@@ -165,6 +165,8 @@ def get_hgnc_name(protein_id):
         return hgnc_name
     except KeyError:
         pass
+    if no_web_fallback:
+        return None
     # If it's not in the dict then call webservice
     g = query_protein(protein_id)
     if g is None:
