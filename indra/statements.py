@@ -52,6 +52,7 @@ import logging
 import textwrap
 import jsonpickle
 from collections import namedtuple
+from indra.databases.hgnc_client import get_hgnc_name
 
 logger = logging.getLogger('indra_statements')
 
@@ -307,10 +308,16 @@ class Agent(object):
             return ('BE', be)
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
-            return ('HGNC', hgnc)
+            if isinstance(hgnc, list):
+                return ('HGNC', get_hgnc_name(str(hgnc[0])))
+            else:
+                return ('HGNC', get_hgnc_name(str(hgnc)))
         up = self.db_refs.get('UP')
         if up:
-            return ('UP', up)
+            if isinstance(up, list):
+                return ('UP', up[0])
+            else:
+                return ('UP', up)
         return (None, None)
 
     def isa(self, other, hierarchies):

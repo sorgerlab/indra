@@ -11,6 +11,7 @@ This script generates the following folders and files
     model_name/log.txt
     model_name/err.txt
     model_name/search_terms.txt
+    model_name/belief.txt
     model_name/jsons/
     model_name/jsons/abstract
     model_name/jsons/full
@@ -36,7 +37,7 @@ This script sets the JAVA\_HOME, CLASSPATH and PYTHONPATH environmental
 variables and then calls
 
     python rasmachine.py --model model_name [--twitter twitter_cred]
-                         [--gmail gmail_cred]
+                         [--gmail gmail_cred] [--belief belief_file]
 
 Extending a model involves extracting PMIDs from emails (if Gmail credentials
 are given), and searching using INDRA's PubMed client with each line of
@@ -45,5 +46,5 @@ find the full text corresponding to each PMID or its abstract when the full
 text is not available. The REACH parser is then used to read each new paper.
 INDRA uses the REACH output to construct Statements corresponding to
 mechanisms.  It then adds them to an incremental model through a process of
-assembly involving duplication and overlap resolving and the application of
+assembly involving duplication and overlap resolution and the application of
 filters.

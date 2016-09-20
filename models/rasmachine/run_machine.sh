@@ -16,4 +16,5 @@ gmail_cred="$model_name/gmail_cred.txt"
 ndex_cred="$model_name/ndex_cred.txt"
 log_file="$model_name/log.txt"
 err_file="$model_name/err.txt"
-python rasmachine.py --model $model_name --twitter $twitter_cred --gmail $gmail_cred --ndex $ndex_cred 1>> $log_file 2>> $err_file
+belief_file="$model_name/belief.txt"
+python rasmachine.py --model $model_name --twitter $twitter_cred --gmail $gmail_cred --ndex $ndex_cred --belief $belief_file 1>> $log_file 2>> $err_file
