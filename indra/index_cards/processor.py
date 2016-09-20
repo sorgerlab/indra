@@ -73,7 +73,7 @@ class IndexCardProcessor(object):
 
         db_refs = {}
         entity_type = participant.get('entity_type')
-        if entity_type in ['protein', 'chemical']:
+        if entity_type in ['protein', 'chemical', 'gene']:
             # TODO: standardize name here
             name = participant.get('entity_text')[0]
             db_refs['TEXT'] = participant.get('entity_text')[0]
@@ -85,6 +85,8 @@ class IndexCardProcessor(object):
                 elif db_name.lower() == 'pubchem':
                     chebi_id = chebi_client.get_chebi_id_from_pubchem(db_id)
                     db_refs['CHEBI'] = chebi_id
+                elif db_name.lower() == 'hgnc':
+                    db_refs['HGNC'] = db_id
         elif entity_type == 'protein_family':
             name = participant.get('entity_text')[0]
         else:
