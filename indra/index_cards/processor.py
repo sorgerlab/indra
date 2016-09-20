@@ -18,14 +18,32 @@ class IndexCardProcessor(object):
                 continue
             enz = self._get_agent(inter.get('participant_a'))
             sub = self._get_agent(inter.get('participant_b'))
+            if sub is None:
+                continue
             mods = inter.get('modifications')
             mcs = [self._get_mod_condition(mod) for mod in mods]
             ev = self._get_evidence(card)
             for mc in mcs:
                 stmt_class = self._mod_type_map.get(mc.mod_type)
+                if stmt_class is None:
+                    print '%s not found in mod type map' % mc.mod_type
+                    continue
                 stmt = stmt_class(enz, sub, mc.residue, mc.position,
                                   evidence=ev)
                 self.statements.append(stmt)
+
+    def get_binds(self): 
+        for card in self.index_cards:
+            inter = card.get('interaction')
+            if inter['interaction_type'] != 'binds':
+                continue
+            a1 = self._get_agent(inter.get('participant_a'))
+            a2 = self._get_agent(inter.get('participant_b'))
+            if a1 is None or a2 is None:
+                continue
+            ev = self._get_evidence(card)
+            stmt = Complex([a1, a2], evidence=ev)
+            self.statements.append(stmt)
 
     def get_complexes(self):
         for card in self.index_cards:
@@ -38,7 +56,10 @@ class IndexCardProcessor(object):
             members = []
             for entity in entities:
                 agent = self._get_agent(entity)
-                members.append(agent)
+                if agent is not None:
+                    members.append(agent)
+            if len(members) < 2:
+                continue
             stmt = Complex(members, evidence=ev)
             self.statements.append(stmt)
 
@@ -68,15 +89,20 @@ class IndexCardProcessor(object):
 
     def _get_agent(self, participant):
         dbid = participant.get('identifier')
+        text = participant.get('entity_text')[0]
+
         if dbid == 'GENERIC':
-            return None
+            if not text:
+                return None
+            else:
+                return Agent(text)
 
         db_refs = {}
         entity_type = participant.get('entity_type')
-        if entity_type in ['protein', 'chemical']:
+        if entity_type in ['protein', 'chemical', 'gene']:
             # TODO: standardize name here
             name = participant.get('entity_text')[0]
-            db_refs['TEXT'] = participant.get('entity_text')[0]
+            db_refs['TEXT'] = text
             if dbid:
                 db_name, db_id = dbid.split(':')
                 if db_name.lower() == 'uniprot':
@@ -85,8 +111,10 @@ class IndexCardProcessor(object):
                 elif db_name.lower() == 'pubchem':
                     chebi_id = chebi_client.get_chebi_id_from_pubchem(db_id)
                     db_refs['CHEBI'] = chebi_id
+                elif db_name.lower() == 'hgnc':
+                    db_refs['HGNC'] = db_id
         elif entity_type == 'protein_family':
-            name = participant.get('entity_text')[0]
+            name = text
         else:
             return None
         # TODO: handle other participant types
@@ -164,7 +192,7 @@ class IndexCardProcessor(object):
             'farnesylation': Farnesylation,
             'glycosylation': Glycosylation,
             'deglycosylation': Deglycosylation,
-            'hydorxylation': Hydroxylation,
+            'hydroxylation': Hydroxylation,
             'dehydroxylatoni': Dehydroxylation,
             'sumoylation': Sumoylation,
             'desumoylation': Desumoylation
