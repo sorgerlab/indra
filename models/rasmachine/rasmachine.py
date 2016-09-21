@@ -266,8 +266,12 @@ if __name__ == '__main__':
     stats['orig_unique'] = len(model.unique_stmts)
     stats['orig_top'] = len(model.toplevel_stmts)
     # Filter the top level statements with a probability cutoff
-    orig_likely = [s for s in model.toplevel_stmts
-                   if s.belief > BELIEF_THRESHOLD]
+    orig_likely = []
+    for s in model.toplevel_stmts:
+        if s.evidence[0].source_api in ['bel', 'biopax']:
+            orig_likely.append(s)
+        elif s.belief > BELIEF_THRESHOLD:
+            orig_likely.append(s)
     stats['orig_likely'] = len(orig_likely)
 
     # Make a PySB model from filtered statements
@@ -288,8 +292,12 @@ if __name__ == '__main__':
     stats['new_stmts'] = len(model.get_statements())
     stats['new_unique'] = len(model.unique_stmts)
     stats['new_top'] = len(model.toplevel_stmts)
-    new_likely = [s for s in model.toplevel_stmts
-                  if s.belief > BELIEF_THRESHOLD]
+    new_likely = []
+    for s in model.toplevel_stmts:
+        if s.evidence[0].source_api in ['bel', 'biopax']:
+            new_likely.append(s)
+        elif s.belief > BELIEF_THRESHOLD:
+            new_likely.append(s)
     stats['new_likely'] = len(new_likely)
 
     # Make a PySB model from filtered statements
