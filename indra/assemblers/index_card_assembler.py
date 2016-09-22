@@ -34,7 +34,6 @@ class IndexCardAssembler(object):
                     card.card['pmc_id'] = self.pmc_override
                 else:
                     card.card['pmc_id'] = get_pmc_id(stmt)
-                    print 'a'
                 self.cards.append(card)
 
     def print_model(self):
