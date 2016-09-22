@@ -7,6 +7,7 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.databases import biogrid_client as bg
 import csv
+from indra.databases import hgnc_client, uniprot_client
 
 logger = logging.getLogger('analyze_complexes')
 
@@ -17,9 +18,6 @@ def load_file(stmts_file):
         results = pickle.load(f)
     return results
 
-
-def get_biogrid_interactors(gene_list):
-    pass
 
 if __name__ == '__main__':
 
@@ -45,13 +43,16 @@ if __name__ == '__main__':
 
     # Get complexes
     complexes = [s for s in pa.unique_stmts if isinstance(s, Complex)]
+    # Get HGNC grounding
     protein_complexes = [s for s in complexes
                            if all([True if 'HGNC' in ag.db_refs.keys()
                                         else False
                                         for ag in s.agent_list()])]
 
-    genes = list(set([ag.db_refs['HGNC'] for stmt in protein_complexes
+    logger.info('Mapping gene IDs to gene symbols')
+    gene_ids = list(set([ag.db_refs['HGNC'] for stmt in protein_complexes
                                          for ag in stmt.members]))
+    genes = [hgnc_client.get_hgnc_name(id) for id in gene_ids]
 
     # Get complexes from BioGrid and combine duplicates
     num_genes_per_query = 50
