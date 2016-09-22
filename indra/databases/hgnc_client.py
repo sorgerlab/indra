@@ -1,9 +1,14 @@
+from __future__ import print_function, unicode_literals
 import os
 import re
 import csv
 from functools32 import lru_cache
 import urllib2
 import xml.etree.ElementTree as et
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
 # Download http://tinyurl.com/jgm29xp and save it in

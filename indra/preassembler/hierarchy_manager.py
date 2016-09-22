@@ -1,6 +1,10 @@
+from __future__ import print_function, unicode_literals
 import os
 import rdflib
-import functools32
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.

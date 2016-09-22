@@ -1,9 +1,13 @@
+from __future__ import print_function, unicode_literals
 import os
 import csv
 import rdflib
 import logging
 import urllib, urllib2
-from functools32 import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 logger = logging.getLogger('uniprot')
 

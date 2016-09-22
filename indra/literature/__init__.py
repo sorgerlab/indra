@@ -1,11 +1,15 @@
+from __future__ import print_function, unicode_literals
 import requests
 import warnings
-from functools32 import lru_cache
 import xml.etree.ElementTree as ET
 from indra.literature import pubmed_client
 from indra.literature import pmc_client
 from indra.literature import crossref_client
 from indra.literature import elsevier_client
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 
 def id_lookup(paper_id, idtype):
@@ -192,6 +196,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
 
     # We'll only get here if we've missed a combination of conditions
     assert False
+
 
 def get_asbmb_full_text(url):
     # Get the location of the full text PDF from the target URL

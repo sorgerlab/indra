@@ -1,13 +1,16 @@
+from __future__ import print_function, unicode_literals
 import re
 import sys
 import pickle
 import logging
 import itertools
 import collections
-from functools32 import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
-
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc

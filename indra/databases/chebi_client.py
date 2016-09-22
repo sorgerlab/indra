@@ -1,6 +1,10 @@
+from __future__ import print_function, unicode_literals
 import os
 import csv
-from functools32 import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 def read_chebi_to_pubchem():
     # Based on ftp://ftp.ebi.ac.uk/pub/databases/chebi/

@@ -50,10 +50,14 @@ Structure of the XML output returned by queries to Pubmed database::
           ArticleIdList
 """
 
+from __future__ import print_function, unicode_literals
 import urllib, urllib2
-from functools32 import lru_cache
 import xml.etree.ElementTree as ET
 from indra.databases import hgnc_client
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'

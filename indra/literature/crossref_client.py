@@ -1,11 +1,15 @@
+from __future__ import print_function, unicode_literals
 import os
 import requests
 import json
-from functools32 import lru_cache
 import urllib
 import re
 import warnings
 import pubmed_client
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/'
