@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 import csv
 import sys
@@ -309,7 +310,7 @@ if __name__ == '__main__':
     import pickle
 
     if len(sys.argv) != 2:
-        print "Usage: %s stmt_file" % sys.argv[0]
+        print("Usage: %s stmt_file" % sys.argv[0])
         sys.exit()
     statement_file = sys.argv[1]
 

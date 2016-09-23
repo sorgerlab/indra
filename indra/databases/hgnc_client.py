@@ -126,7 +126,7 @@ def get_hgnc_id(hgnc_name):
     hgnc_id : str
         The HGNC ID corresponding to the given HGNC symbol.
     """
-    for k, v in hgnc_names.iteritems():
+    for k, v in hgnc_names.items():
         if v == hgnc_name and k not in hgnc_withdrawn:
             hgnc_id = k
             return hgnc_id
