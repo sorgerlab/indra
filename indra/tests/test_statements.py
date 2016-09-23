@@ -3,7 +3,6 @@ import os
 from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.util import unicode_strs
 from indra.statements import *
 
 # Argument checking for ActiveForms ----------------------------
@@ -14,15 +13,15 @@ def test_activitymod_sitelist_of_ints():
                               [ModCondition('phosphorylation', 'serine', 218),
                                ModCondition('phosphorylation', 'serine', 222)]),
                               'kinase', True)
-    assert isinstance(st.agent.mods[0].position, basestring)
-    assert isinstance(st.agent.mods[1].position, basestring)
+    assert not isinstance(st.agent.mods[0].position, int)
+    assert not isinstance(st.agent.mods[1].position, int)
 
 def testactivitymod_string_string():
     """Check that string mod position is preserved"""
     st = ActiveForm(Agent('MAP2K1', mods=
-                              [ModCondition('phosphorylation', 'serine', '218')]),
-                              'kinase', True)
-    assert isinstance(st.agent.mods[0].position, basestring)
+                            [ModCondition('phosphorylation', 'serine', '218')]),
+                             'kinase', True)
+    assert not isinstance(st.agent.mods[0].position, int)
 
 def testactivitymod_string_none():
     """Check that None mod position is preserved"""

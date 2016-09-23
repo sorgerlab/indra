@@ -172,11 +172,8 @@ class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
         self.residue = get_valid_residue(residue)
-        if not isinstance(position, basestring):
-            if position is None:
-                self.position = None
-            else:
-                self.position = str(position)
+        if isinstance(position, int):
+            self.position = str(position)
         else:
             self.position = position
         self.is_modified = is_modified
@@ -674,10 +671,10 @@ class Modification(Statement):
         self.enz = enz
         self.sub = sub
         self.residue = get_valid_residue(residue)
-        if position is not None:
-            if not isinstance(position, basestring):
-                position = str(position)
-        self.position = position
+        if isinstance(position, int):
+            self.position = str(position)
+        else:
+            self.position = position
 
     def matches_key(self):
         if self.enz is None:
@@ -760,10 +757,10 @@ class SelfModification(Statement):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
         self.residue = get_valid_residue(residue)
-        if position is not None:
-            if not isinstance(position, basestring):
-                position = str(position)
-        self.position = position
+        if isinstance(position, int):
+            self.position = str(position)
+        else:
+            self.position = position
 
     def __str__(self):
         res_str = (', %s' % self.residue) if self.residue is not None else ''

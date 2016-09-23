@@ -2,11 +2,15 @@ from __future__ import print_function, unicode_literals
 import os
 import re
 import csv
-import urllib2
 import xml.etree.ElementTree as et
 try:
+    # Python 3
     from functools import lru_cache
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
 except ImportError:
+    # Python 2
+    from urllib2 import urlopen, HTTPError
     from functools32 import lru_cache
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
@@ -142,8 +146,8 @@ def get_hgnc_entry(hgnc_id):
     headers = {'Accept': '*/*'}
     req = urllib2.Request(url, headers=headers)
     try:
-        res = urllib2.urlopen(req)
-    except urllib2.HTTPError:
+        res = urlopen(req)
+    except HTTPError:
         return None
     xml_tree = et.parse(res)
     return xml_tree

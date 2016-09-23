@@ -3,11 +3,15 @@ import os
 import csv
 import rdflib
 import logging
-import urllib, urllib2
 try:
+    # Python 3
     from functools import lru_cache
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
 except ImportError:
+    # Python 2
     from functools32 import lru_cache
+    from urllib2 import urlopen, HTTPError
 
 logger = logging.getLogger('uniprot')
 
@@ -46,7 +50,7 @@ def query_protein(protein_id):
     g = rdflib.Graph()
     try:
         g.parse(url)
-    except urllib2.HTTPError:
+    except HTTPError:
         logger.warning('Could not find protein with id %s' % protein_id)
         return None
     # Check if the entry has been replaced by a new entry
@@ -83,8 +87,7 @@ def get_family_members(family_name, human_only=True):
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    req = urllib2.Request(uniprot_url, urllib.urlencode(data))
-    res = urllib2.urlopen(req)
+    res = urlopen(uniprot_url, urllib.urlencode(data))
     html = res.read()
     if html:
         protein_list = html.strip().split('\n')
@@ -237,8 +240,8 @@ def get_sequence(protein_id):
         pass
     url = uniprot_url + '%s.fasta' % protein_id
     try:
-        res = urllib2.urlopen(url)
-    except urllib2.HTTPError:
+        res = urlopen(url)
+    except HTTPError:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
     lines = res.readlines()
