@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.preassembler.sitemapper import default_mapper as sm, MappedStatement
 from indra.statements import *
 

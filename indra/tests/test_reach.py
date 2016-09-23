@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra import reach
 from indra.reach.processor import ReachProcessor
 

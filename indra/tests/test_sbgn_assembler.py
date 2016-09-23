@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from os.path import dirname, join
 from hashlib import sha1
 from indra.assemblers.sbgn_assembler import text_to_sbgn

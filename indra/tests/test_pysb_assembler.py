@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.assemblers import PysbAssembler
 from indra.assemblers.pysb_assembler import get_agent_rule_str
 from indra.statements import *

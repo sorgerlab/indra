@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.literature import pubmed_client
 
 def test_get_ids():

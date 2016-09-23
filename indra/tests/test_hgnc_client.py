@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.databases import hgnc_client
 
 def test_get_uniprot_id():

@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.databases import uniprot_client
 
 def test_query_protein_exists():

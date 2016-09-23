@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.literature import id_lookup, get_full_text
 
 def test_get_full_text_pmc():

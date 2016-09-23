@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.literature import pmc_client
 from nose.tools import raises
 

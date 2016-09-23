@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts

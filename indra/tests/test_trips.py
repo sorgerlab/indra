@@ -1,9 +1,9 @@
-from indra.assemblers import PysbAssembler
-from indra import trips
+from __future__ import print_function, unicode_literals
+import sys
 from os.path import dirname, join
 import indra.statements as ist
-import sys
-import os
+from indra import trips
+from indra.assemblers import PysbAssembler
 
 test_small_file = join(dirname(__file__), 'test_small.xml')
 

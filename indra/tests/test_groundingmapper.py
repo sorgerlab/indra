@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.preassembler.grounding_mapper import GroundingMapper, \
                                                 default_grounding_map
 from indra.statements import Agent, Phosphorylation

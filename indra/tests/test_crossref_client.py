@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.literature import crossref_client
 
 test_doi = '10.1016/j.ccell.2016.02.010'

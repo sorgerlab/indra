@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import get_valid_location, InvalidLocationError

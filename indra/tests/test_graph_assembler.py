@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from indra.statements import *
 from indra.assemblers import GraphAssembler
 
