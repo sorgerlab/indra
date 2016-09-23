@@ -47,7 +47,7 @@ contained in one or more :py:class:`Evidence` objects associated with the
 Statement.
 """
 
-#from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals
 import os
 import logging
 import textwrap
@@ -486,10 +486,7 @@ class Agent(object):
         #if self.db_refs:
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
-        if isinstance(self.name, unicode):
-            agent_name = self.name.encode('utf-8')
-        else:
-            agent_name = self.name
+        agent_name = self.name
         return '%s(%s)' % (agent_name, attr_str)
 
     def __repr__(self):
@@ -1439,6 +1436,7 @@ def get_valid_location(location):
         else:
             return loc
     return location
+
 
 def _read_cellular_components():
     """Read cellular components from a resource file."""

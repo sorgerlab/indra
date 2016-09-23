@@ -88,9 +88,9 @@ class CxAssembler():
                                 'name': 'nodes'},
                                {'idCounter': self._id_counter,
                                 'name': 'edges'}]
-        for k, v in self.cx.iteritems():
+        for k, v in self.cx.items():
             full_cx[k] = v
-        full_cx = [{k: v} for k, v in full_cx.iteritems()]
+        full_cx = [{k: v} for k, v in full_cx.items()]
         json_str = json.dumps(full_cx, indent=2)
         return json_str
 
@@ -204,13 +204,13 @@ class CxAssembler():
                           'n': 'type',
                           'v': agent_type}
         self.cx['nodeAttributes'].append(node_attribute)
-        for db_name, db_ids in agent.db_refs.iteritems():
-            if isinstance(db_ids, basestring):
-                db_id = db_ids
-            elif isinstance(db_ids, int):
+        for db_name, db_ids in agent.db_refs.items():
+            if isinstance(db_ids, int):
                 db_id = str(db_ids)
-            else:
+            elif hasattr(db_ids, '__iter__'):
                 db_id = db_ids[0]
+            else:
+                db_id = db_ids
             if db_name == 'UP':
                 name = 'UniProt'
                 val = 'http://identifiers.org/uniprot/%s' % db_id
