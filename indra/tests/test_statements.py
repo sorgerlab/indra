@@ -1,9 +1,10 @@
-from indra.statements import *
-import pkg_resources
+from __future__ import print_function, unicode_literals
 import os
+from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
-from nose.tools import raises
+from indra.util import unicode_strs
+from indra.statements import *
 
 # Argument checking for ActiveForms ----------------------------
 

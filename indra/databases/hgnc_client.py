@@ -2,7 +2,6 @@ from __future__ import print_function, unicode_literals
 import os
 import re
 import csv
-from functools32 import lru_cache
 import urllib2
 import xml.etree.ElementTree as et
 try:
@@ -17,7 +16,7 @@ hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
             '/../resources/hgnc_entries.txt'
 try:
     fh = open(hgnc_file, 'rt')
-    rd = csv.reader(fh, delimiter='\t')
+    rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
     hgnc_names = {}
     hgnc_withdrawn = []
     uniprot_ids = {}

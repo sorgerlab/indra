@@ -47,6 +47,7 @@ contained in one or more :py:class:`Evidence` objects associated with the
 Statement.
 """
 
+#from __future__ import print_function, unicode_literals
 import os
 import logging
 import textwrap
@@ -599,9 +600,9 @@ class Statement(object):
         return str(key)
 
     def print_supports(self):
-        print '%s supported_by:' % self.__str__()
+        print('%s supported_by:' % self.__str__())
         if self.supported_by:
-            print '-->'
+            print('-->')
             for s in self.supported_by:
                 s.print_supports()
 

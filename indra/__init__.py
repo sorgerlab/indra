@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import logging
 __version__ = '1.2.0'
 

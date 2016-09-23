@@ -349,7 +349,7 @@ def _build_uniprot_hgnc():
                 '/../resources/hgnc_entries.txt'
     try:
         fh = open(hgnc_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t')
+        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         uniprot_hgnc = {}
         for row in rd:
             hgnc_name = row[1]
@@ -365,7 +365,7 @@ def _build_uniprot_mnemonic():
                     '/../resources/uniprot_mnemonics.txt'
     try:
         fh = open(mnemonic_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t')
+        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         uniprot_mnemonic = {}
         uniprot_mnemonic_reverse = {}
         for row in rd:

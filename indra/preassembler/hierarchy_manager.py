@@ -91,7 +91,7 @@ class HierarchyManager(object):
                                     self.components[k] = joint_component
 
 
-    @functools32.lru_cache(maxsize=100000)
+    @lru_cache(maxsize=100000)
     def find_entity(self, x):
         """
         Get the entity that has the specified name (or synonym).
@@ -191,7 +191,7 @@ class HierarchyManager(object):
         else:
             return self.query_rdf(id1, 'rn:partof+', id2)
 
-    @functools32.lru_cache(maxsize=100000)
+    @lru_cache(maxsize=100000)
     def query_rdf(self, id1, rel, id2):
         term1 = self.find_entity(id1)
         term2 = self.find_entity(id2)
