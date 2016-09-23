@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import boto3
 import botocore
 import zlib
@@ -8,7 +9,7 @@ import sys
 if __name__ == '__main__':
     usage = "Usage: %s pmid_list start_index end_index" % sys.argv[0]
     if len(sys.argv) < 4:
-        print usage
+        print(usage)
         sys.exit()
 
     pmid_list_file = sys.argv[1]
@@ -30,12 +31,12 @@ if __name__ == '__main__':
         # Get the reach output
         reach_key = 'papers/PMID%s/reach' % pmid
         try:
-            print "Downloading reach output for %s" % pmid
+            print("Downloading reach output for %s" % pmid)
             reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
         # Handle a missing object gracefully
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] =='NoSuchKey':
-                print "Reach output not found for PMID %s, skipping" % pmid
+                print("Reach output not found for PMID %s, skipping" % pmid)
                 continue
             # If there was some other kind of problem, re-raise the exception
             else:
@@ -44,14 +45,14 @@ if __name__ == '__main__':
         reach_gz = reach_gz_obj['Body'].read()
         # Decode the gzipped content
         reach_json = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
-        print "Processing"
+        print("Processing")
         try:
             reach_proc = reach.process_json_str(reach_json,
                                                 citation='PMID%s' % pmid)
         # If there's a problem, skip it
         except Exception as e:
-            print "Exception processing %s" % pmid
-            print e
+            print("Exception processing %s" % pmid)
+            print(e)
             continue
 
         stmts[pmid] = reach_proc.statements

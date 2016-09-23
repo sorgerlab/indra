@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import pickle
 import sys
 import csv
@@ -7,7 +8,7 @@ from indra.assemblers.english_assembler import EnglishAssembler
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
-        print "Usage: %s stmt_file" % sys.argv[0]
+        print("Usage: %s stmt_file" % sys.argv[0])
         sys.exit()
 
     input_file = sys.argv[1]

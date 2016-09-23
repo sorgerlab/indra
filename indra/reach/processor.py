@@ -70,9 +70,9 @@ class ReachProcessor(object):
         if res is None:
             return
         for r in res:
-            print r['subtype']
+            print(r['subtype'])
             for a in r['arguments']:
-                print a['type'], '/', a['argument-type'], ':', a['text']
+                print(a['type'], '/', a['argument-type'], ':', a['text'])
 
     def get_modifications(self):
         """Extract Modification INDRA Statements."""
@@ -209,7 +209,7 @@ class ReachProcessor(object):
                                                 ba in bound_agents]
                             controller_agent.bound_conditions = \
                                     bound_conditions
-                            print controller_agent
+                            print(controller_agent)
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)

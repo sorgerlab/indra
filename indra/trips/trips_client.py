@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import re
 import sys
 import getopt
@@ -93,8 +94,8 @@ if __name__ == '__main__':
                                       ['string=', 'file=', 'output=', 'help'])
     for o, p in opts:
         if o in ['-h', '--help']:
-            print 'String mode: python trips_client.py --string "RAS binds GTP" --output text.xml'
-            print 'File mode: python trips_client.py --file test.txt --output text.xml'
+            print('String mode: python trips_client.py --string "RAS binds GTP" --output text.xml')
+            print('File mode: python trips_client.py --file test.txt --output text.xml')
             sys.exit()
         elif o in ['-s', '--string']:
             text = p
@@ -108,13 +109,13 @@ if __name__ == '__main__':
         try:
             fh = open(infile_name, 'rt')
         except IOError:
-            print 'Could not open %s.' % infile_name
+            print('Could not open %s.' % infile_name)
             exit()
         text = fh.read()
         fh.close()
-        print 'Parsing contents of %s...' % infile_name
+        print('Parsing contents of %s...' % infile_name)
     else:
-        print 'Parsing string: %s' % text
+        print('Parsing string: %s' % text)
 
     html = send_query(text)
     xml = get_xml(html)

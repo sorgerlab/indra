@@ -40,44 +40,44 @@ def test_get_evidence_text():
 def test_assemble_phosphorylation():
     card = assemble_modification(stmt_phos)
     card.card['pmc_id'] = get_pmc_id(stmt_phos)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_phosphorylation2():
     card = assemble_modification(stmt_phos2)
     card.card['pmc_id'] = get_pmc_id(stmt_phos2)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_phosphorylation_indirect():
     card = assemble_modification(stmt_phos_indirect)
     card.card['pmc_id'] = get_pmc_id(stmt_phos_indirect)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_dephosphorylation():
     card = assemble_modification(stmt_dephos)
     card.card['pmc_id'] = get_pmc_id(stmt_dephos)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_autophosphorylation():
     card = assemble_selfmodification(stmt_autophos)
     card.card['pmc_id'] = get_pmc_id(stmt_autophos)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_complex():
     st_complex = Complex([braf, brafmut, map2k1], evidence=ev)
     card = assemble_complex(st_complex)
     card.card['pmc_id'] = get_pmc_id(st_complex)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)
 
 def test_assemble_multiple():
@@ -89,11 +89,11 @@ def test_assemble_multiple():
 
 def test_get_participant():
     participant = get_participant(brafmut)
-    print participant
+    print(participant)
 
 def test_chemical():
     card = assemble_complex(stmt_complex)
     card.card['pmc_id'] = get_pmc_id(stmt_complex)
-    print card.get_string()
-    print
+    print(card.get_string())
+    print()
     jsonschema.validate(card.card, schema)

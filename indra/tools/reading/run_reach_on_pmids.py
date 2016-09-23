@@ -1,11 +1,4 @@
-# Iterate over the PMIDs
-# Check in S3
-# If present, copy to NXML folder
-# Prepare temporary .conf file using appropriate number of cores
-# Run reach on NXML files, send to output folder
-# Join the resulting .json files
-# Upload the .json to S3, mark down in a folder as being run
-
+from __future__ import print_function, unicode_literals
 import os
 import sys
 import tempfile
@@ -31,7 +24,7 @@ if __name__ == '__main__':
     usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
              % sys.argv[0]
     if len(sys.argv) < 6:
-        print usage
+        print(usage)
         sys.exit()
 
     # Get the command line arguments

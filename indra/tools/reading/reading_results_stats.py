@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
@@ -181,7 +182,7 @@ def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
 if __name__ == '__main__':
     # Load the statements
     if len(sys.argv) < 2:
-        print "Usage: %s reach_stmts_file" % sys.argv[0]
+        print("Usage: %s reach_stmts_file" % sys.argv[0])
         sys.exit()
     results = load_file(sys.argv[1])
     all_stmts = [stmt for paper_stmts in results.values()

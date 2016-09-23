@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import sys
 import subprocess
 
@@ -5,7 +6,7 @@ if __name__ == '__main__':
     usage = 'Usage: %s pmid_list tmp_dir num_nodes num_cores_per_node' % \
              sys.argv[0]
     if len(sys.argv) != 5:
-        print usage
+        print(usage)
         sys.exit()
 
     # The file containing the PMIDs to read
@@ -28,7 +29,7 @@ if __name__ == '__main__':
             pass
     num_pmids = i + 1
     if num_pmids == 0:
-        print "No papers in PMID list."
+        print("No papers in PMID list.")
         sys.exit(1)
 
     # Next, submit jobs for offline reading with REACH. This will involve
@@ -49,7 +50,7 @@ if __name__ == '__main__':
                     'run_reach_on_pmids.py', pmid_list, tmp_dir,
                     str(num_cores), str(node_start_ix),
                     str(node_end_ix)]
-        print ' '.join(cmd_list)
+        print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
     # Next, submit jobs for processing the REACH statements with INDRA. These
@@ -68,7 +69,7 @@ if __name__ == '__main__':
         cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-hold_jid', REACH_JOB_NAME,
                     '-N', PROCESS_JOB_NAME, 'python', 'process_reach_from_s3.py',
                     pmid_list, str(core_start_ix), str(core_end_ix)]
-        print ' '.join(cmd_list)
+        print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
     # Finally, we submit a job, contingent on the processing job, that assembles
@@ -77,6 +78,6 @@ if __name__ == '__main__':
                 '-N', ASSEMBLE_JOB_NAME, '-m', 'aes', '-M',
                 'bachmanjohn@gmail.com', 'python', 'assemble_reach_stmts.py',
                 'reach_stmts_*.pkl']
-    print ' '.join(cmd_list)
+    print(' '.join(cmd_list))
     subprocess.call(cmd_list)
 

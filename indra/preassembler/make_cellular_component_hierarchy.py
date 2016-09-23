@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 import rdflib
 from rdflib import Namespace, Literal
@@ -96,14 +97,14 @@ if __name__ == '__main__':
     g = rdflib.Graph()
     pkl_name = '../../data/go.pkl'
     if not os.path.exists(pkl_name):
-        print 'Parsing %s' % fname
+        print('Parsing %s' % fname)
         g.parse(fname)
         with open(pkl_name, 'wb') as fh:
             pickle.dump(g, fh)
     else:
-        print 'Loading %s' % pkl_name
+        print('Loading %s' % pkl_name)
         g = pickle.load(open(pkl_name, 'rb'))
-    print 'Getting cellular components'
+    print('Getting cellular components')
     component_map, component_part_map = get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
     with open('../resources/cellular_component_hierarchy.rdf', 'wt') \

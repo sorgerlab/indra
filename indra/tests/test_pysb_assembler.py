@@ -32,7 +32,6 @@ def test_pysb_assembler_complex3():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==2)
     assert(len(model.monomers)==3)
 
@@ -147,7 +146,6 @@ def test_pysb_assembler_autophos2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -158,7 +156,6 @@ def test_pysb_assembler_autophos3():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==1)
 
@@ -169,7 +166,6 @@ def test_pysb_assembler_transphos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==1)
 
@@ -181,7 +177,6 @@ def test_pysb_assembler_act1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==3)
 
@@ -192,7 +187,6 @@ def test_pysb_assembler_dephos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -204,7 +198,6 @@ def test_pysb_assembler_dephos2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==3)
 
@@ -215,7 +208,6 @@ def test_pysb_assembler_rasgef1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -226,7 +218,6 @@ def test_pysb_assembler_rasgap1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -242,7 +233,6 @@ def test_pysb_assembler_actmod1():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
 
@@ -261,7 +251,6 @@ def test_pysb_assembler_actmod2():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==4)
     assert(len(model.monomers)==2)
 
@@ -272,7 +261,6 @@ def test_pysb_assembler_phos_twostep1():
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
@@ -294,7 +282,6 @@ def test_pysb_assembler_phos_twostep_local():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
-    print model.rules
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
@@ -307,7 +294,6 @@ def test_pysb_assembler_phos_twostep_local_to_global():
     model = pa.make_model(policies='two_step')
     # This call should have reverted to default policy
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -318,7 +304,6 @@ def test_pysb_assembler_dephos_twostep1():
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==3)
     assert(len(model.monomers)==2)
 
@@ -333,7 +318,6 @@ def test_statement_specific_policies():
     pa = PysbAssembler(policies=policies)
     pa.add_statements([stmt1, stmt2])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==4)
     assert(len(model.monomers)==3)
 
@@ -348,7 +332,6 @@ def test_unspecified_statement_policies():
     pa = PysbAssembler(policies=policies)
     pa.add_statements([stmt1, stmt2])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==4)
     assert(len(model.monomers)==3)
 
@@ -359,7 +342,6 @@ def test_activity_activity():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -370,7 +352,6 @@ def test_activity_activity():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -381,7 +362,6 @@ def test_activity_activity2():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -392,7 +372,6 @@ def test_activity_activity3():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    print model.rules
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
@@ -404,26 +383,22 @@ def test_rule_name_str_2():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), True)])
     s = get_agent_rule_str(a)
-    print s
     assert(s == 'GRB2_EGFR')
 
 def test_rule_name_str_3():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), False)])
     s = get_agent_rule_str(a)
-    print s
     assert(s == 'GRB2_nEGFR')
 
 def test_rule_name_str_4():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine')])
     s = get_agent_rule_str(a)
-    print s
     assert(s == 'BRAF_phosphoS')
 
 def test_rule_name_str_5():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine', '123')])
     s = get_agent_rule_str(a)
-    print s
     assert(s == 'BRAF_phosphoS123')
 
 def test_neg_act_mod():
