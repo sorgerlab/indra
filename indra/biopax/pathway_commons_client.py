@@ -1,6 +1,16 @@
-import urllib, urllib2
+from __future__ import print_function, unicode_literals
 import logging
 from indra.java_vm import autoclass, JavaException
+
+try:
+    # Python 3
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+except ImportError:
+    # Python 2
+    from urllib2 import urlopen, HTTPError
+    from urllib import urlencode
 
 logger = logging.getLogger('biopax')
 
@@ -48,7 +58,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     params['source'] = source_str
     try:
         neighbor_limit = int(neighbor_limit)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
@@ -60,8 +70,8 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
 
     logger.info('Sending Pathway Commons query...')
     try:
-        res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
-    except urllib2.HTTPError as e:
+        res = urlopen(pc2_url + 'graph', data=urlencode(params))
+    except HTTPError as e:
         logger.error('Response is HTTP eror code %d.' % e.code)
         return None
 

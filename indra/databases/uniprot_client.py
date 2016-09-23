@@ -8,10 +8,12 @@ try:
     from functools import lru_cache
     from urllib.request import urlopen
     from urllib.error import HTTPError
+    from urllib.parse import urlencode
 except ImportError:
     # Python 2
     from functools32 import lru_cache
     from urllib2 import urlopen, HTTPError
+    from urllib import urlencode
 
 logger = logging.getLogger('uniprot')
 
@@ -87,7 +89,7 @@ def get_family_members(family_name, human_only=True):
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    res = urlopen(uniprot_url, urllib.urlencode(data))
+    res = urlopen(uniprot_url, urlencode(data))
     html = res.read()
     if html:
         protein_list = html.strip().split('\n')
@@ -352,7 +354,11 @@ def _build_uniprot_hgnc():
                 '/../resources/hgnc_entries.txt'
     try:
         fh = open(hgnc_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
+        # In Python 2, the unicode_literal delimiter '\t' will lead to TypeError
+        try:
+            rd = csv.reader(fh, delimiter='\t')
+        except TypeError:
+            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         uniprot_hgnc = {}
         for row in rd:
             hgnc_name = row[1]
@@ -368,7 +374,11 @@ def _build_uniprot_mnemonic():
                     '/../resources/uniprot_mnemonics.txt'
     try:
         fh = open(mnemonic_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
+        # In Python 2, the unicode_literal delimiter '\t' will lead to TypeError
+        try:
+            rd = csv.reader(fh, delimiter='\t')
+        except TypeError:
+            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         uniprot_mnemonic = {}
         uniprot_mnemonic_reverse = {}
         for row in rd:

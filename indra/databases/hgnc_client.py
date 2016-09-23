@@ -20,7 +20,11 @@ hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
             '/../resources/hgnc_entries.txt'
 try:
     fh = open(hgnc_file, 'rt')
-    rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
+    # In Python 2, the unicode_literal delimiter '\t' will lead to a TypeError
+    try:
+        rd = csv.reader(fh, delimiter='\t')
+    except TypeError:
+        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
     hgnc_names = {}
     hgnc_withdrawn = []
     uniprot_ids = {}

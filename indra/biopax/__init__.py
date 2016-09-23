@@ -1,5 +1,5 @@
-from biopax_api import process_pc_neighborhood
-from biopax_api import process_pc_pathsbetween
-from biopax_api import process_pc_pathsfromto
-from biopax_api import process_owl
-from biopax_api import process_model
+from indra.biopax.biopax_api import (process_pc_neighborhood,
+                                     process_pc_pathsbetween,
+                                     process_pc_pathsfromto,
+                                     process_owl,
+                                     process_model)

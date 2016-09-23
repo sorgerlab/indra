@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 from indra.java_vm import autoclass, cast
 from indra import biopax

@@ -51,7 +51,7 @@ class BiopaxProcessor(object):
     def print_statements(self):
         """Print all INDRA Statements collected by the processors."""
         for i, stmt in enumerate(self.statements):
-            print "%s: %s" % (i, stmt)
+            print("%s: %s" % (i, stmt))
 
     def save_model(self, file_name=None):
         """Save the BioPAX model object in an OWL file.

@@ -13,7 +13,11 @@ def read_chebi_to_pubchem():
                             '/../resources/chebi_to_pubchem.tsv'
     try:
         fh = open(chebi_to_pubchem_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t')
+        # In Python 2, the unicode_literal delimiter '\t' will give TypeError
+        try:
+            rd = csv.reader(fh, delimiter='\t')
+        except TypeError:
+            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         chebi_pubchem = {}
         pubchem_chebi = {}
         for row in rd:
@@ -31,7 +35,11 @@ def read_chebi_to_chembl():
                             '/../resources/chebi_to_chembl.tsv'
     try:
         fh = open(chebi_to_chembl_file, 'rt')
-        rd = csv.reader(fh, delimiter='\t')
+        # In Python 2, the unicode_literal delimiter '\t' will give TypeError
+        try:
+            rd = csv.reader(fh, delimiter='\t')
+        except TypeError:
+            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         chebi_chembl = {}
         for row in rd:
             chebi_chembl[row[0]] = row[1]

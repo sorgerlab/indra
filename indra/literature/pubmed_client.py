@@ -51,13 +51,17 @@ Structure of the XML output returned by queries to Pubmed database::
 """
 
 from __future__ import print_function, unicode_literals
-import urllib, urllib2
 import xml.etree.ElementTree as ET
 from indra.databases import hgnc_client
 try:
     from functools import lru_cache
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
 except ImportError:
     from functools32 import lru_cache
+    from urllib import urlencode
+    from urllib2 import urlopen, HTTPError
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
@@ -66,8 +70,7 @@ pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 @lru_cache(maxsize=100)
 def send_request(url, data):
     try:
-        req = urllib2.Request(url, data)
-        res = urllib2.urlopen(req)
+        res = urlopen(url, data)
         xml_str = res.read()
         tree = ET.fromstring(xml_str)
     except:
@@ -92,11 +95,11 @@ def get_ids(search_term, **kwargs):
               'sort': 'pub+date'}
     for k, v in kwargs.iteritems():
         params[k] = v
-    tree = send_request(pubmed_search, urllib.urlencode(params))
+    tree = send_request(pubmed_search, urlencode(params))
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print tree.find('ERROR').text
+        print(tree.find('ERROR').text)
         return []
     count = int(tree.find('Count').text)
     id_terms = tree.findall('IdList/Id')
@@ -138,11 +141,11 @@ def get_ids_for_gene(hgnc_name, **kwargs):
               }
     for k, v in kwargs.iteritems():
         params[k] = v
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print tree.find('ERROR').text
+        print(tree.find('ERROR').text)
         return []
     # Get all PMIDs from the XML tree
     id_terms = tree.findall('.//PubMedId')
@@ -161,7 +164,7 @@ def get_article_xml(pubmed_id):
     params = {'db': 'pubmed',
                 'retmode': 'xml',
                 'id': pubmed_id}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
         return None
     article = tree.find('PubmedArticle/MedlineCitation/Article')
@@ -217,7 +220,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     params = {'db': 'pubmed',
               'retmode': 'xml',
               'id': pmid_list}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
         return None
 
@@ -339,7 +342,7 @@ def get_issns_for_journal(nlm_id):
     params = {'db': 'nlmcatalog',
               'retmode': 'xml',
               'id': nlm_id}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
         return None
     issn_list = tree.findall('.//ISSN')

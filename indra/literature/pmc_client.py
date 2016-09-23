@@ -1,8 +1,14 @@
-import urllib
-import urllib2
+from __future__ import print_function, unicode_literals
 import xml.etree.ElementTree as et
 from indra.literature import pubmed_client
 import os.path
+try:
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
+    from urllib2 import urlopen, HTTPError
 
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 pmid_convert_url = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
@@ -38,7 +44,7 @@ def id_lookup(paper_id, idtype=None):
     data = {'ids': paper_id}
     if idtype is not None:
         data['idtype'] = idtype
-    tree = pubmed_client.send_request(pmid_convert_url, urllib.urlencode(data))
+    tree = pubmed_client.send_request(pmid_convert_url, urlencode(data))
     if tree is None:
         return {}
     record = tree.find('record')
@@ -66,12 +72,10 @@ def get_xml(pmc_id):
     params['identifier'] = 'oai:pubmedcentral.nih.gov:%s' % pmc_id
     params['metadataPrefix'] = 'pmc'
 
-    data = urllib.urlencode(params)
-    req = urllib2.Request(pmc_url, data)
     try:
-        res = urllib2.urlopen(req)
-    except urllib2.HTTPError:
-        print 'Couldn\'t download PMC%d' % pmc_id
+        res = urlopen(pmc_url, urlencode(params))
+    except HTTPError:
+        print("Couldn't download PMC%d" % pmc_id)
     xml_str = res.read()
     xml_str = xml_str.decode('utf-8')
 
@@ -79,7 +83,7 @@ def get_xml(pmc_id):
     if err is None:
         return xml_str
     else:
-        print 'PMC client returned with error %s: %s' % (err[0], err[1])
+        print('PMC client returned with error %s: %s' % (err[0], err[1]))
         return None
 
 
@@ -92,6 +96,7 @@ def check_xml_error(xml_str):
         err_text = err_tag.text
         return (err_code, err_text)
     return None
+
 
 def filter_pmids(pmid_list, source_type):
     """Filter a list of PMIDs for ones with full text from PMC.

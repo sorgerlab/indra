@@ -26,8 +26,8 @@ try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    print 'CrossRef Clickthrough API key could not be found.'
-    print api_key_file
+    print('CrossRef Clickthrough API key could not be found.')
+    print(api_key_file)
     api_key = None
 
 @lru_cache(maxsize=100)
@@ -37,7 +37,7 @@ def get_metadata(doi):
     url = crossref_url + 'works/' + doi
     res = requests.get(url)
     if res.status_code != 200:
-        print 'Could not get CrossRef metadata, code %d' % res.status_code
+        print('Could not get CrossRef metadata, code %d' % res.status_code)
         return None
     raw_message = res.json()
     metadata = raw_message.get('message')
@@ -120,7 +120,7 @@ def doi_query(pmid, search_limit=10):
           '&sort=score'
     res = requests.get(url)
     if res.status_code != 200:
-        print 'Could not get DOI from CrossRef, code %d' % res.status_code
+        print('Could not get DOI from CrossRef, code %d' % res.status_code)
         return None
     raw_message = res.json()
     mapped_doi = None
