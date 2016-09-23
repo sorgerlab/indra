@@ -846,8 +846,10 @@ def complex_assemble_multi_way(stmt, model, agent_set):
         lhs = lhs + left_pattern
         rhs = rhs % right_pattern
     # Finally, create the rule and add it to the model
-    rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
-    add_rule_to_model(model, rule)
+    rule_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
+    rule_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
+    add_rule_to_model(model, rule_fwd)
+    add_rule_to_model(model, rule_rev)
 
 complex_assemble_default = complex_assemble_one_step
 
@@ -936,11 +938,12 @@ def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
     active_site = active_site_names['Kinase']
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
-    r = Rule(rule_name,
-                enz(**{active_site: None}) + sub(**{phos_site: None}) <>
-                enz(**{active_site: 1}) + sub(**{phos_site: 1}),
-                kf_bind, kr_bind)
-    add_rule_to_model(model, r)
+    lhs = enz(**{active_site: None}) + sub(**{phos_site: None})
+    rhs = enz(**{active_site: 1}) + sub(**{phos_site: 1})
+    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
+    r_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
+    add_rule_to_model(model, r_fwd)
+    add_rule_to_model(model, r_rev)
 
 
 def phosphorylation_assemble_one_step(stmt, model, agent_set):
