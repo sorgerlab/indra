@@ -196,6 +196,9 @@ class CxAssembler():
             elif db_name == 'MESH':
                 name = 'MESH'
                 val = 'http://identifiers.org/mesh/%s' % db_id
+            elif db_name == 'IP':
+                name = 'InterPro'
+                val = 'http://identifiers.org/interpro/%s' % db_val
             elif db_name == 'TEXT':
                 continue
             else:
