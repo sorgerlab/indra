@@ -92,7 +92,7 @@ def get_family_members(family_name, human_only=True):
     else:
         return None
 
-def get_mnemonic(protein_id):
+def get_mnemonic(protein_id, no_web_fallback=False):
     """Return the UniProt mnemonic for the given UniProt ID.
 
     Parameters
@@ -110,6 +110,8 @@ def get_mnemonic(protein_id):
         return mnemonic
     except KeyError:
         pass
+    if no_web_fallback:
+        return None
     g = query_protein(protein_id)
     if g is None:
         return None
