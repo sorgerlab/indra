@@ -14,7 +14,7 @@ from indra.assemblers import CxAssembler, PysbAssembler
 from indra.tools.incremental_model import IncrementalModel
 
 model_path = os.path.dirname(os.path.abspath(__file__))
-global_filters = ['grounding', 'prior_one']
+global_filters = ['grounding', 'prior_one', 'human_only']
 
 def get_email_pmids(cred_file):
     try:
