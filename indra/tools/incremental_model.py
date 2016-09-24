@@ -6,6 +6,7 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import grounding_mapper as gm
 from indra.belief import BeliefEngine
+from indra.databases import uniprot_client
 
 logger = logging.getLogger('incremental_model')
 
@@ -120,6 +121,23 @@ class IncrementalModel(object):
                                     break
                             if found:
                                 break
+        if ('human_only' in filters):
+            for i in stmts_to_add:
+                agents = [a for a in stmts[i].agent_list()
+                          if a is not None]
+                for a in agents:
+                    up_id = a.db_refs.get('UP')
+                    hgnc_id = a.db_refs.get('HGNC')
+                    if not hgnc_id:
+                        if up_id:
+                            mnemonic = uniprot_client.get_mnemonic(up_id, True)
+                            if mnemonic is None:
+                                stmts_to_add.remove(i)
+                                break
+                            if not mnemonic.endswith('HUMAN'):
+                                stmts_to_add.remove(i)
+                                break
+
         relevant_stmts = [stmts[i] for i in stmts_to_add]
         return relevant_stmts
 

@@ -76,3 +76,12 @@ def test_grounding_none_agent():
     im = IncrementalModel()
     im.add_statements('12345', stmts2, filters=['grounding'])
     assert(len(im.get_statements()) == 1)
+
+def test_human_only():
+    im = IncrementalModel()
+    stmt1 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P15056'}))
+    stmt2 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P28028'}))
+    im.add_statements('12345', [stmt1], filters=['human_only'])
+    assert(len(im.get_statements()) == 1)
+    im.add_statements('12346', [stmt2], filters=['human_only'])
+    assert(len(im.get_statements()) == 1)
