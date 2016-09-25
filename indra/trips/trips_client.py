@@ -2,10 +2,15 @@ from __future__ import print_function, unicode_literals
 import re
 import sys
 import getopt
-import urllib
-import urllib2
 import xml.dom.minidom
 import logging
+
+try:
+    from urllib.request import Request, urlopen
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib2 import Request, urlopen
+    from urllib import urlencode
 
 logger = logging.getLogger('trips')
 
@@ -30,11 +35,11 @@ def send_query(text, query_args=None):
     if query_args is None:
         qa = {}
     qa['input'] = text
-    data = urllib.urlencode(qa)
-    req = urllib2.Request(trips_url, data)
-    res = urllib2.urlopen(req, timeout=3600)
+    data = urlencode(qa)
+    req = Request(trips_url, data.encode('utf-8'))
+    res = urlopen(req, timeout=3600)
     html = res.read()
-    return html
+    return html.decode('utf-8')
 
 
 def get_xml(html):
@@ -80,7 +85,7 @@ def save_xml(xml_str, file_name, pretty=True):
     if pretty:
         xmld = xml.dom.minidom.parseString(xml_str)
         xml_str_pretty = xmld.toprettyxml()
-        fh.write(xml_str_pretty.encode('utf8'))
+        fh.write(xml_str_pretty)
     else:
         fh.write(xml_str)
     fh.close()

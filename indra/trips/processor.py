@@ -57,7 +57,8 @@ class TripsProcessor(object):
             logger.error('Could not parse XML string')
             self.tree = None
             return
-        # Get the document ID from the EKB tag. This is the PMC ID when available.
+        # Get the document ID from the EKB tag. This is the PMC ID when
+        # available.
         self.doc_id = self.tree.attrib.get('id')
         # Store all paragraphs and store all sentences in a data structure
         paragraph_tags = self.tree.findall('input/paragraphs/paragraph')
@@ -73,7 +74,7 @@ class TripsProcessor(object):
         self.extracted_events = {k:[] for k in self.all_events.keys()}
         logger.debug('All events by type')
         logger.debug('------------------')
-        for k, v in self.all_events.iteritems():
+        for k, v in self.all_events.items():
             logger.debug('%s %s' % (k, len(v)))
         logger.debug('------------------')
 
@@ -532,6 +533,7 @@ class TripsProcessor(object):
                         self.statements.append(st)
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
+
     def get_translocation(self):
         translocation_events = \
             self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
