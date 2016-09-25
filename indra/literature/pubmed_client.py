@@ -70,7 +70,7 @@ pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 @lru_cache(maxsize=100)
 def send_request(url, data):
     try:
-        res = urlopen(url, data)
+        res = urlopen(url, data.encode('utf-8'))
         xml_str = res.read()
         tree = ET.fromstring(xml_str)
     except:
@@ -93,7 +93,7 @@ def get_ids(search_term, **kwargs):
               'retstart': 0,
               'db': 'pubmed',
               'sort': 'pub+date'}
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         params[k] = v
     tree = send_request(pubmed_search, urlencode(params))
     if tree is None:
@@ -137,9 +137,8 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     # Query the Entrez Gene database
     params = {'db': 'gene',
               'retmode': 'xml',
-              'id': entrez_id,
-              }
-    for k, v in kwargs.iteritems():
+              'id': entrez_id}
+    for k, v in kwargs.items():
         params[k] = v
     tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
@@ -162,8 +161,8 @@ def get_article_xml(pubmed_id):
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
     params = {'db': 'pubmed',
-                'retmode': 'xml',
-                'id': pubmed_id}
+              'retmode': 'xml',
+              'id': pubmed_id}
     tree = send_request(pubmed_fetch, urlencode(params))
     if tree is None:
         return None

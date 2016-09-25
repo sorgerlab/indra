@@ -2,14 +2,18 @@ from __future__ import print_function, unicode_literals
 import os
 import requests
 import json
-import urllib
 import re
 import warnings
-import pubmed_client
+from indra.literature import pubmed_client
+# Python3
 try:
     from functools import lru_cache
+    from urllib.parse import quote_plus
+# Python2
 except ImportError:
+    from urllib import quote_plus
     from functools32 import lru_cache
+
 
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/'
@@ -116,7 +120,7 @@ def doi_query(pmid, search_limit=10):
         return None
     # Now query CrossRef using the title we've got
     url = crossref_search_url + 'dois?q=' + \
-           urllib.quote_plus(pm_article_title.encode('UTF-8')) + \
+           quote_plus(pm_article_title.encode('utf-8')) + \
           '&sort=score'
     res = requests.get(url)
     if res.status_code != 200:

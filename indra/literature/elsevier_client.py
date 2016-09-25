@@ -1,12 +1,18 @@
 from __future__ import print_function, unicode_literals
 import os
 import logging
-import urllib, urllib2
 import xml.etree.ElementTree as ET
+# Python3
 try:
     from functools import lru_cache
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+# Python2
 except ImportError:
     from functools32 import lru_cache
+    from urllib2 import urlopen, HTTPError
+    from urllib import urlencode
 
 logger = logging.getLogger('elsevier')
 
@@ -49,8 +55,8 @@ def download_article(doi):
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
     try:
-        res = urllib2.urlopen(url, data=urllib.urlencode(params))
-    except urllib2.HTTPError:
+        res = urlopen(url, data=urlencode(params))
+    except HTTPError:
         logging.error('Cound not download article %s' % doi)
         return None
     xml = res.read()
@@ -131,7 +137,7 @@ def get_dois(query_str, count=100):
               'httpAccept': 'application/xml',
               'sort': '-coverdate',
               'field': 'doi'}
-    res = urllib2.urlopen(url, data=urllib.urlencode(params))
+    res = urlopen(url, data=urlencode(params))
     xml = res.read()
     et = ET.fromstring(xml)
     doi_tags = et.findall('atom:entry/prism:doi', elsevier_ns)

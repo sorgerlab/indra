@@ -3,13 +3,13 @@ import os
 import re
 import csv
 import xml.etree.ElementTree as et
+# Python3
 try:
-    # Python 3
     from functools import lru_cache
     from urllib.request import urlopen
     from urllib.error import HTTPError
+# Python2
 except ImportError:
-    # Python 2
     from urllib2 import urlopen, HTTPError
     from functools32 import lru_cache
 
