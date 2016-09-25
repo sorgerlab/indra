@@ -1,7 +1,7 @@
-from reach_api import process_pmc
-from reach_api import process_pubmed_abstract
-from reach_api import process_text
-from reach_api import process_nxml_str
-from reach_api import process_nxml_file
-from reach_api import process_json_str
-from reach_api import process_json_file
+from indra.reach.reach_api import (process_pmc,
+                                   process_pubmed_abstract,
+                                   process_text,
+                                   process_nxml_str,
+                                   process_nxml_file,
+                                   process_json_str,
+                                   process_json_file,)

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function
 import re
 import logging
 import objectpath
@@ -262,7 +263,7 @@ class ReachProcessor(object):
         if res is None:
             return None
         try:
-            entity_term = res.next()
+            entity_term = next(res)
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
@@ -293,7 +294,7 @@ class ReachProcessor(object):
         if res is None:
             return None
         try:
-            entity_term = res.next()
+            entity_term = next(res)
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
@@ -381,7 +382,7 @@ class ReachProcessor(object):
             res = self.tree.execute(qstr)
             if res is None:
                 return context
-            context_frame = res.next()
+            context_frame = next(res)
             facets = context_frame['facets']
             cell_line = facets.get('cell-line')
             cell_type = facets.get('cell-type')
@@ -408,7 +409,7 @@ class ReachProcessor(object):
         if hyp is True:
             epistemics['hypothesis'] = True
         # Check if it is direct
-        if event.has_key('is_direct'):
+        if 'is_direct' in event:
             direct = event['is_direct']
             epistemics['direct'] = direct
         # Get the section of the paper it comes from

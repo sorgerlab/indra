@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 import json
 import logging
@@ -5,7 +6,7 @@ import tempfile
 import requests
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
-from processor import ReachProcessor
+from indra.reach.processor import ReachProcessor
 
 logger = logging.getLogger('reach')
 
@@ -55,6 +56,7 @@ def process_pmc(pmc_id, offline=False):
     rp = process_nxml_str(xml_str, citation=pmc_id, offline=offline)
     return rp
 
+
 def process_pubmed_abstract(pubmed_id, offline=False):
     """Return a ReachProcessor by processing an abstract with a given Pubmed id.
 
@@ -83,6 +85,7 @@ def process_pubmed_abstract(pubmed_id, offline=False):
         return None
     rp = process_text(abs_txt, citation=pubmed_id, offline=offline)
     return rp
+
 
 def process_text(text, citation=None, offline=False):
     """Return a ReachProcessor by processing the given text.
@@ -136,6 +139,7 @@ def process_text(text, citation=None, offline=False):
         out_str = json_str
         fh.write(out_str)
     return process_json_str(json_str, citation)
+
 
 def process_nxml_str(nxml_str, citation=None, offline=False):
     """Return a ReachProcessor by processing the given NXML string.
@@ -193,6 +197,7 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         fh.write(json_str)
     return process_json_str(json_str, citation)
 
+
 def process_nxml_file(file_name, citation=None, offline=False):
     """Return a ReachProcessor by processing the given NXML file.
 
@@ -219,6 +224,7 @@ def process_nxml_file(file_name, citation=None, offline=False):
     nxml_str = open(file_name, 'rt').read()
     nxml_str = nxml_str.decode('utf-8')
     return process_nxml_str(nxml_str, citation, offline)
+
 
 def process_json_file(file_name, citation=None):
     """Return a ReachProcessor by processing the given REACH json file.
