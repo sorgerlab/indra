@@ -222,6 +222,11 @@ class IncrementalModel(object):
                 logger.info('Running grounding filter')
                 stmts = self._relevance_filter(stmts, ['grounding'])
                 logger.info('%s Statements after filter' % len(stmts))
+            if 'human_only' in filters:
+                # Filter out non-human proteins
+                logger.info('Running non-human protein filter')
+                stmts = self._relevance_filter(stmts, ['human_only'])
+                logger.info('%s Statements after filter' % len(stmts))
             for rel_key in ('prior_one', 'model_one',
                              'prior_all', 'model_all'):
                 if rel_key in filters:

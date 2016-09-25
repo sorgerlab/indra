@@ -198,7 +198,7 @@ class CxAssembler():
                 val = 'http://identifiers.org/mesh/%s' % db_id
             elif db_name == 'IP':
                 name = 'InterPro'
-                val = 'http://identifiers.org/interpro/%s' % db_val
+                val = 'http://identifiers.org/interpro/%s' % db_id
             elif db_name == 'TEXT':
                 continue
             else:
