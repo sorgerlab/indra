@@ -191,7 +191,6 @@ class Preassembler(object):
         >>> st2 = Phosphorylation(braf, map2k1, residue='S')
         >>> pa = Preassembler(hierarchies, [st1, st2])
         >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
-        Combining ...
         >>> combined_stmts
         [Phosphorylation(BRAF(), MAP2K1(), S)]
         >>> combined_stmts[0].supported_by
@@ -310,7 +309,6 @@ def render_stmt_graph(statements, agent_style=None):
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
     >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
-    Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
     >>> graph = render_stmt_graph(pa.related_stmts)
     >>> graph.write('example_graph.dot') # To make the DOT file
@@ -385,7 +383,6 @@ def flatten_stmts(stmts):
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
     >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
-    Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
     >>> flattened = flatten_stmts(pa.related_stmts)
     >>> flattened.sort(key=lambda x: x.matches_key())
@@ -439,7 +436,6 @@ def flatten_evidence(stmts):
     ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
     >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
-    Combining ...
     [Phosphorylation(BRAF(), MAP2K1(), S)]
     >>> [e.text for e in pa.related_stmts[0].evidence]
     ['baz', 'bak']
