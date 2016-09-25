@@ -142,15 +142,16 @@ class Preassembler(object):
         The procedure for combining statements in this way involves a series
         of steps:
 
-        1. The statements are grouped by whether they are of the same type
-           (e.g., Phosphorylation) and involve the same entities (e.g.,
-           BRAF and MAP2K1).
-        2. The groups of statements are then further compared to see if one
-           group involves superfamily entities of another group. If so, the
-           statements involving the superfamily are added into the group of
-           statements involving the more concrete entities to create an
-           "extended group."
-        3. The statements within each extended group are then compared; if one
+        1. The statements are grouped by type (e.g., Phosphorylation) and
+           each type is iterated over independently.
+        2. Statements of the same type are then grouped according to their
+           Agents' entity hierarchy component identifiers. For instance,
+           ERK, MAPK1 and MAPK3 are all in the same connected component in the
+           entity hierarchy and therefore all Statements of the same type
+           referencing these entities will be grouped. This grouping assures
+           that relations are only possible within Statement groups and
+           not among groups.
+        3. The statements within each group are then compared; if one
            statement represents a refinement of the other (as defined by the
            `refinement_of()` method implemented for the Statement), then the
            more refined statement is added to the `supports` field of the more
