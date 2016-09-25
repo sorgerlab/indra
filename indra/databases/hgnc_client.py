@@ -6,11 +6,11 @@ import xml.etree.ElementTree as et
 # Python3
 try:
     from functools import lru_cache
-    from urllib.request import urlopen
+    from urllib.request import urlopen, Request
     from urllib.error import HTTPError
 # Python2
 except ImportError:
-    from urllib2 import urlopen, HTTPError
+    from urllib2 import urlopen, HTTPError, Request
     from functools32 import lru_cache
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
@@ -148,7 +148,7 @@ def get_hgnc_entry(hgnc_id):
     """
     url = hgnc_url + 'hgnc_id/%s' % hgnc_id
     headers = {'Accept': '*/*'}
-    req = urllib2.Request(url, headers=headers)
+    req = Request(url, headers=headers)
     try:
         res = urlopen(req)
     except HTTPError:
