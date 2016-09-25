@@ -209,6 +209,7 @@ class Preassembler(object):
         unique_stmts = deepcopy(self.unique_stmts)
         eh = self.hierarchies['entity']
         type_groups = list(set([type(stmt) for stmt in unique_stmts]))
+        no_comp_stmts = []
         related_stmts = []
         for stmt_type in type_groups:
             stmts_this_type = [stmt for stmt in unique_stmts
@@ -232,7 +233,7 @@ class Preassembler(object):
                             except KeyError:
                                 stmt_by_comp[component] = [stmt]
                 if not any_component:
-                    related_stmts.append(stmt)
+                    no_comp_stmts.append(stmt)
 
             for comp, stmts in stmt_by_comp.iteritems():
                 print comp, stmts
@@ -243,8 +244,28 @@ class Preassembler(object):
                             stmt1.supported_by.append(stmt2)
                             stmt2.supports.append(stmt1)
 
+            no_comp_keys = {}
+            for stmt in no_comp_stmts:
+                agent_keys = []
+                for a in stmt.agent_list():
+                    if a is not None:
+                        agent_keys.append(a.entity_matches_key())
+                key = '|'.join(agent_keys)
+                try:
+                    no_comp_keys[key].append(stmt)
+                except KeyError:
+                    no_comp_keys[key] = [stmt]
+            for _, stmts in no_comp_keys.iteritems():
+                comparisons = list(itertools.permutations(stmts, 2))
+                for stmt1, stmt2 in comparisons:
+                    if stmt1.refinement_of(stmt2, self.hierarchies):
+                        if stmt2 not in stmt1.supported_by:
+                            stmt1.supported_by.append(stmt2)
+                            stmt2.supports.append(stmt1)
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             related_stmts += toplevel_stmts
+
+
         print related_stmts
         self.related_stmts = related_stmts
 
