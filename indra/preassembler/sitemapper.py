@@ -354,7 +354,7 @@ def load_site_map(path):
     with open(path) as f:
         mapreader = csv.reader(f, delimiter='\t')
         # Skip the header line
-        mapreader.next()
+        next(mapreader)
         for row in mapreader:
             # Don't allow empty entries in the key section
             if not (row[0] and row[1] and row[2]):

@@ -56,7 +56,7 @@ class IncrementalModel(object):
             pickle.dump(self.stmts, fh)
 
     def _relevance_filter(self, stmts, filters=None):
-        stmts_to_add = range(len(stmts))
+        stmts_to_add = list(range(len(stmts)))
         # Filter for grounding
         if 'grounding' in filters:
             for i, stmt in enumerate(stmts):
@@ -294,7 +294,7 @@ class IncrementalModel(object):
 
     def get_statements(self):
         """Return a list of all Statements in a single list."""
-        stmt_lists = [v for k, v in self.stmts.iteritems()]
+        stmt_lists = [v for k, v in self.stmts.items()]
         stmts = []
         for s in stmt_lists:
             stmts += s
@@ -302,7 +302,7 @@ class IncrementalModel(object):
 
     def get_statements_noprior(self):
         """Return a list of all non-prior Statements in a single list."""
-        stmt_lists = [v for k, v in self.stmts.iteritems() if k != 'prior']
+        stmt_lists = [v for k, v in self.stmts.items() if k != 'prior']
         stmts = []
         for s in stmt_lists:
             stmts += s
