@@ -215,16 +215,24 @@ class Preassembler(object):
                           if type(stmt) == stmt_type]
             stmt_by_comp = {}
             for stmt in stmts_this_type:
+                any_component = False
                 for a in stmt.agent_list():
                     if a is not None:
-                        uri = eh.get_uri(*a.get_grounding())
+                        a_ns, a_id = a.get_grounding()
+                        if a_ns is None:
+                            continue
+                        uri = eh.get_uri(a_ns, a_id)
                         print uri
                         component = eh.components.get(uri)
                         print component
-                    try:
-                        stmt_by_comp[component].append(stmt)
-                    except KeyError:
-                        stmt_by_comp[component] = [stmt]
+                        if component is not None:
+                            any_component = True
+                            try:
+                                stmt_by_comp[component].append(stmt)
+                            except KeyError:
+                                stmt_by_comp[component] = [stmt]
+                if not any_component:
+                    related_stmts.append(stmt)
 
             for comp, stmts in stmt_by_comp.iteritems():
                 print comp, stmts
@@ -237,9 +245,10 @@ class Preassembler(object):
 
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             related_stmts += toplevel_stmts
+        print related_stmts
         self.related_stmts = related_stmts
 
-        return
+        return self.related_stmts
 
         unique_stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
