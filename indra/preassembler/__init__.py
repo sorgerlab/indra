@@ -207,6 +207,40 @@ class Preassembler(object):
         # by the statement type and its entities:
         # Sort the statements in place by entities_match_key():
         unique_stmts = deepcopy(self.unique_stmts)
+        eh = self.hierarchies['entity']
+        type_groups = list(set([type(stmt) for stmt in unique_stmts]))
+        related_stmts = []
+        for stmt_type in type_groups:
+            stmts_this_type = [stmt for stmt in unique_stmts
+                          if type(stmt) == stmt_type]
+            stmt_by_comp = {}
+            for stmt in stmts_this_type:
+                for a in stmt.agent_list():
+                    if a is not None:
+                        uri = eh.get_uri(*a.get_grounding())
+                        print uri
+                        component = eh.components.get(uri)
+                        print component
+                    try:
+                        stmt_by_comp[component].append(stmt)
+                    except KeyError:
+                        stmt_by_comp[component] = [stmt]
+
+            for comp, stmts in stmt_by_comp.iteritems():
+                print comp, stmts
+                comparisons = list(itertools.permutations(stmts, 2))
+                for stmt1, stmt2 in comparisons:
+                    if stmt1.refinement_of(stmt2, self.hierarchies):
+                        if stmt2 not in stmt1.supported_by:
+                            stmt1.supported_by.append(stmt2)
+                            stmt2.supports.append(stmt1)
+
+            toplevel_stmts = [st for st in stmts_this_type if not st.supports]
+            related_stmts += toplevel_stmts
+        self.related_stmts = related_stmts
+
+        return
+
         unique_stmts.sort(key=lambda x: x.entities_match_key())
         groups = {grouper[0]: list(grouper[1])
                   for grouper in itertools.groupby(unique_stmts,
