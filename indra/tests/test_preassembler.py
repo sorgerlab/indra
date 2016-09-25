@@ -172,7 +172,7 @@ def test_modification_norefinement_subsfamily():
     generic modification statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS')
+    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(src, ras, 'Y', '32',
                           evidence=[Evidence(text='foo')])

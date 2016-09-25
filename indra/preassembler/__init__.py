@@ -202,41 +202,44 @@ class Preassembler(object):
         # If unique_stmts is not initialized, call combine_duplicates.
         if not self.unique_stmts:
             self.combine_duplicates()
-        # Group statements according to whether they have matching entities,
-        # and store the resulting lists in a dict, indexed by the key defined
-        # by the statement type and its entities:
-        # Sort the statements in place by entities_match_key():
         unique_stmts = deepcopy(self.unique_stmts)
         eh = self.hierarchies['entity']
+        # Make a list of Statement types
         type_groups = list(set([type(stmt) for stmt in unique_stmts]))
         no_comp_stmts = []
         related_stmts = []
+        # Each Statement type can be preassembled independently
         for stmt_type in type_groups:
+            # All Statements of this type
             stmts_this_type = [stmt for stmt in unique_stmts
                           if type(stmt) == stmt_type]
+            # Here we group Statements according to the hierarchy graph
+            # components that their agents are part of
             stmt_by_comp = {}
             for stmt in stmts_this_type:
                 any_component = False
                 for a in stmt.agent_list():
                     if a is not None:
                         a_ns, a_id = a.get_grounding()
-                        if a_ns is None:
+                        if a_ns is None or a_id is None:
                             continue
                         uri = eh.get_uri(a_ns, a_id)
-                        print uri
+                        # This is the component ID corresponding to the agent
+                        # in the entity hierarchy
                         component = eh.components.get(uri)
-                        print component
                         if component is not None:
                             any_component = True
                             try:
                                 stmt_by_comp[component].append(stmt)
                             except KeyError:
                                 stmt_by_comp[component] = [stmt]
+                # If the Statement has no Agent belonging to any component
+                # then we put it in a special group
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
+            # This is the preassembly within each component ID group
             for comp, stmts in stmt_by_comp.iteritems():
-                print comp, stmts
                 comparisons = list(itertools.permutations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
                     if stmt1.refinement_of(stmt2, self.hierarchies):
@@ -244,17 +247,21 @@ class Preassembler(object):
                             stmt1.supported_by.append(stmt2)
                             stmt2.supports.append(stmt1)
 
+            # Next we deal with the Statements that have no associated
+            # entity hierarchy component IDs.
+            # We take all the Agent entity_matches_key()-s and group
+            # Statements based on this key
             no_comp_keys = {}
             for stmt in no_comp_stmts:
-                agent_keys = []
                 for a in stmt.agent_list():
                     if a is not None:
-                        agent_keys.append(a.entity_matches_key())
-                key = '|'.join(agent_keys)
-                try:
-                    no_comp_keys[key].append(stmt)
-                except KeyError:
-                    no_comp_keys[key] = [stmt]
+                        key = a.entity_matches_key()
+                        try:
+                            no_comp_keys[key].append(stmt)
+                        except KeyError:
+                            no_comp_keys[key] = [stmt]
+            # This is the preassembly within each Statement group
+            # keyed by the Agent entity_matches_key
             for _, stmts in no_comp_keys.iteritems():
                 comparisons = list(itertools.permutations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
@@ -266,153 +273,9 @@ class Preassembler(object):
             related_stmts += toplevel_stmts
 
 
-        print related_stmts
         self.related_stmts = related_stmts
 
         return self.related_stmts
-
-        unique_stmts.sort(key=lambda x: x.entities_match_key())
-        groups = {grouper[0]: list(grouper[1])
-                  for grouper in itertools.groupby(unique_stmts,
-                                          key=lambda x: x.entities_match_key())}
-        # The ext_groups dict is where we store the extended groups, those
-        # statements which involve either the same entities or entities with
-        # family relationships.
-        ext_groups = copy(groups)
-        # Set up progress bar
-        # see http://stackoverflow.com/questions/3160699/python-progress-bar
-        toolbar_width = 40
-        sys.stdout.write("Combining related stmts: [%s]"
-                         % (" " * toolbar_width))
-        sys.stdout.flush()
-        sys.stdout.write("\b" * (toolbar_width+1)) # return to start of bar
-        dashes_printed = 0
-        comparisons = list(itertools.permutations(groups.keys(), 2))
-        num_comparisons = len(comparisons)
-        # Put together a list of all entity families
-        entity_tc = self.hierarchies['entity'].isa_closure
-        # FIXME This is done to avoid the find_entity lookup step in
-        # the hierarchy manager
-        indra_prefix = 'http://sorger.med.harvard.edu/indra/entities/'
-        entity_families = set([family_name[len(indra_prefix):]
-                               for isa_lists in entity_tc.values()
-                               for family_name in isa_lists
-                               if family_name.startswith(indra_prefix)])
-        # A handy function for checking if an agent has any family-level
-        # agents
-        def _has_family_agent(stmt):
-            for ag in stmt.agent_list():
-                if ag is None or ag.name in entity_families:
-                    return True
-            return False
-        # We examine pairs of Statement groups, looking for "isa" relationships:
-        for counter, (g1_key, g2_key) in enumerate(comparisons):
-            # Update progress bar
-            pct_completed = (counter + 1) / float(num_comparisons)
-            total_dashes = int(pct_completed * toolbar_width)
-            dashes_to_print = total_dashes - dashes_printed
-            sys.stdout.write("-" * dashes_to_print)
-            sys.stdout.flush()
-            dashes_printed += dashes_to_print
-            # Get the groups
-            g1 = groups[g1_key]
-            g2 = groups[g2_key]
-            # If we have two groups G1 and G2, each containing Statements with
-            # some number of Agent arguments, e.g.  G1_Stmt(Ag1, Ag2, Ag3) and
-            # G2_Stmt(Ag4, Ag5, Ag6), we need to know whether each of the
-            # corresponding Agent arguments are related for all of the
-            # Statements in the two groups.  That is, each of the arguments
-            # between G1 and G2 must either be an entity match (as determined
-            # by the entities_match test of the respective agents) or have an
-            # "isa" relationship, as determined by the HierarchyManager in use.
-            # If the elements in both groups are related, then the
-            # Statements in the group with the superfamily relationship
-            # are added into the group with the more specific entities. However,
-            # the superfamily group is not removed from the group list, as
-            # it may be a superfamily supporting Statements from another group.
-
-            # Get the first statement from each group (we've already determined
-            # that all of the statements within each group have an entity
-            # match, so we only need the first:
-            g1_stmt = g1[0]
-            g2_stmt = g2[0]
-            # Check that the statements are of the same type; if not, no merge.
-            if type(g1_stmt) is not type(g2_stmt):
-                continue
-            # If both statements are Complexes, make sure they have the same
-            # number of members:
-            if type(g1_stmt) is Complex and \
-               len(g1_stmt.members) != len(g2_stmt.members):
-                continue
-
-            # Check if any of the agents in the second statement group,
-            # g2_stmt, are families of some kind. If not, then the g1_stmt
-            # group cannot be a refinement of the g2_stmt group at the entity
-            # level, and we can skip the comparison.
-            if not _has_family_agent(g2_stmt):
-                continue
-
-            # Check that all of the agents match or have an isa relationship.
-            # Because the statements are of the same type, they should have the
-            # same number of agents as arguments.  First, let's keep track of
-            # our checks that g1 is the "primary" group, i.e., it is the one
-            # with the more refined/grounded entities. We build a list with one
-            # boolean entry for each argument, where a True value indicates
-            # that the arguments at that position imply that g1 is the primary
-            # group.
-            agent_pairs = zip(g1_stmt.agent_list(), g2_stmt.agent_list())
-            g1_is_refinement = []
-            for ag1, ag2 in agent_pairs:
-                if ag2 is None:
-                    val = True
-                elif ag2 is not None and ag1 is None:
-                    val = False
-                else:
-                    val = ag1.entity_matches(ag2) or \
-                          ag1.isa(ag2, self.hierarchies)
-                g1_is_refinement.append(val)
-            # If g1_is_refinement is all True values, that means everything in
-            # the group1 statements isa thing in the group2 statements.
-            if all(g1_is_refinement):
-                g1_ext_list = ext_groups[g1_key]
-                ext_groups[g1_key] = g1_ext_list + g2
-        # Move cursor to next line after progress bar
-        print
-        # At this point we have, in ext_groups, a dict of lists of Statements
-        # indexed by their entity_matches key, but now the groups contain not
-        # only statements with matching entities, but also entities related by
-        # isa relationships. The next step is to process each group, checking
-        # each statement against each other statement to determine supports and
-        # supported_by relationships. This is determined by calling the
-        # refinement_of method on pairs of statements.
-        # Iterate over each of the extended groups:
-        for ext_group in ext_groups.values():
-            # Iterate over pairs of statements in the group:
-            for stmt1, stmt2 in itertools.permutations(ext_group, 2):
-                if stmt1.refinement_of(stmt2, self.hierarchies):
-                    stmt1.supported_by.append(stmt2)
-                    stmt2.supports.append(stmt1)
-        # Now that the groups have been processed, we need to find the
-        # non-subsumed statements, those that have no supports relationships.
-        self.related_stmts = [stmt for ext_group in ext_groups.values()
-                               for stmt in ext_group
-                               if not stmt.supports]
-        self.related_stmts = self.combine_duplicate_stmts(self.related_stmts)
-
-        # Make sure we haven't lost any statements!
-        if len(flatten_stmts(self.unique_stmts)) != \
-            len(flatten_stmts(self.related_stmts)):
-            logger.error("Statements lost after combining related")
-            for s1 in flatten_stmts(self.unique_stmts):
-                found = False
-                for s2 in flatten_stmts(self.related_stmts):
-                    if s1.matches(s2):
-                        found = True
-                if not found:
-                    logger.error('Lost: %s' % s1)
-
-        return self.related_stmts
-
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.
