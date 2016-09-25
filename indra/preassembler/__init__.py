@@ -204,14 +204,16 @@ class Preassembler(object):
         unique_stmts = deepcopy(self.unique_stmts)
         eh = self.hierarchies['entity']
         # Make a list of Statement types
-        type_groups = list(set([type(stmt) for stmt in unique_stmts]))
+        stmts_by_type = {}
+        for stmt in unique_stmts:
+            try:
+                stmts_by_type[type(stmt)].append(stmt)
+            except KeyError:
+                stmts_by_type[type(stmt)] = [stmt]
         no_comp_stmts = []
         related_stmts = []
         # Each Statement type can be preassembled independently
-        for stmt_type in type_groups:
-            # All Statements of this type
-            stmts_this_type = [stmt for stmt in unique_stmts
-                          if type(stmt) == stmt_type]
+        for stmt_type, stmts_this_type in stmts_by_type.iteritems():
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             stmt_by_comp = {}
