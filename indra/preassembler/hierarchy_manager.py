@@ -2,16 +2,6 @@ import os
 import rdflib
 import functools32
 
-def get_uri(ns, id):
-    if ns == 'HGNC':
-        return 'http://identifiers.org/hgnc.symbol/' + id
-    elif ns == 'UP':
-        return 'http://identifiers.org/uniprot/' + id
-    elif ns == 'BE' or ns == 'INDRA':
-        return 'http://sorger.med.harvard.edu/indra/entities/' + id
-    else:
-        raise ValueError('Unknown namespace %s' % ns)
-
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
 
@@ -149,8 +139,8 @@ class HierarchyManager(object):
             return False
 
         if self.isa_closure:
-            term1 = get_uri(ns1, id1)
-            term2 = get_uri(ns2, id2)
+            term1 = self.get_uri(ns1, id1)
+            term2 = self.get_uri(ns2, id2)
             ec = self.isa_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
@@ -187,8 +177,8 @@ class HierarchyManager(object):
             return False
 
         if self.partof_closure:
-            term1 = get_uri(ns1, id1)
-            term2 = get_uri(ns2, id2)
+            term1 = self.get_uri(ns1, id1)
+            term2 = self.get_uri(ns2, id2)
             ec = self.partof_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
@@ -212,6 +202,18 @@ class HierarchyManager(object):
             return True
         else:
             return False
+
+    @staticmethod
+    def get_uri(ns, id):
+        if ns == 'HGNC':
+            return 'http://identifiers.org/hgnc.symbol/' + id
+        elif ns == 'UP':
+            return 'http://identifiers.org/uniprot/' + id
+        elif ns == 'BE' or ns == 'INDRA':
+            return 'http://sorger.med.harvard.edu/indra/entities/' + id
+        else:
+            raise ValueError('Unknown namespace %s' % ns)
+
 
 # Load the default entity and modification hierarchies
 entity_file_path = os.path.join(os.path.dirname(__file__),
