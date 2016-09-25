@@ -211,10 +211,10 @@ class Preassembler(object):
                 stmts_by_type[type(stmt)].append(stmt)
             except KeyError:
                 stmts_by_type[type(stmt)] = [stmt]
-        no_comp_stmts = []
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.iteritems():
+            no_comp_stmts = []
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             stmt_by_comp = {}
@@ -242,12 +242,16 @@ class Preassembler(object):
 
             # This is the preassembly within each component ID group
             for comp, stmts in stmt_by_comp.iteritems():
-                comparisons = list(itertools.permutations(stmts, 2))
+                comparisons = list(itertools.combinations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
                     if stmt1.refinement_of(stmt2, self.hierarchies):
                         if stmt2 not in stmt1.supported_by:
                             stmt1.supported_by.append(stmt2)
                             stmt2.supports.append(stmt1)
+                    elif stmt2.refinement_of(stmt1, self.hierarchies):
+                        if stmt1 not in stmt2.supported_by:
+                            stmt2.supported_by.append(stmt1)
+                            stmt1.supports.append(stmt2)
 
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
@@ -265,12 +269,16 @@ class Preassembler(object):
             # This is the preassembly within each Statement group
             # keyed by the Agent entity_matches_key
             for _, stmts in no_comp_keys.iteritems():
-                comparisons = list(itertools.permutations(stmts, 2))
+                comparisons = list(itertools.combinations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
                     if stmt1.refinement_of(stmt2, self.hierarchies):
                         if stmt2 not in stmt1.supported_by:
                             stmt1.supported_by.append(stmt2)
                             stmt2.supports.append(stmt1)
+                    elif stmt2.refinement_of(stmt1, self.hierarchies):
+                        if stmt1 not in stmt2.supported_by:
+                            stmt2.supported_by.append(stmt1)
+                            stmt1.supports.append(stmt2)
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             related_stmts += toplevel_stmts
 
