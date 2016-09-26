@@ -1,9 +1,10 @@
-from indra.assemblers import PysbAssembler
-from indra import trips
-from os.path import dirname, join
-import indra.statements
-import sys
+from __future__ import absolute_import, print_function, unicode_literals
 import os
+from os.path import dirname, join
+import sys
+from indra import trips
+import indra.statements
+from indra.assemblers import PysbAssembler
 
 def test_bind():
     fname = sys._getframe().f_code.co_name + '.xml'

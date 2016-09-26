@@ -17,7 +17,7 @@ logger = logging.getLogger('complexes')
 def load_file(stmts_file):
     logger.info("Loading results...")
     with open(stmts_file, 'rb') as f:
-        results = pickle.load(f, encoding='utf-8')
+        results = pickle.load(f)
     return results
 
 def analyze(filename):

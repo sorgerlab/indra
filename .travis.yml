@@ -8,6 +8,7 @@ before_install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
   - conda update --yes conda
+  - conda update --yes --all
   - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx
 install:
   # INDRA dependencies
@@ -15,7 +16,7 @@ install:
   - pip install pygraphviz
   - pip install functools32
   - pip install jsonschema coverage python-coveralls boto3
-  - pip install future pandas
+  - pip install future pandas doctest-ignore-unicode
   # PySB and dependencies
   - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
   - unzip -q 2.2.5-stable.zip
@@ -28,7 +29,7 @@ install:
   - pip install .
 script:
   nosetests indra
-     --with-doctest
+     --with-doctest --with-doctest-ignore-unicode
      --with-coverage --cover-inclusive --cover-package=indra
 after_success:
   coveralls

@@ -98,7 +98,7 @@ class Preassembler(object):
         >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
-        >>> sorted([e.text for e in uniq_stmts[0].evidence])
+        >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
@@ -448,10 +448,10 @@ def flatten_evidence(stmts):
     >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> [e.text for e in pa.related_stmts[0].evidence]
+    >>> [e.text for e in pa.related_stmts[0].evidence] # doctest:+IGNORE_UNICODE
     ['baz', 'bak']
     >>> flattened = flatten_evidence(pa.related_stmts)
-    >>> sorted([e.text for e in flattened[0].evidence])
+    >>> sorted([e.text for e in flattened[0].evidence]) # doctest:+IGNORE_UNICODE
     ['bak', 'bar', 'baz', 'foo']
     """
     # Copy all of the statements--these will be the ones where we update

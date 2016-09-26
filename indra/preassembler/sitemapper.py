@@ -69,7 +69,7 @@ class SiteMapper(object):
     >>> ms = mapped[0]
     >>> ms.original_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
-    >>> ms.mapped_mods
+    >>> ms.mapped_mods # doctest:+IGNORE_UNICODE
     [(('MAP2K1', 'S', '217'), ('S', '218', 'off by one')), (('MAP2K1', 'S', '221'), ('S', '222', 'off by one')), (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))]
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)

@@ -13,7 +13,7 @@ from indra.preassembler.sitemapper import SiteMapper, default_site_map
 psite_fname = 'phosphosite_kin_sub_2016.csv'
 stmts_fname = 'model.pkl'
 
-logger = logger.get_logger('phosphorylations')
+logger = logging.getLogger('phosphorylations')
 
 def phosphosite_to_indra():
     df = pandas.DataFrame.from_csv(psite_fname, index_col=None)
@@ -40,7 +40,7 @@ def phosphosite_to_indra():
         ev = Evidence('phosphosite')
         st = Phosphorylation(enz, sub, residue, position, ev)
         stmts.append(st)
-    print '%d human-human phosphorylations in Phosphosite' % len(stmts)
+    logger.info('%d human-human phosphorylations in Phosphosite' % len(stmts))
     with open('phosphosite_indra.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
     return stmts
@@ -54,36 +54,36 @@ def extract_phos():
         for stmt in pmid_stmts:
             if isinstance(stmt, Phosphorylation):
                 stmts.append(stmt)
-    print '%d phosphorylations in RAS Machine' % len(stmts)
+    logger.info('%d phosphorylations in RAS Machine' % len(stmts))
 
     stmts = [s for s in stmts if s.enz is not None]
-    print '%d phosphorylations with enzyme in RAS Machine' % len(stmts)
+    logger.info('%d phosphorylations with enzyme in RAS Machine' % len(stmts))
 
     stmts_grounded = filter_grounded(stmts)
-    print '%d grounded phosphorylations in RAS Machine' % len(stmts_grounded)
+    logger.info('%d grounded phosphorylations in RAS Machine' % len(stmts_grounded))
 
     stmts_enzkinase = filter_enzkinase(stmts_grounded)
-    print '%d phosphorylations with kinase enzyme in RAS Machine' % len(stmts_enzkinase)
+    logger.info('%d phosphorylations with kinase enzyme in RAS Machine' % len(stmts_enzkinase))
 
     sm = SiteMapper(default_site_map)
     stmts_valid, _ = sm.map_sites(stmts_enzkinase)
-    print '%d valid-sequence phosphorylations in RAS Machine' % len(stmts_valid)
+    logger.info('%d valid-sequence phosphorylations in RAS Machine' % len(stmts_valid))
 
     pa = Preassembler(hierarchies, stmts_valid)
     stmts_unique = pa.combine_duplicates()
-    print '%d unique phosphorylations in RAS Machine' % len(stmts_unique)
+    logger.info('%d unique phosphorylations in RAS Machine' % len(stmts_unique))
 
     stmts_unique = pa.combine_related()
-    print '%d top-level phosphorylations in RAS Machine' % len(stmts_unique)
+    logger.info('%d top-level phosphorylations in RAS Machine' % len(stmts_unique))
 
     with open('mapped_unique_phos.pkl', 'wb') as fh:
         pickle.dump(stmts_unique, fh)
 
     # Filter RAS Machine statements for direct and not hypothesis
     stmts = filter_direct(stmts_unique)
-    print '%d direct phosphorylations in RAS Machine' % len(stmts)
+    logger.info('%d direct phosphorylations in RAS Machine' % len(stmts))
     stmts = filter_non_hypothesis(stmts)
-    print '%d non-hypothesis phosphorylations in RAS Machine' % len(stmts)
+    logger.info('%d non-hypothesis phosphorylations in RAS Machine' % len(stmts))
 
     with open('filtered_phos.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
@@ -207,29 +207,29 @@ if __name__ == '__main__':
 
     use_pkl = False
     if use_pkl:
-        rm_file = 'filtered_phos.pkl'
-        with open(rm_file, 'rb') as fh:
-            rm_stmts = pickle.load(fh)
+        stmts_file = 'filtered_phos.pkl'
+        with open(stmts_file, 'rb') as fh:
+            indra_stmts = pickle.load(fh)
 
         ps_file = 'phosphosite_indra.pkl'
         with open(ps_file, 'rb') as fh:
             ps_stmts = pickle.load(fh)
     else:
-        print 'Extract phosphorylations from Phosphosite'
+        logger.info('Extract phosphorylations from Phosphosite')
         ps_stmts = phosphosite_to_indra()
-        print 'Extract phosphorylations from the RAS Machine'
-        rm_stmts = extract_phos()
+        logger.info('Extract phosphorylations from the RAS Machine')
+        indra_stmts = extract_phos()
 
-    not_found_stmts, found_stmts = compare_overlap(rm_stmts, ps_stmts)
-    print '%d phosphorylations found in Phosphosite' % len(found_stmts)
-    print '%d phosphorylations not found in Phosphosite' % len(not_found_stmts)
+    not_found_stmts, found_stmts = compare_overlap(indra_stmts, ps_stmts)
+    logger.info('%d phosphorylations found in Phosphosite' % len(found_stmts))
+    logger.info('%d phosphorylations not found in Phosphosite' % len(not_found_stmts))
 
-    rm_stmts = filter_belief(rm_stmts)
-    print '%d > 1 evidence phosphorylations in statements' % len(rm_stmts)
+    indra_stmts = filter_belief(indra_stmts)
+    logger.info('%d > 1 evidence phosphorylations in statements' % len(indra_stmts))
 
-    not_found_stmts, found_stmts = compare_overlap(rm_stmts, ps_stmts)
-    print '%d phosphorylations found in Phosphosite' % len(found_stmts)
-    print '%d phosphorylations not found in Phosphosite' % len(not_found_stmts)
+    not_found_stmts, found_stmts = compare_overlap(indra_stmts, ps_stmts)
+    logger.info('%d phosphorylations found in Phosphosite' % len(found_stmts))
+    logger.info('%d phosphorylations not found in Phosphosite' % len(not_found_stmts))
 
     with open('not_found.tsv', 'wt') as fh:
         for i, st in enumerate(not_found_stmts):

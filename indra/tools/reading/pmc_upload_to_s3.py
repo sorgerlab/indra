@@ -1,11 +1,12 @@
-import gzip
-import boto3
-import cStringIO
-import sys
-import pymysql
-import time
 
 if __name__ == '__main__':
+    import gzip
+    import boto3
+    import cStringIO
+    import sys
+    import pymysql
+    import time
+
     if len(sys.argv) != 3:
         print "Usage: %s start_index end_index_inclusive" % sys.argv[0]
         sys.exit(1)
