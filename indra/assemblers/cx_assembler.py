@@ -5,6 +5,13 @@ from collections import OrderedDict
 from indra.statements import *
 from indra.databases import context_client
 
+# Python 2
+try:
+    basestring
+# Python 3
+except NameError:
+    basestring = str
+
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
 
@@ -207,10 +214,10 @@ class CxAssembler():
         for db_name, db_ids in agent.db_refs.items():
             if isinstance(db_ids, int):
                 db_id = str(db_ids)
-            elif hasattr(db_ids, '__iter__'):
-                db_id = db_ids[0]
-            else:
+            elif isinstance(db_ids, basestring):
                 db_id = db_ids
+            else:
+                db_id = db_ids[0]
             if db_name == 'UP':
                 name = 'UniProt'
                 val = 'http://identifiers.org/uniprot/%s' % db_id
