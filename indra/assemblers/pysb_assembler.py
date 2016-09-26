@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import logging
 import itertools
 
@@ -13,6 +14,13 @@ from indra.databases import context_client
 logger = logging.getLogger('pysb_assembler')
 
 SelfExporter.do_export = False
+
+# Python2
+try:
+    basestring
+# Python3 -- create basestring type
+except NameError:
+    basestring = str
 
 # Here we define the types of INDRA statements that are meant to be
 # assembled using the PySB assembler. If a type of statement appears
@@ -74,15 +82,15 @@ class _BaseAgentSet(object):
             base_agent.create_site('loc', [agent.location])
 
         # There might be overwrites here
-        for db_name, db_ref in agent.db_refs.iteritems():
+        for db_name, db_ref in agent.db_refs.items():
             base_agent.db_refs[db_name] = db_ref
 
         return base_agent
 
-    def iteritems(self):
-        """Return iteritems for the set of BaseAgents that this class wraps.
+    def items(self):
+        """Return items for the set of BaseAgents that this class wraps.
         """
-        return self.agents.iteritems()
+        return self.agents.items()
 
     def __getitem__(self, name):
         return self.agents[name]
@@ -306,7 +314,7 @@ def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
-        for k, v in extra_fields.iteritems():
+        for k, v in extra_fields.items():
             pattern[k] = v
 
     # If a model is given, return the Monomer with the generated pattern,
@@ -532,10 +540,10 @@ class PysbAssembler(object):
         # statements
         self._monomers()
         # Add the monomers to the model based on our BaseAgentSet
-        for agent_name, agent in self.agent_set.iteritems():
+        for agent_name, agent in self.agent_set.items():
             m = Monomer(agent_name, agent.sites, agent.site_states)
             self.model.add_component(m)
-            for db_name, db_ref in agent.db_refs.iteritems():
+            for db_name, db_ref in agent.db_refs.items():
                 a = get_annotation(m, db_name, db_ref)
                 if a is not None:
                     self.model.add_annotation(a)
