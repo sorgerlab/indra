@@ -284,7 +284,7 @@ class Agent(object):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
-        name_str = self.name.encode('utf-8')
+        name_str = self.name
         key = (name_str,
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
@@ -543,10 +543,10 @@ class Evidence(object):
         return matches
 
     def __str__(self):
-        ev_str = u'Evidence(%s, %s, %s, %s)' % \
+        ev_str = 'Evidence(%s, %s, %s, %s)' % \
                  (self.source_api, self.pmid, self.annotations,
                   self.text)
-        return ev_str.encode('utf-8')
+        return ev_str
 
     def __repr__(self):
         return self.__str__()
