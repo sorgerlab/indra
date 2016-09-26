@@ -108,9 +108,17 @@ class GroundingMapper(object):
 def load_grounding_map(path):
     g_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
+        # Unicode literals will fail in Python 2
+        try:
+            mapreader = csv.reader(f, delimiter=',', quotechar='"',
+                                   quoting=csv.QUOTE_MINIMAL,
+                                   lineterminator='\r\n')
+        except TypeError:
+            mapreader = csv.reader(f, delimiter=','.encode('utf-8'),
+                                   quotechar='"'.encode('utf-8'),
+                                   quoting=csv.QUOTE_MINIMAL,
+                                   lineterminator='\r\n')
+
         rows = [row for row in mapreader]
 
     for row in rows:

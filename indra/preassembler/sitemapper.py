@@ -359,7 +359,10 @@ def load_site_map(path):
     """
     site_map = {}
     with open(path) as f:
-        mapreader = csv.reader(f, delimiter='\t')
+        try:
+            mapreader = csv.reader(f, delimiter='\t')
+        except TypeError:
+            mapreader = csv.reader(f, delimiter='\t'.encode('utf-8'))
         # Skip the header line
         next(mapreader)
         for row in mapreader:
