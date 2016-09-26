@@ -31,7 +31,7 @@ logger = logging.getLogger('analyze_biological_processes')
 def load_file(stmts_file):
     logger.info("Loading results...")
     with open(stmts_file, 'rb') as f:
-        results = pickle.load(f, encoding='utf-8')
+        results = pickle.load(f)
     return results
 
 
@@ -107,7 +107,7 @@ def plot_stmt_counts(go_stmt_map, plot_filename, figsize=(3, 3)):
 
 def analyze(filename):
     # Load the file
-    results = load_file(sys.argv[1])
+    results = load_file(filename)
 
     # Put together a list of all statements
     all_stmts = [stmt for paper_stmts in results.values()
@@ -163,9 +163,3 @@ def analyze(filename):
 
     plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
 
-if __name__ == '__main__':
-    # Get the command line args
-    if len(sys.argv) < 2:
-        print("Usage: %s reach_stmts_file" % sys.argv[0])
-        sys.exit()
-    analyze(sys.argv[1])
