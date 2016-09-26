@@ -246,7 +246,7 @@ def get_sequence(protein_id):
     except HTTPError:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
-    lines = res.readlines()
+    lines = [line.decode('utf-8') for line in res.readlines()]
     seq = (''.join(lines[1:])).replace('\n','')
     return seq
 

@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import os
 import csv
 from collections import namedtuple
@@ -5,6 +6,12 @@ from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 
+# Python2
+try:
+    basestring
+# Python3
+except NameError:
+    basestring = str
 
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
