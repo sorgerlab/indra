@@ -89,8 +89,8 @@ def get_family_members(family_name, human_only=True):
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    res = urlopen(uniprot_url, urlencode(data))
-    html = res.read()
+    res = urlopen(uniprot_url, urlencode(data).encode('utf-8'))
+    html = res.read().decode('utf-8')
     if html:
         protein_list = html.strip().split('\n')
         gene_names = []
