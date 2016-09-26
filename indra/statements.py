@@ -48,6 +48,7 @@ Statement.
 """
 
 from __future__ import print_function, unicode_literals
+from builtins import str
 import os
 import logging
 import textwrap

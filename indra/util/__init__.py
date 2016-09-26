@@ -1,11 +1,17 @@
 from __future__ import absolute_import, division, print_function, \
                        unicode_literals
+import sys
+
+if sys.version_info > (3, 0):
+    non_unicode = bytes
+else:
+    non_unicode = str
 
 def unicode_strs(obj):
-    if type(obj) == str:
+    if isinstance(obj, non_unicode):
         return False
     # Check for an iterable
-    if hasattr(obj, '__iter__'):
+    if isinstance(obj, list) or isinstance(obj, tuple):
         for item in obj:
             has_unicode_strs = unicode_strs(item)
             if not has_unicode_strs:
@@ -25,6 +31,5 @@ def unicode_strs(obj):
 
 
 #foo = {u'a':u'b', u'c':[u'a', u'b', u'c']}
-foo = {'a':'b', 'c':['a', 'b', 'c']}
-
-print(unicode_strs(foo))
+#foo = {'a':'b', 'c':['a', 'b', 'c']}
+#print(unicode_strs(foo))
