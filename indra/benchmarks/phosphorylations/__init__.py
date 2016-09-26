@@ -1,5 +1,8 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 import pandas
+import logging
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -8,7 +11,9 @@ from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 psite_fname = 'phosphosite_kin_sub_2016.csv'
-rasmachine_stmts_fname = 'model.pkl'
+stmts_fname = 'model.pkl'
+
+logger = logger.get_logger('phosphorylations')
 
 def phosphosite_to_indra():
     df = pandas.DataFrame.from_csv(psite_fname, index_col=None)
@@ -40,8 +45,8 @@ def phosphosite_to_indra():
         pickle.dump(stmts, fh)
     return stmts
 
-def rasmachine_extract_phos():
-    with open(rasmachine_stmts_fname, 'rb') as fh:
+def extract_phos():
+    with open(stmts_fname, 'rb') as fh:
         model = pickle.load(fh)
 
     stmts = []
@@ -71,7 +76,7 @@ def rasmachine_extract_phos():
     stmts_unique = pa.combine_related()
     print '%d top-level phosphorylations in RAS Machine' % len(stmts_unique)
 
-    with open('rasmachine_mapped_unique_phos.pkl', 'wb') as fh:
+    with open('mapped_unique_phos.pkl', 'wb') as fh:
         pickle.dump(stmts_unique, fh)
 
     # Filter RAS Machine statements for direct and not hypothesis
@@ -80,7 +85,7 @@ def rasmachine_extract_phos():
     stmts = filter_non_hypothesis(stmts)
     print '%d non-hypothesis phosphorylations in RAS Machine' % len(stmts)
 
-    with open('rasmachine_filtered_phos.pkl', 'wb') as fh:
+    with open('filtered_phos.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
 
     return stmts
@@ -199,9 +204,10 @@ def get_is_not_hypothesis(stmt):
     return False
 
 if __name__ == '__main__':
+
     use_pkl = False
     if use_pkl:
-        rm_file = 'rasmachine_filtered_phos.pkl'
+        rm_file = 'filtered_phos.pkl'
         with open(rm_file, 'rb') as fh:
             rm_stmts = pickle.load(fh)
 
@@ -212,14 +218,14 @@ if __name__ == '__main__':
         print 'Extract phosphorylations from Phosphosite'
         ps_stmts = phosphosite_to_indra()
         print 'Extract phosphorylations from the RAS Machine'
-        rm_stmts = rasmachine_extract_phos()
+        rm_stmts = extract_phos()
 
     not_found_stmts, found_stmts = compare_overlap(rm_stmts, ps_stmts)
     print '%d phosphorylations found in Phosphosite' % len(found_stmts)
     print '%d phosphorylations not found in Phosphosite' % len(not_found_stmts)
 
     rm_stmts = filter_belief(rm_stmts)
-    print '%d > 1 evidence phosphorylations in RAS Machine' % len(rm_stmts)
+    print '%d > 1 evidence phosphorylations in statements' % len(rm_stmts)
 
     not_found_stmts, found_stmts = compare_overlap(rm_stmts, ps_stmts)
     print '%d phosphorylations found in Phosphosite' % len(found_stmts)

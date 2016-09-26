@@ -15,13 +15,12 @@ install:
   - pip install pygraphviz
   - pip install functools32
   - pip install jsonschema coverage python-coveralls boto3
-  - pip install future
+  - pip install future pandas
   # PySB and dependencies
   - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
   - unzip -q 2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
-  - mkdir pysb
-  - git clone -b unicode_fix git@github.com:johnbachman/pysb.git
+  - git clone -b unicode_fix https://github.com/johnbachman/pysb.git
   - pip install -e pysb
   #- pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies

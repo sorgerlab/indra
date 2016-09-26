@@ -11,7 +11,7 @@ from indra.preassembler.hierarchy_manager import hierarchies
 from indra.databases import biogrid_client as bg
 from indra.databases import hgnc_client, uniprot_client
 
-logger = logging.getLogger('analyze_complexes')
+logger = logging.getLogger('complexes')
 
 # Filter out complexes from the statement list
 def load_file(stmts_file):
