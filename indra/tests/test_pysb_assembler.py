@@ -480,7 +480,6 @@ def test_phos_atpdep():
     pa.make_model(policies='atp_dependent')
     assert(len(pa.model.rules) == 5)
 
-"""
 def test_set_context():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
     pa = PysbAssembler()
@@ -509,7 +508,6 @@ def test_set_context_celltype_notfound():
     pa.add_statements([st])
     pa.make_model()
     pa.set_context('XYZ')
-"""
 
 def test_annotation():
     st = Phosphorylation(Agent('BRAF', db_refs = {'UP': 'P15056'}),
