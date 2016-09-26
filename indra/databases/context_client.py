@@ -1,6 +1,14 @@
+from __future__ import print_function, unicode_literals
 from indra.databases import ndex_client
 
 ndex_context = 'http://general.bigmech.ndexbio.org:8081/context/'
+
+# Python2
+try:
+    basestring
+# Python3
+except NameError:
+    basestring = str
 
 def get_protein_expression(gene_names, cell_types):
     """Return the protein expression levels of genes in cell types.
