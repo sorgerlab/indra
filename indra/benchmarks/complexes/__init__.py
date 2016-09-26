@@ -1,12 +1,14 @@
-from indra.preassembler import grounding_mapper as gm
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import sys
+import csv
+import pickle
 import logging
 from indra.statements import Complex
-import pickle
 from indra.preassembler import Preassembler
+from indra.preassembler import grounding_mapper as gm
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.databases import biogrid_client as bg
-import csv
 from indra.databases import hgnc_client, uniprot_client
 
 logger = logging.getLogger('analyze_complexes')
@@ -14,18 +16,12 @@ logger = logging.getLogger('analyze_complexes')
 # Filter out complexes from the statement list
 def load_file(stmts_file):
     logger.info("Loading results...")
-    with open(stmts_file) as f:
-        results = pickle.load(f)
+    with open(stmts_file, 'rb') as f:
+        results = pickle.load(f, encoding='utf-8')
     return results
 
-
-if __name__ == '__main__':
-
-    # Load the statements
-    if len(sys.argv) < 2:
-        print "Usage: %s reach_stmts_file" % sys.argv[0]
-        sys.exit()
-    results = load_file(sys.argv[1])
+def analyze(filename):
+    results = load_file(filename)
 
     all_stmts = [stmt for paper_stmts in results.values()
                       for stmt in paper_stmts]
@@ -51,7 +47,7 @@ if __name__ == '__main__':
 
     logger.info('Mapping gene IDs to gene symbols')
     gene_ids = list(set([ag.db_refs['HGNC'] for stmt in protein_complexes
-                                         for ag in stmt.members]))
+                                            for ag in stmt.members]))
     genes = [hgnc_client.get_hgnc_name(id) for id in gene_ids]
 
     # Get complexes from BioGrid and combine duplicates
@@ -81,28 +77,32 @@ if __name__ == '__main__':
     pa = Preassembler(hierarchies, bg_filt + protein_complexes)
     pa.combine_duplicates()
 
-    reach_only = []
+    indra_only = []
     bg_only = []
-    reach_and_bg = []
+    indra_and_bg = []
     for stmt in pa.unique_stmts:
         evidence_source_list = set([])
         for e in stmt.evidence:
             evidence_source_list.add(e.source_api)
         if 'reach' in evidence_source_list and \
            'biogrid' in evidence_source_list:
-            reach_and_bg.append(stmt)
+            indra_and_bg.append(stmt)
         elif 'reach' in evidence_source_list and \
              'biogrid' not in evidence_source_list:
-            reach_only.append(stmt)
+            indra_only.append(stmt)
         elif 'reach' not in evidence_source_list and \
              'biogrid' in evidence_source_list:
             bg_only.append(stmt)
 
     rows = []
-    for stmt in reach_only:
+    for stmt in indra_only:
         rows.append([stmt.members[0].name, stmt.members[1].name,
                      len(stmt.evidence)])
     with open('unmatched_complexes.tsv', 'w') as f:
         csvwriter = csv.writer(f, delimiter='\t')
         csvwriter.writerows(rows)
+
+    return {'indra_only': indra_only,
+            'bg_only': bg_only,
+            'indra_and_bg': indra_and_bg}
 
