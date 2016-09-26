@@ -1,44 +1,56 @@
-#import rdflib
-#from rdflib import Namespace, Literal
+from __future__ import absolute_import, division, unicode_literals, \
+                       print_function
+from builtins import str
 import sys
 import logging
 import pickle
+import csv
+import numpy as np
+from matplotlib import pyplot as plt
+# Python 3 version
+try:
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+    from io import StringIO
+# Python 2 version
+except ImportError:
+    from urllib import urlencode
+    from urllib2 import urlopen, HTTPError
+    from StringIO import StringIO
 from indra.preassembler import grounding_mapper as gm
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-import urllib2, urllib
-import cStringIO
-import sys
-import csv
 from indra.tools import plot_formatting as pf
-from matplotlib import pyplot as plt
-import numpy as np
+from indra.databases import hgnc_client
+
 
 logger = logging.getLogger('analyze_biological_processes')
 
 
 def load_file(stmts_file):
     logger.info("Loading results...")
-    with open(stmts_file) as f:
-        results = pickle.load(f)
+    with open(stmts_file, 'rb') as f:
+        results = pickle.load(f, encoding='utf-8')
     return results
 
 
 # Get statements involving biological processes
-def go_protein_pair(stmt):
+def go_gene_pair(stmt):
     go = None
-    protein = None
+    gene_symbol = None
     for ag in stmt.agent_list():
         if ag is None:
             continue
         grounding = ag.db_refs.keys()
         if 'HGNC' in grounding:
-            protein = ag.db_refs.get('HGNC')
+            gene_id = ag.db_refs.get('HGNC')
+            gene_symbol = hgnc_client.get_hgnc_name(gene_id)
         elif 'GO' in grounding:
             go = ag.db_refs.get('GO')
             bp_name = ag.name
-    if go is not None and protein is not None:
-        return (bp_name, go, protein)
+    if go is not None and gene_symbol is not None:
+        return (bp_name, go, gene_symbol)
     else:
         return (None, None, None)
 
@@ -49,13 +61,16 @@ def get_genes_for_go_id(goid):
               'col':'proteinSymbol'
            }
     try:
-        res = urllib2.urlopen(quickgo_url, data=urllib.urlencode(params))
-    except urllib2.HTTPError:
+        res = urlopen(quickgo_url, data=urlencode(params).encode('utf-8'))
+    except HTTPError:
         logging.error('Could not retrieve proteins associated with GO ID %s'
                       % goid)
         return None
-    tsv_str = cStringIO.StringIO(res.read())
-    tsv_reader = csv.reader(tsv_str, delimiter='\t')
+    tsv_str = StringIO(res.read().decode('utf-8'))
+    try:
+        tsv_reader = csv.reader(tsv_str, delimiter='\t')
+    except TypeError:
+        tsv_reader = csv.reader(tsv_str, delimiter='\t'.encode('utf-8'))
     genes = set([])
     for row in tsv_reader:
         genes.add(row[0])
@@ -89,20 +104,12 @@ def plot_stmt_counts(go_stmt_map, plot_filename, figsize=(3, 3)):
     pf.format_axis(ax)
     fig.savefig(plot_filename)
 
-if __name__ == '__main__':
 
-    #with open('go_stmt_map.pkl') as f:
-    #    import pickle
-    #    go_stmt_map = pickle.load(f)
-    #plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
-    #sys.exit()
-
-    # Load the statements
-    if len(sys.argv) < 2:
-        print "Usage: %s reach_stmts_file" % sys.argv[0]
-        sys.exit()
+def analyze(filename):
+    # Load the file
     results = load_file(sys.argv[1])
 
+    # Put together a list of all statements
     all_stmts = [stmt for paper_stmts in results.values()
                       for stmt in paper_stmts]
 
@@ -119,15 +126,15 @@ if __name__ == '__main__':
 
     # Map GO IDs to genes and associated statements
     logger.info('Building map from GO IDs to stmts')
-    go_protein_map = {}
+    go_gene_map = {}
     go_name_map = {}
     for stmt in pa.unique_stmts:
-        (bp_name, go, hgnc) = go_protein_pair(stmt)
-        if bp_name is None and go is None and hgnc is None:
+        (bp_name, go, gene) = go_gene_pair(stmt)
+        if bp_name is None and go is None and gene is None:
             continue
-        go_prot_list = go_protein_map.get(go, [])
-        go_prot_list.append((hgnc, stmt))
-        go_protein_map[go] = go_prot_list
+        go_gene_list = go_gene_map.get(go, [])
+        go_gene_list.append((gene, stmt))
+        go_gene_map[go] = go_gene_list
         go_name_set = go_name_map.get(go, set([]))
         go_name_set.add(bp_name)
         go_name_map[go] = go_name_set
@@ -135,23 +142,30 @@ if __name__ == '__main__':
     # Iterate over all of the GO IDs and compare the annotated genes in GO
     # to the ones from the given statements
     go_stmt_map = {}
-    for ix, go_id in enumerate(go_protein_map.keys()):
+    for ix, go_id in enumerate(go_gene_map.keys()):
         logger.info('Getting genes for %s (%s) from GO (%d of %d)' %
                     (go_id, ','.join(list(go_name_map[go_id])),
-                     ix+1, len(go_protein_map.keys())))
+                     ix+1, len(go_gene_map.keys())))
         genes_from_go = get_genes_for_go_id(go_id)
-        prot_stmt_list = go_protein_map[go_id]
+        gene_stmt_list = go_gene_map[go_id]
         in_go = []
         not_in_go = []
-        for (prot, stmt) in prot_stmt_list:
-            if prot in genes_from_go:
+        for (gene, stmt) in gene_stmt_list:
+            if gene in genes_from_go:
                 in_go.append(stmt)
             else:
                 not_in_go.append(stmt)
         go_stmt_map[go_id] = {'names': list(go_name_map[go_id]),
                               'in_go': in_go, 'not_in_go': not_in_go}
 
-    with open('go_stmt_map.pkl', 'w') as f:
+    with open('go_stmt_map.pkl', 'wb') as f:
         pickle.dump(go_stmt_map, f)
 
     plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
+
+if __name__ == '__main__':
+    # Get the command line args
+    if len(sys.argv) < 2:
+        print("Usage: %s reach_stmts_file" % sys.argv[0])
+        sys.exit()
+    analyze(sys.argv[1])
