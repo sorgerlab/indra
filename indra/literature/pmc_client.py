@@ -73,7 +73,7 @@ def get_xml(pmc_id):
     params['metadataPrefix'] = 'pmc'
 
     try:
-        res = urlopen(pmc_url, urlencode(params))
+        res = urlopen(pmc_url, urlencode(params).encode('utf-8'))
     except HTTPError:
         print("Couldn't download PMC%d" % pmc_id)
     xml_str = res.read()
