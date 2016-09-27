@@ -69,7 +69,7 @@ def test_edge_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
-    assert(len(cxa.cx['edgeAttributes']) == 6)
+    assert(len(cxa.cx['edgeAttributes']) == 8)
 
 def test_cited():
     cxa = CxAssembler()

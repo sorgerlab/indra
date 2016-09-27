@@ -287,6 +287,12 @@ class CxAssembler():
                             'po': [edge_id]}
             self.cx['edgeSupports'].append(edge_support)
 
+        belief_str = '%.2f' % stmt.belief
+        edge_attribute = {'po': edge_id,
+                          'n': 'Belief score',
+                          'v': belief_str}
+        self.cx['edgeAttributes'].append(edge_attribute)
+
         # NOTE: supports and edgeSupports are currently
         # not shown on NDEx therefore we add text evidence as a generic
         # edgeAttribute
@@ -330,12 +336,18 @@ def get_agent_type(agent):
     pfam_id = agent.db_refs.get('PF')
     fa_id = agent.db_refs.get('FA')
     chebi_id = agent.db_refs.get('CHEBI')
+    be_id = agent.db_refs.get('BE')
+    go_id = agent.db_refs.get('GO')
     if hgnc_id or uniprot_id:
         agent_type = 'protein'
     elif pfam_id or fa_id:
         agent_type = 'proteinfamily'
     elif chebi_id:
         agent_type = 'chemical'
+    elif be_id:
+        agent_type = 'proteinfamily'
+    elif go_id:
+        agent_type = 'bioprocess'
     else:
         agent_type = 'other'
     return agent_type
