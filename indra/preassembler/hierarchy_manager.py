@@ -2,16 +2,6 @@ import os
 import rdflib
 import functools32
 
-def get_uri(ns, id):
-    if ns == 'HGNC':
-        return 'http://identifiers.org/hgnc.symbol/' + id
-    elif ns == 'UP':
-        return 'http://identifiers.org/uniprot/' + id
-    elif ns == 'BE' or ns == 'INDRA':
-        return 'http://sorger.med.harvard.edu/indra/entities/' + id
-    else:
-        raise ValueError('Unknown namespace %s' % ns)
-
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
 
@@ -38,6 +28,7 @@ class HierarchyManager(object):
         self.graph.parse(rdf_file)
         self.isa_closure = {}
         self.partof_closure = {}
+        self.components = {}
 
     def build_transitive_closures(self):
         """Build the transitive closures of the hierarchy.
@@ -46,6 +37,7 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
+        component_counter = 0
         for rel, tc_dict in (('isa', self.isa_closure),
                              ('partof', self.partof_closure)):
             qstr = self.prefixes + """
@@ -61,6 +53,39 @@ class HierarchyManager(object):
                     tc_dict[xs].append(ys)
                 except KeyError:
                     tc_dict[xs] = [ys]
+                xcomp = self.components.get(xs)
+                ycomp = self.components.get(ys)
+                if xcomp is None:
+                    if ycomp is None:
+                        # Neither x nor y are in a component so we start a
+                        # new component and assign x and y to the same
+                        # component
+                        self.components[xs] = component_counter
+                        self.components[ys] = component_counter
+                        component_counter += 1
+                    else:
+                        # Because y is already part of an existing component
+                        # we assign its component to x
+                        self.components[xs] = ycomp
+                else:
+                    if ycomp is None:
+                        # Because x is already part of an existing component
+                        # we assign its component to y
+                        self.components[ys] = xcomp
+                    else:
+                        # This is a special case in which both x and y are
+                        # parts of components
+                        # If they are in the same component then there's
+                        # nothing further to do
+                        if xcomp == ycomp:
+                            continue
+                        else:
+                            remove_component = max(xcomp, ycomp)
+                            joint_component = min(xcomp, ycomp)
+                            for k, v in self.components.iteritems():
+                                if v == remove_component:
+                                    self.components[k] = joint_component
+
 
     @functools32.lru_cache(maxsize=100000)
     def find_entity(self, x):
@@ -114,8 +139,8 @@ class HierarchyManager(object):
             return False
 
         if self.isa_closure:
-            term1 = get_uri(ns1, id1)
-            term2 = get_uri(ns2, id2)
+            term1 = self.get_uri(ns1, id1)
+            term2 = self.get_uri(ns2, id2)
             ec = self.isa_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
@@ -152,8 +177,8 @@ class HierarchyManager(object):
             return False
 
         if self.partof_closure:
-            term1 = get_uri(ns1, id1)
-            term2 = get_uri(ns2, id2)
+            term1 = self.get_uri(ns1, id1)
+            term2 = self.get_uri(ns2, id2)
             ec = self.partof_closure.get(term1)
             if ec is not None and term2 in ec:
                 return True
@@ -177,6 +202,18 @@ class HierarchyManager(object):
             return True
         else:
             return False
+
+    @staticmethod
+    def get_uri(ns, id):
+        if ns == 'HGNC':
+            return 'http://identifiers.org/hgnc.symbol/' + id
+        elif ns == 'UP':
+            return 'http://identifiers.org/uniprot/' + id
+        elif ns == 'BE' or ns == 'INDRA':
+            return 'http://sorger.med.harvard.edu/indra/entities/' + id
+        else:
+            raise ValueError('Unknown namespace %s' % ns)
+
 
 # Load the default entity and modification hierarchies
 entity_file_path = os.path.join(os.path.dirname(__file__),
