@@ -8,10 +8,10 @@ def set_fig_params():
     matplotlib.rcParams['font.sans-serif'] = 'Arial'
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.preamble'] = [
-            r'\usepackage{helvet}',
-            r'\usepackage{sansmath}',
-            r'\sansmath',
-            r'\usepackage{underscore}',]
+            '\\usepackage{helvet}',
+            '\\usepackage{sansmath}',
+            '\\sansmath',
+            '\\usepackage{underscore}',]
 
 def format_axis(ax, label_padding=2, tick_padding=0, yticks_position='left'):
     ax.xaxis.set_ticks_position('bottom')
