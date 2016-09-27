@@ -19,9 +19,11 @@ install:
   # INDRA dependencies
   - sudo apt-get install graphviz
   - pip install pygraphviz
-  - pip install functools32
-  - pip install jsonschema coverage python-coveralls boto3
-  - pip install future pandas doctest-ignore-unicode
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      pip install functools32;
+    fi
+  - pip install jsonschema coverage python-coveralls boto3 pandas
+  - pip install doctest-ignore-unicode future
   # PySB and dependencies
   - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
   - unzip -q 2.2.5-stable.zip
