@@ -1,6 +1,5 @@
-from __future__ import absolute_import, division, unicode_literals, \
-                       print_function
-from builtins import str
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import sys
 import logging
 import pickle

@@ -1,4 +1,5 @@
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.assemblers import PysbAssembler
 from indra.assemblers.pysb_assembler import get_agent_rule_str
 from indra.statements import *

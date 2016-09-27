@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.trips import trips_client
 from indra.trips.processor import TripsProcessor
 

@@ -1,4 +1,5 @@
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.literature import crossref_client
 
 test_doi = '10.1016/j.ccell.2016.02.010'

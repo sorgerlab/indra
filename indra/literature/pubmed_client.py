@@ -50,7 +50,8 @@ Structure of the XML output returned by queries to Pubmed database::
           ArticleIdList
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import xml.etree.ElementTree as ET
 from indra.databases import hgnc_client
 try:

@@ -1,6 +1,8 @@
 """Handles all imports from jnius to prevent conflicts resulting from attempts
 to set JVM options while the VM is already running."""
 
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import warnings
 import jnius_config

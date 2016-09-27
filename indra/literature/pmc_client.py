@@ -1,4 +1,5 @@
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import xml.etree.ElementTree as et
 from indra.literature import pubmed_client
 import os.path
