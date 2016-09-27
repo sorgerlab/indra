@@ -3,6 +3,7 @@ import json
 import itertools
 from collections import OrderedDict
 from indra.statements import *
+from indra.databases import context_client
 
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
@@ -104,6 +105,41 @@ class CxAssembler():
         with open(file_name, 'wt') as fh:
             cx_str = self.print_cx()
             fh.write(cx_str)
+
+    def set_context(self, cell_type):
+        """Set protein expression data as node attribute
+
+        This method uses :py:mod:`indra.databases.context_client` to get
+        protein expression levels for a given cell type and set a node
+        attribute for proteins accordingly.
+
+        Parameters
+        ----------
+        cell_type : str
+            Cell type name for which expression levels are queried.
+            The cell type name follows the CCLE database conventions.
+
+        Example: LOXIMVI_SKIN, BT20_BREAST
+        """
+        node_names = [node['n'] for node in self.cx['nodes']]
+        res = context_client.get_protein_expression(node_names, cell_type)
+        if not res:
+            logger.warning('Could not get context for %s cell type.' %
+                           cell_type)
+            return
+        self.cx['networkAttributes'].append({'n': 'cellular_context',
+                                             'v': cell_type})
+        counter = 0
+        for node in self.cx['nodes']:
+            amount = res.get(node['n'])
+            if amount is None:
+                continue
+            node_attribute = {'po': node['@id'],
+                              'n': 'expression_amount',
+                              'v': int(amount[cell_type])}
+            self.cx['nodeAttributes'].append(node_attribute)
+            counter += 1
+        logger.info('Set context for %d nodes.' % counter)
 
     def _get_new_id(self):
         ret = self._id_counter
