@@ -797,7 +797,6 @@ def test_activation_activity_hierarchy_refinement():
     assert(not st3.refinement_of(st4, hierarchies))
     assert(not st4.refinement_of(st3, hierarchies))
 
-
 def test_activitymod_refinement():
     mc1 = ModCondition('phosphorylation')
     mc2 = ModCondition('phosphorylation', 'S')

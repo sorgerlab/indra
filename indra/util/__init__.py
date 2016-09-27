@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import sys
+import csv
 
 if sys.version_info > (3, 0):
     non_unicode = bytes
@@ -29,6 +30,33 @@ def unicode_strs(obj):
                 return False
     return True
 
+def unicode_csv_reader(f, delimiter=',', quotechar='"',
+                       quoting=csv.QUOTE_MINIMAL, lineterminator='\n',
+                       encoding='utf-8'):
+    # Unicode literals will fail in Python 2
+    try:
+        csv_reader = csv.reader(f, delimiter=delimiter, quotechar=quotechar,
+                                quoting=quoting, lineterminator=lineterminator)
+    except TypeError:
+        csv_reader = csv.reader(f, delimiter=delimiter.encode('utf-8'),
+                                quotechar=quotechar.encode('utf-8'),
+                                quoting=quoting, lineterminator=lineterminator)
+    for row in csv_reader:
+        yield [cell.decode(encoding) for cell in row]
+
+def write_unicode_csv(f, rows, delimiter=',', quotechar='"',
+                       quoting=csv.QUOTE_MINIMAL, lineterminator='\n',
+                       encoding='utf-8'):
+    try:
+        csv_writer = csv.writer(f, delimiter=delimiter, quotechar=quotechar,
+                                quoting=quoting, lineterminator=lineterminator)
+    except TypeError:
+        csv_writer = csv.writer(f, delimiter=delimiter.encode('utf-8'),
+                                quotechar=quotechar.encode('utf-8'),
+                                quoting=quoting, lineterminator=lineterminator)
+    for row in rows:
+        csv_writer.writerow([cell.encode(encoding) for cell in row])
+    return
 
 #foo = {u'a':u'b', u'c':[u'a', u'b', u'c']}
 #foo = {'a':'b', 'c':['a', 'b', 'c']}

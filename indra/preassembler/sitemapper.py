@@ -1,12 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import csv
 from collections import namedtuple
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
-
+from indra.util import unicode_csv_reader
 # Python2
 try:
     basestring
@@ -361,9 +360,9 @@ def load_site_map(path):
     site_map = {}
     with open(path) as f:
         try:
-            mapreader = csv.reader(f, delimiter='\t')
+            mapreader = unicode_csv_reader(f, delimiter='\t')
         except TypeError:
-            mapreader = csv.reader(f, delimiter='\t'.encode('utf-8'))
+            mapreader = unicode_csv_reader(f, delimiter='\t'.encode('utf-8'))
         # Skip the header line
         next(mapreader)
         for row in mapreader:
