@@ -384,7 +384,7 @@ class BelProcessor(object):
             cmplx_ev[cmplx_id] = ev
         # Now iterate over the stored complex information and create binding
         # statements
-        for cmplx_id, cmplx_list in cmplx_dict.iteritems():
+        for cmplx_id, cmplx_list in cmplx_dict.items():
             if len(cmplx_list) < 2:
                 msg = 'Complex %s has less than 2 members! Skipping.' % \
                        cmplx_name

@@ -45,7 +45,7 @@ class ReachProcessor(object):
         """Print the number of events in the REACH output by type."""
         logger.info('All events by type')
         logger.info('-------------------')
-        for k, v in self.all_events.iteritems():
+        for k, v in self.all_events.items():
             logger.info('%s, %s' % (k, len(v)))
         logger.info('-------------------')
 

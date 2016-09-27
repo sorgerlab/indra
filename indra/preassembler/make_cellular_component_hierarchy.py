@@ -83,7 +83,7 @@ def make_component_hierarchy(component_map, component_part_map):
     rn = Namespace(indra_ns + 'relations/')
     part_of = rn.term('partof')
     has_name = rn.term('hasName')
-    for comp_id, comp_name in component_map.iteritems():
+    for comp_id, comp_name in component_map.items():
         g.add((en.term(comp_id), has_name, Literal(comp_name)))
         sups = component_part_map.get(comp_id)
         if sups is not None:

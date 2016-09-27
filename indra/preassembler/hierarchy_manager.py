@@ -87,7 +87,7 @@ class HierarchyManager(object):
                         else:
                             remove_component = max(xcomp, ycomp)
                             joint_component = min(xcomp, ycomp)
-                            for k, v in self.components.iteritems():
+                            for k, v in self.components.items():
                                 if v == remove_component:
                                     self.components[k] = joint_component
 

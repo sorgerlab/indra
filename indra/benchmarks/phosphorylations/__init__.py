@@ -50,7 +50,7 @@ def extract_phos():
         model = pickle.load(fh)
 
     stmts = []
-    for pmid, pmid_stmts in model.iteritems():
+    for pmid, pmid_stmts in model.items():
         for stmt in pmid_stmts:
             if isinstance(stmt, Phosphorylation):
                 stmts.append(stmt)

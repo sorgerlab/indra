@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     model = pickle.load(open('models/rasmachine/rem/model.pkl'))
     stmts = []
-    for k, v in model.iteritems():
+    for k, v in model.items():
         stmts += v
 
     rasmachine_network = '50e3dff7-133e-11e6-a039-06603eb7f303'

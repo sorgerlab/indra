@@ -224,8 +224,8 @@ class BaseAgentSet(object):
     def keys(self):
         return self.agents.keys()
 
-    def iteritems(self):
-        return self.agents.iteritems()
+    def items(self):
+        return self.agents.items()
 
     def __getitem__(self, name):
         return self.agents[name]
@@ -285,7 +285,7 @@ class BaseAgent(object):
         s = '%s(' % self.name
         if self.activities:
             s += 'activities: %s, ' % self.activities
-        for k, v in self.active_states.iteritems():
+        for k, v in self.active_states.items():
             s += '%s: %s' % (k, v)
         s += ')'
         return s
