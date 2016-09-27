@@ -3,12 +3,17 @@ python:
   - "2.7"
   - "3.5"
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
   - conda update --yes conda
-  - conda update --yes --all
   - conda install --yes python="$TRAVIS_PYTHON_VERSION" numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx
 install:
   # INDRA dependencies
