@@ -1,8 +1,15 @@
 from ez_setup import use_setuptools
 use_setuptools()
 from setuptools import setup
+import sys
 
 def main():
+
+    install_list =['pysb', 'objectpath', 'rdflib', 'requests', 'lxml',
+                   'jsonpickle', 'ipython', 'future'],
+    if sys.version_info[0] == 2:
+        install_list.append('functools32')
+
     setup(name='indra',
           version='1.2.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
@@ -18,9 +25,7 @@ def main():
                     'indra.preassembler', 'indra.mechlinker',
                     'indra.tools', 'indra.tests', 'indra.resources',
                     'indra.literature'],
-          install_requires=['pysb', 'objectpath', 'rdflib',
-                            'functools32', 'requests', 'lxml', 'jsonpickle',
-                            'ipython', 'future'],
+          install_requires=install_list,
           tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler',
