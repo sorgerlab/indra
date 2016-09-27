@@ -1,7 +1,6 @@
 import sys
 from rdflib import Graph, Namespace, Literal
 import csv
-import urllib2
 
 
 def make_term(ns_name, id):

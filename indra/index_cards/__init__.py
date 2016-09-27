@@ -1,5 +1,5 @@
 import json
-from processor import IndexCardProcessor
+from indra.index_cards.processor import IndexCardProcessor
 
 def process_json_file(file_name, source_api):
     with open(file_name, 'rt') as fh:

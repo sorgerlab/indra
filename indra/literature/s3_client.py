@@ -3,8 +3,13 @@ import boto3
 import zlib
 import botocore
 import json
-import cStringIO
 import gzip
+# Python 3
+try:
+    from io import StringIO
+# Python 2
+except ImportError:
+    from cStringIO import StringIO
 
 # Logger
 logger = logging.getLogger('s3_client')

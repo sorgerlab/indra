@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 import os
 import rdflib
 from rdflib import Namespace, Literal
-import cPickle as pickle
+import pickle
 
 prefixes = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

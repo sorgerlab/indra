@@ -1,14 +1,18 @@
+from __future__ import absolute_import, print_function, unicode_literals
 
 if __name__ == '__main__':
     import gzip
     import boto3
-    import cStringIO
     import sys
     import pymysql
     import time
+    try:
+        from io import StringIO
+    except ImportError:
+        from cStringIO import StringIO
 
     if len(sys.argv) != 3:
-        print "Usage: %s start_index end_index_inclusive" % sys.argv[0]
+        print("Usage: %s start_index end_index_inclusive" % sys.argv[0])
         sys.exit(1)
 
     client = boto3.client('s3')
@@ -27,7 +31,7 @@ if __name__ == '__main__':
     for rec in cursor.fetchall():
         my_id = rec['id']
         if int(my_id) % 10 == 0:
-            print my_id, rec['pmid']
+            print('%s %s' % (my_id, rec['pmid']))
         # Shortcut for making key names
         def key_prefix(s):
             return 'papers/PMID%s/%s' % (rec['pmid'], s)
@@ -42,7 +46,7 @@ if __name__ == '__main__':
         # Store full text 
         with open(rec['path']) as f:
             xml = f.read()
-        buf = cStringIO.StringIO()
+        buf = StringIO()
         content_type = rec['content_type']
         gzf = gzip.GzipFile(content_type, 'wb', 6, buf)
         gzf.write(xml)
@@ -51,5 +55,5 @@ if __name__ == '__main__':
         client.put_object(Key=xml_key, Body=buf.getvalue(), Bucket=bucket_name)
     end = time.time()
     elapsed = end - start
-    print "Elapsed", elapsed
+    print("Elapsed: %s" % elapsed)
 

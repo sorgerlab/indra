@@ -5,8 +5,10 @@ import sys
 
 def main():
 
-    install_list =['pysb', 'objectpath', 'rdflib', 'requests', 'lxml',
-                   'jsonpickle', 'ipython', 'future'],
+    # Only install functools32 if we're in Python 2 (it's not available
+    # for Python 3)
+    install_list = ['pysb', 'objectpath', 'rdflib', 'requests', 'lxml',
+                    'jsonpickle', 'ipython', 'future']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
