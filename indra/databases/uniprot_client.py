@@ -15,6 +15,7 @@ except ImportError:
     from functools32 import lru_cache
     from urllib2 import urlopen, HTTPError
     from urllib import urlencode
+from indra.util import unicode_csv_rows
 
 logger = logging.getLogger('uniprot')
 
@@ -354,14 +355,11 @@ def _build_uniprot_hgnc():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/hgnc_entries.txt'
     try:
-        fh = open(hgnc_file, 'rt')
-        # In Python 2, the unicode_literal delimiter '\t' will lead to TypeError
-        try:
-            rd = csv.reader(fh, delimiter='\t')
-        except TypeError:
-            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
+        csv_rows = unicode_csv_rows(hgnc_file, delimiter='\t')
+        # Skip the header row
+        next(csv_rows)
         uniprot_hgnc = {}
-        for row in rd:
+        for row in csv_rows:
             hgnc_name = row[1]
             uniprot_id = row[6]
             if uniprot_id:
@@ -374,15 +372,10 @@ def _build_uniprot_mnemonic():
     mnemonic_file = os.path.dirname(os.path.abspath(__file__)) +\
                     '/../resources/uniprot_mnemonics.txt'
     try:
-        fh = open(mnemonic_file, 'rt')
-        # In Python 2, the unicode_literal delimiter '\t' will lead to TypeError
-        try:
-            rd = csv.reader(fh, delimiter='\t')
-        except TypeError:
-            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
         uniprot_mnemonic = {}
         uniprot_mnemonic_reverse = {}
-        for row in rd:
+        csv_rows = unicode_csv_rows(mnemonic_file, delimiter='\t')
+        for row in csv_rows:
             uniprot_mnemonic[row[0]] = row[1]
             uniprot_mnemonic_reverse[row[1]] = row[0]
     except IOError:
@@ -416,12 +409,13 @@ def _build_uniprot_subcell_loc():
     fname = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/uniprot_subcell_loc.tsv'
     try:
+        csv_rows = unicode_csv_rows(fname, delimiter='\t')
+        # Skip the header row
+        next(csv_rows)
         subcell_loc = {}
-        lines = open(fname, 'rt').readlines()
-        for l in lines[1:]:
-            cols = l.strip().split('\t')
-            loc_id = cols[0]
-            loc_alias = cols[3]
+        for row in csv_rows:
+            loc_id = row[0]
+            loc_alias = row[3]
             subcell_loc[loc_id] = loc_alias
     except IOError:
         subcell_loc = {}
