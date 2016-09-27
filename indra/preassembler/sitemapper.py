@@ -5,7 +5,7 @@ from collections import namedtuple
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
-from indra.util import unicode_csv_reader
+from indra.util import unicode_csv_rows
 # Python2
 try:
     basestring
@@ -358,23 +358,19 @@ def load_site_map(path):
         error, wrong residue name, etc.).
     """
     site_map = {}
-    with open(path) as f:
-        try:
-            mapreader = unicode_csv_reader(f, delimiter='\t')
-        except TypeError:
-            mapreader = unicode_csv_reader(f, delimiter='\t'.encode('utf-8'))
-        # Skip the header line
-        next(mapreader)
-        for row in mapreader:
-            # Don't allow empty entries in the key section
-            if not (row[0] and row[1] and row[2]):
-                raise Exception("Entries in the key (gene, residue, position) "
-                                "may not be empty.")
-            correct_res = row[3].strip() if row[3] else None
-            correct_pos = row[4].strip() if row[4] else None
-            comment = row[5].strip() if row[5] else None
-            site_map[(row[0].strip(), row[1].strip(), row[2].strip())] = \
-                                    (correct_res, correct_pos, comment)
+    maprows = unicode_csv_rows(path, delimiter='\t')
+    # Skip the header line
+    next(maprows)
+    for row in maprows:
+        # Don't allow empty entries in the key section
+        if not (row[0] and row[1] and row[2]):
+            raise Exception("Entries in the key (gene, residue, position) "
+                            "may not be empty.")
+        correct_res = row[3].strip() if row[3] else None
+        correct_pos = row[4].strip() if row[4] else None
+        comment = row[5].strip() if row[5] else None
+        site_map[(row[0].strip(), row[1].strip(), row[2].strip())] = \
+                                (correct_res, correct_pos, comment)
     return site_map
 
 
