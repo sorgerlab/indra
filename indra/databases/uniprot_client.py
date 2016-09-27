@@ -15,7 +15,7 @@ except ImportError:
     from functools32 import lru_cache
     from urllib2 import urlopen, HTTPError
     from urllib import urlencode
-from indra.util import unicode_csv_rows
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger('uniprot')
 
@@ -355,7 +355,7 @@ def _build_uniprot_hgnc():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/hgnc_entries.txt'
     try:
-        csv_rows = unicode_csv_rows(hgnc_file, delimiter='\t')
+        csv_rows = read_unicode_csv(hgnc_file, delimiter='\t')
         # Skip the header row
         next(csv_rows)
         uniprot_hgnc = {}
@@ -374,7 +374,7 @@ def _build_uniprot_mnemonic():
     try:
         uniprot_mnemonic = {}
         uniprot_mnemonic_reverse = {}
-        csv_rows = unicode_csv_rows(mnemonic_file, delimiter='\t')
+        csv_rows = read_unicode_csv(mnemonic_file, delimiter='\t')
         for row in csv_rows:
             uniprot_mnemonic[row[0]] = row[1]
             uniprot_mnemonic_reverse[row[1]] = row[0]
@@ -409,7 +409,7 @@ def _build_uniprot_subcell_loc():
     fname = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/uniprot_subcell_loc.tsv'
     try:
-        csv_rows = unicode_csv_rows(fname, delimiter='\t')
+        csv_rows = read_unicode_csv(fname, delimiter='\t')
         # Skip the header row
         next(csv_rows)
         subcell_loc = {}
