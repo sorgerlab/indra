@@ -69,7 +69,7 @@ def test_edge_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
-    assert(len(cxa.cx['edgeAttributes']) == 6)
+    assert(len(cxa.cx['edgeAttributes']) == 8)
 
 def test_cited():
     cxa = CxAssembler()
@@ -91,3 +91,10 @@ def test_supports():
     cxa.make_model()
     assert(len(cxa.cx['supports']) == 1)
     assert(len(cxa.cx['edgeSupports']) == 1)
+
+def test_set_context():
+    cxa = CxAssembler()
+    cxa.add_statements([st_phos, st_dephos])
+    cxa.make_model()
+    cxa.set_context('BT20_BREAST')
+    assert(len(cxa.cx['nodeAttributes']) == 8)

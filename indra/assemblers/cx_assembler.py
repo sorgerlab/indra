@@ -3,6 +3,7 @@ import json
 import itertools
 from collections import OrderedDict
 from indra.statements import *
+from indra.databases import context_client
 
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
@@ -104,6 +105,41 @@ class CxAssembler():
         with open(file_name, 'wt') as fh:
             cx_str = self.print_cx()
             fh.write(cx_str)
+
+    def set_context(self, cell_type):
+        """Set protein expression data as node attribute
+
+        This method uses :py:mod:`indra.databases.context_client` to get
+        protein expression levels for a given cell type and set a node
+        attribute for proteins accordingly.
+
+        Parameters
+        ----------
+        cell_type : str
+            Cell type name for which expression levels are queried.
+            The cell type name follows the CCLE database conventions.
+
+        Example: LOXIMVI_SKIN, BT20_BREAST
+        """
+        node_names = [node['n'] for node in self.cx['nodes']]
+        res = context_client.get_protein_expression(node_names, cell_type)
+        if not res:
+            logger.warning('Could not get context for %s cell type.' %
+                           cell_type)
+            return
+        self.cx['networkAttributes'].append({'n': 'cellular_context',
+                                             'v': cell_type})
+        counter = 0
+        for node in self.cx['nodes']:
+            amount = res.get(node['n'])
+            if amount is None:
+                continue
+            node_attribute = {'po': node['@id'],
+                              'n': 'expression_amount',
+                              'v': int(amount[cell_type])}
+            self.cx['nodeAttributes'].append(node_attribute)
+            counter += 1
+        logger.info('Set context for %d nodes.' % counter)
 
     def _get_new_id(self):
         ret = self._id_counter
@@ -247,6 +283,7 @@ class CxAssembler():
         # Add the citations for the edge
         pmids = [e.pmid for e in stmt.evidence if e.pmid]
         edge_citations = []
+        pmids_added = []
         for pmid in pmids:
             pmid_txt = None
             if re.match('[0-9]+', pmid):
@@ -260,11 +297,13 @@ class CxAssembler():
                     pmid_txt = 'pmid:' + m.groups()[0]
             if pmid_txt is None:
                 pmid_txt = pmid
-            citation_id = self._get_new_id()
-            citation = {'@id': citation_id,
-                        'dc:identifier': pmid_txt}
-            self.cx['citations'].append(citation)
-            edge_citations.append(citation_id)
+            if pmid_txt not in pmids_added:
+                citation_id = self._get_new_id()
+                citation = {'@id': citation_id,
+                            'dc:identifier': pmid_txt}
+                self.cx['citations'].append(citation)
+                edge_citations.append(citation_id)
+                pmids_added.append(pmid_txt)
         if edge_citations:
             edge_citation = {'citations': edge_citations,
                              'po': [edge_id]}
@@ -283,6 +322,12 @@ class CxAssembler():
             edge_support = {'supports': edge_supports,
                             'po': [edge_id]}
             self.cx['edgeSupports'].append(edge_support)
+
+        belief_str = '%.2f' % stmt.belief
+        edge_attribute = {'po': edge_id,
+                          'n': 'Belief score',
+                          'v': belief_str}
+        self.cx['edgeAttributes'].append(edge_attribute)
 
         # NOTE: supports and edgeSupports are currently
         # not shown on NDEx therefore we add text evidence as a generic
@@ -327,12 +372,18 @@ def get_agent_type(agent):
     pfam_id = agent.db_refs.get('PF')
     fa_id = agent.db_refs.get('FA')
     chebi_id = agent.db_refs.get('CHEBI')
+    be_id = agent.db_refs.get('BE')
+    go_id = agent.db_refs.get('GO')
     if hgnc_id or uniprot_id:
         agent_type = 'protein'
     elif pfam_id or fa_id:
         agent_type = 'proteinfamily'
     elif chebi_id:
         agent_type = 'chemical'
+    elif be_id:
+        agent_type = 'proteinfamily'
+    elif go_id:
+        agent_type = 'bioprocess'
     else:
         agent_type = 'other'
     return agent_type
