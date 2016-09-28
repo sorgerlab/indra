@@ -911,11 +911,7 @@ class TripsProcessor(object):
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return self._get_valid_name(hgnc_name)
         elif up_id:
-            # First try to get HGNC name
-            hgnc_name = up_client.get_hgnc_name(up_id)
-            if hgnc_name is not None:
-                return self._get_valid_name(hgnc_name)
-            # Next, try to get the gene name
+            # First to get gene name
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
                 return self._get_valid_name(gene_name)

@@ -673,11 +673,9 @@ class BiopaxProcessor(object):
                 if name is None:
                     name = bpe.getDisplayName()
             elif uniprot_id is not None:
-                name = uniprot_client.get_hgnc_name(uniprot_id[0])
+                name = uniprot_client.get_gene_name(uniprot_id[0])
                 if name is None:
-                    name = uniprot_client.get_gene_name(uniprot_id[0])
-                    if name is None:
-                        name = bpe.getDisplayName()
+                    name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
         elif _is_small_molecule(bpe):
