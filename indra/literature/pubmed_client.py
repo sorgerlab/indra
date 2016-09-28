@@ -72,8 +72,9 @@ pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 def send_request(url, data):
     try:
         res = urlopen(url, data.encode('utf-8'))
-        xml_str = res.read()
-        tree = ET.fromstring(xml_str)
+        # ElementTree handles the decoding from bytes based on the header
+        # in the XML file
+        tree = ET.parse(res)
     except:
         return None
     return tree
@@ -106,7 +107,7 @@ def get_ids(search_term, **kwargs):
     id_terms = tree.findall('IdList/Id')
     if id_terms is None:
         return []
-    ids = [idt.text for idt in id_terms]
+    ids = [str(idt.text) for idt in id_terms]
     if count != len(ids):
         print('Not all ids were retrieved for search %s;\n'
               'limited at %d.' % (search_term, params['retmax']))
@@ -145,14 +146,14 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print(tree.find('ERROR').text)
+        print(str(tree.find('ERROR').text))
         return []
     # Get all PMIDs from the XML tree
     id_terms = tree.findall('.//PubMedId')
     if id_terms is None:
         return []
     # Use a set to remove duplicate IDs
-    ids = list(set([idt.text for idt in id_terms]))
+    ids = list(set([str(idt.text) for idt in id_terms]))
     return ids
 
 
@@ -176,7 +177,7 @@ def get_title(pubmed_id):
     article = get_article_xml(pubmed_id)
     if article is None:
         return None
-    title = article.find('ArticleTitle').text
+    title = str(article.find('ArticleTitle').text)
     return title
 
 
@@ -189,8 +190,8 @@ def get_abstract(pubmed_id):
     if abstract is None:
         return None
     else:
-        abstract_text = ' '.join([' ' if abst.text is None 
-                                    else abst.text for abst in abstract])
+        abstract_text = ' '.join([' ' if abst.text is None
+                                      else str(abst.text) for abst in abstract])
         return abstract_text
 
 
@@ -227,7 +228,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     # A function to get the text for the element, or None if not found
     def find_elem_text(root, xpath_string):
         elem = root.find(xpath_string)
-        return None if elem is None else elem.text
+        return None if elem is None else str(elem.text)
 
     # Iterate over the articles and build the results dict
     results = {}
@@ -248,7 +249,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
         author_elems = pm_article.findall('MedlineCitation/Article/'
                                           'AuthorList/Author/LastName')
         author_names = None if author_elems is None \
-                            else [au.text for au in author_elems]
+                            else [str(au.text) for au in author_elems]
         # Journal info
         journal_title = find_elem_text(pm_article, 'MedlineCitation/Article/'
                                                    'Journal/Title')
@@ -352,7 +353,7 @@ def get_issns_for_journal(nlm_id):
     if not issns:
         return None
     else:
-        return [issn.text for issn in issns]
+        return [str(issn.text) for issn in issns]
 
 
 def expand_pagination(pages):
