@@ -50,7 +50,7 @@ def get_relevant_nodes(network_id, query_nodes):
     """
     url = ndex_relevance + '/rank_entities'
     kernel_id = get_heat_kernel(network_id)
-    if isinstance(query_nodes, basestring):
+    if isinstance(query_nodes, str):
         query_nodes = [query_nodes]
     params = {'identifier_set': query_nodes,
               'kernel_id': kernel_id}

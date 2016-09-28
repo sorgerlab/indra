@@ -4,13 +4,6 @@ from indra.databases import ndex_client
 
 ndex_context = 'http://general.bigmech.ndexbio.org:8081/context/'
 
-# Python2
-try:
-    basestring
-# Python3
-except NameError:
-    basestring = str
-
 def get_protein_expression(gene_names, cell_types):
     """Return the protein expression levels of genes in cell types.
 
@@ -32,9 +25,9 @@ def get_protein_expression(gene_names, cell_types):
         NDEx web service.
     """
     url = ndex_context + 'expression/cell_line'
-    if isinstance(gene_names, basestring):
+    if isinstance(gene_names, str):
         gene_names = [gene_names]
-    if isinstance(cell_types, basestring):
+    if isinstance(cell_types, str):
         cell_types = [cell_types]
     params = {g: cell_types for g in gene_names}
     res = ndex_client.send_request(url, params, is_json=True)
@@ -61,9 +54,9 @@ def get_mutations(gene_names, cell_types):
         NDEx web service.
     """
     url = ndex_context + 'mutation/cell_line'
-    if isinstance(gene_names, basestring):
+    if isinstance(gene_names, str):
         gene_names = [gene_names]
-    if isinstance(cell_types, basestring):
+    if isinstance(cell_types, str):
         cell_types = [cell_types]
     params = {g: cell_types for g in gene_names}
     res = ndex_client.send_request(url, params, is_json=True)
