@@ -48,20 +48,16 @@ class GroundingMapper(object):
                             agent.name = agent.db_refs.get('BE')
                         # Take a HGNC name from Uniprot next
                         elif agent.db_refs.get('UP'):
-                            # Try for the HGNC name
-                            hgnc_name = uniprot_client.get_hgnc_name(
-                                                      agent.db_refs.get('UP'))
-                            if hgnc_name is not None:
-                                hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
-                                agent.name = hgnc_name
-                                agent.db_refs['HGNC'] = hgnc_id
-                                continue
-                            # Fall back on the Uniprot gene name
-                            up_gene_name = uniprot_client.get_gene_name(
-                                                       agent.db_refs.get('UP'))
-                            if up_gene_name is not None:
-                                agent.name = up_gene_name
-                                continue
+                            # Try for gene name
+                            gene_name = uniprot_client.get_gene_name(
+                                                      agent.db_refs.get('UP'),
+                                                      web_fallback=False)
+                            if gene_name:
+                                agent.name = gene_name
+                                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                                if hgnc_id is not None:
+                                    agent.db_refs['HGNC'] = hgnc_id
+                                    continue
             # Check if we should skip the statement
             if not skip_stmt:
                 mapped_stmts.append(mapped_stmt)
@@ -82,20 +78,15 @@ class GroundingMapper(object):
                     agent.name = agent.db_refs.get('BE')
                 # Take a HGNC name from Uniprot next
                 elif agent.db_refs.get('UP'):
-                    # Try for the HGNC name
-                    hgnc_name = uniprot_client.get_hgnc_name(
-                                                    agent.db_refs.get('UP'))
-                    if hgnc_name is not None:
-                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
-                        agent.name = hgnc_name
-                        agent.db_refs['HGNC'] = hgnc_id
-                        continue
-                    # Fall back on the Uniprot gene name
-                    up_gene_name = uniprot_client.get_gene_name(
-                                                    agent.db_refs.get('UP'))
-                    if up_gene_name is not None:
-                        agent.name = up_gene_name
-                        continue
+                    # Try for the gene name
+                    gene_name = uniprot_client.get_gene_name(
+                                                    agent.db_refs.get('UP'),
+                                                    web_fallback=False)
+                    if gene_name:
+                        agent.name = gene_name
+                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                        if hgnc_id:
+                            agent.db_refs['HGNC'] = hgnc_id
                     # Take the text string
                     #if agent.db_refs.get('TEXT'):
                     #    agent.name = agent.db_refs.get('TEXT')
@@ -263,7 +254,7 @@ def protein_map_from_twg(twg):
                 continue
             # Otherwise, look up the gene name in HGNC and match against the
             # agent text
-            gene_name = uniprot_client.get_hgnc_name(uniprot_id)
+            gene_name = uniprot_client.get_gene_name(uniprot_id)
             if gene_name is None:
                 unmatched += 1
                 continue

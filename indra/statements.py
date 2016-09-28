@@ -315,9 +315,11 @@ class Agent(object):
         if up:
             if isinstance(up, list):
                 up = up[0]
-            hgnc_name = upc.get_hgnc_name(up, True)
-            if hgnc_name:
-                return ('HGNC', hgnc_name)
+            up_mnemonic = upc.get_mnemonic(up)
+            if up_mnemonic and up_mnemonic.endswith('HUMAN'):
+                gene_name = upc.get_gene_name(up, web_fallback=False)
+                if gene_name:
+                    return ('HGNC', gene_name)
             else:
                 return ('UP', up)
         return (None, None)

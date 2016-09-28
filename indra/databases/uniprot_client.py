@@ -29,7 +29,7 @@ rdf_prefixes = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> """
 
 
-@lru_cache(maxsize=1000)
+@lru_cache(maxsize=10000)
 def query_protein(protein_id):
     """Return the UniProt entry as an RDF graph for the given UniProt ID.
 
@@ -97,19 +97,22 @@ def get_family_members(family_name, human_only=True):
         protein_list = html.strip().split('\n')
         gene_names = []
         for p in protein_list:
-            hgnc_name = get_hgnc_name(p)
-            gene_names.append(hgnc_name)
+            gene_name = get_gene_name(p)
+            gene_names.append(gene_name)
         return gene_names
     else:
         return None
 
-def get_mnemonic(protein_id, no_web_fallback=False):
+def get_mnemonic(protein_id, web_fallback=True):
     """Return the UniProt mnemonic for the given UniProt ID.
 
     Parameters
     ----------
     protein_id : str
         UniProt ID to be mapped.
+    web_fallback : Optional[bool]
+        If True and the offline lookup fails, the UniProt web service
+        is used to do the query.
 
     Returns
     -------
@@ -121,7 +124,7 @@ def get_mnemonic(protein_id, no_web_fallback=False):
         return mnemonic
     except KeyError:
         pass
-    if no_web_fallback:
+    if not web_fallback:
         return None
     g = query_protein(protein_id)
     if g is None:
@@ -158,50 +161,7 @@ def get_id_from_mnemonic(uniprot_mnemonic):
     except KeyError:
         return None
 
-@lru_cache(maxsize=10000)
-def get_hgnc_name(protein_id, no_web_fallback=False):
-    """Return the HGNC symbol for the given UniProt ID.
-
-    Parameters
-    ----------
-    protein_id : str
-        UniProt ID to be mapped.
-
-    Returns
-    -------
-    hgnc_name : str
-        The HGNC symbol corresponding to the given Uniprot ID.
-    """
-    # Try getting it from the dict first
-    try:
-        hgnc_name = uniprot_hgnc[protein_id]
-        return hgnc_name
-    except KeyError:
-        pass
-    if no_web_fallback:
-        return None
-    # If it's not in the dict then call webservice
-    g = query_protein(protein_id)
-    if g is None:
-        return None
-    query = rdf_prefixes + """
-        SELECT ?name
-        WHERE {
-            ?res a up:Resource .
-            ?res up:database db:HGNC .
-            ?res rdfs:comment ?name .
-            }
-        """
-    res = g.query(query)
-    if res:
-        hgnc_name = [r for r in res][0][0].toPython()
-        return hgnc_name
-    else:
-        return None
-
-
-@lru_cache(maxsize=10000)
-def get_gene_name(protein_id):
+def get_gene_name(protein_id, web_fallback=True):
     """Return the gene name for the given UniProt ID.
 
     This is an alternative to get_hgnc_name and is useful when
@@ -212,12 +172,26 @@ def get_gene_name(protein_id):
     ----------
     protein_id : str
         UniProt ID to be mapped.
+    web_fallback : Optional[bool]
+        If True and the offline lookup fails, the UniProt web service
+        is used to do the query.
 
     Returns
     -------
     gene_name : str
         The gene name corresponding to the given Uniprot ID.
     """
+    try:
+        gene_name = uniprot_gene_name[protein_id]
+        # Handle empty string
+        if not gene_name:
+            return None
+        return gene_name
+    except KeyError:
+        pass
+    if not web_fallback:
+        return None
+
     g = query_protein(protein_id)
     if g is None:
         return None
@@ -231,9 +205,10 @@ def get_gene_name(protein_id):
     res = g.query(query)
     if res:
         gene_name = [r for r in res][0][0].toPython()
+        if not gene_name:
+            return None
         return gene_name
-    else:
-        return None
+    return None
 
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
@@ -351,6 +326,27 @@ def verify_modification(protein_id, residue, location=None):
                 return True
         return False
 
+def _build_uniprot_entries():
+    up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../resources/uniprot_entries.tsv'
+    uniprot_gene_name = {}
+    uniprot_mnemonic = {}
+    uniprot_mnemonic_reverse = {}
+    try:
+        csv_rows = read_unicode_csv(up_entries_file, delimiter='\t')
+        # Skip the header row
+        next(csv_rows)
+        for row in csv_rows:
+            up_id = row[0]
+            gene_name = row[1]
+            up_mnemonic = row[3]
+            uniprot_gene_name[up_id] = gene_name
+            uniprot_mnemonic[up_id] = up_mnemonic
+            uniprot_mnemonic_reverse[up_mnemonic] = up_id
+    except IOError:
+        pass
+    return uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse
+
 def _build_uniprot_hgnc():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/hgnc_entries.txt'
@@ -367,21 +363,6 @@ def _build_uniprot_hgnc():
     except IOError:
         uniprot_hgnc = {}
     return uniprot_hgnc
-
-def _build_uniprot_mnemonic():
-    mnemonic_file = os.path.dirname(os.path.abspath(__file__)) +\
-                    '/../resources/uniprot_mnemonics.txt'
-    try:
-        uniprot_mnemonic = {}
-        uniprot_mnemonic_reverse = {}
-        csv_rows = read_unicode_csv(mnemonic_file, delimiter='\t')
-        for row in csv_rows:
-            uniprot_mnemonic[row[0]] = row[1]
-            uniprot_mnemonic_reverse[row[1]] = row[0]
-    except IOError:
-        uniprot_mnemonic = {}
-        uniprot_mnemonic_reverse = {}
-    return uniprot_mnemonic, uniprot_mnemonic_reverse
 
 def _build_uniprot_sec():
     # File containing secondary accession numbers mapped
@@ -421,7 +402,7 @@ def _build_uniprot_subcell_loc():
         subcell_loc = {}
     return subcell_loc
 
-uniprot_hgnc = _build_uniprot_hgnc()
-uniprot_mnemonic, uniprot_mnemonic_reverse = _build_uniprot_mnemonic()
+uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse = \
+    _build_uniprot_entries()
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()

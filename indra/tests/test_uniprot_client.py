@@ -14,7 +14,7 @@ def test_query_protein_nonexist():
 def test_query_protein_deprecated():
     g = uniprot_client.query_protein('Q8NHX1')
     assert(g is not None)
-    gene_name = uniprot_client.get_hgnc_name('Q8NHX1')
+    gene_name = uniprot_client.get_gene_name('Q8NHX1')
     assert gene_name == 'MAPK3'
     assert unicode_strs(gene_name)
 
@@ -25,15 +25,15 @@ def test_get_family_members():
     assert('RAF1' in members)
     assert unicode_strs(members)
 
-def test_get_hgnc_name_human():
-    hgnc_name = uniprot_client.get_hgnc_name('P00533')
-    assert(hgnc_name == 'EGFR')
-    assert unicode_strs(hgnc_name)
+def test_get_gene_name_human():
+    gene_name = uniprot_client.get_gene_name('P00533')
+    assert(gene_name == 'EGFR')
+    assert unicode_strs(gene_name)
 
-def test_get_hgnc_name_nonhuman():
-    hgnc_name = uniprot_client.get_hgnc_name('P31938')
-    assert(hgnc_name is None)
-    assert unicode_strs(hgnc_name)
+def test_get_gene_name_nonhuman():
+    gene_name = uniprot_client.get_gene_name('P31938')
+    assert(gene_name is None)
+    assert unicode_strs(gene_name)
 
 def test_get_gene_name_human():
     gene_name = uniprot_client.get_gene_name('P00533')
