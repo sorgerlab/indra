@@ -52,7 +52,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         return None
     params['kind'] = kind_str
     # Get the source string
-    if isinstance(source, basestring):
+    if isinstance(source, str):
         source_str = source
     else:
         source_str = ','.join(source)
@@ -63,7 +63,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
-        if isinstance(target, basestring):
+        if isinstance(target, str):
             target_str = target
         else:
             target_str = ','.join(target)
@@ -71,11 +71,13 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
 
     logger.info('Sending Pathway Commons query...')
     try:
-        res = urlopen(pc2_url + 'graph', data=urlencode(params))
+        res = urlopen(pc2_url + 'graph', data=urlencode(params).encode('utf-8'))
     except HTTPError as e:
         logger.error('Response is HTTP eror code %d.' % e.code)
         return None
 
+    # We don't decode to Unicode here because owl_str_to_model expects
+    # a byte stream
     owl_str = res.read()
     model = owl_str_to_model(owl_str)
     if model is not None:

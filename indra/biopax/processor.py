@@ -15,6 +15,7 @@ from indra.java_vm import autoclass, JavaException, cast
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
+from indra.util import decode_obj
 
 logger = logging.getLogger('biopax')
 
@@ -100,7 +101,8 @@ class BiopaxProcessor(object):
                     continue
                 complexes = _get_combinations(members)
                 for c in complexes:
-                    self.statements.append(Complex(c, ev))
+                    self.statements.append(decode_obj(Complex(c, ev),
+                                                      encoding='utf-8'))
 
     def get_phosphorylation(self, force_contains=None):
         """Extract INDRA Phosphorylation statements from the model.
@@ -115,7 +117,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('phospho',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Phosphorylation(*s))
+            self.statements.append(decode_obj(Phosphorylation(*s),
+                                              encoding='utf-8'))
 
     def get_dephosphorylation(self, force_contains=None):
         """Extract INDRA Dephosphorylation statements from the model.
@@ -130,7 +133,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('phospho', mod_gain=False,
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Dephosphorylation(*s))
+            self.statements.append(decode_obj(Dephosphorylation(*s),
+                                              encoding='utf-8'))
 
     def get_acetylation(self, force_contains=None):
         """Extract INDRA Acetylation statements from the model.
@@ -145,7 +149,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('acetyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Acetylation(*s))
+            self.statements.append(decode_obj(Acetylation(*s),
+                                              encoding='utf-8'))
 
     def get_glycosylation(self, force_contains=None):
         """Extract INDRA Glycosylation statements from the model.
@@ -160,7 +165,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('glycosyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Glycosylation(*s))
+            self.statements.append(decode_obj(Glycosylation(*s),
+                                              encoding='utf-8'))
 
     def get_palmitoylation(self, force_contains=None):
         """Extract INDRA Palmitoylation statements from the model.
@@ -175,7 +181,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('palmitoyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Palmitoylation(*s))
+            self.statements.append(decode_obj(Palmitoylation(*s),
+                                              encoding='utf-8'))
 
     def get_ubiquitination(self, force_contains=None):
         """Extract INDRA Ubiquitination statements from the model.
@@ -190,7 +197,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('ubiq',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Ubiquitination(*s))
+            self.statements.append(decode_obj(Ubiquitination(*s),
+                                              encoding='utf-8'))
 
     def get_activity_modification(self, force_contains=None):
         """Extract INDRA ActiveForm statements from the model.
@@ -268,7 +276,8 @@ class BiopaxProcessor(object):
                     if mods:
                         stmt = ActiveForm(monomer, activity, is_active,
                                           evidence=ev)
-                        self.statements.append(stmt)
+                        self.statements.append(decode_obj(stmt,
+                                                          encoding='utf-8'))
 
     @staticmethod
     def _get_complex_members(cplx):
@@ -449,7 +458,6 @@ class BiopaxProcessor(object):
                     if (enz.name not in force_contains) and \
                         (sub.name not in force_contains):
                         continue
-
                 # Get the modifications
                 mod_in =\
                     BiopaxProcessor._get_entity_mods(input_spe, False)
