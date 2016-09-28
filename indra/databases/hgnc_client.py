@@ -13,6 +13,7 @@ try:
 except ImportError:
     from urllib2 import urlopen, HTTPError, Request
     from functools32 import lru_cache
+from indra.util import read_unicode_csv
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
 # Download http://tinyurl.com/jgm29xp and save it in
@@ -20,17 +21,12 @@ hgnc_url = 'http://rest.genenames.org/fetch/'
 hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
             '/../resources/hgnc_entries.txt'
 try:
-    fh = open(hgnc_file, 'rt')
-    # In Python 2, the unicode_literal delimiter '\t' will lead to a TypeError
-    try:
-        rd = csv.reader(fh, delimiter='\t')
-    except TypeError:
-        rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
+    csv_rows = read_unicode_csv(hgnc_file, delimiter='\t', encoding='utf-8')
     hgnc_names = {}
     hgnc_withdrawn = []
     uniprot_ids = {}
     entrez_ids = {}
-    for row in rd:
+    for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
         if hgnc_status == 'Approved':
@@ -102,7 +98,8 @@ def get_hgnc_name(hgnc_id):
         The HGNC symbol corresponding to the given HGNC ID.
     """
     try:
-        hgnc_name = hgnc_names[hgnc_id]
+        #hgnc_name = hgnc_names[hgnc_id]
+        raise KeyError
     except KeyError:
         xml_tree = get_hgnc_entry(hgnc_id)
         if xml_tree is None:
@@ -112,6 +109,15 @@ def get_hgnc_name(hgnc_id):
         if hgnc_name_tag is None:
             return None
         hgnc_name = hgnc_name_tag.text.strip()
+        # In Python 3, the string returned by ElementTree will always be
+        # unicode (Python 3 str). However, in Python 2, the string returned
+        # will be a unicode string if it contains unicode characters, and
+        # str if it contains only ASCII characters. To maintain consistency,
+        # we convert it to unicode here:
+        try:
+            hgnc_name = unicode(hgnc_name)
+        except NameError:
+            pass
     return hgnc_name
 
 def get_hgnc_id(hgnc_name):
