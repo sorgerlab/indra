@@ -1,15 +1,18 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
-import urllib
 import keyword
 import logging
 import collections
 from rdflib import URIRef, Namespace
 from rdflib.namespace import RDF
-
 from indra.statements import *
 from indra.databases import hgnc_client
+# Python 3
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 
 logger = logging.getLogger('bel')
 
@@ -81,14 +84,13 @@ def term_from_uri(uri):
     else:
         term = uri.rsplit('/')[-1]
     # Decode URL to handle spaces, special characters
-    term = urllib.unquote(term)
+    term = unquote(term)
     # Replace any spaces, hyphens, commas, or periods with underscores
     term = term.replace(' ', '_')
     term = term.replace('/', '_')
     term = term.replace('-', '_')
     term = term.replace(',', '_')
     term = term.replace('.', '_')
-    term = term.encode('ascii', 'ignore')
     return term
 
 def strip_statement(uri):
@@ -731,11 +733,8 @@ class BelProcessor(object):
         """ % statement.format()
         res_evidence = self.g.query(q_evidence)
         for stmt in res_evidence:
-            try:
-                evidence = unicode(stmt[0])
-                citation = unicode(stmt[1])
-            except IndexError:
-                logger.warning('Problem converting evidence/citation string')
+            evidence = stmt[0].toPython()
+            citation = stmt[1].toPython()
         if citation is not None:
             m = re.match('.*pubmed:([0-9]+)', citation)
             if m is not None:
