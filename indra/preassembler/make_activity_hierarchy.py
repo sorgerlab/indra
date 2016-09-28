@@ -1,10 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import sys
 from rdflib import Graph, Namespace, Literal
-import csv
+from os.path import abspath, dirname, join
 
-if __name__ == '__main__':
+hierarchy_path = join(dirname(abspath(__file__)),
+                      '../resources/activity_hierarchy.rdf')
+
+def main():
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
     rn = Namespace(indra_ns + 'relations/')
     en = Namespace(indra_ns + 'entities/')
@@ -18,5 +20,9 @@ if __name__ == '__main__':
     g.add((en.term('kinase'), isa, en.term('catalytic')))
     g.add((en.term('phosphatase'), isa, en.term('catalytic')))
 
-    with open('../resources/activity_hierarchy.rdf', 'wt') as out_file:
-        out_file.write(g.serialize(format='xml'))
+    with open(hierarchy_path, 'wb') as out_file:
+        g_bytes = g.serialize(format='xml', encoding='utf-8')
+        out_file.write(g_bytes)
+
+if __name__ == '__main__':
+    main()

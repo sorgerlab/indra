@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import os
+from os.path import abspath, dirname, join, exists
 import rdflib
 from rdflib import Namespace, Literal
 import pickle
@@ -14,10 +14,12 @@ prefixes = """
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     """
 
+
 class CellularComponent(object):
     def __init__(self, go_id, name):
         self.go_id = go_id
         self.name = name
+
 
 def get_cellular_components(g):
     # Query for direct part_of relationships
@@ -76,6 +78,7 @@ def get_cellular_components(g):
             component_part_map[comp_id] = [sup_id]
     return component_map, component_part_map
 
+
 def make_component_hierarchy(component_map, component_part_map):
     g = rdflib.Graph()
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
@@ -91,23 +94,30 @@ def make_component_hierarchy(component_map, component_part_map):
                 g.add((en.term(comp_id), part_of, en.term(sup_id)))
     return g
 
-if __name__ == '__main__':
+
+def main():
     # This file can be donwloaded from:
-    # http://purl.obolibrary.org/obo/go.owl
-    fname = '../../data/go.owl'
+    # http://geneontology.org/ontology/go.owl
+    go_owl_file = join(dirname(abspath(__file__)), '../../data/go.owl')
+    pkl_file = join(dirname(abspath(__file__)), '../../data/go.pkl')
     g = rdflib.Graph()
-    pkl_name = '../../data/go.pkl'
-    if not os.path.exists(pkl_name):
-        print('Parsing %s' % fname)
-        g.parse(fname)
-        with open(pkl_name, 'wb') as fh:
+    if not exists(pkl_file):
+        print('Parsing %s' % go_owl_file)
+        g.parse(go_owl_file)
+        with open(pkl_file, 'wb') as fh:
             pickle.dump(g, fh)
     else:
-        print('Loading %s' % pkl_name)
-        g = pickle.load(open(pkl_name, 'rb'))
+        print('Loading %s' % pkl_file)
+        with open(pkl_file, 'rb') as fh:
+            g = pickle.load(fh)
     print('Getting cellular components')
     component_map, component_part_map = get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
-    with open('../resources/cellular_component_hierarchy.rdf', 'wt') \
+    with open('../resources/cellular_component_hierarchy.rdf', 'w') \
                                                                 as out_file:
-        out_file.write(gg.serialize(format='xml'))
+        gg_bytes = gg.serialize(format='xml', encoding='utf-8')
+        out_file.write(gg_bytes)
+
+
+if __name__ == '__main__':
+    main()

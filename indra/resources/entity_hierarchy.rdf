@@ -3,1126 +3,1085 @@
    xmlns:ns1="http://sorger.med.harvard.edu/indra/relations/"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP8B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT10B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC16">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF8">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC26">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TYK2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_12_alpha">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB3">
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Cyclin_D">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP8">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP25">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD8B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD8"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCD2">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAD51">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCA">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/uniprot/Q16695">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT8A">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT7B">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90AA"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_i_alpha">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF17">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF11">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT8B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L4">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF20">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCD2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/INHBA">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_A"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_AB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNC">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCL">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNK">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC10">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNJ">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10D">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA3">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FNTB">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP8A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK17">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNY">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK10">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBG1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBG"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNYL1">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT5B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HIF3A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/uniprot/P68431">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNYL3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNI">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP17">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT8B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCC1">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP21">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNW1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTL6B">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK11">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/p38"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3B2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC11">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT5A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TSC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT16">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GSK3A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GSK3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAL">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRCA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BRCA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IFNA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARID1B">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC27">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCA4">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOS2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB3">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CNKSR2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CNKSR"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT7A">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT5B">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP2K2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTG2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUN">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNYL3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RELB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ETS2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP21">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP15">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_s">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNB3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC4">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RHOC">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3G">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP23B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC1">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PDGFRB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_BB"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_AB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/uniprot/P84243">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TFDP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNH">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHC">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCC1">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HSP90AA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90A"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP25">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERCC4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBD1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBD"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CFL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ROCK2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL1B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TFDP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Histone_H3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNI2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/uniprot/Q71DI3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HIF3A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAL">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT16">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT2B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ARID1B">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DSTN">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOS1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL12A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL12"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK12">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC27">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3E">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FAS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/KSR1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/KSR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_beta"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3D">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2A1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CSNK2A"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNE1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1C">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_12_alpha">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA15">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTG2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/UBE2T">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC15">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GYS1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GYS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK6">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK18">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10C">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF1B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP28">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAZ">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SLX4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRF1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP1">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TYK2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90AA"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK19">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC2">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/REL">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRCA1">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BRCA"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_q_alpha">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP11">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA13">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PALB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCC2">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ACTL6B">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GSK3B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GSK3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNF">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNT2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RALA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/KRAS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA4A">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IFNA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNO">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_AB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC16">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT5B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/INHBB">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_AB"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_B"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNG1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ACTL6A">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ROCK1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL1A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNG2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAD51C">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCE">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERK">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAPK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC23">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB4Q">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA5">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA10">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCI">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNJL">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT5A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HSP90A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/uniprot/P68431">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FNTB">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARAF">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HRAS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK11A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA17">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF22">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK15">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBG2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBG"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF21">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCD3">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP13">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT9A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAF1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_12">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA12">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL12B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL12"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CSNK2A">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CK2"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP19">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TSC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TIAM1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK20">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF1A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC11">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF11">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRCA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BRCA"/>
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/P70RSK">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBD">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_s_alpha">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s"/>
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP17">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAPGEF2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC16">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ETS1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ATF2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP16">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK20">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRAF">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNYL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA11">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT2B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNTL">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNJL">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3C">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNE1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3C">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCC">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF4">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF23">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2B">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CK2"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF16">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HIF1A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC16">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP24">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCF">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAO1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT11">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL1A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/INHBB">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_B"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_AB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA17">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CNKSR1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CNKSR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CGB3">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/hCG"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT8A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TSC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERCC4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCD3">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD8A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD8"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK16">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP19">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HSP90AA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90A"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD8B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD8"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBE1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBE"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHC">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RELB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GSK3B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GSK3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HIF1A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GYS1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GYS"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PDGFRA">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR"/>
     <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_AA"/>
     <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_AB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2C">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF13">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ROCK2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SLX4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNJ">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFKB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC13">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAT3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90A"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB1">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP12">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAQ">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP7">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNT">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3D">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90AA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ERK">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAPK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_s_alpha">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2A1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CSNK2A"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/UBE2T">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/CSNK2A">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CK2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK13">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_AB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/KSR1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/KSR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2A2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CSNK2A"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP28">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOS1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAPGEF2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TIAM1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCC">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNB3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RHOA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/uniprot/P84243">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC3">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RELA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP1LC3B2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MAP1LC3"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP20">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK16">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2B">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CK2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/p38"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/REL">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNTL">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBG">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF22">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3G">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/uniprot/Q16695">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF17">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF21">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNG2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAO1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RHOC">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_i_alpha">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCMDC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF3">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IFNB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAPGEF1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP12">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP16">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK17">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCM">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PALB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAD51C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC7">
     <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_s">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF18">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DSTN">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNG1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP11">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP8A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3D">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNE2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUND">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_beta"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC1">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBG2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBG"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP23B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CFL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT3A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RALA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Histone_H3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRF2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HRAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF20">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP2K1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCC2">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFATC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNK">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ETS1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNT1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHA">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_beta"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA11">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNO">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFKB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC11">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SAA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SAA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC4">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCD2">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCL">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT10A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP15">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCI">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCD2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAZ">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNH">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP2K2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SMARCD1">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC15">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GYS2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GYS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNK">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HSP90A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK15">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACACA">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ACC"/>
@@ -1130,509 +1089,577 @@
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/KSR2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/KSR"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FOS_family">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AP1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBG">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF13">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_beta">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_q">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT7B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCM">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUNB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAA2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF19">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FNTA">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF12">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK18">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTG1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TSC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TSC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA21">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB2A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/XRCC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT10A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA10">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK19">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAP2K1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MEK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90AA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TIAM2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_q_alpha">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_alpha"/>
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFKB2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3E">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_i">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUND">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC8">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCA4">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT3A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GSK3A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GSK3"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAQ">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASAL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASAL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFRL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CFL1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP15">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CSNK2A2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CSNK2A"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_beta"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR2">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR10">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNI">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_s_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP14">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT5B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Cyclin_D">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACACB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ACC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EGFR">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RALB">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK13">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90B1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRF2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3D">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRIP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT11">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF4">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ARID1A">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM7">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD8A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD8"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/JUN_family">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AP1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBE">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
-  </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RHOB">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNW1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA7">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EPAS1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF9">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCMDC2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNAI1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_i_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HIF1_beta">
     <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP7">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP8B">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT3">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT9A">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RHOA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RHO"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNK">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC5">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA16">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF18">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA13">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12_alpha"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC13">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RELA">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_2"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF16">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT5">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOS2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOS"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/P90RSK">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/F_actin">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA6">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NFKB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90AB1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90A"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCG">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC2">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK11B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC11">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF23">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT5A">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNY">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNA1">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT9B">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GYS2">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/GYS"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HSP90B1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HSP90"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NRAS">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_q">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNF">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SHC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SHC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACACB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ACC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK13">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/p38"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFRL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUNB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10B">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CNKSR1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CNKSR"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB3">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP27">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP13">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC4">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/DUSP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/DUSP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TFDP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/LDHB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/LDH"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBD">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10C">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF1A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC5">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA1B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT2">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/SMARCD1">
-    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ETS2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ETS"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNE2">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/AMPK_beta">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCE">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA13">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA13">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_12_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOSB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF19">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/F_actin">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/AKT3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AKT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP15">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/HDAC7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNC">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK7">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FANCG">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCND3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin_D"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PDGFRB">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_BB"/>
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/PDGFR_AB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL1B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC5">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRIP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBD1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBD"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNT">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/KRAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC26">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/TUBE">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Tubulin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CD3E">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/CD3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/p38"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAA2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase_3_7"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/XRCC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNI2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BRAF">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA21">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MAPK3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CFL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cofilin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/P90RSK">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAD51">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FANC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/JUN_family">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AP1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOS_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP12">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/uniprot/Q71DI3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Histone_H3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB4Q">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP24">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KA4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P90RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL4">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBE1">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBE"/>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF5">
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FNTA">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/FNT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL12B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL12"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/GNA14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_q_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/IFNB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Interferon"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JUN">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JUN_family"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRY3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBA3E">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RALB">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SAA1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SAA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP27">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IL12A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IL12"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT10B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EGFR">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT9B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RGL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RGL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/NRAS">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAS"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/INHBA">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_AB"/>
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin_A"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EPAS1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4G3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4G"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ANAPC10">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RAPGEF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAPGEF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EIF4EBP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EIF4EBP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF6">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ERBB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ERBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGFR1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGFR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA14">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP20">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASGRP2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASGRP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDC23">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/APC_C"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CGA">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/hCG"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA16">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF9">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARID1A">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF8">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/HIF1_alpha">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PAK3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/PAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTG1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Actin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARAF">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RAF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CREB3L3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CREB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/JAK1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/JAK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/PRKAG2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/AMPK_gamma"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/NFkappaB_1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/NFkappaB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ACTL6A">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/SWI_SNF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SAA4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SAA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TLR3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TLR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBB4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBB"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SPRED3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SPRED"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TFDP1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TFDP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FOXO4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FOXO"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF1B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MMP10">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/FGF1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/FGF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ARNT2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HIF1_beta"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SOD2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/SOD"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RPS6KB2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/P70RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/RASSF7">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RASSF"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/STAT5A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/STAT"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/SIRT3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/HDAC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK11B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/BMP3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/BMP"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/G_i">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/G_protein"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CASP5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Caspase"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC3">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/ROCK1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/ROCK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK11A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TUBG1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TUBG"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/IFNA5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/IFNA"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDKL1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/Activin_B">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Activin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/MCM4">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/MCM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CCNB1">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Cyclin"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TNFRSF10D">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Death_receptor"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/P70RSK">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/RSK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/WNT7A">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/Wnt"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/TIAM2">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/TIAM"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/FOS_family">
+    <ns1:partof rdf:resource="http://sorger.med.harvard.edu/indra/entities/AP1"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/CDK6">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/CDK"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://identifiers.org/hgnc.symbol/EXOC5">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/EXOC"/>
   </rdf:Description>
 </rdf:RDF>

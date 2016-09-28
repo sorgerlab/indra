@@ -29,6 +29,8 @@ install:
   #- pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
+  # Download a number of useful resource files for testing purposes
+  - wget http://geneontology.org/ontology/go.owl -P data/
   - pip install .
 script:
   nosetests indra
