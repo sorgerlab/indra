@@ -8,6 +8,7 @@ from indra.databases import uniprot_client, hgnc_client
 from itertools import groupby
 from collections import Counter
 import logging
+from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger('grounding_mapper')
 
@@ -108,21 +109,10 @@ class GroundingMapper(object):
 # key (e.g., ROS, ER)
 def load_grounding_map(path):
     g_map = {}
-    with open(path) as f:
-        # Unicode literals will fail in Python 2
-        try:
-            mapreader = csv.reader(f, delimiter=',', quotechar='"',
-                                   quoting=csv.QUOTE_MINIMAL,
-                                   lineterminator='\r\n')
-        except TypeError:
-            mapreader = csv.reader(f, delimiter=','.encode('utf-8'),
-                                   quotechar='"'.encode('utf-8'),
-                                   quoting=csv.QUOTE_MINIMAL,
-                                   lineterminator='\r\n')
-
-        rows = [row for row in mapreader]
-
-    for row in rows:
+    csv_rows = read_unicode_csv(path, delimiter=',', quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL,
+                                lineterminator='\r\n')
+    for row in csv_rows:
         key = row[0]
         db_refs = {'TEXT': key}
         keys = [entry for entry in row[1::2] if entry != '']
@@ -238,15 +228,11 @@ def save_base_map(filename, grouped_by_text):
                 name = uniprot_client.get_mnemonic(id)
             else:
                 name = ''
-            row = [text_string.encode('utf8'), db, id, count, name]
+            row = [text_string, db, id, count, name]
             rows.append(row)
 
-    with open(filename, 'w') as f:
-        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
-        csvwriter.writerows(rows)
-        f.write('\r\n')
+    write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
+                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 def protein_map_from_twg(twg):
     """Build map of entity texts to validated protein grounding.
@@ -303,11 +289,8 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
         if counter >= agent_limit:
             break
     # Write sentences to CSV file
-    with open(filename, 'w') as f:
-        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
-        csvwriter.writerows(sentences)
+    write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
+                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
                                   '../../bioentities/grounding_map.csv')

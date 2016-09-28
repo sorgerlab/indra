@@ -5,7 +5,7 @@ from collections import namedtuple
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
-from indra.util import unicode_csv_rows
+from indra.util import read_unicode_csv
 # Python2
 try:
     basestring
@@ -358,7 +358,7 @@ def load_site_map(path):
         error, wrong residue name, etc.).
     """
     site_map = {}
-    maprows = unicode_csv_rows(path, delimiter='\t')
+    maprows = read_unicode_csv(path, delimiter='\t')
     # Skip the header line
     next(maprows)
     for row in maprows:
