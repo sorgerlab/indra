@@ -97,8 +97,8 @@ def get_family_members(family_name, human_only=True):
         protein_list = html.strip().split('\n')
         gene_names = []
         for p in protein_list:
-            hgnc_name = get_hgnc_name(p)
-            gene_names.append(hgnc_name)
+            gene_name = get_gene_name(p)
+            gene_names.append(gene_name)
         return gene_names
     else:
         return None

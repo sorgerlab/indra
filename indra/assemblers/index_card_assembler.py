@@ -227,10 +227,10 @@ def get_participant(agent):
                 entity_dict = {}
                 uniprot_mnemonic = \
                     str(uniprot_client.get_mnemonic(uniprot_id))
-                hgnc_name = uniprot_client.get_hgnc_name(uniprot_id)
-                if hgnc_name is None:
-                    hgnc_name = ""
-                entity_dict['entity_text'] = [hgnc_name]
+                gene_name = uniprot_client.get_gene_name(uniprot_id)
+                if gene_name is None:
+                    gene_name = ""
+                entity_dict['entity_text'] = [gene_name]
                 entity_dict['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
                 entity_dict['entity_type'] = 'protein'
                 participant['entities'].append(entity_dict)
