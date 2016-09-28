@@ -103,13 +103,16 @@ def get_family_members(family_name, human_only=True):
     else:
         return None
 
-def get_mnemonic(protein_id, no_web_fallback=False):
+def get_mnemonic(protein_id, web_fallback=True):
     """Return the UniProt mnemonic for the given UniProt ID.
 
     Parameters
     ----------
     protein_id : str
         UniProt ID to be mapped.
+    web_fallback : Optional[bool]
+        If True and the offline lookup fails, the UniProt web service
+        is used to do the query.
 
     Returns
     -------
@@ -121,7 +124,7 @@ def get_mnemonic(protein_id, no_web_fallback=False):
         return mnemonic
     except KeyError:
         pass
-    if no_web_fallback:
+    if not web_fallback:
         return None
     g = query_protein(protein_id)
     if g is None:
@@ -159,13 +162,16 @@ def get_id_from_mnemonic(uniprot_mnemonic):
         return None
 
 @lru_cache(maxsize=10000)
-def get_hgnc_name(protein_id, no_web_fallback=False):
+def get_hgnc_name(protein_id, web_fallback=True):
     """Return the HGNC symbol for the given UniProt ID.
 
     Parameters
     ----------
     protein_id : str
         UniProt ID to be mapped.
+    web_fallback : Optional[bool]
+        If True and the offline lookup fails, the UniProt web service
+        is used to do the query.
 
     Returns
     -------
@@ -178,7 +184,7 @@ def get_hgnc_name(protein_id, no_web_fallback=False):
         return hgnc_name
     except KeyError:
         pass
-    if no_web_fallback:
+    if not web_fallback:
         return None
     # If it's not in the dict then call webservice
     g = query_protein(protein_id)

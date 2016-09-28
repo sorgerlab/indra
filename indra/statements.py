@@ -315,7 +315,7 @@ class Agent(object):
         if up:
             if isinstance(up, list):
                 up = up[0]
-            hgnc_name = upc.get_hgnc_name(up, True)
+            hgnc_name = upc.get_hgnc_name(up, web_fallback=False)
             if hgnc_name:
                 return ('HGNC', hgnc_name)
             else:

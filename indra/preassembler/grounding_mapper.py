@@ -50,7 +50,8 @@ class GroundingMapper(object):
                         elif agent.db_refs.get('UP'):
                             # Try for the HGNC name
                             hgnc_name = uniprot_client.get_hgnc_name(
-                                                      agent.db_refs.get('UP'))
+                                                      agent.db_refs.get('UP'),
+                                                      web_fallback=False)
                             if hgnc_name is not None:
                                 hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
                                 agent.name = hgnc_name
@@ -84,7 +85,8 @@ class GroundingMapper(object):
                 elif agent.db_refs.get('UP'):
                     # Try for the HGNC name
                     hgnc_name = uniprot_client.get_hgnc_name(
-                                                    agent.db_refs.get('UP'))
+                                                    agent.db_refs.get('UP'),
+                                                    web_fallback=False)
                     if hgnc_name is not None:
                         hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
                         agent.name = hgnc_name
