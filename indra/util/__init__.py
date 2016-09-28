@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, \
 import sys
 import csv
 
-if sys.version_info > (3, 0):
+if sys.version_info[0] >= 3:
     non_unicode = bytes
 else:
     non_unicode = str
@@ -12,7 +12,8 @@ def unicode_strs(obj):
     if isinstance(obj, non_unicode):
         return False
     # Check for an iterable
-    if isinstance(obj, list) or isinstance(obj, tuple):
+    if isinstance(obj, list) or isinstance(obj, tuple) or \
+       isinstance(obj, set):
         for item in obj:
             has_unicode_strs = unicode_strs(item)
             if not has_unicode_strs:
@@ -68,7 +69,7 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
     # Python 2 version
     else:
         # Open the file, no encoding specified
-        with open(filename, 'r') as f:
+        with open(filename, 'rb') as f:
             # Next, get the csv reader, passing delimiter and quotechar as
             # bytestrings rather than unicode
             csv_reader = csv.reader(f, delimiter=delimiter.encode(encoding),

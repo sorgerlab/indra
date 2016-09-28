@@ -65,14 +65,27 @@ def get_genes_for_go_id(goid):
         logging.error('Could not retrieve proteins associated with GO ID %s'
                       % goid)
         return None
-    tsv_str = StringIO(res.read().decode('utf-8'))
-    try:
-        tsv_reader = csv.reader(tsv_str, delimiter='\t')
-    except TypeError:
-        tsv_reader = csv.reader(tsv_str, delimiter='\t'.encode('utf-8'))
+
     genes = set([])
-    for row in tsv_reader:
-        genes.add(row[0])
+    # Python 3
+    if sys.version_info[0] >= 3:
+        # Convert the stream to unicode
+        tsv_str = res.read().decode('utf-8')
+        # csv.reader takes an iterable (by line), so we have to call
+        # splitlines() so that we don't iterate over individual characters
+        tsv_reader = csv.reader(tsv_str.splitlines(), delimiter='\t')
+        # No decoding necessary here
+        for row in tsv_reader:
+            genes.add(row[0])
+    # Python 2
+    else:
+        # Leave the stream as bytes
+        tsv_bytes = res.read()
+        tsv_reader = csv.reader(tsv_bytes.splitlines(),
+                                delimiter='\t'.encode('utf-8'))
+        # Decode here
+        for row in tsv_reader:
+            genes.add(row[0].decode('utf-8'))
     return list(genes)
 
 
