@@ -51,9 +51,9 @@ def id_lookup(paper_id, idtype=None):
     record = tree.find('record')
     if record is None:
         return {}
-    doi = record.attrib.get('doi')
-    pmid = record.attrib.get('pmid')
-    pmcid = record.attrib.get('pmcid')
+    doi = str(record.attrib.get('doi'))
+    pmid = str(record.attrib.get('pmid'))
+    pmcid = str(record.attrib.get('pmcid'))
     ids = {'doi': doi,
            'pmid': pmid,
            'pmcid': pmcid}
@@ -78,25 +78,19 @@ def get_xml(pmc_id):
     except HTTPError:
         print("Couldn't download PMC%d" % pmc_id)
     xml_str = res.read()
-    xml_str = xml_str.decode('utf-8')
 
-    err = check_xml_error(xml_str)
-    if err is None:
-        return xml_str
-    else:
-        print('PMC client returned with error %s: %s' % (err[0], err[1]))
-        return None
-
-
-def check_xml_error(xml_str):
-    tree = et.fromstring(xml_str.encode('utf-8'))
+    # Check for any XML errors; xml_str should still be bytes
+    tree = et.fromstring(xml_str)
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:
-        err_code = err_tag.attrib['code']
-        err_text = err_tag.text
-        return (err_code, err_text)
-    return None
+        err_code = str(err_tag.attrib['code'])
+        err_text = str(err_tag.text)
+        print('PMC client returned with error %s: %s' % (err_code, err_text))
+        return None
+    # If no error, return the XML as a unicode string
+    else:
+        return xml_str.decode('utf-8')
 
 
 def filter_pmids(pmid_list, source_type):
@@ -122,8 +116,9 @@ def filter_pmids(pmid_list, source_type):
     if pmids_fulltext_dict.get(source_type) is None:
         fulltext_list_path = os.path.join(os.path.dirname(__file__),
                                      'pmids_%s.txt' % source_type)
-        with open(fulltext_list_path) as f:
-            fulltext_list = set([line.strip('\n') for line in f.readlines()])
+        with open(fulltext_list_path, 'rb') as f:
+            fulltext_list = set([line.strip('\n').decode('utf-8')
+                                 for line in f.readlines()])
             pmids_fulltext_dict[source_type] = fulltext_list
     return list(set(pmid_list).intersection(
                                 pmids_fulltext_dict.get(source_type)))

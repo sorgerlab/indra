@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import sys
 import csv
+import xml.etree.ElementTree as et
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
@@ -105,3 +106,15 @@ def write_unicode_csv(path, rows, delimiter=',', quotechar='"',
             for row in rows:
                 csv_writer.writerow([cell.encode(encoding) for cell in row])
 
+
+"""
+if sys.version_info[0] >= 3:
+    unicode_parser = et.XMLParser()
+else:
+    class UnicodeXMLTreeBuilder(et.XMLTreeBuilder):
+        # See this thread:
+        # http://www.gossamer-threads.com/lists/python/python/728903
+        def _fixtext(self, text):
+            return text
+    unicode_parser = UnicodeXMLTreeBuilder()
+"""
