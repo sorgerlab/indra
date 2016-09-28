@@ -100,6 +100,8 @@ def main():
     # http://geneontology.org/ontology/go.owl
     go_owl_file = join(dirname(abspath(__file__)), '../../data/go.owl')
     pkl_file = join(dirname(abspath(__file__)), '../../data/go.pkl')
+    rdf_file = join(dirname(abspath(__file__)),
+                    '../resources/cellular_component_hierarchy.rdf')
     g = rdflib.Graph()
     if not exists(pkl_file):
         print('Parsing %s' % go_owl_file)
@@ -113,8 +115,7 @@ def main():
     print('Getting cellular components')
     component_map, component_part_map = get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
-    with open('../resources/cellular_component_hierarchy.rdf', 'w') \
-                                                                as out_file:
+    with open(rdf_file, 'wb') as out_file:
         gg_bytes = gg.serialize(format='xml', encoding='utf-8')
         out_file.write(gg_bytes)
 
