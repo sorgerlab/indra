@@ -1,51 +1,31 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import os
+from os.path import dirname, abspath, join
 import csv
 try:
     from functools import lru_cache
 except ImportError:
     from functools32 import lru_cache
+from indra.util import read_unicode_csv
 
 def read_chebi_to_pubchem():
-    # Based on ftp://ftp.ebi.ac.uk/pub/databases/chebi/
-    #                Flat_file_tab_delimited/reference.tsv.gz
-    chebi_to_pubchem_file = os.path.dirname(os.path.abspath(__file__)) + \
-                            '/../resources/chebi_to_pubchem.tsv'
-    try:
-        fh = open(chebi_to_pubchem_file, 'rt')
-        # In Python 2, the unicode_literal delimiter '\t' will give TypeError
-        try:
-            rd = csv.reader(fh, delimiter='\t')
-        except TypeError:
-            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
-        chebi_pubchem = {}
-        pubchem_chebi = {}
-        for row in rd:
-            chebi_pubchem[row[0]] = row[1]
-            pubchem_chebi[row[1]] = row[0]
-    except IOError:
-        chebi_pubchem = {}
-        pubchem_chebi = {}
+    chebi_to_pubchem_file = join(dirname(abspath(__file__)),
+                                 '../resources/chebi_to_pubchem.tsv')
+    csv_reader = read_unicode_csv(chebi_to_pubchem_file, delimiter='\t')
+    chebi_pubchem = {}
+    pubchem_chebi = {}
+    for row in csv_reader:
+        chebi_pubchem[row[0]] = row[1]
+        pubchem_chebi[row[1]] = row[0]
     return chebi_pubchem, pubchem_chebi
 
 def read_chebi_to_chembl():
-    # Based on ftp://ftp.ebi.ac.uk/pub/databases/chebi/
-    #                Flat_file_tab_delimited/reference.tsv.gz
-    chebi_to_chembl_file = os.path.dirname(os.path.abspath(__file__)) + \
-                            '/../resources/chebi_to_chembl.tsv'
-    try:
-        fh = open(chebi_to_chembl_file, 'rt')
-        # In Python 2, the unicode_literal delimiter '\t' will give TypeError
-        try:
-            rd = csv.reader(fh, delimiter='\t')
-        except TypeError:
-            rd = csv.reader(fh, delimiter='\t'.encode('utf-8'))
-        chebi_chembl = {}
-        for row in rd:
-            chebi_chembl[row[0]] = row[1]
-    except IOError:
-        chebi_chembl = {}
+    chebi_to_chembl_file = join(dirname(abspath(__file__)),
+                                '../resources/chebi_to_chembl.tsv')
+    csv_reader = read_unicode_csv(chebi_to_chembl_file, delimiter='\t')
+    chebi_chembl = {}
+    for row in csv_reader:
+        chebi_chembl[row[0]] = row[1]
     return chebi_chembl
 
 chebi_pubchem, pubchem_chebi = read_chebi_to_pubchem()
