@@ -71,6 +71,7 @@ large_corpus.rdf
 *.bel
 *.json
 *.bson
+*.dat
 
 # Documents, graphs, images
 *.pdf
@@ -89,7 +90,6 @@ large_corpus.rdf
 cover
 setuptools*.zip
 
-indra/data/ras_pathway_proteins.csv
 indra/literature/elsevier_api_key
 indra/literature/cr_clickthrough_key
 models/assembly_eval/batch4/trips
