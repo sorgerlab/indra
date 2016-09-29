@@ -1,17 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
+import requests
 from indra.java_vm import autoclass, JavaException
-
-try:
-    # Python 3
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
-    from urllib.parse import urlencode
-except ImportError:
-    # Python 2
-    from urllib2 import urlopen, HTTPError
-    from urllib import urlencode
 
 logger = logging.getLogger('biopax')
 
@@ -70,16 +61,13 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         params['target'] = target_str
 
     logger.info('Sending Pathway Commons query...')
-    try:
-        res = urlopen(pc2_url + 'graph', data=urlencode(params).encode('utf-8'))
-    except HTTPError as e:
-        logger.error('Response is HTTP eror code %d.' % e.code)
+    res = requests.get(pc2_url + 'graph', params=params)
+    if not res.status_code == 200:
+        logger.error('Response is HTTP error code %d.' % res.status_code)
         return None
-
     # We don't decode to Unicode here because owl_str_to_model expects
     # a byte stream
-    owl_str = res.read()
-    model = owl_str_to_model(owl_str)
+    model = owl_str_to_model(res.content)
     if model is not None:
         logger.info('Pathway Commons query returned a model...')
     return model
