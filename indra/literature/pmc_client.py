@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import xml.etree.ElementTree as et
-from indra.literature import pubmed_client
 import os.path
 try:
     from urllib.request import urlopen
@@ -10,6 +9,8 @@ try:
 except ImportError:
     from urllib import urlencode
     from urllib2 import urlopen, HTTPError
+from indra.literature import pubmed_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 pmid_convert_url = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
@@ -51,9 +52,9 @@ def id_lookup(paper_id, idtype=None):
     record = tree.find('record')
     if record is None:
         return {}
-    doi = str(record.attrib.get('doi'))
-    pmid = str(record.attrib.get('pmid'))
-    pmcid = str(record.attrib.get('pmcid'))
+    doi = record.attrib.get('doi')
+    pmid = record.attrib.get('pmid')
+    pmcid = record.attrib.get('pmcid')
     ids = {'doi': doi,
            'pmid': pmid,
            'pmcid': pmcid}
@@ -84,8 +85,8 @@ def get_xml(pmc_id):
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:
-        err_code = str(err_tag.attrib['code'])
-        err_text = str(err_tag.text)
+        err_code = err_tag.attrib['code']
+        err_text = err_tag.text
         print('PMC client returned with error %s: %s' % (err_code, err_text))
         return None
     # If no error, return the XML as a unicode string

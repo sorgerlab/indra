@@ -9,7 +9,8 @@ from os.path import join, dirname, abspath
 hierarchy_path = join(dirname(abspath(__file__)),
                       '../resources/entity_hierarchy.rdf')
 
-relations_file = '../../bioentities/relations.csv'
+relations_file = join(dirname(abspath(__file__)),
+                      '../../bioentities/relations.csv')
 
 indra_ns = 'http://sorger.med.harvard.edu/indra/'
 hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
@@ -49,7 +50,7 @@ def main(relations_file):
             raise ValueError("Invalid relation %s" % rel)
         g.add((term1, rel_term, term2))
 
-    with open('../resources/entity_hierarchy.rdf', 'wb') as out_file:
+    with open(hierarchy_path, 'wb') as out_file:
         g_bytes = g.serialize(format='xml', encoding='utf-8')
         out_file.write(g_bytes)
 

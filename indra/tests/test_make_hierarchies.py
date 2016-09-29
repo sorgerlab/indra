@@ -12,5 +12,7 @@ def test_make_entity_hierarchy():
 def test_make_modification_hierarchy():
     make_mod.main()
 
+"""
 def test_make_cellular_component_hierarchy():
     make_comp.main()
+"""

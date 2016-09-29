@@ -107,9 +107,9 @@ def write_unicode_csv(path, rows, delimiter=',', quotechar='"',
                 csv_writer.writerow([cell.encode(encoding) for cell in row])
 
 
-"""
 if sys.version_info[0] >= 3:
-    unicode_parser = et.XMLParser()
+    def UnicodeXMLTreeBuilder():
+        return None
 else:
     class UnicodeXMLTreeBuilder(et.XMLTreeBuilder):
         # See this thread:
@@ -117,4 +117,3 @@ else:
         def _fixtext(self, text):
             return text
     unicode_parser = UnicodeXMLTreeBuilder()
-"""

@@ -30,7 +30,7 @@ install:
   # Biopax/Paxtools dependencies
   - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
   # Download a number of useful resource files for testing purposes
-  - wget http://geneontology.org/ontology/go.owl -P data/
+  #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
   - pip install .
 script:
