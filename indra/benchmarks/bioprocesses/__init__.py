@@ -55,12 +55,17 @@ def get_genes_for_go_id(goid):
                       % goid)
         return None
     genes = set([])
-    # csv.reader takes an iterable (by line), so we have to call
-    # splitlines() so that we don't iterate over individual characters
-    tsv_reader = csv.reader(res.text.splitlines(), delimiter='\t')
-    # No decoding necessary here
-    for row in tsv_reader:
-        genes.add(row[0])
+    # Python 3
+    if sys.version_info[0] >= 3:
+        tsv_reader = csv.reader(res.text.splitlines(), delimiter='\t')
+        for row in tsv_reader:
+            genes.add(row[0])
+    # Python 2
+    else:
+        tsv_reader = csv.reader(res.content.splitlines(),
+                                delimiter='\t'.encode('utf-8'))
+        for row in tsv_reader:
+            genes.add(row[0].decode('utf-8')) 
     return list(genes)
 
 
