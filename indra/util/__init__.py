@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import sys
 import csv
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
@@ -111,7 +111,7 @@ if sys.version_info[0] >= 3:
     def UnicodeXMLTreeBuilder():
         return None
 else:
-    class UnicodeXMLTreeBuilder(et.XMLTreeBuilder):
+    class UnicodeXMLTreeBuilder(ET.XMLTreeBuilder):
         # See this thread:
         # http://www.gossamer-threads.com/lists/python/python/728903
         def _fixtext(self, text):

@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 import os.path
 try:
     from urllib.request import urlopen
@@ -81,7 +81,7 @@ def get_xml(pmc_id):
     xml_str = res.read()
 
     # Check for any XML errors; xml_str should still be bytes
-    tree = et.fromstring(xml_str)
+    tree = ET.fromstring(xml_str)
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:

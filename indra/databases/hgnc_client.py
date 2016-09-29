@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 import re
 import csv
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 # Python3
 try:
     from functools import lru_cache
@@ -13,7 +13,7 @@ try:
 except ImportError:
     from urllib2 import urlopen, HTTPError, Request
     from functools32 import lru_cache
-from indra.util import read_unicode_csv
+from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
 # Download http://tinyurl.com/jgm29xp and save it in
@@ -115,7 +115,7 @@ def get_hgnc_name(hgnc_id):
         # str if it contains only ASCII characters. To maintain consistency,
         # we convert it to unicode here:
         try:
-            hgnc_name = unicode(hgnc_name)
+            hgnc_name = hgnc_name
         except NameError:
             pass
     return hgnc_name
@@ -160,5 +160,5 @@ def get_hgnc_entry(hgnc_id):
         res = urlopen(req)
     except HTTPError:
         return None
-    xml_tree = et.parse(res)
+    xml_tree = ET.parse(res, parser=UTB())
     return xml_tree
