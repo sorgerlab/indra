@@ -11,7 +11,7 @@ try:
     from functools import lru_cache
 except ImportError:
     from functools32 import lru_cache
-
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
 def id_lookup(paper_id, idtype):
     """Take an ID of type PMID, PMCID, or DOI and lookup the other IDs.
@@ -208,7 +208,7 @@ def get_asbmb_full_text(url):
         return (None, None)
     # If we're here that means that we successfully got the paper URL
     xml_str = req.text
-    tree = ET.fromstring(xml_str.encode('UTF-8'))
+    tree = ET.XML(xml_str, parser=UTB())
     fulltext_elem = tree.find('.//{http://www.w3.org/1999/xhtml}meta'
                               '[@name="citation_fulltext_html_url"]')
     # Couldn't find the element containing the full text URL
@@ -226,5 +226,5 @@ def get_asbmb_full_text(url):
     # We've got the full text page!
     # Get all the section elements
     xml_str2 = req2.text
-    tree2 = ET.fromstring(xml_str2.encode('UTF-8'))
+    tree2 = ET.XML(xml_str2, parser=UTB())
     return None, None

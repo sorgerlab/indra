@@ -78,10 +78,11 @@ def get_xml(pmc_id):
         res = urlopen(pmc_url, urlencode(params).encode('utf-8'))
     except HTTPError:
         print("Couldn't download PMC%d" % pmc_id)
+        return None
+    # Read the bytestream
     xml_str = res.read()
-
     # Check for any XML errors; xml_str should still be bytes
-    tree = ET.fromstring(xml_str)
+    tree = ET.XML(xml_str, parser=UTB())
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:

@@ -5,12 +5,11 @@ import logging
 import operator
 import itertools
 import collections
-
 import xml.etree.ElementTree as ET
-
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('trips')
 
@@ -52,7 +51,7 @@ class TripsProcessor(object):
     """
     def __init__(self, xml_string):
         try:
-            self.tree = ET.fromstring(xml_string)
+            self.tree = ET.XML(xml_string, parser=UTB())
         except ET.ParseError:
             logger.error('Could not parse XML string')
             self.tree = None
