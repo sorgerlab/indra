@@ -4,14 +4,12 @@ import os
 import re
 import csv
 import xml.etree.ElementTree as ET
+import requests
 # Python3
 try:
     from functools import lru_cache
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
 # Python2
 except ImportError:
-    from urllib2 import urlopen, HTTPError, Request
     from functools32 import lru_cache
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
@@ -155,10 +153,8 @@ def get_hgnc_entry(hgnc_id):
     """
     url = hgnc_url + 'hgnc_id/%s' % hgnc_id
     headers = {'Accept': '*/*'}
-    req = Request(url, headers=headers)
-    try:
-        res = urlopen(req)
-    except HTTPError:
+    res = requests.get(url, headers=headers)
+    if not res.status_code == 200:
         return None
-    xml_tree = ET.parse(res, parser=UTB())
+    xml_tree = ET.XML(res.text, parser=UTB())
     return xml_tree
