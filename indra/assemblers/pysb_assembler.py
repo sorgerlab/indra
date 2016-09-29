@@ -16,13 +16,6 @@ logger = logging.getLogger('pysb_assembler')
 
 SelfExporter.do_export = False
 
-# Python2
-try:
-    basestring
-# Python3 -- create basestring type
-except NameError:
-    basestring = str
-
 # Here we define the types of INDRA statements that are meant to be
 # assembled using the PySB assembler. If a type of statement appears
 # in this list then we require that there is at least one default
@@ -482,7 +475,7 @@ class PysbAssembler(object):
         self.model = None
         if policies is None:
             self.policies = {'other': 'default'}
-        elif isinstance(policies, basestring):
+        elif isinstance(policies, str):
             self.policies = {'other': policies}
         else:
             self.policies = {'other': 'default'}
@@ -529,7 +522,7 @@ class PysbAssembler(object):
         # the global policies of the PySB assembler
         if policies is not None:
             global_policies = self.policies
-            if isinstance(policies, basestring):
+            if isinstance(policies, str):
                 local_policies = {'other': policies}
             else:
                 local_policies = {'other': 'default'}

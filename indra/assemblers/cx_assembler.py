@@ -7,13 +7,6 @@ from collections import OrderedDict
 from indra.statements import *
 from indra.databases import context_client
 
-# Python 2
-try:
-    basestring
-# Python 3
-except NameError:
-    basestring = str
-
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
 
@@ -216,7 +209,7 @@ class CxAssembler():
         for db_name, db_ids in agent.db_refs.items():
             if isinstance(db_ids, int):
                 db_id = str(db_ids)
-            elif isinstance(db_ids, basestring):
+            elif isinstance(db_ids, str):
                 db_id = db_ids
             else:
                 db_id = db_ids[0]
