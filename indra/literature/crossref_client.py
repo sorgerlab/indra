@@ -8,15 +8,13 @@ from indra.literature import pubmed_client
 # Python3
 try:
     from functools import lru_cache
-    from urllib.parse import quote_plus
 # Python2
 except ImportError:
-    from urllib import quote_plus
     from functools32 import lru_cache
 
 
 crossref_url = 'http://api.crossref.org/'
-crossref_search_url = 'http://search.crossref.org/'
+crossref_search_url = 'http://search.crossref.org/dois'
 
 # THIS FILE IS NOT UNDER VERSION CONTROL
 # For more information see:
@@ -119,10 +117,9 @@ def doi_query(pmid, search_limit=10):
         warnings.warn('No page number found in Pubmed for PMID %s' % pmid)
         return None
     # Now query CrossRef using the title we've got
-    url = crossref_search_url + 'dois?q=' + \
-           quote_plus(pm_article_title.encode('utf-8')) + \
-          '&sort=score'
-    res = requests.get(url)
+    url = crossref_search_url
+    params = {'q': pm_article_title, 'sort': 'score'}
+    res = requests.get(cross_ref_search_url, params)
     if res.status_code != 200:
         print('Could not get DOI from CrossRef, code %d' % res.status_code)
         return None

@@ -5,18 +5,8 @@ import logging
 import pickle
 import csv
 import numpy as np
+import requests
 from matplotlib import pyplot as plt
-# Python 3 version
-try:
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
-    from urllib.parse import urlencode
-    from io import StringIO
-# Python 2 version
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import urlopen, HTTPError
-    from StringIO import StringIO
 from indra.preassembler import grounding_mapper as gm
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -59,33 +49,18 @@ def get_genes_for_go_id(goid):
     params = {'goid': goid, 'format':'tsv', 'db':'UniProtKB', 'tax':'9606',
               'col':'proteinSymbol'
            }
-    try:
-        res = urlopen(quickgo_url, data=urlencode(params).encode('utf-8'))
-    except HTTPError:
+    res = requests.get(quickgo_url, params)
+    if not res.status_code == 200:
         logging.error('Could not retrieve proteins associated with GO ID %s'
                       % goid)
         return None
-
     genes = set([])
-    # Python 3
-    if sys.version_info[0] >= 3:
-        # Convert the stream to unicode
-        tsv_str = res.read().decode('utf-8')
-        # csv.reader takes an iterable (by line), so we have to call
-        # splitlines() so that we don't iterate over individual characters
-        tsv_reader = csv.reader(tsv_str.splitlines(), delimiter='\t')
-        # No decoding necessary here
-        for row in tsv_reader:
-            genes.add(row[0])
-    # Python 2
-    else:
-        # Leave the stream as bytes
-        tsv_bytes = res.read()
-        tsv_reader = csv.reader(tsv_bytes.splitlines(),
-                                delimiter='\t'.encode('utf-8'))
-        # Decode here
-        for row in tsv_reader:
-            genes.add(row[0].decode('utf-8'))
+    # csv.reader takes an iterable (by line), so we have to call
+    # splitlines() so that we don't iterate over individual characters
+    tsv_reader = csv.reader(res.text.splitlines(), delimiter='\t')
+    # No decoding necessary here
+    for row in tsv_reader:
+        genes.add(row[0])
     return list(genes)
 
 
@@ -174,4 +149,3 @@ def analyze(filename):
         pickle.dump(go_stmt_map, f, protocol=2)
 
     plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
-

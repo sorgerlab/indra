@@ -5,13 +5,7 @@ import sys
 import getopt
 import xml.dom.minidom
 import logging
-
-try:
-    from urllib.request import Request, urlopen
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib2 import Request, urlopen
-    from urllib import urlencode
+import requests
 
 logger = logging.getLogger('trips')
 
@@ -34,13 +28,15 @@ def send_query(text, query_args=None):
         The HTML result returned by the web service.
     """
     if query_args is None:
-        qa = {}
-    qa['input'] = text
-    data = urlencode(qa)
-    req = Request(trips_url, data.encode('utf-8'))
-    res = urlopen(req, timeout=3600)
-    html = res.read()
-    return html.decode('utf-8')
+        query_args = {}
+    query_args.update({'input': text})
+    res = requests.get(trips_url, query_args, timeout=3600)
+    if not res.status_code == 200:
+        logger.error('Problem with TRIPS query: status code %s' %
+                     res.status_code)
+        return ''
+    # Gets unicode content
+    return res.text
 
 
 def get_xml(html):

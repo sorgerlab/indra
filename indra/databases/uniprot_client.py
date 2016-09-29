@@ -4,17 +4,15 @@ import os
 import csv
 import rdflib
 import logging
+import requests
 try:
     # Python 3
     from functools import lru_cache
-    from urllib.request import urlopen
     from urllib.error import HTTPError
-    from urllib.parse import urlencode
 except ImportError:
     # Python 2
     from functools32 import lru_cache
-    from urllib2 import urlopen, HTTPError
-    from urllib import urlencode
+    from urllib2 import HTTPError
 from indra.util import read_unicode_csv
 
 logger = logging.getLogger('uniprot')
@@ -91,17 +89,17 @@ def get_family_members(family_name, human_only=True):
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    res = urlopen(uniprot_url, urlencode(data).encode('utf-8'))
-    html = res.read().decode('utf-8')
-    if html:
-        protein_list = html.strip().split('\n')
-        gene_names = []
-        for p in protein_list:
-            gene_name = get_gene_name(p)
-            gene_names.append(gene_name)
-        return gene_names
-    else:
+    res = requests.get(uniprot_url, params=data)
+    if not res.status_code == 200 or not res.text:
         return None
+    # res.text gets us the Unicode
+    html = res.text
+    protein_list = html.strip().split('\n')
+    gene_names = []
+    for p in protein_list:
+        gene_name = get_gene_name(p)
+        gene_names.append(gene_name)
+    return gene_names
 
 def get_mnemonic(protein_id, web_fallback=True):
     """Return the UniProt mnemonic for the given UniProt ID.
@@ -218,12 +216,12 @@ def get_sequence(protein_id):
     except KeyError:
         pass
     url = uniprot_url + '%s.fasta' % protein_id
-    try:
-        res = urlopen(url)
-    except HTTPError:
+    res = requests.get(url)
+    if not res.status_code == 200:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
-    lines = [line.decode('utf-8') for line in res.readlines()]
+    # res.text is Unicode
+    lines = res.text.splitlines()
     seq = (''.join(lines[1:])).replace('\n','')
     return seq
 
