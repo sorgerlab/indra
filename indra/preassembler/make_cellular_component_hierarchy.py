@@ -107,7 +107,7 @@ def main():
         print('Parsing %s' % go_owl_file)
         g.parse(go_owl_file)
         with open(pkl_file, 'wb') as fh:
-            pickle.dump(g, fh)
+            pickle.dump(g, fh, protocol=2)
     else:
         print('Loading %s' % pkl_file)
         with open(pkl_file, 'rb') as fh:

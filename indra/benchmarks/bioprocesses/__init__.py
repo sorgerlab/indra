@@ -171,7 +171,7 @@ def analyze(filename):
                               'in_go': in_go, 'not_in_go': not_in_go}
 
     with open('go_stmt_map.pkl', 'wb') as f:
-        pickle.dump(go_stmt_map, f)
+        pickle.dump(go_stmt_map, f, protocol=2)
 
     plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
 

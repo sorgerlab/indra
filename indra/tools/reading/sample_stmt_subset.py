@@ -13,7 +13,7 @@ if __name__ == '__main__':
     input_file = sys.argv[1]
     sample_size = int(sys.argv[2])
     print("Opening input file...")
-    with open(input_file) as f:
+    with open(input_file, 'rb') as f:
         stmts_by_paper = pickle.load(f)
 
     pmids = stmts_by_paper.keys()
@@ -27,6 +27,6 @@ if __name__ == '__main__':
     subset = {paper_id: stmts_by_paper[paper_id] for paper_id in sample_ids}
 
     print("Pickling paper subset...")
-    with open('%s_subset.pkl' % sys.argv[1], 'w') as f:
-        pickle.dump(subset, f)
+    with open('%s_subset.pkl' % sys.argv[1], 'wb') as f:
+        pickle.dump(subset, f, protocol=2)
 

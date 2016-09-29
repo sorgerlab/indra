@@ -22,7 +22,7 @@ pf.set_fig_params()
 
 def load_file(stmts_file):
     logger.info("Loading results...")
-    with open(stmts_file) as f:
+    with open(stmts_file, 'rb') as f:
         results = pickle.load(f)
     return results
 

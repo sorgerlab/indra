@@ -42,7 +42,7 @@ def phosphosite_to_indra():
         stmts.append(st)
     logger.info('%d human-human phosphorylations in Phosphosite' % len(stmts))
     with open('phosphosite_indra.pkl', 'wb') as fh:
-        pickle.dump(stmts, fh)
+        pickle.dump(stmts, fh, protocol=2)
     return stmts
 
 def extract_phos():
@@ -77,7 +77,7 @@ def extract_phos():
     logger.info('%d top-level phosphorylations in RAS Machine' % len(stmts_unique))
 
     with open('mapped_unique_phos.pkl', 'wb') as fh:
-        pickle.dump(stmts_unique, fh)
+        pickle.dump(stmts_unique, fh, protocol=2)
 
     # Filter RAS Machine statements for direct and not hypothesis
     stmts = filter_direct(stmts_unique)
@@ -86,7 +86,7 @@ def extract_phos():
     logger.info('%d non-hypothesis phosphorylations in RAS Machine' % len(stmts))
 
     with open('filtered_phos.pkl', 'wb') as fh:
-        pickle.dump(stmts, fh)
+        pickle.dump(stmts, fh, protocol=2)
 
     return stmts
 

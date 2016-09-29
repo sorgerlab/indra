@@ -58,5 +58,5 @@ if __name__ == '__main__':
 
         stmts[pmid] = reach_proc.statements
 
-    with open('reach_stmts_%d_%d.pkl' % (start_ix, end_ix), 'w') as f:
-        pickle.dump(stmts, f)
+    with open('reach_stmts_%d_%d.pkl' % (start_ix, end_ix), 'wb') as f:
+        pickle.dump(stmts, f, protocol=2)

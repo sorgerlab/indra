@@ -12,7 +12,7 @@ class StmtScoring(object):
 
     def load_unscored_stmts_from_file(self, stmt_pkl_file):
         """Load a list of statements to score from a pickle file."""
-        with open(stmt_pkl_file) as f:
+        with open(stmt_pkl_file, 'rb') as f:
             stmts = pickle.load(f)
             self.load_unscored_stmts(stmts)
 
@@ -21,7 +21,7 @@ class StmtScoring(object):
 
     def load_scored_stmts_from_file(self, stmt_pkl_file):
         """Load a list of scored (or partially scored) stmts from pickle file."""
-        with open(stmt_pkl_file) as f:
+        with open(stmt_pkl_file, 'rb') as f:
             stmts = pickle.load(f)
             self.load_scored_stmts(stmts)
 

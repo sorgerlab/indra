@@ -28,6 +28,5 @@ if __name__ == '__main__':
     stmts = model.toplevel_stmts
     ml = MechLinker(stmts)
     linked_stmts = ml.link_statements()
-    #linked_stmts = pickle.load(open('rasmachine_linked.pkl', 'rb'))
     for stmt in linked_stmts:
         print_linked_stmt(stmt)

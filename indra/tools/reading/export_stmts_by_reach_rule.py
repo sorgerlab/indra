@@ -13,7 +13,7 @@ if __name__ == '__main__':
         sys.exit()
 
     input_file = sys.argv[1]
-    with open(input_file) as f:
+    with open(input_file, 'rb') as f:
         stmts_by_paper = pickle.load(f)
 
     stmts_by_rule = {}
@@ -26,8 +26,8 @@ if __name__ == '__main__':
             else:
                 stmt_list.append(stmt)
 
-    with open('reach_stmts_by_rule.pkl', 'w') as f:
-        pickle.dump(stmts_by_rule, f)
+    with open('reach_stmts_by_rule.pkl', 'wb') as f:
+        pickle.dump(stmts_by_rule, f, protocol=2)
 
     frequencies = [(k, len(v)) for k, v in stmts_by_rule.items()]
     frequencies.sort(key=lambda x: x[1], reverse=True)

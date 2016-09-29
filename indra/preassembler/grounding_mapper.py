@@ -3,6 +3,7 @@ from builtins import dict, str
 import os
 import csv
 import sys
+import pickle
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from itertools import groupby
@@ -290,7 +291,6 @@ gm = default_grounding_map
 
 
 if __name__ == '__main__':
-    import pickle
 
     if len(sys.argv) != 2:
         print("Usage: %s stmt_file" % sys.argv[0])
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     statement_file = sys.argv[1]
 
     logger.info("Opening statement file %s" % statement_file)
-    with open(statement_file) as f:
+    with open(statement_file, 'rb') as f:
         st = pickle.load(f)
 
     stmts = []

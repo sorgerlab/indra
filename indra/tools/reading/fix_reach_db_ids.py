@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
+import pickle
 
 if __name__ == '__main__':
-    import pickle
-    import sys
 
-    with open(sys.argv[1]) as f:
+    with open(sys.argv[1], 'rb') as f:
         paper_stmts = pickle.load(f)
 
     for stmts in paper_stmts.values():
@@ -23,5 +23,5 @@ if __name__ == '__main__':
                 if ag.db_refs.get('GO'):
                     ag.db_refs['GO'] = 'GO:%s' % ag.db_refs['GO']
 
-    with open('fixed.pkl', 'w') as f:
-        pickle.dump(paper_stmts, f)
+    with open('fixed.pkl', 'wb') as f:
+        pickle.dump(paper_stmts, f, protocol=2)

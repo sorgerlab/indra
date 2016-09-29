@@ -38,7 +38,8 @@ class IncrementalModel(object):
             self.stmts = {}
         else:
             try:
-                self.stmts = pickle.load(open(model_fname, 'rb'))
+                with open(model_fname, 'rb') as f:
+                    self.stmts = pickle.load(f)
             except:
                 logger.warning('Could not load %s, starting new model.' %
                                model_fname)
@@ -55,7 +56,7 @@ class IncrementalModel(object):
             IncrementalModel in. Default: model.pkl
         """
         with open(model_fname, 'wb') as fh:
-            pickle.dump(self.stmts, fh)
+            pickle.dump(self.stmts, fh, protocol=2)
 
     def _relevance_filter(self, stmts, filters=None):
         stmts_to_add = list(range(len(stmts)))

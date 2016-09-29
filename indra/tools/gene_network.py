@@ -66,7 +66,7 @@ class GeneNetwork(object):
         # Check for cached BEL stmt file
         if self.basename is not None and os.path.isfile(bel_stmt_path):
             logger.info("Loading BEL statements from %s" % bel_stmt_path)
-            with open(bel_stmt_path) as f:
+            with open(bel_stmt_path, 'rb') as f:
                 bel_statements = pickle.load(f)
         # No cache, so perform the queries
         else:
@@ -78,8 +78,8 @@ class GeneNetwork(object):
                     bel_statements += bel_proc.statements
             # Save to pickle file if we're caching
             if self.basename is not None:
-                with open(bel_stmt_path, 'w') as f:
-                    pickle.dump(bel_statements, f)
+                with open(bel_stmt_path, 'wb') as f:
+                    pickle.dump(bel_statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
             logger.info("Filtering statements to match gene list")
@@ -118,7 +118,7 @@ class GeneNetwork(object):
         # if it's there, return the statements from the cache
         if self.basename is not None and os.path.isfile(biopax_stmt_path):
             logger.info("Loading Biopax statements from %s" % biopax_stmt_path)
-            with open(biopax_stmt_path) as f:
+            with open(biopax_stmt_path, 'rb') as f:
                 bp_statements = pickle.load(f)
             return bp_statements
         # Check for cached file before querying Pathway Commons Web API
@@ -140,8 +140,8 @@ class GeneNetwork(object):
         bp.get_activity_modification()
         # Save statements to pickle file if we're caching
         if self.basename is not None:
-            with open(biopax_stmt_path, 'w') as f:
-                pickle.dump(bp.statements, f)
+            with open(biopax_stmt_path, 'wb') as f:
+                pickle.dump(bp.statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
             logger.info("Filtering statements to match gene list")
@@ -244,8 +244,8 @@ class GeneNetwork(object):
         # Save the results if we're caching
         if self.basename is not None:
             results_filename = '%s_results.pkl' % self.basename
-            with open(results_filename, 'w') as f:
-                pickle.dump(self.results, f)
+            with open(results_filename, 'wb') as f:
+                pickle.dump(self.results, f, protocol=2)
         return self.results
 
 

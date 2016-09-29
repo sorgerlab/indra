@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import sys
-import pickle
 import logging
 import itertools
 import collections
