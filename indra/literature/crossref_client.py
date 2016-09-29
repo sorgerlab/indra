@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import requests
-import json
 import re
 import warnings
 from indra.literature import pubmed_client

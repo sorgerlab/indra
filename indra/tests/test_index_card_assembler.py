@@ -4,10 +4,12 @@ import json
 import jsonschema
 from indra.statements import *
 from indra.assemblers.index_card_assembler import *
+from os.path import dirname, abspath, join
 
-schema_path = os.path.dirname(os.path.abspath(__file__)) +\
-             '/../resources/index_card_schema.json'
-schema = json.load(open(schema_path, 'rt'))
+schema_path = join(dirname(abspath(__file__)),
+                   '../resources/index_card_schema.json')
+with open(schema_path, 'rt') as fh:
+    schema = json.load(fh)
 
 braf = Agent('BRAF', db_refs={'UP': 'P15056'})
 map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})

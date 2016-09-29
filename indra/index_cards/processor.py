@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import json
 import objectpath
 from indra.databases import uniprot_client, chebi_client
 from indra.literature import id_lookup

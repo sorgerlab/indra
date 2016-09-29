@@ -135,10 +135,12 @@ def process_text(text, citation=None, offline=False):
             return None
         # TODO: we could use res.json() here to get a dict 
         # directly
+        # This is a unicode string
         json_str = res.text
+        # In Python2 this is a test against future str type
+        assert isinstance(json_str, str)
     with open('reach_output.json', 'wt') as fh:
-        out_str = json_str
-        fh.write(out_str)
+        fh.write(json_str)
     return process_json_str(json_str, citation)
 
 
@@ -276,7 +278,6 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    json_str = str(json_str)
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')

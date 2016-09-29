@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import json
 from indra.statements import *
 from indra.assemblers import CxAssembler
 

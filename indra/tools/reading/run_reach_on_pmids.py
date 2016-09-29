@@ -244,9 +244,12 @@ if __name__ == '__main__':
     def join_parts(prefix):
         """Join different REACH output JSON files into a single JSON."""
         try:
-            entities = json.load(open(prefix + '.uaz.entities.json'))
-            events = json.load(open(prefix + '.uaz.events.json'))
-            sentences = json.load(open(prefix + '.uaz.sentences.json'))
+            with open(prefix + '.uaz.entities.json', 'rt') as f:
+                entities = json.load(f)
+            with open(prefix + '.uaz.events.json', 'rt') as f:
+                events = json.load(f)
+            with open(prefix + '.uaz.sentences.json', 'rt') as f:
+                sentences = json.load(f)
         except IOError as e:
             logging.error('Failed to open JSON files for %s; REACH error?' %
                           prefix)
