@@ -6,14 +6,9 @@ import xml.etree.ElementTree as ET
 # Python3
 try:
     from functools import lru_cache
-    from urllib.parse import urlencode
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
 # Python2
 except ImportError:
     from functools32 import lru_cache
-    from urllib2 import urlopen, HTTPError
-    from urllib import urlencode
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('elsevier')
@@ -45,7 +40,6 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 
 
-@lru_cache(maxsize=100)
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
     if doi.lower().startswith('doi:'):
@@ -56,13 +50,12 @@ def download_article(doi):
                       api_key_file)
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
-    try:
-        res = urlopen(url, data=urlencode(params))
-    except HTTPError:
+    res = requests.get(url, params)
+    if not res.status_code == 200:
         logging.error('Could not download article %s' % doi)
         return None
     # Parse the content from the stream and then return the tree
-    xml_tree = ET.parse(res, parser=UTB())
+    xml_tree = ET.XML(res.content, parser=UTB())
     return xml_tree
 
 
@@ -140,11 +133,10 @@ def get_dois(query_str, count=100):
               'httpAccept': 'application/xml',
               'sort': '-coverdate',
               'field': 'doi'}
-    try:
-        res = urlopen(url, data=urlencode(params))
-    except:
+    res = requests.get(url, params)
+    if not res.status_code == 200:
         return None
-    tree = ET.parse(res, parser=UTB())
+    tree = ET.XML(res.content, parser=UTB())
     doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
     dois = [dt.text for dt in doi_tags]
     return dois

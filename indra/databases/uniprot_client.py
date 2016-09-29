@@ -92,6 +92,7 @@ def get_family_members(family_name, human_only=True):
     res = requests.get(uniprot_url, params=data)
     if not res.status_code == 200 or not res.text:
         return None
+    # res.text gets us the Unicode
     html = res.text
     protein_list = html.strip().split('\n')
     gene_names = []
@@ -219,6 +220,7 @@ def get_sequence(protein_id):
     if not res.status_code == 200:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
+    # res.text is Unicode
     lines = res.text.splitlines()
     seq = (''.join(lines[1:])).replace('\n','')
     return seq

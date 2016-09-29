@@ -156,5 +156,5 @@ def get_hgnc_entry(hgnc_id):
     res = requests.get(url, headers=headers)
     if not res.status_code == 200:
         return None
-    xml_tree = ET.XML(res.text, parser=UTB())
+    xml_tree = ET.XML(res.content, parser=UTB())
     return xml_tree

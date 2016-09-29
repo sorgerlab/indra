@@ -2,13 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import xml.etree.ElementTree as ET
 import os.path
-try:
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import urlopen, HTTPError
+import requests
 from indra.literature import pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -46,7 +40,7 @@ def id_lookup(paper_id, idtype=None):
     data = {'ids': paper_id}
     if idtype is not None:
         data['idtype'] = idtype
-    tree = pubmed_client.send_request(pmid_convert_url, urlencode(data))
+    tree = pubmed_client.send_request(pmid_convert_url, data)
     if tree is None:
         return {}
     record = tree.find('record')
@@ -68,21 +62,20 @@ def get_ids(search_term, retmax=1000):
 def get_xml(pmc_id):
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
-
+    # Request params
     params = {}
     params['verb'] = 'GetRecord'
     params['identifier'] = 'oai:pubmedcentral.nih.gov:%s' % pmc_id
     params['metadataPrefix'] = 'pmc'
-
-    try:
-        res = urlopen(pmc_url, urlencode(params).encode('utf-8'))
-    except HTTPError:
+    # Submit the request
+    res = requests.get(pmc_url, params)
+    if not res.status_code == 200:
         print("Couldn't download PMC%d" % pmc_id)
         return None
     # Read the bytestream
-    xml_str = res.read()
+    xml_bytes = res.content
     # Check for any XML errors; xml_str should still be bytes
-    tree = ET.XML(xml_str, parser=UTB())
+    tree = ET.XML(xml_bytes, parser=UTB())
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:
@@ -92,7 +85,7 @@ def get_xml(pmc_id):
         return None
     # If no error, return the XML as a unicode string
     else:
-        return xml_str.decode('utf-8')
+        return xml_bytes.decode('utf-8')
 
 
 def filter_pmids(pmid_list, source_type):
