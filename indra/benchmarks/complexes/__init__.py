@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
-import csv
 import pickle
 import logging
 from indra.statements import Complex
@@ -10,6 +9,7 @@ from indra.preassembler import grounding_mapper as gm
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.databases import biogrid_client as bg
 from indra.databases import hgnc_client, uniprot_client
+from indra.util import write_unicode_csv
 
 logger = logging.getLogger('complexes')
 
@@ -98,9 +98,7 @@ def analyze(filename):
     for stmt in indra_only:
         rows.append([stmt.members[0].name, stmt.members[1].name,
                      len(stmt.evidence)])
-    with open('unmatched_complexes.tsv', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(rows)
+    write_unicode_csv('unmatched_complexes.tsv', rows, delimiter='\t')
 
     return {'indra_only': indra_only,
             'bg_only': bg_only,

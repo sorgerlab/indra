@@ -5,6 +5,7 @@ import sys
 import csv
 import numpy as np
 from indra.assemblers.english_assembler import EnglishAssembler
+from indra.util import write_unicode_csv
 
 if __name__ == '__main__':
 
@@ -31,9 +32,8 @@ if __name__ == '__main__':
 
     frequencies = [(k, len(v)) for k, v in stmts_by_rule.items()]
     frequencies.sort(key=lambda x: x[1], reverse=True)
-    with open('reach_rule_frequencies.tsv', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(frequencies)
+    write_unicode_csv('reach_rule_frequencies.tsv', frequencies,
+                      delimiter='\t')
 
     sample_rows = []
     max_sample_size = 20
@@ -60,10 +60,5 @@ if __name__ == '__main__':
                                 stmt.evidence[0].text, rule, freq, stmt,
                                 is_direct])
 
-    with open('stmts_by_rule_to_curate.tsv', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(sample_rows)
-
-        # Sample 100 stmts from each rule and put in a .tsv file and upload to
-        # Google docs
-
+    write_unicode_csv('stmts_by_rule_to_curate.tsv', sample_rows,
+                      delimiter='\t')
