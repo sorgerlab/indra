@@ -17,7 +17,7 @@ if __name__ == '__main__':
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
 
     # Load the REACH reading output
-    with open('reach/reach_stmts_batch_4_eval.pkl') as f:
+    with open('reach/reach_stmts_batch_4_eval.pkl', 'rb') as f:
         reach_stmts = pickle.load(f)
 
     # Load the PMID to PMCID map
