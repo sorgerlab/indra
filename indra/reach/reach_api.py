@@ -278,6 +278,7 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
+    assert isinstance(json_str, str)
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')
