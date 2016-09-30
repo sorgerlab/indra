@@ -274,6 +274,8 @@ def verify_location(protein_id, residue, location):
     corresponding to the given UniProt ID, otherwise False.
     """
     seq = get_sequence(protein_id)
+    if seq is None:
+        return False
     try:
         loc_int = int(location)
     except ValueError:

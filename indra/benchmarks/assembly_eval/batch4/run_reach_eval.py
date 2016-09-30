@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import sys
 import shutil
 from indra import reach
@@ -6,6 +8,11 @@ from assembly_eval import have_file, run_assembly
 import csv
 import os
 import pickle
+from indra.util import read_unicode_csv
+import logging
+
+# Quiet the requests logging
+logging.getLogger('requests').setLevel(logging.ERROR)
 
 if __name__ == '__main__':
     # This script assumes that the papers have been processed offline,
@@ -16,13 +23,12 @@ if __name__ == '__main__':
 
     # Load the PMID to PMCID map
     pmid_to_pmcid = {}
-    with open('pmc_batch_4_id_map.txt') as f:
-        csvreader = csv.reader(f, delimiter='\t')
-        for row in csvreader:
-            pmid_to_pmcid[row[1]] = row[0]
+    csvreader = read_unicode_csv('pmc_batch_4_id_map.txt', delimiter='\t')
+    for row in csvreader:
+        pmid_to_pmcid[row[1]] = row[0]
 
     # Load the REACH reading output
-    with open(os.path.join(folder, 'reach_stmts_batch_4_eval.pkl')) as f:
+    with open(os.path.join(folder, 'reach_stmts_batch_4_eval.pkl'), 'rb') as f:
         stmts = pickle.load(f)
 
     # Iterate over all of the PMIDs

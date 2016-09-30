@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import pickle
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -9,23 +11,20 @@ from indra.mechlinker import MechLinker
 from indra.assemblers import PysbAssembler, IndexCardAssembler,\
                              EnglishAssembler
 from indra.belief import BeliefEngine
+from indra.util import write_unicode_csv
 
 def have_file(fname):
     return os.path.exists(fname)
 
 def print_stmts(stmts, file_name):
-    with open(file_name, 'wt') as fh:
-        for s in stmts:
-            agents = s.agent_list()
-            db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
-                        for a in agents if a is not None]
-            db_refs_str = (', '.join(db_refs)).encode('utf-8')
-            try:
-                fh.write('%s\t%s\t%s\n' %
-                        (s, db_refs_str, s.evidence[0].text.encode('utf-8')))
-                continue
-            except Exception as e:
-                pass
+    rows = []
+    for s in stmts:
+        agents = s.agent_list()
+        db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
+                    for a in agents if a is not None]
+        db_refs_str = (', '.join(db_refs)).encode('utf-8')
+        rows.append([str(s), db_refs_str, s.evidence[0].text])
+    write_unicode_csv(file_name, rows, delimiter='\t')
 
 def is_protein_or_chemical(agent):
     '''Return True if the agent is a protein/protein family or chemical.'''
@@ -85,7 +84,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     # Do grounding mapping here
     # Load the TRIPS-specific grounding map and add to the default
     # (REACH-oriented) grounding map:
-    trips_gm = load_grounding_map('trips_grounding_map.txt')
+    trips_gm = load_grounding_map('trips_grounding_map.csv')
     default_grounding_map.update(trips_gm)
     gm = GroundingMapper(default_grounding_map)
 
@@ -101,11 +100,12 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     # Instantiate the Preassembler
     pa = Preassembler(hierarchies)
     pa.add_statements(grounded_stmts)
-    print '%d statements collected in total.' % len(pa.stmts)
+    print('== %s ====================' % pmcid)
+    print('%d statements collected in total.' % len(pa.stmts))
 
     # Combine duplicates
     unique_stmts = pa.combine_duplicates()
-    print '%d statements after combining duplicates.' % len(unique_stmts)
+    print('%d statements after combining duplicates.' % len(unique_stmts))
 
     # Run BeliefEngine on unique statements
     epe = BeliefEngine(pa.unique_stmts)
@@ -115,7 +115,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     related_stmts = pa.combine_related()
     # Run BeliefEngine on hierarchy
     epe.set_hierarchy_probs(related_stmts)
-    print '%d statements after combining related.' % len(related_stmts)
+    print('%d statements after combining related.' % len(related_stmts))
 
     # Instantiate the mechanism linker
     ml = MechLinker(related_stmts)
@@ -124,10 +124,10 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     # Run BeliefEngine on linked statements
     epe.set_linked_probs(linked_stmts)
     # Print linked statements for debugging purposes
-    print 'Linked\n====='
+    print('Linked\n=====')
     for ls in linked_stmts:
-        print ls.inferred_stmt.belief, ls.inferred_stmt
-    print '============='
+        print(ls.inferred_stmt.belief, ls.inferred_stmt)
+    print('=============')
 
     # Combine all statements including linked ones
     all_statements = ml.statements + [ls.inferred_stmt for ls in linked_stmts]
@@ -148,7 +148,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
 
     # Dump top-level statements in a pickle
     with open(otherout_prefix + '.pkl', 'wb') as fh:
-        pickle.dump(nonbg_stmts, fh)
+        pickle.dump(nonbg_stmts, fh, protocol=2)
 
     # Flatten evidence for statements
     flattened_evidence_stmts = flatten_evidence(nonbg_stmts)
@@ -166,13 +166,13 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     for st in sorted(flattened_evidence_stmts,
                      key=lambda x: x.belief, reverse=True):
         if st.belief >= belief_cutoff:
-            print st.belief, st
+            print(st.belief, st)
         if st.belief < belief_cutoff:
-            print 'SKIP', st.belief, st
+            print('SKIP', st.belief, st)
 
         # If it's background knowledge, we skip the statement
         if is_background_knowledge(st):
-            print 'This statement is background knowledge - skipping.'
+            print('This statement is background knowledge - skipping.')
             continue
 
         # Assemble IndexCards
@@ -191,9 +191,9 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
 
     # Print the English-assembled model for debugging purposes
     ea = EnglishAssembler(top_stmts)
-    print '======================='
-    print ea.make_model()
-    print '======================='
+    print('=======================')
+    print(ea.make_model())
+    print('=======================')
 
     # Print the statement graph
     graph = render_stmt_graph(nonbg_stmts)

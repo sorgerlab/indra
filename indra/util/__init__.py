@@ -81,7 +81,7 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
                 yield [cell.decode(encoding) for cell in row]
 
 
-def write_unicode_csv(path, rows, delimiter=',', quotechar='"',
+def write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
                        quoting=csv.QUOTE_MINIMAL, lineterminator='\n',
                        encoding='utf-8'):
     # Python 3 version
@@ -93,11 +93,11 @@ def write_unicode_csv(path, rows, delimiter=',', quotechar='"',
             csv_writer = csv.writer(f, delimiter=delimiter, quotechar=quotechar,
                                 quoting=quoting, lineterminator=lineterminator)
             # Write the rows to the file
-            csv_writer.writerows()
+            csv_writer.writerows(rows)
     # Python 2 version
     else:
         # Open the file, no encoding specified
-        with open(filename, 'r') as f:
+        with open(filename, 'w') as f:
             # Next, get the csv writer, passing delimiter and quotechar as
             # bytestrings rather than unicode
             csv_writer = csv.writer(f, delimiter=delimiter.encode(encoding),
