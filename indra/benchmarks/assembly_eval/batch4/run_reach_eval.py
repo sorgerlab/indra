@@ -11,10 +11,11 @@ import pickle
 from indra.util import read_unicode_csv
 import logging
 
-# Quiet the requests logging
-logging.getLogger('requests').setLevel(logging.ERROR)
-
 if __name__ == '__main__':
+    # Quiet the requests logging
+    logging.getLogger('requests').setLevel(logging.ERROR)
+    logging.getLogger('urllib3').setLevel(logging.ERROR)
+
     # This script assumes that the papers have been processed offline,
     # e.g., using the submit_reading_pipeline.py script on Amazon,
     # and the results placed in a dict (mapping PMID -> lists of statements)
