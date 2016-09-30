@@ -34,8 +34,12 @@ install:
   - git submodule update --remote
   - pip install .
 script:
-  nosetests indra
-     --with-doctest --with-doctest-ignore-unicode
-     --with-coverage --cover-inclusive --cover-package=indra
+  #- nosetests indra
+  # --with-doctest --with-doctest-ignore-unicode
+  # --with-coverage --cover-inclusive --cover-package=indra
+  - cd indra/benchmarks/assembl_eval/batch4
+  - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz
+  - tar -xf trips_reach_batch4.gz
+  - python run_combined.py
 after_success:
   coveralls
