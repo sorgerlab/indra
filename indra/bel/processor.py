@@ -3,9 +3,10 @@ from builtins import dict, str
 import re
 import logging
 import collections
+from requests.utils import unquote
 from indra.statements import *
 from indra.databases import hgnc_client
-from requests.utils import unquote
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger('bel')
 
@@ -670,6 +671,13 @@ class BelProcessor(object):
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
+        if namespace == 'PFH':
+            indra_name = bel_to_indra.get(name)
+            if indra_name is None:
+                msg = 'Could not find mapping for BEL family: %s' % name
+                logger.warning(msg)
+            else:
+                db_refs['BE'] = indra_name
         agent = Agent(name, db_refs=db_refs)
         return agent
 
@@ -734,3 +742,15 @@ class BelProcessor(object):
         mc.position = mod_pos
         return mc
 
+def _build_bel_indra_map():
+    fname = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/bel_indra_map.tsv'
+    bel_to_indra = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        bel_name = row[0]
+        indra_name = row[1]
+        bel_to_indra[bel_name] = indra_name
+    return bel_to_indra
+
+bel_to_indra = _build_bel_indra_map()
