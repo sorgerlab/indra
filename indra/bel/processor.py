@@ -678,6 +678,8 @@ class BelProcessor(object):
                 logger.warning(msg)
             else:
                 db_refs['BE'] = indra_name
+                db_refs['TEXT'] = name
+                name = indra_name
         agent = Agent(name, db_refs=db_refs)
         return agent
 
