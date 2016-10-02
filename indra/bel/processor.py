@@ -1,60 +1,19 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
-import keyword
 import logging
 import collections
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF
 from indra.statements import *
 from indra.databases import hgnc_client
-# Python 3
-try:
-    from urllib.parse import unquote
-except ImportError:
-    from urllib import unquote
+from requests.utils import unquote
 
 logger = logging.getLogger('bel')
-
-BEL = Namespace("http://www.openbel.org/")
 
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>
     PREFIX belsc: <http://www.openbel.org/bel/>
     PREFIX belns: <http://www.openbel.org/bel/namespace/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
-
-class InvalidNameError(ValueError):
-    def __init__(self, name):
-        ValueError.__init__(self, "Not a valid name: %s" % name)
-
-def name_from_uri(uri):
-    """Make the URI term usable as a valid Python identifier, if possible.
-
-    First strips of the extra URI information by calling term_from_uri,
-    then checks to make sure the name is a valid Python identifier.
-    Currently fixes identifiers starting with numbers by prepending with
-    the letter 'p'. For other cases it raises an exception.
-
-    This function should be called when the string that is returned is to be
-    used as a PySB component name, which are required to be valid Python
-    identifiers.
-    """
-    name = term_from_uri(uri)
-    # Handle the case where the string starts with a number
-    if name[0].isdigit():
-        name = 'p' + name
-    if re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) \
-            and not keyword.iskeyword(name):
-        pass
-    else:
-        raise InvalidNameError(name)
-
-    return name
-
-def gene_name_from_uri(uri):
-    name = name_from_uri(uri).upper()
-    return name
 
 def namespace_from_uri(uri):
     """Return the entity namespace from the URI. Examples:
@@ -69,29 +28,23 @@ def namespace_from_uri(uri):
         return None
 
 def term_from_uri(uri):
-    """Basic conversion of RDF URIs to more friendly strings.
-
-    Removes prepended URI information, and replaces spaces and hyphens with
-    underscores.
-    """
+    """Removes prepended URI information from terms."""
     if uri is None:
         return None
     # This is to handle URIs like
-    # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
-    match = re.match('http://www.openbel.org/bel/namespace//(.*)', uri)
-    if match is not None:
-        term = match.groups()[0]
-    else:
-        term = uri.rsplit('/')[-1]
-    # Decode URL to handle spaces, special characters
-    term = unquote(term)
-    # Replace any spaces, hyphens, commas, or periods with underscores
-    term = term.replace(' ', '_')
-    term = term.replace('/', '_')
-    term = term.replace('-', '_')
-    term = term.replace(',', '_')
-    term = term.replace('.', '_')
-    return term
+    # http://www.openbel.org/bel/namespace/MAPK%20Erk1/3%20Family
+    patterns = ['http://www.openbel.org/bel/namespace/(.*)',
+                'http://www.openbel.org/vocabulary/(.*)',
+                'http://www.openbel.org/bel/(.*)']
+    for pr in patterns:
+        match = re.match(pr, uri)
+        if match is not None:
+            term = match.groups()[0]
+            term = unquote(term)
+            return term
+    # If none of the patterns match then the URI is actually a simple term
+    # for instance a site: "341" or a substitution: "sub(V,600,E)"
+    return uri
 
 def strip_statement(uri):
     uri = uri.replace(r'http://www.openbel.org/bel/', '')
@@ -162,7 +115,7 @@ class BelProcessor(object):
             evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz = self.get_agent(stmt[0], stmt[6])
-            act_type = name_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[1])
             sub = self.get_agent(stmt[2], stmt[7])
             mod = term_from_uri(stmt[3])
             residue = self._get_residue(mod)
@@ -434,7 +387,7 @@ class BelProcessor(object):
             # for modified protein abundances. Instead, the substitution
             # just comes back as a string, e.g., "sub(V,600,E)". This code
             # parses the arguments back out using a regular expression.
-            match = re.match('sub\(([A-Z])_([0-9]*)_([A-Z])\)', sub_expr)
+            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
             if match:
                 matches = match.groups()
                 wt_residue = matches[0]
@@ -486,14 +439,14 @@ class BelProcessor(object):
         for stmt in res_stmts:
             evidence = self.get_evidence(stmt[5])
             subj = self.get_agent(stmt[0], stmt[6])
-            subj_activity = name_from_uri(stmt[1]).lower()
+            subj_activity = term_from_uri(stmt[1]).lower()
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
                 is_activation = False
             else:
                 is_activation = True
             obj = self.get_agent(stmt[3], stmt[7])
-            obj_activity = name_from_uri(stmt[4]).lower()
+            obj_activity = term_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -707,7 +660,7 @@ class BelProcessor(object):
 
     @staticmethod
     def get_agent(concept, entity):
-        name = gene_name_from_uri(concept)
+        name = term_from_uri(concept)
         namespace = namespace_from_uri(entity)
         db_refs = {}
         if namespace == 'HGNC':
