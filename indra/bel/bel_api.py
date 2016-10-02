@@ -92,6 +92,6 @@ def process_belrdf(rdf_str):
 
     # Print some output about the process
     bp.print_statement_coverage()
-    logger.debug("\n--- Converted INDRA Statements -------------")
+    logger.info("\n--- Converted INDRA Statements -------------")
     bp.print_statements()
     return bp
