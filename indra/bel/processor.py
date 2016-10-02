@@ -21,11 +21,14 @@ def namespace_from_uri(uri):
     http://www.openbel.org/bel/p_RGD_Raf1 -> RGD
     http://www.openbel.org/bel/p_PFH_MEK1/2_Family -> PFH
     """
-    match = re.match('http://www.openbel.org/bel/p_([A-Za-z]+)_.*', uri)
-    if match is not None:
-        return match.groups()[0]
-    else:
-        return None
+    patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*']
+    for pr in patterns:
+        match = re.match(pr, uri)
+        if match is not None:
+            return match.groups()[0]
+    return None
 
 def term_from_uri(uri):
     """Removes prepended URI information from terms."""
