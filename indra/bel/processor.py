@@ -24,6 +24,7 @@ def namespace_from_uri(uri):
     """
     patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_complex_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/a_([A-Za-z]+)_.*']
     for pr in patterns:
         match = re.match(pr, uri)
@@ -36,8 +37,15 @@ def term_from_uri(uri):
     if uri is None:
         return None
     # This is to handle URIs like
+    # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
+    # or
     # http://www.openbel.org/bel/namespace/MAPK%20Erk1/3%20Family
-    patterns = ['http://www.openbel.org/bel/namespace/(.*)',
+    # In the current implementation, the order of the patterns
+    # matters.
+    patterns = ['http://www.openbel.org/bel/namespace//(.*)',
+                'http://www.openbel.org/vocabulary//(.*)',
+                'http://www.openbel.org/bel//(.*)',
+                'http://www.openbel.org/bel/namespace/(.*)',
                 'http://www.openbel.org/vocabulary/(.*)',
                 'http://www.openbel.org/bel/(.*)']
     for pr in patterns:
@@ -671,7 +679,7 @@ class BelProcessor(object):
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
-        if namespace == 'PFH':
+        elif namespace in ('PFH', 'SFAM'):
             indra_name = bel_to_indra.get(name)
             if indra_name is None:
                 msg = 'Could not find mapping for BEL family: %s' % name
@@ -680,6 +688,8 @@ class BelProcessor(object):
                 db_refs['BE'] = indra_name
                 db_refs['TEXT'] = name
                 name = indra_name
+        else:
+            logger.warning('Unhandled entity namespace: %s' % namespace)
         agent = Agent(name, db_refs=db_refs)
         return agent
 
