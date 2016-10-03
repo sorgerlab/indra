@@ -82,6 +82,24 @@ def get_entrez_id(hgnc_id):
     entrez_id = entrez_ids.get(hgnc_id)
     return entrez_id
 
+def get_hgnc_from_entrez(entrez_id):
+    """Return the HGNC ID corresponding to the given Entrez ID.
+
+    Parameters
+    ----------
+    entrez_id : str
+        The EntrezC ID to be converted, a number passed as a strig.
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given Entrez ID.
+    """
+    for k, v in entrez_ids.items():
+        if v == entrez_id and k not in hgnc_withdrawn:
+            hgnc_id = k
+            return hgnc_id
+
 def get_hgnc_name(hgnc_id):
     """Return the HGNC symbol corresponding to the given HGNC ID.
 
@@ -96,8 +114,7 @@ def get_hgnc_name(hgnc_id):
         The HGNC symbol corresponding to the given HGNC ID.
     """
     try:
-        #hgnc_name = hgnc_names[hgnc_id]
-        raise KeyError
+        hgnc_name = hgnc_names[hgnc_id]
     except KeyError:
         xml_tree = get_hgnc_entry(hgnc_id)
         if xml_tree is None:

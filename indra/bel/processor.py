@@ -688,8 +688,20 @@ class BelProcessor(object):
                 db_refs['BE'] = indra_name
                 db_refs['TEXT'] = name
                 name = indra_name
+        elif namespace == 'CHEBI':
+            chebi_id = chebi_name_id.get(name)
+            if chebi_id:
+                db_refs['CHEBI'] = chebi_id
+            else:
+                logger.warning('CHEBI name %s not found in map.' % chebi_name)
+        elif namespace == 'EGID':
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = str(hgnc_id)
+                name = hgnc_client.get_hgnc_name(hgnc_id)
         else:
             logger.warning('Unhandled entity namespace: %s' % namespace)
+            return None
         agent = Agent(name, db_refs=db_refs)
         return agent
 
@@ -765,4 +777,16 @@ def _build_bel_indra_map():
         bel_to_indra[bel_name] = indra_name
     return bel_to_indra
 
+def _build_chebi_map():
+    fname = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/bel_chebi_map.tsv'
+    chebi_name_id = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        chebi_name = row[0]
+        chebi_id = row[1]
+        chebi_name_id[chebi_name] = chebi_id
+    return chebi_name_id
+
 bel_to_indra = _build_bel_indra_map()
+chebi_name_id = _build_chebi_map()
