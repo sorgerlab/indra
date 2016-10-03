@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import os
 import json
 import logging
@@ -95,6 +96,7 @@ def get_publications(gene_names, save_json_name=None):
     return publications
 
 
+@python_2_unicode_compatible
 class Publication(object):
     def __init__(self, interaction, interaction_id):
         self.pmid = "PMID" + str(interaction['PUBMED_ID'])
@@ -105,10 +107,10 @@ class Publication(object):
         self.interaction_id = interaction_id
 
     def __str__(self):
-        return self.__repr__()
+        return "Publication(%s)" % self.pmid
 
     def __repr__(self):
-        return "Publication(%s)" % self.pmid
+        return str(self)
 
 
 def _extract_publications(res_dict, gene_names):

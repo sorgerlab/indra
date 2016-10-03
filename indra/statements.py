@@ -49,6 +49,7 @@ Statement.
 
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import os
 import logging
 import textwrap
@@ -87,7 +88,7 @@ class BoundCondition(object):
         self.agent = agent
         self.is_bound = is_bound
 
-
+@python_2_unicode_compatible
 class MutCondition(object):
     """Mutation state of an amino acid position of an Agent.
 
@@ -131,9 +132,10 @@ class MutCondition(object):
         return s
 
     def __repr__(self):
-        return 'MutCondition' + self.__str__()
+        return 'MutCondition' + str(self)
 
 
+@python_2_unicode_compatible
 class ModCondition(object):
     """Post-translational modification state at an amino acid position.
 
@@ -208,7 +210,7 @@ class ModCondition(object):
         return ms
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
     def equals(self, other):
         type_match = (self.mod_type == other.mod_type)
@@ -220,7 +222,7 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
-
+@python_2_unicode_compatible
 class Agent(object):
     """A molecular entity, e.g., a protein.
 
@@ -493,9 +495,10 @@ class Agent(object):
         return '%s(%s)' % (agent_name, attr_str)
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
 
+@python_2_unicode_compatible
 class Evidence(object):
     """Container for evidence supporting a given statement.
 
@@ -551,9 +554,10 @@ class Evidence(object):
         return ev_str
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
 
+@python_2_unicode_compatible
 class Statement(object):
     """The parent class of all statements.
 
@@ -597,14 +601,14 @@ class Statement(object):
         return str(key)
 
     def print_supports(self):
-        print('%s supported_by:' % self.__str__())
+        print('%s supported_by:' % str(self))
         if self.supported_by:
             print('-->')
             for s in self.supported_by:
                 s.print_supports()
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
     def equals(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
