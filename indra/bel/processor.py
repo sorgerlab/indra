@@ -694,6 +694,11 @@ class BelProcessor(object):
                 db_refs['CHEBI'] = chebi_id
             else:
                 logger.warning('CHEBI name %s not found in map.' % chebi_name)
+        elif namespace == 'EGID':
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = str(hgnc_id)
+                name = hgnc_client.get_hgnc_name(hgnc_id)
         else:
             logger.warning('Unhandled entity namespace: %s' % namespace)
             return None
