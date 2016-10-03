@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import io
 import sys
@@ -21,14 +23,14 @@ def get_email_pmids(cred_file):
         fh = open(cred_file, 'rt')
         uname, passwd = [l.strip() for l in fh.readlines()]
     except IOError:
-        print 'Could not access Gmail credentials.'
+        print('Could not access Gmail credentials.')
         return []
 
     M = gmail_client.gmail_login(uname, passwd)
     gmail_client.select_mailbox(M, 'INBOX')
     day_limit = 10
     pmids = gmail_client.get_message_pmids(M, day_limit)
-    print 'Collected %d PMIDs' % len(pmids)
+    print('Collected %d PMIDs' % len(pmids))
     return pmids
 
 def get_searchterm_pmids(search_terms, num_days=1):
@@ -111,11 +113,11 @@ def extend_model(model_name, model, pmids):
                     nabstracts += 1
                 else:
                     npapers += 1
-                print pmid, len(rp.statements)
+                print(pmid, len(rp.statements))
                 model.add_statements(pmid, rp.statements)
             else:
                 model.add_statements(pmid, [])
-                print 'No statement extracted from PMID%s' % pmid
+                print('No statement extracted from PMID%s' % pmid)
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
     model.preassemble(filters=global_filters)
@@ -135,7 +137,7 @@ def upload_to_ndex(stmts, cred_file):
         fh = open(cred_file, 'rt')
         uname, passwd, network_id = [l.strip() for l in fh.readlines()]
     except IOError:
-        print 'Could not access NDEx credentials.'
+        print('Could not access NDEx credentials.')
         return
     nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=uname, password=passwd)
@@ -148,14 +150,14 @@ def upload_to_ndex(stmts, cred_file):
     try:
         summary = nd.get_network_summary(network_id)
     except Exception as e:
-        print 'Could not get NDEx network summary.'
-        print e
+        print('Could not get NDEx network summary.')
+        print(e)
         return
     try:
         nd.update_cx_network(cx_str, network_id)
     except Exception as e:
-        print 'Could not update NDEx network.'
-        print e
+        print('Could not update NDEx network.')
+        print(e)
         return
     ver_str = summary.get('version')
     new_ver = _increment_ndex_ver(ver_str)
@@ -167,8 +169,8 @@ def upload_to_ndex(stmts, cred_file):
     try:
         nd.update_network_profile(network_id, profile)
     except Exception as e:
-        print 'Could not update NDEx network profile.'
-        print e
+        print('Could not update NDEx network profile.')
+        print(e)
         return
 
 if __name__ == '__main__':
@@ -180,11 +182,11 @@ if __name__ == '__main__':
     parser.add_argument('--belief', help='Belief threshold (between 0 and 1')
     args = parser.parse_args()
 
-    print '-------------------------'
-    print time.strftime('%c')
+    print('-------------------------')
+    print(time.strftime('%c'))
 
     if not args.model:
-        print 'Model name must be supplied as --model model_name.'
+        print('Model name must be supplied as --model model_name.')
         sys.exit()
     else:
         model_name = args.model
@@ -229,14 +231,14 @@ if __name__ == '__main__':
     pmids = []
     # Get email PMIDs
     if use_gmail:
-        print 'Getting PMIDs from emails'
-        print time.strftime('%c')
+        print('Getting PMIDs from emails')
+        print(time.strftime('%c'))
         try:
             email_pmids = get_email_pmids(gmail_cred)
             pmids += email_pmids
         except Exception as e:
-            print 'Could not get email PMIDs, continuing'
-            print e
+            print('Could not get email PMIDs, continuing')
+            print(e)
 
     # Get search PMIDs
     search_terms_file = os.path.join(model_path, model_name, 'search_terms.txt')
@@ -246,19 +248,19 @@ if __name__ == '__main__':
         if search_terms:
             pmids += get_searchterm_pmids(search_terms, num_days=5)
     if not pmids:
-        print 'No PMIDs found.'
+        print('No PMIDs found.')
         sys.exit()
     else:
-        print '%s PMIDs found.' % len(pmids)
+        print('%s PMIDs found.' % len(pmids))
 
     # Load the model
-    print 'Loading model'
-    print time.strftime('%c')
+    print('Loading model')
+    print(time.strftime('%c'))
     inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
     model = IncrementalModel(inc_model_file)
     stats = {}
-    print 'Preassembling model'
-    print time.strftime('%c')
+    print('Preassembling model')
+    print(time.strftime('%c'))
     model.preassemble(filters=global_filters)
 
     # Original statistics
@@ -283,8 +285,8 @@ if __name__ == '__main__':
     stats['orig_rules'] = len(pysb_assmb.model.rules)
 
     # Extend the model with PMIDs
-    print 'Extending model'
-    print time.strftime('%c')
+    print('Extending model')
+    print(time.strftime('%c'))
     stats['new_papers'], stats['new_abstracts'] =\
         extend_model(model_name, model, pmids)
 
@@ -309,20 +311,20 @@ if __name__ == '__main__':
     stats['new_rules'] = len(pysb_assmb.model.rules)
 
     # Save model
-    print 'Saving model'
-    print time.strftime('%c')
+    print('Saving model')
+    print(time.strftime('%c'))
     model.save(inc_model_file)
 
     # Upload the new, highly likely statements to NDEx
     if use_ndex:
-        print 'Uploading to NDEx'
-        print time.strftime('%c')
+        print('Uploading to NDEx')
+        print(time.strftime('%c'))
         upload_to_ndex(new_likely, ndex_cred)
 
     # Print and tweet the status message
-    print stats
+    print(stats)
     msg_str = make_status_message(stats)
     if msg_str is not None:
-        print msg_str
+        print(msg_str)
         if use_twitter:
             twitter_client.update_status(msg_str, twitter_cred)

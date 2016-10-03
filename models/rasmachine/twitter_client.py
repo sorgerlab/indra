@@ -1,10 +1,12 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import tweepy
 
 def get_oauth(auth_file):
     try:
         fh = open(auth_file, 'rt')
     except IOError:
-        print 'Could not get Twitter credentials.'
+        print('Could not get Twitter credentials.')
         return None
     lines = [l.strip() for l in fh.readlines()]
     oauth = tweepy.OAuthHandler(lines[0], lines[1])

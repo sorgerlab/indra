@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import os
 import sys
@@ -52,19 +54,19 @@ def get_text(msg):
             else:
                 msg_txt = base64.b64decode(parts)
     else:
-        print 'Can\'t handle content type %s' % content_type
+        print('Can\'t handle content type %s' % content_type)
     return msg_txt
 
 def print_msg(msg):
     headers = get_headers(msg)
     text = get_text(msg)
-    print '-----------'
-    print 'Subject: %s' % headers['Subject']
-    print 'From: %s' % headers['From']
-    print 'To: %s' % headers['To']
+    print('-----------')
+    print('Subject: %s' % headers['Subject'])
+    print('From: %s' % headers['From'])
+    print('To: %s' % headers['To'])
 
-    print 'Message:'
-    print text
+    print('Message:')
+    print(text)
 
 def get_message_pmids(M, day_limit=10):
     if day_limit is not None:
@@ -112,7 +114,7 @@ def gmail_login(email_addr, passwd):
     try:
         M.login(email_addr, passwd)
     except imaplib.IMAP4.error:
-        print 'Login failed'
+        print('Login failed')
         return None
     return M
 
