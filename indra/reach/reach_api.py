@@ -14,7 +14,7 @@ logger = logging.getLogger('reach')
 try:
     # For offline reading
     from indra.java_vm import autoclass, JavaException
-    from reach_reader import ReachReader
+    from indra.reach.reach_reader import ReachReader
     reach_reader = ReachReader()
     try_offline = True
 except Exception:
