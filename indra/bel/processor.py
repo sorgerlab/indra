@@ -25,7 +25,9 @@ def namespace_from_uri(uri):
     patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/[a-z]+_complex_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*']
+                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/g_([A-Za-z]+)_.*']
     for pr in patterns:
         match = re.match(pr, uri)
         if match is not None:
@@ -676,33 +678,39 @@ class BelProcessor(object):
         namespace = namespace_from_uri(entity)
         db_refs = {}
         if namespace == 'HGNC':
+            agent_name = name
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
+        elif namespace in ('MGI', 'RGD'):
+            agent_name = name
         elif namespace in ('PFH', 'SFAM'):
             indra_name = bel_to_indra.get(name)
             if indra_name is None:
+                agent_name = name
                 msg = 'Could not find mapping for BEL family: %s' % name
                 logger.warning(msg)
             else:
                 db_refs['BE'] = indra_name
                 db_refs['TEXT'] = name
-                name = indra_name
+                agent_name = indra_name
         elif namespace == 'CHEBI':
             chebi_id = chebi_name_id.get(name)
             if chebi_id:
                 db_refs['CHEBI'] = chebi_id
             else:
-                logger.warning('CHEBI name %s not found in map.' % chebi_name)
+                logger.warning('CHEBI name %s not found in map.' % chebi_id)
+            agent_name = name
         elif namespace == 'EGID':
             hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
-                name = hgnc_client.get_hgnc_name(hgnc_id)
+                agent_name = hgnc_client.get_hgnc_name(hgnc_id)
         else:
             logger.warning('Unhandled entity namespace: %s' % namespace)
-            return None
-        agent = Agent(name, db_refs=db_refs)
+            print('%s, %s' % (concept, entity))
+            agent_name = name
+        agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
     def get_evidence(self, statement):
