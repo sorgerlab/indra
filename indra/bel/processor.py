@@ -718,24 +718,6 @@ class BelProcessor(object):
         citation = None
         annotations = []
 
-        # Query for evidence text and citation
-        q_evidence = prefixes + """
-            SELECT ?evidenceText ?citation
-            WHERE {
-                <%s> belvoc:hasEvidence ?evidence .
-                ?evidence belvoc:hasEvidenceText ?evidenceText .
-                ?evidence belvoc:hasCitation ?citation .
-            }
-        """ % statement.format()
-        res_evidence = self.g.query(q_evidence)
-        for stmt in res_evidence:
-            evidence = stmt[0].toPython()
-            citation = stmt[1].toPython()
-        if citation is not None:
-            m = re.match('.*pubmed:([0-9]+)', citation)
-            if m is not None:
-                citation = m.groups()[0]
-
         # Query for all annotations of the statement
         q_annotations = prefixes + """
             SELECT ?annotation
@@ -748,9 +730,31 @@ class BelProcessor(object):
         for stmt in res_annotations:
             annotations.append(stmt[0].format())
 
-        ev = Evidence(source_api='bel', source_id=statement, pmid=citation,
-                      text=evidence, annotations=annotations)
-        return ev
+        # Query for evidence text and citation
+        q_evidence = prefixes + """
+            SELECT ?evidenceText ?citation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasEvidenceText ?evidenceText .
+                ?evidence belvoc:hasCitation ?citation .
+            }
+        """ % statement.format()
+        res_evidence = self.g.query(q_evidence)
+        evs = []
+        for stmt in res_evidence:
+            text = stmt[0].toPython()
+            citation = stmt[1].toPython()
+            if citation is not None:
+                m = re.match('.*pubmed:([0-9]+)', citation)
+                if m is not None:
+                    citation = m.groups()[0]
+                    ev = Evidence(source_api='bel', source_id=statement,
+                                  pmid=citation, text=text,
+                                  annotations=annotations)
+                    evs.append(ev)
+                else:
+                    logger.warning('Could not parse citation: %s' % citation)
+        return evs
 
     @staticmethod
     def _get_residue(mod):
