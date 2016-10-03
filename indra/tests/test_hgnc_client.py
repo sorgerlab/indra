@@ -20,3 +20,8 @@ def test_get_hgnc_name_nonexistent():
     hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
     assert(hgnc_name is None)
     assert unicode_strs(hgnc_name)
+
+def test_entrez_hgnc():
+    entrez_id = '653509'
+    hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
+    assert(hgnc_id == '10798')
