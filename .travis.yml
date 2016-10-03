@@ -34,9 +34,9 @@ install:
   - git submodule update --remote
   - pip install .
 script:
-  #- nosetests indra
-  # --with-doctest --with-doctest-ignore-unicode
-  # --with-coverage --cover-inclusive --cover-package=indra
+  - nosetests indra
+     --with-doctest --with-doctest-ignore-unicode
+     --with-coverage --cover-inclusive --cover-package=indra
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz
