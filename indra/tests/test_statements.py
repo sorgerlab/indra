@@ -1231,11 +1231,41 @@ def test_unicode_str_methods():
     print(ag)
     ev = Evidence(text='foo \U0001F4A9 bar')
     print(ev)
+    print(repr(ev))
+
     st = Phosphorylation(ag, ag, evidence=ev)
     print(st)
+    print(repr(st))
 
-if __name__ == '__main__':
-    test_unicode_str_methods()
+    st1 = Autophosphorylation(ag, evidence=ev)
+    print(st1)
+    print(repr(st1))
+
+    st = Activation(ag, 'activity', ag, 'activity', is_activation=True,
+                    evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = ActiveForm(ag, 'activity', True)
+    print(st)
+    print(repr(st))
+
+    st = HasActivity(ag, 'activity', True)
+    print(st)
+    print(repr(st))
+
+    st = RasGef(ag, 'gef', ag, evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = RasGap(ag, 'gap', ag, evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = Complex([ag, ag], evidence=ev)
+    print(st)
+    print(repr(st))
+
 
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)

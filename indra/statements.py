@@ -51,6 +51,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
+import sys
 import logging
 import textwrap
 import jsonpickle
@@ -554,10 +555,13 @@ class Evidence(object):
         return ev_str
 
     def __repr__(self):
+        if sys.version_info[0] >= 3:
+            return str(self)
+        else:
+            return str(self).encode('utf-8')
         return str(self)
 
 
-@python_2_unicode_compatible
 class Statement(object):
     """The parent class of all statements.
 
@@ -608,7 +612,10 @@ class Statement(object):
                 s.print_supports()
 
     def __repr__(self):
-        return str(self)
+        if sys.version_info[0] >= 3:
+            return str(self)
+        else:
+            return str(self).encode('utf-8')
 
     def equals(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
@@ -652,6 +659,7 @@ class Statement(object):
             return None
 
 
+@python_2_unicode_compatible
 class Modification(Statement):
     """Generic statement representing the modification of a protein.
 
@@ -741,6 +749,7 @@ class Modification(Statement):
         return s
 
 
+@python_2_unicode_compatible
 class SelfModification(Statement):
     """Generic statement representing the self-modification of a protein.
 
@@ -921,7 +930,7 @@ class Farnesylation(Modification):
     """Farnesylation modification."""
     pass
 
-
+@python_2_unicode_compatible
 class Activation(Statement):
     """Indicates that the activity of a protein affects the activity of another.
 
@@ -1023,6 +1032,7 @@ class RasGtpActivation(Activation):
     pass
 
 
+@python_2_unicode_compatible
 class ActiveForm(Statement):
     """Specifies conditions causing an Agent to be active or inactive.
 
@@ -1090,6 +1100,8 @@ class ActiveForm(Statement):
                   (self.is_active == other.is_active)
         return matches
 
+
+@python_2_unicode_compatible
 class HasActivity(Statement):
     """States that an Agent has or doesn't have a given activity type.
 
@@ -1157,6 +1169,8 @@ class HasActivity(Statement):
                   (self.has_activity == other.has_activity)
         return matches
 
+
+@python_2_unicode_compatible
 class RasGef(Statement):
     """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
 
@@ -1223,6 +1237,7 @@ class RasGef(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class RasGap(Statement):
     """Acceleration of a Ras protein's GTP hydrolysis rate by a GAP.
 
@@ -1289,6 +1304,7 @@ class RasGap(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class Complex(Statement):
     """A set of proteins observed to be in a complex.
 
@@ -1358,6 +1374,7 @@ class Complex(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class Translocation(Statement):
     """The translocation of a molecular agent from one location to another.
 
