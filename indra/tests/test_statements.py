@@ -1226,6 +1226,17 @@ def test_homodimer_bound_to():
     assert not st1.matches(st3)
     assert not st3.matches(st2)
 
+def test_unicode_str_methods():
+    ag = Agent('MAPK1\U0001F4A9')
+    print(ag)
+    ev = Evidence(text='foo \U0001F4A9 bar')
+    print(ev)
+    st = Phosphorylation(ag, ag, evidence=ev)
+    print(st)
+
+if __name__ == '__main__':
+    test_unicode_str_methods()
+
 # TODO expand tests to also check for things that should NOT match (different
 # agent names)
 
