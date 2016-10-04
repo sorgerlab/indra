@@ -5,10 +5,6 @@ from assembly_eval import have_file, run_assembly
 import logging
 
 if __name__ == '__main__':
-    # Quiet the requests logging
-    logging.getLogger('requests').setLevel(logging.ERROR)
-    logging.getLogger('urllib3').setLevel(logging.ERROR)
-
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
     # Use the existing EKB extractions.
     for pmcid in pmc_ids:
