@@ -163,8 +163,16 @@ def get_reach_metadata(pmid):
 
 def get_reach_output(pmid):
     reach_key = get_reach_key(pmid)
-    reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
-    meta = reach_s3obj['Metadata']
+    try:
+        reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] =='NoSuchKey':
+            logger.info('No REACH output found on S3 for key' % reach_key)
+            reach_version = None
+        # If there was some other kind of problem, re-raise the exception
+        else:
+            raise e
+    #meta = reach_s3obj['Metadata']
     reach_gz = reach_s3obj['Body'].read()
     # Gunzip the the content
     reach_bytes = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
