@@ -49,7 +49,7 @@ if __name__ == '__main__':
         print("Processing")
         try:
             reach_proc = reach.process_json_str(reach_json,
-                                                citation='PMID%s' % pmid)
+                                                citation=pmid)
         # If there's a problem, skip it
         except Exception as e:
             print("Exception processing %s" % pmid)

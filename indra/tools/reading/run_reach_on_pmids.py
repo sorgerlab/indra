@@ -145,9 +145,9 @@ if __name__ == '__main__':
                         (content_type, pmid))
             continue
         # Write the content to a file with the appropriate extension
-        with open(content_path, 'w') as f:
+        with open(content_path, 'wb') as f:
             # The XML string is Unicode
-            enc = content.encode('utf8')
+            enc = content.encode('utf-8')
             f.write(enc)
     logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
                 '%d txt (incl. Elsevier), %d abstract, %d no content' %

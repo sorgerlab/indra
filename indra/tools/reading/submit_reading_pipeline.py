@@ -1,4 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, \
+                       division
 from builtins import dict, str
 import sys
 import subprocess
@@ -37,19 +38,19 @@ if __name__ == '__main__':
     # running num_nodes jobs, each with num_cores assigned to each. The papers
     # are divided up into chunks such that all the papers will be processed in
     # a single round.
-    if num_pmids / int(num_nodes) == num_pmids / float(num_nodes):
+    if num_pmids // num_nodes == num_pmids / num_nodes:
         node_chunk_size = int(num_pmids / num_nodes)
     else:
-        node_chunk_size = int(num_pmids / num_nodes) + 1
+        node_chunk_size = int((num_pmids // num_nodes) + 1)
     node_start_pts = range(0, num_pmids, node_chunk_size)
 
     for node_start_ix in node_start_pts:
         node_end_ix = node_start_ix + node_chunk_size
 
         cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-N', REACH_JOB_NAME,
-                    '-pe', 'orte', str(num_cores), 'python',
-                    'run_reach_on_pmids.py', pmid_list, tmp_dir,
-                    str(num_cores), str(node_start_ix),
+                    '-pe', 'orte', str(num_cores), 'python', '-m',
+                    'indra.tools.reading.run_reach_on_pmids', pmid_list,
+                    tmp_dir, str(num_cores), str(node_start_ix),
                     str(node_end_ix)]
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
@@ -58,18 +59,19 @@ if __name__ == '__main__':
     # will be parallelized across cores rather than nodes, so we divide the
     # jobs accordingly. We make the start of these jobs contingent on the
     # completion of all of the REACH jobs.
-    if num_pmids / int(num_cores * num_nodes) == \
-       num_pmids / float(num_cores * num_nodes):
+    if num_pmids // (num_cores * num_nodes) == \
+       num_pmids / (num_cores * num_nodes):
         core_chunk_size = int(num_pmids / (num_cores * num_nodes))
     else:
-        core_chunk_size = int(num_pmids / (num_cores * num_nodes)) + 1
+        core_chunk_size = int((num_pmids // (num_cores * num_nodes)) + 1)
     core_start_pts = range(0, num_pmids, core_chunk_size)
 
     for core_start_ix in core_start_pts:
         core_end_ix = core_start_ix + core_chunk_size
-        cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-hold_jid', REACH_JOB_NAME,
-                    '-N', PROCESS_JOB_NAME, 'python', 'process_reach_from_s3.py',
-                    pmid_list, str(core_start_ix), str(core_end_ix)]
+        cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-hold_jid',
+                    REACH_JOB_NAME, '-N', PROCESS_JOB_NAME, 'python', '-m',
+                    'indra.tools.reading.process_reach_from_s3', pmid_list,
+                    str(core_start_ix), str(core_end_ix)]
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
@@ -77,7 +79,8 @@ if __name__ == '__main__':
     # all of the pickle files produced into a single file.
     cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-hold_jid', PROCESS_JOB_NAME,
                 '-N', ASSEMBLE_JOB_NAME, '-m', 'aes', '-M',
-                'bachmanjohn@gmail.com', 'python', 'assemble_reach_stmts.py',
+                'bachmanjohn@gmail.com', 'python', '-m',
+                'indra.tools.reading.assemble_reach_stmts',
                 'reach_stmts_*.pkl']
     print(' '.join(cmd_list))
     subprocess.call(cmd_list)
