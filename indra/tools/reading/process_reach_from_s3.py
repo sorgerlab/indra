@@ -34,14 +34,14 @@ if __name__ == '__main__':
 
     stmts = {}
     for ix, pmid in enumerate(pmid_list[start_ix:end_ix]):
-        reach_json = s3_client.get_reach_output(pmid)
+        reach_json_str = s3_client.get_reach_json_str(pmid)
         # Logging message will have been produced by get_reach_output
-        if reach_json is None:
+        if reach_json_str is None:
             continue
         # Run the REACH processor on the JSON
         try:
             logger.info('%d: Processing %s' % (ix, pmid))
-            reach_proc = reach.process_json_str(reach_json, citation=pmid)
+            reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
         # If there's a problem, skip it
         except Exception as e:
             print("Exception processing %s" % pmid)
