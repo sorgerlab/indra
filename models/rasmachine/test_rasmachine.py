@@ -1,7 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from os.path import join, abspath, dirname
 from rasmachine import make_status_message
-from rasmachine import _increment_ndex_ver
+from rasmachine import _increment_ndex_ver, get_email_pmids
+import gmail_client
 
 stats = {}
 stats['new_abstracts'] = 0
@@ -10,6 +12,19 @@ stats['orig_stmts'] = 10
 stats['new_stmts'] = 10
 stats['orig_top'] = 10
 stats['new_top'] = 10
+
+def test_gmail_client():
+    cred_file = join(dirname(abspath(__file__)), 'ras_test', 'gmail.txt')
+    pmids = get_email_pmids(cred_file)
+
+def test_gmail_get_message():
+    cred_file = join(dirname(abspath(__file__)), 'ras_test', 'gmail.txt')
+    with open(cred_file, 'rb') as fh:
+        uname, passwd = [l.strip().decode('utf-8') for l in fh.readlines()]
+    M = gmail_client.gmail_login(uname, passwd)
+    # Get the mailbox ID of the INBOX
+    mbox = gmail_client.select_mailbox(M, 'INBOX')
+    pmids = gmail_client.get_message_pmids(M, day_limit=10)
 
 def test_ndex_ver():
     assert(_increment_ndex_ver(None) == '1.0')
