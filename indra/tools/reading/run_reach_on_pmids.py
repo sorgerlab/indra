@@ -4,8 +4,6 @@ import os
 import sys
 import tempfile
 import shutil
-import boto3
-import botocore
 import subprocess
 import glob
 import json
@@ -36,9 +34,6 @@ if __name__ == '__main__':
 
     # Logger
     logger = logging.getLogger('runreach')
-    logging.getLogger('boto3').setLevel(logging.CRITICAL)
-    logging.getLogger('botocore').setLevel(logging.CRITICAL)
-    logging.getLogger('requests').setLevel(logging.CRITICAL)
 
     # Load the list of PMIDs from the given file
     with open(pmid_list_file) as f:
