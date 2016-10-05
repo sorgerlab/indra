@@ -3,6 +3,7 @@ from builtins import dict, str
 import os
 import logging
 import xml.etree.ElementTree as ET
+import requests
 # Python3
 try:
     from functools import lru_cache
