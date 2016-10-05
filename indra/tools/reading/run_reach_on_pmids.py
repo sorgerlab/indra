@@ -64,7 +64,8 @@ if __name__ == '__main__':
     # Otherwise, check if we've read the PMIDs already
     else:
         for pmid in pmids_in_range:
-            found_reach_version = s3_client.get_reach_version(pmid)
+            (read_reach_version, read_source_text) = \
+                                    s3_client.get_reach_metadata(pmid)
             # Found it, same version
             if found_reach_version is not None and \
                found_reach_version == reach_version:

@@ -15,9 +15,6 @@ if __name__ == '__main__':
 
     pmid_list = sys.argv[1]
     logger = logging.getLogger('upload_content')
-    logging.getLogger('boto3').setLevel(logging.CRITICAL)
-    logging.getLogger('botocore').setLevel(logging.CRITICAL)
-    logging.getLogger('requests').setLevel(logging.CRITICAL)
 
     with open(pmid_list) as f:
         pmids = [line.strip('\n') for line in f.readlines()]
