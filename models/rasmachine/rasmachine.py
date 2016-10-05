@@ -20,8 +20,8 @@ global_filters = ['grounding', 'prior_one', 'human_only']
 
 def get_email_pmids(cred_file):
     try:
-        fh = open(cred_file, 'rt')
-        uname, passwd = [l.strip() for l in fh.readlines()]
+        with open(cred_file, 'rt') as fh:
+            uname, passwd = [l.strip() for l in fh.readlines()]
     except IOError:
         print('Could not access Gmail credentials.')
         return []
@@ -134,8 +134,8 @@ def _increment_ndex_ver(ver_str):
 
 def upload_to_ndex(stmts, cred_file):
     try:
-        fh = open(cred_file, 'rt')
-        uname, passwd, network_id = [l.strip() for l in fh.readlines()]
+        with open(cred_file, 'rt') as fh:
+            uname, passwd, network_id = [l.strip() for l in fh.readlines()]
     except IOError:
         print('Could not access NDEx credentials.')
         return
@@ -153,6 +153,7 @@ def upload_to_ndex(stmts, cred_file):
         print('Could not get NDEx network summary.')
         print(e)
         return
+    """
     try:
         nd.update_cx_network(cx_str, network_id)
     except Exception as e:
@@ -172,6 +173,7 @@ def upload_to_ndex(stmts, cred_file):
         print('Could not update NDEx network profile.')
         print(e)
         return
+    """
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -222,7 +224,8 @@ if __name__ == '__main__':
     if args.belief:
         if not os.path.exists(args.belief):
             BELIEF_THRESHOLD = 0.95
-        belief_str = open(args.belief, 'rt').read().strip()
+        with open(args.belief, 'rt') as f:
+            belief_str = f.read().strip()
         BELIEF_THRESHOLD = float(belief_str)
     else:
         BELIEF_THRESHOLD = 0.95
@@ -243,8 +246,8 @@ if __name__ == '__main__':
     # Get search PMIDs
     search_terms_file = os.path.join(model_path, model_name, 'search_terms.txt')
     if os.path.exists(search_terms_file):
-        search_terms = [l.strip() for l in
-                    open(search_terms_file, 'rt').readlines()]
+        with open(search_terms_file, 'rt') as f:
+            search_terms = [l.strip() for l in f.readlines()]
         if search_terms:
             pmids += get_searchterm_pmids(search_terms, num_days=5)
     if not pmids:
@@ -288,7 +291,7 @@ if __name__ == '__main__':
     print('Extending model')
     print(time.strftime('%c'))
     stats['new_papers'], stats['new_abstracts'] =\
-        extend_model(model_name, model, pmids)
+                            extend_model(model_name, model, pmids[0:2])
 
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
@@ -326,5 +329,7 @@ if __name__ == '__main__':
     msg_str = make_status_message(stats)
     if msg_str is not None:
         print(msg_str)
+        """
         if use_twitter:
             twitter_client.update_status(msg_str, twitter_cred)
+        """
