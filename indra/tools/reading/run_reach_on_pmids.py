@@ -4,8 +4,6 @@ import os
 import sys
 import tempfile
 import shutil
-import boto3
-import botocore
 import subprocess
 import glob
 import json
@@ -36,9 +34,6 @@ if __name__ == '__main__':
 
     # Logger
     logger = logging.getLogger('runreach')
-    logging.getLogger('boto3').setLevel(logging.CRITICAL)
-    logging.getLogger('botocore').setLevel(logging.CRITICAL)
-    logging.getLogger('requests').setLevel(logging.CRITICAL)
 
     # Load the list of PMIDs from the given file
     with open(pmid_list_file) as f:
@@ -145,9 +140,9 @@ if __name__ == '__main__':
                         (content_type, pmid))
             continue
         # Write the content to a file with the appropriate extension
-        with open(content_path, 'w') as f:
+        with open(content_path, 'wb') as f:
             # The XML string is Unicode
-            enc = content.encode('utf8')
+            enc = content.encode('utf-8')
             f.write(enc)
     logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
                 '%d txt (incl. Elsevier), %d abstract, %d no content' %

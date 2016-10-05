@@ -162,19 +162,36 @@ def get_reach_metadata(pmid):
 
 
 def get_reach_output(pmid):
+    # Get the REACH JSON as unicode
+    reach_json_str = get_reach_json_str(pmid)
+    # Now create the JSON object--the resulting obj will contain un-escaped
+    # unicode data
+    if reach_json_str is None:
+        return None
+    else:
+        reach_json = json.loads(reach_json_str)
+        return reach_json
+
+
+def get_reach_json_str(pmid):
     reach_key = get_reach_key(pmid)
-    reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
-    meta = reach_s3obj['Metadata']
+    try:
+        reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] =='NoSuchKey':
+            logger.info('No REACH output found on S3 for key' % reach_key)
+            return None
+        # If there was some other kind of problem, re-raise the exception
+        else:
+            raise e
+    #meta = reach_s3obj['Metadata']
     reach_gz = reach_s3obj['Body'].read()
     # Gunzip the the content
     reach_bytes = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
     # Convert from bytes to str (shouldn't affect content since all
     # Unicode should be escaped in the JSON)
     reach_uni = reach_bytes.decode('utf-8')
-    # Now create the JSON object--the resulting obj will contain un-escaped
-    # unicode data
-    reach_json = json.loads(reach_uni)
-    return reach_json
+    return reach_uni
 
 
 def put_reach_output(reach_output, pmid, reach_version, source_text):
