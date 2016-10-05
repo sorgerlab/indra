@@ -12,6 +12,13 @@ import pysb.export
 from indra import statements as ist
 from indra.databases import context_client
 
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
+
 logger = logging.getLogger('pysb_assembler')
 
 SelfExporter.do_export = False
@@ -475,7 +482,7 @@ class PysbAssembler(object):
         self.model = None
         if policies is None:
             self.policies = {'other': 'default'}
-        elif isinstance(policies, str):
+        elif isinstance(policies, basestring):
             self.policies = {'other': policies}
         else:
             self.policies = {'other': 'default'}

@@ -12,6 +12,12 @@ try:
 # Python 2
 except ImportError:
     from cStringIO import StringIO as BytesIO
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 # Logger
 logger = logging.getLogger('s3_client')
@@ -172,7 +178,7 @@ def get_reach_output(pmid):
 
 
 def put_reach_output(reach_output, pmid, reach_version, source_text):
-    if not isinstance(reach_version, str):
+    if not isinstance(reach_version, basestring):
         raise ValueError("REACH version must be a string.")
     full_json_gz = gzip_string(json.dumps(reach_output), 'reach_output.json')
     reach_key = get_reach_key(pmid)

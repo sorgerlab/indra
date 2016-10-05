@@ -8,6 +8,12 @@ import requests
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from indra.reach.processor import ReachProcessor
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 logger = logging.getLogger('reach')
 
@@ -278,7 +284,7 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    assert isinstance(json_str, str)
+    assert isinstance(json_str, basestring)
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')
