@@ -6,6 +6,12 @@ from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 from indra.util import read_unicode_csv
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
@@ -126,8 +132,8 @@ class SiteMapper(object):
                 isinstance(stmt, SelfModification)) and \
                  stmt.residue is not None and stmt.position is not None:
                 # Make sure we didn't end up with lists by accident
-                assert isinstance(stmt.residue, str) and \
-                       isinstance(stmt.position, str)
+                assert isinstance(stmt.residue, basestring) and \
+                       isinstance(stmt.position, basestring)
                 # Get the right agent depending on whether this is a
                 # Modification or SelfModification statement
                 agent_to_check = (stmt_copy.sub
@@ -317,8 +323,8 @@ def _get_uniprot_id(agent):
         if up_id is None:
             return None
     # If the UniProt ID is a list then choose the first one.
-    if not isinstance(up_id, str) and \
-       isinstance(up_id[0], str):
+    if not isinstance(up_id, basestring) and \
+       isinstance(up_id[0], basestring):
         up_id = up_id[0]
     return up_id
 

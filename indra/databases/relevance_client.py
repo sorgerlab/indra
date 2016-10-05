@@ -2,6 +2,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 from indra.databases import ndex_client
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 logging = logging.getLogger('relevance')
 
@@ -50,7 +56,7 @@ def get_relevant_nodes(network_id, query_nodes):
     """
     url = ndex_relevance + '/rank_entities'
     kernel_id = get_heat_kernel(network_id)
-    if isinstance(query_nodes, str):
+    if isinstance(query_nodes, basestring):
         query_nodes = [query_nodes]
     params = {'identifier_set': query_nodes,
               'kernel_id': kernel_id}

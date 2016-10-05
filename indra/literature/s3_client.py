@@ -12,6 +12,12 @@ try:
 # Python 2
 except ImportError:
     from cStringIO import StringIO as BytesIO
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 # Logger
 logger = logging.getLogger('s3_client')
@@ -130,17 +136,20 @@ def put_abstract(pmid, text):
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
-def get_reach_version(pmid):
+def get_reach_metadata(pmid):
     reach_key = get_reach_key(pmid)
     try:
         reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
         logger.info("%s: found REACH output on S3; checking version" % pmid)
         reach_metadata = reach_gz_obj['Metadata']
-        reach_version = reach_metadata.get('reach_version')
         # The REACH version string comes back as str in Python 2, not unicode
         # Using str (instead of .decode) should work in both Python 2 and 3
+        reach_version = reach_metadata.get('reach_version')
         if reach_version is not None:
             reach_version = str(reach_version)
+        source_text = reach_metadata.get('source_text')
+        if source_text is not None:
+            source_text = str(source_text)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
@@ -149,7 +158,7 @@ def get_reach_version(pmid):
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
-    return reach_version
+    return (reach_version, source_text)
 
 
 def get_reach_output(pmid):
@@ -169,7 +178,7 @@ def get_reach_output(pmid):
 
 
 def put_reach_output(reach_output, pmid, reach_version, source_text):
-    if not isinstance(reach_version, str):
+    if not isinstance(reach_version, basestring):
         raise ValueError("REACH version must be a string.")
     full_json_gz = gzip_string(json.dumps(reach_output), 'reach_output.json')
     reach_key = get_reach_key(pmid)

@@ -27,7 +27,7 @@ def make_term(ns_name, id):
     elif ns_name == 'BE':
         term = en.term(id)
     else:
-        raise ValueError("Unknown namespace %s" % ns)
+        raise ValueError("Unknown namespace %s" % ns_name)
     return term
 
 

@@ -202,7 +202,7 @@ class ReachProcessor(object):
                     # When the controller is not a simple entity
                     if controller is None:
                         if a['argument-type'] == 'complex':
-                            controllers = a.get('args').values()
+                            controllers = list(a.get('args').values())
                             controller_agent =\
                                 self._get_agent_from_entity(controllers[0])
                             bound_agents = [self._get_agent_from_entity(c) 

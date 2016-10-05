@@ -3,6 +3,12 @@ from builtins import dict, str
 import logging
 import requests
 from indra.java_vm import autoclass, JavaException
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 logger = logging.getLogger('biopax')
 
@@ -43,7 +49,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         return None
     params['kind'] = kind_str
     # Get the source string
-    if isinstance(source, str):
+    if isinstance(source, basestring):
         source_str = source
     else:
         source_str = ','.join(source)
@@ -54,7 +60,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
-        if isinstance(target, str):
+        if isinstance(target, basestring):
             target_str = target
         else:
             target_str = ','.join(target)

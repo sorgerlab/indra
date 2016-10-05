@@ -10,10 +10,6 @@ from indra.util import read_unicode_csv
 import rasmodel
 
 if __name__ == '__main__':
-    # Quiet the requests logging
-    logging.getLogger('requests').setLevel(logging.ERROR)
-    logging.getLogger('urllib3').setLevel(logging.ERROR)
-
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
 
     # Load the REACH reading output

@@ -1,6 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import ndex_client
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 ndex_context = 'http://general.bigmech.ndexbio.org:8081/context/'
 
@@ -25,9 +31,9 @@ def get_protein_expression(gene_names, cell_types):
         NDEx web service.
     """
     url = ndex_context + 'expression/cell_line'
-    if isinstance(gene_names, str):
+    if isinstance(gene_names, basestring):
         gene_names = [gene_names]
-    if isinstance(cell_types, str):
+    if isinstance(cell_types, basestring):
         cell_types = [cell_types]
     params = {g: cell_types for g in gene_names}
     res = ndex_client.send_request(url, params, is_json=True)
@@ -54,9 +60,9 @@ def get_mutations(gene_names, cell_types):
         NDEx web service.
     """
     url = ndex_context + 'mutation/cell_line'
-    if isinstance(gene_names, str):
+    if isinstance(gene_names, basestring):
         gene_names = [gene_names]
-    if isinstance(cell_types, str):
+    if isinstance(cell_types, basestring):
         cell_types = [cell_types]
     params = {g: cell_types for g in gene_names}
     res = ndex_client.send_request(url, params, is_json=True)
