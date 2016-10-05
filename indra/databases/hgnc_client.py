@@ -21,6 +21,7 @@ hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
 try:
     csv_rows = read_unicode_csv(hgnc_file, delimiter='\t', encoding='utf-8')
     hgnc_names = {}
+    hgnc_ids = {}
     hgnc_withdrawn = []
     uniprot_ids = {}
     entrez_ids = {}
@@ -30,12 +31,14 @@ try:
         if hgnc_status == 'Approved':
             hgnc_name = row[1]
             hgnc_names[hgnc_id] = hgnc_name
+            hgnc_ids[hgnc_name] = hgnc_id
         elif hgnc_status == 'Symbol Withdrawn':
             descr = row[2]
             m = re.match(r'symbol withdrawn, see ([^ ]*)', descr)
             new_name = m.groups()[0]
             hgnc_withdrawn.append(hgnc_id)
             hgnc_names[hgnc_id] = new_name
+            hgnc_ids[new_name] = hgnc_id
         # Uniprot
         uniprot_id = row[6]
         uniprot_ids[hgnc_id] = uniprot_id
@@ -148,10 +151,7 @@ def get_hgnc_id(hgnc_name):
     hgnc_id : str
         The HGNC ID corresponding to the given HGNC symbol.
     """
-    for k, v in hgnc_names.items():
-        if v == hgnc_name and k not in hgnc_withdrawn:
-            hgnc_id = k
-            return hgnc_id
+    return hgnc_ids.get(hgnc_name)
 
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
