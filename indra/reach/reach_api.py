@@ -60,7 +60,7 @@ def process_pmc(pmc_id, offline=False):
     fname = pmc_id + '.nxml'
     with open(fname, 'wt') as fh:
         fh.write(xml_str.encode('utf-8'))
-    rp = process_nxml_str(xml_str, citation=pmc_id, offline=offline)
+    rp = process_nxml_file(fname, citation=pmc_id, offline=offline)
     return rp
 
 
@@ -174,21 +174,11 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         in rp.statements.
     """
     if offline:
-        if not try_offline:
-            logger.error('Offline reading is not available.')
-            return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler' +\
-                         'could not be instantiated.')
-            return None
-        try:
-            #TODO: Test if UTF-8 files are parsed correctly here
-            result_map = api_ruler.annotateNxml(nxml_str, 'fries')
-        except JavaException:
-            logger.error('Could not process NXML.')
-            return None
-        json_str = result_map.get('resultJson')
+        fname = 'tmp.nxml'
+        with open(fname, 'wt') as fh:
+            fh.write(nxml_str.encode('utf-8'))
+        rp = process_nxml_file(fname, citation, True)
+        return rp
     else:
         data = {'nxml': nxml_str}
         try:
@@ -202,9 +192,9 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
                          'Status code: %d' % res.status_code)
             return None
         json_str = res.text
-    with open('reach_output.json', 'wt') as fh:
-        fh.write(json_str)
-    return process_json_str(json_str, citation)
+        with open('reach_output.json', 'wt') as fh:
+            fh.write(json_str)
+        return process_json_str(json_str, citation)
 
 
 def process_nxml_file(file_name, citation=None, offline=False):
@@ -230,9 +220,29 @@ def process_nxml_file(file_name, citation=None, offline=False):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    nxml_str = open(file_name, 'rt').read()
-    nxml_str = nxml_str.decode('utf-8')
-    return process_nxml_str(nxml_str, citation, offline)
+    # Offline we use the API ruler directly to read the nxml fle
+    if offline:
+        if not try_offline:
+            logger.error('Offline reading is not available.')
+            return None
+        api_ruler = reach_reader.get_api_ruler()
+        if api_ruler is None:
+            logger.error('Cannot read offline because the REACH ApiRuler' +\
+                         'could not be instantiated.')
+            return None
+        try:
+            result_map = api_ruler.annotateNxml(file_name, 'fries')
+        except JavaException as e:
+            logger.error('Could not process NXML.')
+            logger.error(e)
+            return None
+        json_str = result_map.get('resultJson')
+        return process_json_str(json_str)
+    # For the web service, we read the file and process it as a string
+    else:
+        nxml_str = open(file_name, 'rt').read()
+        nxml_str = nxml_str.decode('utf-8')
+        return process_nxml_str(nxml_str, citation, False)
 
 
 def process_json_file(file_name, citation=None):
