@@ -87,10 +87,9 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     # If it does not have PMC NXML then we attempt to obtain the full-text
     # through the CrossRef Click-through API
     if doi:
-        # Check if there are any full text links
-        links = crossref_client.get_fulltext_links(doi)
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
+
         # First check for whether this is Elsevier--if so, use the Elsevier
         # client directly, because the Clickthrough API key seems unreliable.
         # For now, return as text.
@@ -98,10 +97,13 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
             article = elsevier_client.get_article(doi, output='txt')
             if article is not None:
                 return (article, 'txt')
+
         # FIXME FIXME FIXME
         # Because we don't yet have a way to process non-Elsevier content
         # obtained from CrossRef, which includes both XML of unknown format
         # and PDFs, we just comment this section out for now
+        # Check if there are any full text links
+        links = crossref_client.get_fulltext_links(doi)
         """
         if links:
             headers = {}
@@ -180,12 +182,14 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
             return get_asbmb_full_text(url)
         """
         # end FIXME FIXME FIXME
+
         # No full text links and not a publisher we support. We'll have to
         # fall back to the abstract.
         #elif pmid:
         if pmid:
             abstract = pubmed_client.get_abstract(pmid)
             return abstract, 'abstract'
+
         # We have a useless DOI and no PMID. Give up.
         else:
             return (None, None)
