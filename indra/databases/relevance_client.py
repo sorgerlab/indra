@@ -9,7 +9,7 @@ try:
 except:
     basestring = str
 
-logging = logging.getLogger('relevance')
+logger = logging.getLogger('relevance')
 
 ndex_relevance = 'http://general.bigmech.ndexbio.org:8080'
 
@@ -30,7 +30,7 @@ def get_heat_kernel(network_id):
     res = ndex_client.send_request(url, {}, is_json=True, use_get=True)
     kernel_id = res.get('kernel_id')
     if kernel_id is None:
-        logging.error('Could not get heat kernel for network.')
+        logger.error('Could not get heat kernel for network.')
         return None
     return kernel_id
 
@@ -63,6 +63,6 @@ def get_relevant_nodes(network_id, query_nodes):
     res = ndex_client.send_request(url, params, is_json=True)
     ranked_entities = res.get('ranked_entities')
     if ranked_entities is None:
-        logging.error('Could not get ranked entities.')
+        logger.error('Could not get ranked entities.')
         return None
     return ranked_entities

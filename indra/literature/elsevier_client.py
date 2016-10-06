@@ -47,13 +47,13 @@ def download_article(doi):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_article_url, doi)
     if api_key is None:
-        logging.error('Missing API key at %s, could not download article.' %
+        logger.error('Missing API key at %s, could not download article.' %
                       api_key_file)
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
     res = requests.get(url, params)
     if not res.status_code == 200:
-        logging.error('Could not download article %s' % doi)
+        logger.error('Could not download article %s' % doi)
         return None
     # Parse the content from the stream and then return the tree
     xml_tree = ET.XML(res.content, parser=UTB())
@@ -82,7 +82,7 @@ def get_article(doi, output='txt'):
         return None
     full_text = xml_tree.find('article:originalText', elsevier_ns)
     if full_text is None:
-        logging.info('Could not find full text for %s.' % doi)
+        logger.info('Could not find full text for %s.' % doi)
         return None
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
@@ -110,7 +110,7 @@ def get_article(doi, output='txt'):
                                      else '' for c in p.getchildren()])
                 full_txt += '\n'
     else:
-        logging.error('Unknown output format %s.' % output)
+        logger.error('Unknown output format %s.' % output)
         return None
     return full_txt
 
@@ -125,7 +125,7 @@ def get_dois(query_str, count=100):
     """
     url = '%s/%s' % (elsevier_search_url, query_str)
     if api_key is None:
-        logging.error('Missing API key at %s, could not perform search.' %
+        logger.error('Missing API key at %s, could not perform search.' %
                       api_key_file)
         return None
     params = {'APIKey': api_key,
