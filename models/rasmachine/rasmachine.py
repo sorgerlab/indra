@@ -153,7 +153,7 @@ def upload_to_ndex(stmts, cred_file):
         print('Could not get NDEx network summary.')
         print(e)
         return
-    """
+
     try:
         nd.update_cx_network(cx_str, network_id)
     except Exception as e:
@@ -173,7 +173,6 @@ def upload_to_ndex(stmts, cred_file):
         print('Could not update NDEx network profile.')
         print(e)
         return
-    """
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -280,12 +279,12 @@ if __name__ == '__main__':
     stats['orig_likely'] = len(orig_likely)
 
     # Make a PySB model from filtered statements
-    pysb_assmb = PysbAssembler()
-    pysb_assmb.add_statements(orig_likely)
-    pysb_assmb.make_model()
+    #pysb_assmb = PysbAssembler()
+    #pysb_assmb.add_statements(orig_likely)
+    #pysb_assmb.make_model()
     # Stats for Pysb assembled model
-    stats['orig_monomers'] = len(pysb_assmb.model.monomers)
-    stats['orig_rules'] = len(pysb_assmb.model.rules)
+    #stats['orig_monomers'] = len(pysb_assmb.model.monomers)
+    #stats['orig_rules'] = len(pysb_assmb.model.rules)
 
     # Extend the model with PMIDs
     print('Extending model')
@@ -306,12 +305,12 @@ if __name__ == '__main__':
     stats['new_likely'] = len(new_likely)
 
     # Make a PySB model from filtered statements
-    pysb_assmb = PysbAssembler()
-    pysb_assmb.add_statements(new_likely)
-    pysb_assmb.make_model()
+    #pysb_assmb = PysbAssembler()
+    #pysb_assmb.add_statements(new_likely)
+    #pysb_assmb.make_model()
     # Stats for Pysb assembled model
-    stats['new_monomers'] = len(pysb_assmb.model.monomers)
-    stats['new_rules'] = len(pysb_assmb.model.rules)
+    #stats['new_monomers'] = len(pysb_assmb.model.monomers)
+    #stats['new_rules'] = len(pysb_assmb.model.rules)
 
     # Save model
     print('Saving model')
