@@ -706,6 +706,9 @@ class BelProcessor(object):
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
                 agent_name = hgnc_client.get_hgnc_name(hgnc_id)
+            else:
+                logger.warning('Could not map EGID%s to HGNC.' % name)
+                agent_name = 'E%s' % name
         else:
             logger.warning('Unhandled entity namespace: %s' % namespace)
             print('%s, %s' % (concept, entity))
@@ -754,6 +757,9 @@ class BelProcessor(object):
                     evs.append(ev)
                 else:
                     logger.warning('Could not parse citation: %s' % citation)
+        if not evs:
+            evs = [Evidence(source_api='bel', source_id=statement,
+                            annotations=annotations)]
         return evs
 
     @staticmethod
