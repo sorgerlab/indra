@@ -68,7 +68,7 @@ def process_paper(model_name, pmid):
         elif txt_format == 'abstract':
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', fulltext_path)
+                shutil.move('reach_output.json', abstract_path)
         else:
             rp = None
     return rp, txt_format
@@ -114,12 +114,14 @@ def extend_model(model_name, model, pmids):
                     nabstracts += 1
                 else:
                     npapers += 1
-                logger.info('%d statements from PMID%s ' % \
-                            (len(rp.statements), pmid))
+                if not rp.statements:
+                    logger.info('No statement from PMID%s' % pmid)
+                else:
+                    logger.info('%d statements from PMID%s ' % \
+                                (len(rp.statements), pmid))
                 model.add_statements(pmid, rp.statements)
             else:
-                model.add_statements(pmid, [])
-                logger.info('No statement from PMID%s' % pmid)
+                logger.info('Reach processing failed for PMID%s' % pmid)
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
     model.preassemble(filters=global_filters)
@@ -235,8 +237,6 @@ if __name__ == '__main__':
         BELIEF_THRESHOLD = 0.95
     logger.info('Using belief threshold: %.2f' % BELIEF_THRESHOLD)
 
-
-
     pmids = []
     # Get email PMIDs
     if use_gmail:
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     # Extend the model with PMIDs
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
-    stats['new_papers'], stats['new_abstracts'] =\
+    stats['new_papers'], stats['new_abstracts'] = \
                             extend_model(model_name, model, pmids)
 
     # New statistics
@@ -339,7 +339,7 @@ if __name__ == '__main__':
 
     # Print and tweet the status message
     logger.info('--- Final statistics ---')
-    for k, v in stats:
+    for k, v in stats.items():
         logger.info('%s: %s' % (k, v))
     logger.info('------------------------')
 
