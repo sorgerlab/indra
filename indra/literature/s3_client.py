@@ -7,6 +7,7 @@ import botocore
 import json
 import gzip
 from io import BytesIO
+from indra import literature as lit
 
 # Python 2
 try:
@@ -56,6 +57,39 @@ def check_key(key):
     else:
         exists = True
     return exists
+
+
+def get_upload_content(pmid, return_content=False):
+    """Get full text and/or abstract for paper and upload to S3."""
+
+    # First, check S3:
+    (ft_content_s3, ft_content_type_s3) = get_full_text(pmid)
+    if ft_content_type_s3 is None:
+        # If none found, try to retrieve from literature client
+        (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
+        # If we tried to get the full text and didn't even get the abstract,
+        # then there was probably a problem with the web service or the DOI
+        if ft_content_type is None:
+            return (None, None)
+        elif ft_content_type == 'abstract':
+            put_abstract(pmid, ft_content)
+            return (ft_content, ft_content_type)
+        else:
+            logger.info("Uploading %s for %s" % (ft_content_type, pmid))
+            put_full_text(pmid, ft_content, full_text_type=ft_content_type)
+            return (ft_content, ft_content_type)
+    # Abstract is on S3 but not full text
+    elif ft_content_type_s3 == 'abstract':
+        # TODO
+        # If we only got the abstract, we return it; in future could attempt
+        # to get full text if only abstract is on S3
+        return (ft_content_s3, ft_content_type_s3)
+    # Some form of full text is on S3
+    else:
+        # TODO
+        # In future, could check for abstract even if full text is found, and
+        # upload it just to have it
+        return (ft_content_s3, ft_content_type_s3)
 
 
 def get_gz_object(key):

@@ -190,8 +190,10 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         #elif pmid:
         if pmid:
             abstract = pubmed_client.get_abstract(pmid)
-            return abstract, 'abstract'
-
+            if abstract is None:
+                return (None, None)
+            else:
+                return abstract, 'abstract'
         # We have a useless DOI and no PMID. Give up.
         else:
             return (None, None)
@@ -199,8 +201,10 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     # so we fall back to the abstract:
     else:
         abstract = pubmed_client.get_abstract(pmid)
-        return abstract, 'abstract'
-
+        if abstract is None:
+            return (None, None)
+        else:
+            return abstract, 'abstract'
     # We'll only get here if we've missed a combination of conditions
     assert False
 
