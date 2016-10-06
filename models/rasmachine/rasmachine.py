@@ -6,6 +6,7 @@ import sys
 import time
 import json
 import shutil
+import logging
 import argparse
 import gmail_client
 import twitter_client
@@ -18,19 +19,19 @@ from indra.tools.incremental_model import IncrementalModel
 model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one', 'human_only']
 
-def get_email_pmids(cred_file):
+logger = logging.getLogger('rasmachine')
+
+def get_email_pmids(cred_file, num_days=10):
     try:
         with open(cred_file, 'rt') as fh:
             uname, passwd = [l.strip() for l in fh.readlines()]
     except IOError:
-        print('Could not access Gmail credentials.')
+        logger.error('Could not access Gmail credentials at %s.' % cred_file)
         return []
 
     M = gmail_client.gmail_login(uname, passwd)
     gmail_client.select_mailbox(M, 'INBOX')
-    day_limit = 10
-    pmids = gmail_client.get_message_pmids(M, day_limit)
-    print('Collected %d PMIDs' % len(pmids))
+    pmids = gmail_client.get_message_pmids(M, num_days)
     return pmids
 
 def get_searchterm_pmids(search_terms, num_days=1):
@@ -76,7 +77,7 @@ def make_status_message(stats):
     ndiff = (stats['new_top'] - stats['orig_top'])
     msg_str = None
     if (((stats['new_papers'] > 0) or
-        (stats['new_abstracts'] > 0)) and 
+        (stats['new_abstracts'] > 0)) and
         (ndiff > 0)):
         papers_str = '%d paper' % stats['new_papers']
         if stats['new_papers'] > 1:
@@ -113,11 +114,12 @@ def extend_model(model_name, model, pmids):
                     nabstracts += 1
                 else:
                     npapers += 1
-                print(pmid, len(rp.statements))
+                logger.info('%d statements from PMID%s ' % \
+                            (len(rp.statements), pmid))
                 model.add_statements(pmid, rp.statements)
             else:
                 model.add_statements(pmid, [])
-                print('No statement extracted from PMID%s' % pmid)
+                logger.info('No statement from PMID%s' % pmid)
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
     model.preassemble(filters=global_filters)
@@ -137,7 +139,7 @@ def upload_to_ndex(stmts, cred_file):
         with open(cred_file, 'rt') as fh:
             uname, passwd, network_id = [l.strip() for l in fh.readlines()]
     except IOError:
-        print('Could not access NDEx credentials.')
+        logger.error('Could not access NDEx credentials.')
         return
     nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=uname, password=passwd)
@@ -150,15 +152,15 @@ def upload_to_ndex(stmts, cred_file):
     try:
         summary = nd.get_network_summary(network_id)
     except Exception as e:
-        print('Could not get NDEx network summary.')
-        print(e)
+        logger.error('Could not get NDEx network summary.')
+        logger.error(e)
         return
 
     try:
         nd.update_cx_network(cx_str, network_id)
     except Exception as e:
-        print('Could not update NDEx network.')
-        print(e)
+        logger.error('Could not update NDEx network.')
+        logger.error(e)
         return
     ver_str = summary.get('version')
     new_ver = _increment_ndex_ver(ver_str)
@@ -170,8 +172,8 @@ def upload_to_ndex(stmts, cred_file):
     try:
         nd.update_network_profile(network_id, profile)
     except Exception as e:
-        print('Could not update NDEx network profile.')
-        print(e)
+        logger.error('Could not update NDEx network profile.')
+        logger.error(e)
         return
 
 if __name__ == '__main__':
@@ -183,11 +185,11 @@ if __name__ == '__main__':
     parser.add_argument('--belief', help='Belief threshold (between 0 and 1')
     args = parser.parse_args()
 
-    print('-------------------------')
-    print(time.strftime('%c'))
+    logger.info('-------------------------')
+    logger.info(time.strftime('%c'))
 
     if not args.model:
-        print('Model name must be supplied as --model model_name.')
+        logger.error('Model name must be supplied as --model model_name.')
         sys.exit()
     else:
         model_name = args.model
@@ -196,6 +198,7 @@ if __name__ == '__main__':
         twitter_cred = args.twitter
         if os.path.exists(twitter_cred):
             use_twitter = True
+            logger.info('Using Twitter with credentials: %s' % twitter_cred)
         else:
             use_twitter = False
     else:
@@ -205,6 +208,7 @@ if __name__ == '__main__':
         gmail_cred = args.gmail
         if os.path.exists(gmail_cred):
             use_gmail = True
+            logger.info('Using Gmail with credentials: %s' % gmail_cred)
         else:
             use_gmail = False
     else:
@@ -214,6 +218,7 @@ if __name__ == '__main__':
         ndex_cred = args.ndex
         if os.path.exists(ndex_cred):
             use_ndex = True
+            logger.info('Using NDEx with credentials: %s' % ndex_cred)
         else:
             use_ndex = False
     else:
@@ -228,19 +233,22 @@ if __name__ == '__main__':
         BELIEF_THRESHOLD = float(belief_str)
     else:
         BELIEF_THRESHOLD = 0.95
+    logger.info('Using belief threshold: %.2f' % BELIEF_THRESHOLD)
+
 
 
     pmids = []
     # Get email PMIDs
     if use_gmail:
-        print('Getting PMIDs from emails')
-        print(time.strftime('%c'))
+        logger.info('Getting PMIDs from emails.')
+        logger.info(time.strftime('%c'))
         try:
-            email_pmids = get_email_pmids(gmail_cred)
+            email_pmids = get_email_pmids(gmail_cred, num_days=10)
+            logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
             pmids += email_pmids
         except Exception as e:
-            print('Could not get email PMIDs, continuing')
-            print(e)
+            logger.error('Could not get PMIDs from Gmail, continuing.')
+            logger.error(e)
 
     # Get search PMIDs
     search_terms_file = os.path.join(model_path, model_name, 'search_terms.txt')
@@ -248,22 +256,27 @@ if __name__ == '__main__':
         with open(search_terms_file, 'rt') as f:
             search_terms = [l.strip() for l in f.readlines()]
         if search_terms:
-            pmids += get_searchterm_pmids(search_terms, num_days=5)
+            logger.info('Using search terms: %s' % ', '.join(search_terms))
+            search_pmids = get_searchterm_pmids(search_terms, num_days=5)
+            logger.info('Collected %d PMIDs from PubMed' % len(search_pmids))
+            pmids += search_pmids
+
     if not pmids:
-        print('No PMIDs found.')
+        logger.info('No PMIDs found.')
         sys.exit()
     else:
-        print('%s PMIDs found.' % len(pmids))
+        logger.info('%s PMIDs found in total.' % len(pmids))
 
     # Load the model
-    print('Loading model')
-    print(time.strftime('%c'))
+    logger.info(time.strftime('%c'))
+    logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
     model = IncrementalModel(inc_model_file)
     stats = {}
-    print('Preassembling model')
-    print(time.strftime('%c'))
+    logger.info(time.strftime('%c'))
+    logger.info('Preassembling original model.')
     model.preassemble(filters=global_filters)
+    logger.info(time.strftime('%c'))
 
     # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
@@ -287,10 +300,10 @@ if __name__ == '__main__':
     #stats['orig_rules'] = len(pysb_assmb.model.rules)
 
     # Extend the model with PMIDs
-    print('Extending model')
-    print(time.strftime('%c'))
+    logger.info(time.strftime('%c'))
+    logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'] =\
-                            extend_model(model_name, model, pmids[0:2])
+                            extend_model(model_name, model, pmids)
 
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
@@ -313,22 +326,26 @@ if __name__ == '__main__':
     #stats['new_rules'] = len(pysb_assmb.model.rules)
 
     # Save model
-    print('Saving model')
-    print(time.strftime('%c'))
+    logger.info(time.strftime('%c'))
+    logger.info('Saving model')
     model.save(inc_model_file)
+    logger.info(time.strftime('%c'))
 
     # Upload the new, highly likely statements to NDEx
     if use_ndex:
-        print('Uploading to NDEx')
-        print(time.strftime('%c'))
+        logger.info('Uploading to NDEx')
+        logger.info(time.strftime('%c'))
         upload_to_ndex(new_likely, ndex_cred)
 
     # Print and tweet the status message
-    print(stats)
+    logger.info('--- Final statistics ---')
+    for k, v in stats:
+        logger.info('%s: %s' % (k, v))
+    logger.info('------------------------')
+
     msg_str = make_status_message(stats)
     if msg_str is not None:
-        print(msg_str)
-        """
+        logger.info('Status message: %s' % msg_str)
         if use_twitter:
+            logger.info('Now tweeting: %s' % msg_str)
             twitter_client.update_status(msg_str, twitter_cred)
-        """
