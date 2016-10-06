@@ -146,15 +146,15 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
-            if event.find('type').text == 'ONT::ACTIVATE':
+            if _is_type(event, 'ONT::ACTIVATE'):
                 is_activation = True
                 activator_act = 'activity'
                 self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
-            elif event.find('type').text == 'ONT::INHIBIT':
+            elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
                 activator_act = None
                 self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
-            elif event.find('type').text == 'ONT::DEACTIVATE':
+            elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
                 activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
@@ -654,7 +654,7 @@ class TripsProcessor(object):
             db_refs_dict['TEXT'] = agent_text
 
         # If the entity is a complex
-        if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
+        if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
             complex_id = entity_id
             complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
             components = complex_term.find("components")
@@ -735,7 +735,7 @@ class TripsProcessor(object):
         dbid = term.attrib.get('dbid')
         if dbid is None:
             db_refs_dict = {}
-            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+            if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                 members = term.findall('members/member')
                 dbids = []
                 for m in members:
@@ -766,7 +766,7 @@ class TripsProcessor(object):
 
                     if dbid_str is None:
                         db_refs_dict = {}
-                        if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+                        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                             members = term.findall('members/member')
                             dbids = []
                             for m in members:
@@ -802,7 +802,8 @@ class TripsProcessor(object):
         return db_refs_dict
 
     def _add_condition(self, agent, precond_event, agent_term):
-        precond_event_type = precond_event.find('type').text
+        precond_event_type = _get_type(precond_event)
+        print(precond_event_type)
         # Binding precondition
         if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
@@ -823,8 +824,9 @@ class TripsProcessor(object):
 
             bound_agents = []
             if bound_to_term_id is not None:
-                bound_to_term = self.tree.find("TERM/[@id='%s']" % bound_to_term_id)
-                if bound_to_term.find('type').text == 'ONT::MOLECULAR-PART':
+                bound_to_term = self.tree.find("TERM/[@id='%s']" % \
+                                               bound_to_term_id)
+                if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
                     for c in components:
                         bound_agent_name = self._get_name_by_id(c.attrib['id'])
@@ -843,14 +845,14 @@ class TripsProcessor(object):
                             'predicate/mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('negation')
             if negation_sign is not None:
-                if negation_sign.text == '+':
+                if _get_text(negation_sign) == '+':
                     neg_flag = True
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('predicate/negation')
             if negation_sign is not None:
-                if negation_sign.text == '+':
+                if _get_text(negation_sign) == '+':
                     neg_flag = True
             for ba in bound_agents:
                 if neg_flag:
@@ -868,26 +870,6 @@ class TripsProcessor(object):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
 
-    @staticmethod
-    def _get_text(element):
-        text_tag = element.find("text")
-        if text_tag is None:
-            return None
-        text = text_tag.text
-        return text
-
-    @staticmethod
-    def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-        return hgnc_name
-
-    @staticmethod
-    def _get_valid_name(name):
-        name = name.replace('-', '_')
-        name = name.replace('/', '_')
-        name = str(name.encode('utf-8').decode('ascii', 'ignore'))
-        return name
-
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
         if entity_term is None:
@@ -899,23 +881,23 @@ class TripsProcessor(object):
             return None
         db_refs = self._get_db_refs(entity_term)
         if not db_refs:
-            return self._get_valid_name(name.text)
+            return _get_valid_name(name.text)
 
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
         hgnc_id = db_refs.get('HGNC')
         up_id = db_refs.get('UP')
         if hgnc_id:
-            hgnc_name = self._get_hgnc_name(hgnc_id)
-            return self._get_valid_name(hgnc_name)
+            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+            return _get_valid_name(hgnc_name)
         elif up_id:
             # First to get gene name
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
-                return self._get_valid_name(gene_name)
+                return _get_valid_name(gene_name)
         # By default, return the text of the name tag
         name_txt = name.text.strip('|')
-        return self._get_valid_name(name_txt)
+        return _get_valid_name(name_txt)
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
@@ -1104,6 +1086,32 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+def _get_text(element):
+    text_tag = element.find('text')
+    if text_tag is None:
+        return None
+    text = text_tag.text
+    return text
+
+def _get_type(element):
+    type_tag = element.find('type')
+    if type_tag is None:
+        return None
+    type_text = type_tag.text
+    return type_text
+
+def _is_type(element, type_text):
+    element_type = _get_type(element)
+    if element_type == type_text:
+        return True
+    return False
+
+def _get_valid_name(name):
+    name = name.replace('-', '_')
+    name = name.replace('/', '_')
+    name = str(name.encode('utf-8').decode('ascii', 'ignore'))
+    return name
 
 def _stmt_location_to_agents(stmt, location):
     """Apply an event location to the Agents in the corresponding Statement.
