@@ -3,8 +3,11 @@ from builtins import dict, str
 import xml.etree.ElementTree as ET
 import os.path
 import requests
+import logging
 from indra.literature import pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
+
+logger = logging.getLogger('pmc')
 
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 pmid_convert_url = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
@@ -70,7 +73,7 @@ def get_xml(pmc_id):
     # Submit the request
     res = requests.get(pmc_url, params)
     if not res.status_code == 200:
-        print("Couldn't download PMC%d" % pmc_id)
+        logger.warning("Couldn't download PMC%d" % pmc_id)
         return None
     # Read the bytestream
     xml_bytes = res.content
@@ -81,7 +84,7 @@ def get_xml(pmc_id):
     if err_tag is not None:
         err_code = err_tag.attrib['code']
         err_text = err_tag.text
-        print('PMC client returned with error %s: %s' % (err_code, err_text))
+        logger.warning('PMC client returned with error %s: %s' % (err_code, err_text))
         return None
     # If no error, return the XML as a unicode string
     else:

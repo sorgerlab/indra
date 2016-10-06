@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import requests
 import re
-import warnings
+import logging
+import requests
 from indra.literature import pubmed_client
 # Python3
 try:
@@ -12,6 +12,8 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
+
+logger = logging.getLogger('crossref')
 
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/dois'
@@ -94,7 +96,7 @@ def doi_query(pmid, search_limit=10):
     pubmed_meta_dict = pubmed_client.get_metadata_for_ids([pmid],
                                                         get_issns_from_nlm=True)
     if pubmed_meta_dict is None or pubmed_meta_dict.get(pmid) is None:
-        warnings.warn('No metadata found in Pubmed for PMID %s' % pmid)
+        logger.warning('No metadata found in Pubmed for PMID%s' % pmid)
         return None
     # The test above ensures we've got this now
     pubmed_meta = pubmed_meta_dict[pmid]
@@ -104,17 +106,17 @@ def doi_query(pmid, search_limit=10):
     # Check for the title, which we'll need for the CrossRef search
     pm_article_title = pubmed_meta.get('title')
     if pm_article_title is None:
-        warnings.warn('No article title found in Pubmed for PMID %s' % pmid)
+        logger.warning('No article title found in Pubmed for PMID%s' % pmid)
         return None
     # Get the ISSN list
     pm_issn_list = pubmed_meta.get('issn_list')
     if not pm_issn_list:
-        warnings.warn('No ISSNs found in Pubmed for PMID %s' % pmid)
+        logger.warning('No ISSNs found in Pubmed for PMID%s' % pmid)
         return None
     # Get the page number
     pm_page = pubmed_meta.get('page')
     if not pm_page:
-        warnings.warn('No page number found in Pubmed for PMID %s' % pmid)
+        logger.warning('No page number found in Pubmed for PMID%s' % pmid)
         return None
     # Now query CrossRef using the title we've got
     url = crossref_search_url
@@ -128,7 +130,7 @@ def doi_query(pmid, search_limit=10):
     # Iterate over the search results, looking up XREF metadata
     for result_ix, result in enumerate(raw_message):
         if result_ix > search_limit:
-            warnings.warn('No match found within first %s results, giving up!'
+            logger.warning('No match found within first %s results, giving up!'
                            % search_limit)
             break
         xref_doi_url = result['doi']
@@ -141,11 +143,11 @@ def doi_query(pmid, search_limit=10):
         xref_page = xref_meta.get('page')
         # If there's no ISSN info for this article, skip to the next result
         if not xref_issn_list:
-            warnings.warn('No ISSN found for DOI %s, skipping' % xref_doi_url)
+            logger.warning('No ISSN found for DOI %s, skipping' % xref_doi_url)
             continue
         # If there's no page info for this article, skip to the next result
         if not xref_page:
-            warnings.warn('No page number found for DOI %s, skipping' %
+            logger.warning('No page number found for DOI %s, skipping' %
                           xref_doi_url)
             continue
         # Now check for an ISSN match by looking for the set intersection

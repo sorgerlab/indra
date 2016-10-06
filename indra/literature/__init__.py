@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import requests
-import warnings
+import logging
 import xml.etree.ElementTree as ET
 from indra.literature import pubmed_client
 from indra.literature import pmc_client
@@ -12,6 +12,8 @@ try:
 except ImportError:
     from functools32 import lru_cache
 from indra.util import UnicodeXMLTreeBuilder as UTB
+
+logger = logging.getLogger('literature')
 
 def id_lookup(paper_id, idtype):
     """Take an ID of type PMID, PMCID, or DOI and lookup the other IDs.
@@ -50,7 +52,7 @@ def id_lookup(paper_id, idtype):
     # into problems later on when we try to the reverse lookup using CrossRef.
     # So we bail here and return what we have (PMCID only) with a warning.
     if ids.get('pmcid') and ids.get('doi') is None and ids.get('pmid') is None:
-        warnings.warn('%s: PMCID without PMID or DOI' % ids.get('pmcid'))
+        logger.warning('%s: PMCID without PMID or DOI' % ids.get('pmcid'))
         return ids
     # To clarify the state of things at this point:
     assert ids.get('pmid') is not None
@@ -126,7 +128,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request): '
+                    logger.warning('Full text query returned 400 (Bad Request): '
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -138,7 +140,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -150,7 +152,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -164,15 +166,15 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return 'foo', req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
                 elif req.status_code == 401:
-                    warnings.warn('Full text query returned 401 (Unauthorized)')
+                    logger.warning('Full text query returned 401 (Unauthorized)')
                     return (None, None)
                 elif req.status_code == 403:
-                    warnings.warn('Full text query returned 403 (Forbidden)')
+                    logger.warning('Full text query returned 403 (Forbidden)')
                     return (None, None)
             else:
                 raise Exception("Unknown content type(s): %s" % links)
@@ -207,7 +209,7 @@ def get_asbmb_full_text(url):
     # Get the location of the full text PDF from the target URL
     req = requests.get(url)
     if req.status_code != 200:
-        warnings.warn('ASBMB full text query returned status code %s: URL %s'
+        logger.warning('ASBMB full text query returned status code %s: URL %s'
                       % (req.status_code, url))
         return (None, None)
     # If we're here that means that we successfully got the paper URL
@@ -217,14 +219,14 @@ def get_asbmb_full_text(url):
                               '[@name="citation_fulltext_html_url"]')
     # Couldn't find the element containing the full text URL
     if fulltext_elem is None:
-        warnings.warn("ASBMB full text: couldn't find the full text URL "
+        logger.warning("ASBMB full text: couldn't find the full text URL "
                       "element among the meta tags.")
         return (None, None)
     fulltext_url = fulltext_elem.attrib['content']
     # Now, get the full text HTML page
     req2 = requests.get(fulltext_url)
     if req2.status_code != 200:
-        warnings.warn('ASBMB full text query returned status code %s: URL %s'
+        logger.warning('ASBMB full text query returned status code %s: URL %s'
                       % (req.status_code, fulltext_url))
         return (None, None)
     # We've got the full text page!
