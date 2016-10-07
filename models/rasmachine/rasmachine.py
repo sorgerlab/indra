@@ -115,10 +115,11 @@ def extend_model(model_name, model, pmids):
                 else:
                     npapers += 1
                 if not rp.statements:
-                    logger.info('No statement from PMID%s' % pmid)
+                    logger.info('No statement from PMID%s (%s)' % \
+                                (pmid, txt_format))
                 else:
-                    logger.info('%d statements from PMID%s ' % \
-                                (len(rp.statements), pmid))
+                    logger.info('%d statements from PMID%s (%s)' % \
+                                (len(rp.statements), pmid, txt_format))
                 model.add_statements(pmid, rp.statements)
             else:
                 logger.info('Reach processing failed for PMID%s' % pmid)
@@ -241,7 +242,6 @@ if __name__ == '__main__':
     # Get email PMIDs
     if use_gmail:
         logger.info('Getting PMIDs from emails.')
-        logger.info(time.strftime('%c'))
         try:
             email_pmids = get_email_pmids(gmail_cred, num_days=10)
             logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
@@ -300,6 +300,7 @@ if __name__ == '__main__':
     #stats['orig_rules'] = len(pysb_assmb.model.rules)
 
     # Extend the model with PMIDs
+    logger.info('----------------')
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'] = \
