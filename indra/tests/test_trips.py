@@ -59,6 +59,27 @@ def test_actmods():
     assert(st.agent.mods[0].position == '218')
     assert unicode_strs((tp, st))
 
+def test_actform_bound():
+    tp = trips.process_text('HRAS bound to GTP is activated.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.bound_conditions[0], ist.BoundCondition))
+    assert(st.agent.bound_conditions[0].agent.name == 'GTP')
+    assert(st.agent.bound_conditions[0].is_bound == True)
+    assert unicode_strs((tp, st))
+
+def test_actform_muts():
+    tp = trips.process_text('BRAF V600E is activated.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.mutations[0], ist.MutCondition))
+    assert(st.agent.mutations[0].residue_from == 'V')
+    assert(st.agent.mutations[0].residue_to == 'E')
+    assert(st.agent.mutations[0].position == '600')
+    assert unicode_strs((tp, st))
+
 def test_actmods():
     tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
     assert(len(tp.statements) == 1)

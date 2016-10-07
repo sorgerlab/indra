@@ -51,7 +51,7 @@ def process_xml(xml_string):
         return None
     tp.get_complexes()
     tp.get_phosphorylation()
-    tp.get_activating_mods()
+    tp.get_active_forms()
     tp.get_activations()
     tp.get_activations_causal()
     tp.get_translocation()
