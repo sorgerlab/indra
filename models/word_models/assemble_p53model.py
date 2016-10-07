@@ -33,6 +33,13 @@ def assemble_model(model_name):
         model.parameters['kf_pa_act_1'].value = 1e-04
         model.parameters['ATM_0'].value = 99.0
 
+    if model_name == 'p53_ATR':
+        model.add_component(Parameter('ATRa_0', 1))
+        atr = model.monomers['ATR']
+        model.initial(atr(act='active'),
+                      model.parameters['ATRa_0'])
+        model.parameters['ATR_0'].value = 99.0    
+
     pa.model = model
     pa.save_model('%s.py' % model_name)
     return model
