@@ -101,13 +101,6 @@ class TripsProcessor(object):
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
             event_id = event.attrib['id']
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
-            location = self._get_event_location(event)
-
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -159,6 +152,9 @@ class TripsProcessor(object):
                 activator_act = 'activity'
                 self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
 
+            ev = _self._get_evidence(event)
+            location = self._get_event_location(event)
+
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
                 st = Activation(a1, activator_act, a2, 'activity',
@@ -198,11 +194,8 @@ class TripsProcessor(object):
             if outcome_event_type is None:
                 continue
             # Construct evidence
-            sentence = self._get_evidence_text(cc)
-            sec = self._get_section(cc)
-            epi = {'section_type': sec, 'direct': False}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(cc)
+            ev.epi['direct'] = False
             location = self._get_event_location(outcome_event)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
@@ -267,11 +260,8 @@ class TripsProcessor(object):
             if affected_event_type is None:
                 continue
             # Construct evidence
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec, 'direct': False}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(event)
+            ev.epistemics['direct'] = False
             location = self._get_event_location(affected_event)
             if affected_event_type.text == 'ONT::ACTIVATE':
                 affected = affected_event.find(".//*[@role=':AFFECTED']")
@@ -304,8 +294,8 @@ class TripsProcessor(object):
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
-    def get_activating_mods(self):
-        """Extract ActiveForm INDRA Statements based on modifications."""
+    def get_active_forms(self):
+        """Extract ActiveForm INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
             if event.attrib['id'] in self._static_events:
@@ -323,32 +313,9 @@ class TripsProcessor(object):
                     'affected agent')
                 continue
 
-            affected_name = self._get_name_by_id(affected_id)
-            if affected_name is None:
-                logger.debug(
-                    'Skipping activating modification with missing' +\
-                    'affected agent')
-                continue
-            affected_agent = Agent(affected_name)
-            precond_ids = self._get_precond_event_ids(affected_id)
-            if not precond_ids:
-                # This means that it is not an activating modification
-                continue
-            precond_id = precond_ids[0]
-            precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
-            if precond_event is None:
-                continue
-            mods = self._get_mod_site(precond_event)
-            if mods is None:
-                logger.debug('Skipping activity modification with missing' +\
-                                'modification')
-                continue
-            affected_agent.mods = mods
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
+            affected_agent = self._get_agent_by_id(affected_id,
+                                                   event.attrib['id'])
+            ev = self._get_evidence(event)
             location = self._get_event_location(event)
             st = ActiveForm(affected_agent, 'activity', True, evidence=ev)
             _stmt_location_to_agents(st, location)
@@ -361,13 +328,6 @@ class TripsProcessor(object):
         for event in bind_events:
             if event.attrib['id'] in self._static_events:
                 continue
-
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
-            location = self._get_event_location(event)
 
             arg1 = event.find("arg1")
             if arg1 is None or arg1.attrib.get('id') is None:
@@ -405,6 +365,9 @@ class TripsProcessor(object):
             if agent1 is None or agent2 is None:
                 logger.debug('Complex with missing members')
                 continue
+
+            ev = self._get_evidence(event)
+            location = self._get_event_location(event)
 
             for a1, a2 in _agent_list_product((agent1, agent2)):
                 st = Complex([a1, a2], evidence=ev)
@@ -450,11 +413,7 @@ class TripsProcessor(object):
                 continue
             mods = self._get_mod_site(event)
 
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
+            ev = self._get_evidence(event)
             location = self._get_event_location(event)
             # Assuming that multiple modifications can only happen in
             # distinct steps, we add a statement for each modification
@@ -561,11 +520,7 @@ class TripsProcessor(object):
                 to_loc_id = to_loc_tag.attrib.get('id')
                 to_location = self._get_cell_loc_by_id(to_loc_id)
             # Get evidence
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(event)
             if isinstance(agent, list):
                 for aa in agent:
                     st = Translocation(aa, from_location,
@@ -1015,6 +970,14 @@ class TripsProcessor(object):
             return pos, aa_from, aa_to
         else:
             return None
+
+    def _get_evidence(self, event_tag):
+        api = 'trips'
+        text = self._get_evidence_text(event_tag)
+        sec = self._get_section(event_tag)
+        epi = {'section_type': sec}
+        ev = Evidence(source_api='trips', text=text, pmid=self.doc_id,
+                      epistemics=epi)
 
     def _get_evidence_text(self, event_tag):
         """Extract the evidence for an event.
