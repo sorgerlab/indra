@@ -211,7 +211,6 @@ class ReachProcessor(object):
                                                 ba in bound_agents]
                             controller_agent.bound_conditions = \
                                     bound_conditions
-                            print(controller_agent)
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
