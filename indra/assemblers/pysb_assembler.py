@@ -1650,7 +1650,7 @@ def translocation_assemble_default(stmt, model, agent_set):
                                      extra_fields={'loc': stmt.from_location})
     agent_to = get_monomer_pattern(model, stmt.agent,
                                    extra_fields={'loc': stmt.to_location})
-    r = Rule(rule_name, agent_to >> agent_from, kf_trans)
+    r = Rule(rule_name, agent_from >> agent_to, kf_trans)
     add_rule_to_model(model, r)
 
 
