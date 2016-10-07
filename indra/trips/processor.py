@@ -330,26 +330,28 @@ class TripsProcessor(object):
     def get_complexes(self):
         """Extract Complex INDRA Statements."""
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
+        bind_events += self.tree.findall("EVENT/[type='ONT::INTERACT']")
         for event in bind_events:
             if event.attrib['id'] in self._static_events:
                 continue
 
             arg1 = event.find("arg1")
-            if arg1 is None or arg1.attrib.get('id') is None:
-                msg = 'Skipping complex missing arg1.'
-                logger.debug(msg)
-                continue
-            agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
-
             arg2 = event.find("arg2")
-            if arg2 is None or arg2.attrib.get('id') is None:
-                msg = 'Skipping complex missing arg2.'
-                logger.debug(msg)
+            if (arg1 is None or arg1.attrib.get('id') is None) or \
+                (arg2 is None or arg2.attrib.get('id') is None):
+                logger.debug('Skipping complex with less than 2 members')
                 continue
-            agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
+
+            agent1 = self._get_agent_by_id(arg1.attrib['id'],
+                                           event.attrib['id'])
+            agent2 = self._get_agent_by_id(arg2.attrib['id'],
+                                           event.attrib['id'])
+            if agent1 is None or agent2 is None:
+                logger.debug('Skipping complex with less than 2 members')
+                continue
 
             # Information on binding site is either attached to the agent term
-            # in a features/site tag or attached to the event itself in 
+            # in a features/site tag or attached to the event itself in
             # a site tag
             '''
             site_feature = self._find_in_term(arg1.attrib['id'], 'features/site')
@@ -367,10 +369,6 @@ class TripsProcessor(object):
                 sites, positions = self._get_site_by_id(site.attrib['id'])
                 print sites, positions
             '''
-            if agent1 is None or agent2 is None:
-                logger.debug('Complex with missing members')
-                continue
-
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
 
@@ -378,7 +376,7 @@ class TripsProcessor(object):
                 st = Complex([a1, a2], evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
-            self.extracted_events['ONT::BIND'].append(event.attrib['id'])
+            self.extracted_events[_get_type(event)].append(event.attrib['id'])
 
     def get_modifications(self):
         """Extract all types of Modification INDRA Statements."""
