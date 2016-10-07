@@ -126,15 +126,6 @@ def get_hgnc_name(hgnc_id):
         if hgnc_name_tag is None:
             return None
         hgnc_name = hgnc_name_tag.text.strip()
-        # In Python 3, the string returned by ElementTree will always be
-        # unicode (Python 3 str). However, in Python 2, the string returned
-        # will be a unicode string if it contains unicode characters, and
-        # str if it contains only ASCII characters. To maintain consistency,
-        # we convert it to unicode here:
-        try:
-            hgnc_name = hgnc_name
-        except NameError:
-            pass
     return hgnc_name
 
 def get_hgnc_id(hgnc_name):
