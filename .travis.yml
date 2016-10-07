@@ -24,11 +24,9 @@ install:
   - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
   - unzip -q 2.2.5-stable.zip
   - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
-  - git clone -b unicode_fix https://github.com/johnbachman/pysb.git
-  - pip install -e pysb
-  #- pip install git+https://github.com/pysb/pysb.git
+  - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
-  - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
+  - pip install jnius-indra
   # Download a number of useful resource files for testing purposes
   #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
