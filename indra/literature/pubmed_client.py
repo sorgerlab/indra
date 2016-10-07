@@ -54,6 +54,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import xml.etree.ElementTree as ET
 import requests
+import logging
 # Python 3
 try:
     from functools import lru_cache
@@ -63,9 +64,10 @@ except ImportError:
 from indra.databases import hgnc_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
+logger = logging.getLogger('pubmed')
+
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
-
 
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
@@ -98,7 +100,7 @@ def get_ids(search_term, **kwargs):
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print(tree.find('ERROR').text)
+        logger.error(tree.find('ERROR').text)
         return []
     count = int(tree.find('Count').text)
     id_terms = tree.findall('IdList/Id')
@@ -106,8 +108,8 @@ def get_ids(search_term, **kwargs):
         return []
     ids = [idt.text for idt in id_terms]
     if count != len(ids):
-        print('Not all ids were retrieved for search %s;\n'
-              'limited at %d.' % (search_term, params['retmax']))
+        logger.warning('Not all ids were retrieved for search %s;\n'
+                       'limited at %d.' % (search_term, params['retmax']))
     return ids
 
 
@@ -143,7 +145,7 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print(tree.find('ERROR').text)
+        logger.error(tree.find('ERROR').text)
         return []
     # Get all PMIDs from the XML tree
     id_terms = tree.findall('.//PubMedId')
@@ -372,5 +374,5 @@ def expand_pagination(pages):
         new_end = start[:-num_end_digits] + end
         return '%s-%s' % (start, new_end)
     else: # More than one hyphen, something weird happened
-        warnings.warn("Multiple hyphens in page number: %s" % pages)
+        logger.warning("Multiple hyphens in page number: %s" % pages)
         return pages

@@ -247,7 +247,7 @@ if __name__ == '__main__':
             with open(prefix + '.uaz.sentences.json', 'rt') as f:
                 sentences = json.load(f)
         except IOError as e:
-            logging.error('Failed to open JSON files for %s; REACH error?' %
+            logger.error('Failed to open JSON files for %s; REACH error?' %
                           prefix)
             return None
         return {'events': events, 'entities': entities, 'sentences': sentences}

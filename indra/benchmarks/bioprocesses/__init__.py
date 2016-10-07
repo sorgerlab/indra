@@ -51,7 +51,7 @@ def get_genes_for_go_id(goid):
            }
     res = requests.get(quickgo_url, params)
     if not res.status_code == 200:
-        logging.error('Could not retrieve proteins associated with GO ID %s'
+        logger.error('Could not retrieve proteins associated with GO ID %s'
                       % goid)
         return None
     genes = set([])
