@@ -50,7 +50,7 @@ def process_xml(xml_string):
     if tp.tree is None:
         return None
     tp.get_complexes()
-    tp.get_phosphorylation()
+    tp.get_modifications()
     tp.get_active_forms()
     tp.get_activations()
     tp.get_activations_causal()
