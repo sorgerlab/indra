@@ -774,9 +774,13 @@ class TripsProcessor(object):
 
     def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = _get_type(precond_event)
-        print(precond_event_type)
+
+        # Modification precondition
+        if precond_event_type in mod_names.keys():
+            mods = self._get_mod_site(precond_event)
+            agent.mods = mods
         # Binding precondition
-        if precond_event_type == 'ONT::BIND':
+        elif precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
             mod = precond_event.findall('mods/mod')
@@ -831,11 +835,6 @@ class TripsProcessor(object):
                 else:
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
-
-        # Phosphorylation precondition
-        elif precond_event_type == 'ONT::PHOSPHORYLATION':
-            mods = self._get_mod_site(precond_event)
-            agent.mods = mods
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))

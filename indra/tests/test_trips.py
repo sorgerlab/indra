@@ -18,6 +18,26 @@ def test_phosphorylation():
     assert(st.position == '222')
     assert unicode_strs((tp, st))
 
+def test_mod_cond():
+    tp = trips.process_text('Phosphorylated BRAF binds ubiquitinated MAP2K1.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Complex))
+    braf = st.members[0]
+    mek = st.members[1]
+    assert(len(braf.mods) == 1)
+    assert(braf.mods[0].mod_type == 'phosphorylation')
+    assert(len(mek.mods) == 1)
+    assert(mek.mods[0].mod_type == 'ubiquitination')
+    assert unicode_strs((tp, st))
+
+def test_ubiquitination():
+    tp = trips.process_text('MDM2 ubiquitinates p53.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Ubiquitination))
+    assert unicode_strs((tp, st))
+
 def test_phosphorylation_noresidue():
     tp = trips.process_text('BRAF phosphorylates MEK1.')
     assert(len(tp.statements) == 1)
