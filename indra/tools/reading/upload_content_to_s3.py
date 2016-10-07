@@ -9,11 +9,14 @@ import logging
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
-        print("Usage: %s pmid_list" % sys.argv[0])
+    if len(sys.argv) < 4:
+        print("Usage: %s pmid_list start_index end_index" % sys.argv[0])
         sys.exit()
 
     pmid_list = sys.argv[1]
+    start_index = int(sys.argv[2])
+    end_index = int(sys.argv[3])
+
     logger = logging.getLogger('upload_content')
 
     with open(pmid_list) as f:
@@ -23,5 +26,5 @@ if __name__ == '__main__':
     # to be uploaded (fulltext, abstract) in a list of tuples.
     pmids_to_upload = []
     logger.info("-- Checking for %d full texts --" % len(pmids))
-    for ix, pmid in enumerate(pmids[0:10]):
+    for ix, pmid in enumerate(pmids[start_index:end_index]):
         s3_client.get_upload_content(pmid)
