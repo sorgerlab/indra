@@ -38,7 +38,6 @@ try:
             new_name = m.groups()[0]
             hgnc_withdrawn.append(hgnc_id)
             hgnc_names[hgnc_id] = new_name
-            hgnc_ids[new_name] = hgnc_id
         # Uniprot
         uniprot_id = row[6]
         uniprot_ids[hgnc_id] = uniprot_id
