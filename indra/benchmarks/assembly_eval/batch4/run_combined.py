@@ -1,13 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import csv
+import pickle
+import rasmodel
 from indra import trips, reach
 from indra.literature import id_lookup
-from assembly_eval import have_file, run_assembly
-import pickle
-import csv
-import logging
 from indra.util import read_unicode_csv
-import rasmodel
+from assembly_eval import have_file, run_assembly
 
 if __name__ == '__main__':
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]

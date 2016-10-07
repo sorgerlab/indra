@@ -1,15 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import sys
+import csv
 import shutil
+import pickle
 from indra import reach
+from indra.util import read_unicode_csv
 from indra.literature import pmc_client, get_full_text, id_lookup
 from assembly_eval import have_file, run_assembly
-import csv
-import os
-import pickle
-from indra.util import read_unicode_csv
-import logging
 
 if __name__ == '__main__':
     # This script assumes that the papers have been processed offline,

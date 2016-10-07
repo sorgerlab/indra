@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra import trips
 from assembly_eval import have_file, run_assembly
-import logging
 
 if __name__ == '__main__':
     pmc_ids = [s.strip() for s in open('pmcids.txt', 'rt').readlines()]
