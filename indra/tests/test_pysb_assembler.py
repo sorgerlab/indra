@@ -495,6 +495,7 @@ def test_translocation():
     assert(f1.site_conditions == {'loc': 'nucleus'})
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
     assert(f2.site_conditions == {'loc': 'cytoplasm'})
+    assert(r.rate_forward.name == 'kf_foxo3a_nucleus_cytoplasm_1')
 
 def test_phos_atpdep():
     st = Phosphorylation(Agent('BRAF'), Agent('MEK'), 'S', '222')

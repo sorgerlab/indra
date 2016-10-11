@@ -1640,7 +1640,9 @@ def translocation_monomers_default(stmt, agent_set):
 def translocation_assemble_default(stmt, model, agent_set):
     if stmt.from_location is None or stmt.to_location is None:
         return
-    kf_trans = get_create_parameter(model, 'kf_trans', 1.0, unique=False)
+    param_name = 'kf_%s_%s_%s' % (stmt.agent.name.lower(),
+                                  stmt.from_location, stmt.to_location)
+    kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
     monomer = model.monomers[stmt.agent.name]
     rule_agent_str = get_agent_rule_str(stmt.agent)
     rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
