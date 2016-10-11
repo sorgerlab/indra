@@ -5,7 +5,7 @@ from indra.benchmarks import phosphorylations as phos
 from indra.util import unicode_strs
 
 eval_file = join(dirname(abspath(__file__)),
-                 '../../models/assembly_eval/batch4/reach/' +
+                 '../benchmarks/assembly_eval/batch4/reach/' +
                  'reach_stmts_batch_4_eval.pkl')
 
 # Comment out for now b/c they're slow
