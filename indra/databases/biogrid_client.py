@@ -16,13 +16,24 @@ logger = logging.getLogger('biogrid')
 # For more information see http://wiki.thebiogrid.org/doku.php/biogridrest
 api_key_file = os.path.dirname(os.path.realpath(__file__)) + '/' + \
                'biogrid_api_key'
-# Read the API key
+api_key_env_name = 'BIOGRID_API_KEY'
+
+# Try to read the API key from a file
 try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    logger.error('BioGRID API key could not be found.')
+    logger.error('BioGRID API key could not be found, trying environment '
+                 'variable $%s.' % api_key_env_name)
     logger.error(api_key_file)
+    api_key = None
+
+# Try the environment variable
+if api_key_env_name in os.environ:
+    api_key = os.environ.get(api_key_env_name)
+else:
+    logger.error('No BioGRID API key found in environment variable '
+                 '%s.' % api_key_env_name)
     api_key = None
 
 
