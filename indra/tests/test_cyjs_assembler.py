@@ -28,6 +28,14 @@ def test_act():
     assert(len(set(polarities))==2)
     assert('positive' in polarities)
     assert('negative' in polarities)
+    db_refs = [node['data']['db_refs'] for node in cja._nodes]
+    for node in cja._nodes:
+        if node['data']['name'] == 'MAP2K1':
+            assert(node['data']['db_refs'].get('HGNC'))
+        if node['data']['name'] == 'MAPK1':
+            assert(node['data']['db_refs'].get('UniProt'))
+        if node['data']['name'] == 'DUSP4':
+            assert(not node['data']['db_refs'])
 
 def test_complex():
     cja = CyJSAssembler()

@@ -5,6 +5,13 @@ import logging
 import itertools
 from indra.statements import *
 
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
+
 logger = logging.getLogger('cyjs_assembler')
 
 class CyJSAssembler(object):
@@ -78,10 +85,11 @@ class CyJSAssembler(object):
         node_id = self._existing_nodes.get(node_key)
         if node_id is not None:
             return node_id
+        db_refs = _get_db_refs(agent)
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
-        node = {'data': {'id': node_id, 'name': node_name}}
+        node = {'data': {'id': node_id, 'name': node_name, 'db_refs': db_refs}}
         self._nodes.append(node)
         return node_id
 
@@ -89,6 +97,47 @@ class CyJSAssembler(object):
         ret = self._id_counter
         self._id_counter += 1
         return ret
+
+def _get_db_refs(agent):
+    cyjs_db_refs = {}
+    for db_name, db_ids in agent.db_refs.items():
+        if isinstance(db_ids, int):
+            db_id = str(db_ids)
+        elif isinstance(db_ids, basestring):
+            db_id = db_ids
+        else:
+            db_id = db_ids[0]
+        if db_name == 'UP':
+            name = 'UniProt'
+            val = 'http://identifiers.org/uniprot/%s' % db_id
+        elif db_name == 'HGNC':
+            name = 'HGNC'
+            val = 'http://identifiers.org/hgnc/HGNC:%s' % db_id
+        elif db_name == 'CHEBI':
+            name = 'ChEBI'
+            val = 'http://identifiers.org/chebi/%s' % db_id
+        elif db_name == 'PUBCHEM':
+            name = 'PubChem'
+            val = 'http://identifiers.org/pubchem.compound/%s' % db_id
+        elif db_name == 'HMDB':
+            name = 'HMDB'
+            val = 'http://identifiers.org/hmdb/%s' % db_id
+        elif db_name == 'GO':
+            name = 'GO'
+            val = 'http://identifiers.org/go/%s' % db_id
+        elif db_name == 'MESH':
+            name = 'MESH'
+            val = 'http://identifiers.org/mesh/%s' % db_id
+        elif db_name == 'IP':
+            name = 'InterPro'
+            val = 'http://identifiers.org/interpro/%s' % db_id
+        elif db_name == 'TEXT':
+            continue
+        else:
+            val = db_id
+            name = db_name
+        cyjs_db_refs[name] = val
+    return cyjs_db_refs
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, Modification):
