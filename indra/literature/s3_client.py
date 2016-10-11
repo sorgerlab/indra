@@ -6,12 +6,8 @@ import zlib
 import botocore
 import json
 import gzip
-# Python 3
-try:
-    from io import BytesIO
-# Python 2
-except ImportError:
-    from cStringIO import StringIO as BytesIO
+from io import BytesIO
+
 # Python 2
 try:
     basestring

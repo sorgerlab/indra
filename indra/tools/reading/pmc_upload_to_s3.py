@@ -7,10 +7,7 @@ if __name__ == '__main__':
     import sys
     import pymysql
     import time
-    try:
-        from io import StringIO
-    except ImportError:
-        from cStringIO import StringIO
+    from io import StringIO
 
     if len(sys.argv) != 3:
         print("Usage: %s start_index end_index_inclusive" % sys.argv[0])
