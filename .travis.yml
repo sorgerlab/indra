@@ -30,14 +30,16 @@ install:
   #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
   - pip install .
-script:
-  - nosetests indra
-     --with-doctest --with-doctest-ignore-unicode
-     --with-coverage --cover-inclusive --cover-package=indra
-  - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz
   - tar -xf trips_reach_batch4.gz
+script:
+  - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+  - cd $TRAVIS_BUILD_DIR
+  - nosetests indra
+     --with-doctest --with-doctest-ignore-unicode
+     --with-coverage --cover-inclusive --cover-package=indra
+  - cd indra/benchmarks/assembly_eval/batch4
   - python run_combined.py
 after_success:
   coveralls

@@ -8,7 +8,6 @@ eval_file = join(dirname(abspath(__file__)),
                  '../benchmarks/assembly_eval/batch4/reach/' +
                  'reach_stmts_batch_4_eval.pkl')
 
-# Comment out for now b/c they're slow
 def test_bioprocesses():
     """Smoke test to see if bioprocesses analysis works."""
     bp.analyze(eval_file)
@@ -18,10 +17,7 @@ def test_bioprocesses_get_genes():
     assert gene_set
     assert unicode_strs(gene_set)
 
-# Comment out for now b/c they're slow
 def test_complexes():
     """Smoke test to see if complexes analysis works."""
     cp.analyze(eval_file)
 
-if __name__ == '__main__':
-    test_bioprocesses_get_genes()
