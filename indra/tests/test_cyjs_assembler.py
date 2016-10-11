@@ -24,6 +24,10 @@ def test_act():
     cja.make_model()
     assert(len(cja._nodes) == 3)
     assert(len(cja._edges) == 2)
+    polarities = [edge['data']['polarity'] for edge in cja._edges]
+    assert(len(set(polarities))==2)
+    assert('positive' in polarities)
+    assert('negative' in polarities)
 
 def test_print_cyjs():
     cja = CyJSAssembler()

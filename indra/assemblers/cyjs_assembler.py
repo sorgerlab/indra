@@ -37,12 +37,13 @@ class CyJSAssembler(object):
         return cyjs_str
 
     def _add_activation(self, stmt):
-        edge_type = _get_stmt_type(stmt)
+        edge_type, edge_polarity = _get_stmt_type(stmt)
         edge_id = self._get_new_id()
         source_id = self._add_node(stmt.subj)
         target_id = self._add_node(stmt.obj)
         edge = {'data': {'i': edge_type, 'id': edge_id,
-                         'source': source_id, 'target': target_id}}
+                         'source': source_id, 'target': target_id,
+                         'polarity': edge_polarity}}
         self._edges.append(edge)
 
     def _add_node(self, agent):
@@ -65,16 +66,26 @@ class CyJSAssembler(object):
 def _get_stmt_type(stmt):
     if isinstance(stmt, Modification):
         edge_type = 'Modification'
+        edge_polarity = 'positive'
     elif isinstance(stmt, SelfModification):
         edge_type = 'SelfModification'
+        edge_polarity = 'positive'
     elif isinstance(stmt, Complex):
         edge_type = 'Complex'
+        edge_polarity = 'none'
     elif isinstance(stmt, Activation):
         edge_type = 'Activation'
+        if stmt.is_activation:
+            edge_polarity = 'positive'
+        else:
+            edge_polarity = 'negative'
     elif isinstance(stmt, RasGef):
         edge_type = 'RasGef'
+        edge_polarity = 'positive'
     elif isinstance(stmt, RasGap):
         edge_type = 'RasGap'
+        edge_polarity = 'negative'
     else:
         edge_type = stmt.__class__.__str__()
-    return edge_type
+        edge_polarity = 'none'
+    return edge_type, edge_polarity
