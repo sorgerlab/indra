@@ -1266,9 +1266,3 @@ def test_unicode_str_methods():
     print(st)
     print(repr(st))
 
-
-# TODO expand tests to also check for things that should NOT match (different
-# agent names)
-
-# TODO Expand match tests to 
-

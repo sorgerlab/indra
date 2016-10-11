@@ -61,6 +61,10 @@ import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
 
+# Set the JSONpickle backend. We need to use the json module explicitly (rather
+# than simplejson, which is the default if installed), because it returns
+# unicode strings upon unpickling, which is what we want.
+jsonpickle.set_preferred_backend('json')
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
