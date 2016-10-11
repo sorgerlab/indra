@@ -97,7 +97,7 @@ def analyze(filename):
     rows = []
     for stmt in indra_only:
         rows.append([stmt.members[0].name, stmt.members[1].name,
-                     len(stmt.evidence)])
+                     str(len(stmt.evidence))])
     write_unicode_csv('unmatched_complexes.tsv', rows, delimiter='\t')
 
     return {'indra_only': indra_only,

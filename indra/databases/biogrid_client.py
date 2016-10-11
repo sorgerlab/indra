@@ -26,15 +26,13 @@ except IOError:
     logger.error('BioGRID API key could not be found, trying environment '
                  'variable $%s.' % api_key_env_name)
     logger.error(api_key_file)
-    api_key = None
-
-# Try the environment variable
-if api_key_env_name in os.environ:
-    api_key = os.environ.get(api_key_env_name)
-else:
-    logger.error('No BioGRID API key found in environment variable '
-                 '%s.' % api_key_env_name)
-    api_key = None
+    # Try the environment variable
+    if api_key_env_name in os.environ:
+        api_key = os.environ.get(api_key_env_name)
+    else:
+        logger.error('No BioGRID API key found in environment variable '
+                     '%s.' % api_key_env_name)
+        api_key = None
 
 
 def get_interactors(gene_name):
