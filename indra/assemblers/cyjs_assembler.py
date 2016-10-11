@@ -45,6 +45,12 @@ class CyJSAssembler(object):
         cyjs_str = json.dumps(cyjs_dict, indent=1)
         return cyjs_str
 
+    def save_model(self, fname='model.js'):
+        cyjs_str = self.print_cyjs()
+        s = 'var modelElements = %s;' % cyjs_str
+        with open(fname, 'wt') as fh:
+            fh.write(s)
+
     def _add_activation(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         edge_id = self._get_new_id()
