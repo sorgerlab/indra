@@ -29,6 +29,16 @@ def test_act():
     assert('positive' in polarities)
     assert('negative' in polarities)
 
+def test_complex():
+    cja = CyJSAssembler()
+    cja.add_statements([st_complex])
+    cja.make_model()
+    assert(len(cja._nodes) == 3)
+    assert(len(cja._edges) == 3)
+    polarities = [edge['data']['polarity'] for edge in cja._edges]
+    assert(len(set(polarities))==1)
+    assert('none' in polarities)
+
 def test_print_cyjs():
     cja = CyJSAssembler()
     cja.add_statements([st_act, st_act2])

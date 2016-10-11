@@ -1,7 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
+import logging
+import itertools
 from indra.statements import *
+
+logger = logging.getLogger('cyjs_assembler')
 
 class CyJSAssembler(object):
     def __init__(self, stmts=None):
@@ -30,6 +34,11 @@ class CyJSAssembler(object):
         for stmt in self.statements:
             if isinstance(stmt, Activation):
                 self._add_activation(stmt)
+            elif isinstance(stmt, Complex):
+                self._add_complex(stmt)
+            else:
+                logger.warning('Unhandled statement type: %s' % 
+                               stmt.__class_.__name__)
 
     def print_cyjs(self):
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
@@ -45,6 +54,18 @@ class CyJSAssembler(object):
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
         self._edges.append(edge)
+
+    def _add_complex(self, stmt):
+        edge_type, edge_polarity = _get_stmt_type(stmt)
+        for m1, m2 in itertools.combinations(stmt.members, 2):
+            m1_id = self._add_node(m1)
+            m2_id = self._add_node(m2)
+
+            edge_id = self._get_new_id()
+            edge = {'data': {'i': edge_type, 'id': edge_id,
+                             'source': m1_id, 'target': m2_id,
+                             'polarity': edge_polarity}}
+            self._edges.append(edge)
 
     def _add_node(self, agent):
         node_key = agent.name
