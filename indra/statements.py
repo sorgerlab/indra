@@ -1517,3 +1517,4 @@ class InvalidLocationError(ValueError):
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
 
+
