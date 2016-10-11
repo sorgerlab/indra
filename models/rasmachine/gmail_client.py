@@ -39,10 +39,9 @@ def fetch_email(M, msg_id):
             msg = email.message_from_bytes(raw_msg_txt)
         except AttributeError:
             msg = email.message_from_string(raw_msg_txt)
-        # At this point, in Python 3 all our decoding is taken care of.
-        # In Python 2, we have a message containing string (not unicode)
-        # fields that will still need to be decoded.
-        # in Python3, 
+        # At this point, we have a message containing bytes (not unicode)
+        # fields that will still need to be decoded, ideally according to the
+        # character set specified in the message.
         return msg
     else:
         return None
