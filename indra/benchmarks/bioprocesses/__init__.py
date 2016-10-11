@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from indra.preassembler import grounding_mapper as gm
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.tools import plot_formatting as pf
+from indra.util import plot_formatting as pf
 from indra.databases import hgnc_client
 
 
@@ -97,7 +97,7 @@ def plot_stmt_counts(go_stmt_map, plot_filename, figsize=(3, 3)):
     fig.savefig(plot_filename)
 
 
-def analyze(filename):
+def analyze(filename, plot=False):
     # Load the file
     results = load_file(filename)
 
@@ -153,4 +153,6 @@ def analyze(filename):
     with open('go_stmt_map.pkl', 'wb') as f:
         pickle.dump(go_stmt_map, f, protocol=2)
 
-    plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
+    if plot:
+        plot_stmt_counts(go_stmt_map, 'go_stmts.pdf')
+

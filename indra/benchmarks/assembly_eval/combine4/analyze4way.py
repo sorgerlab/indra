@@ -2,7 +2,7 @@ import glob
 import pickle
 import matplotlib_venn as mv
 import matplotlib.pyplot as plt
-import indra.tools.plot_formatting as pf
+import indra.util.plot_formatting as pf
 
 fnames = glob.glob('combined/other_outputs/*.pkl')
 all_stmts = []

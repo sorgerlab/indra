@@ -3,7 +3,7 @@ from builtins import dict, str
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
-from indra.tools import plot_formatting as pf
+from indra.util import plot_formatting as pf
 from collections import Counter
 from indra.statements import *
 from indra.preassembler import Preassembler
