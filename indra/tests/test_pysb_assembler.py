@@ -1,8 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
-from indra.assemblers.pysb_assembler import get_agent_rule_str
+from indra.assemblers.pysb_assembler import get_agent_rule_str, _n
 from indra.statements import *
+from pysb import bng
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -531,3 +532,37 @@ def test_save_rst():
     pa.add_statements([st])
     pa.make_model()
     pa.save_rst('/dev/null')
+
+def test_name_standardize():
+    n = _n('.*/- ^&#@$')
+    assert(isinstance(n, str))
+    assert(n == '__________')
+    n = _n('14-3-3')
+    assert(isinstance(n, str))
+    assert(n == 'p14_3_3')
+    n = _n('\U0001F4A9bar')
+    assert(isinstance(n, str))
+    assert(n == 'bar')
+
+def test_generate_equations():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    bng.generate_equations(pa.model)
+
+def test_non_python_name_phos():
+    st = Phosphorylation(Agent('14-3-3'), Agent('BRAF kinase'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(pa.model.monomers[0].name == 'BRAF_kinase')
+    assert(pa.model.monomers[1].name == 'p14_3_3')
+    bng.generate_equations(pa.model)
+
+def test_non_python_name_bind():
+    st = Complex([Agent('14-3-3'), Agent('BRAF kinase')])
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    bng.generate_equations(pa.model)
