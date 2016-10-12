@@ -143,7 +143,7 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
                 sentences.append((stmt.evidence[0].pmid,
-                                  stmt.evidence[0].text.encode('utf8')))
+                                  stmt.evidence[0].text))
                 if max_sentences is not None and \
                    len(sentences) >= max_sentences:
                     return sentences
