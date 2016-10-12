@@ -240,8 +240,8 @@ def process_nxml_file(file_name, citation=None, offline=False):
         return process_json_str(json_str)
     # For the web service, we read the file and process it as a string
     else:
-        nxml_str = open(file_name, 'rt').read()
-        nxml_str = nxml_str.decode('utf-8')
+        with open(file_name, 'rb') as f:
+            nxml_str = f.read().decode('utf-8')
         return process_nxml_str(nxml_str, citation, False)
 
 
