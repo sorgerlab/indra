@@ -1,9 +1,11 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
-from processor import BelProcessor
+from indra.bel.processor import BelProcessor
 
 logger = logging.getLogger('bel')
 
@@ -40,11 +42,13 @@ def process_ndex_neighborhood(gene_names, network_id=None,
         network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
+    # The ndex_client returns the rdf as a unicode string
     rdf = ndex_client.send_request(url, params, is_json=False)
     if rdf is None:
         logger.info('No response for NDEx neighborhood query.')
         return None
-    with open(rdf_out, 'wt') as fh:
+    assert isinstance(rdf, str)
+    with open(rdf_out, 'wb') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf)
     return bp
@@ -88,6 +92,6 @@ def process_belrdf(rdf_str):
 
     # Print some output about the process
     bp.print_statement_coverage()
-    logger.debug("\n--- Converted INDRA Statements -------------")
+    logger.info("\n--- Converted INDRA Statements -------------")
     bp.print_statements()
     return bp

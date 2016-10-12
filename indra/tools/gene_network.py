@@ -1,10 +1,15 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import pickle
+import logging
 from indra.bel import bel_api
 from indra.biopax import biopax_api as ba
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.sitemapper import default_mapper as sm
+
+logger = logging.getLogger('gene_network')
 
 class GeneNetwork(object):
     """Build a set of INDRA statements for a given gene list from databases.
@@ -60,24 +65,24 @@ class GeneNetwork(object):
             bel_stmt_path = '%s_bel_stmts.pkl' % self.basename
         # Check for cached BEL stmt file
         if self.basename is not None and os.path.isfile(bel_stmt_path):
-            print "Loading BEL statements from %s" % bel_stmt_path
-            with open(bel_stmt_path) as f:
+            logger.info("Loading BEL statements from %s" % bel_stmt_path)
+            with open(bel_stmt_path, 'rb') as f:
                 bel_statements = pickle.load(f)
         # No cache, so perform the queries
         else:
             bel_statements = []
             for gene in self.gene_list:
-                print "Getting BEL statements for gene", gene
+                logger.info("Getting BEL statements for gene %s" % gene)
                 bel_proc = bel_api.process_ndex_neighborhood([gene])
                 if bel_proc is not None:
                     bel_statements += bel_proc.statements
             # Save to pickle file if we're caching
             if self.basename is not None:
-                with open(bel_stmt_path, 'w') as f:
-                    pickle.dump(bel_statements, f)
+                with open(bel_stmt_path, 'wb') as f:
+                    pickle.dump(bel_statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            print("Filtering statements to match gene list")
+            logger.info("Filtering statements to match gene list")
             bel_statements = [s for s in bel_statements
                               if all([(agent.name in self.gene_list)
                                       for agent in s.agent_list()])]
@@ -112,13 +117,13 @@ class GeneNetwork(object):
         # Check for cached Biopax stmt file at the given path
         # if it's there, return the statements from the cache
         if self.basename is not None and os.path.isfile(biopax_stmt_path):
-            print "Loading Biopax statements from %s" % biopax_stmt_path
-            with open(biopax_stmt_path) as f:
+            logger.info("Loading Biopax statements from %s" % biopax_stmt_path)
+            with open(biopax_stmt_path, 'rb') as f:
                 bp_statements = pickle.load(f)
             return bp_statements
         # Check for cached file before querying Pathway Commons Web API
         if self.basename is not None and os.path.isfile(biopax_ras_owl_path):
-            print "Loading Biopax from OWL file", biopax_ras_owl_path
+            logger.info("Loading Biopax from OWL file", biopax_ras_owl_path)
             bp = ba.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
         else:
@@ -135,11 +140,11 @@ class GeneNetwork(object):
         bp.get_activity_modification()
         # Save statements to pickle file if we're caching
         if self.basename is not None:
-            with open(biopax_stmt_path, 'w') as f:
-                pickle.dump(bp.statements, f)
+            with open(biopax_stmt_path, 'wb') as f:
+                pickle.dump(bp.statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            print("Filtering statements to match gene list")
+            logger.info("Filtering statements to match gene list")
             bp_statements = [s for s in bp.statements
                               if all([(agent.name in self.gene_list)
                                       for agent in s.agent_list()])]
@@ -204,16 +209,16 @@ class GeneNetwork(object):
         """
         # First round of preassembly: remove duplicates before sitemapping
         pa1 = Preassembler(hierarchies, stmts)
-        print "Combining duplicates"
+        logger.info("Combining duplicates")
         pa1.combine_duplicates()
         # Map sites
-        print "Mapping sites"
+        logger.info("Mapping sites")
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
         # Combine valid and mapped statements into single list
         mapped_stmts = valid + [m.mapped_stmt for m in mapped]
         # Second round of preassembly: de-duplicate and combine related
         pa2 = Preassembler(hierarchies, mapped_stmts)
-        print "Combining duplicates again"
+        logger.info("Combining duplicates again")
         pa2.combine_duplicates()
         pa2.combine_related()
         # Fill out the results dict
@@ -227,20 +232,20 @@ class GeneNetwork(object):
         self.results['related2'] = pa2.related_stmts
         # Print summary
         if print_summary:
-            print
-            print("Starting number of statements: %d" % len(stmts))
-            print("After duplicate removal: %d" % len(pa1.unique_stmts))
-            print("Unique statements with valid sites: %d" % len(valid))
-            print("Unique statements with invalid sites: %d" % len(mapped))
-            print("After post-mapping duplicate removal: %d" %
-                  len(pa2.unique_stmts))
-            print("After combining related statements: %d" %
-                  len(pa2.related_stmts))
+            logger.info("\nStarting number of statements: %d" % len(stmts))
+            logger.info("After duplicate removal: %d" % len(pa1.unique_stmts))
+            logger.info("Unique statements with valid sites: %d" % len(valid))
+            logger.info("Unique statements with invalid sites: %d" %
+                        len(mapped))
+            logger.info("After post-mapping duplicate removal: %d" %
+                        len(pa2.unique_stmts))
+            logger.info("After combining related statements: %d" %
+                        len(pa2.related_stmts))
         # Save the results if we're caching
         if self.basename is not None:
             results_filename = '%s_results.pkl' % self.basename
-            with open(results_filename, 'w') as f:
-                pickle.dump(self.results, f)
+            with open(results_filename, 'wb') as f:
+                pickle.dump(self.results, f, protocol=2)
         return self.results
 
 

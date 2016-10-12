@@ -1,17 +1,22 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import logging
 import boto3
 import zlib
 import botocore
 import json
-import cStringIO
 import gzip
+from io import BytesIO
+
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 # Logger
 logger = logging.getLogger('s3_client')
-
-# Check Amazon credentials here?
-
-# Create global boto3 client singleton? Perhaps by lazy initialization?
 
 bucket_name ='bigmech'
 client = boto3.client('s3')
@@ -30,6 +35,10 @@ def check_pmid(pmid):
 def get_pmid_key(pmid):
     pmid = check_pmid(pmid)
     return prefix + pmid
+
+
+def get_reach_key(pmid):
+    return get_pmid_key(pmid) + '/reach'
 
 
 def filter_keys(prefix):
@@ -123,14 +132,20 @@ def put_abstract(pmid, text):
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
-def get_reach_version(pmid):
-    pmid = check_pmid(pmid)
-    reach_key = prefix + pmid + '/reach'
+def get_reach_metadata(pmid):
+    reach_key = get_reach_key(pmid)
     try:
         reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
         logger.info("%s: found REACH output on S3; checking version" % pmid)
         reach_metadata = reach_gz_obj['Metadata']
+        # The REACH version string comes back as str in Python 2, not unicode
+        # Using str (instead of .decode) should work in both Python 2 and 3
         reach_version = reach_metadata.get('reach_version')
+        if reach_version is not None:
+            reach_version = str(reach_version)
+        source_text = reach_metadata.get('source_text')
+        if source_text is not None:
+            source_text = str(source_text)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
@@ -139,21 +154,47 @@ def get_reach_version(pmid):
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
-    return reach_version
+    return (reach_version, source_text)
 
 
 def get_reach_output(pmid):
-    pmid = check_pmid(pmid)
-    reach_key = prefix + pmid + '/reach'
-    reach_s3obj = client.get_object(Bucket=bucket, Key=reach_key)
-    meta = reach_s3obj['Metadata']
-    reach_result = reach_s3obj['Body'].read()
-    return reach_result
+    # Get the REACH JSON as unicode
+    reach_json_str = get_reach_json_str(pmid)
+    # Now create the JSON object--the resulting obj will contain un-escaped
+    # unicode data
+    if reach_json_str is None:
+        return None
+    else:
+        reach_json = json.loads(reach_json_str)
+        return reach_json
 
 
-def put_reach_output(reach_output, pmid_key, reach_version, source_text):
+def get_reach_json_str(pmid):
+    reach_key = get_reach_key(pmid)
+    try:
+        reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] =='NoSuchKey':
+            logger.info('No REACH output found on S3 for key' % reach_key)
+            return None
+        # If there was some other kind of problem, re-raise the exception
+        else:
+            raise e
+    #meta = reach_s3obj['Metadata']
+    reach_gz = reach_s3obj['Body'].read()
+    # Gunzip the the content
+    reach_bytes = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
+    # Convert from bytes to str (shouldn't affect content since all
+    # Unicode should be escaped in the JSON)
+    reach_uni = reach_bytes.decode('utf-8')
+    return reach_uni
+
+
+def put_reach_output(reach_output, pmid, reach_version, source_text):
+    if not isinstance(reach_version, basestring):
+        raise ValueError("REACH version must be a string.")
     full_json_gz = gzip_string(json.dumps(reach_output), 'reach_output.json')
-    reach_key = 'papers/%s/reach' % pmid_key
+    reach_key = get_reach_key(pmid)
     reach_metadata = {'reach_version': reach_version,
                       'source_text': source_text}
     client.put_object(Key=reach_key, Body=full_json_gz, Bucket=bucket_name,
@@ -161,7 +202,7 @@ def put_reach_output(reach_output, pmid_key, reach_version, source_text):
 
 
 def gzip_string(content, name):
-    buf = cStringIO.StringIO()
+    buf = BytesIO()
     gzf = gzip.GzipFile(name, 'wb', 6, buf)
     gzf.write(content.encode('utf8'))
     gzf.close()

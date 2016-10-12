@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.java_vm import autoclass, JavaException
 
 class ReachReader(object):

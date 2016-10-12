@@ -1,7 +1,9 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
-from indra.tools import plot_formatting as pf
+from indra.util import plot_formatting as pf
 from collections import Counter
 from indra.statements import *
 from indra.preassembler import Preassembler
@@ -20,7 +22,7 @@ pf.set_fig_params()
 
 def load_file(stmts_file):
     logger.info("Loading results...")
-    with open(stmts_file) as f:
+    with open(stmts_file, 'rb') as f:
         results = pickle.load(f)
     return results
 
@@ -181,7 +183,7 @@ def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
 if __name__ == '__main__':
     # Load the statements
     if len(sys.argv) < 2:
-        print "Usage: %s reach_stmts_file" % sys.argv[0]
+        print("Usage: %s reach_stmts_file" % sys.argv[0])
         sys.exit()
     results = load_file(sys.argv[1])
     all_stmts = [stmt for paper_stmts in results.values()

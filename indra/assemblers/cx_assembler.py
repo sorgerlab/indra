@@ -1,9 +1,18 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import json
 import itertools
 from collections import OrderedDict
 from indra.statements import *
 from indra.databases import context_client
+
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
@@ -88,9 +97,9 @@ class CxAssembler():
                                 'name': 'nodes'},
                                {'idCounter': self._id_counter,
                                 'name': 'edges'}]
-        for k, v in self.cx.iteritems():
+        for k, v in self.cx.items():
             full_cx[k] = v
-        full_cx = [{k: v} for k, v in full_cx.iteritems()]
+        full_cx = [{k: v} for k, v in full_cx.items()]
         json_str = json.dumps(full_cx, indent=2)
         return json_str
 
@@ -204,11 +213,11 @@ class CxAssembler():
                           'n': 'type',
                           'v': agent_type}
         self.cx['nodeAttributes'].append(node_attribute)
-        for db_name, db_ids in agent.db_refs.iteritems():
-            if isinstance(db_ids, basestring):
-                db_id = db_ids
-            elif isinstance(db_ids, int):
+        for db_name, db_ids in agent.db_refs.items():
+            if isinstance(db_ids, int):
                 db_id = str(db_ids)
+            elif isinstance(db_ids, basestring):
+                db_id = db_ids
             else:
                 db_id = db_ids[0]
             if db_name == 'UP':

@@ -1,8 +1,14 @@
 language: python
 python:
   - "2.7"
+  - "3.5"
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
@@ -11,20 +17,29 @@ before_install:
 install:
   # INDRA dependencies
   - sudo apt-get install graphviz
-  - pip install pygraphviz
-  - pip install functools32
-  - pip install jsonschema coverage python-coveralls boto3
+  - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas
+  - pip install doctest-ignore-unicode
   # PySB and dependencies
-  - wget https://github.com/RuleWorld/bionetgen/archive/2.2.5-stable.zip
-  - unzip -q 2.2.5-stable.zip
-  - sudo ln -s `pwd`/BioNetGen-2.2.5-stable /usr/local/share/BioNetGen
-  - pip install git+https://github.com/pysb/pysb.git
+  - wget "http://www.csb.pitt.edu/Faculty/Faeder/?smd_process_download=1&download_id=142" -O BioNetGen-2.2.6-stable.tar.gz
+  - tar xzf BioNetGen-2.2.6-stable.tar.gz
+  - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
+  - pip install git+https://github.com/johnbachman/pysb.git@unicode_fix2
   # Biopax/Paxtools dependencies
-  - pip install git+https://github.com/jmuhlich/pyjnius_indra.git@master
+  - pip install jnius-indra
+  # Download a number of useful resource files for testing purposes
+  #- wget http://geneontology.org/ontology/go.owl -P data/
+  - git submodule update --remote
   - pip install .
+  - cd indra/benchmarks/assembly_eval/batch4
+  - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz
+  - tar -xf trips_reach_batch4.gz
 script:
-  nosetests indra
-     --with-doctest
+  - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+  - cd $TRAVIS_BUILD_DIR
+  - nosetests indra
+     --with-doctest --with-doctest-ignore-unicode
      --with-coverage --cover-inclusive --cover-package=indra
+  - cd indra/benchmarks/assembly_eval/batch4
+  - python run_combined.py
 after_success:
   coveralls

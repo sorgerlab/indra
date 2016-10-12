@@ -1,17 +1,9 @@
-# Iterate over the PMIDs
-# Check in S3
-# If present, copy to NXML folder
-# Prepare temporary .conf file using appropriate number of cores
-# Run reach on NXML files, send to output folder
-# Join the resulting .json files
-# Upload the .json to S3, mark down in a folder as being run
-
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import sys
 import tempfile
 import shutil
-import boto3
-import botocore
 import subprocess
 import glob
 import json
@@ -31,7 +23,7 @@ if __name__ == '__main__':
     usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
              % sys.argv[0]
     if len(sys.argv) < 6:
-        print usage
+        print(usage)
         sys.exit()
 
     # Get the command line arguments
@@ -42,9 +34,6 @@ if __name__ == '__main__':
 
     # Logger
     logger = logging.getLogger('runreach')
-    logging.getLogger('boto3').setLevel(logging.CRITICAL)
-    logging.getLogger('botocore').setLevel(logging.CRITICAL)
-    logging.getLogger('requests').setLevel(logging.CRITICAL)
 
     # Load the list of PMIDs from the given file
     with open(pmid_list_file) as f:
@@ -70,7 +59,8 @@ if __name__ == '__main__':
     # Otherwise, check if we've read the PMIDs already
     else:
         for pmid in pmids_in_range:
-            found_reach_version = s3_client.get_reach_version(pmid)
+            (read_reach_version, read_source_text) = \
+                                    s3_client.get_reach_metadata(pmid)
             # Found it, same version
             if found_reach_version is not None and \
                found_reach_version == reach_version:
@@ -150,9 +140,9 @@ if __name__ == '__main__':
                         (content_type, pmid))
             continue
         # Write the content to a file with the appropriate extension
-        with open(content_path, 'w') as f:
+        with open(content_path, 'wb') as f:
             # The XML string is Unicode
-            enc = content.encode('utf8')
+            enc = content.encode('utf-8')
             f.write(enc)
     logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
                 '%d txt (incl. Elsevier), %d abstract, %d no content' %
@@ -250,11 +240,14 @@ if __name__ == '__main__':
     def join_parts(prefix):
         """Join different REACH output JSON files into a single JSON."""
         try:
-            entities = json.load(open(prefix + '.uaz.entities.json'))
-            events = json.load(open(prefix + '.uaz.events.json'))
-            sentences = json.load(open(prefix + '.uaz.sentences.json'))
+            with open(prefix + '.uaz.entities.json', 'rt') as f:
+                entities = json.load(f)
+            with open(prefix + '.uaz.events.json', 'rt') as f:
+                events = json.load(f)
+            with open(prefix + '.uaz.sentences.json', 'rt') as f:
+                sentences = json.load(f)
         except IOError as e:
-            logging.error('Failed to open JSON files for %s; REACH error?' %
+            logger.error('Failed to open JSON files for %s; REACH error?' %
                           prefix)
             return None
         return {'events': events, 'entities': entities, 'sentences': sentences}

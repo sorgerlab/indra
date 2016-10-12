@@ -50,27 +50,36 @@ Structure of the XML output returned by queries to Pubmed database::
           ArticleIdList
 """
 
-import urllib, urllib2
-from functools32 import lru_cache
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import xml.etree.ElementTree as ET
+import requests
+import logging
+# Python 3
+try:
+    from functools import lru_cache
+# Python 2
+except ImportError:
+    from functools32 import lru_cache
 from indra.databases import hgnc_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
+
+logger = logging.getLogger('pubmed')
 
 pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 
-
-@lru_cache(maxsize=100)
+# Send request can't be cached by lru_cache because it takes a dict
+# (a mutable/unhashable type) as an argument. We cache the callers instead.
 def send_request(url, data):
-    try:
-        req = urllib2.Request(url, data)
-        res = urllib2.urlopen(req)
-        xml_str = res.read()
-        tree = ET.fromstring(xml_str)
-    except:
+    res = requests.get(url, params=data)
+    if not res.status_code == 200:
         return None
+    tree = ET.XML(res.content, parser=UTB())
     return tree
 
 
+@lru_cache(maxsize=100)
 def get_ids(search_term, **kwargs):
     """Search Pubmed for paper IDs given a search term.
 
@@ -86,13 +95,12 @@ def get_ids(search_term, **kwargs):
               'retstart': 0,
               'db': 'pubmed',
               'sort': 'pub+date'}
-    for k, v in kwargs.iteritems():
-        params[k] = v
-    tree = send_request(pubmed_search, urllib.urlencode(params))
+    params.update(kwargs)
+    tree = send_request(pubmed_search, params)
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print tree.find('ERROR').text
+        logger.error(tree.find('ERROR').text)
         return []
     count = int(tree.find('Count').text)
     id_terms = tree.findall('IdList/Id')
@@ -100,11 +108,12 @@ def get_ids(search_term, **kwargs):
         return []
     ids = [idt.text for idt in id_terms]
     if count != len(ids):
-        print('Not all ids were retrieved for search %s;\n'
-              'limited at %d.' % (search_term, params['retmax']))
+        logger.warning('Not all ids were retrieved for search %s;\n'
+                       'limited at %d.' % (search_term, params['retmax']))
     return ids
 
 
+@lru_cache(maxsize=100)
 def get_ids_for_gene(hgnc_name, **kwargs):
     """Get the curated set of articles for a gene in the Entrez database.
 
@@ -130,15 +139,13 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     # Query the Entrez Gene database
     params = {'db': 'gene',
               'retmode': 'xml',
-              'id': entrez_id,
-              }
-    for k, v in kwargs.iteritems():
-        params[k] = v
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+              'id': entrez_id}
+    params.update(kwargs)
+    tree = send_request(pubmed_fetch, params)
     if tree is None:
         return []
     if tree.find('ERROR') is not None:
-        print tree.find('ERROR').text
+        logger.error(tree.find('ERROR').text)
         return []
     # Get all PMIDs from the XML tree
     id_terms = tree.findall('.//PubMedId')
@@ -149,15 +156,16 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     return ids
 
 
+@lru_cache(maxsize=100)
 def get_article_xml(pubmed_id):
     """Get the XML metadata for a single article from the Pubmed database.
     """
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
     params = {'db': 'pubmed',
-                'retmode': 'xml',
-                'id': pubmed_id}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+              'retmode': 'xml',
+              'id': pubmed_id}
+    tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
     article = tree.find('PubmedArticle/MedlineCitation/Article')
@@ -182,8 +190,8 @@ def get_abstract(pubmed_id):
     if abstract is None:
         return None
     else:
-        abstract_text = ' '.join([' ' if abst.text is None 
-                                    else abst.text for abst in abstract])
+        abstract_text = ' '.join([' ' if abst.text is None
+                                      else abst.text for abst in abstract])
         return abstract_text
 
 
@@ -213,7 +221,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     params = {'db': 'pubmed',
               'retmode': 'xml',
               'id': pmid_list}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
 
@@ -335,7 +343,7 @@ def get_issns_for_journal(nlm_id):
     params = {'db': 'nlmcatalog',
               'retmode': 'xml',
               'id': nlm_id}
-    tree = send_request(pubmed_fetch, urllib.urlencode(params))
+    tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
     issn_list = tree.findall('.//ISSN')
@@ -366,5 +374,5 @@ def expand_pagination(pages):
         new_end = start[:-num_end_digits] + end
         return '%s-%s' % (start, new_end)
     else: # More than one hyphen, something weird happened
-        warnings.warn("Multiple hyphens in page number: %s" % pages)
+        logger.warning("Multiple hyphens in page number: %s" % pages)
         return pages

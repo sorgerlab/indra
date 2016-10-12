@@ -1,4 +1,5 @@
-import json
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import objectpath
 from indra.databases import uniprot_client, chebi_client
 from indra.literature import id_lookup
@@ -26,7 +27,7 @@ class IndexCardProcessor(object):
             for mc in mcs:
                 stmt_class = self._mod_type_map.get(mc.mod_type)
                 if stmt_class is None:
-                    print '%s not found in mod type map' % mc.mod_type
+                    print('%s not found in mod type map' % mc.mod_type)
                     continue
                 stmt = stmt_class(enz, sub, mc.residue, mc.position,
                                   evidence=ev)

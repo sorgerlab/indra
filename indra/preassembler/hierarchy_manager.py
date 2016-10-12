@@ -1,6 +1,11 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import rdflib
-import functools32
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
@@ -82,12 +87,12 @@ class HierarchyManager(object):
                         else:
                             remove_component = max(xcomp, ycomp)
                             joint_component = min(xcomp, ycomp)
-                            for k, v in self.components.iteritems():
+                            for k, v in self.components.items():
                                 if v == remove_component:
                                     self.components[k] = joint_component
 
 
-    @functools32.lru_cache(maxsize=100000)
+    @lru_cache(maxsize=100000)
     def find_entity(self, x):
         """
         Get the entity that has the specified name (or synonym).
@@ -187,7 +192,7 @@ class HierarchyManager(object):
         else:
             return self.query_rdf(id1, 'rn:partof+', id2)
 
-    @functools32.lru_cache(maxsize=100000)
+    @lru_cache(maxsize=100000)
     def query_rdf(self, id1, rel, id2):
         term1 = self.find_entity(id1)
         term2 = self.find_entity(id2)

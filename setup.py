@@ -1,8 +1,17 @@
 from ez_setup import use_setuptools
 use_setuptools()
 from setuptools import setup
+import sys
 
 def main():
+
+    # Only install functools32 if we're in Python 2 (it's not available
+    # for Python 3)
+    install_list = ['pysb', 'objectpath', 'rdflib', 'requests', 'lxml',
+                    'jsonpickle', 'ipython', 'future']
+    if sys.version_info[0] == 2:
+        install_list.append('functools32')
+
     setup(name='indra',
           version='1.2.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
@@ -18,13 +27,11 @@ def main():
                     'indra.preassembler', 'indra.mechlinker',
                     'indra.tools', 'indra.tests', 'indra.resources',
                     'indra.literature'],
-          install_requires=['pysb', 'objectpath', 'rdflib',
-                            'functools32', 'requests', 'lxml', 'jsonpickle',
-                            'ipython'],
-          tests_require=['jnius-indra', 'jsonschema', 'coverage'],
+          install_requires=install_list,
+          tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
           include_package_data=True,
-          keywords=['systems', 'biology', 'model', 'pathway', 'assembler', 'nlp',
-                    'mechanism', 'biochemistry', 'network'],
+          keywords=['systems', 'biology', 'model', 'pathway', 'assembler',
+                    'nlp', 'mechanism', 'biochemistry', 'network'],
           classifiers=[
             'Development Status :: 4 - Beta',
             'Environment :: Console',

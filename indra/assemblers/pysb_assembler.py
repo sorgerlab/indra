@@ -1,3 +1,6 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+import re
 import logging
 import itertools
 
@@ -9,6 +12,13 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client
+
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 logger = logging.getLogger('pysb_assembler')
 
@@ -22,6 +32,13 @@ statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
                        ist.SelfModification, ist.Complex,
                        ist.Activation, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation]
+
+def _n(name):
+    """Return valid PySB name."""
+    n = name.encode('ascii', errors='ignore').decode('ascii')
+    n = re.sub('[^A-Za-z0-9_]', '_', n)
+    n = re.sub(r'(^[0-9].*)', r'p\1', n)
+    return n
 
 def _is_whitelisted(stmt):
     """Return True if the statement type is in the whitelist."""
@@ -40,16 +57,16 @@ class _BaseAgentSet(object):
     def get_create_base_agent(self, agent):
         """Return base agent with given name, creating it if needed."""
         try:
-            base_agent = self.agents[agent.name]
+            base_agent = self.agents[_n(agent.name)]
         except KeyError:
-            base_agent = _BaseAgent(agent.name)
-            self.agents[agent.name] = base_agent
+            base_agent = _BaseAgent(_n(agent.name))
+            self.agents[_n(agent.name)] = base_agent
 
         # Handle bound conditions
         for bc in agent.bound_conditions:
             bound_base_agent = self.get_create_base_agent(bc.agent)
-            bound_base_agent.create_site(get_binding_site_name(agent.name))
-            base_agent.create_site(get_binding_site_name(bc.agent.name))
+            bound_base_agent.create_site(get_binding_site_name(_n(agent.name)))
+            base_agent.create_site(get_binding_site_name(_n(bc.agent.name)))
 
         # Handle modification conditions
         for mc in agent.mods:
@@ -74,15 +91,15 @@ class _BaseAgentSet(object):
             base_agent.create_site('loc', [agent.location])
 
         # There might be overwrites here
-        for db_name, db_ref in agent.db_refs.iteritems():
+        for db_name, db_ref in agent.db_refs.items():
             base_agent.db_refs[db_name] = db_ref
 
         return base_agent
 
-    def iteritems(self):
-        """Return iteritems for the set of BaseAgents that this class wraps.
+    def items(self):
+        """Return items for the set of BaseAgents that this class wraps.
         """
-        return self.agents.iteritems()
+        return self.agents.items()
 
     def __getitem__(self, name):
         return self.agents[name]
@@ -194,7 +211,7 @@ default_mod_site_names = {
 
 def get_binding_site_name(name):
     """Return a binding site name from a given agent name."""
-    binding_site = name.lower()
+    binding_site = _n(name).lower()
     return binding_site
 
 def get_mod_site_name(mod_type, residue, position):
@@ -211,7 +228,7 @@ def get_mod_site_name(mod_type, residue, position):
 def get_active_forms(agent, agent_set):
     '''Returns all the patterns (dicts of site states) of an Agent
     that are known to be active.'''
-    act_forms = agent_set[agent.name].active_forms
+    act_forms = agent_set[_n(agent.name)].active_forms
     if not act_forms:
         act_forms = [{}]
     return act_forms
@@ -219,7 +236,7 @@ def get_active_forms(agent, agent_set):
 def get_inactive_forms(agent, agent_set):
     '''Returns all the patterns (dicts of site states) of an Agent
     that are known to be inactive.'''
-    inact_forms = agent_set[agent.name].inactive_forms
+    inact_forms = agent_set[_n(agent.name)].inactive_forms
     if not inact_forms:
         inact_forms = [{}]
     return inact_forms
@@ -228,7 +245,7 @@ def get_inactive_forms(agent, agent_set):
 
 def get_agent_rule_str(agent):
     """Construct a string from an Agent as part of a PySB rule name."""
-    rule_str_list = [agent.name]
+    rule_str_list = [_n(agent.name)]
     for mod in agent.mods:
         mstr = abbrevs[mod.mod_type]
         if mod.residue is not None:
@@ -248,9 +265,9 @@ def get_agent_rule_str(agent):
     if agent.bound_conditions:
         for b in agent.bound_conditions:
             if b.is_bound:
-                rule_str_list.append(b.agent.name)
+                rule_str_list.append(_n(b.agent.name))
             else:
-                rule_str_list.append('n' + b.agent.name)
+                rule_str_list.append('n' + _n(b.agent.name))
     if agent.location is not None:
         rule_str_list.append(agent.location.replace(' ', '_'))
     rule_str = '_'.join(rule_str_list)
@@ -299,19 +316,19 @@ def get_uncond_agent(agent):
     without any bound conditions and modification conditions.
     Mutation conditions, however, are preserved since they are static.
     """
-    agent_uncond = ist.Agent(agent.name, mutations=agent.mutations)
+    agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
 
 def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
-        for k, v in extra_fields.iteritems():
+        for k, v in extra_fields.items():
             pattern[k] = v
 
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
-    monomer = model.monomers[agent.name]
+    monomer = model.monomers[_n(agent.name)]
     monomer_pattern = monomer(**pattern)
     return monomer_pattern
 
@@ -326,9 +343,9 @@ def get_site_pattern(agent):
         # Here we make the assumption that the binding site
         # is simply named after the binding partner
         if bc.is_bound:
-            pattern[get_binding_site_name(bc.agent.name)] = ANY
+            pattern[get_binding_site_name(_n(bc.agent.name))] = ANY
         else:
-            pattern[get_binding_site_name(bc.agent.name)] = None
+            pattern[get_binding_site_name(_n(bc.agent.name))] = None
 
     # Handle modifications
     for mod in agent.mods:
@@ -520,7 +537,7 @@ class PysbAssembler(object):
         # the global policies of the PySB assembler
         if policies is not None:
             global_policies = self.policies
-            if isinstance(policies, basestring):
+            if isinstance(policies, str):
                 local_policies = {'other': policies}
             else:
                 local_policies = {'other': 'default'}
@@ -532,10 +549,10 @@ class PysbAssembler(object):
         # statements
         self._monomers()
         # Add the monomers to the model based on our BaseAgentSet
-        for agent_name, agent in self.agent_set.iteritems():
-            m = Monomer(agent_name, agent.sites, agent.site_states)
+        for agent_name, agent in self.agent_set.items():
+            m = Monomer(_n(agent_name), agent.sites, agent.site_states)
             self.model.add_component(m)
-            for db_name, db_ref in agent.db_refs.iteritems():
+            for db_name, db_ref in agent.db_refs.items():
                 a = get_annotation(m, db_name, db_ref)
                 if a is not None:
                     self.model.add_annotation(a)
@@ -819,7 +836,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
 
         # Add the pattern for the member being bound
         for bc in member.bound_conditions:
-            bound_name = bc.agent.name
+            bound_name = _n(bc.agent.name)
             bound_bs = get_binding_site_name(bound_name)
             gene_bs = get_binding_site_name(gene_name)
             if bc.is_bound:
@@ -846,8 +863,10 @@ def complex_assemble_multi_way(stmt, model, agent_set):
         lhs = lhs + left_pattern
         rhs = rhs % right_pattern
     # Finally, create the rule and add it to the model
-    rule = Rule(rule_name, lhs <> rhs, kf_bind, kr_bind)
-    add_rule_to_model(model, rule)
+    rule_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
+    rule_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
+    add_rule_to_model(model, rule_fwd)
+    add_rule_to_model(model, rule_rev)
 
 complex_assemble_default = complex_assemble_one_step
 
@@ -936,11 +955,12 @@ def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
     active_site = active_site_names['Kinase']
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
-    r = Rule(rule_name,
-                enz(**{active_site: None}) + sub(**{phos_site: None}) <>
-                enz(**{active_site: 1}) + sub(**{phos_site: 1}),
-                kf_bind, kr_bind)
-    add_rule_to_model(model, r)
+    lhs = enz(**{active_site: None}) + sub(**{phos_site: None})
+    rhs = enz(**{active_site: 1}) + sub(**{phos_site: 1})
+    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
+    r_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
+    add_rule_to_model(model, r_fwd)
+    add_rule_to_model(model, r_rev)
 
 
 def phosphorylation_assemble_one_step(stmt, model, agent_set):
@@ -1223,7 +1243,7 @@ def transphosphorylation_assemble_interactions_only(stmt, model, agent_set):
 
 def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
-                  stmt.enz.bound_conditions[0].agent.name[0].lower() +
+                  _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
     kf = get_create_parameter(model, param_name, 1e-3)
 
@@ -1640,10 +1660,10 @@ def translocation_monomers_default(stmt, agent_set):
 def translocation_assemble_default(stmt, model, agent_set):
     if stmt.from_location is None or stmt.to_location is None:
         return
-    param_name = 'kf_%s_%s_%s' % (stmt.agent.name.lower(),
+    param_name = 'kf_%s_%s_%s' % (_n(stmt.agent.name).lower(),
                                   stmt.from_location, stmt.to_location)
     kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
-    monomer = model.monomers[stmt.agent.name]
+    monomer = model.monomers[_n(stmt.agent.name)]
     rule_agent_str = get_agent_rule_str(stmt.agent)
     rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
                                               stmt.from_location,

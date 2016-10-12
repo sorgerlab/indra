@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import logging
 import objectpath
@@ -43,7 +45,7 @@ class ReachProcessor(object):
         """Print the number of events in the REACH output by type."""
         logger.info('All events by type')
         logger.info('-------------------')
-        for k, v in self.all_events.iteritems():
+        for k, v in self.all_events.items():
             logger.info('%s, %s' % (k, len(v)))
         logger.info('-------------------')
 
@@ -70,9 +72,9 @@ class ReachProcessor(object):
         if res is None:
             return
         for r in res:
-            print r['subtype']
+            print(r['subtype'])
             for a in r['arguments']:
-                print a['type'], '/', a['argument-type'], ':', a['text']
+                print(a['type'], '/', a['argument-type'], ':', a['text'])
 
     def get_modifications(self):
         """Extract Modification INDRA Statements."""
@@ -200,7 +202,7 @@ class ReachProcessor(object):
                     # When the controller is not a simple entity
                     if controller is None:
                         if a['argument-type'] == 'complex':
-                            controllers = a.get('args').values()
+                            controllers = list(a.get('args').values())
                             controller_agent =\
                                 self._get_agent_from_entity(controllers[0])
                             bound_agents = [self._get_agent_from_entity(c) 
@@ -209,7 +211,6 @@ class ReachProcessor(object):
                                                 ba in bound_agents]
                             controller_agent.bound_conditions = \
                                     bound_conditions
-                            print controller_agent
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
@@ -262,7 +263,7 @@ class ReachProcessor(object):
         if res is None:
             return None
         try:
-            entity_term = res.next()
+            entity_term = next(res)
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
@@ -293,7 +294,7 @@ class ReachProcessor(object):
         if res is None:
             return None
         try:
-            entity_term = res.next()
+            entity_term = next(res)
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
@@ -307,13 +308,9 @@ class ReachProcessor(object):
                 up_id = xr['id']
                 db_refs['UP'] = up_id
                 # Look up official names in UniProt
-                hgnc_name = up_client.get_hgnc_name(up_id)
-                if hgnc_name is not None:
-                    agent_name = self._get_valid_name(hgnc_name)
-                else:
-                    gene_name = up_client.get_gene_name(up_id)
-                    if gene_name is not None:
-                        agent_name = self._get_valid_name(gene_name)
+                gene_name = up_client.get_gene_name(up_id)
+                if gene_name is not None:
+                    agent_name = self._get_valid_name(gene_name)
             elif ns == 'interpro':
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':
@@ -381,7 +378,7 @@ class ReachProcessor(object):
             res = self.tree.execute(qstr)
             if res is None:
                 return context
-            context_frame = res.next()
+            context_frame = next(res)
             facets = context_frame['facets']
             cell_line = facets.get('cell-line')
             cell_type = facets.get('cell-type')
@@ -408,7 +405,7 @@ class ReachProcessor(object):
         if hyp is True:
             epistemics['hypothesis'] = True
         # Check if it is direct
-        if event.has_key('is_direct'):
+        if 'is_direct' in event:
             direct = event['is_direct']
             epistemics['direct'] = direct
         # Get the section of the paper it comes from

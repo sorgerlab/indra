@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 import random
 from indra.statements import *
@@ -10,7 +12,7 @@ class StmtScoring(object):
 
     def load_unscored_stmts_from_file(self, stmt_pkl_file):
         """Load a list of statements to score from a pickle file."""
-        with open(stmt_pkl_file) as f:
+        with open(stmt_pkl_file, 'rb') as f:
             stmts = pickle.load(f)
             self.load_unscored_stmts(stmts)
 
@@ -19,7 +21,7 @@ class StmtScoring(object):
 
     def load_scored_stmts_from_file(self, stmt_pkl_file):
         """Load a list of scored (or partially scored) stmts from pickle file."""
-        with open(stmt_pkl_file) as f:
+        with open(stmt_pkl_file, 'rb') as f:
             stmts = pickle.load(f)
             self.load_scored_stmts(stmts)
 
@@ -31,8 +33,8 @@ class StmtScoring(object):
 
     def begin_scoring(self):
         if not self.unscored_stmts and not self.scored_stmts:
-            print "Please load a set of unscored or partially scored " \
-                  "statements first."
+            print("Please load a set of unscored or partially scored "
+                  "statements first.")
             return
         stmts_to_score = None
         # If we have unscored statements and no partially scored statements
@@ -48,21 +50,21 @@ class StmtScoring(object):
             already_scored_stmts = [(stmt, score)
                                     for (stmt, score) in self.scored_stmts
                                     if score is not None]
-        print "Already:", already_scored_stmts
+        print("Already:", already_scored_stmts)
         # Sanity check
         assert stmts_to_score is not None
         # If there are no statements to score, that might mean that we've
         # scored them all!
         if stmts_to_score == []:
-            print "No statements to score--perhaps all have been scored?"
+            print("No statements to score--perhaps all have been scored?")
             return
 
         # Now, begin scoring session
         for stmt in stmts_to_score:
-            print "---------------------------------------------------"
-            print "Statement:", stmt, '\n'
+            print("---------------------------------------------------")
+            print("Statement: %s\n" % stmt)
             for ev_ix, ev in enumerate(stmt.evidence):
-                print "Evidence %s: %s\n" % (ev_ix, ev.text)
+                print("Evidence %s: %s\n" % (ev_ix, ev.text))
             while True:
                 score_input = raw_input('Score (0, 1, q)> ')
                 if score_input in ('0', '1'):
@@ -71,13 +73,13 @@ class StmtScoring(object):
                 elif score_input == 'q':
                     break
                 else:
-                    print "Please enter 0 or 1."
+                    print("Please enter 0 or 1.")
 
             if score_input == 'q':
                 break
             else:
                 already_scored_stmts.append((stmt, score_input))
-                print "Already:", already_scored_stmts
+                print("Already: %s" % already_scored_stmts)
         # Update self.scored_stmts with new scored statements
         self.scored_stmts = already_scored_stmts
         scored_set = [stmt for stmt, score in already_scored_stmts]
@@ -85,15 +87,12 @@ class StmtScoring(object):
             if stmt not in scored_set:
                 self.scored_stmts.append((stmt, None))
 
-        print
-        print "Resulting stmts"
-        print '\n'.join([str(s) for s in stmts_to_score])
-        print
-        print '\n'.join([str(s) for s in already_scored_stmts])
-        print
-        print '\n'.join([str(s) for s in self.scored_stmts])
-
-        import ipdb; ipdb.set_trace()
+        print("\nResulting stmts")
+        print('\n'.join([str(s) for s in stmts_to_score]))
+        print()
+        print('\n'.join([str(s) for s in already_scored_stmts]))
+        print()
+        print('\n'.join([str(s) for s in self.scored_stmts]))
 
 if __name__ == '__main__':
     a = Agent('A')

@@ -1,4 +1,0 @@
-get_pmid_map.py
-get_pmids_with_full_text_from_db.py
-pmc_db.py
-pmc_upload_submit.py

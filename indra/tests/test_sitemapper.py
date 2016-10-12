@@ -1,6 +1,8 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.preassembler.sitemapper import default_mapper as sm, MappedStatement
 from indra.statements import *
-
+from indra.util import unicode_strs
 
 def test_check_agent_mod():
     mapk1_valid = Agent('MAPK1',
@@ -39,7 +41,8 @@ def test_check_agent_mod():
                                                   'T', '185'))
     assert new_agent.mods[1].matches(ModCondition('phosphorylation',
                                                   'Y', '187'))
-
+    assert unicode_strs((mapk1_valid, res_valid, mapk1_invalid, res_invalid,
+                         invalid_sites, map183, map185, new_agent))
 
 def test_site_map_modification():
     mapk1_invalid = Agent('MAPK1',
@@ -56,7 +59,6 @@ def test_site_map_modification():
 
     st1 = Phosphorylation(mapk1_invalid, mapk3_invalid, 'Y', '203')
     st2 = Phosphorylation(map2k1_invalid, mapk1_invalid, 'Y', '218')
-
     res = sm.map_sites([st1, st2])
 
     assert len(res) == 2
@@ -105,6 +107,9 @@ def test_site_map_modification():
     # statement unchanged
     assert ms.residue == 'Y'
     assert ms.position == '218'
+    # Check for unicode
+    assert unicode_strs((mapk1_invalid, mapk3_invalid, map2k1_invalid, st1,
+                         st2, res, valid_stmts, mapped_stmts))
 
 
 def test_site_map_activity_modification():
@@ -128,7 +133,7 @@ def test_site_map_activity_modification():
                                                              'T', '185'))
     assert ms.mapped_stmt.agent.mods[1].matches(ModCondition('phosphorylation',
                                                              'Y', '187'))
-
+    assert unicode_strs((mc, mapk1, st1, valid, mapped))
 
 def test_site_map_selfmodification():
     mapk1_invalid = Agent('MAPK1',
@@ -151,6 +156,7 @@ def test_site_map_selfmodification():
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert ms.residue == 'Y'
     assert ms.position == '187'
+    assert unicode_strs((mapk1_invalid, st1, valid, mapped))
 
 # The following Statements are all handled by the same block of code and hence
 # can be tested in similar fashion
@@ -160,7 +166,6 @@ def test_site_map_complex():
     st1 = RasGef(mapk1_invalid, 'activity', mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
-
 
 def test_site_map_rasgef():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
@@ -202,6 +207,7 @@ def get_invalid_mapks():
                           mods=[ModCondition('phosphorylation', 'T', '201'),
                                 ModCondition('phosphorylation', 'Y', '203')],
                           db_refs={'UP': 'P27361'})
+    assert unicode_strs((mapk1_invalid, mapk3_invalid))
     return (mapk1_invalid, mapk3_invalid)
 
 
@@ -231,5 +237,5 @@ def check_validated_mapks(res, st1):
     assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
     assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
-
+    assert unicode_strs((res, st1))
 

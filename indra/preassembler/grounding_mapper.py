@@ -1,11 +1,15 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import csv
 import sys
+import pickle
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
 from itertools import groupby
 from collections import Counter
 import logging
+from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger('grounding_mapper')
 
@@ -45,20 +49,16 @@ class GroundingMapper(object):
                             agent.name = agent.db_refs.get('BE')
                         # Take a HGNC name from Uniprot next
                         elif agent.db_refs.get('UP'):
-                            # Try for the HGNC name
-                            hgnc_name = uniprot_client.get_hgnc_name(
-                                                      agent.db_refs.get('UP'))
-                            if hgnc_name is not None:
-                                hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
-                                agent.name = hgnc_name
-                                agent.db_refs['HGNC'] = hgnc_id
-                                continue
-                            # Fall back on the Uniprot gene name
-                            up_gene_name = uniprot_client.get_gene_name(
-                                                       agent.db_refs.get('UP'))
-                            if up_gene_name is not None:
-                                agent.name = up_gene_name
-                                continue
+                            # Try for gene name
+                            gene_name = uniprot_client.get_gene_name(
+                                                      agent.db_refs.get('UP'),
+                                                      web_fallback=False)
+                            if gene_name:
+                                agent.name = gene_name
+                                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                                if hgnc_id is not None:
+                                    agent.db_refs['HGNC'] = hgnc_id
+                                    continue
             # Check if we should skip the statement
             if not skip_stmt:
                 mapped_stmts.append(mapped_stmt)
@@ -79,20 +79,15 @@ class GroundingMapper(object):
                     agent.name = agent.db_refs.get('BE')
                 # Take a HGNC name from Uniprot next
                 elif agent.db_refs.get('UP'):
-                    # Try for the HGNC name
-                    hgnc_name = uniprot_client.get_hgnc_name(
-                                                    agent.db_refs.get('UP'))
-                    if hgnc_name is not None:
-                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
-                        agent.name = hgnc_name
-                        agent.db_refs['HGNC'] = hgnc_id
-                        continue
-                    # Fall back on the Uniprot gene name
-                    up_gene_name = uniprot_client.get_gene_name(
-                                                    agent.db_refs.get('UP'))
-                    if up_gene_name is not None:
-                        agent.name = up_gene_name
-                        continue
+                    # Try for the gene name
+                    gene_name = uniprot_client.get_gene_name(
+                                                    agent.db_refs.get('UP'),
+                                                    web_fallback=False)
+                    if gene_name:
+                        agent.name = gene_name
+                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                        if hgnc_id:
+                            agent.db_refs['HGNC'] = hgnc_id
                     # Take the text string
                     #if agent.db_refs.get('TEXT'):
                     #    agent.name = agent.db_refs.get('TEXT')
@@ -106,13 +101,10 @@ class GroundingMapper(object):
 # key (e.g., ROS, ER)
 def load_grounding_map(path):
     g_map = {}
-    with open(path) as f:
-        mapreader = csv.reader(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
-        rows = [row for row in mapreader]
-
-    for row in rows:
+    csv_rows = read_unicode_csv(path, delimiter=',', quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL,
+                                lineterminator='\r\n')
+    for row in csv_rows:
         key = row[0]
         db_refs = {'TEXT': key}
         keys = [entry for entry in row[1::2] if entry != '']
@@ -151,7 +143,7 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
         for agent in stmt.agent_list():
             if agent is not None and agent.db_refs.get('TEXT') == text:
                 sentences.append((stmt.evidence[0].pmid,
-                                  stmt.evidence[0].text.encode('utf8')))
+                                  stmt.evidence[0].text))
                 if max_sentences is not None and \
                    len(sentences) >= max_sentences:
                     return sentences
@@ -228,15 +220,11 @@ def save_base_map(filename, grouped_by_text):
                 name = uniprot_client.get_mnemonic(id)
             else:
                 name = ''
-            row = [text_string.encode('utf8'), db, id, count, name]
+            row = [text_string, db, id, count, name]
             rows.append(row)
 
-    with open(filename, 'w') as f:
-        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
-        csvwriter.writerows(rows)
-        f.write('\r\n')
+    write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
+                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 def protein_map_from_twg(twg):
     """Build map of entity texts to validated protein grounding.
@@ -267,7 +255,7 @@ def protein_map_from_twg(twg):
                 continue
             # Otherwise, look up the gene name in HGNC and match against the
             # agent text
-            gene_name = uniprot_client.get_hgnc_name(uniprot_id)
+            gene_name = uniprot_client.get_gene_name(uniprot_id)
             if gene_name is None:
                 unmatched += 1
                 continue
@@ -293,11 +281,8 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
         if counter >= agent_limit:
             break
     # Write sentences to CSV file
-    with open(filename, 'w') as f:
-        csvwriter = csv.writer(f, delimiter=',', quotechar='"',
-                               quoting=csv.QUOTE_MINIMAL,
-                               lineterminator='\r\n')
-        csvwriter.writerows(sentences)
+    write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
+                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
                                   '../../bioentities/grounding_map.csv')
@@ -306,15 +291,14 @@ gm = default_grounding_map
 
 
 if __name__ == '__main__':
-    import pickle
 
     if len(sys.argv) != 2:
-        print "Usage: %s stmt_file" % sys.argv[0]
+        print("Usage: %s stmt_file" % sys.argv[0])
         sys.exit()
     statement_file = sys.argv[1]
 
     logger.info("Opening statement file %s" % statement_file)
-    with open(statement_file) as f:
+    with open(statement_file, 'rb') as f:
         st = pickle.load(f)
 
     stmts = []

@@ -1,3 +1,6 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import logging
 import itertools
 from indra.statements import *
@@ -222,12 +225,13 @@ class BaseAgentSet(object):
     def keys(self):
         return self.agents.keys()
 
-    def iteritems(self):
-        return self.agents.iteritems()
+    def items(self):
+        return self.agents.items()
 
     def __getitem__(self, name):
         return self.agents[name]
 
+@python_2_unicode_compatible
 class BaseAgent(object):
     def __init__(self, name):
         self.name = name
@@ -283,14 +287,15 @@ class BaseAgent(object):
         s = '%s(' % self.name
         if self.activities:
             s += 'activities: %s, ' % self.activities
-        for k, v in self.active_states.iteritems():
+        for k, v in self.active_states.items():
             s += '%s: %s' % (k, v)
         s += ')'
         return s
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
+@python_2_unicode_compatible
 class LinkedStatement(object):
     def __init__(self, source_stmts, inferred_stmt):
         self.source_stmts = source_stmts
@@ -303,7 +308,7 @@ class LinkedStatement(object):
         return s
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]

@@ -1,3 +1,6 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import os
 import json
 import logging
@@ -13,14 +16,23 @@ logger = logging.getLogger('biogrid')
 # For more information see http://wiki.thebiogrid.org/doku.php/biogridrest
 api_key_file = os.path.dirname(os.path.realpath(__file__)) + '/' + \
                'biogrid_api_key'
-# Read the API key
+api_key_env_name = 'BIOGRID_API_KEY'
+
+# Try to read the API key from a file
 try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    logger.error('BioGRID API key could not be found.')
+    logger.error('BioGRID API key could not be found, trying environment '
+                 'variable $%s.' % api_key_env_name)
     logger.error(api_key_file)
-    api_key = None
+    # Try the environment variable
+    if api_key_env_name in os.environ:
+        api_key = os.environ.get(api_key_env_name)
+    else:
+        logger.error('No BioGRID API key found in environment variable '
+                     '%s.' % api_key_env_name)
+        api_key = None
 
 
 def get_interactors(gene_name):
@@ -85,12 +97,15 @@ def get_publications(gene_names, save_json_name=None):
     if not res_dict:
         return []
     if save_json_name is not None:
+        # The json module produces strings, not bytes, so the file should be
+        # opened in text mode
         with open(save_json_name, 'wt') as fh:
             json.dump(res_dict, fh, indent=1)
     publications = _extract_publications(res_dict, gene_names)
     return publications
 
 
+@python_2_unicode_compatible
 class Publication(object):
     def __init__(self, interaction, interaction_id):
         self.pmid = "PMID" + str(interaction['PUBMED_ID'])
@@ -101,10 +116,10 @@ class Publication(object):
         self.interaction_id = interaction_id
 
     def __str__(self):
-        return self.__repr__()
+        return "Publication(%s)" % self.pmid
 
     def __repr__(self):
-        return "Publication(%s)" % self.pmid
+        return str(self)
 
 
 def _extract_publications(res_dict, gene_names):
@@ -138,5 +153,6 @@ def _send_request(gene_names, include_interactors=False):
               'accesskey': api_key}
     res = requests.get(biogrid_url, params)
     res.raise_for_status()
+    # The json module handles the conversion from bytes to unicode internally
     res_dict = res.json()
     return res_dict

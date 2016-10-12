@@ -1,6 +1,14 @@
-import urllib, urllib2
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import logging
+import requests
 from indra.java_vm import autoclass, JavaException
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
 
 logger = logging.getLogger('biopax')
 
@@ -48,7 +56,8 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     params['source'] = source_str
     try:
         neighbor_limit = int(neighbor_limit)
-    except TypeError, ValueError:
+        params['limit'] = neighbor_limit
+    except (TypeError, ValueError):
         logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
@@ -59,14 +68,16 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         params['target'] = target_str
 
     logger.info('Sending Pathway Commons query...')
-    try:
-        res = urllib2.urlopen(pc2_url + 'graph', data=urllib.urlencode(params))
-    except urllib2.HTTPError as e:
-        logger.error('Response is HTTP eror code %d.' % e.code)
+    res = requests.get(pc2_url + 'graph', params=params)
+    if not res.status_code == 200:
+        logger.error('Response is HTTP code %d.' % res.status_code)
+        if res.status_code == 500:
+            logger.error('Note: HTTP code 500 can mean empty '
+                         'results for a valid query.')
         return None
-
-    owl_str = res.read()
-    model = owl_str_to_model(owl_str)
+    # We don't decode to Unicode here because owl_str_to_model expects
+    # a byte stream
+    model = owl_str_to_model(res.content)
     if model is not None:
         logger.info('Pathway Commons query returned a model...')
     return model

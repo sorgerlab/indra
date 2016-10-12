@@ -1,17 +1,20 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 import sys
 import csv
 import numpy as np
 from indra.assemblers.english_assembler import EnglishAssembler
+from indra.util import write_unicode_csv
 
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
-        print "Usage: %s stmt_file" % sys.argv[0]
+        print("Usage: %s stmt_file" % sys.argv[0])
         sys.exit()
 
     input_file = sys.argv[1]
-    with open(input_file) as f:
+    with open(input_file, 'rb') as f:
         stmts_by_paper = pickle.load(f)
 
     stmts_by_rule = {}
@@ -24,14 +27,13 @@ if __name__ == '__main__':
             else:
                 stmt_list.append(stmt)
 
-    with open('reach_stmts_by_rule.pkl', 'w') as f:
-        pickle.dump(stmts_by_rule, f)
+    with open('reach_stmts_by_rule.pkl', 'wb') as f:
+        pickle.dump(stmts_by_rule, f, protocol=2)
 
     frequencies = [(k, len(v)) for k, v in stmts_by_rule.items()]
     frequencies.sort(key=lambda x: x[1], reverse=True)
-    with open('reach_rule_frequencies.tsv', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(frequencies)
+    write_unicode_csv('reach_rule_frequencies.tsv', frequencies,
+                      delimiter='\t')
 
     sample_rows = []
     max_sample_size = 20
@@ -58,10 +60,5 @@ if __name__ == '__main__':
                                 stmt.evidence[0].text, rule, freq, stmt,
                                 is_direct])
 
-    with open('stmts_by_rule_to_curate.tsv', 'w') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(sample_rows)
-
-        # Sample 100 stmts from each rule and put in a .tsv file and upload to
-        # Google docs
-
+    write_unicode_csv('stmts_by_rule_to_curate.tsv', sample_rows,
+                      delimiter='\t')

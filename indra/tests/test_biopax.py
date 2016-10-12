@@ -1,8 +1,13 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 from indra.java_vm import autoclass, cast
 from indra import biopax
 import indra.biopax.processor as bpc
 from indra.assemblers import PysbAssembler
+from indra.util import unicode_strs
+from indra.preassembler import Preassembler
+from indra.preassembler.hierarchy_manager import hierarchies
 
 model_path = os.path.dirname(os.path.abspath(__file__)) +\
              '/../../data/biopax_test.owl'
@@ -153,3 +158,11 @@ def test_get_entity_mods():
     assert(residues == set(['Y']))
     mod_pos = set([m.position for m in mods])
     assert(mod_pos == set(['1035', '1056', '1128', '1188', '1242']))
+
+def test_pathsfromto():
+    bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
+    bp.get_phosphorylation()
+    pre = Preassembler(hierarchies, bp.statements)
+    pre.combine_related()
+    assert unicode_strs(pre.unique_stmts)
+

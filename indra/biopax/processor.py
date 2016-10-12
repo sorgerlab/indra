@@ -1,16 +1,20 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import sys
-import pickle
 import logging
 import itertools
 import collections
-from functools32 import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
-
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
 from indra.biopax import pathway_commons_client as pcc
+from indra.util import decode_obj
 
 logger = logging.getLogger('biopax')
 
@@ -48,7 +52,7 @@ class BiopaxProcessor(object):
     def print_statements(self):
         """Print all INDRA Statements collected by the processors."""
         for i, stmt in enumerate(self.statements):
-            print "%s: %s" % (i, stmt)
+            print("%s: %s" % (i, stmt))
 
     def save_model(self, file_name=None):
         """Save the BioPAX model object in an OWL file.
@@ -96,7 +100,8 @@ class BiopaxProcessor(object):
                     continue
                 complexes = _get_combinations(members)
                 for c in complexes:
-                    self.statements.append(Complex(c, ev))
+                    self.statements.append(decode_obj(Complex(c, ev),
+                                                      encoding='utf-8'))
 
     def get_phosphorylation(self, force_contains=None):
         """Extract INDRA Phosphorylation statements from the model.
@@ -111,7 +116,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('phospho',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Phosphorylation(*s))
+            self.statements.append(decode_obj(Phosphorylation(*s),
+                                              encoding='utf-8'))
 
     def get_dephosphorylation(self, force_contains=None):
         """Extract INDRA Dephosphorylation statements from the model.
@@ -126,7 +132,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('phospho', mod_gain=False,
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Dephosphorylation(*s))
+            self.statements.append(decode_obj(Dephosphorylation(*s),
+                                              encoding='utf-8'))
 
     def get_acetylation(self, force_contains=None):
         """Extract INDRA Acetylation statements from the model.
@@ -141,7 +148,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('acetyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Acetylation(*s))
+            self.statements.append(decode_obj(Acetylation(*s),
+                                              encoding='utf-8'))
 
     def get_glycosylation(self, force_contains=None):
         """Extract INDRA Glycosylation statements from the model.
@@ -156,7 +164,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('glycosyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Glycosylation(*s))
+            self.statements.append(decode_obj(Glycosylation(*s),
+                                              encoding='utf-8'))
 
     def get_palmitoylation(self, force_contains=None):
         """Extract INDRA Palmitoylation statements from the model.
@@ -171,7 +180,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('palmitoyl',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Palmitoylation(*s))
+            self.statements.append(decode_obj(Palmitoylation(*s),
+                                              encoding='utf-8'))
 
     def get_ubiquitination(self, force_contains=None):
         """Extract INDRA Ubiquitination statements from the model.
@@ -186,7 +196,8 @@ class BiopaxProcessor(object):
         stmts = self._get_generic_modification('ubiq',
                                                force_contains=force_contains)
         for s in stmts:
-            self.statements.append(Ubiquitination(*s))
+            self.statements.append(decode_obj(Ubiquitination(*s),
+                                              encoding='utf-8'))
 
     def get_activity_modification(self, force_contains=None):
         """Extract INDRA ActiveForm statements from the model.
@@ -264,7 +275,8 @@ class BiopaxProcessor(object):
                     if mods:
                         stmt = ActiveForm(monomer, activity, is_active,
                                           evidence=ev)
-                        self.statements.append(stmt)
+                        self.statements.append(decode_obj(stmt,
+                                                          encoding='utf-8'))
 
     @staticmethod
     def _get_complex_members(cplx):
@@ -445,7 +457,6 @@ class BiopaxProcessor(object):
                     if (enz.name not in force_contains) and \
                         (sub.name not in force_contains):
                         continue
-
                 # Get the modifications
                 mod_in =\
                     BiopaxProcessor._get_entity_mods(input_spe, False)
@@ -661,11 +672,9 @@ class BiopaxProcessor(object):
                 if name is None:
                     name = bpe.getDisplayName()
             elif uniprot_id is not None:
-                name = uniprot_client.get_hgnc_name(uniprot_id[0])
+                name = uniprot_client.get_gene_name(uniprot_id[0])
                 if name is None:
-                    name = uniprot_client.get_gene_name(uniprot_id[0])
-                    if name is None:
-                        name = bpe.getDisplayName()
+                    name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
         elif _is_small_molecule(bpe):

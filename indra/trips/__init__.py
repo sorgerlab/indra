@@ -1,2 +1,1 @@
-from trips_api import process_text
-from trips_api import process_xml
+from indra.trips.trips_api import process_text, process_xml
