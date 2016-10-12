@@ -56,6 +56,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     params['source'] = source_str
     try:
         neighbor_limit = int(neighbor_limit)
+        params['limit'] = neighbor_limit
     except (TypeError, ValueError):
         logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
         return None
@@ -69,7 +70,10 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     logger.info('Sending Pathway Commons query...')
     res = requests.get(pc2_url + 'graph', params=params)
     if not res.status_code == 200:
-        logger.error('Response is HTTP error code %d.' % res.status_code)
+        logger.error('Response is HTTP code %d.' % res.status_code)
+        if res.status_code == 500:
+            logger.error('Note: HTTP code 500 can mean empty '
+                         'results for a valid query.')
         return None
     # We don't decode to Unicode here because owl_str_to_model expects
     # a byte stream
