@@ -58,7 +58,7 @@ def process_pmc(pmc_id, offline=False):
     if xml_str is None:
         return None
     fname = pmc_id + '.nxml'
-    with open(fname, 'wt') as fh:
+    with open(fname, 'wb') as fh:
         fh.write(xml_str.encode('utf-8'))
     rp = process_nxml_file(fname, citation=pmc_id, offline=offline)
     return rp
@@ -175,7 +175,7 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
     """
     if offline:
         fname = 'tmp.nxml'
-        with open(fname, 'wt') as fh:
+        with open(fname, 'wb') as fh:
             fh.write(nxml_str.encode('utf-8'))
         rp = process_nxml_file(fname, citation, True)
         return rp
