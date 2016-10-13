@@ -147,15 +147,15 @@ class TripsProcessor(object):
             if _is_type(event, 'ONT::ACTIVATE'):
                 is_activation = True
                 activator_act = 'activity'
-                self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
+                self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
             elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
                 activator_act = None
-                self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
+                self._add_extracted('ONT::INHIBIT', event.attrib['id'])
             elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
                 activator_act = 'activity'
-                self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
+                self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
 
             ev = _self._get_evidence(event)
             location = self._get_event_location(event)
@@ -325,7 +325,7 @@ class TripsProcessor(object):
             st = ActiveForm(affected_agent, 'activity', True, evidence=ev)
             _stmt_location_to_agents(st, location)
             self.statements.append(st)
-            self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
+            self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
 
     def get_complexes(self):
         """Extract Complex INDRA Statements."""
@@ -376,7 +376,7 @@ class TripsProcessor(object):
                 st = Complex([a1, a2], evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
-            self.extracted_events[_get_type(event)].append(event.attrib['id'])
+            self._add_extracted(_get_type(event), event.attrib['id'])
 
     def get_modifications(self):
         """Extract all types of Modification INDRA Statements."""
@@ -504,7 +504,7 @@ class TripsProcessor(object):
                     st = mod_stmt(ea, aa, m.residue, m.position, evidence=ev)
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
-            self.extracted_events[event_type].append(event.attrib['id'])
+            self._add_extracted(event_type, event.attrib['id'])
 
     def get_translocation(self):
         translocation_events = \
@@ -679,7 +679,8 @@ class TripsProcessor(object):
                 if mut_values is None:
                     continue
                 try:
-                    mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
+                    mc = MutCondition(mut_values[0], mut_values[1],
+                                      mut_values[2])
                 except InvalidResidueError:
                     logger.error('Invalid residue in mutation condition.')
                     continue
@@ -996,8 +997,8 @@ class TripsProcessor(object):
         """Extract the evidence for an event.
 
         Pieces of text linked to an EVENT are fragments of a sentence. The
-        EVENT refers to the paragraph ID and the "uttnum", which corresponds 
-        to a sentence ID. Here we find and return the full sentence from which 
+        EVENT refers to the paragraph ID and the "uttnum", which corresponds
+        to a sentence ID. Here we find and return the full sentence from which
         the event was taken.
         """
         par_id = event_tag.attrib.get('paragraph')
@@ -1038,8 +1039,6 @@ class TripsProcessor(object):
         sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
         for event_id in sub_event_ids:
-            if event_id == 'V2260949':
-                import ipdb; ipdb.set_trace()
             event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
             if event_tag is not None:
                 # If an affected TERM in the primary event has the same event
@@ -1062,6 +1061,9 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+    def _add_extracted(self, event_type, event_id):
+        self.extracted_events[event_type].append(event_id)
 
 def _get_text(element):
     text_tag = element.find('text')
