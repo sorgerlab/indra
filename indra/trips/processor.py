@@ -115,7 +115,6 @@ class TripsProcessor(object):
                 logger.debug(
                     'Skipping activation with missing activator agent')
                 continue
-            agent_name = self._get_name_by_id(agent_id)
             activator_agent = self._get_agent_by_id(agent_id, event_id)
             if activator_agent is None:
                 continue
@@ -404,7 +403,7 @@ class TripsProcessor(object):
             # Get substrate Agent
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                logger.debug('Skipping phosphorylation event with no '
+                logger.debug('Skipping modification event with no '
                               'affected term.')
                 continue
             affected_id = affected.attrib.get('id')
@@ -412,7 +411,7 @@ class TripsProcessor(object):
                 continue
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
-                logger.debug('Skipping phosphorylation event with no '
+                logger.debug('Skipping modification event with no '
                               'affected term.')
                 continue
 
@@ -544,6 +543,7 @@ class TripsProcessor(object):
                 st = Translocation(agent, from_location,
                                    to_location, evidence=ev)
                 self.statements.append(st)
+            self._add_extracted('ONT::TRANSLOCATE', event.attrib['id'])
 
     def _get_cell_loc_by_id(self, term_id):
         term = self.tree.find("TERM/[@id='%s']" % term_id)
@@ -608,7 +608,7 @@ class TripsProcessor(object):
         if members:
             op = term.find('aggregate').attrib.get('operator')
             if op != 'AND':
-                logger.debug('Skipping aggregate with operator %s' % op)
+                logger.debug('Skipping aggregate with operator %s.' % op)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
             member_agents = [self._get_agent_by_id(m, event_id)
@@ -617,24 +617,14 @@ class TripsProcessor(object):
 
         db_refs_dict = self._get_db_refs(term)
 
-        agent_text_tag = term.find('name')
-        if agent_text_tag is not None:
-            agent_text = agent_text_tag.text
-            db_refs_dict['TEXT'] = agent_text
-
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
-            complex_id = entity_id
-            complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
-            components = complex_term.find("components")
-            if components is None:
-                logger.debug('Complex without components')
-                return None
-            terms = components.findall('component')
-            term_names = []
+            components = term.findall("components/component")
             agents = []
-            for t in terms:
-                agents.append(self._get_agent_by_id(t.attrib['id'], None))
+            for component in components:
+                component_id = component.attrib['id']
+                agent = self._get_agent_by_id(component_id, None)
+                agents.append(agent)
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
@@ -701,10 +691,17 @@ class TripsProcessor(object):
 
     @staticmethod
     def _get_db_refs(term):
-        # Extract database references
+        """Extract database references for a TERM."""
+
+        db_refs = {}
+        agent_text_tag = term.find('name')
+        if agent_text_tag is not None:
+            agent_text = agent_text_tag.text
+            db_refs['TEXT'] = agent_text
+
         dbid = term.attrib.get('dbid')
+
         if dbid is None:
-            db_refs_dict = {}
             if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                 members = term.findall('members/member')
                 dbids = []
@@ -712,7 +709,7 @@ class TripsProcessor(object):
                     dbid = m.attrib.get('dbid')
                     parts = dbid.split(':')
                     dbids.append({parts[0]: parts[1]})
-                db_refs_dict = {'PFAM-DEF': dbids}
+                db_refs = {'PFAM-DEF': dbids}
         else:
             drum_terms = term.findall('drum-terms/drum-term')
             if drum_terms:
@@ -735,7 +732,6 @@ class TripsProcessor(object):
                             match_score = 0.1
 
                     if dbid_str is None:
-                        db_refs_dict = {}
                         if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                             members = term.findall('members/member')
                             dbids = []
@@ -753,23 +749,21 @@ class TripsProcessor(object):
                 sorted_db_refs = sorted(scores.items(),
                                         key=operator.itemgetter(1),
                                         reverse=True)
-                db_refs_dict = {}
                 for dbid_str, _ in sorted_db_refs:
                     dbname, dbid = dbid_str.split(':')
-                    if not db_refs_dict.get(dbname):
+                    if not db_refs.get(dbname):
                         if dbname == 'PFAM-DEF':
                             dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                            db_refs_dict[dbname] = dbids
+                            db_refs[dbname] = dbids
                         else:
-                            db_refs_dict[dbname] = dbid
+                            db_refs[dbname] = dbid
 
             else:
                 dbids = dbid.split('|')
-                db_refs_dict = {}
                 for dbname, dbid in [d.split(':') for d in dbids]:
-                    if not db_refs_dict.get(dbname):
-                        db_refs_dict[dbname] = dbid
-        return db_refs_dict
+                    if not db_refs.get(dbname):
+                        db_refs[dbname] = dbid
+        return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = _get_type(precond_event)
@@ -850,7 +844,7 @@ class TripsProcessor(object):
             return None
         db_refs = self._get_db_refs(entity_term)
         if not db_refs:
-            return _get_valid_name(name.text)
+            return name.text
 
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
@@ -858,15 +852,15 @@ class TripsProcessor(object):
         up_id = db_refs.get('UP')
         if hgnc_id:
             hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-            return _get_valid_name(hgnc_name)
+            return hgnc_name
         elif up_id:
             # First to get gene name
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
-                return _get_valid_name(gene_name)
+                return gene_name
         # By default, return the text of the name tag
         name_txt = name.text.strip('|')
-        return _get_valid_name(name_txt)
+        return name_txt
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
@@ -1084,12 +1078,6 @@ def _is_type(element, type_text):
     if element_type == type_text:
         return True
     return False
-
-def _get_valid_name(name):
-    name = name.replace('-', '_')
-    name = name.replace('/', '_')
-    name = str(name.encode('utf-8').decode('ascii', 'ignore'))
-    return name
 
 def _stmt_location_to_agents(stmt, location):
     """Apply an event location to the Agents in the corresponding Statement.

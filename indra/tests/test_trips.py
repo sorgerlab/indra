@@ -32,7 +32,7 @@ def test_mod_cond():
     assert unicode_strs((tp, st))
 
 def test_ubiquitination():
-    tp = trips.process_text('MDM2 ubiquitinates p53.')
+    tp = trips.process_text('MDM2 ubiquitinates TP53.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
     assert(isinstance(st, ist.Ubiquitination))
