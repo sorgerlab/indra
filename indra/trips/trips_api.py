@@ -54,5 +54,6 @@ def process_xml(xml_string):
     tp.get_active_forms()
     tp.get_activations()
     tp.get_activations_causal()
+    tp.get_activations_stimulate()
     tp.get_translocation()
     return tp

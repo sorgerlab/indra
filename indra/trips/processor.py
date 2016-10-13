@@ -234,6 +234,9 @@ class TripsProcessor(object):
 
     def get_activations_stimulate(self):
         """Extract Activation INDRA Statements via stimulation."""
+        # TODO: extract to other patterns:
+        # - Stimulation by EGF activates ERK
+        # - Stimulation by EGF leads to ERK activation
         # Search for stimulation event
         stim_events = self.tree.findall("EVENT/[type='ONT::STIMULATE']")
         for event in stim_events:
@@ -416,7 +419,7 @@ class TripsProcessor(object):
                 continue
 
             # Get modification sites
-            mods = self._get_mod_site(event)
+            mods = self._get_modification(event)
 
             # Get evidence and location
             ev = self._get_evidence(event)
@@ -615,7 +618,7 @@ class TripsProcessor(object):
                              for m in member_ids]
             return member_agents
 
-        db_refs_dict = self._get_db_refs(term)
+        db_refs = self._get_db_refs(term)
 
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
@@ -635,46 +638,48 @@ class TripsProcessor(object):
             agent_name = self._get_name_by_id(entity_id)
             if agent_name is None:
                 return None
-            agent = Agent(agent_name, db_refs=db_refs_dict)
-            precond_ids = self._get_precond_event_ids(entity_id)
-            if precond_ids:
-                for precond_id in precond_ids:
-                    if precond_id == event_id:
-                        logger.debug('Circular reference to event %s.' %
-                                       precond_id)
-                    precond_event = self.tree.find("EVENT[@id='%s']" % 
-                                                    precond_id)
-                    if precond_event is None:
-                        # Sometimes, if there are multiple preconditions
-                        # they are numbered with <id>.1, <id>.2, etc.
-                        p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
-                        if p is not None:
-                            self._add_condition(agent, p, term)
-                        p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
-                        if p is not None:
-                            self._add_condition(agent, p, term)
-                    else:
-                        self._add_condition(agent, precond_event, term)
-            # Get mutations
-            mutations = term.findall('features/mutation')
-            for mut in mutations:
-                mut_id = mut.attrib.get('id')
-                if mut_id is None:
-                    continue
-                mut_term = self.tree.find("TERM/[@id='%s']" %\
-                    mut.attrib.get('id'))
-                if mut_term is None:
-                    continue
-                mut_values = self._get_mutation(mut_term)
-                if mut_values is None:
-                    continue
-                try:
-                    mc = MutCondition(mut_values[0], mut_values[1],
-                                      mut_values[2])
-                except InvalidResidueError:
-                    logger.error('Invalid residue in mutation condition.')
-                    continue
-                agent.mutations.append(mc)
+            agent = Agent(agent_name, db_refs=db_refs)
+
+        # Look for precondition events and apply them to the Agent
+        precond_ids = self._get_precond_event_ids(entity_id)
+        if precond_ids:
+            for precond_id in precond_ids:
+                if precond_id == event_id:
+                    logger.debug('Circular reference to event %s.' %
+                                   precond_id)
+                precond_event = self.tree.find("EVENT[@id='%s']" % 
+                                                precond_id)
+                if precond_event is None:
+                    # Sometimes, if there are multiple preconditions
+                    # they are numbered with <id>.1, <id>.2, etc.
+                    p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
+                    if p is not None:
+                        self._add_condition(agent, p, term)
+                    p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
+                    if p is not None:
+                        self._add_condition(agent, p, term)
+                else:
+                    self._add_condition(agent, precond_event, term)
+        # Get mutations
+        mutations = term.findall('features/mutation')
+        for mut in mutations:
+            mut_id = mut.attrib.get('id')
+            if mut_id is None:
+                continue
+            mut_term = self.tree.find("TERM/[@id='%s']" %\
+                mut.attrib.get('id'))
+            if mut_term is None:
+                continue
+            mut_values = self._get_mutation(mut_term)
+            if mut_values is None:
+                continue
+            try:
+                mc = MutCondition(mut_values[0], mut_values[1],
+                                  mut_values[2])
+            except InvalidResidueError:
+                logger.error('Invalid residue in mutation condition.')
+                continue
+            agent.mutations.append(mc)
         # Get location
         location = term.find('features/location')
         if location is not None:
@@ -694,13 +699,20 @@ class TripsProcessor(object):
         """Extract database references for a TERM."""
 
         db_refs = {}
+        # Here we extract the text name of the Agent
+        # There are two relevant tags to consider here.
+        # The <text> tag typically contains a larger phrase surrounding the
+        # term but it contains the term in a raw, non-canonicalized form.
+        # The <name> tag only contains the name of the entity but it is
+        # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
         agent_text_tag = term.find('name')
         if agent_text_tag is not None:
-            agent_text = agent_text_tag.text
-            db_refs['TEXT'] = agent_text
+            db_refs['TEXT'] = agent_text_tag.text
 
         dbid = term.attrib.get('dbid')
 
+        # If there are no dbids listed then we check whether it's an ad-hoc
+        # protein family definition.
         if dbid is None:
             if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                 members = term.findall('members/member')
@@ -709,60 +721,60 @@ class TripsProcessor(object):
                     dbid = m.attrib.get('dbid')
                     parts = dbid.split(':')
                     dbids.append({parts[0]: parts[1]})
-                db_refs = {'PFAM-DEF': dbids}
-        else:
-            drum_terms = term.findall('drum-terms/drum-term')
-            if drum_terms:
-                scores = {}
-                score_started = False
-                for dt in drum_terms:
-                    dbid_str = dt.attrib.get('dbid')
-                    match_score = dt.attrib.get('match-score')
-                    if not score_started:
-                        if match_score is not None:
-                            score_started = True
-                        else:
-                            # This is a match before other scored terms so we
-                            # default to 1.0
-                            match_score = 1.0
-                    else:
-                        if match_score is None:
-                            # This is a match after other scored matches
-                            # default to a small value
-                            match_score = 0.1
+                db_refs['PFAM-DEF'] = dbids
+            return db_refs
 
-                    if dbid_str is None:
-                        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-                            members = term.findall('members/member')
-                            dbids = []
-                            for m in members:
-                                dbid = m.attrib.get('dbid')
-                                dbids.append(dbid)
-                            key_name = 'PFAM-DEF:' + '|'.join(dbids)
-                            scores[key_name] = float(match_score)
+        # In case there are dbids listed then we look at the match scores
+        drum_terms = term.findall('drum-terms/drum-term')
+        if drum_terms:
+            scores = {}
+            score_started = False
+            for dt in drum_terms:
+                dbid_str = dt.attrib.get('dbid')
+                match_score = dt.attrib.get('match-score')
+                if not score_started:
+                    if match_score is not None:
+                        score_started = True
                     else:
-                        scores[dbid_str] = float(match_score)
-                    xr_tags = dt.findall('xrefs/xref')
-                    for xrt in xr_tags:
-                        dbid_str = xrt.attrib.get('dbid')
-                        scores[dbid_str] = float(match_score)
-                sorted_db_refs = sorted(scores.items(),
-                                        key=operator.itemgetter(1),
-                                        reverse=True)
-                for dbid_str, _ in sorted_db_refs:
-                    dbname, dbid = dbid_str.split(':')
-                    if not db_refs.get(dbname):
-                        if dbname == 'PFAM-DEF':
-                            dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                            db_refs[dbname] = dbids
-                        else:
-                            db_refs[dbname] = dbid
-
-            else:
-                dbids = dbid.split('|')
-                for dbname, dbid in [d.split(':') for d in dbids]:
-                    if not db_refs.get(dbname):
+                        # This is a match before other scored terms so we
+                        # default to 1.0
+                        match_score = 1.0
+                else:
+                    if match_score is None:
+                        # This is a match after other scored matches
+                        # default to a small value
+                        match_score = 0.1
+                if dbid_str is None:
+                    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
+                        members = term.findall('members/member')
+                        dbids = []
+                        for m in members:
+                            dbid = m.attrib.get('dbid')
+                            dbids.append(dbid)
+                        key_name = 'PFAM-DEF:' + '|'.join(dbids)
+                        scores[key_name] = float(match_score)
+                else:
+                    scores[dbid_str] = float(match_score)
+                xr_tags = dt.findall('xrefs/xref')
+                for xrt in xr_tags:
+                    dbid_str = xrt.attrib.get('dbid')
+                    scores[dbid_str] = float(match_score)
+            sorted_db_refs = sorted(scores.items(),
+                                    key=operator.itemgetter(1),
+                                    reverse=True)
+            for dbid_str, _ in sorted_db_refs:
+                dbname, dbid = dbid_str.split(':')
+                if not db_refs.get(dbname):
+                    if dbname == 'PFAM-DEF':
+                        dbids = [{p[0]: p[1]} for p in dbid.split('|')]
+                        db_refs[dbname] = dbids
+                    else:
                         db_refs[dbname] = dbid
+        else:
+            dbids = dbid.split('|')
+            for dbname, dbid in [d.split(':') for d in dbids]:
+                if not db_refs.get(dbname):
+                    db_refs[dbname] = dbid
         return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
@@ -770,7 +782,7 @@ class TripsProcessor(object):
 
         # Modification precondition
         if precond_event_type in mod_names.keys():
-            mods = self._get_mod_site(precond_event)
+            mods = self._get_modification(precond_event)
             agent.mods = mods
         # Binding precondition
         elif precond_event_type == 'ONT::BIND':
@@ -828,6 +840,9 @@ class TripsProcessor(object):
                 else:
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
+        else:
+            logger.warning('Unhandled precondition event type: %s' %
+                           precond_event_type)
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
@@ -839,28 +854,26 @@ class TripsProcessor(object):
             logger.debug('Term %s for entity not found' % entity_id)
             return None
         name = entity_term.find("name")
+        db_refs = self._get_db_refs(entity_term)
         if name is None:
             logger.debug('Entity without a name')
             return None
-        db_refs = self._get_db_refs(entity_term)
         if not db_refs:
             return name.text
 
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
         hgnc_id = db_refs.get('HGNC')
-        up_id = db_refs.get('UP')
         if hgnc_id:
             hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
             return hgnc_name
-        elif up_id:
-            # First to get gene name
+        up_id = db_refs.get('UP')
+        if up_id:
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
                 return gene_name
         # By default, return the text of the name tag
-        name_txt = name.text.strip('|')
-        return name_txt
+        return name.text
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
@@ -912,7 +925,7 @@ class TripsProcessor(object):
             return (residue, ), (pos, )
         return all_residues, all_pos
 
-    def _get_mod_site(self, event):
+    def _get_modification(self, event):
         # Find the modification type
         mod_type = event.find('type').text
         mod_type_name = mod_names.get(mod_type)
