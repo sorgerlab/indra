@@ -23,7 +23,7 @@ install:
   - wget "http://www.csb.pitt.edu/Faculty/Faeder/?smd_process_download=1&download_id=142" -O BioNetGen-2.2.6-stable.tar.gz
   - tar xzf BioNetGen-2.2.6-stable.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
-  - pip install git+https://github.com/johnbachman/pysb.git@unicode_fix2
+  - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Download a number of useful resource files for testing purposes
