@@ -1456,8 +1456,10 @@ class Degradation(Statement):
         Evidence objects in support of the degradation statement.
     """
     def __init__(self, subj, obj, evidence=None):
-        super(Statement, self).__init__(evidence)
+        super(Degradation, self).__init__(evidence)
         self.subj = subj
+        if obj is None:
+            raise ValueError('Object of Degradation cannot be None.')
         self.obj = obj
 
     def matches_key(self):
@@ -1503,7 +1505,7 @@ class Degradation(Statement):
 
     def __str__(self):
         s = ("%s(%s, %s)" %
-                  (type(self).__name__, self.enz, self.sub))
+                  (type(self).__name__, self.subj, self.obj))
         return s
 
 
