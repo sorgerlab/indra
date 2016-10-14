@@ -589,3 +589,25 @@ def test_degradation_interactions_only():
     model = pa.make_model()
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
+
+def test_synthesis_one_step():
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    st1 = Synthesis(subj, obj)
+    st2 = Synthesis(None, obj)
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1, st2])
+    model = pa.make_model()
+    assert(len(model.rules)==2)
+    assert(len(model.monomers)==2)
+
+def test_synthesis_interactions_only():
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    st1 = Synthesis(subj, obj)
+    st2 = Synthesis(None, obj)
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([st1, st2])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
