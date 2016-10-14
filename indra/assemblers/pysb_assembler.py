@@ -31,7 +31,8 @@ SelfExporter.do_export = False
 statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
                        ist.SelfModification, ist.Complex,
                        ist.Activation, ist.ActiveForm,
-                       ist.RasGef, ist.RasGap, ist.Translocation]
+                       ist.RasGef, ist.RasGap, ist.Translocation,
+                       ist.Degradation]
 
 def _n(name):
     """Return valid PySB name."""
@@ -1675,4 +1676,68 @@ def translocation_assemble_default(stmt, model, agent_set):
     r = Rule(rule_name, agent_from >> agent_to, kf_trans)
     add_rule_to_model(model, r)
 
+# DEGRADATION ###############################################
+
+def degradation_monomers_interactions_only(stmt, agent_set):
+    if stmt.subj is None:
+        return
+    subj = agent_set.get_create_base_agent(stmt.subj)
+    obj = agent_set.get_create_base_agent(stmt.obj)
+    subj.create_site(get_binding_site_name(obj.name))
+    obj.create_site(get_binding_site_name(subj.name))
+
+def degradation_monomers_one_step(stmt, agent_set):
+    obj = agent_set.get_create_base_agent(stmt.obj)
+    if stmt.subj is not None:
+        subj = agent_set.get_create_base_agent(stmt.subj)
+
+def degradation_assemble_interactions_only(stmt, model, agent_set):
+    # No interaction when subj is None
+    if stmt.subj is None:
+        return
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    subj_base_agent = agent_set.get_create_base_agent(stmt.subj)
+    obj_base_agent = agent_set.get_create_base_agent(stmt.obj)
+    subj = model.monomers[subj_base_agent.name]
+    obj = model.monomers[obj_base_agent.name]
+    rule_subj_str = get_agent_rule_str(stmt.subj)
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+    rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
+
+    subj_site_name = get_binding_site_name(obj_base_agent.name)
+    obj_site_name = get_binding_site_name(subj_base_agent.name)
+
+    r = Rule(rule_name,
+            subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
+            subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
+            kf_bind)
+    add_rule_to_model(model, r)
+
+def degradation_assemble_one_step(stmt, model, agent_set):
+    obj_pattern = get_monomer_pattern(model, stmt.obj)
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+
+    if stmt.subj is None:
+        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784 
+        param_name = 'kf_' + stmt.obj.name[0].lower() + '_deg'
+        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-5,
+                                                   unique=True)
+        rule_name = '%s_degraded' % rule_obj_str
+        r = Rule(rule_name, obj_pattern >> None, kf_one_step_degrade)
+    else:
+        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784 
+        param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                            stmt.obj.name[0].lower() + '_deg'
+        # Scale the average apparent degradation rate by the default
+        # protein initial condition
+        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-7)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
+        rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
+        r = Rule(rule_name,
+            subj_pattern + obj_pattern >> subj_pattern,
+            kf_one_step_degrade)
+    add_rule_to_model(model, r)
+
+degradation_assemble_default = degradation_assemble_one_step
 
