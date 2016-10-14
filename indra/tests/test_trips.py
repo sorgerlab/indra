@@ -16,6 +16,7 @@ def test_phosphorylation():
     assert(isinstance(st, ist.Phosphorylation))
     assert(st.residue == 'S')
     assert(st.position == '222')
+    assert(st.evidence)
     assert unicode_strs((tp, st))
 
 def test_mod_cond():
@@ -30,6 +31,7 @@ def test_mod_cond():
     assert(len(mek.mods) == 1)
     assert(mek.mods[0].mod_type == 'ubiquitination')
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_ubiquitination():
     tp = trips.process_text('MDM2 ubiquitinates TP53.')
@@ -37,6 +39,7 @@ def test_ubiquitination():
     st = tp.statements[0]
     assert(isinstance(st, ist.Ubiquitination))
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_phosphorylation_noresidue():
     tp = trips.process_text('BRAF phosphorylates MEK1.')
@@ -46,6 +49,7 @@ def test_phosphorylation_noresidue():
     assert(st.residue is None)
     assert(st.position is None)
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_phosphorylation_nosite():
     tp = trips.process_text('BRAF phosphorylates MEK1 at Serine.')
@@ -55,6 +59,7 @@ def test_phosphorylation_nosite():
     assert(st.residue == 'S')
     assert(st.position is None)
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_actmod():
     tp = trips.process_text('MEK1 phosphorylated at Ser222 is activated.')
@@ -66,6 +71,7 @@ def test_actmod():
     assert(st.agent.mods[0].residue == 'S')
     assert(st.agent.mods[0].position == '222')
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_actmods():
     tp = trips.process_text('MEK1 phosphorylated at Ser 218 and Ser222 is activated.')
@@ -78,6 +84,7 @@ def test_actmods():
     assert(st.agent.mods[0].residue == 'S')
     assert(st.agent.mods[0].position == '218')
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_actform_bound():
     tp = trips.process_text('HRAS bound to GTP is activated.')
@@ -88,6 +95,7 @@ def test_actform_bound():
     assert(st.agent.bound_conditions[0].agent.name == 'GTP')
     assert(st.agent.bound_conditions[0].is_bound == True)
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_actform_muts():
     tp = trips.process_text('BRAF V600E is activated.')
@@ -99,6 +107,7 @@ def test_actform_muts():
     assert(st.agent.mutations[0].residue_to == 'E')
     assert(st.agent.mutations[0].position == '600')
     assert unicode_strs((tp, st))
+    assert(st.evidence)
 
 def test_actmods():
     tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
@@ -110,6 +119,7 @@ def test_actmods():
     assert(braf.mods[0].residue == 'S')
     assert(braf.mods[0].position == '536')
     assert unicode_strs((tp, st, braf))
+    assert(st.evidence)
 
 def test_trips_processor_online():
     """Smoke test to see if imports and executes without error. Doesn't

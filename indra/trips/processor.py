@@ -999,6 +999,7 @@ class TripsProcessor(object):
         epi = {'section_type': sec}
         ev = Evidence(source_api='trips', text=text, pmid=self.doc_id,
                       epistemics=epi)
+        return ev
 
     def _get_evidence_text(self, event_tag):
         """Extract the evidence for an event.
