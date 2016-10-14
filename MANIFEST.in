@@ -1,4 +1,9 @@
 include ez_setup.py
-include indra/bel/bel2rdf.rb
+include LICENSE
 graft indra/resources
+graft indra/benchmarks
+graft bioentities
+graft data
+graft doc
+graft models
 include indra/biopax/jars/paxtools.jar

@@ -4,7 +4,6 @@ from setuptools import setup
 import sys
 
 def main():
-
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
     install_list = ['pysb', 'objectpath', 'rdflib', 'requests', 'lxml',
@@ -13,7 +12,7 @@ def main():
         install_list.append('functools32')
 
     setup(name='indra',
-          version='1.2.0',
+          version='1.3.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
@@ -22,11 +21,13 @@ def main():
           author='Benjamin Gyori',
           author_email='benjamin_gyori@hms.harvard.edu',
           url='http://github.com/sorgerlab/indra',
-          packages=['indra', 'indra.assemblers', 'indra.bel', 'indra.biopax',
-                    'indra.reach', 'indra.trips', 'indra.databases',
-                    'indra.preassembler', 'indra.mechlinker',
-                    'indra.tools', 'indra.tests', 'indra.resources',
-                    'indra.literature'],
+          packages=['indra', 'indra.assemblers', 'indra.bel', 'indra.belief',
+                    'indra.benchmarks',
+                    'indra.biopax', 'indra.databases', 'indra.index_cards',
+                    'indra.literature', 'indra.mechlinker',
+                    'indra.preassembler', 'indra.reach', 'indra.resources',
+                    'indra.tests', 'indra.tools', 'indra.tools.reading',
+                    'indra.trips', 'indra.util'],
           install_requires=install_list,
           tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
           include_package_data=True,
@@ -39,6 +40,7 @@ def main():
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 3',
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',
