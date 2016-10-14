@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 from indra.tools.incremental_model import IncrementalModel
 from indra.mechlinker import MechLinker
@@ -16,7 +18,7 @@ def print_linked_stmt(stmt):
         if i < len(source_txts) -1:
             final_txt = final_txt[:-2] + ', and '
     final_txt += 'Is it therefore true that ' + query_txt[:-1] + '?'
-    print final_txt
+    print(final_txt)
     return final_txt
 
 if __name__ == '__main__':
@@ -26,6 +28,5 @@ if __name__ == '__main__':
     stmts = model.toplevel_stmts
     ml = MechLinker(stmts)
     linked_stmts = ml.link_statements()
-    #linked_stmts = pickle.load(open('rasmachine_linked.pkl', 'rb'))
     for stmt in linked_stmts:
         print_linked_stmt(stmt)

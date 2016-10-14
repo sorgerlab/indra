@@ -1,6 +1,8 @@
-from processor import BiopaxProcessor
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.java_vm import autoclass, JavaException
 from indra.biopax import pathway_commons_client as pcc
+from indra.biopax.processor import BiopaxProcessor
 
 def process_pc_neighborhood(gene_names, neighbor_limit=1):
     """Returns a BiopaxProcessor for a PathwayCommons neighborhood query.

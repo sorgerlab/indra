@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import itertools
 from indra.statements import *
 import logging
@@ -76,13 +78,13 @@ class GraphAssembler():
         self.node_properties = default_node_properties
         self.edge_properties = default_edge_properties
         if graph_properties:
-            for k, v in graph_properties.iteritems():
+            for k, v in graph_properties.items():
                 self.graph_properties[k] = v
         if node_properties:
-            for k, v in node_properties.iteritems():
+            for k, v in node_properties.items():
                 self.node_properties[k] = v
         if edge_properties:
-            for k, v in edge_properties.iteritems():
+            for k, v in edge_properties.items():
                 self.edge_properties[k] = v
         self.graph = pygraphviz.AGraph(**self.graph_properties)
         self.existing_nodes = []
@@ -178,7 +180,7 @@ class GraphAssembler():
         # Start with default edge properties
         edge_properties = self.edge_properties
         # Overwrite ones that are given in function call explicitly
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             edge_properties[k] = v
         self.graph.add_edge(source, target, **edge_properties)
 

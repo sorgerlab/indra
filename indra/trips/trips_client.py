@@ -1,10 +1,11 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 import sys
 import getopt
-import urllib
-import urllib2
 import xml.dom.minidom
 import logging
+import requests
 
 logger = logging.getLogger('trips')
 
@@ -27,13 +28,15 @@ def send_query(text, query_args=None):
         The HTML result returned by the web service.
     """
     if query_args is None:
-        qa = {}
-    qa['input'] = text
-    data = urllib.urlencode(qa)
-    req = urllib2.Request(trips_url, data)
-    res = urllib2.urlopen(req, timeout=3600)
-    html = res.read()
-    return html
+        query_args = {}
+    query_args.update({'input': text})
+    res = requests.get(trips_url, query_args, timeout=3600)
+    if not res.status_code == 200:
+        logger.error('Problem with TRIPS query: status code %s' %
+                     res.status_code)
+        return ''
+    # Gets unicode content
+    return res.text
 
 
 def get_xml(html):
@@ -79,7 +82,7 @@ def save_xml(xml_str, file_name, pretty=True):
     if pretty:
         xmld = xml.dom.minidom.parseString(xml_str)
         xml_str_pretty = xmld.toprettyxml()
-        fh.write(xml_str_pretty.encode('utf8'))
+        fh.write(xml_str_pretty)
     else:
         fh.write(xml_str)
     fh.close()
@@ -93,8 +96,8 @@ if __name__ == '__main__':
                                       ['string=', 'file=', 'output=', 'help'])
     for o, p in opts:
         if o in ['-h', '--help']:
-            print 'String mode: python trips_client.py --string "RAS binds GTP" --output text.xml'
-            print 'File mode: python trips_client.py --file test.txt --output text.xml'
+            print('String mode: python trips_client.py --string "RAS binds GTP" --output text.xml')
+            print('File mode: python trips_client.py --file test.txt --output text.xml')
             sys.exit()
         elif o in ['-s', '--string']:
             text = p
@@ -108,13 +111,13 @@ if __name__ == '__main__':
         try:
             fh = open(infile_name, 'rt')
         except IOError:
-            print 'Could not open %s.' % infile_name
+            print('Could not open %s.' % infile_name)
             exit()
         text = fh.read()
         fh.close()
-        print 'Parsing contents of %s...' % infile_name
+        print('Parsing contents of %s...' % infile_name)
     else:
-        print 'Parsing string: %s' % text
+        print('Parsing string: %s' % text)
 
     html = send_query(text)
     xml = get_xml(html)

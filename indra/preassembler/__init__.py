@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import sys
 import logging
 try:
@@ -98,7 +100,7 @@ class Preassembler(object):
         >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
-        >>> sorted([e.text for e in uniq_stmts[0].evidence])
+        >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
@@ -213,7 +215,7 @@ class Preassembler(object):
                 stmts_by_type[type(stmt)] = [stmt]
         related_stmts = []
         # Each Statement type can be preassembled independently
-        for stmt_type, stmts_this_type in stmts_by_type.iteritems():
+        for stmt_type, stmts_this_type in stmts_by_type.items():
             no_comp_stmts = []
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
@@ -241,7 +243,7 @@ class Preassembler(object):
                     no_comp_stmts.append(stmt)
 
             # This is the preassembly within each component ID group
-            for comp, stmts in stmt_by_comp.iteritems():
+            for comp, stmts in stmt_by_comp.items():
                 comparisons = list(itertools.combinations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
                     if stmt1.refinement_of(stmt2, self.hierarchies):
@@ -268,7 +270,7 @@ class Preassembler(object):
                             no_comp_keys[key] = [stmt]
             # This is the preassembly within each Statement group
             # keyed by the Agent entity_matches_key
-            for _, stmts in no_comp_keys.iteritems():
+            for _, stmts in no_comp_keys.items():
                 comparisons = list(itertools.combinations(stmts, 2))
                 for stmt1, stmt2 in comparisons:
                     if stmt1.refinement_of(stmt2, self.hierarchies):
@@ -282,9 +284,7 @@ class Preassembler(object):
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             related_stmts += toplevel_stmts
 
-
         self.related_stmts = related_stmts
-
         return self.related_stmts
 
 def render_stmt_graph(statements, agent_style=None):
@@ -448,10 +448,10 @@ def flatten_evidence(stmts):
     >>> pa = Preassembler(hierarchies, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> [e.text for e in pa.related_stmts[0].evidence]
+    >>> [e.text for e in pa.related_stmts[0].evidence] # doctest:+IGNORE_UNICODE
     ['baz', 'bak']
     >>> flattened = flatten_evidence(pa.related_stmts)
-    >>> sorted([e.text for e in flattened[0].evidence])
+    >>> sorted([e.text for e in flattened[0].evidence]) # doctest:+IGNORE_UNICODE
     ['bak', 'bar', 'baz', 'foo']
     """
     # Copy all of the statements--these will be the ones where we update

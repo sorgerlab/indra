@@ -1,6 +1,8 @@
-from indra.preassembler.grounding_mapper import GroundingMapper, \
-                                                default_grounding_map
-from indra.statements import Agent, Phosphorylation
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+from indra.preassembler.grounding_mapper import *
+from indra.statements import Agent, Phosphorylation, Evidence
+from indra.util import unicode_strs
 
 # The grounding map
 # Format:
@@ -22,6 +24,7 @@ def test_simple_mapping():
     mapped_akt = mapped_stmts[0].sub
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
     assert mapped_akt.db_refs['BE'] == 'AKT'
+    assert unicode_strs((akt, stmt, gm, mapped_akt))
 
 def test_renaming():
     akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'BE':'AKT family',
@@ -43,4 +46,19 @@ def test_renaming():
     # Don't fall back on text if there's no grounding
     assert renamed_stmts[2].sub.name == 'pkbA'
     assert renamed_stmts[3].sub.name == 'tat'
+    assert unicode_strs((akt_indra, akt_hgnc_from_up, akt_other,
+                         tat_up_no_hgnc, stmts, gm, renamed_stmts))
+
+def test_save_sentences_unicode():
+    mek = Agent('MEK', db_refs={'TEXT':'MAP2K1'})
+    ev = Evidence(source_api='reach', pmid='PMID000asdf',
+                  text='foo\U0001F4A9bar')
+    st = Phosphorylation(None, mek, evidence=[ev])
+    sent = get_sentences_for_agent('MAP2K1', [st])
+    assert unicode_strs(sent)
+    twg = agent_texts_with_grounding([st])
+    save_sentences(twg, [st], 'test_save_sentences.csv')
+
+if __name__ == '__main__':
+    test_save_sentences_unicode()
 

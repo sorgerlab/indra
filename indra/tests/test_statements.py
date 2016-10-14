@@ -1,9 +1,11 @@
-from indra.statements import *
-import pkg_resources
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
+from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
-from nose.tools import raises
+from indra.statements import *
+from indra.util import unicode_strs
 
 # Argument checking for ActiveForms ----------------------------
 
@@ -13,15 +15,17 @@ def test_activitymod_sitelist_of_ints():
                               [ModCondition('phosphorylation', 'serine', 218),
                                ModCondition('phosphorylation', 'serine', 222)]),
                               'kinase', True)
-    assert isinstance(st.agent.mods[0].position, basestring)
-    assert isinstance(st.agent.mods[1].position, basestring)
+    assert not isinstance(st.agent.mods[0].position, int)
+    assert not isinstance(st.agent.mods[1].position, int)
+    assert unicode_strs(st)
 
 def testactivitymod_string_string():
     """Check that string mod position is preserved"""
     st = ActiveForm(Agent('MAP2K1', mods=
-                              [ModCondition('phosphorylation', 'serine', '218')]),
-                              'kinase', True)
-    assert isinstance(st.agent.mods[0].position, basestring)
+                            [ModCondition('phosphorylation', 'serine', '218')]),
+                             'kinase', True)
+    assert not isinstance(st.agent.mods[0].position, int)
+    assert unicode_strs(st)
 
 def testactivitymod_string_none():
     """Check that None mod position is preserved"""
@@ -29,6 +33,7 @@ def testactivitymod_string_none():
                           [ModCondition('phosphorylation', 'serine', None)]),
                           'kinase', True)
     assert (st.agent.mods[0].position is None)
+    assert unicode_strs(st)
 
 def testactivitymod_nolist():
     """Make sure mod is correctly turned into a list if it's
@@ -37,6 +42,8 @@ def testactivitymod_nolist():
     st = ActiveForm(Agent('MAP2K1', mods=mc),
                           'kinase', True)
     assert isinstance(st.agent.mods, list)
+    assert unicode_strs(st)
+    assert unicode_strs(mc)
 
 # Checking for exact matching (except Evidence) between Agents/stmts ---------
 
@@ -46,6 +53,7 @@ def test_matches():
     st1 = Complex([ras, raf])
     st2 = Complex([ras, raf])
     assert(st1.matches(st2))
+    assert unicode_strs(st1)
 
 def test_matches_key():
     ras = Agent('Ras')
@@ -53,6 +61,7 @@ def test_matches_key():
     st1 = Complex([ras, raf])
     st2 = Complex([ras, raf])
     assert(st1.matches_key() == st2.matches_key())
+    assert unicode_strs(st1)
 
 def test_matches_key_unicode():
     ras = Agent('Ras')
@@ -61,6 +70,8 @@ def test_matches_key_unicode():
     st1 = Complex([ras, raf])
     st2 = Complex([rasu, raf])
     assert(st1.matches_key() == st2.matches_key())
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_matches_key_unicode2():
     raf = Agent('Raf')
@@ -68,6 +79,8 @@ def test_matches_key_unicode2():
     st1 = Phosphorylation(raf, mek, u'S')
     st2 = Phosphorylation(raf, mek, 'S')
     assert(st1.matches_key() == st2.matches_key())
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_matches_key_unicode3():
     raf = Agent('Raf')
@@ -75,6 +88,8 @@ def test_matches_key_unicode3():
     st1 = Phosphorylation(raf, mek, 'S', u'222')
     st2 = Phosphorylation(raf, mek, 'S', '222')
     assert(st1.matches_key() == st2.matches_key())
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_matches2():
     raf = Agent('Raf')
@@ -82,6 +97,8 @@ def test_matches2():
     st1 = Phosphorylation(raf, mek)
     st2 = Phosphorylation(raf, mek)
     assert(st1.matches(st2))
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_matches_key2():
     raf = Agent('Raf')
@@ -89,6 +106,8 @@ def test_matches_key2():
     st1 = Phosphorylation(raf, mek)
     st2 = Phosphorylation(raf, mek)
     assert(st1.matches_key() == st2.matches_key())
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_not_matches():
     raf = Agent('Raf')
@@ -96,6 +115,8 @@ def test_not_matches():
     st1 = Phosphorylation(raf, mek)
     st2 = Phosphorylation(raf, mek, 'tyrosine')
     assert(not st1.matches(st2))
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_not_matches_key():
     raf = Agent('Raf')
@@ -103,16 +124,21 @@ def test_not_matches_key():
     st1 = Phosphorylation(raf, mek)
     st2 = Phosphorylation(raf, mek, 'tyrosine')
     assert(st1.matches_key() != st2.matches_key())
+    assert unicode_strs(st1)
+    assert unicode_strs(st2)
 
 def test_matches_dbrefs():
     hras1 = Agent('HRAS', db_refs={'hgnc': 1111})
     hras2 = Agent('HRAS', db_refs={'hgnc': 9999})
     assert(hras1.matches(hras2))
+    assert unicode_strs(hras1)
+    assert unicode_strs(hras2)
 
 def test_matches_key_dbrefs():
     hras1 = Agent('HRAS', db_refs={'hgnc': 1111})
     hras2 = Agent('HRAS', db_refs={'hgnc': 9999})
     assert(hras1.matches_key() == hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_bound():
     hras1 = Agent('HRAS',
@@ -120,6 +146,7 @@ def test_matches_bound():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), True)])
     assert(hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_key_bound():
     hras1 = Agent('HRAS',
@@ -127,6 +154,7 @@ def test_matches_key_bound():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), True)])
     assert(hras1.matches_key() == hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_not_matches_bound():
     hras1 = Agent('HRAS',
@@ -134,6 +162,7 @@ def test_not_matches_bound():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('RAF1'), True)])
     assert(not hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_not_matches_key_bound():
     hras1 = Agent('HRAS',
@@ -141,6 +170,7 @@ def test_not_matches_key_bound():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches_key() != hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_not_matches_bound2():
     hras1 = Agent('HRAS',
@@ -148,6 +178,7 @@ def test_not_matches_bound2():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), False)])
     assert(not hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_not_matches_key_bound2():
     hras1 = Agent('HRAS',
@@ -155,34 +186,39 @@ def test_not_matches_key_bound2():
     hras2 = Agent('HRAS',
         bound_conditions=[BoundCondition(Agent('BRAF'), False)])
     assert(hras1.matches_key() != hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_bound_multiple():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_key_bound_multiple():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches_key() == hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_bound_multiple_order():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('RAF1'), True),
-                                            BoundCondition(Agent('BRAF'), True)])
+                                           BoundCondition(Agent('BRAF'), True)])
     hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_key_bound_multiple_order():
     hras1 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('RAF1'), True),
-                                            BoundCondition(Agent('BRAF'), True)])
+                                           BoundCondition(Agent('BRAF'), True)])
     hras2 = Agent('HRAS', bound_conditions=[BoundCondition(Agent('BRAF'), True),
-                                            BoundCondition(Agent('RAF1'), True)])
+                                           BoundCondition(Agent('RAF1'), True)])
     assert(hras1.matches_key() == hras2.matches_key())
+    assert unicode_strs((hras1, hras2))
 
 def test_matches_agent_mod_order():
     hras1 = Agent('MAP2K1',
@@ -190,6 +226,7 @@ def test_matches_agent_mod_order():
     hras2 = Agent('MAP2K1',
         mods=[ModCondition('ubiquitination'), ModCondition('phosphorylation')])
     assert(hras1.matches(hras2))
+    assert unicode_strs((hras1, hras2))
 
 def test_refinement_agent_mod_order():
     hras1 = Agent('MAP2K1',
@@ -199,6 +236,7 @@ def test_refinement_agent_mod_order():
         mods=[ModCondition('ubiquitination'), ModCondition('phosphorylation')])
     assert(hras1.refinement_of(hras2, hierarchies))
     assert(not hras2.refinement_of(hras1, hierarchies))
+    assert unicode_strs((hras1, hras2))
 
 def test_refinement_agent_mod_same_order():
     hras1 = Agent('MAP2K1',
@@ -208,6 +246,7 @@ def test_refinement_agent_mod_same_order():
         mods=[ModCondition('phosphorylation')])
     assert(hras1.refinement_of(hras2, hierarchies))
     assert(not hras2.refinement_of(hras1, hierarchies))
+    assert unicode_strs((hras1, hras2))
 
 def test_refinement_agent_mod_multiple():
     mc1 = ModCondition('phosphorylation', 'S', '218')
@@ -227,6 +266,7 @@ def test_refinement_agent_mod_multiple():
     assert(st3.refinement_of(st1, hierarchies))
     assert(not st1.refinement_of(st2, hierarchies))
     assert(not st1.refinement_of(st3, hierarchies))
+    assert unicode_strs((st1, st2, st3))
 
 def test_refinement_agent_mod_generic():
     p = ModCondition('phosphorylation')
@@ -234,6 +274,7 @@ def test_refinement_agent_mod_generic():
     raf2p = Phosphorylation(Agent('RAF', mods=[p,p]), Agent('MAP2K1'))
     assert(raf3p.refinement_of(raf2p, hierarchies))
     assert(not raf2p.refinement_of(raf3p, hierarchies))
+    assert unicode_strs((raf3p, raf2p))
 
 # Check matches implementations for all statement types ---------------------
 def test_matches_selfmod():
@@ -247,6 +288,7 @@ def test_matches_selfmod():
     st3 = Autophosphorylation(nras2, evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_matches_activation():
     """Test matching of entities only, entities match only on name."""
@@ -264,6 +306,7 @@ def test_matches_activation():
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_matches_activitymod():
     """Test matching of entities only, entities match only on name."""
@@ -279,6 +322,7 @@ def test_matches_activitymod():
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_matches_activatingsub():
     """Test matching of entities only, entities match only on name."""
@@ -301,6 +345,7 @@ def test_matches_activatingsub():
     assert(not st1.matches(st3))
     assert(not st3.matches(st4)) # Differ only in relationship
     assert(not st3.matches(st5)) # Differ only in activity
+    assert unicode_strs((st1, st2, st3, st4, st5))
 
 def test_matches_rasgef():
     """Test matching of entities only, entities match only on name."""
@@ -316,6 +361,7 @@ def test_matches_rasgef():
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_matches_rasgap():
     rasa1 = Agent('RASA1', db_refs = {'HGNC': 'rasa1'})
@@ -330,6 +376,7 @@ def test_matches_rasgap():
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_matches_complex():
     ksr1 = Agent('KSR1', db_refs = {'HGNC': 'ksr1'})
@@ -344,6 +391,7 @@ def test_matches_complex():
     assert(st1.matches(st2))
     assert(st2.matches(st3))
     assert(st3.matches(st1))
+    assert unicode_strs((st1, st2, st3))
 
 # Entity matching between statements ----------------------------------------
 def test_agent_entity_match():
@@ -351,6 +399,7 @@ def test_agent_entity_match():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     assert(nras1.entity_matches(nras2))
+    assert unicode_strs((nras1, nras2))
 
 def test_entities_match_mod():
     """Test matching of entities only, entities match only on name."""
@@ -362,6 +411,7 @@ def test_entities_match_mod():
     st2 = Phosphorylation(src, nras2,
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_selfmod():
     """Test matching of entities only, entities match only on name."""
@@ -372,6 +422,7 @@ def test_entities_match_selfmod():
     st2 = Autophosphorylation(nras2,
                           evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_activation():
     """Test matching of entities only, entities match only on name."""
@@ -385,6 +436,7 @@ def test_entities_match_activation():
                      nras2, 'gtpbound2', True,
                      evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_activitymod():
     """Test matching of entities only, entities match only on name."""
@@ -397,6 +449,7 @@ def test_entities_match_activitymod():
     st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_activatingsub():
     """Test matching of entities only, entities match only on name."""
@@ -409,6 +462,7 @@ def test_entities_match_activatingsub():
     st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_rasgef():
     """Test matching of entities only, entities match only on name."""
@@ -421,6 +475,7 @@ def test_entities_match_rasgef():
     st2 = RasGef(sos2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.entities_match(st2))
+    assert unicode_strs((st1, st2))
 
 def test_entities_match_rasgap():
     """Test matching of entities only, entities match only on name."""
@@ -742,7 +797,6 @@ def test_activation_activity_hierarchy_refinement():
     assert(not st3.refinement_of(st4, hierarchies))
     assert(not st4.refinement_of(st3, hierarchies))
 
-
 def test_activitymod_refinement():
     mc1 = ModCondition('phosphorylation')
     mc2 = ModCondition('phosphorylation', 'S')
@@ -989,6 +1043,7 @@ def test_residue_selfmod():
 def test_valid_mod_residue():
     mc = ModCondition('phosphorylation', 'serine')
     assert(mc.residue == 'S')
+    assert unicode_strs(mc)
 
 def test_valid_residue():
     assert(get_valid_residue('serine') == 'S')
@@ -1002,6 +1057,7 @@ def test_modcondition_order_actmod():
     p1 = ActiveForm(Agent('MAP2K1', mods=[mc1, mc2]), 'kinase', True)
     p2 = ActiveForm(Agent('MAP2K1', mods=[mc2, mc1]), 'kinase', True)
     assert(p1.matches(p2))
+    assert unicode_strs((p1, p2))
 
 def test_modcondition_order_agent():
     mc1 = ModCondition('phoshporylation', 'S', '222')
@@ -1009,6 +1065,7 @@ def test_modcondition_order_agent():
     p1 = Agent('MAP2K1', mods=[mc1, mc2])
     p2 = Agent('MAP2K1', mods=[mc2, mc1])
     assert(p1.matches(p2))
+    assert unicode_strs((p1, p2))
 
 def test_eq_mut():
     assert(MutCondition('600', 'V', 'E').equals(MutCondition('600', 'V', 'E')))
@@ -1075,14 +1132,15 @@ def test_eq_stmt():
                       Agent('b'), 'activity', True, evidence=[ev2])))
 
 def test_serialize():
-    ev1 = Evidence(text='1')
-    st = Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1])
+    ev1 = Evidence(text='1\U0001F4A9')
+    st = Phosphorylation(Agent('a\U0001F4A9'), Agent('b'), evidence=[ev1])
     jstr = st.to_json()
     st2 = Phosphorylation.from_json(jstr)
     assert(st.equals(st2))
+    assert unicode_strs((ev1, st, st2))
 
 def test_serialize_errors():
-    st = Phosphorylation(Agent('a'), Agent('b'))
+    st = Phosphorylation(Agent('a\U0001F4A9'), Agent('b\U0001F4A9'))
     jstr = st.to_json()
     st2 = Complex.from_json(jstr)
     assert(st2 is None)
@@ -1090,6 +1148,7 @@ def test_serialize_errors():
     assert(st3 is None)
     st4 = Phosphorylation.from_json('xyz' + jstr)
     assert(st4 is None)
+    assert unicode_strs((st, st2, st3, st4))
 
 def test_location_refinement():
     a1 = Agent('a', location='plasma membrane')
@@ -1167,8 +1226,43 @@ def test_homodimer_bound_to():
     assert not st1.matches(st3)
     assert not st3.matches(st2)
 
-# TODO expand tests to also check for things that should NOT match (different
-# agent names)
+def test_unicode_str_methods():
+    ag = Agent('MAPK1\U0001F4A9')
+    print(ag)
+    ev = Evidence(text='foo \U0001F4A9 bar')
+    print(ev)
+    print(repr(ev))
 
-# TODO Expand match tests to 
+    st = Phosphorylation(ag, ag, evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st1 = Autophosphorylation(ag, evidence=ev)
+    print(st1)
+    print(repr(st1))
+
+    st = Activation(ag, 'activity', ag, 'activity', is_activation=True,
+                    evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = ActiveForm(ag, 'activity', True)
+    print(st)
+    print(repr(st))
+
+    st = HasActivity(ag, 'activity', True)
+    print(st)
+    print(repr(st))
+
+    st = RasGef(ag, 'gef', ag, evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = RasGap(ag, 'gap', ag, evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = Complex([ag, ag], evidence=ev)
+    print(st)
+    print(repr(st))
 

@@ -1,8 +1,16 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import logging
-import urllib, urllib2
-from functools32 import lru_cache
 import xml.etree.ElementTree as ET
+import requests
+# Python3
+try:
+    from functools import lru_cache
+# Python2
+except ImportError:
+    from functools32 import lru_cache
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('elsevier')
 
@@ -33,31 +41,31 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 
 
-@lru_cache(maxsize=100)
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_article_url, doi)
     if api_key is None:
-        logging.error('Missing API key at %s, could not download article.' %
+        logger.error('Missing API key at %s, could not download article.' %
                       api_key_file)
         return None
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
-    try:
-        res = urllib2.urlopen(url, data=urllib.urlencode(params))
-    except urllib2.HTTPError:
-        logging.error('Cound not download article %s' % doi)
+    res = requests.get(url, params)
+    if not res.status_code == 200:
+        logger.error('Could not download article %s' % doi)
         return None
-    xml = res.read()
-    return xml
+    # Parse the content from the stream and then return the tree
+    xml_tree = ET.XML(res.content, parser=UTB())
+    return xml_tree
 
 
 def get_abstract(doi):
     """Get the abstract of an article from Elsevier."""
-    xml = download_article(doi)
-    et = ET.fromstring(xml)
-    coredata = et.find('article:coredata', elsevier_ns)
+    xml_tree = download_article(doi)
+    if xml_tree is None:
+        return None
+    coredata = xml_tree.find('article:coredata', elsevier_ns)
     abstract = coredata.find('dc:description', elsevier_ns)
     abs_text = abstract.text
     return abs_text
@@ -69,13 +77,12 @@ def get_article(doi, output='txt'):
     text, while 'xml' simply takes the tag containing the body of the article
     and returns it as is . In the latter case, downstream code needs to be
     able to interpret Elsever's XML format. """
-    xml = download_article(doi)
-    if xml is None:
+    xml_tree = download_article(doi)
+    if xml_tree is None:
         return None
-    et = ET.fromstring(xml)
-    full_text = et.find('article:originalText', elsevier_ns)
+    full_text = xml_tree.find('article:originalText', elsevier_ns)
     if full_text is None:
-        logging.info('Could not find full text for %s.' % doi)
+        logger.info('Could not find full text for %s.' % doi)
         return None
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
@@ -103,7 +110,7 @@ def get_article(doi, output='txt'):
                                      else '' for c in p.getchildren()])
                 full_txt += '\n'
     else:
-        logging.error('Unknown output format %s.' % output)
+        logger.error('Unknown output format %s.' % output)
         return None
     return full_txt
 
@@ -118,7 +125,7 @@ def get_dois(query_str, count=100):
     """
     url = '%s/%s' % (elsevier_search_url, query_str)
     if api_key is None:
-        logging.error('Missing API key at %s, could not perform search.' %
+        logger.error('Missing API key at %s, could not perform search.' %
                       api_key_file)
         return None
     params = {'APIKey': api_key,
@@ -127,9 +134,10 @@ def get_dois(query_str, count=100):
               'httpAccept': 'application/xml',
               'sort': '-coverdate',
               'field': 'doi'}
-    res = urllib2.urlopen(url, data=urllib.urlencode(params))
-    xml = res.read()
-    et = ET.fromstring(xml)
-    doi_tags = et.findall('atom:entry/prism:doi', elsevier_ns)
+    res = requests.get(url, params)
+    if not res.status_code == 200:
+        return None
+    tree = ET.XML(res.content, parser=UTB())
+    doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
     dois = [dt.text for dt in doi_tags]
     return dois

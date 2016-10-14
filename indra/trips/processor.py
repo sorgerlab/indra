@@ -1,15 +1,15 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
-import pickle
 import logging
 import operator
 import itertools
 import collections
-
 import xml.etree.ElementTree as ET
-
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('trips')
 
@@ -51,12 +51,13 @@ class TripsProcessor(object):
     """
     def __init__(self, xml_string):
         try:
-            self.tree = ET.fromstring(xml_string)
+            self.tree = ET.XML(xml_string, parser=UTB())
         except ET.ParseError:
             logger.error('Could not parse XML string')
             self.tree = None
             return
-        # Get the document ID from the EKB tag. This is the PMC ID when available.
+        # Get the document ID from the EKB tag. This is the PMC ID when
+        # available.
         self.doc_id = self.tree.attrib.get('id')
         # Store all paragraphs and store all sentences in a data structure
         paragraph_tags = self.tree.findall('input/paragraphs/paragraph')
@@ -72,7 +73,7 @@ class TripsProcessor(object):
         self.extracted_events = {k:[] for k in self.all_events.keys()}
         logger.debug('All events by type')
         logger.debug('------------------')
-        for k, v in self.all_events.iteritems():
+        for k, v in self.all_events.items():
             logger.debug('%s %s' % (k, len(v)))
         logger.debug('------------------')
 
@@ -531,6 +532,7 @@ class TripsProcessor(object):
                         self.statements.append(st)
             self.extracted_events['ONT::PHOSPHORYLATION'].append(
                                                             event.attrib['id'])
+
     def get_translocation(self):
         translocation_events = \
             self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
@@ -907,11 +909,7 @@ class TripsProcessor(object):
             hgnc_name = self._get_hgnc_name(hgnc_id)
             return self._get_valid_name(hgnc_name)
         elif up_id:
-            # First try to get HGNC name
-            hgnc_name = up_client.get_hgnc_name(up_id)
-            if hgnc_name is not None:
-                return self._get_valid_name(hgnc_name)
-            # Next, try to get the gene name
+            # First to get gene name
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
                 return self._get_valid_name(gene_name)

@@ -47,7 +47,11 @@ contained in one or more :py:class:`Evidence` objects associated with the
 Statement.
 """
 
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import os
+import sys
 import logging
 import textwrap
 import jsonpickle
@@ -57,6 +61,10 @@ import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
 
+# Set the JSONpickle backend. We need to use the json module explicitly (rather
+# than simplejson, which is the default if installed), because it returns
+# unicode strings upon unpickling, which is what we want.
+jsonpickle.set_preferred_backend('json')
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
@@ -85,7 +93,7 @@ class BoundCondition(object):
         self.agent = agent
         self.is_bound = is_bound
 
-
+@python_2_unicode_compatible
 class MutCondition(object):
     """Mutation state of an amino acid position of an Agent.
 
@@ -129,9 +137,10 @@ class MutCondition(object):
         return s
 
     def __repr__(self):
-        return 'MutCondition' + self.__str__()
+        return 'MutCondition' + str(self)
 
 
+@python_2_unicode_compatible
 class ModCondition(object):
     """Post-translational modification state at an amino acid position.
 
@@ -171,11 +180,8 @@ class ModCondition(object):
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
         self.mod_type = mod_type
         self.residue = get_valid_residue(residue)
-        if not isinstance(position, basestring):
-            if position is None:
-                self.position = None
-            else:
-                self.position = str(position)
+        if isinstance(position, int):
+            self.position = str(position)
         else:
             self.position = position
         self.is_modified = is_modified
@@ -209,7 +215,7 @@ class ModCondition(object):
         return ms
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
     def equals(self, other):
         type_match = (self.mod_type == other.mod_type)
@@ -221,7 +227,7 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
-
+@python_2_unicode_compatible
 class Agent(object):
     """A molecular entity, e.g., a protein.
 
@@ -285,7 +291,7 @@ class Agent(object):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
-        name_str = self.name.encode('utf-8')
+        name_str = self.name
         key = (name_str,
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
@@ -316,9 +322,11 @@ class Agent(object):
         if up:
             if isinstance(up, list):
                 up = up[0]
-            hgnc_name = upc.get_hgnc_name(up, True)
-            if hgnc_name:
-                return ('HGNC', hgnc_name)
+            up_mnemonic = upc.get_mnemonic(up)
+            if up_mnemonic and up_mnemonic.endswith('HUMAN'):
+                gene_name = upc.get_gene_name(up, web_fallback=False)
+                if gene_name:
+                    return ('HGNC', gene_name)
             else:
                 return ('UP', up)
         return (None, None)
@@ -488,16 +496,14 @@ class Agent(object):
         #if self.db_refs:
         #    attr_strs.append('db_refs: %s' % self.db_refs)
         attr_str = ', '.join(attr_strs)
-        if isinstance(self.name, unicode):
-            agent_name = self.name.encode('utf-8')
-        else:
-            agent_name = self.name
+        agent_name = self.name
         return '%s(%s)' % (agent_name, attr_str)
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
 
+@python_2_unicode_compatible
 class Evidence(object):
     """Container for evidence supporting a given statement.
 
@@ -547,13 +553,17 @@ class Evidence(object):
         return matches
 
     def __str__(self):
-        ev_str = u'Evidence(%s, %s, %s, %s)' % \
+        ev_str = 'Evidence(%s, %s, %s, %s)' % \
                  (self.source_api, self.pmid, self.annotations,
                   self.text)
-        return ev_str.encode('utf-8')
+        return ev_str
 
     def __repr__(self):
-        return self.__str__()
+        if sys.version_info[0] >= 3:
+            return str(self)
+        else:
+            return str(self).encode('utf-8')
+        return str(self)
 
 
 class Statement(object):
@@ -599,14 +609,17 @@ class Statement(object):
         return str(key)
 
     def print_supports(self):
-        print '%s supported_by:' % self.__str__()
+        print('%s supported_by:' % str(self))
         if self.supported_by:
-            print '-->'
+            print('-->')
             for s in self.supported_by:
                 s.print_supports()
 
     def __repr__(self):
-        return self.__str__()
+        if sys.version_info[0] >= 3:
+            return str(self)
+        else:
+            return str(self).encode('utf-8')
 
     def equals(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
@@ -650,6 +663,7 @@ class Statement(object):
             return None
 
 
+@python_2_unicode_compatible
 class Modification(Statement):
     """Generic statement representing the modification of a protein.
 
@@ -673,10 +687,10 @@ class Modification(Statement):
         self.enz = enz
         self.sub = sub
         self.residue = get_valid_residue(residue)
-        if position is not None:
-            if not isinstance(position, basestring):
-                position = str(position)
-        self.position = position
+        if isinstance(position, int):
+            self.position = str(position)
+        else:
+            self.position = position
 
     def matches_key(self):
         if self.enz is None:
@@ -739,6 +753,7 @@ class Modification(Statement):
         return s
 
 
+@python_2_unicode_compatible
 class SelfModification(Statement):
     """Generic statement representing the self-modification of a protein.
 
@@ -759,10 +774,10 @@ class SelfModification(Statement):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
         self.residue = get_valid_residue(residue)
-        if position is not None:
-            if not isinstance(position, basestring):
-                position = str(position)
-        self.position = position
+        if isinstance(position, int):
+            self.position = str(position)
+        else:
+            self.position = position
 
     def __str__(self):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
@@ -919,7 +934,7 @@ class Farnesylation(Modification):
     """Farnesylation modification."""
     pass
 
-
+@python_2_unicode_compatible
 class Activation(Statement):
     """Indicates that the activity of a protein affects the activity of another.
 
@@ -1021,6 +1036,7 @@ class RasGtpActivation(Activation):
     pass
 
 
+@python_2_unicode_compatible
 class ActiveForm(Statement):
     """Specifies conditions causing an Agent to be active or inactive.
 
@@ -1088,6 +1104,8 @@ class ActiveForm(Statement):
                   (self.is_active == other.is_active)
         return matches
 
+
+@python_2_unicode_compatible
 class HasActivity(Statement):
     """States that an Agent has or doesn't have a given activity type.
 
@@ -1155,6 +1173,8 @@ class HasActivity(Statement):
                   (self.has_activity == other.has_activity)
         return matches
 
+
+@python_2_unicode_compatible
 class RasGef(Statement):
     """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
 
@@ -1221,6 +1241,7 @@ class RasGef(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class RasGap(Statement):
     """Acceleration of a Ras protein's GTP hydrolysis rate by a GAP.
 
@@ -1287,6 +1308,7 @@ class RasGap(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class Complex(Statement):
     """A set of proteins observed to be in a complex.
 
@@ -1356,6 +1378,7 @@ class Complex(Statement):
         return matches
 
 
+@python_2_unicode_compatible
 class Translocation(Statement):
     """The translocation of a molecular agent from one location to another.
 
@@ -1442,6 +1465,7 @@ def get_valid_location(location):
             return loc
     return location
 
+
 def _read_cellular_components():
     """Read cellular components from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1492,4 +1516,5 @@ class InvalidLocationError(ValueError):
     """Invalid cellular component name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
+
 

@@ -1,17 +1,14 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
-import urllib
-import keyword
 import logging
 import collections
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF
-
+from requests.utils import unquote
 from indra.statements import *
 from indra.databases import hgnc_client
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger('bel')
-
-BEL = Namespace("http://www.openbel.org/")
 
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>
@@ -19,75 +16,49 @@ prefixes = """
     PREFIX belns: <http://www.openbel.org/bel/namespace/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
 
-class InvalidNameError(ValueError):
-    def __init__(self, name):
-        ValueError.__init__(self, "Not a valid name: %s" % name)
-
-def name_from_uri(uri):
-    """Make the URI term usable as a valid Python identifier, if possible.
-
-    First strips of the extra URI information by calling term_from_uri,
-    then checks to make sure the name is a valid Python identifier.
-    Currently fixes identifiers starting with numbers by prepending with
-    the letter 'p'. For other cases it raises an exception.
-
-    This function should be called when the string that is returned is to be
-    used as a PySB component name, which are required to be valid Python
-    identifiers.
-    """
-    name = term_from_uri(uri)
-    # Handle the case where the string starts with a number
-    if name[0].isdigit():
-        name = 'p' + name
-    if re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) \
-            and not keyword.iskeyword(name):
-        pass
-    else:
-        raise InvalidNameError(name)
-
-    return name
-
-def gene_name_from_uri(uri):
-    name = name_from_uri(uri).upper()
-    return name
-
 def namespace_from_uri(uri):
     """Return the entity namespace from the URI. Examples:
     http://www.openbel.org/bel/p_HGNC_RAF1 -> HGNC
     http://www.openbel.org/bel/p_RGD_Raf1 -> RGD
     http://www.openbel.org/bel/p_PFH_MEK1/2_Family -> PFH
     """
-    match = re.match('http://www.openbel.org/bel/p_([A-Za-z]+)_.*', uri)
-    if match is not None:
-        return match.groups()[0]
-    else:
-        return None
+    patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_complex_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/g_([A-Za-z]+)_.*']
+    for pr in patterns:
+        match = re.match(pr, uri)
+        if match is not None:
+            return match.groups()[0]
+    return None
 
 def term_from_uri(uri):
-    """Basic conversion of RDF URIs to more friendly strings.
-
-    Removes prepended URI information, and replaces spaces and hyphens with
-    underscores.
-    """
+    """Removes prepended URI information from terms."""
     if uri is None:
         return None
     # This is to handle URIs like
     # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
-    match = re.match('http://www.openbel.org/bel/namespace//(.*)', uri)
-    if match is not None:
-        term = match.groups()[0]
-    else:
-        term = uri.rsplit('/')[-1]
-    # Decode URL to handle spaces, special characters
-    term = urllib.unquote(term)
-    # Replace any spaces, hyphens, commas, or periods with underscores
-    term = term.replace(' ', '_')
-    term = term.replace('/', '_')
-    term = term.replace('-', '_')
-    term = term.replace(',', '_')
-    term = term.replace('.', '_')
-    term = term.encode('ascii', 'ignore')
-    return term
+    # or
+    # http://www.openbel.org/bel/namespace/MAPK%20Erk1/3%20Family
+    # In the current implementation, the order of the patterns
+    # matters.
+    patterns = ['http://www.openbel.org/bel/namespace//(.*)',
+                'http://www.openbel.org/vocabulary//(.*)',
+                'http://www.openbel.org/bel//(.*)',
+                'http://www.openbel.org/bel/namespace/(.*)',
+                'http://www.openbel.org/vocabulary/(.*)',
+                'http://www.openbel.org/bel/(.*)']
+    for pr in patterns:
+        match = re.match(pr, uri)
+        if match is not None:
+            term = match.groups()[0]
+            term = unquote(term)
+            return term
+    # If none of the patterns match then the URI is actually a simple term
+    # for instance a site: "341" or a substitution: "sub(V,600,E)"
+    return uri
 
 def strip_statement(uri):
     uri = uri.replace(r'http://www.openbel.org/bel/', '')
@@ -158,7 +129,7 @@ class BelProcessor(object):
             evidence = self.get_evidence(stmt[5])
             # Parse out the elements of the query
             enz = self.get_agent(stmt[0], stmt[6])
-            act_type = name_from_uri(stmt[1])
+            act_type = term_from_uri(stmt[1])
             sub = self.get_agent(stmt[2], stmt[7])
             mod = term_from_uri(stmt[3])
             residue = self._get_residue(mod)
@@ -382,7 +353,7 @@ class BelProcessor(object):
             cmplx_ev[cmplx_id] = ev
         # Now iterate over the stored complex information and create binding
         # statements
-        for cmplx_id, cmplx_list in cmplx_dict.iteritems():
+        for cmplx_id, cmplx_list in cmplx_dict.items():
             if len(cmplx_list) < 2:
                 msg = 'Complex %s has less than 2 members! Skipping.' % \
                        cmplx_name
@@ -430,7 +401,7 @@ class BelProcessor(object):
             # for modified protein abundances. Instead, the substitution
             # just comes back as a string, e.g., "sub(V,600,E)". This code
             # parses the arguments back out using a regular expression.
-            match = re.match('sub\(([A-Z])_([0-9]*)_([A-Z])\)', sub_expr)
+            match = re.match('sub\(([A-Z]),([0-9]*),([A-Z])\)', sub_expr)
             if match:
                 matches = match.groups()
                 wt_residue = matches[0]
@@ -482,14 +453,14 @@ class BelProcessor(object):
         for stmt in res_stmts:
             evidence = self.get_evidence(stmt[5])
             subj = self.get_agent(stmt[0], stmt[6])
-            subj_activity = name_from_uri(stmt[1]).lower()
+            subj_activity = term_from_uri(stmt[1]).lower()
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
                 is_activation = False
             else:
                 is_activation = True
             obj = self.get_agent(stmt[3], stmt[7])
-            obj_activity = name_from_uri(stmt[4]).lower()
+            obj_activity = term_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
@@ -703,41 +674,52 @@ class BelProcessor(object):
 
     @staticmethod
     def get_agent(concept, entity):
-        name = gene_name_from_uri(concept)
+        name = term_from_uri(concept)
         namespace = namespace_from_uri(entity)
         db_refs = {}
         if namespace == 'HGNC':
+            agent_name = name
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
-        agent = Agent(name, db_refs=db_refs)
+        elif namespace in ('MGI', 'RGD'):
+            agent_name = name
+        elif namespace in ('PFH', 'SFAM'):
+            indra_name = bel_to_indra.get(name)
+            if indra_name is None:
+                agent_name = name
+                msg = 'Could not find mapping for BEL family: %s' % name
+                logger.warning(msg)
+            else:
+                db_refs['BE'] = indra_name
+                db_refs['TEXT'] = name
+                agent_name = indra_name
+        elif namespace == 'CHEBI':
+            chebi_id = chebi_name_id.get(name)
+            if chebi_id:
+                db_refs['CHEBI'] = chebi_id
+            else:
+                logger.warning('CHEBI name %s not found in map.' % chebi_id)
+            agent_name = name
+        elif namespace == 'EGID':
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+            if hgnc_id is not None:
+                db_refs['HGNC'] = str(hgnc_id)
+                agent_name = hgnc_client.get_hgnc_name(hgnc_id)
+            else:
+                logger.warning('Could not map EGID%s to HGNC.' % name)
+                agent_name = 'E%s' % name
+        else:
+            logger.warning('Unhandled entity namespace: %s' % namespace)
+            print('%s, %s' % (concept, entity))
+            agent_name = name
+        agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
     def get_evidence(self, statement):
         evidence = None
         citation = None
         annotations = []
-
-        # Query for evidence text and citation
-        q_evidence = prefixes + """
-            SELECT ?evidenceText ?citation
-            WHERE {
-                <%s> belvoc:hasEvidence ?evidence .
-                ?evidence belvoc:hasEvidenceText ?evidenceText .
-                ?evidence belvoc:hasCitation ?citation .
-            }
-        """ % statement.format()
-        res_evidence = self.g.query(q_evidence)
-        for stmt in res_evidence:
-            try:
-                evidence = unicode(stmt[0])
-                citation = unicode(stmt[1])
-            except IndexError:
-                logger.warning('Problem converting evidence/citation string')
-        if citation is not None:
-            m = re.match('.*pubmed:([0-9]+)', citation)
-            if m is not None:
-                citation = m.groups()[0]
 
         # Query for all annotations of the statement
         q_annotations = prefixes + """
@@ -751,9 +733,34 @@ class BelProcessor(object):
         for stmt in res_annotations:
             annotations.append(stmt[0].format())
 
-        ev = Evidence(source_api='bel', source_id=statement, pmid=citation,
-                      text=evidence, annotations=annotations)
-        return ev
+        # Query for evidence text and citation
+        q_evidence = prefixes + """
+            SELECT ?evidenceText ?citation
+            WHERE {
+                <%s> belvoc:hasEvidence ?evidence .
+                ?evidence belvoc:hasEvidenceText ?evidenceText .
+                ?evidence belvoc:hasCitation ?citation .
+            }
+        """ % statement.format()
+        res_evidence = self.g.query(q_evidence)
+        evs = []
+        for stmt in res_evidence:
+            text = stmt[0].toPython()
+            citation = stmt[1].toPython()
+            if citation is not None:
+                m = re.match('.*pubmed:([0-9]+)', citation)
+                if m is not None:
+                    citation = m.groups()[0]
+                    ev = Evidence(source_api='bel', source_id=statement,
+                                  pmid=citation, text=text,
+                                  annotations=annotations)
+                    evs.append(ev)
+                else:
+                    logger.warning('Could not parse citation: %s' % citation)
+        if not evs:
+            evs = [Evidence(source_api='bel', source_id=statement,
+                            annotations=annotations)]
+        return evs
 
     @staticmethod
     def _get_residue(mod):
@@ -777,3 +784,27 @@ class BelProcessor(object):
         mc.position = mod_pos
         return mc
 
+def _build_bel_indra_map():
+    fname = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/bel_indra_map.tsv'
+    bel_to_indra = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        bel_name = row[0]
+        indra_name = row[1]
+        bel_to_indra[bel_name] = indra_name
+    return bel_to_indra
+
+def _build_chebi_map():
+    fname = os.path.dirname(os.path.abspath(__file__)) +\
+                '/../resources/bel_chebi_map.tsv'
+    chebi_name_id = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        chebi_name = row[0]
+        chebi_id = row[1]
+        chebi_name_id[chebi_name] = chebi_id
+    return chebi_name_id
+
+bel_to_indra = _build_bel_indra_map()
+chebi_name_id = _build_chebi_map()

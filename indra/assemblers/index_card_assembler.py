@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import json
 from indra.statements import *
 from indra.literature import id_lookup
@@ -34,7 +36,6 @@ class IndexCardAssembler(object):
                     card.card['pmc_id'] = self.pmc_override
                 else:
                     card.card['pmc_id'] = get_pmc_id(stmt)
-                    print 'a'
                 self.cards.append(card)
 
     def print_model(self):
@@ -226,10 +227,10 @@ def get_participant(agent):
                 entity_dict = {}
                 uniprot_mnemonic = \
                     str(uniprot_client.get_mnemonic(uniprot_id))
-                hgnc_name = uniprot_client.get_hgnc_name(uniprot_id)
-                if hgnc_name is None:
-                    hgnc_name = ""
-                entity_dict['entity_text'] = [hgnc_name]
+                gene_name = uniprot_client.get_gene_name(uniprot_id)
+                if gene_name is None:
+                    gene_name = ""
+                entity_dict['entity_text'] = [gene_name]
                 entity_dict['identifier'] = 'UNIPROT:%s' % uniprot_mnemonic
                 entity_dict['entity_type'] = 'protein'
                 participant['entities'].append(entity_dict)

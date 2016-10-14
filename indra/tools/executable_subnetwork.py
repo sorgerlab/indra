@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 from indra.databases import relevance_client
 from indra.assemblers import PysbAssembler
@@ -93,9 +95,10 @@ if __name__ == '__main__':
     genes = ['EGF', 'EGFR', 'ERBB2', 'GRB2', 'SOS1', 'HRAS', 'RAF1',
             'MAP2K1', 'MAPK1']
 
-    model = pickle.load(open('models/rasmachine/rem/model.pkl'))
+    with open('models/rasmachine/rem/model.pkl', 'rb') as f:
+        model = pickle.load(f)
     stmts = []
-    for k, v in model.iteritems():
+    for k, v in model.items():
         stmts += v
 
     rasmachine_network = '50e3dff7-133e-11e6-a039-06603eb7f303'

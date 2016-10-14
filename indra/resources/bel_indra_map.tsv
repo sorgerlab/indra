@@ -1,0 +1,242 @@
+14-3-3 Family	p14_3_3
+ACAD Family	ACAD
+ACOX Family	ACOX
+ACSL Family	ACSL
+ACT Family	Actin
+ACTN Family	ACTN
+ADCY Family	ADCY
+ADH Family	ADH
+ADRA Family	ADRA
+ADRA2 Family	ADRA2
+ADRB Family	ADRB
+ADRBK Family	ADRBK
+AKT Family	AKT
+ALDH Family	ALDH
+ALDO Family	ALDO
+APOA Family	APOA
+ARRB Family	ARRB
+ATP2A Family	ATP2A
+ATP5G Family	ATP5G
+AXIN Family	AXIN
+Acetyl-CoA Synthetase Family	Acetyl_CoA_synthase
+BIRC Family	BIRC
+BMP Family	BMP
+BMP Receptor Type I Family	BMP_receptor_type_I
+BMP Receptor Type II Family	BMP_receptor_type_II
+CALM Family	CALM
+CAMK Family	CAMK
+CAMK2 Family	CAMK2
+CAPN Family	CAPN
+CASP Family	Caspase
+CAV Family	CAV
+CCNA Family	Cyclin_A
+CCND Family	Cyclin_D
+CCNE Family	Cyclin_E
+CD16 Family	CD16
+CD32 Family	CD32
+CD64 Family	CD64
+CDC25 Family	CDC25
+CDH Family	Cadherin
+CEBP Family	CEBP
+CHRM Family	CHRM
+COL1 Family	COL1
+COL4 Family	COL4
+COL5 Family	COL5
+COX4 Family	COX4
+COX6A Family	COX6A
+COX6B Family	COX6B
+COX7A Family	COX7A
+COX7B Family	COX7B
+COX8 Family	COX8
+CREB Family	CREB
+CRISP Family	CRISP
+CSNK1 Family	CSNK1
+CSNK2 Family	CSNK2
+CTNNA Family	CTNNA
+CUL Family	CUL
+CXCL ELR-Negative Family	CXCL_ELR_negative
+CXCL ELR-Positive Family	CXCL_ELR_positive
+Carboxylesterase Family	Carboxylesterase
+Chemokine Receptor Family	Chemokine_receptor
+Cholinesterase Family	Cholinesterase
+Cu-Zn SOD Family	SOD
+Cyclophilin Family	Cyclophilin
+DDR Family	DDR
+DGK Family	DGK
+DNM Family	DNM
+DRD Family	DRD
+DVL Family	DVL
+Desmoglein Family	Desmoglein
+E2F Family	E2F
+EDN Family	EDN
+EGFR Ligand Family	EGFR_ligand
+EGFR/ERBB Family	ERBB
+EGR Family	EGR
+EIF4A Family	EIF4A
+EIF4EBP Family	EIF4EBP
+ELA Family	ELA
+ENO Family	ENO
+EPN Family	EPN
+ESR Family	ESR
+ETS Family	ETS
+Ephrin Receptor Family	Ephrin_receptor
+FGF Family	FGF
+FGFR Family	FGFR
+FLOT Family	FLOT
+FLRT Family	FLRT
+FOXO Family	FOXO
+FZD Family	FZD
+GABR Family	GABR
+GAS6 Receptor Family	GAS6_receptor
+GATA Family	GATA
+GNA Gq Family	G_q
+GNA Gs Family	G_s
+GNAI Family	G_i
+GNB Family	GNB
+GNG Family	GNG
+GPX Family	GPX
+GRIA Family	GRIA
+GRK Family	GRK
+GRM Family	GRM
+GSK3 Family	GSK3
+GST Family	GST
+GUCY Family	GUCY
+GYS Family	GYS
+HDAC Family	HDAC
+HDAC Class I Family	HDAC_I
+HDAC Class II Family	HDAC_II
+HES Family	HES
+HLA-DR Family	HLA_DR
+HMOX Family	HMOX
+HSP90 Family	HSP90
+HSPA Family	HSPA
+HSPB Family	HSPB
+Hedgehog Family	Hedgehog
+Histone H1 Family	Histone_H1
+Histone H2A Family	Histone_H2A
+Histone H2B Family	Histone_H2B
+Histone H3 Family	Histone_H3
+Histone H4 Family	Histone_H4
+IFNA Family	IFNA
+IGFBP Family	IGFBP
+IL1 Family	IL1
+INS Family	INS
+INSR Family	INSR
+IRS Family	IRS
+IRX Family	IRX
+IkappaB Kinase Family	IKK
+JAK Family	JAK
+KLK Family	KLK
+LDH Family	LDH
+MAF Family	MAF
+MAPK Erk1/3 Family	ERK
+MAPK JNK Family	JNK
+MAPK p38 Family	p38
+MEF2 Family	MEF2
+MEK1/2 Family	MEK
+MMP Family	MMP
+MYH Family	MYH
+MYL Family	MYL
+MYL Alkali Family	MYL_alkali
+MYL Regulatory Family	MYL_regulatory
+MYL Slow Family	MYL_slow
+MYST Family	MYST
+NCOR Family	NCOR
+NDRG Family	NDRG
+NFAT Family	NFAT
+NKD Family	NKD
+NOS Family	NOS
+NOTCH Family	Notch
+NRG1/2 Family	NRG_1_2
+NRG3/4 Family	NRG_3_4
+NTRK Family	NTRK
+p160/SRC Family	NCOA
+P2RX Family	P2RX
+P2RY Family	P2RY
+PAK Family	PAK
+PARV Family	PARV
+PBX Family	PBX
+PDE Family	PDE
+PDE1 Family	PDE1
+PDE3 Family	PDE3
+PDE4 Family	PDE4
+PDE6 Family	PDE6
+PDGF Family	PDGF
+PDGFR Family	PDGFR
+PDK Family	PDK
+PFN Family	PFN
+PIK3C Class IA Family	PI3K_p110
+PIK3R Class IA Family	PIK3R_I
+PKI Family	PKI
+PLA2 Family	PLA2
+PLA2G2 Family	PLA2G2
+PLC Family	PLC
+PLCB Family	PLCB
+PLCG Family	PLCG
+PLD Family	PLD
+PPAP2 Family	PPAP2
+PPAR Family	PPAR
+PPP1C Family	PPP1C
+PPP1R Family	PPP1R
+PPP2C Family	PPP2C
+PPP2R Subunit A Family	PPP2R_A
+PPP2R Subunit B Family	PPP2R_B
+PPP3 Family	PPP3
+PPP3C Family	PPP3C
+PPP3R Family	PPP3R
+PRDX Family	PRDX
+PRKA Family	AMPK
+PRKAA Family	AMPK_alpha
+PRKAB Family	AMPK_beta
+PRKAG Family	AMPK_gamma
+PRKAR Family	PRKAR
+PRKC Family	PRKC
+PRKG Family	PRKG
+PTGER Family	PTGER
+RAB Family	RAB
+RAC Family	RAC
+RAF Family	RAF
+RAR Family	RAR
+RAS Family	RAS
+RFX Family	RFX
+RHO Family	RHO
+ROCK Family	ROCK
+ROR Family	ROR
+RPS6KA Family	P90RSK
+RPS6KB Family	P70RSK
+RXR Family	RXR
+S100A Family	S100A
+S1PR Family	S1PR
+SAA Family	SAA
+SCD Family	SCD
+SERPINB Family	SERPINB
+SLC2A Family	SLC2A
+SMAD Family	SMAD
+SMC1 Family	SMC1
+SNAI Family	SNAI
+SOS Family	SOS
+SRC Family	SRC
+SREBF Family	SREBF
+STAT Family	STAT
+STAT5 Family	STAT5
+Sulfonylurea Receptor Family	Sulfonylurea_receptor
+TAP Family	TAP
+TCF/LEF Family	TCF_LEF
+TFAP2 Family	TFAP2
+TFDP Family	TFDP
+TGFB Family	TGFB
+THBS Family	THBS
+THR Family	THR
+TN Family	TN
+TNFRSF Family	TNFRSF
+TOP2 Family	TOP2
+TUBA Family	TUBA
+TUBB Family	TUBB
+TXN Family	TXN
+TXNRD Family	TXNRD
+Tryptase Family	Tryptase
+UBE2 Family	UBE2
+VAV Family	VAV
+VEGF Family	VEGF
+VEGFR Family	VEGFR
+WNT Family	Wnt

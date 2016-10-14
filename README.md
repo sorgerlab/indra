@@ -18,10 +18,7 @@ Documentation is available at http://indra.readthedocs.io.
 Installing INDRA
 ----------------
 
-INDRA works with Python 2.7.x (tested with 2.7.3 and higher). Python 3 is
-currently not supported. When installing INDRA and its dependencies, make sure
-that the correct version of Python is used.
-
+INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5).
 You can install INDRA by cloning this repository and running setup.py from the
 terminal as
 

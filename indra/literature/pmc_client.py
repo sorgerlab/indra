@@ -1,8 +1,13 @@
-import urllib
-import urllib2
-import xml.etree.ElementTree as et
-from indra.literature import pubmed_client
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+import xml.etree.ElementTree as ET
 import os.path
+import requests
+import logging
+from indra.literature import pubmed_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
+
+logger = logging.getLogger('pmc')
 
 pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 pmid_convert_url = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
@@ -38,7 +43,7 @@ def id_lookup(paper_id, idtype=None):
     data = {'ids': paper_id}
     if idtype is not None:
         data['idtype'] = idtype
-    tree = pubmed_client.send_request(pmid_convert_url, urllib.urlencode(data))
+    tree = pubmed_client.send_request(pmid_convert_url, data)
     if tree is None:
         return {}
     record = tree.find('record')
@@ -60,38 +65,31 @@ def get_ids(search_term, retmax=1000):
 def get_xml(pmc_id):
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
-
+    # Request params
     params = {}
     params['verb'] = 'GetRecord'
     params['identifier'] = 'oai:pubmedcentral.nih.gov:%s' % pmc_id
     params['metadataPrefix'] = 'pmc'
-
-    data = urllib.urlencode(params)
-    req = urllib2.Request(pmc_url, data)
-    try:
-        res = urllib2.urlopen(req)
-    except urllib2.HTTPError:
-        print 'Couldn\'t download PMC%d' % pmc_id
-    xml_str = res.read()
-    xml_str = xml_str.decode('utf-8')
-
-    err = check_xml_error(xml_str)
-    if err is None:
-        return xml_str
-    else:
-        print 'PMC client returned with error %s: %s' % (err[0], err[1])
+    # Submit the request
+    res = requests.get(pmc_url, params)
+    if not res.status_code == 200:
+        logger.warning("Couldn't download PMC%d" % pmc_id)
         return None
-
-
-def check_xml_error(xml_str):
-    tree = et.fromstring(xml_str.encode('utf-8'))
+    # Read the bytestream
+    xml_bytes = res.content
+    # Check for any XML errors; xml_str should still be bytes
+    tree = ET.XML(xml_bytes, parser=UTB())
     xmlns = "http://www.openarchives.org/OAI/2.0/"
     err_tag = tree.find('{%s}error' % xmlns)
     if err_tag is not None:
         err_code = err_tag.attrib['code']
         err_text = err_tag.text
-        return (err_code, err_text)
-    return None
+        logger.warning('PMC client returned with error %s: %s' % (err_code, err_text))
+        return None
+    # If no error, return the XML as a unicode string
+    else:
+        return xml_bytes.decode('utf-8')
+
 
 def filter_pmids(pmid_list, source_type):
     """Filter a list of PMIDs for ones with full text from PMC.
@@ -116,8 +114,9 @@ def filter_pmids(pmid_list, source_type):
     if pmids_fulltext_dict.get(source_type) is None:
         fulltext_list_path = os.path.join(os.path.dirname(__file__),
                                      'pmids_%s.txt' % source_type)
-        with open(fulltext_list_path) as f:
-            fulltext_list = set([line.strip('\n') for line in f.readlines()])
+        with open(fulltext_list_path, 'rb') as f:
+            fulltext_list = set([line.strip('\n').decode('utf-8')
+                                 for line in f.readlines()])
             pmids_fulltext_dict[source_type] = fulltext_list
     return list(set(pmid_list).intersection(
                                 pmids_fulltext_dict.get(source_type)))

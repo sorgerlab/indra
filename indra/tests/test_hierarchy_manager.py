@@ -1,11 +1,24 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import get_valid_location, InvalidLocationError
+from indra.util import unicode_strs
 
 ent_hierarchy = hierarchies['entity']
 mod_hierarchy = hierarchies['modification']
 act_hierarchy = hierarchies['activity']
 comp_hierarchy = hierarchies['cellular_component']
+
+def test_hierarchy_unicode():
+    # Test all the hierarchies except the comp_hierarchy, which is an
+    # RDF graph
+    assert unicode_strs((ent_hierarchy.isa_closure,
+                         ent_hierarchy.partof_closure))
+    assert unicode_strs((mod_hierarchy.isa_closure,
+                         mod_hierarchy.partof_closure))
+    assert unicode_strs((act_hierarchy.isa_closure,
+                         act_hierarchy.partof_closure))
 
 def test_isa_entity():
     assert(ent_hierarchy.isa('HGNC', 'BRAF', 'BE', 'RAF'))

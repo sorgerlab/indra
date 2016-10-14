@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 import logging
 from indra.statements import Agent
@@ -36,7 +38,8 @@ class IncrementalModel(object):
             self.stmts = {}
         else:
             try:
-                self.stmts = pickle.load(open(model_fname, 'rb'))
+                with open(model_fname, 'rb') as f:
+                    self.stmts = pickle.load(f)
             except:
                 logger.warning('Could not load %s, starting new model.' %
                                model_fname)
@@ -53,10 +56,10 @@ class IncrementalModel(object):
             IncrementalModel in. Default: model.pkl
         """
         with open(model_fname, 'wb') as fh:
-            pickle.dump(self.stmts, fh)
+            pickle.dump(self.stmts, fh, protocol=2)
 
     def _relevance_filter(self, stmts, filters=None):
-        stmts_to_add = range(len(stmts))
+        stmts_to_add = list(range(len(stmts)))
         # Filter for grounding
         if 'grounding' in filters:
             for i, stmt in enumerate(stmts):
@@ -294,7 +297,7 @@ class IncrementalModel(object):
 
     def get_statements(self):
         """Return a list of all Statements in a single list."""
-        stmt_lists = [v for k, v in self.stmts.iteritems()]
+        stmt_lists = [v for k, v in self.stmts.items()]
         stmts = []
         for s in stmt_lists:
             stmts += s
@@ -302,7 +305,7 @@ class IncrementalModel(object):
 
     def get_statements_noprior(self):
         """Return a list of all non-prior Statements in a single list."""
-        stmt_lists = [v for k, v in self.stmts.iteritems() if k != 'prior']
+        stmt_lists = [v for k, v in self.stmts.items() if k != 'prior']
         stmts = []
         for s in stmt_lists:
             stmts += s

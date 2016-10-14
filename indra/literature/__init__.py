@@ -1,12 +1,19 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import requests
-import warnings
-from functools32 import lru_cache
+import logging
 import xml.etree.ElementTree as ET
 from indra.literature import pubmed_client
 from indra.literature import pmc_client
 from indra.literature import crossref_client
 from indra.literature import elsevier_client
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
+from indra.util import UnicodeXMLTreeBuilder as UTB
 
+logger = logging.getLogger('literature')
 
 def id_lookup(paper_id, idtype):
     """Take an ID of type PMID, PMCID, or DOI and lookup the other IDs.
@@ -45,7 +52,7 @@ def id_lookup(paper_id, idtype):
     # into problems later on when we try to the reverse lookup using CrossRef.
     # So we bail here and return what we have (PMCID only) with a warning.
     if ids.get('pmcid') and ids.get('doi') is None and ids.get('pmid') is None:
-        warnings.warn('%s: PMCID without PMID or DOI' % ids.get('pmcid'))
+        logger.warning('%s: PMCID without PMID or DOI' % ids.get('pmcid'))
         return ids
     # To clarify the state of things at this point:
     assert ids.get('pmid') is not None
@@ -82,10 +89,9 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     # If it does not have PMC NXML then we attempt to obtain the full-text
     # through the CrossRef Click-through API
     if doi:
-        # Check if there are any full text links
-        links = crossref_client.get_fulltext_links(doi)
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
+
         # First check for whether this is Elsevier--if so, use the Elsevier
         # client directly, because the Clickthrough API key seems unreliable.
         # For now, return as text.
@@ -93,10 +99,13 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
             article = elsevier_client.get_article(doi, output='txt')
             if article is not None:
                 return (article, 'txt')
+
         # FIXME FIXME FIXME
         # Because we don't yet have a way to process non-Elsevier content
         # obtained from CrossRef, which includes both XML of unknown format
         # and PDFs, we just comment this section out for now
+        # Check if there are any full text links
+        links = crossref_client.get_fulltext_links(doi)
         """
         if links:
             headers = {}
@@ -119,7 +128,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request): '
+                    logger.warning('Full text query returned 400 (Bad Request): '
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -131,7 +140,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -143,7 +152,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return req.text, req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
@@ -157,15 +166,15 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
                     req_content_type = req.headers['Content-Type']
                     return 'foo', req_content_type
                 elif req.status_code == 400:
-                    warnings.warn('Full text query returned 400 (Bad Request):'
+                    logger.warning('Full text query returned 400 (Bad Request):'
                                   'Perhaps missing CrossRef Clickthrough API '
                                   'key?')
                     return (None, None)
                 elif req.status_code == 401:
-                    warnings.warn('Full text query returned 401 (Unauthorized)')
+                    logger.warning('Full text query returned 401 (Unauthorized)')
                     return (None, None)
                 elif req.status_code == 403:
-                    warnings.warn('Full text query returned 403 (Forbidden)')
+                    logger.warning('Full text query returned 403 (Forbidden)')
                     return (None, None)
             else:
                 raise Exception("Unknown content type(s): %s" % links)
@@ -175,12 +184,14 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
             return get_asbmb_full_text(url)
         """
         # end FIXME FIXME FIXME
+
         # No full text links and not a publisher we support. We'll have to
         # fall back to the abstract.
         #elif pmid:
         if pmid:
             abstract = pubmed_client.get_abstract(pmid)
             return abstract, 'abstract'
+
         # We have a useless DOI and no PMID. Give up.
         else:
             return (None, None)
@@ -193,32 +204,33 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     # We'll only get here if we've missed a combination of conditions
     assert False
 
+
 def get_asbmb_full_text(url):
     # Get the location of the full text PDF from the target URL
     req = requests.get(url)
     if req.status_code != 200:
-        warnings.warn('ASBMB full text query returned status code %s: URL %s'
+        logger.warning('ASBMB full text query returned status code %s: URL %s'
                       % (req.status_code, url))
         return (None, None)
     # If we're here that means that we successfully got the paper URL
     xml_str = req.text
-    tree = ET.fromstring(xml_str.encode('UTF-8'))
+    tree = ET.XML(xml_str, parser=UTB())
     fulltext_elem = tree.find('.//{http://www.w3.org/1999/xhtml}meta'
                               '[@name="citation_fulltext_html_url"]')
     # Couldn't find the element containing the full text URL
     if fulltext_elem is None:
-        warnings.warn("ASBMB full text: couldn't find the full text URL "
+        logger.warning("ASBMB full text: couldn't find the full text URL "
                       "element among the meta tags.")
         return (None, None)
     fulltext_url = fulltext_elem.attrib['content']
     # Now, get the full text HTML page
     req2 = requests.get(fulltext_url)
     if req2.status_code != 200:
-        warnings.warn('ASBMB full text query returned status code %s: URL %s'
+        logger.warning('ASBMB full text query returned status code %s: URL %s'
                       % (req.status_code, fulltext_url))
         return (None, None)
     # We've got the full text page!
     # Get all the section elements
     xml_str2 = req2.text
-    tree2 = ET.fromstring(xml_str2.encode('UTF-8'))
+    tree2 = ET.XML(xml_str2, parser=UTB())
     return None, None
