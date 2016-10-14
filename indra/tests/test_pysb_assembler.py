@@ -556,8 +556,9 @@ def test_non_python_name_phos():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(pa.model.monomers[0].name == 'BRAF_kinase')
-    assert(pa.model.monomers[1].name == 'p14_3_3')
+    names = [m.name for m in pa.model.monomers]
+    assert('BRAF_kinase' in names)
+    assert('p14_3_3' in names)
     bng.generate_equations(pa.model)
 
 def test_non_python_name_bind():
