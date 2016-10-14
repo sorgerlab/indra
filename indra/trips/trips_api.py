@@ -56,4 +56,5 @@ def process_xml(xml_string):
     tp.get_activations_causal()
     tp.get_activations_stimulate()
     tp.get_translocation()
+    tp.get_degradations()
     return tp
