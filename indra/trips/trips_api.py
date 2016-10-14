@@ -57,4 +57,5 @@ def process_xml(xml_string):
     tp.get_activations_stimulate()
     tp.get_translocation()
     tp.get_degradations()
+    tp.get_syntheses()
     return tp

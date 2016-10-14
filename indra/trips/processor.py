@@ -337,10 +337,49 @@ class TripsProcessor(object):
             location = self._get_event_location(event)
             for subj, obj in \
                     _agent_list_product((agent_agent, affected_agent)):
-                print(subj)
-                print(obj)
-                print(ev)
                 st = Degradation(subj, obj, evidence=ev)
+                _stmt_location_to_agents(st, location)
+                self.statements.append(st)
+            self._add_extracted(_get_type(event), event.attrib['id'])
+
+    def get_syntheses(self):
+        """Extract Synthesis INDRA Statements."""
+        syn_events = self.tree.findall("EVENT/[type='ONT::PRODUCE']")
+        syn_events += self.tree.findall("EVENT/[type='ONT::TRANSCRIBE']")
+        for event in syn_events:
+            if event.attrib['id'] in self._static_events:
+                continue
+            affected = event.find(".//*[@role=':AFFECTED-RESULT']")
+            if affected is None:
+                msg = 'Skipping synthesis event with no affected term.'
+                logger.debug(msg)
+                continue
+
+            affected_id = affected.attrib.get('id')
+            if affected_id is None:
+                logger.debug(
+                    'Skipping synthesis event with missing affected agent')
+                continue
+
+            affected_agent = self._get_agent_by_id(affected_id,
+                                                   event.attrib['id'])
+
+            agent = event.find(".//*[@role=':AGENT']")
+            if agent is None:
+                agent_agent = None
+            else:
+                agent_id = agent.attrib.get('id')
+                if agent_id is None:
+                    agent_agent = None
+                else:
+                    agent_agent = self._get_agent_by_id(agent_id,
+                                                        event.attrib['id'])
+
+            ev = self._get_evidence(event)
+            location = self._get_event_location(event)
+            for subj, obj in \
+                    _agent_list_product((agent_agent, affected_agent)):
+                st = Synthesis(subj, obj, evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
