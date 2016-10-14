@@ -1442,6 +1442,93 @@ class Translocation(Statement):
                 str(self.to_location))
         return str(key)
 
+@python_2_unicode_compatible
+class DirectedInteraction(Statement):
+    """Superclass handling operations on directed, two-element interactions."""
+    def __init__(self, subj, obj, evidence=None):
+        super(DirectedInteraction, self).__init__(evidence)
+        self.subj = subj
+        if obj is None:
+            raise ValueError('Object of %s cannot be None.' %
+                              type(self).__name__)
+        self.obj = obj
+
+    def matches_key(self):
+        if self.subj is None:
+            subj_key = None
+        else:
+            subj_key = self.subj.matches_key()
+        key = (type(self), subj_key, self.obj.matches_key())
+        return str(key)
+
+    def agent_list(self):
+        return [self.subj, self.obj]
+
+    def set_agent_list(self, agent_list):
+        if len(agent_list) != 2:
+            raise ValueError("%s has two agents in agent_list." %
+                             type(self).__name__)
+        self.subj = agent_list[0]
+        self.obj = agent_list[1]
+
+    def refinement_of(self, other, hierarchies):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        if self.subj is None and other.subj is None:
+            subj_refinement = True
+        elif self.subj is None and other.subj is not None:
+            subj_refinement = False
+        elif self.subj is not None and other.subj is None:
+            subj_refinement = True
+        else:
+            subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
+        obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+        if subj_refinement and obj_refinement:
+            return True
+        else:
+            return False
+
+    def equals(self, other):
+        matches = super(Statement, self).equals(other)
+        return matches
+
+    def __str__(self):
+        s = ("%s(%s, %s)" %
+                  (type(self).__name__, self.subj, self.obj))
+        return s
+
+
+class Degradation(DirectedInteraction):
+    """Degradation of a protein, possibly mediated by another protein.
+
+    Parameters
+    ----------
+    subj : :py:class`indra.statement.Agent`
+        The protein mediating the degradation.
+    obj : :py:class:`indra.statement.Agent`
+        The protein that is degraded.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the degradation statement.
+    """
+    pass
+
+
+class Synthesis(DirectedInteraction):
+    """Synthesis of a protein, possibly mediated by another protein.
+
+    Parameters
+    ----------
+    subj : :py:class`indra.statement.Agent`
+        The protein mediating the synthesis.
+    obj : :py:class:`indra.statement.Agent`
+        The protein that is synthesized.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the synthesis statement.
+    """
+
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
