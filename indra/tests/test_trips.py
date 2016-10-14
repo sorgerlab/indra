@@ -121,6 +121,26 @@ def test_actmods():
     assert unicode_strs((tp, st, braf))
     assert(st.evidence)
 
+def test_synthesis():
+    tp = trips.process_text('NFKB transcribes IKB.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Synthesis))
+    assert(st.subj is not None)
+    assert(st.obj is not None)
+    assert unicode_strs((tp, st))
+    assert(st.evidence)
+
+def test_degradation():
+    tp = trips.process_text('MDM2 degrades TP53.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Degradation))
+    assert(st.subj is not None)
+    assert(st.obj is not None)
+    assert unicode_strs((tp, st))
+    assert(st.evidence)
+
 def test_trips_processor_online():
     """Smoke test to see if imports and executes without error. Doesn't
     check for correctness of parse or of assembled model."""
