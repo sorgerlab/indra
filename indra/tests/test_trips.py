@@ -18,6 +18,26 @@ def test_phosphorylation():
     assert(st.position == '222')
     assert unicode_strs((tp, st))
 
+def test_mod_cond():
+    tp = trips.process_text('Phosphorylated BRAF binds ubiquitinated MAP2K1.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Complex))
+    braf = st.members[0]
+    mek = st.members[1]
+    assert(len(braf.mods) == 1)
+    assert(braf.mods[0].mod_type == 'phosphorylation')
+    assert(len(mek.mods) == 1)
+    assert(mek.mods[0].mod_type == 'ubiquitination')
+    assert unicode_strs((tp, st))
+
+def test_ubiquitination():
+    tp = trips.process_text('MDM2 ubiquitinates TP53.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.Ubiquitination))
+    assert unicode_strs((tp, st))
+
 def test_phosphorylation_noresidue():
     tp = trips.process_text('BRAF phosphorylates MEK1.')
     assert(len(tp.statements) == 1)
@@ -57,6 +77,27 @@ def test_actmods():
     assert(st.agent.mods[0].mod_type == 'phosphorylation')
     assert(st.agent.mods[0].residue == 'S')
     assert(st.agent.mods[0].position == '218')
+    assert unicode_strs((tp, st))
+
+def test_actform_bound():
+    tp = trips.process_text('HRAS bound to GTP is activated.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.bound_conditions[0], ist.BoundCondition))
+    assert(st.agent.bound_conditions[0].agent.name == 'GTP')
+    assert(st.agent.bound_conditions[0].is_bound == True)
+    assert unicode_strs((tp, st))
+
+def test_actform_muts():
+    tp = trips.process_text('BRAF V600E is activated.')
+    assert(len(tp.statements) == 1)
+    st = tp.statements[0]
+    assert(isinstance(st, ist.ActiveForm))
+    assert(isinstance(st.agent.mutations[0], ist.MutCondition))
+    assert(st.agent.mutations[0].residue_from == 'V')
+    assert(st.agent.mutations[0].residue_to == 'E')
+    assert(st.agent.mutations[0].position == '600')
     assert unicode_strs((tp, st))
 
 def test_actmods():

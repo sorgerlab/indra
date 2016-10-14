@@ -14,7 +14,12 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 logger = logging.getLogger('trips')
 
 mod_names = {
-    'PHOSPHORYLATION': 'phosphorylation'
+    'ONT::PHOSPHORYLATION': 'phosphorylation',
+    'ONT::UBIQUITINATION': 'ubiquitination',
+    'ONT::RIBOSYLATION': 'ribosylation',
+    'ONT::ACETYLATION': 'acetylation',
+    'ONT::HYDROXYLATION': 'hydroxylation',
+    'ONT::FARNESYLATION': 'farnesylation'
     }
 
 molecule_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
@@ -101,13 +106,6 @@ class TripsProcessor(object):
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
             event_id = event.attrib['id']
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
-            location = self._get_event_location(event)
-
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -117,7 +115,6 @@ class TripsProcessor(object):
                 logger.debug(
                     'Skipping activation with missing activator agent')
                 continue
-            agent_name = self._get_name_by_id(agent_id)
             activator_agent = self._get_agent_by_id(agent_id, event_id)
             if activator_agent is None:
                 continue
@@ -146,18 +143,21 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
-            if event.find('type').text == 'ONT::ACTIVATE':
+            if _is_type(event, 'ONT::ACTIVATE'):
                 is_activation = True
                 activator_act = 'activity'
-                self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
-            elif event.find('type').text == 'ONT::INHIBIT':
+                self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
+            elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
                 activator_act = None
-                self.extracted_events['ONT::INHIBIT'].append(event.attrib['id'])
-            elif event.find('type').text == 'ONT::DEACTIVATE':
+                self._add_extracted('ONT::INHIBIT', event.attrib['id'])
+            elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
                 activator_act = 'activity'
-                self.extracted_events['ONT::DEACTIVATE'].append(event.attrib['id'])
+                self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
+
+            ev = _self._get_evidence(event)
+            location = self._get_event_location(event)
 
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
@@ -198,11 +198,8 @@ class TripsProcessor(object):
             if outcome_event_type is None:
                 continue
             # Construct evidence
-            sentence = self._get_evidence_text(cc)
-            sec = self._get_section(cc)
-            epi = {'section_type': sec, 'direct': False}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(cc)
+            ev.epi['direct'] = False
             location = self._get_event_location(outcome_event)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
@@ -237,6 +234,9 @@ class TripsProcessor(object):
 
     def get_activations_stimulate(self):
         """Extract Activation INDRA Statements via stimulation."""
+        # TODO: extract to other patterns:
+        # - Stimulation by EGF activates ERK
+        # - Stimulation by EGF leads to ERK activation
         # Search for stimulation event
         stim_events = self.tree.findall("EVENT/[type='ONT::STIMULATE']")
         for event in stim_events:
@@ -267,11 +267,8 @@ class TripsProcessor(object):
             if affected_event_type is None:
                 continue
             # Construct evidence
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec, 'direct': False}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(event)
+            ev.epistemics['direct'] = False
             location = self._get_event_location(affected_event)
             if affected_event_type.text == 'ONT::ACTIVATE':
                 affected = affected_event.find(".//*[@role=':AFFECTED']")
@@ -304,8 +301,8 @@ class TripsProcessor(object):
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
-    def get_activating_mods(self):
-        """Extract ActiveForm INDRA Statements based on modifications."""
+    def get_active_forms(self):
+        """Extract ActiveForm INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
         for event in act_events:
             if event.attrib['id'] in self._static_events:
@@ -323,68 +320,40 @@ class TripsProcessor(object):
                     'affected agent')
                 continue
 
-            affected_name = self._get_name_by_id(affected_id)
-            if affected_name is None:
-                logger.debug(
-                    'Skipping activating modification with missing' +\
-                    'affected agent')
-                continue
-            affected_agent = Agent(affected_name)
-            precond_ids = self._get_precond_event_ids(affected_id)
-            if not precond_ids:
-                # This means that it is not an activating modification
-                continue
-            precond_id = precond_ids[0]
-            precond_event = self.tree.find("EVENT[@id='%s']" % precond_id)
-            if precond_event is None:
-                continue
-            mods = self._get_mod_site(precond_event)
-            if mods is None:
-                logger.debug('Skipping activity modification with missing' +\
-                                'modification')
-                continue
-            affected_agent.mods = mods
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
+            affected_agent = self._get_agent_by_id(affected_id,
+                                                   event.attrib['id'])
+            ev = self._get_evidence(event)
             location = self._get_event_location(event)
             st = ActiveForm(affected_agent, 'activity', True, evidence=ev)
             _stmt_location_to_agents(st, location)
             self.statements.append(st)
-            self.extracted_events['ONT::ACTIVATE'].append(event.attrib['id'])
+            self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
 
     def get_complexes(self):
         """Extract Complex INDRA Statements."""
         bind_events = self.tree.findall("EVENT/[type='ONT::BIND']")
+        bind_events += self.tree.findall("EVENT/[type='ONT::INTERACT']")
         for event in bind_events:
             if event.attrib['id'] in self._static_events:
                 continue
 
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
-            location = self._get_event_location(event)
-
             arg1 = event.find("arg1")
-            if arg1 is None or arg1.attrib.get('id') is None:
-                msg = 'Skipping complex missing arg1.'
-                logger.debug(msg)
-                continue
-            agent1 = self._get_agent_by_id(arg1.attrib['id'], event.attrib['id'])
-
             arg2 = event.find("arg2")
-            if arg2 is None or arg2.attrib.get('id') is None:
-                msg = 'Skipping complex missing arg2.'
-                logger.debug(msg)
+            if (arg1 is None or arg1.attrib.get('id') is None) or \
+                (arg2 is None or arg2.attrib.get('id') is None):
+                logger.debug('Skipping complex with less than 2 members')
                 continue
-            agent2 = self._get_agent_by_id(arg2.attrib['id'], event.attrib['id'])
+
+            agent1 = self._get_agent_by_id(arg1.attrib['id'],
+                                           event.attrib['id'])
+            agent2 = self._get_agent_by_id(arg2.attrib['id'],
+                                           event.attrib['id'])
+            if agent1 is None or agent2 is None:
+                logger.debug('Skipping complex with less than 2 members')
+                continue
 
             # Information on binding site is either attached to the agent term
-            # in a features/site tag or attached to the event itself in 
+            # in a features/site tag or attached to the event itself in
             # a site tag
             '''
             site_feature = self._find_in_term(arg1.attrib['id'], 'features/site')
@@ -402,29 +371,29 @@ class TripsProcessor(object):
                 sites, positions = self._get_site_by_id(site.attrib['id'])
                 print sites, positions
             '''
-            if agent1 is None or agent2 is None:
-                logger.debug('Complex with missing members')
-                continue
+            ev = self._get_evidence(event)
+            location = self._get_event_location(event)
 
             for a1, a2 in _agent_list_product((agent1, agent2)):
                 st = Complex([a1, a2], evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
-            self.extracted_events['ONT::BIND'].append(event.attrib['id'])
+            self._add_extracted(_get_type(event), event.attrib['id'])
 
-    def get_phosphorylation(self):
-        """Extract all types of phosphorylation INDRA Statements.
-
-        The types of statements extracted here are: Phosphorylation,
-        Dephosphorylation, Transphosphorylation, Autophosphorylation.
-        """
-        phosphorylation_events = \
-            self.tree.findall("EVENT/[type='ONT::PHOSPHORYLATION']")
-        for event in phosphorylation_events:
+    def get_modifications(self):
+        """Extract all types of Modification INDRA Statements."""
+        mod_event_types = mod_names.keys()
+        mod_events = []
+        for mod_event_type in mod_event_types:
+            events = self.tree.findall("EVENT/[type='%s']" % mod_event_type)
+            mod_events += events
+        for event in mod_events:
             event_id = event.attrib['id']
+            event_type = _get_type(event)
             if event_id in self._static_events:
                 continue
 
+            # Get enzyme Agent
             enzyme = event.find(".//*[@role=':AGENT']")
             if enzyme is None:
                 enzyme_agent = None
@@ -432,14 +401,12 @@ class TripsProcessor(object):
                 enzyme_id = enzyme.attrib.get('id')
                 if enzyme_id is None:
                     continue
-                enzyme_term = self.tree.find("TERM/[@id='%s']" % enzyme_id)
-                if enzyme_term is None:
-                    enzyme_agent = None
-                else:
-                    enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+
+            # Get substrate Agent
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                logger.debug('Skipping phosphorylation event with no '
+                logger.debug('Skipping modification event with no '
                               'affected term.')
                 continue
             affected_id = affected.attrib.get('id')
@@ -447,91 +414,99 @@ class TripsProcessor(object):
                 continue
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
+                logger.debug('Skipping modification event with no '
+                              'affected term.')
                 continue
-            mods = self._get_mod_site(event)
 
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence, pmid=self.doc_id,
-                          epistemics=epi)
+            # Get modification sites
+            mods = self._get_modification(event)
+
+            # Get evidence and location
+            ev = self._get_evidence(event)
             location = self._get_event_location(event)
-            # Assuming that multiple modifications can only happen in
-            # distinct steps, we add a statement for each modification
-            # independently
 
-            # TODO: the first extraction here might be deprecated
-            mod_types = event.findall('predicate/mods/mod/type')
-            mod_types += event.findall('mods/mod/type')
-            # Transphosphorylation
-            if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
-                agent_bound = Agent(affected_agent.name)
-                enzyme_agent.bound_conditions = \
-                                           [BoundCondition(agent_bound, True)]
-                for m in mods:
-                    st = Transphosphorylation(enzyme_agent, m.residue,
-                                              m.position, evidence=ev)
-                    _stmt_location_to_agents(st, location)
-                    self.statements.append(st)
-            # Dephosphorylation
-            elif 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
-                for ea, aa in _agent_list_product((enzyme_agent,
-                                                   affected_agent)):
-                    if aa is None:
-                        continue
+            mod_types = event.findall('mods/mod/type')
+
+            # Trans and Auto are unique to Phosphorylation
+            if _is_type(event, 'ONT::PHOSPHORYLATION'):
+                # Transphosphorylation
+                if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
+                    agent_bound = Agent(affected_agent.name)
+                    enzyme_agent.bound_conditions = \
+                        [BoundCondition(agent_bound, True)]
                     for m in mods:
-                        st = Dephosphorylation(ea, aa, m.residue, m.position,
-                                               evidence=ev)
+                        st = Transphosphorylation(enzyme_agent, m.residue,
+                                                  m.position, evidence=ev)
                         _stmt_location_to_agents(st, location)
                         self.statements.append(st)
-            # Autophosphorylation
-            elif enzyme_agent is not None and (enzyme_id == affected_id):
-                for m in mods:
-                    if isinstance(enzyme_agent, list):
-                        for ea in enzyme_agent:
-                            st = Autophosphorylation(ea,
-                                                 m.residue, m.position,
-                                                 evidence=ev)
-                            _stmt_location_to_agents(st, location)
-                            self.statements.append(st)
-                    else:
-                        st = Autophosphorylation(enzyme_agent,
-                                                 m.residue, m.position,
-                                                 evidence=ev)
-                        _stmt_location_to_agents(st, location)
-                        self.statements.append(st)
-            elif affected_agent is not None and \
-                'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
-                for m in mods:
-                    if isinstance(affected_agent, list):
-                        for aa in affected_agent:
-                            st = Autophosphorylation(aa,
+                # Autophosphorylation
+                elif enzyme_agent is not None and (enzyme_id == affected_id):
+                    for m in mods:
+                        if isinstance(enzyme_agent, list):
+                            for ea in enzyme_agent:
+                                st = Autophosphorylation(ea,
+                                                     m.residue, m.position,
+                                                     evidence=ev)
+                                _stmt_location_to_agents(st, location)
+                                self.statements.append(st)
+                        else:
+                            st = Autophosphorylation(enzyme_agent,
                                                      m.residue, m.position,
                                                      evidence=ev)
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
-                    else:
-                        st = Autophosphorylation(affected_agent,
-                                                 m.residue, m.position,
-                                                 evidence=ev)
-                        _stmt_location_to_agents(st, location)
-                        self.statements.append(st)
-
-            # Regular phosphorylation
-            else:
-                if mods is None:
-                    continue
-                for ea, aa in _agent_list_product((enzyme_agent,
-                                                   affected_agent)):
-                    if aa is None:
-                        continue
+                elif affected_agent is not None and \
+                    'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                     for m in mods:
-                        st = Phosphorylation(ea, aa, m.residue, m.position,
-                                             evidence=ev)
-                        _stmt_location_to_agents(st, location)
-                        self.statements.append(st)
-            self.extracted_events['ONT::PHOSPHORYLATION'].append(
-                                                            event.attrib['id'])
+                        if isinstance(affected_agent, list):
+                            for aa in affected_agent:
+                                st = Autophosphorylation(aa,
+                                                         m.residue, m.position,
+                                                         evidence=ev)
+                                _stmt_location_to_agents(st, location)
+                                self.statements.append(st)
+                        else:
+                            st = Autophosphorylation(affected_agent,
+                                                     m.residue, m.position,
+                                                     evidence=ev)
+                            _stmt_location_to_agents(st, location)
+                            self.statements.append(st)
+
+            mod = mod_names.get(event_type)
+            if 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
+                if mod == 'phosphorylation':
+                    mod_stmt = Dephosphorylation
+                elif mod == 'ubiquitination':
+                    mod_stmt = Deubiquitination
+                elif mod == 'farnesylation':
+                    mod_stmt = Defarnesylation
+                elif mod == 'ribosylation':
+                    mod_stmt = Deribosylation
+                elif mod == 'hydroxylation':
+                    mod_stmt = Dehydroxylation
+                elif mod == 'acetylation':
+                    mod_stmt = Deacetylatyion
+            else:
+                if mod == 'phosphorylation':
+                    mod_stmt = Phosphorylation
+                elif mod == 'ubiquitination':
+                    mod_stmt = Ubiquitination
+                elif mod == 'farnesylation':
+                    mod_stmt = Farnesylation
+                elif mod == 'ribosylation':
+                    mod_stmt = Ribosylation
+                elif mod == 'hydroxylation':
+                    mod_stmt = Hydroxylation
+                elif mod == 'acetylation':
+                    mod_stmt = Acetylatyion
+            for ea, aa in _agent_list_product((enzyme_agent, affected_agent)):
+                if aa is None:
+                    continue
+                for m in mods:
+                    st = mod_stmt(ea, aa, m.residue, m.position, evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
+            self._add_extracted(event_type, event.attrib['id'])
 
     def get_translocation(self):
         translocation_events = \
@@ -561,11 +536,7 @@ class TripsProcessor(object):
                 to_loc_id = to_loc_tag.attrib.get('id')
                 to_location = self._get_cell_loc_by_id(to_loc_id)
             # Get evidence
-            sentence = self._get_evidence_text(event)
-            sec = self._get_section(event)
-            epi = {'section_type': sec}
-            ev = Evidence(source_api='trips', text=sentence,
-                          pmid=self.doc_id, epistemics=epi)
+            ev = self._get_evidence(event)
             if isinstance(agent, list):
                 for aa in agent:
                     st = Translocation(aa, from_location,
@@ -575,6 +546,7 @@ class TripsProcessor(object):
                 st = Translocation(agent, from_location,
                                    to_location, evidence=ev)
                 self.statements.append(st)
+            self._add_extracted('ONT::TRANSLOCATE', event.attrib['id'])
 
     def _get_cell_loc_by_id(self, term_id):
         term = self.tree.find("TERM/[@id='%s']" % term_id)
@@ -639,33 +611,23 @@ class TripsProcessor(object):
         if members:
             op = term.find('aggregate').attrib.get('operator')
             if op != 'AND':
-                logger.debug('Skipping aggregate with operator %s' % op)
+                logger.debug('Skipping aggregate with operator %s.' % op)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
             member_agents = [self._get_agent_by_id(m, event_id)
                              for m in member_ids]
             return member_agents
 
-        db_refs_dict = self._get_db_refs(term)
-
-        agent_text_tag = term.find('name')
-        if agent_text_tag is not None:
-            agent_text = agent_text_tag.text
-            db_refs_dict['TEXT'] = agent_text
+        db_refs = self._get_db_refs(term)
 
         # If the entity is a complex
-        if term.find("type").text == 'ONT::MACROMOLECULAR-COMPLEX':
-            complex_id = entity_id
-            complex_term = self.tree.find("TERM/[@id='%s']" % complex_id)
-            components = complex_term.find("components")
-            if components is None:
-                logger.debug('Complex without components')
-                return None
-            terms = components.findall('component')
-            term_names = []
+        if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
+            components = term.findall("components/component")
             agents = []
-            for t in terms:
-                agents.append(self._get_agent_by_id(t.attrib['id'], None))
+            for component in components:
+                component_id = component.attrib['id']
+                agent = self._get_agent_by_id(component_id, None)
+                agents.append(agent)
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
@@ -676,45 +638,48 @@ class TripsProcessor(object):
             agent_name = self._get_name_by_id(entity_id)
             if agent_name is None:
                 return None
-            agent = Agent(agent_name, db_refs=db_refs_dict)
-            precond_ids = self._get_precond_event_ids(entity_id)
-            if precond_ids:
-                for precond_id in precond_ids:
-                    if precond_id == event_id:
-                        logger.debug('Circular reference to event %s.' %
-                                       precond_id)
-                    precond_event = self.tree.find("EVENT[@id='%s']" % 
-                                                    precond_id)
-                    if precond_event is None:
-                        # Sometimes, if there are multiple preconditions
-                        # they are numbered with <id>.1, <id>.2, etc.
-                        p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
-                        if p is not None:
-                            self._add_condition(agent, p, term)
-                        p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
-                        if p is not None:
-                            self._add_condition(agent, p, term)
-                    else:
-                        self._add_condition(agent, precond_event, term)
-            # Get mutations
-            mutations = term.findall('features/mutation')
-            for mut in mutations:
-                mut_id = mut.attrib.get('id')
-                if mut_id is None:
-                    continue
-                mut_term = self.tree.find("TERM/[@id='%s']" %\
-                    mut.attrib.get('id'))
-                if mut_term is None:
-                    continue
-                mut_values = self._get_mutation(mut_term)
-                if mut_values is None:
-                    continue
-                try:
-                    mc = MutCondition(mut_values[0], mut_values[1], mut_values[2])
-                except InvalidResidueError:
-                    logger.error('Invalid residue in mutation condition.')
-                    continue
-                agent.mutations.append(mc)
+            agent = Agent(agent_name, db_refs=db_refs)
+
+        # Look for precondition events and apply them to the Agent
+        precond_ids = self._get_precond_event_ids(entity_id)
+        if precond_ids:
+            for precond_id in precond_ids:
+                if precond_id == event_id:
+                    logger.debug('Circular reference to event %s.' %
+                                   precond_id)
+                precond_event = self.tree.find("EVENT[@id='%s']" % 
+                                                precond_id)
+                if precond_event is None:
+                    # Sometimes, if there are multiple preconditions
+                    # they are numbered with <id>.1, <id>.2, etc.
+                    p = self.tree.find("EVENT[@id='%s.1']" % precond_id)
+                    if p is not None:
+                        self._add_condition(agent, p, term)
+                    p = self.tree.find("EVENT[@id='%s.2']" % precond_id)
+                    if p is not None:
+                        self._add_condition(agent, p, term)
+                else:
+                    self._add_condition(agent, precond_event, term)
+        # Get mutations
+        mutations = term.findall('features/mutation')
+        for mut in mutations:
+            mut_id = mut.attrib.get('id')
+            if mut_id is None:
+                continue
+            mut_term = self.tree.find("TERM/[@id='%s']" %\
+                mut.attrib.get('id'))
+            if mut_term is None:
+                continue
+            mut_values = self._get_mutation(mut_term)
+            if mut_values is None:
+                continue
+            try:
+                mc = MutCondition(mut_values[0], mut_values[1],
+                                  mut_values[2])
+            except InvalidResidueError:
+                logger.error('Invalid residue in mutation condition.')
+                continue
+            agent.mutations.append(mc)
         # Get location
         location = term.find('features/location')
         if location is not None:
@@ -731,80 +696,96 @@ class TripsProcessor(object):
 
     @staticmethod
     def _get_db_refs(term):
-        # Extract database references
+        """Extract database references for a TERM."""
+
+        db_refs = {}
+        # Here we extract the text name of the Agent
+        # There are two relevant tags to consider here.
+        # The <text> tag typically contains a larger phrase surrounding the
+        # term but it contains the term in a raw, non-canonicalized form.
+        # The <name> tag only contains the name of the entity but it is
+        # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
+        agent_text_tag = term.find('name')
+        if agent_text_tag is not None:
+            db_refs['TEXT'] = agent_text_tag.text
+
         dbid = term.attrib.get('dbid')
+
+        # If there are no dbids listed then we check whether it's an ad-hoc
+        # protein family definition.
         if dbid is None:
-            db_refs_dict = {}
-            if term.find('type').text == 'ONT::PROTEIN-FAMILY':
+            if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                 members = term.findall('members/member')
                 dbids = []
                 for m in members:
                     dbid = m.attrib.get('dbid')
                     parts = dbid.split(':')
                     dbids.append({parts[0]: parts[1]})
-                db_refs_dict = {'PFAM-DEF': dbids}
+                db_refs['PFAM-DEF'] = dbids
+            return db_refs
+
+        # In case there are dbids listed then we look at the match scores
+        drum_terms = term.findall('drum-terms/drum-term')
+        if drum_terms:
+            scores = {}
+            score_started = False
+            for dt in drum_terms:
+                dbid_str = dt.attrib.get('dbid')
+                match_score = dt.attrib.get('match-score')
+                if not score_started:
+                    if match_score is not None:
+                        score_started = True
+                    else:
+                        # This is a match before other scored terms so we
+                        # default to 1.0
+                        match_score = 1.0
+                else:
+                    if match_score is None:
+                        # This is a match after other scored matches
+                        # default to a small value
+                        match_score = 0.1
+                if dbid_str is None:
+                    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
+                        members = term.findall('members/member')
+                        dbids = []
+                        for m in members:
+                            dbid = m.attrib.get('dbid')
+                            dbids.append(dbid)
+                        key_name = 'PFAM-DEF:' + '|'.join(dbids)
+                        scores[key_name] = float(match_score)
+                else:
+                    scores[dbid_str] = float(match_score)
+                xr_tags = dt.findall('xrefs/xref')
+                for xrt in xr_tags:
+                    dbid_str = xrt.attrib.get('dbid')
+                    scores[dbid_str] = float(match_score)
+            sorted_db_refs = sorted(scores.items(),
+                                    key=operator.itemgetter(1),
+                                    reverse=True)
+            for dbid_str, _ in sorted_db_refs:
+                dbname, dbid = dbid_str.split(':')
+                if not db_refs.get(dbname):
+                    if dbname == 'PFAM-DEF':
+                        dbids = [{p[0]: p[1]} for p in dbid.split('|')]
+                        db_refs[dbname] = dbids
+                    else:
+                        db_refs[dbname] = dbid
         else:
-            drum_terms = term.findall('drum-terms/drum-term')
-            if drum_terms:
-                scores = {}
-                score_started = False
-                for dt in drum_terms:
-                    dbid_str = dt.attrib.get('dbid')
-                    match_score = dt.attrib.get('match-score')
-                    if not score_started:
-                        if match_score is not None:
-                            score_started = True
-                        else:
-                            # This is a match before other scored terms so we
-                            # default to 1.0
-                            match_score = 1.0
-                    else:
-                        if match_score is None:
-                            # This is a match after other scored matches
-                            # default to a small value
-                            match_score = 0.1
-
-                    if dbid_str is None:
-                        db_refs_dict = {}
-                        if term.find('type').text == 'ONT::PROTEIN-FAMILY':
-                            members = term.findall('members/member')
-                            dbids = []
-                            for m in members:
-                                dbid = m.attrib.get('dbid')
-                                dbids.append(dbid)
-                            key_name = 'PFAM-DEF:' + '|'.join(dbids)
-                            scores[key_name] = float(match_score)
-                    else:
-                        scores[dbid_str] = float(match_score)
-                    xr_tags = dt.findall('xrefs/xref')
-                    for xrt in xr_tags:
-                        dbid_str = xrt.attrib.get('dbid')
-                        scores[dbid_str] = float(match_score)
-                sorted_db_refs = sorted(scores.items(),
-                                        key=operator.itemgetter(1),
-                                        reverse=True)
-                db_refs_dict = {}
-                for dbid_str, _ in sorted_db_refs:
-                    dbname, dbid = dbid_str.split(':')
-                    if not db_refs_dict.get(dbname):
-                        if dbname == 'PFAM-DEF':
-                            dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                            db_refs_dict[dbname] = dbids
-                        else:
-                            db_refs_dict[dbname] = dbid
-
-            else:
-                dbids = dbid.split('|')
-                db_refs_dict = {}
-                for dbname, dbid in [d.split(':') for d in dbids]:
-                    if not db_refs_dict.get(dbname):
-                        db_refs_dict[dbname] = dbid
-        return db_refs_dict
+            dbids = dbid.split('|')
+            for dbname, dbid in [d.split(':') for d in dbids]:
+                if not db_refs.get(dbname):
+                    db_refs[dbname] = dbid
+        return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
-        precond_event_type = precond_event.find('type').text
+        precond_event_type = _get_type(precond_event)
+
+        # Modification precondition
+        if precond_event_type in mod_names.keys():
+            mods = self._get_modification(precond_event)
+            agent.mods = mods
         # Binding precondition
-        if precond_event_type == 'ONT::BIND':
+        elif precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
             mod = precond_event.findall('mods/mod')
@@ -823,8 +804,9 @@ class TripsProcessor(object):
 
             bound_agents = []
             if bound_to_term_id is not None:
-                bound_to_term = self.tree.find("TERM/[@id='%s']" % bound_to_term_id)
-                if bound_to_term.find('type').text == 'ONT::MOLECULAR-PART':
+                bound_to_term = self.tree.find("TERM/[@id='%s']" % \
+                                               bound_to_term_id)
+                if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
                     for c in components:
                         bound_agent_name = self._get_name_by_id(c.attrib['id'])
@@ -843,14 +825,14 @@ class TripsProcessor(object):
                             'predicate/mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('negation')
             if negation_sign is not None:
-                if negation_sign.text == '+':
+                if _get_text(negation_sign) == '+':
                     neg_flag = True
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('predicate/negation')
             if negation_sign is not None:
-                if negation_sign.text == '+':
+                if _get_text(negation_sign) == '+':
                     neg_flag = True
             for ba in bound_agents:
                 if neg_flag:
@@ -858,35 +840,13 @@ class TripsProcessor(object):
                 else:
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
-
-        # Phosphorylation precondition
-        elif precond_event_type == 'ONT::PHOSPHORYLATION':
-            mods = self._get_mod_site(precond_event)
-            agent.mods = mods
+        else:
+            logger.warning('Unhandled precondition event type: %s' %
+                           precond_event_type)
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
-
-    @staticmethod
-    def _get_text(element):
-        text_tag = element.find("text")
-        if text_tag is None:
-            return None
-        text = text_tag.text
-        return text
-
-    @staticmethod
-    def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-        return hgnc_name
-
-    @staticmethod
-    def _get_valid_name(name):
-        name = name.replace('-', '_')
-        name = name.replace('/', '_')
-        name = str(name.encode('utf-8').decode('ascii', 'ignore'))
-        return name
 
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
@@ -894,28 +854,26 @@ class TripsProcessor(object):
             logger.debug('Term %s for entity not found' % entity_id)
             return None
         name = entity_term.find("name")
+        db_refs = self._get_db_refs(entity_term)
         if name is None:
             logger.debug('Entity without a name')
             return None
-        db_refs = self._get_db_refs(entity_term)
         if not db_refs:
-            return self._get_valid_name(name.text)
+            return name.text
 
         #TODO: handle protein families like 14-3-3 with IDs like
         # XFAM:PF00244.15, FA:00007
         hgnc_id = db_refs.get('HGNC')
-        up_id = db_refs.get('UP')
         if hgnc_id:
-            hgnc_name = self._get_hgnc_name(hgnc_id)
-            return self._get_valid_name(hgnc_name)
-        elif up_id:
-            # First to get gene name
+            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+            return hgnc_name
+        up_id = db_refs.get('UP')
+        if up_id:
             gene_name = up_client.get_gene_name(up_id)
             if gene_name is not None:
-                return self._get_valid_name(gene_name)
+                return gene_name
         # By default, return the text of the name tag
-        name_txt = name.text.strip('|')
-        return self._get_valid_name(name_txt)
+        return name.text
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
@@ -967,13 +925,13 @@ class TripsProcessor(object):
             return (residue, ), (pos, )
         return all_residues, all_pos
 
-    def _get_mod_site(self, event):
+    def _get_modification(self, event):
         # Find the modification type
-        mod_type = event.find('type')
-        mod_txt = mod_type.text.split('::')[1]
-        mod_type_name = mod_names.get(mod_txt)
+        mod_type = event.find('type').text
+        mod_type_name = mod_names.get(mod_type)
         # If it is an unknown modification type
         if mod_type_name is None:
+            logger.warning('Unhandled modification type: %s')
             return None
 
         # Check if the event is negated
@@ -1034,12 +992,20 @@ class TripsProcessor(object):
         else:
             return None
 
+    def _get_evidence(self, event_tag):
+        api = 'trips'
+        text = self._get_evidence_text(event_tag)
+        sec = self._get_section(event_tag)
+        epi = {'section_type': sec}
+        ev = Evidence(source_api='trips', text=text, pmid=self.doc_id,
+                      epistemics=epi)
+
     def _get_evidence_text(self, event_tag):
         """Extract the evidence for an event.
 
         Pieces of text linked to an EVENT are fragments of a sentence. The
-        EVENT refers to the paragraph ID and the "uttnum", which corresponds 
-        to a sentence ID. Here we find and return the full sentence from which 
+        EVENT refers to the paragraph ID and the "uttnum", which corresponds
+        to a sentence ID. Here we find and return the full sentence from which
         the event was taken.
         """
         par_id = event_tag.attrib.get('paragraph')
@@ -1080,8 +1046,6 @@ class TripsProcessor(object):
         sub_event_ids += [t.attrib.get('event') for t in notptm_tags]
         static_events = []
         for event_id in sub_event_ids:
-            if event_id == 'V2260949':
-                import ipdb; ipdb.set_trace()
             event_tag = self.tree.find("EVENT[@id='%s']" % event_id)
             if event_tag is not None:
                 # If an affected TERM in the primary event has the same event
@@ -1104,6 +1068,29 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.2')
 
         return static_events
+
+    def _add_extracted(self, event_type, event_id):
+        self.extracted_events[event_type].append(event_id)
+
+def _get_text(element):
+    text_tag = element.find('text')
+    if text_tag is None:
+        return None
+    text = text_tag.text
+    return text
+
+def _get_type(element):
+    type_tag = element.find('type')
+    if type_tag is None:
+        return None
+    type_text = type_tag.text
+    return type_text
+
+def _is_type(element, type_text):
+    element_type = _get_type(element)
+    if element_type == type_text:
+        return True
+    return False
 
 def _stmt_location_to_agents(stmt, location):
     """Apply an event location to the Agents in the corresponding Statement.
