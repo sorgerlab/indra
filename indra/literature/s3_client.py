@@ -61,21 +61,27 @@ def check_key(key):
 
 def get_upload_content(pmid, return_content=False):
     """Get full text and/or abstract for paper and upload to S3."""
-
+    # Make sure that the PMID doesn't start with PMID so that it doesn't
+    # screw up the literature clients
+    if pmid.startswith('PMID'):
+        pmid = pmid[4:]
     # First, check S3:
     (ft_content_s3, ft_content_type_s3) = get_full_text(pmid)
     if ft_content_type_s3 is None:
         # If none found, try to retrieve from literature client
+        logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
         # If we tried to get the full text and didn't even get the abstract,
         # then there was probably a problem with the web service or the DOI
         if ft_content_type is None:
             return (None, None)
         elif ft_content_type == 'abstract':
-            put_abstract(pmid, ft_content)
+            logger.info("PMID%s: pretend uploading %s" %
+                        (pmid, ft_content_type))
+            #put_abstract(pmid, ft_content)
             return (ft_content, ft_content_type)
         else:
-            logger.info("Uploading %s for %s" % (ft_content_type, pmid))
+            logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
             put_full_text(pmid, ft_content, full_text_type=ft_content_type)
             return (ft_content, ft_content_type)
     # Abstract is on S3 but not full text
@@ -98,8 +104,7 @@ def get_gz_object(key):
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('get_full_text: no object found for key %s' %
-                        key)
+            logger.debug('key %s not in S3' % key)
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
@@ -130,26 +135,26 @@ def get_full_text(pmid):
             else:
                 content = get_gz_object(ft_key)
                 if content:
-                    logger.info('Found %s for %s' % (content_type, pmid))
+                    logger.info('%s: found %s on S3' % (pmid, content_type))
                     return (content, content_type)
                 else:
-                    logger.info('Error getting %s for %s' %
-                                (content_type, pmid))
+                    logger.info('%s: error getting %s' %
+                                (pmid, content_type))
                     return (None, None)
         # If we've gotten here, it means there were full text keys not
         # included in the above
-        logger.info('Unrecognized full text key %s for %s' %
+        logger.error('Unrecognized full text key %s for %s' %
                     (ft_keys, pmid))
         return (None, None)
     else:
-        logger.info('No full texts found for %s, trying abstract' % pmid)
+        logger.debug('%s: no full texts found on S3, trying abstract' % pmid)
         abstract_key = get_pmid_key(pmid) + '/abstract'
         abstract = get_gz_object(abstract_key)
         if abstract is None:
-            logger.info('No abstract found for %s' % pmid)
+            logger.info('%s: no full text or abstract found on S3' % pmid)
             return (None, None)
         else:
-            logger.info('Found abstract for %s' % pmid)
+            logger.info('%s: found abstract on S3' % pmid)
             return (abstract, 'abstract')
 
 

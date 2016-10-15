@@ -26,5 +26,7 @@ if __name__ == '__main__':
     # to be uploaded (fulltext, abstract) in a list of tuples.
     pmids_to_upload = []
     logger.info("-- Checking for %d full texts --" % len(pmids))
+    if end_index > len(pmids):
+        end_index = len(pmids)
     for ix, pmid in enumerate(pmids[start_index:end_index]):
         s3_client.get_upload_content(pmid)

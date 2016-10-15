@@ -41,8 +41,8 @@ def get_metadata(doi):
     url = crossref_url + 'works/' + doi
     res = requests.get(url)
     if res.status_code != 200:
-        logger.warning('Could not get CrossRef metadata, code %d' %
-                       res.status_code)
+        logger.info('Could not get CrossRef metadata for DOI %s, code %d' %
+                    (doi, res.status_code))
         return None
     raw_message = res.json()
     metadata = raw_message.get('message')
@@ -117,22 +117,23 @@ def doi_query(pmid, search_limit=10):
     # Get the page number
     pm_page = pubmed_meta.get('page')
     if not pm_page:
-        logger.warning('No page number found in Pubmed for PMID%s' % pmid)
+        logger.debug('No page number found in Pubmed for PMID%s' % pmid)
         return None
     # Now query CrossRef using the title we've got
     url = crossref_search_url
     params = {'q': pm_article_title, 'sort': 'score'}
     res = requests.get(crossref_search_url, params)
     if res.status_code != 200:
-        logger.info('Could not get DOI from CrossRef, code %d' % res.status_code)
+        logger.info('PMID%s: no search results from CrossRef, code %d' %
+                    (pmid, res.status_code))
         return None
     raw_message = res.json()
     mapped_doi = None
     # Iterate over the search results, looking up XREF metadata
     for result_ix, result in enumerate(raw_message):
         if result_ix > search_limit:
-            logger.warning('No match found within first %s results, giving up!'
-                           % search_limit)
+            logger.info('PMID%s: No match found within first %s results, '
+                        'giving up!' % (pmid, search_limit))
             break
         xref_doi_url = result['doi']
         # Strip the URL prefix off of the DOI
@@ -140,15 +141,17 @@ def doi_query(pmid, search_limit=10):
         xref_doi = m.groups()[0]
         # Get the XREF metadata using the DOI
         xref_meta = get_metadata(xref_doi)
+        if xref_meta is None:
+            continue
         xref_issn_list = xref_meta.get('ISSN')
         xref_page = xref_meta.get('page')
         # If there's no ISSN info for this article, skip to the next result
         if not xref_issn_list:
-            logger.warning('No ISSN found for DOI %s, skipping' % xref_doi_url)
+            logger.debug('No ISSN found for DOI %s, skipping' % xref_doi_url)
             continue
         # If there's no page info for this article, skip to the next result
         if not xref_page:
-            logger.warning('No page number found for DOI %s, skipping' %
+            logger.debug('No page number found for DOI %s, skipping' %
                           xref_doi_url)
             continue
         # Now check for an ISSN match by looking for the set intersection
