@@ -35,11 +35,11 @@ def get_email_pmids(cred_file, num_days=10):
     return pmids
 
 def get_searchterm_pmids(search_terms, num_days=1):
-    pmids = set([])
+    pmids = {}
     for s in search_terms:
         ids = pubmed_client.get_ids(s, reldate=num_days)
-        pmids = pmids.union(ids)
-    return list(pmids)
+        pmids[s] = ids
+    return pmids
 
 def process_paper(model_name, pmid):
     abstract_path = os.path.join(model_path, model_name, 
@@ -105,9 +105,15 @@ def make_status_message(stats):
 def extend_model(model_name, model, pmids):
     npapers = 0
     nabstracts = 0
-    for pmid in pmids:
+    id_used = []
+    for search_term, pmid in pmids.items():
         # If the paper has not been included in the model yet
+        if pmid in id_used:
+            continue
+        id_used.append(pmid)
         if model.stmts.get(pmid) is None:
+            logger.info('Processing %s for search term %s' % \
+                        (pmid, search_term))
             rp, txt_format = process_paper(model_name, pmid)
             if rp is not None:
                 if txt_format == 'abstract':
@@ -238,14 +244,13 @@ if __name__ == '__main__':
         BELIEF_THRESHOLD = 0.95
     logger.info('Using belief threshold: %.2f' % BELIEF_THRESHOLD)
 
-    pmids = []
+    email_pmids = []
     # Get email PMIDs
     if use_gmail:
         logger.info('Getting PMIDs from emails.')
         try:
             email_pmids = get_email_pmids(gmail_cred, num_days=10)
             logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
-            pmids += email_pmids
         except Exception as e:
             logger.error('Could not get PMIDs from Gmail, continuing.')
             logger.error(e)
@@ -257,9 +262,9 @@ if __name__ == '__main__':
             search_terms = [l.strip() for l in f.readlines()]
         if search_terms:
             logger.info('Using search terms: %s' % ', '.join(search_terms))
-            search_pmids = get_searchterm_pmids(search_terms, num_days=5)
-            logger.info('Collected %d PMIDs from PubMed' % len(search_pmids))
-            pmids += search_pmids
+            pmids = get_searchterm_pmids(search_terms, num_days=5)
+            logger.info('Collected %d PMIDs from PubMed' % len(pmids))
+            pmids['Gmail'] = email_pmids
 
     if not pmids:
         logger.info('No PMIDs found.')
