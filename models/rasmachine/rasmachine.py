@@ -101,29 +101,30 @@ def extend_model(model_name, model, pmids):
     npapers = 0
     nabstracts = 0
     id_used = []
-    for search_term, pmid in pmids.items():
-        # If the paper has not been included in the model yet
-        if pmid in id_used:
-            continue
-        id_used.append(pmid)
-        if model.stmts.get(pmid) is None:
-            logger.info('Processing %s for search term %s' % \
-                        (pmid, search_term))
-            rp, txt_format = process_paper(model_name, pmid)
-            if rp is not None:
-                if txt_format == 'abstract':
-                    nabstracts += 1
+    for search_term, pmid_list in pmids.items():
+        for pmid in pmid_list:
+            # If the paper has not been included in the model yet
+            if pmid in id_used:
+                continue
+            id_used.append(pmid)
+            if model.stmts.get(pmid) is None:
+                logger.info('Processing %s for search term %s' % \
+                            (pmid, search_term))
+                rp, txt_format = process_paper(model_name, pmid)
+                if rp is not None:
+                    if txt_format == 'abstract':
+                        nabstracts += 1
+                    else:
+                        npapers += 1
+                    if not rp.statements:
+                        logger.info('No statement from PMID%s (%s)' % \
+                                    (pmid, txt_format))
+                    else:
+                        logger.info('%d statements from PMID%s (%s)' % \
+                                    (len(rp.statements), pmid, txt_format))
+                    model.add_statements(pmid, rp.statements)
                 else:
-                    npapers += 1
-                if not rp.statements:
-                    logger.info('No statement from PMID%s (%s)' % \
-                                (pmid, txt_format))
-                else:
-                    logger.info('%d statements from PMID%s (%s)' % \
-                                (len(rp.statements), pmid, txt_format))
-                model.add_statements(pmid, rp.statements)
-            else:
-                logger.info('Reach processing failed for PMID%s' % pmid)
+                    logger.info('Reach processing failed for PMID%s' % pmid)
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
     model.preassemble(filters=global_filters)
@@ -302,8 +303,6 @@ if __name__ == '__main__':
 
     # Put the email_pmids into the pmids dictionary
     pmids['Gmail'] = email_pmids
-
-    sys.exit()
 
     # Load the model
     logger.info(time.strftime('%c'))
