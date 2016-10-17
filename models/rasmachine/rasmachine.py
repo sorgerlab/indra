@@ -196,6 +196,9 @@ def get_config(config_fname):
 
 
 if __name__ == '__main__':
+    logger.info('-------------------------')
+    logger.info(time.strftime('%c'))
+
     if len(sys.argv) < 2:
         logger.error('Model name argument missing')
         sys.exit()
@@ -203,10 +206,8 @@ if __name__ == '__main__':
         logger.error('Configuration file argument missing.')
         sys.exit()
 
-    logger.info('-------------------------')
-    logger.info(time.strftime('%c'))
-
-    config_fname = sys.argv[1]
+    model_name = sys.argv[1]
+    config_fname = sys.argv[2]
     try:
         config = get_config(config_fname)
     except Exception as e:
