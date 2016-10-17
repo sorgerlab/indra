@@ -3,6 +3,7 @@ from builtins import dict, str
 import os
 import io
 import sys
+import yaml
 import time
 import json
 import shutil
@@ -21,15 +22,9 @@ global_filters = ['grounding', 'prior_one', 'human_only']
 
 logger = logging.getLogger('rasmachine')
 
-def get_email_pmids(cred_file, num_days=10):
-    try:
-        with open(cred_file, 'rt') as fh:
-            uname, passwd = [l.strip() for l in fh.readlines()]
-    except IOError:
-        logger.error('Could not access Gmail credentials at %s.' % cred_file)
-        return []
-
-    M = gmail_client.gmail_login(uname, passwd)
+def get_email_pmids(gmail_cred, num_days=10):
+    M = gmail_client.gmail_login(gmail_cred.get('user'),
+                                 gmail_cred.get('password'))
     gmail_client.select_mailbox(M, 'INBOX')
     pmids = gmail_client.get_message_pmids(M, num_days)
     return pmids
@@ -42,9 +37,9 @@ def get_searchterm_pmids(search_terms, num_days=1):
     return pmids
 
 def process_paper(model_name, pmid):
-    abstract_path = os.path.join(model_path, model_name, 
+    abstract_path = os.path.join(model_path, model_name,
                                  'jsons', 'abstract', 'PMID%s.json' % pmid)
-    fulltext_path = os.path.join(model_path, model_name, 
+    fulltext_path = os.path.join(model_path, model_name,
                                  'jsons', 'full', 'PMID%s.json' % pmid)
 
     # If the paper has been parsed, use the parse output file
@@ -143,15 +138,12 @@ def _increment_ndex_ver(ver_str):
         new_ver = major_ver + '.' + new_minor_ver
     return new_ver
 
-def upload_to_ndex(stmts, cred_file):
-    try:
-        with open(cred_file, 'rt') as fh:
-            uname, passwd, network_id = [l.strip() for l in fh.readlines()]
-    except IOError:
-        logger.error('Could not access NDEx credentials.')
-        return
+def upload_to_ndex(stmts, ndex_cred):
     nd = ndex.client.Ndex('http://public.ndexbio.org',
-                            username=uname, password=passwd)
+                            username=ndex_cred.get('user'),
+                            password=ndex_cred.get('password'))
+    network_id = ndex_cred.get('network')
+
     ca = CxAssembler()
     ca.network_name = 'rasmachine'
     ca.add_statements(stmts)
@@ -185,64 +177,106 @@ def upload_to_ndex(stmts, cred_file):
         logger.error(e)
         return
 
+class InvalidConfigurationError(Exception):
+    pass
+
+def get_config(config_fname):
+    try:
+        fh = open(config_fname, 'rt')
+    except IOError as e:
+        logger.error('Could not open configuration file %s.' % config_fname)
+        raise(e)
+    try:
+        config = yaml.load(fh)
+    except Exception as e:
+        logger.error('Could not parse YAML configuration %s.' % config_name)
+        raise(e)
+
+    return config
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', help='Model name', required=True)
-    parser.add_argument('--twitter', help='Twitter credentials file')
-    parser.add_argument('--gmail', help='Gmail credentials file')
-    parser.add_argument('--ndex', help='NDEx credentials file')
-    parser.add_argument('--belief', help='Belief threshold (between 0 and 1')
-    args = parser.parse_args()
+    if len(sys.argv) < 2:
+        logger.error('Model name argument missing')
+        sys.exit()
+    if len(sys.argv) < 3:
+        logger.error('Configuration file argument missing.')
+        sys.exit()
 
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
 
-    if not args.model:
-        logger.error('Model name must be supplied as --model model_name.')
+    config_fname = sys.argv[1]
+    try:
+        config = get_config(config_fname)
+    except Exception as e:
         sys.exit()
-    else:
-        model_name = args.model
 
-    if args.twitter:
-        twitter_cred = args.twitter
-        if os.path.exists(twitter_cred):
-            use_twitter = True
-            logger.info('Using Twitter with credentials: %s' % twitter_cred)
-        else:
+    # Probability cutoff for filtering statements
+    default_belief_threshold = 0.95
+    belief_threshold = config.get('belief_threshold')
+    if belief_threshold is None:
+        belief_threshold = default_belief_threshold
+        msg = 'Belief threshold argument (belief_threshold) not specified.' + \
+              ' Using default belief threshold %.2f' % default_belief_threshold
+        logger.info(msg)
+    else:
+        logger.info('Using belief threshold: %.2f' % belief_threshold)
+
+    twitter_cred = config.get('twitter')
+    if twitter_cred:
+        use_twitter = True
+        if not twitter_cred.get('consumer_token'):
+            logger.info('Twitter consumer token (consumer_token) missing.')
+            use_twitter = False
+        if not twitter_cred.get('consumer_secret'):
+            logger.info('Twitter consumer secret (consumer_secret) missing.')
+            use_twitter = False
+        if not twitter_cred.get('access_token'):
+            logger.info('Twitter access token (access_token) missing.')
+            use_twitter = False
+        if not twitter_cred.get('access_secret'):
+            logger.info('Twitter access secret (access_secret) missing.')
             use_twitter = False
     else:
         use_twitter = False
+    if use_twitter:
+        logger.info('Using Twitter with given credentials.')
+    else:
+        logger.info('Not using Twitter due to missing credentials.')
 
-    if args.gmail:
-        gmail_cred = args.gmail
-        if os.path.exists(gmail_cred):
-            use_gmail = True
-            logger.info('Using Gmail with credentials: %s' % gmail_cred)
-        else:
+    gmail_cred = config.get('gmail')
+    if gmail_cred:
+        use_gmail = True
+        if not gmail_cred.get('user'):
+            logger.info('Gmail user missing.')
+            use_gmail = False
+        if not gmail_cred.get('password'):
+            logger.info('Gmail password missing.')
             use_gmail = False
     else:
         use_gmail = False
+    if use_gmail:
+        logger.info('Using Gmail with given credentials.')
+    else:
+        logger.info('Not using Gmail due to missing credentials.')
 
-    if args.ndex:
-        ndex_cred = args.ndex
-        if os.path.exists(ndex_cred):
-            use_ndex = True
-            logger.info('Using NDEx with credentials: %s' % ndex_cred)
-        else:
+    ndex_cred = config.get('ndex')
+    if ndex_cred:
+        use_ndex = True
+        if not ndex_cred.get('user'):
+            logger.info('NDEx user missing.')
             use_ndex = False
+        if not ndex_cred.get('password'):
+            logger.info('NDEx password missing.')
+            use_ndex = False
+        if not ndex_cred.get('network'):
+            logger.info('NDEx network missing.')
+            use_ndex = False
+    if use_ndex:
+        logger.info('Using NDEx with given credentials.')
     else:
-        use_ndex = False
-
-    # Probability cutoff for filtering statements
-    if args.belief:
-        if not os.path.exists(args.belief):
-            BELIEF_THRESHOLD = 0.95
-        with open(args.belief, 'rt') as f:
-            belief_str = f.read().strip()
-        BELIEF_THRESHOLD = float(belief_str)
-    else:
-        BELIEF_THRESHOLD = 0.95
-    logger.info('Using belief threshold: %.2f' % BELIEF_THRESHOLD)
+        logger.info('Not using NDEx due to missing information.')
 
     email_pmids = []
     # Get email PMIDs
@@ -255,22 +289,20 @@ if __name__ == '__main__':
             logger.error('Could not get PMIDs from Gmail, continuing.')
             logger.error(e)
 
-    # Get search PMIDs
-    search_terms_file = os.path.join(model_path, model_name, 'search_terms.txt')
-    if os.path.exists(search_terms_file):
-        with open(search_terms_file, 'rt') as f:
-            search_terms = [l.strip() for l in f.readlines()]
-        if search_terms:
-            logger.info('Using search terms: %s' % ', '.join(search_terms))
-            pmids = get_searchterm_pmids(search_terms, num_days=5)
-            logger.info('Collected %d PMIDs from PubMed' % len(pmids))
-            pmids['Gmail'] = email_pmids
-
-    if not pmids:
-        logger.info('No PMIDs found.')
-        sys.exit()
+    pmids = {}
+    search_terms = config.get('search_terms')
+    if not search_terms:
+        logging.info('No search terms argument (search_terms) specified.')
     else:
-        logger.info('%s PMIDs found in total.' % len(pmids))
+        logger.info('Using search terms: %s' % ', '.join(search_terms))
+        pmids = get_searchterm_pmids(search_terms, num_days=5)
+        num_pmids = sum([len(pm) for _, pm in pmids.items()])
+        logger.info('Collected %d PMIDs from PubMed.' % num_pmids)
+
+    # Put the email_pmids into the pmids dictionary
+    pmids['Gmail'] = email_pmids
+
+    sys.exit()
 
     # Load the model
     logger.info(time.strftime('%c'))
@@ -292,7 +324,7 @@ if __name__ == '__main__':
     for s in model.toplevel_stmts:
         if s.evidence[0].source_api in ['bel', 'biopax']:
             orig_likely.append(s)
-        elif s.belief > BELIEF_THRESHOLD:
+        elif s.belief > belief_threshold:
             orig_likely.append(s)
     stats['orig_likely'] = len(orig_likely)
 
@@ -319,7 +351,7 @@ if __name__ == '__main__':
     for s in model.toplevel_stmts:
         if s.evidence[0].source_api in ['bel', 'biopax']:
             new_likely.append(s)
-        elif s.belief > BELIEF_THRESHOLD:
+        elif s.belief > belief_threshold:
             new_likely.append(s)
     stats['new_likely'] = len(new_likely)
 
