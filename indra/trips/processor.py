@@ -156,7 +156,7 @@ class TripsProcessor(object):
                 activator_act = 'activity'
                 self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
 
-            ev = _self._get_evidence(event)
+            ev = self._get_evidence(event)
             location = self._get_event_location(event)
 
             for a1, a2 in _agent_list_product((activator_agent,
@@ -390,17 +390,20 @@ class TripsProcessor(object):
         for event in act_events:
             if event.attrib['id'] in self._static_events:
                 continue
+            agent = event.find(".//*[@role=':AGENT']")
+            if agent is not None:
+                # In this case this is not an ActiveForm statement
+                continue
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
-                msg = 'Skipping activation event with no affected term.'
+                msg = 'Skipping active form event with no affected term.'
                 logger.debug(msg)
                 continue
 
             affected_id = affected.attrib.get('id')
             if affected_id is None:
                 logger.debug(
-                    'Skipping activating modification with missing' +\
-                    'affected agent')
+                    'Skipping active form event with missing affected agent')
                 continue
 
             affected_agent = self._get_agent_by_id(affected_id,
