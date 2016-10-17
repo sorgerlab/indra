@@ -73,19 +73,35 @@ class Expander(object):
             families_list = []
             for ag in stmt.agent_list():
                 ag_children = self.get_children(ag)
-                families_list.append(ag_children)
+                # If the agent has no children, then we use the agent itself
+                if len(ag_children) == 0:
+                    families_list.append([ag])
+                # Otherwise, we add the tuple of namespaces/IDs for the children
+                else:
+                    families_list.append(ag_children)
             # Now, put together new statements frmo the cross product of the
             # expanded family members
             for ag_combo in itertools.product(*families_list):
                 print(ag_combo)
-                # Create agents based on the namespaces/IDs, with appropriate
-                # name and db_refs entries
+                # Create new agents based on the namespaces/IDs, with
+                # appropriate name and db_refs entries
                 child_agents = []
-                for ag_ns, ag_id in ag_combo:
-                    new_agent = Agent(ag_id, db_refs={ag_ns: ag_id})
-                    # FIXME FIXME FIXME
-                    # This doesn't reproduce agent state from the original
-                    # family-level statements!
+                for ag_entry in ag_combo:
+                    # If we got an agent, or None, that means there were no
+                    # children; so we use the original agent rather than
+                    # construct a new agent
+                    if ag_entry is None or isinstance(ag_entry, Agent):
+                        new_agent = ag_entry
+                    # Otherwise, create a new agent from the ns/ID
+                    elif isinstance(ag_entry, tuple):
+                        # FIXME FIXME FIXME
+                        # This doesn't reproduce agent state from the original
+                        # family-level statements!
+                        ag_ns, ag_id = ag_entry
+                        new_agent = Agent(ag_id, db_refs={ag_ns: ag_id})
+                    else:
+                        raise Exception('Unrecognized agent entry type.')
+                    # Add agent to our list of child agents
                     child_agents.append(new_agent)
                 # Create a copy of the statement
                 new_stmt = deepcopy(stmt)
@@ -96,3 +112,7 @@ class Expander(object):
                 # Add to list
                 new_stmts.append(new_stmt)
         return new_stmts
+
+    #def complexes_from_hierarchy(self):
+        # Iterate over the partof_closure to determine all of the complexes
+

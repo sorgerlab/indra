@@ -54,15 +54,29 @@ def test_component_children_lookup():
     assert len(none_children) == 0
 
 def test_expand_families():
+    # Get the Expander
+    exp = ef.Expander(hierarchies)
+    # Declare some agents
+    akt = Agent('AKT', db_refs={'BE':'AKT'})
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mapk1 = Agent('MAPK1', db_refs={'BE':'MAPK1'})
+    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    # Test case where one agent is a family and the other is a gene
+    st = Phosphorylation(mek, mapk1)
+    import ipdb; ipdb.set_trace()
+    expanded_stmts = exp.expand_families([st])
+    assert len(expanded_stmts) == 2
+    # Test for case involving None for one of the agents
+    st = Phosphorylation(None, akt)
+    expanded_stmts = exp.expand_families([st])
+    assert len(expanded_stmts) == 3
+
     st = Phosphorylation(raf, mek, 'S', '202')
-    exp = ef.Expander(hierarchies)
     expanded_stmts = exp.expand_families([st])
     # 3 Rafs x 2 Meks
     assert len(expanded_stmts) == 6
     # Test also for case involving both family and complex relationships
-    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
     st = Phosphorylation(ampk, mek)
     expanded_stmts = exp.expand_families([st])
     assert len(expanded_stmts) == 14
