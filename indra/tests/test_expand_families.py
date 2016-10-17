@@ -56,11 +56,16 @@ def test_component_children_lookup():
 def test_expand_families():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
-    st = Phosphorylation(raf, mek)
+    st = Phosphorylation(raf, mek, 'S', '202')
     exp = ef.Expander(hierarchies)
     expanded_stmts = exp.expand_families([st])
     # 3 Rafs x 2 Meks
     assert len(expanded_stmts) == 6
+    # Test also for case involving both family and complex relationships
+    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    st = Phosphorylation(ampk, mek)
+    expanded_stmts = exp.expand_families([st])
+    assert len(expanded_stmts) == 14
 
 if __name__ == '__main__':
     test_expand_families()

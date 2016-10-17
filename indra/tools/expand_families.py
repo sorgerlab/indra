@@ -1,8 +1,11 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 import logging
-from indra.preassembler.make_entity_hierarchy import ns_map
+import itertools
 import rdflib.namespace
+from copy import deepcopy
+from indra.statements import Agent
+from indra.preassembler.make_entity_hierarchy import ns_map
 
 logger = logging.getLogger('expand_families')
 
@@ -62,6 +65,7 @@ class Expander(object):
     def expand_families(self, stmts):
         """Generate statements by expanding members of families and complexes.
         """
+        new_stmts = []
         for stmt in stmts:
             # Put together the lists of families, with their members. E.g.,
             # for a statement involving RAF and MEK, should return a list of
@@ -70,4 +74,25 @@ class Expander(object):
             for ag in stmt.agent_list():
                 ag_children = self.get_children(ag)
                 families_list.append(ag_children)
-                # Check to 
+            # Now, put together new statements frmo the cross product of the
+            # expanded family members
+            for ag_combo in itertools.product(*families_list):
+                print(ag_combo)
+                # Create agents based on the namespaces/IDs, with appropriate
+                # name and db_refs entries
+                child_agents = []
+                for ag_ns, ag_id in ag_combo:
+                    new_agent = Agent(ag_id, db_refs={ag_ns: ag_id})
+                    # FIXME FIXME FIXME
+                    # This doesn't reproduce agent state from the original
+                    # family-level statements!
+                    child_agents.append(new_agent)
+                # Create a copy of the statement
+                new_stmt = deepcopy(stmt)
+                # Replace the agents in the statement with the newly-created
+                # child agents
+                new_stmt.set_agent_list(child_agents)
+                print(new_stmt)
+                # Add to list
+                new_stmts.append(new_stmt)
+        return new_stmts
