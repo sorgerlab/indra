@@ -38,6 +38,20 @@ def test_component_children_lookup():
     assert len(mapks) == 2
     assert ('HGNC', 'MAPK1') in mapks
     assert ('HGNC', 'MAPK3') in mapks
+    # Make sure we can also do this in a case involving both family and complex
+    # relationships
+    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    ampks = exp.get_children(ampk, ns_filter=None)
+    assert len(ampks) == 10
+    ampks = exp.get_children(ampk, ns_filter='HGNC')
+    assert len(ampks) == 7
+    # Test that the default filter is HGNC
+    ampks = exp.get_children(ampk)
+    assert len(ampks) == 7
+    ag_none = None
+    none_children = exp.get_children(ag_none)
+    assert isinstance(none_children, list)
+    assert len(none_children) == 0
 
 def test_expand_families():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
@@ -45,6 +59,9 @@ def test_expand_families():
     st = Phosphorylation(raf, mek)
     exp = ef.Expander(hierarchies)
     expanded_stmts = exp.expand_families([st])
+    # 3 Rafs x 2 Meks
+    assert len(expanded_stmts) == 6
 
 if __name__ == '__main__':
-    test_component_children_lookup()
+    test_expand_families()
+    #test_component_children_lookup()

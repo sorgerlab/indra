@@ -31,6 +31,8 @@ class Expander(object):
         return all_parents.union(immediate_parents)
 
     def get_children(self, agent, ns_filter='HGNC'):
+        if agent is None:
+            return []
         # Get the grounding for the agent
         (ns, id) = agent.get_grounding()
         # Get URI for agent
@@ -58,4 +60,14 @@ class Expander(object):
         return children_parsed
 
     def expand_families(self, stmts):
-        pass
+        """Generate statements by expanding members of families and complexes.
+        """
+        for stmt in stmts:
+            # Put together the lists of families, with their members. E.g.,
+            # for a statement involving RAF and MEK, should return a list of
+            # tuples like [(BRAF, RAF1, ARAF), (MAP2K1, MAP2K2)]
+            families_list = []
+            for ag in stmt.agent_list():
+                ag_children = self.get_children(ag)
+                families_list.append(ag_children)
+                # Check to 
