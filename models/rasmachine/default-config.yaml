@@ -1,0 +1,26 @@
+belief_threshold: 0.8
+#PUBMED SEARCH TERMS ######################
+#search_terms:
+#- "search term 1"
+#- "search term 2"
+
+#GMAIL CREDENTIALS ########################
+#gmail:
+#  user: 
+#  password: 
+###########################################
+
+#TWITTER CREDENTIALS ######################
+#twitter:
+#  consumer_token: 
+#  consumer_secret: 
+#  access_token: 
+#  access_secret: 
+###########################################
+
+#NDEX CREDENTIALS #########################
+#ndex:
+#  user: 
+#  password: 
+#  network: 
+###########################################

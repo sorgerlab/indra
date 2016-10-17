@@ -109,6 +109,8 @@ def get_message_pmids(M, day_limit=10):
     # Data here is a space-separated list of message IDs
     # like ['1 2 3']
     msg_ids_str = data[0].decode('utf-8')
+    if not msg_ids_str:
+        return []
     msg_ids = msg_ids_str.split(' ')
     pmids = []
     for mid in msg_ids:
