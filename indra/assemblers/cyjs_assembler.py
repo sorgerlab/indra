@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
 import logging
+import networkx
 import itertools
 from indra.statements import *
 
@@ -22,6 +23,7 @@ class CyJSAssembler(object):
             self.statements = stmts
         self._edges = []
         self._nodes = []
+        self._graph = networkx.DiGraph()
         self._existing_nodes = {}
         self._id_counter = 0
 
@@ -46,6 +48,12 @@ class CyJSAssembler(object):
             else:
                 logger.warning('Unhandled statement type: %s' % 
                                stmt.__class_.__name__)
+        # Check for nodes that should be grouped
+        #   look at self._graph to find nodes with same incoming and outgoing
+        #   edges and group them
+        # Create groups for those nodes
+        # Merge edges for grouped nodes
+        # Store in an internal data structure
 
     def print_cyjs(self):
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
@@ -67,6 +75,7 @@ class CyJSAssembler(object):
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
         self._edges.append(edge)
+        self._graph.add_edge(source_id, target_id)
 
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
@@ -79,6 +88,7 @@ class CyJSAssembler(object):
                              'source': m1_id, 'target': m2_id,
                              'polarity': edge_polarity}}
             self._edges.append(edge)
+            self._graph.add_edge(m1_id, m2_id)
 
     def _add_node(self, agent):
         node_key = agent.name
@@ -91,6 +101,7 @@ class CyJSAssembler(object):
         node_name = agent.name
         node = {'data': {'id': node_id, 'name': node_name, 'db_refs': db_refs}}
         self._nodes.append(node)
+        self._graph.add_node(node_id)
         return node_id
 
     def _get_new_id(self):
