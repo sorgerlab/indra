@@ -33,8 +33,11 @@ install:
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz
   - tar -xf trips_reach_batch4.gz
+  - cd $TRAVIS_BUILD_DIR
+  - wget http://sorger.med.harvard.edu/data/bachman/reach-gordo-1.3.3-SNAPSHOT.jar
 script:
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+  - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-gordo-1.3.3-SNAPSHOT.jar
   - cd $TRAVIS_BUILD_DIR
   - nosetests indra
      --with-doctest --with-doctest-ignore-unicode
