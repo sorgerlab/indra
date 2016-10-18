@@ -3,6 +3,7 @@ python:
   - "2.7"
   - "3.5"
 before_install:
+  - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -17,6 +18,10 @@ before_install:
 install:
   # INDRA dependencies
   - sudo apt-get install graphviz
+  - sudo apt-get install oracle-java8-installer
+  - sudo update-java-alternatives -s java-8-oracle
+  - sudo apt-get install oracle-java8-set-default
+  - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
   - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas
   - pip install doctest-ignore-unicode
   # PySB and dependencies
