@@ -9,15 +9,25 @@ import logging
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 4:
-        print("Usage: %s pmid_list start_index end_index" % sys.argv[0])
+    usage = "Usage: %s pmid_list start_index end_index [force_fulltext]" % \
+             sys.argv[0]
+
+    if len(sys.argv) < 4 or len(sys.argv) > 5:
+        print(usage)
         sys.exit()
+    if len(sys.argv) == 5 and sys.argv[5] != 'force_fulltext':
+        print(usage)
+        sys.exit()
+    elif len(sys.argv) == 5:
+        force_fulltext = True
+    else:
+        force_fulltext = False
+
+    logger = logging.getLogger('upload_content')
 
     pmid_list = sys.argv[1]
     start_index = int(sys.argv[2])
     end_index = int(sys.argv[3])
-
-    logger = logging.getLogger('upload_content')
 
     with open(pmid_list) as f:
         pmids = [line.strip('\n') for line in f.readlines()]
@@ -29,4 +39,5 @@ if __name__ == '__main__':
     if end_index > len(pmids):
         end_index = len(pmids)
     for ix, pmid in enumerate(pmids[start_index:end_index]):
-        s3_client.get_upload_content(pmid)
+        s3_client.get_upload_content(pmid,
+                                     force_fulltext_lookup=force_fulltext)
