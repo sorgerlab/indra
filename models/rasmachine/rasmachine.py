@@ -69,7 +69,7 @@ def process_paper(model_name, pmid):
     return rp, txt_format
 
 def make_status_message(stats):
-    ndiff = (stats['new_likely'] - stats['orig_likely'])
+    ndiff = (stats['new_top'] - stats['orig_top'])
     msg_str = None
     if (((stats['new_papers'] > 0) or
         (stats['new_abstracts'] > 0)) and

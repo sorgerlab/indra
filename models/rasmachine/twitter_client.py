@@ -16,7 +16,7 @@ def get_oauth_file(auth_file):
 
 def get_oauth_dict(auth_dict):
     oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
-                                auth_dict.get('consumer_secred'))
+                                auth_dict.get('consumer_secret'))
     oauth.set_access_token(auth_dict.get('access_token'),
                            auth_dict.get('access_secret'))
     return oauth
