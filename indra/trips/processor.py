@@ -628,6 +628,8 @@ class TripsProcessor(object):
             self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
         for event in translocation_events:
             event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
             # Get Agent which translocates
             agent_tag = event.find(".//*[@role=':AGENT']")
             if agent_tag is None:
