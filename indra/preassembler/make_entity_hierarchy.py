@@ -15,9 +15,13 @@ relations_file = join(dirname(abspath(__file__)),
 indra_ns = 'http://sorger.med.harvard.edu/indra/'
 hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
 up_ns = Namespace('http://identifiers.org/uniprot/')
-en = Namespace(indra_ns + 'entities/')
-rn = Namespace(indra_ns + 'relations/')
+indra_ent_ns = Namespace(indra_ns + 'entities/')
+indra_rel_ns = Namespace(indra_ns + 'relations/')
 
+ns_map = {'http://sorger.med.harvard.edu/indra/entities/': 'BE',
+          'http://sorger.med.harvard.edu/indra/relations/': 'BE',
+          'http://identifiers.org/hgnc.symbol/': 'HGNC',
+          'http://identifiers.org/uniprot/': 'UP',}
 
 def make_term(ns_name, id):
     if ns_name == 'HGNC':
@@ -25,7 +29,7 @@ def make_term(ns_name, id):
     elif ns_name == 'UP':
         term = up_ns.term(id)
     elif ns_name == 'BE':
-        term = en.term(id)
+        term = indra_ent_ns.term(id)
     else:
         raise ValueError("Unknown namespace %s" % ns_name)
     return term
@@ -33,8 +37,8 @@ def make_term(ns_name, id):
 
 def main(relations_file):
     g = Graph()
-    isa = rn.term('isa')
-    partof = rn.term('partof')
+    isa = indra_rel_ns.term('isa')
+    partof = indra_rel_ns.term('partof')
 
     family_names = set([])
     csv_rows = read_unicode_csv(relations_file, delimiter=',', quotechar='"',
@@ -45,7 +49,7 @@ def main(relations_file):
         term1 = make_term(ns1, id1)
         term2 = make_term(ns2, id2)
         if rel in ('isa', 'partof'):
-            rel_term = rn.term(rel)
+            rel_term = indra_rel_ns.term(rel)
         else:
             raise ValueError("Invalid relation %s" % rel)
         g.add((term1, rel_term, term2))
