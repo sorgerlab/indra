@@ -72,3 +72,6 @@ def test_process_pmc():
     rp = reach.process_pmc('PMC4338247')
     assert unicode_strs(rp.statements)
 
+def test_process_unicode_abstract():
+    rp = reach.process_pubmed_abstract('27749056')
+    assert unicode_strs(rp.statements)
