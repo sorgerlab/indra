@@ -59,7 +59,7 @@ def check_key(key):
     return exists
 
 
-def get_upload_content(pmid, return_content=False):
+def get_upload_content(pmid, force_fulltext_lookup=False):
     """Get full text and/or abstract for paper and upload to S3."""
     # Make sure that the PMID doesn't start with PMID so that it doesn't
     # screw up the literature clients
@@ -67,30 +67,38 @@ def get_upload_content(pmid, return_content=False):
         pmid = pmid[4:]
     # First, check S3:
     (ft_content_s3, ft_content_type_s3) = get_full_text(pmid)
-    if ft_content_type_s3 is None:
-        # If none found, try to retrieve from literature client
+    # The abstract is on S3 but there is no full text; if we're not forcing
+    # fulltext lookup, then we're done
+    if ft_content_type_s3 == 'abstract' and not force_fulltext_lookup:
+        return (ft_content_s3, ft_content_type_s3)
+    # If there's nothing (even an abstract on S3), or if there's an abstract
+    # and we're forcing fulltext lookup, do the lookup
+    elif ft_content_type_s3 is None or \
+            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup):
+        # Try to retrieve from literature client
         logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
+        assert ft_content_type in ('pmc_oa_xml', 'txt', 'abstract', None)
         # If we tried to get the full text and didn't even get the abstract,
         # then there was probably a problem with the web service or the DOI
         if ft_content_type is None:
             return (None, None)
-        elif ft_content_type == 'abstract':
-            logger.info("PMID%s: pretend uploading %s" %
-                        (pmid, ft_content_type))
-            #put_abstract(pmid, ft_content)
+        # If we got the abstract, and we already had the abstract on S3, then
+        # do nothing
+        elif ft_content_type == 'abstract' and ft_content_type_s3 == 'abstract':
+            logger.info("PMID%s: found abstract but already had it on " \
+                        "S3; skipping" % (pmid, ft_content_type))
             return (ft_content, ft_content_type)
+        # If we got the abstract, and we had nothing on S3, then upload
+        elif ft_content_type == 'abstract' and ft_content_type_s3 is None:
+            logger.info("PMID%s: found abstract, uploading to S3" % pmid)
+            put_abstract(pmid, ft_content)
+        # We got a full text (or something other than None or abstract...)
         else:
             logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
             put_full_text(pmid, ft_content, full_text_type=ft_content_type)
             return (ft_content, ft_content_type)
-    # Abstract is on S3 but not full text
-    elif ft_content_type_s3 == 'abstract':
-        # TODO
-        # If we only got the abstract, we return it; in future could attempt
-        # to get full text if only abstract is on S3
-        return (ft_content_s3, ft_content_type_s3)
-    # Some form of full text is on S3
+    # Some form of full text is already on S3
     else:
         # TODO
         # In future, could check for abstract even if full text is found, and
