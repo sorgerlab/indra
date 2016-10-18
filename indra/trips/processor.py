@@ -204,7 +204,7 @@ class TripsProcessor(object):
                 continue
             # Construct evidence
             ev = self._get_evidence(cc)
-            ev.epi['direct'] = False
+            ev.epistemics['direct'] = False
             location = self._get_event_location(outcome_event)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
@@ -600,7 +600,7 @@ class TripsProcessor(object):
                 elif mod == 'hydroxylation':
                     mod_stmt = Dehydroxylation
                 elif mod == 'acetylation':
-                    mod_stmt = Deacetylatyion
+                    mod_stmt = Deacetylation
             else:
                 if mod == 'phosphorylation':
                     mod_stmt = Phosphorylation
@@ -613,7 +613,7 @@ class TripsProcessor(object):
                 elif mod == 'hydroxylation':
                     mod_stmt = Hydroxylation
                 elif mod == 'acetylation':
-                    mod_stmt = Acetylatyion
+                    mod_stmt = Acetylation
             for ea, aa in _agent_list_product((enzyme_agent, affected_agent)):
                 if aa is None:
                     continue
@@ -743,6 +743,8 @@ class TripsProcessor(object):
                 component_id = component.attrib['id']
                 agent = self._get_agent_by_id(component_id, None)
                 agents.append(agent)
+            if not agents:
+                return None
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
