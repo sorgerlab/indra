@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 from indra.java_vm import autoclass, JavaException
+
+logger = logging.getLogger('reach_reader')
 
 class ReachReader(object):
     """The ReachReaader wraps a singleton instance of the REACH reader.
@@ -27,11 +30,12 @@ class ReachReader(object):
         if self.api_ruler is None:
             try:
                 self.api_ruler =\
-                    autoclass('org.clulab.reach.apis.ApiRuler')
+                    autoclass('org.clulab.reach.export.apis.ApiRuler')
             except JavaException:
                 try:
                     autoclass('java.lang.String')
-                except JavaException:
+                except JavaException as e:
+                    logger.error(e)
                     pass
                 return None
         return self.api_ruler
