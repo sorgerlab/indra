@@ -29,6 +29,6 @@ if __name__ == '__main__':
                     out_filename, 'python', '-m',
                     'indra.tools.reading.upload_content_to_s3',
                     pmid_list, start_ix, end_ix]
-        print ' '.join(cmd_list)
+        print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
