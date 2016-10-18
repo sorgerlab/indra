@@ -6,7 +6,7 @@ from indra.java_vm import autoclass, JavaException
 logger = logging.getLogger('reach_reader')
 
 class ReachReader(object):
-    """The ReachReaader wraps a singleton instance of the REACH reader.
+    """The ReachReader wraps a singleton instance of the REACH reader.
 
     This allows calling the reader many times without having to wait for it to
     start up each time.
@@ -29,9 +29,11 @@ class ReachReader(object):
         """
         if self.api_ruler is None:
             try:
-                self.api_ruler =\
+                self.api_ruler = \
                     autoclass('org.clulab.reach.export.apis.ApiRuler')
             except JavaException:
+                # This second autoclass is needed because of a jnius
+                # issue in which the first JavaException is not raised.
                 try:
                     autoclass('java.lang.String')
                 except JavaException as e:
