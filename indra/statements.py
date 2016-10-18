@@ -919,6 +919,14 @@ class Deglycosylation(Modification):
     """Deglycosylation modification."""
     pass
 
+class Ribosylation(Modification):
+    """Ribosylation modification."""
+    pass
+
+class Deribosylation(Modification):
+    """Deribosylation modification."""
+    pass
+
 
 class Ubiquitination(Modification):
     """Ubiquitination modification."""
@@ -932,6 +940,10 @@ class Deubiquitination(Modification):
 
 class Farnesylation(Modification):
     """Farnesylation modification."""
+    pass
+
+class Defarnesylation(Modification):
+    """Defarnesylation modification."""
     pass
 
 @python_2_unicode_compatible
