@@ -78,7 +78,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     if pmcid:
         nxml = pmc_client.get_xml(pmcid)
         if nxml:
-            return nxml, 'nxml'
+            return nxml, 'pmc_oa_xml'
     # If we got here, it means we didn't find the full text in PMC, so we'll
     # need either the DOI (for lookup in CrossRef) and/or the PMID (so we
     # can fall back on the abstract. If by some strange turn we have neither,
