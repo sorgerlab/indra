@@ -286,7 +286,10 @@ mod_state_prefix = {
     'sumoylation': 'sumoylated',
     'desumoylation': 'desumoylated',
     'farnesylation': 'farnesylated',
+    'defarnesylation': 'defarnesylated',
     'glycosylation': 'glycosylated',
+    'ribosylation': 'ribosylated',
+    'deribosylation': 'deribosylated'
 }
 
 mod_process_prefix = {
@@ -301,5 +304,8 @@ mod_process_prefix = {
     'sumoylation': 'sumoylates',
     'desumoylation': 'desumoylates',
     'farnesylation': 'farnesylates',
+    'defarnesylation': 'defarnesylates',
     'glycosylation': 'glycosylates',
+    'ribosylation': 'ribosylates',
+    'deribosylation': 'deribosylates'
     }

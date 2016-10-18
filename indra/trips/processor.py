@@ -22,8 +22,13 @@ mod_names = {
     'ONT::FARNESYLATION': 'farnesylation'
     }
 
-molecule_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
-                 'ONT::PROTEIN', 'ONT::PROTEIN-FAMILY', 'ONT::GENE']
+protein_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
+                 'ONT::PROTEIN', 'ONT::PROTEIN-FAMILY', 'ONT::GENE',
+                 'ONT::MACROMOLECULAR-COMPLEX']
+
+molecule_types = protein_types + \
+    ['ONT::CHEMICAL', 'ONT::MOLECULE', 'ONT::SUBSTANCE',
+     'ONT::PHARMACOLOGIC-SUBSTANCE']
 
 class TripsProcessor(object):
     """The TripsProcessor extracts INDRA Statements from a TRIPS XML.
@@ -199,7 +204,7 @@ class TripsProcessor(object):
                 continue
             # Construct evidence
             ev = self._get_evidence(cc)
-            ev.epi['direct'] = False
+            ev.epistemics['direct'] = False
             location = self._get_event_location(outcome_event)
             if outcome_event_type.text == 'ONT::ACTIVATE':
                 affected = outcome_event.find(".//*[@role=':AFFECTED']")
@@ -313,6 +318,12 @@ class TripsProcessor(object):
                 logger.debug(msg)
                 continue
 
+            # Make sure the degradation is affecting a molecule type
+            affected_type = affected.find('type')
+            if affected_type is None or \
+                affected_type.text not in molecule_types:
+                continue
+
             affected_id = affected.attrib.get('id')
             if affected_id is None:
                 logger.debug(
@@ -353,6 +364,12 @@ class TripsProcessor(object):
             if affected is None:
                 msg = 'Skipping synthesis event with no affected term.'
                 logger.debug(msg)
+                continue
+
+            # Make sure the synthesis is affecting a molecule type
+            affected_type = affected.find('type')
+            if affected_type is None or \
+                affected_type.text not in molecule_types:
                 continue
 
             affected_id = affected.attrib.get('id')
@@ -408,6 +425,18 @@ class TripsProcessor(object):
 
             affected_agent = self._get_agent_by_id(affected_id,
                                                    event.attrib['id'])
+            # If it is a list of agents, skip them for now
+            if not isinstance(affected_agent, Agent):
+                continue
+            # The affected agent has to be protein-like type
+            affected_type = affected.find('type')
+            if affected_type is None or \
+                affected_type.text not in protein_types:
+                continue
+            # If the Agent state is at the base state then this is not an
+            # ActiveForm statement
+            if _is_base_agent_state(affected_agent):
+                continue
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
             st = ActiveForm(affected_agent, 'activity', True, evidence=ev)
@@ -571,7 +600,7 @@ class TripsProcessor(object):
                 elif mod == 'hydroxylation':
                     mod_stmt = Dehydroxylation
                 elif mod == 'acetylation':
-                    mod_stmt = Deacetylatyion
+                    mod_stmt = Deacetylation
             else:
                 if mod == 'phosphorylation':
                     mod_stmt = Phosphorylation
@@ -584,7 +613,7 @@ class TripsProcessor(object):
                 elif mod == 'hydroxylation':
                     mod_stmt = Hydroxylation
                 elif mod == 'acetylation':
-                    mod_stmt = Acetylatyion
+                    mod_stmt = Acetylation
             for ea, aa in _agent_list_product((enzyme_agent, affected_agent)):
                 if aa is None:
                     continue
@@ -599,6 +628,8 @@ class TripsProcessor(object):
             self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
         for event in translocation_events:
             event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
             # Get Agent which translocates
             agent_tag = event.find(".//*[@role=':AGENT']")
             if agent_tag is None:
@@ -714,6 +745,8 @@ class TripsProcessor(object):
                 component_id = component.attrib['id']
                 agent = self._get_agent_by_id(component_id, None)
                 agents.append(agent)
+            if not agents:
+                return None
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
@@ -1198,3 +1231,11 @@ def _agent_list_product(lists):
             return lst
     ll = [_listify(l) for l in lists]
     return itertools.product(*ll)
+
+def _is_base_agent_state(agent):
+    if agent.location is None and \
+        not agent.mods and \
+        not agent.mutations and \
+        not agent.bound_conditions:
+            return True
+    return False

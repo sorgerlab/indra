@@ -22,7 +22,7 @@ def print_stmts(stmts, file_name):
         agents = s.agent_list()
         db_refs = [('%s(%s)' % (a.name, a.db_refs)) 
                     for a in agents if a is not None]
-        db_refs_str = (', '.join(db_refs)).encode('utf-8')
+        db_refs_str = (', '.join(db_refs))
         rows.append([str(s), db_refs_str, s.evidence[0].text])
     write_unicode_csv(file_name, rows, delimiter='\t')
 
