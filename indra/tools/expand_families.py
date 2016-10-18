@@ -4,10 +4,34 @@ import logging
 import itertools
 import rdflib.namespace
 from copy import deepcopy
-from indra.statements import Agent
+from indra.databases import hgnc_client
+from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.make_entity_hierarchy import ns_map
 
 logger = logging.getLogger('expand_families')
+
+class UnknownNamespaceException(Exception):
+    pass
+
+def _agent_from_ns_id(ag_ns, ag_id):
+    if ag_ns == 'HGNC':
+        ag_name = ag_id
+        ag_id = hgnc_client.get_hgnc_id(ag_id)
+    else:
+        ag_name = ag_id
+    return Agent(ag_name, db_refs={ag_ns: ag_id})
+
+def _agent_from_uri(uri):
+    ag_ns, ag_id = _ns_id_from_uri(uri)
+    agent = _agent_from_ns_id(ag_ns, ag_id)
+    return agent
+
+def _ns_id_from_uri(uri):
+    (ag_ns, ag_id) = rdflib.namespace.split_uri(uri)
+    ag_ns_name = ns_map.get(ag_ns)
+    if ag_ns_name is None:
+        raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
+    return (ag_ns_name, ag_id)
 
 class Expander(object):
     def __init__(self, hierarchies):
@@ -33,6 +57,7 @@ class Expander(object):
             all_parents = all_parents.union(grandparents)
         return all_parents.union(immediate_parents)
 
+
     def get_children(self, agent, ns_filter='HGNC'):
         if agent is None:
             return []
@@ -47,19 +72,13 @@ class Expander(object):
         # Parse children URI list into namespaces and ID
         children_parsed = []
         for child_uri in children_uris:
-            (child_ns, child_id) = rdflib.namespace.split_uri(child_uri)
-            child_ns_name = ns_map.get(child_ns)
-            # This shouldn't happen, so generate a logging message if it does
-            if child_ns_name is None:
-                logger.warning('Unmatched namespace %s in URI %s, skipping' %
-                               (child_ns, child_uri))
-                continue
+            child_ns, child_id = _ns_id_from_uri(child_uri)
             # If ns_filter is None, add in all children
             if ns_filter is None:
-                children_parsed.append((child_ns_name, child_id))
+                children_parsed.append((child_ns, child_id))
             # Otherwise, only add children with a matching namespace
-            elif child_ns_name == ns_filter:
-                children_parsed.append((child_ns_name, child_id))
+            elif child_ns == ns_filter:
+                children_parsed.append((child_ns, child_id))
         return children_parsed
 
     def expand_families(self, stmts):
@@ -82,7 +101,6 @@ class Expander(object):
             # Now, put together new statements frmo the cross product of the
             # expanded family members
             for ag_combo in itertools.product(*families_list):
-                print(ag_combo)
                 # Create new agents based on the namespaces/IDs, with
                 # appropriate name and db_refs entries
                 child_agents = []
@@ -98,7 +116,7 @@ class Expander(object):
                         # This doesn't reproduce agent state from the original
                         # family-level statements!
                         ag_ns, ag_id = ag_entry
-                        new_agent = Agent(ag_id, db_refs={ag_ns: ag_id})
+                        new_agent = _agent_from_ns_id(ag_ns, ag_id)
                     else:
                         raise Exception('Unrecognized agent entry type.')
                     # Add agent to our list of child agents
@@ -108,11 +126,31 @@ class Expander(object):
                 # Replace the agents in the statement with the newly-created
                 # child agents
                 new_stmt.set_agent_list(child_agents)
-                print(new_stmt)
                 # Add to list
                 new_stmts.append(new_stmt)
         return new_stmts
 
-    #def complexes_from_hierarchy(self):
+    def complexes_from_hierarchy(self):
         # Iterate over the partof_closure to determine all of the complexes
+        # and all of their members
+        all_complexes = {}
+        for subunit, complexes in self.entities.partof_closure.items():
+            for complex in complexes:
+                complex_subunits = all_complexes.get(complex, [])
+                complex_subunits.append(subunit)
+                all_complexes[complex] = complex_subunits
+        # Now iterate over all of the complexes and create Complex statements
+        complex_stmts = []
+        for complex, subunits in all_complexes.items():
+            # Create an Evidence object for the statement with the URI of the
+            # complex as the source_id
+            ev = Evidence(source_api='bioentities', source_id=complex)
+            subunit_agents = [_agent_from_uri(su) for su in subunits]
+            complex_stmt = Complex(subunit_agents, evidence=[ev])
+            complex_stmts.append(complex_stmt)
+        return complex_stmts
 
+    def expanded_complexes_from_hierarchy(self):
+        complex_stmts = self.complexes_from_hierarchy()
+        expanded_complexes = self.expand_families(complex_stmts)
+        return expanded_complexes

@@ -1,12 +1,12 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
-from indra.preassembler.hierarchy_manager import hierarchies
-
-from indra.statements import Agent, Phosphorylation
-from indra.tools import expand_families as ef
+import itertools
 from indra.util import unicode_strs
+from indra.tools import expand_families as ef
+from indra.preassembler.hierarchy_manager import hierarchies
+from indra.statements import Agent, Phosphorylation, Complex
 
-def test_component_children_lookup():
+def test_get_children():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
     # Look up RAF
@@ -64,23 +64,45 @@ def test_expand_families():
     ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
     # Test case where one agent is a family and the other is a gene
     st = Phosphorylation(mek, mapk1)
-    import ipdb; ipdb.set_trace()
     expanded_stmts = exp.expand_families([st])
     assert len(expanded_stmts) == 2
     # Test for case involving None for one of the agents
     st = Phosphorylation(None, akt)
     expanded_stmts = exp.expand_families([st])
     assert len(expanded_stmts) == 3
-
+    # Statement with two families: 3 Rafs x 2 Meks
     st = Phosphorylation(raf, mek, 'S', '202')
     expanded_stmts = exp.expand_families([st])
-    # 3 Rafs x 2 Meks
     assert len(expanded_stmts) == 6
     # Test also for case involving both family and complex relationships
     st = Phosphorylation(ampk, mek)
     expanded_stmts = exp.expand_families([st])
     assert len(expanded_stmts) == 14
 
+def test_complexes_from_hierarchy():
+    exp = ef.Expander(hierarchies)
+    complexes = exp.complexes_from_hierarchy()
+    keys = [c.matches_key() for c in complexes]
+    probe_stmt = Complex([Agent('AMPK_alpha', db_refs={'BE':'AMPK_alpha'}),
+                          Agent('AMPK_beta', db_refs={'BE':'AMPK_beta'}),
+                          Agent('AMPK_gamma', db_refs={'BE':'AMPK_gamma'})])
+    assert probe_stmt.matches_key() in keys
+
+def test_expanded_complexes_from_hierarchy():
+    exp = ef.Expander(hierarchies)
+    complexes = exp.expanded_complexes_from_hierarchy()
+    stmt_ag_names = []
+    for stmt in complexes:
+        sorted_names = tuple(sorted([ag.name for ag in stmt.agent_list()]))
+        stmt_ag_names.append(sorted_names)
+    ampk_alphas = ('PRKAA1', 'PRKAA2')
+    ampk_betas = ('PRKAB1', 'PRKAB2')
+    ampk_gammas = ('PRKAG1', 'PRKAG2', 'PRKAG3')
+    for alpha, beta, gamma in itertools.product(ampk_alphas, ampk_betas,
+                                                ampk_gammas):
+        assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names
+
+
 if __name__ == '__main__':
     test_expand_families()
-    #test_component_children_lookup()
+    test_expanded_complexes_from_hierarchy()
