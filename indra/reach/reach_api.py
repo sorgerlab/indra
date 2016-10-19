@@ -131,6 +131,8 @@ def process_text(text, citation=None, offline=False):
             logger.error(e)
             return None
         json_str = result_map.get('resultJson')
+        if not isinstance(json_str, bytes):
+            json_str = json_str.encode('utf-8')
     else:
         data = {'text': text.encode('utf-8')}
         try:
@@ -236,7 +238,9 @@ def process_nxml_file(file_name, citation=None, offline=False):
             logger.error(e)
             return None
         json_str = result_map.get('resultJson')
-        return process_json_str(json_str.decode('utf-8'))
+        if isinstance(json_str, bytes):
+            json_str = json_str.decode('utf-8')
+        return process_json_str(json_str)
     # For the web service, we read the file and process it as a string
     else:
         with open(file_name, 'rb') as f:
