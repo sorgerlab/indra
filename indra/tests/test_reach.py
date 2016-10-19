@@ -4,6 +4,10 @@ from indra import reach
 from indra.reach.processor import ReachProcessor
 from indra.util import unicode_strs
 
+# Change this list to control what modes of
+# reading are enabled in tests
+offline_modes = [True, False]
+
 def test_parse_site_text():
     text = ['threonine 185', 'thr 185', 'thr-185',
             'threonine residue 185', 'T185']
@@ -32,7 +36,7 @@ def test_valid_name():
     assert(ReachProcessor._get_valid_name('14-3-3') == 'p14_3_3')
 
 def test_phosphorylate():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.', offline=offline)
         assert(len(rp.statements) == 1)
         s = rp.statements[0]
@@ -41,7 +45,7 @@ def test_phosphorylate():
         assert unicode_strs(rp.statements)
 
 def test_activate():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_text('HRAS activates BRAF.', offline=offline)
         assert(len(rp.statements) == 1)
         s = rp.statements[0]
@@ -50,19 +54,19 @@ def test_activate():
         assert unicode_strs(rp.statements)
 
 def test_bind():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_text('MEK1 binds ERK2.', offline=offline)
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
 
 def test_activity():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_text('MEK1 activates ERK2.', offline=offline)
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
 
 def test_mutation():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_text('BRAF(V600E) phosphorylates MEK.',
                                 offline=offline)
         assert(len(rp.statements) == 1)
@@ -74,12 +78,17 @@ def test_mutation():
         assert(braf.mutations[0].residue_to == 'E')
         assert unicode_strs(rp.statements)
 
+def test_process_unicode():
+    for offline in offline_modes:
+        rp = reach.process_text('MEK1 binds ERK2\U0001F4A9.', offline=offline)
+        assert unicode_strs(rp.statements)
+
 def test_process_pmc():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_pmc('PMC4338247', offline=offline)
         assert unicode_strs(rp.statements)
 
 def test_process_unicode_abstract():
-    for offline in [False, True]:
+    for offline in offline_modes:
         rp = reach.process_pubmed_abstract('27749056', offline=offline)
         assert unicode_strs(rp.statements)
