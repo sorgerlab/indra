@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02192_IO-1502833" id="paragraph2191">MAPK1 is synthesized.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2258" pid="paragraph2191">MAPK1 is synthesized.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="20" id="V1502865" lisp="(ONT::EVENT ONT::V1502865 ONT::PRODUCE :AFFECTED-RESULT ONT::V1502841 :FORCE ONT::TRUE :TENSE W::PRES :PASSIVE +)" paragraph="paragraph2191" rule="-RULE40_2_AGENT_AFFECTED-RESULT-AFFECTED-RESULT" start="0" uttnum="2258">
+		<type>ONT::PRODUCE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="20" id="V1502865" start="0">
+			<type>ONT::PRODUCE</type>
+			<text>MAPK1 is synthesized</text>
+		</predicate>
+		<arg2 end="6" id="V1502841" role=":AFFECTED-RESULT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">MAPK1</text>
+		</arg2>
+		<text>MAPK1 is synthesized</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="6" id="V1502841" lisp="(ONT::TERM ONT::V1502841 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2191" rule="-SIMPLE-REF" start="0" uttnum="2258">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAPK1</text>
+	</TERM>
+</ekb>

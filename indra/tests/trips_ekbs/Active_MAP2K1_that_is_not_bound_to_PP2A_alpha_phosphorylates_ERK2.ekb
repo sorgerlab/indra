@@ -1,0 +1,177 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02172_IO-1493132" id="paragraph2171">Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2238" pid="paragraph2171">Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="65" id="V1493389" lisp="(ONT::EVENT ONT::V1493389 ONT::PHOSPHORYLATION :AGENT ONT::V1493194 :AFFECTED ONT::V1493399 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2171" rule="-RULE60_4_AGENT_AFFECTED" start="0" uttnum="2238">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="65" id="V1493389" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2</text>
+		</predicate>
+		<arg1 end="46" id="V1493194" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Active MAP2K1 that is not bound to PP2A-alpha</text>
+		</arg1>
+		<arg2 end="65" id="V1493399" role=":AFFECTED" start="61">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">ERK2</text>
+		</arg2>
+		<text>Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17808|UP:Q02750|HGNC:6840|NCIT:C52823" end="46" id="V1493194" lisp="(ONT::TERM ONT::V1493194 ONT::GENE-PROTEIN :INEVENT ONT::V1493252 :ACTIVE ONT::TRUE :NAME W::MAP-2-K-1 :DRUM ((:DRUM (TERM :ID HGNC::|6840| :NAME &quot;mitogen-activated protein kinase kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :DBXREFS (UP::Q02750) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52823 :NAME &quot;MAP2K1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17808 :NAME &quot;MAP2K1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :EXACT 2) (MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.81855 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2171" rule="-INEVENT2B,-SIMPLE-REF-MODACTIVE1,-SIMPLE-REF" start="0" uttnum="2238">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAP-2-K-1</name>
+		<features>
+			<active>TRUE</active>
+			<inevent>
+				<event id="V1493252"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:6840" match-score="1.0" matched-name="MAP2K1" name="mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q02750"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52823" match-score="1.0" matched-name="MAP2K1" name="MAP2K1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17808" match-score="0.82857" matched-name="MAP2K1" name="MAP2K1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Active MAP2K1 that is not bound to PP2A-alpha</text>
+	</TERM>
+	<TERM dbid="NCIT:C17589|UP:P46196|UP:Q54QB1|NCIT:C52872|XFAM:PF00069|UP:P63086|UP:P28482|HGNC:6871|UP:P63085" end="65" id="V1493399" lisp="(ONT::TERM ONT::V1493399 ONT::GENE-PROTEIN :NAME W::ERK-2 :DRUM ((:DRUM (TERM :ID UP::Q54QB1 :NAME &quot;Extracellular signal-regulated kinase 2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK2&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK2&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;ERK-2&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;ERK2&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P46196 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P28482 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|6871| XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63085 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63086 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2171" rule="-SIMPLE-REF" start="61" uttnum="2238">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK-2</name>
+		<drum-terms>
+			<drum-term dbid="UP:Q54QB1" match-score="1.0" matched-name="ERK2" name="Extracellular signal-regulated kinase 2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.82857" matched-name="ERK2" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82852" matched-name="ERK-2" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.65714" matched-name="ERK2" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P46196" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P28482" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:6871"/>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63085" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63086" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>ERK2</text>
+	</TERM>
+	<EVENT end="46" id="V1493252" lisp="(ONT::EVENT ONT::V1493252 ONT::BIND :AFFECTED ONT::V1493194 :AFFECTED1 ONT::V1493385 :FORCE ONT::FALSE :TENSE W::PRES :PASSIVE + :NEGATION +)" paragraph="paragraph2171" rule="-RULE40_4_AFFECTED_AFFECTED1" start="0" uttnum="2238">
+		<type>ONT::BIND</type>
+		<negation>+</negation>
+		<force>ONT::FALSE</force>
+		<predicate end="46" id="V1493252" start="0">
+			<type>ONT::BIND</type>
+			<text>Active MAP2K1 that is not bound to PP2A-alpha</text>
+		</predicate>
+		<arg1 end="46" id="V1493194" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Active MAP2K1 that is not bound to PP2A-alpha</text>
+		</arg1>
+		<arg2 end="46" id="V1493385" role=":AFFECTED1" start="32">
+			<type>ONT::PROTEIN</type>
+			<text normalization="">to PP2A-alpha</text>
+		</arg2>
+		<text>Active MAP2K1 that is not bound to PP2A-alpha</text>
+	</EVENT>
+	<TERM dbid="UP:P67775|HGNC:9299|UP:P63330|XFAM:PF00149|NCIT:C34080" end="46" id="V1493385" lisp="(ONT::TERM ONT::V1493385 ONT::PROTEIN :NAME W::PP-2-A-PUNC-MINUS-ALPHA :DRUM ((:DRUM (TERM :ID UP::P67775 :NAME &quot;Serine/threonine-protein phosphatase 2A catalytic subunit alpha isoform&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;RecName: Short&quot; :EXACT 3) (MATCH :SCORE 1.0 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;RecName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 3)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|9299| XFAM::PF00149) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63330 :NAME &quot;Serine/threonine-protein phosphatase 2A catalytic subunit alpha isoform&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;RecName: Short&quot; :EXACT 3) (MATCH :SCORE 1.0 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;RecName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 3)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00149) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C34080 :NAME &quot;protein phosphatase-2 catalytic subunit alpha&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;synonym&quot; :EXACT 3) (MATCH :SCORE 0.82857 :MATCHED &quot;PP2A-alpha&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 3)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2171" rule="-SIMPLE-REF" start="32" uttnum="2238">
+		<type>ONT::PROTEIN</type>
+		<name>PP-2-A-ALPHA</name>
+		<drum-terms>
+			<drum-term dbid="UP:P67775" match-score="1.0" matched-name="PP2A-alpha" name="Serine/threonine-protein phosphatase 2A catalytic subunit alpha isoform">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:9299"/>
+					<xref dbid="XFAM:PF00149"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63330" match-score="1.0" matched-name="PP2A-alpha" name="Serine/threonine-protein phosphatase 2A catalytic subunit alpha isoform">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00149"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C34080" match-score="0.82857" matched-name="PP2A-alpha" name="protein phosphatase-2 catalytic subunit alpha">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>to PP2A-alpha</text>
+	</TERM>
+</ekb>

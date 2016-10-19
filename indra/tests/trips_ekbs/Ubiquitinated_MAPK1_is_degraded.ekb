@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02191_IO-1502437" id="paragraph2190">Ubiquitinated MAPK1 is degraded.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2257" pid="paragraph2190">Ubiquitinated MAPK1 is degraded.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="31" id="V1502479" lisp="(ONT::EVENT ONT::V1502479 ONT::CONSUME :AFFECTED ONT::V1502454 :FORCE ONT::TRUE :TENSE W::PRES :PASSIVE +)" paragraph="paragraph2190" rule="-RULE40_4_AGENT_AFFECTED-AFFECTED" start="0" uttnum="2257">
+		<type>ONT::CONSUME</type>
+		<force>ONT::TRUE</force>
+		<predicate end="31" id="V1502479" start="0">
+			<type>ONT::CONSUME</type>
+			<text>Ubiquitinated MAPK1 is degraded</text>
+		</predicate>
+		<arg2 end="20" id="V1502454" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Ubiquitinated MAPK1</text>
+		</arg2>
+		<text>Ubiquitinated MAPK1 is degraded</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="20" id="V1502454" lisp="(ONT::TERM ONT::V1502454 ONT::GENE-PROTEIN :INEVENT ONT::V1502440 :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2190" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="2257">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<features>
+			<inevent>
+				<event id="V1502440"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Ubiquitinated MAPK1</text>
+	</TERM>
+	<EVENT end="20" id="V1502440" lisp="(ONT::EVENT ONT::V1502440 ONT::UBIQUITINATION :AFFECTED ONT::V1502454 :FORCE ONT::TRUE)" paragraph="paragraph2190" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED" start="0" uttnum="2257">
+		<type>ONT::UBIQUITINATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="20" id="V1502440" start="0">
+			<type>ONT::UBIQUITINATION</type>
+			<text>Ubiquitinated MAPK1</text>
+		</predicate>
+		<arg2 end="20" id="V1502454" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Ubiquitinated MAPK1</text>
+		</arg2>
+		<text>Ubiquitinated MAPK1</text>
+	</EVENT>
+</ekb>

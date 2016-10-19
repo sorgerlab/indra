@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02168_IO-1488735" id="paragraph2167">Vemurafenib binds BRAF.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2234" pid="paragraph2167">Vemurafenib binds BRAF.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="22" id="V1488753" lisp="(ONT::EVENT ONT::V1488753 ONT::BIND :AGENT ONT::V1488738 :AFFECTED ONT::V1488762 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2167" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2234">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="22" id="V1488753" start="0">
+			<type>ONT::BIND</type>
+			<text>Vemurafenib binds BRAF</text>
+		</predicate>
+		<arg1 end="12" id="V1488738" role=":AGENT" start="0">
+			<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+			<text normalization="">Vemurafenib</text>
+		</arg1>
+		<arg2 end="22" id="V1488762" role=":AFFECTED" start="18">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">BRAF</text>
+		</arg2>
+		<text>Vemurafenib binds BRAF</text>
+	</EVENT>
+	<TERM dbid="CHEBI:63637" end="12" id="V1488738" lisp="(ONT::TERM ONT::V1488738 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::VEMURAFENIB :DRUM ((:DRUM (TERM :ID CHEBI::|63637| :NAME &quot;vemurafenib&quot; :SCORE 0.99761 :MATCHES ((MATCH :SCORE 0.99761 :MATCHED &quot;vemurafenib&quot; :STATUS &quot;name&quot; :SENTENCE-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph2167" rule="-SIMPLE-REF" start="0" uttnum="2234">
+		<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+		<name>VEMURAFENIB</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:63637" match-score="0.99761" matched-name="vemurafenib" name="vemurafenib">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Vemurafenib</text>
+	</TERM>
+	<TERM dbid="UP:P15056|NCIT:C17476|HGNC:1097|NCIT:C51194" end="22" id="V1488762" lisp="(ONT::TERM ONT::V1488762 ONT::GENE-PROTEIN :NAME W::BRAF :DRUM ((:DRUM (TERM :ID HGNC::|1097| :NAME &quot;B-Raf proto-oncogene, serine/threonine kinase&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P15056) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51194 :NAME &quot;BRAF&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17476 :NAME &quot;B-RAF protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;BRAF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2167" rule="-SIMPLE-REF" start="18" uttnum="2234">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>BRAF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:1097" match-score="1.0" matched-name="BRAF" name="B-Raf proto-oncogene, serine/threonine kinase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P15056"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51194" match-score="1.0" matched-name="BRAF" name="BRAF">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17476" match-score="0.82857" matched-name="BRAF" name="B-RAF protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>BRAF</text>
+	</TERM>
+</ekb>

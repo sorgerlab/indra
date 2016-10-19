@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02201_IO-1505820" id="paragraph2200">MAPK1 translocates from the nucleus.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2267" pid="paragraph2200">MAPK1 translocates from the nucleus.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="35" id="V1505832" lisp="(ONT::EVENT ONT::V1505832 ONT::TRANSLOCATE :AGENT ONT::V1505828 :FROM ONT::V1505855 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2200" rule="-RULE10_4_AGENT_AFFECTED-CELL_LOC3-GD-FROM-AGENT" start="0" uttnum="2267">
+		<type>ONT::TRANSLOCATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="35" id="V1505832" start="0">
+			<type>ONT::TRANSLOCATE</type>
+			<text>MAPK1 translocates from the nucleus</text>
+		</predicate>
+		<arg1 end="6" id="V1505828" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">MAPK1</text>
+		</arg1>
+		<from-location end="35" id="V1505855" start="24">
+			<type>ONT::CELL-PART</type>
+			<text normalization="">the nucleus</text>
+		</from-location>
+		<text>MAPK1 translocates from the nucleus</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="6" id="V1505828" lisp="(ONT::TERM ONT::V1505828 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2200" rule="-SIMPLE-REF" start="0" uttnum="2267">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAPK1</text>
+	</TERM>
+	<TERM dbid="UP:SL-0191|GO:0005634" end="35" id="V1505855" lisp="(ONT::TERM ONT::V1505855 ONT::CELL-PART :NAME W::NUCLEUS :DRUM ((:DRUM (TERM :ID UP::SL-0191 :NAME &quot;Nucleus&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :STATUS &quot;I*&quot; :EXACT 1)) :ONT-TYPES (ONT::CELL-PART)) (TERM :ID GO::|0005634| :NAME &quot;nucleus&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CELL-PART)) (SPECIALIST :EUI E0222333 :CITATION-FORM &quot;nucleus&quot; :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :EXACT 1)) :COMPLEMENTS (&quot;compl=pphr(of,np(thalamus))&quot; &quot;compl=pphr(of,np(vagus nerve))&quot; &quot;compl=pphr(of,np(pretectal area))&quot; &quot;compl=pphr(of,np(lateral geniculate body))&quot; &quot;compl=pphr(of,np(medial geniculate body))&quot; &quot;compl=pphr(of,np(lens))&quot; &quot;compl=pphr(of,np(solitary tract))&quot; &quot;compl=pphr(of,np(abducens nerve))&quot; &quot;compl=pphr(of,np(ansa lenticularis))&quot; &quot;compl=pphr(of,np(facial nerve))&quot; &quot;compl=pphr(of,np(hypoglossal nerve))&quot; &quot;compl=pphr(of,np(Luys))&quot; &quot;compl=pphr(of,np(oculomotor nerve))&quot; &quot;compl=pphr(of,np(trochlear nerve))&quot; &quot;compl=pphr(of,np(Darkschewitsch))&quot; &quot;compl=pphr(of,np(origin),pphr(of,np))&quot; &quot;compl=pphr(of,np(accessory nerve))&quot; &quot;compl=pphr(of,np)&quot; &quot;compl=pphr(of,np(optic tract))&quot; &quot;compl=pphr(of,np(lateral lemniscus))&quot;)))))" paragraph="paragraph2200" rule="-SIMPLE-REF" start="24" uttnum="2267">
+		<type>ONT::CELL-PART</type>
+		<name>NUCLEUS</name>
+		<drum-terms>
+			<drum-term dbid="UP:SL-0191" match-score="1.0" matched-name="nucleus" name="Nucleus">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="GO:0005634" match-score="1.0" matched-name="nucleus" name="nucleus">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>the nucleus</text>
+	</TERM>
+</ekb>

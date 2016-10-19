@@ -1,0 +1,206 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02165_IO-1485541" id="paragraph2164">GRB2-bound SOS1 binds NRAS that is not bound to BRAF.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2231" pid="paragraph2164">GRB2-bound SOS1 binds NRAS that is not bound to BRAF.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="52" id="V1485804" lisp="(ONT::EVENT ONT::V1485804 ONT::BIND :AGENT ONT::V1485800 :AFFECTED ONT::V1485813 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2164" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2231">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="52" id="V1485804" start="0">
+			<type>ONT::BIND</type>
+			<text>GRB2-bound SOS1 binds NRAS that is not bound to BRAF</text>
+		</predicate>
+		<arg1 end="16" id="V1485800" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">GRB2-bound SOS1</text>
+		</arg1>
+		<arg2 end="52" id="V1485813" role=":AFFECTED" start="22">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">NRAS that is not bound to BRAF</text>
+		</arg2>
+		<text>GRB2-bound SOS1 binds NRAS that is not bound to BRAF</text>
+	</EVENT>
+	<TERM dbid="NCIT:C116309|XFAM:PF00621|UP:Q07889|XFAM:PF00125|XFAM:PF00169|HGNC:11187|NCIT:C116311|UP:Q62245|XFAM:PF00618|XFAM:PF00617" end="16" id="V1485800" lisp="(ONT::TERM ONT::V1485800 ONT::GENE-PROTEIN :INEVENT ONT::V1485753 :NAME W::SOS-1 :DRUM ((:DRUM (TERM :ID HGNC::|11187| :NAME &quot;SOS Ras/Rac guanine nucleotide exchange factor 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;SOS1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::Q07889) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C116309 :NAME &quot;SOS1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;SOS1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q07889 :NAME &quot;Son of sevenless homolog 1&quot; :SCORE 0.99995 :MATCHES ((MATCH :SCORE 0.99995 :MATCHED &quot;SOS-1&quot; :STATUS &quot;RecName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|11187| XFAM::PF00125 XFAM::PF00169 XFAM::PF00617 XFAM::PF00618 XFAM::PF00621) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q62245 :NAME &quot;Son of sevenless homolog 1&quot; :SCORE 0.99995 :MATCHES ((MATCH :SCORE 0.99995 :MATCHED &quot;SOS-1&quot; :STATUS &quot;RecName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00125 XFAM::PF00169 XFAM::PF00617 XFAM::PF00618 XFAM::PF00621) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C116311 :NAME &quot;son of sevenless homolog 1&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;SOS-1&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2164" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="2231">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>SOS-1</name>
+		<features>
+			<inevent>
+				<event id="V1485753"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:11187" match-score="1.0" matched-name="SOS1" name="SOS Ras/Rac guanine nucleotide exchange factor 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q07889"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C116309" match-score="1.0" matched-name="SOS1" name="SOS1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q07889" match-score="0.99995" matched-name="SOS-1" name="Son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:11187"/>
+					<xref dbid="XFAM:PF00125"/>
+					<xref dbid="XFAM:PF00169"/>
+					<xref dbid="XFAM:PF00617"/>
+					<xref dbid="XFAM:PF00618"/>
+					<xref dbid="XFAM:PF00621"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:Q62245" match-score="0.99995" matched-name="SOS-1" name="Son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00125"/>
+					<xref dbid="XFAM:PF00169"/>
+					<xref dbid="XFAM:PF00617"/>
+					<xref dbid="XFAM:PF00618"/>
+					<xref dbid="XFAM:PF00621"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C116311" match-score="0.82852" matched-name="SOS-1" name="son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GRB2-bound SOS1</text>
+	</TERM>
+	<TERM dbid="UP:P01111|HGNC:7989|NCIT:C17384|NCIT:C52549|NCIT:C16889" end="52" id="V1485813" lisp="(ONT::TERM ONT::V1485813 ONT::GENE-PROTEIN :INEVENT ONT::V1485871 :NAME W::NRAS :DRUM ((:DRUM (TERM :ID NCIT::C52549 :NAME &quot;NRAS&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;NRAS&quot; :STATUS &quot;name&quot; :EXACT 1) (MATCH :SCORE 0.9982 :MATCHED &quot;NRAS&quot; :STATUS &quot;name&quot; :DASH-NO-DASH 1 :EXACT 1 :NO-CAPS-ALL-CAPS 1) (MATCH :SCORE 0.82852 :MATCHED &quot;N-RAS&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 2) (MATCH :SCORE 0.82682 :MATCHED &quot;N-RAS&quot; :STATUS &quot;synonym&quot; :EXACT 1 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|7989| :NAME &quot;neuroblastoma RAS viral oncogene homolog&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;NRAS&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1) (MATCH :SCORE 0.9982 :MATCHED &quot;NRAS&quot; :STATUS &quot;Approved Symbol&quot; :DASH-NO-DASH 1 :EXACT 1 :NO-CAPS-ALL-CAPS 1) (MATCH :SCORE 0.65714 :MATCHED &quot;N-ras&quot; :STATUS &quot;Synonym&quot; :EXACT 2) (MATCH :SCORE 0.65534 :MATCHED &quot;N-ras&quot; :STATUS &quot;Synonym&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (UP::P01111) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17384 :NAME &quot;p21 N-ras protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;NRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.82677 :MATCHED &quot;NRAS&quot; :STATUS &quot;synonym&quot; :DASH-NO-DASH 1 :EXACT 1 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C16889 :NAME &quot;oncogene N-RAS&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;NRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.82677 :MATCHED &quot;NRAS&quot; :STATUS &quot;synonym&quot; :DASH-NO-DASH 1 :EXACT 1 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph2164" rule="-INEVENT2B,-SIMPLE-REF" start="22" uttnum="2231">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>NRAS</name>
+		<features>
+			<inevent>
+				<event id="V1485871"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="NCIT:C52549" match-score="1.0" matched-name="NRAS" name="NRAS">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:7989" match-score="1.0" matched-name="NRAS" name="neuroblastoma RAS viral oncogene homolog">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01111"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C17384" match-score="0.82857" matched-name="NRAS" name="p21 N-ras protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16889" match-score="0.82857" matched-name="NRAS" name="oncogene N-RAS">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>NRAS that is not bound to BRAF</text>
+	</TERM>
+	<EVENT end="16" id="V1485753" lisp="(ONT::EVENT ONT::V1485753 ONT::BIND :AGENT ONT::V1485742 :AFFECTED ONT::V1485800 :FORCE ONT::TRUE)" paragraph="paragraph2164" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2231">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="16" id="V1485753" start="0">
+			<type>ONT::BIND</type>
+			<text>GRB2-bound SOS1</text>
+		</predicate>
+		<arg1 end="11" id="V1485742" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">GRB2-bound</text>
+		</arg1>
+		<arg2 end="16" id="V1485800" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">GRB2-bound SOS1</text>
+		</arg2>
+		<text>GRB2-bound SOS1</text>
+	</EVENT>
+	<TERM dbid="HGNC:4566|NCIT:C26222|UP:P62993|NCIT:C52395" end="11" id="V1485742" lisp="(ONT::TERM ONT::V1485742 ONT::GENE-PROTEIN :NAME W::GRB-2 :DRUM ((:DRUM (TERM :ID HGNC::|4566| :NAME &quot;growth factor receptor bound protein 2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GRB2&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P62993) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52395 :NAME &quot;GRB2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GRB2&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C26222 :NAME &quot;growth factor receptor-bound protein-2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;GRB2&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.82852 :MATCHED &quot;GRB-2&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2164" rule="-SIMPLE-REF" start="0" uttnum="2231">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>GRB-2</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:4566" match-score="1.0" matched-name="GRB2" name="growth factor receptor bound protein 2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P62993"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52395" match-score="1.0" matched-name="GRB2" name="GRB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26222" match-score="0.82857" matched-name="GRB2" name="growth factor receptor-bound protein-2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GRB2-bound</text>
+	</TERM>
+	<EVENT end="52" id="V1485871" lisp="(ONT::EVENT ONT::V1485871 ONT::BIND :AFFECTED ONT::V1485813 :AFFECTED1 ONT::V1485914 :FORCE ONT::FALSE :TENSE W::PRES :PASSIVE + :NEGATION +)" paragraph="paragraph2164" rule="-RULE40_4_AFFECTED_AFFECTED1" start="22" uttnum="2231">
+		<type>ONT::BIND</type>
+		<negation>+</negation>
+		<force>ONT::FALSE</force>
+		<predicate end="52" id="V1485871" start="22">
+			<type>ONT::BIND</type>
+			<text>NRAS that is not bound to BRAF</text>
+		</predicate>
+		<arg1 end="52" id="V1485813" role=":AFFECTED" start="22">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">NRAS that is not bound to BRAF</text>
+		</arg1>
+		<arg2 end="52" id="V1485914" role=":AFFECTED1" start="45">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">to BRAF</text>
+		</arg2>
+		<text>NRAS that is not bound to BRAF</text>
+	</EVENT>
+	<TERM dbid="UP:P15056|NCIT:C17476|HGNC:1097|NCIT:C51194" end="52" id="V1485914" lisp="(ONT::TERM ONT::V1485914 ONT::GENE-PROTEIN :NAME W::BRAF :DRUM ((:DRUM (TERM :ID HGNC::|1097| :NAME &quot;B-Raf proto-oncogene, serine/threonine kinase&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P15056) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51194 :NAME &quot;BRAF&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17476 :NAME &quot;B-RAF protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;BRAF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2164" rule="-SIMPLE-REF" start="45" uttnum="2231">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>BRAF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:1097" match-score="1.0" matched-name="BRAF" name="B-Raf proto-oncogene, serine/threonine kinase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P15056"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51194" match-score="1.0" matched-name="BRAF" name="BRAF">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17476" match-score="0.82857" matched-name="BRAF" name="B-RAF protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>to BRAF</text>
+	</TERM>
+</ekb>
