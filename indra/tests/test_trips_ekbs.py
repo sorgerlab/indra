@@ -252,21 +252,160 @@ def test_23():
     assert_modtype(tp.statements[0], Defarnesylation)
     assert_evidence(tp.statements[0])
 
-'''
-EGF leads to the activation of MAPK1.
-Vemurafenib leads to the deactivation of MAPK1.
-Stimulation by EGF activates MAPK1.
-Treatment with Vemurafenib deactivates MAPK1.
-Ubiquitinated MAPK1 is degraded.
-MAPK1 is synthesized.
-MAP2K1 transcribes MAPK1.
-MAP2K1 synthesizes MAPK1.
-MAPK1 is degraded.
-MAP2K1 degrades MAPK1.
-EGFR phosphorylates itself.
-EGFR autophosphorylates.
-The EGFR-EGFR complex transphosphorylates.
-MAPK1 traslocates to the nucleus.
-MAPK1 translocates from the nucleus.
-MAPK1 translocates from the plasma membrane to the nucleus.
-'''
+def test_24():
+    sentence = 'Ubiquitinated MAPK1 is degraded.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Degradation))
+    assert(st.subj is None)
+    assert(st.obj is not None)
+    assert(len(st.obj.mods) == 1)
+    assert(st.obj.mods[0].mod_type == 'ubiquitination')
+    assert_evidence(st)
+
+def test_25():
+    sentence = 'MAPK1 is synthesized.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Synthesis))
+    assert(st.subj is None)
+    assert(st.obj is not None)
+    assert_evidence(st)
+
+def test_26():
+    sentence = 'MAP2K1 transcribes MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Synthesis))
+    assert(st.subj is not None)
+    assert(st.obj is not None)
+    assert_evidence(st)
+
+def test_27():
+    sentence = 'MAP2K1 synthesizes MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Synthesis))
+    assert(st.subj is not None)
+    assert(st.obj is not None)
+    assert_evidence(st)
+
+def test_28():
+    sentence = 'MAP2K1 degrades MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Degradation))
+    assert(st.subj is not None)
+    assert(st.obj is not None)
+    assert_evidence(st)
+
+def test_29():
+    sentence = 'MAPK1 translocates to the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Translocation))
+    assert(st.agent is not None)
+    assert(st.to_location == 'nucleus')
+    assert(st.from_location is None)
+    assert_evidence(st)
+
+def test_30():
+    sentence = 'MAPK1 translocates from the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Translocation))
+    assert(st.agent is not None)
+    assert(st.from_location == 'nucleus')
+    assert(st.to_location is None)
+    assert_evidence(st)
+
+def test_31():
+    sentence = 'MAPK1 translocates from the plasma membrane to the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Translocation))
+    assert(st.agent is not None)
+    assert(st.to_location == 'nucleus')
+    assert(st.from_location == 'plasma membrane')
+    assert_evidence(st)
+
+def test_32():
+    sentence = 'EGF leads to the activation of MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Activation))
+    assert(st.obj is not None)
+    assert(st.subj is not None)
+    assert(st.obj_activity == 'activity')
+    assert(st.subj_activity == 'activity')
+    assert(st.is_activation)
+    assert(not st.evidence[0].epistemics['direct'])
+    assert_evidence(st)
+
+def test_33():
+    sentence = 'Stimulation by EGF activates MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Activation))
+    assert(st.obj is not None)
+    assert(st.subj is not None)
+    assert(st.obj_activity == 'activity')
+    assert(st.subj_activity == 'activity')
+    assert(st.is_activation)
+    assert(not st.evidence[0].epistemics['direct'])
+    assert_evidence(st)
+
+def test_34():
+    sentence = 'Vemurafenib leads to the deactivation of MAPK1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Activation))
+    assert(st.obj is not None)
+    assert(st.subj is not None)
+    assert(st.obj_activity == 'activity')
+    assert(st.subj_activity == 'activity')
+    assert(not st.is_activation)
+    assert(not st.evidence[0].epistemics['direct'])
+    assert_evidence(st)
+
+def test_35():
+    sentence = 'EGFR autophosphorylates itself.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Autophosphorylation))
+    assert(st.enz is not None)
+    assert_evidence(st)
+
+def test_36():
+    sentence = 'EGFR autophosphorylates itself on Y1234.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Autophosphorylation))
+    assert(st.enz is not None)
+    assert(st.residue == 'Y')
+    assert(st.position == '1234')
+    assert_evidence(st)
+
+def test_37():
+    sentence = 'EGFR bound to EGFR transphosphorylates itself.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Transphosphorylation))
+    assert(st.enz is not None)
+    assert(st.enz.bound_conditions)
+    assert_evidence(st)
+

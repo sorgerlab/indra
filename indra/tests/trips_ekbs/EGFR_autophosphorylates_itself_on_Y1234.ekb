@@ -1,0 +1,166 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02208_IO-1508395" id="paragraph2207">EGFR autophosphorylates itself on Y1234.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2274" pid="paragraph2207">EGFR autophosphorylates itself on Y1234.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="39" id="V1508409" lisp="(ONT::EVENT ONT::V1508409 ONT::PHOSPHORYLATION :AGENT ONT::V1508398 :AFFECTED ONT::V1508417 :MODA (ONT::MANNER-REFL W::AUTO-) :FORCE ONT::TRUE :SITEMOD (ONT::ON W::ON) :SITE ONT::V1508460 :TENSE W::PRES)" paragraph="paragraph2207" rule="-RULE60_4_AGENT_AFFECTED-MODA1_2" start="0" uttnum="2274">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<mods>
+			<mod>
+				<type>ONT::MANNER-REFL</type>
+				<value>AUTO-</value>
+			</mod>
+		</mods>
+		<predicate end="39" id="V1508409" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>EGFR autophosphorylates itself on Y1234</text>
+		</predicate>
+		<arg1 end="5" id="V1508398" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">EGFR</text>
+		</arg1>
+		<arg2 end="31" id="V1508417" role=":AFFECTED" start="24">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">itself</text>
+		</arg2>
+		<site end="39" id="V1508460" start="34">
+			<type>ONT::MOLECULAR-SITE</type>
+			<text normalization="">Y1234</text>
+		</site>
+		<text>EGFR autophosphorylates itself on Y1234</text>
+	</EVENT>
+	<TERM dbid="UP:P04412|XFAM:PF07714|NCIT:C17068|XFAM:PF14843|XFAM:PF00757|UP:P00533|XFAM:PF01030|HGNC:3236|GO:0005006|NCIT:C51744|UP:P0CY46|NCIT:C18436" end="5" id="V1508398" lisp="(ONT::TERM ONT::V1508398 ONT::GENE-PROTEIN :NAME W::EGFR :DRUM ((:DRUM (TERM :ID HGNC::|3236| :NAME &quot;epidermal growth factor receptor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P00533) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51744 :NAME &quot;EGFR&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P0CY46 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P04412 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID GO::|0005006| :NAME &quot;epidermal growth factor-activated receptor activity&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;EXACT synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C18436 :NAME &quot;soluble ERBB-1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C17068 :NAME &quot;epidermal growth factor receptor&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2207" rule="-SIMPLE-REF" start="0" uttnum="2274">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>EGFR</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3236" match-score="1.0" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P00533"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51744" match-score="1.0" matched-name="EGFR" name="EGFR">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:P0CY46" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P04412" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="GO:0005006" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor-activated receptor activity">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C18436" match-score="0.82857" matched-name="EGFR" name="soluble ERBB-1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17068" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>EGFR</text>
+	</TERM>
+	<TERM dbid="UP:P04412|XFAM:PF07714|NCIT:C17068|XFAM:PF14843|XFAM:PF00757|UP:P00533|XFAM:PF01030|HGNC:3236|GO:0005006|NCIT:C51744|UP:P0CY46|NCIT:C18436" end="31" id="V1508417" lisp="(ONT::TERM ONT::V1508417 ONT::GENE-PROTEIN :NAME W::EGFR :DRUM ((:DRUM (TERM :ID HGNC::|3236| :NAME &quot;epidermal growth factor receptor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P00533) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51744 :NAME &quot;EGFR&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P0CY46 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P04412 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID GO::|0005006| :NAME &quot;epidermal growth factor-activated receptor activity&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;EXACT synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C18436 :NAME &quot;soluble ERBB-1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C17068 :NAME &quot;epidermal growth factor receptor&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))) :COREF ONT::V1508398)" paragraph="paragraph2207" rule="-SIMPLE-REF" start="24" uttnum="2274">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>EGFR</name>
+		<coref id="V1508398"/>
+		<drum-terms>
+			<drum-term dbid="HGNC:3236" match-score="1.0" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P00533"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51744" match-score="1.0" matched-name="EGFR" name="EGFR">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:P0CY46" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P04412" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="GO:0005006" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor-activated receptor activity">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C18436" match-score="0.82857" matched-name="EGFR" name="soluble ERBB-1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17068" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>itself</text>
+	</TERM>
+	<TERM end="39" id="V1508460" lisp="(ONT::TERM ONT::V1508460 ONT::MOLECULAR-SITE :NAME W::Y-1234 :DRUM ((:DRUM (AA-SITE :NAME &quot;Tyrosine&quot; :LETTER &quot;Y&quot; :INDEX 1234))))" paragraph="paragraph2207" rule="-SIMPLE-REF" start="34" uttnum="2274">
+		<type>ONT::MOLECULAR-SITE</type>
+		<name>Y-1234</name>
+		<features>
+			<site>
+				<name>Tyrosine</name>
+				<code>Y</code>
+				<pos>1234</pos>
+			</site>
+		</features>
+		<text>Y1234</text>
+	</TERM>
+</ekb>
