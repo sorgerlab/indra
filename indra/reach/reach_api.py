@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+from builtins import dict, str, bytes
 import os
 import json
 import logging
@@ -131,6 +131,8 @@ def process_text(text, citation=None, offline=False):
             logger.error(e)
             return None
         json_str = result_map.get('resultJson')
+        if not isinstance(json_str, bytes):
+            json_str = json_str.encode('utf-8')
     else:
         data = {'text': text.encode('utf-8')}
         try:
@@ -141,13 +143,12 @@ def process_text(text, citation=None, offline=False):
             return None
         # TODO: we could use res.json() here to get a dict 
         # directly
-        # This is a unicode string
-        json_str = res.text
-        # In Python2 this is a test against future str type
-        assert isinstance(json_str, str)
-    with open('reach_output.json', 'wt') as fh:
+        # This is a byte string
+        json_str = res.content
+    assert isinstance(json_str, bytes)
+    with open('reach_output.json', 'wb') as fh:
         fh.write(json_str)
-    return process_json_str(json_str, citation)
+    return process_json_str(json_str.decode('utf-8'), citation)
 
 
 def process_nxml_str(nxml_str, citation=None, offline=False):
@@ -192,8 +193,8 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
                          'Status code: %d' % res.status_code)
             return None
         json_str = res.text
-        with open('reach_output.json', 'wt') as fh:
-            fh.write(json_str)
+        with open('reach_output.json', 'wb') as fh:
+            fh.write(json_str.encode('utf-8'))
         return process_json_str(json_str, citation)
 
 
@@ -237,6 +238,8 @@ def process_nxml_file(file_name, citation=None, offline=False):
             logger.error(e)
             return None
         json_str = result_map.get('resultJson')
+        if isinstance(json_str, bytes):
+            json_str = json_str.decode('utf-8')
         return process_json_str(json_str)
     # For the web service, we read the file and process it as a string
     else:
@@ -267,8 +270,8 @@ def process_json_file(file_name, citation=None):
         in rp.statements.
     """
     try:
-        with open(file_name, 'rt') as fh:
-            json_str = fh.read()
+        with open(file_name, 'rb') as fh:
+            json_str = fh.read().decode('utf-8')
             return process_json_str(json_str, citation)
     except IOError:
         logger.error('Could not read file %s.' % file_name)
