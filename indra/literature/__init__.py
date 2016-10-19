@@ -96,6 +96,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         # client directly, because the Clickthrough API key seems unreliable.
         # For now, return as text.
         if publisher == 'Elsevier BV':
+            logger.info('Elsevier: %s' % pmid)
             article = elsevier_client.get_article(doi, output='txt')
             if article is not None:
                 return (article, 'txt')

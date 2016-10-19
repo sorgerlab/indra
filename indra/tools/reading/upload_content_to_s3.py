@@ -39,6 +39,6 @@ if __name__ == '__main__':
     if end_index > len(pmids):
         end_index = len(pmids)
     for ix, pmid in enumerate(pmids[start_index:end_index]):
-        print("--- %d: %s ---" % (ix, pmid))
+        logger.info("--- %d: %s ---" % (ix, pmid))
         s3_client.get_upload_content(pmid,
                                      force_fulltext_lookup=force_fulltext)
