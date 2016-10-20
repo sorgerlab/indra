@@ -19,11 +19,19 @@ def test_get_pmc_ids():
                 i.startswith('4')]) == 10)
     assert unicode_strs(ids)
 
-def test_get_abstract():
-    abstract = pubmed_client.get_abstract('27085458')
-    assert(abstract.startswith('Wilms'))
-    assert(abstract.endswith('documented.'))
+def test_get_abstract_notitle():
+    abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
+    assert(abstract.startswith('The RAF inhibitor'))
+    assert(abstract.endswith('vemurafenib.'))
     assert unicode_strs(abstract)
+
+def test_get_abstract_title():
+    abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
+    assert(abstract.startswith('Targeting autophagy'))
+    assert(abstract.endswith('vemurafenib.'))
+    assert unicode_strs(abstract)
+
+def test_get_abstract2():
     # Try another one
     abstract = pubmed_client.get_abstract('27123883')
     assert unicode_strs(abstract)

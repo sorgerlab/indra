@@ -181,7 +181,7 @@ def get_title(pubmed_id):
     return title
 
 
-def get_abstract(pubmed_id):
+def get_abstract(pubmed_id, prepend_title=True):
     """Get the abstract of an article in the Pubmed database."""
     article = get_article_xml(pubmed_id)
     if article is None:
@@ -189,10 +189,15 @@ def get_abstract(pubmed_id):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
-    else:
-        abstract_text = ' '.join([' ' if abst.text is None
-                                      else abst.text for abst in abstract])
-        return abstract_text
+    abstract_text = ' '.join([' ' if abst.text is None
+                                  else abst.text for abst in abstract])
+    title_tag = article.find('ArticleTitle')
+    if title_tag is not None and prepend_title:
+        title = title_tag.text
+        if not title.endswith('.'):
+            title += '.'
+        abstract_text = title + abstract_text
+    return abstract_text
 
 
 def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
