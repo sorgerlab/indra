@@ -130,8 +130,8 @@ if __name__ == '__main__':
             text_sources[full_pmid] = 'pmc_oa_txt'
             content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
         elif content_type == 'elsevier_xml':
-            content_text = elsevier_client.extract_text(content)
-            if content_text is None:
+            content = elsevier_client.extract_text(content)
+            if content is None:
                 logger.info("%s: Couldn't get text from Elsevier XML" % pmid)
                 num_elsevier_xml_fail += 1
                 continue
