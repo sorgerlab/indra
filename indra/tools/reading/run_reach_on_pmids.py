@@ -14,9 +14,9 @@ if __name__ == '__main__':
 
     cleanup = False
     verbose = True
-    path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-    reach_version = '1.3.2'
+    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    reach_version = '1.3.3'
     force_read = True
 
     # Check the arguments
