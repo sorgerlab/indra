@@ -249,7 +249,7 @@ if __name__ == '__main__':
             logger.info(line)
     (p_out, p_err) = p.communicate()
     if p.returncode:
-        raise Exception(p_out + '\n' + p_err)
+        raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
 
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
