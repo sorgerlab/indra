@@ -19,6 +19,21 @@ def test_get_pmc_ids():
                 i.startswith('4')]) == 10)
     assert unicode_strs(ids)
 
+def test_get_title():
+    title = pubmed_client.get_title('27754804')
+    assert(title)
+    assert(title.startswith('Targeting autophagy'))
+
+def test_get_title_prefix():
+    title = pubmed_client.get_title('PMID27754804')
+    assert(title)
+    assert(title.startswith('Targeting autophagy'))
+
+def test_expand_pagination():
+    pages = '456-7'
+    new_pages = pubmed_client.expand_pagination(pages)
+    assert(new_pages == '456-457')
+
 def test_get_abstract_notitle():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
     assert(abstract.startswith('The RAF inhibitor'))
@@ -49,3 +64,4 @@ def test_get_metadata_for_ids():
     pmids = ['27123883', '27121204', '27115606']
     metadata = pubmed_client.get_metadata_for_ids(pmids)
     assert unicode_strs(metadata)
+
