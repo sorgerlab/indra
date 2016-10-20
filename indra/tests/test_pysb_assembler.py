@@ -347,7 +347,7 @@ def test_activity_activity():
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
-def test_activity_activity():
+def test_activity_activity2():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
     stmt = Activation(subj, 'activity', obj, 'activity', True)

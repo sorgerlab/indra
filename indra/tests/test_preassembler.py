@@ -380,8 +380,3 @@ def test_complex_refinement_order():
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
-
-if __name__ == '__main__':
-    test_modification_refinement_residue_noenz()
-
-

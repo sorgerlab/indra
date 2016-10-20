@@ -121,7 +121,7 @@ def test_phos_enz():
     print(s)
     assert(s == 'BRAF phosphorylates MAP2K1 on S222.')
 
-def test_phos_enz():
+def test_phos_enz2():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
     st = Dephosphorylation(b, a, 'serine', '222')

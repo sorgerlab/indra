@@ -101,8 +101,3 @@ def test_expanded_complexes_from_hierarchy():
     for alpha, beta, gamma in itertools.product(ampk_alphas, ampk_betas,
                                                 ampk_gammas):
         assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names
-
-
-if __name__ == '__main__':
-    test_expand_families()
-    test_expanded_complexes_from_hierarchy()

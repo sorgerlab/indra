@@ -79,7 +79,7 @@ def test_cited():
     assert(len(cxa.cx['citations']) == 1)
     assert(len(cxa.cx['edgeCitations']) == 1)
 
-def test_cited():
+def test_cited2():
     cxa = CxAssembler()
     cxa.add_statements([st_cited2])
     cxa.make_model()

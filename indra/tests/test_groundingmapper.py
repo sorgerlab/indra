@@ -58,7 +58,3 @@ def test_save_sentences_unicode():
     assert unicode_strs(sent)
     twg = agent_texts_with_grounding([st])
     save_sentences(twg, [st], 'test_save_sentences.csv')
-
-if __name__ == '__main__':
-    test_save_sentences_unicode()
-

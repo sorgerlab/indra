@@ -1326,6 +1326,3 @@ def test_unicode_str_methods():
     st = Complex([ag, ag], evidence=ev)
     print(st)
     print(repr(st))
-
-if __name__ == '__main__':
-    test_degradation_refinement()

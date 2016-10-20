@@ -32,16 +32,6 @@ def test_get_gene_name_human():
 
 def test_get_gene_name_nonhuman():
     gene_name = uniprot_client.get_gene_name('P31938')
-    assert(gene_name is None)
-    assert unicode_strs(gene_name)
-
-def test_get_gene_name_human():
-    gene_name = uniprot_client.get_gene_name('P00533')
-    assert(gene_name == 'EGFR')
-    assert unicode_strs(gene_name)
-
-def test_get_gene_name_nonhuman():
-    gene_name = uniprot_client.get_gene_name('P31938')
     assert(gene_name == 'Map2k1')
     assert unicode_strs(gene_name)
 

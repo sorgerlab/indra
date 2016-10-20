@@ -109,7 +109,7 @@ def test_actform_muts():
     assert unicode_strs((tp, st))
     assert(st.evidence)
 
-def test_actmods():
+def test_actmods2():
     tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
