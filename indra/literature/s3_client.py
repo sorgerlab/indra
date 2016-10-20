@@ -147,7 +147,7 @@ def get_full_text(pmid):
                 content = get_gz_object(ft_key)
                 if content:
                     logger.info('%s: found %s on S3' % (pmid, content_type))
-                        return (content, content_type)
+                    return (content, content_type)
                 else:
                     logger.info('%s: error getting %s' %
                                 (pmid, content_type))

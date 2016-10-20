@@ -56,8 +56,8 @@ def download_article(doi):
         logger.error('Could not download article %s: status code %d' %
                      (doi, res.status_code))
         return None
-    # Return the XML content as a unicode string
-    return res.text
+    # Return the XML content as a unicode string, assuming UTF-8 encoding
+    return res.content.decode('utf-8')
 
 
 def get_abstract(doi):
