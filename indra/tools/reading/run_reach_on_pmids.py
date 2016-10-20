@@ -234,11 +234,11 @@ if __name__ == '__main__':
     ReadPapers.papersDir = src/test/resources/inputs/nxml/
     ReadPapers.serializedPapers = mentions.ser
 
-    logging {
+    logging {{
       # defines project-wide logging level
       loglevel = INFO
       logfile = {base_dir}/reach.log
-    }""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
+    }}""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
     # Write the configuration file to the temp directory
