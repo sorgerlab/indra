@@ -206,33 +206,27 @@ class TripsProcessor(object):
             ev = self._get_evidence(cc)
             ev.epistemics['direct'] = False
             location = self._get_event_location(outcome_event)
-            if outcome_event_type.text == 'ONT::ACTIVATE':
-                affected = outcome_event.find(".//*[@role=':AFFECTED']")
-                if affected is None:
-                    continue
-                outcome_agent = self._get_agent_by_id(affected.attrib['id'],
-                                                      outcome_id)
-                if outcome_agent is None:
-                    continue
-                for a1, a2 in _agent_list_product((factor_agent,
-                                                   outcome_agent)):
-                    st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
-                                    evidence=[ev])
-                    _stmt_location_to_agents(st, location)
-                    self.statements.append(st)
-            elif outcome_event_type.text == 'ONT::ACTIVITY':
-                agent_tag = outcome_event.find(".//*[@role=':AGENT']")
+            if outcome_event_type.text in ['ONT::ACTIVATE', 'ONT::ACTIVITY',
+                                           'ONT::DEACTIVATE']:
+                if outcome_event_type.text in ['ONT::ACTIVATE',
+                                               'ONT::DEACTIVATE']:
+                    agent_tag = outcome_event.find(".//*[@role=':AFFECTED']")
+                elif outcome_event_type.text == 'ONT::ACTIVITY':
+                    agent_tag = outcome_event.find(".//*[@role=':AGENT']")
                 if agent_tag is None:
                     continue
                 outcome_agent = self._get_agent_by_id(agent_tag.attrib['id'],
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
+                if outcome_event_type.text == 'ONT::DEACTIVATE':
+                    is_activation = False
+                else:
+                    is_activation = True
                 for a1, a2 in _agent_list_product((factor_agent,
                                                    outcome_agent)):
                     st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
+                                    a2, 'activity', is_activation,
                                     evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)

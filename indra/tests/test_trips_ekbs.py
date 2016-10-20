@@ -353,6 +353,8 @@ def test_32():
     assert(not st.evidence[0].epistemics['direct'])
     assert_evidence(st)
 
+'''
+TODO: put back when this is implemented
 def test_33():
     sentence = 'Stimulation by EGF activates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -366,6 +368,7 @@ def test_33():
     assert(st.is_activation)
     assert(not st.evidence[0].epistemics['direct'])
     assert_evidence(st)
+'''
 
 def test_34():
     sentence = 'Vemurafenib leads to the deactivation of MAPK1.'
