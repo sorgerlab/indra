@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
     # this log file gets overwritten every time ReachCLI is executed
     # so you should copy it if you want to keep it around
-    logFile = {base_dir}/log.txt
+    #logFile = {base_dir}/log.txt
 
     # grounding configuration
     grounding: {{
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     logging {
       # defines project-wide logging level
       loglevel = INFO
-      logfile = ${HOME}/Documents/reach/reach.log
+      logfile = {base_dir}/reach.log
     }""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
