@@ -554,6 +554,7 @@ class TripsProcessor(object):
                                                   m.position, evidence=ev)
                         _stmt_location_to_agents(st, location)
                         self.statements.append(st)
+                    continue
                 # Autophosphorylation
                 elif enzyme_agent is not None and (enzyme_id == affected_id):
                     for m in mods:
@@ -570,6 +571,7 @@ class TripsProcessor(object):
                                                      evidence=ev)
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
+                    continue
                 elif affected_agent is not None and \
                     'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                     for m in mods:
@@ -586,6 +588,7 @@ class TripsProcessor(object):
                                                      evidence=ev)
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
+                    continue
 
             mod = mod_names.get(event_type)
             if 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
