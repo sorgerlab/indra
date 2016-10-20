@@ -83,8 +83,10 @@ if __name__ == '__main__':
     num_pmc_oa_xml = 0
     num_pmc_auth_xml = 0
     num_txt = 0
+    num_elsevier_xml = 0
     num_abstract = 0
     num_not_found = 0
+    num_elsevier_xml_fail = 0
     # Keep a map of the content type we've downloaded for each PMID
     text_sources = {}
     for pmid in pmids_to_read:
@@ -126,6 +128,15 @@ if __name__ == '__main__':
             num_txt += 1
             text_sources[full_pmid] = 'pmc_oa_txt'
             content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+        elif content_type == 'elsevier_xml':
+            content_text = elsevier_client.extract_text(content)
+            if content_text is None:
+                logger.info("%s: Couldn't get text from Elsevier XML" % pmid)
+                num_elsevier_xml_fail += 1
+                continue
+            num_elsevier_xml += 1
+            text_sources[full_pmid] = 'elsevier_xml'
+            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
         elif content_type == 'txt':
             num_txt += 1
             text_sources[full_pmid] = 'txt'
@@ -144,10 +155,14 @@ if __name__ == '__main__':
             # The XML string is Unicode
             enc = content.encode('utf-8')
             f.write(enc)
-    logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
-                '%d txt (incl. Elsevier), %d abstract, %d no content' %
-                (num_pmc_oa_xml, num_pmc_auth_xml, num_txt, num_abstract,
-                 num_not_found))
+    logger.info('Found content PMIDs:')
+    logger.info('%d pmc_oa_xml' % num_pmc_oa_xml)
+    logger.info('%d pmc_auth_xml' % num_pmc_auth_xml)
+    logger.info('%d elsevier_xml' % num_elsevier_xml)
+    logger.info('%d elsevier_xml with no full text' % num_elsevier_xml_fail)
+    logger.info('%d txt (incl. some Elsevier)' % num_txt)
+    logger.info('%d abstract' % num_abstract)
+    logger.info('%d no content' % num_not_found)
 
     # Create the REACH configuration file
     conf_file_text = """

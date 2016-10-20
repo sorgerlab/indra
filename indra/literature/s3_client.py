@@ -7,8 +7,10 @@ import botocore
 import json
 import gzip
 from io import BytesIO
+from xml.etree import ElementTree as ET
 from indra import literature as lit
-
+from indra.literature import elsevier_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
 # Python 2
 try:
     basestring
@@ -145,7 +147,7 @@ def get_full_text(pmid):
                 content = get_gz_object(ft_key)
                 if content:
                     logger.info('%s: found %s on S3' % (pmid, content_type))
-                    return (content, content_type)
+                        return (content, content_type)
                 else:
                     logger.info('%s: error getting %s' %
                                 (pmid, content_type))
@@ -170,7 +172,7 @@ def get_full_text(pmid):
 def put_full_text(pmid, text, full_text_type='pmc_oa_xml'):
     pmid = check_pmid(pmid)
     xml_key = prefix + pmid + '/fulltext/' + full_text_type
-    xml_gz = gzip_string(text, '%s.nxml' % pmid)
+    xml_gz = gzip_string(text, '%s.nxml' % pmid) # Encodes to UTF-8
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
