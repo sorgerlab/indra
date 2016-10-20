@@ -169,8 +169,8 @@ def test_12():
     assert(isinstance(st, Phosphorylation))
     assert(st.enz is not None)
     assert(st.sub is not None)
-    assert(st.sub.active == 'activity')
-    assert(not st.sub.bound_conditions[0].is_bound)
+    assert(st.enz.active == 'activity')
+    assert(not st.enz.bound_conditions[0].is_bound)
     assert_evidence(st)
 
 def test_13():

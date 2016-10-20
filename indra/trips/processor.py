@@ -807,8 +807,7 @@ class TripsProcessor(object):
             agent.location = loc
         # Get activity
         activity = term.find('features/active')
-        if activity is not None:
-            if activity.text.lower() == 'true':
+        if activity is not None and activity.text.lower() == 'true':
                 agent.active = 'activity'
 
         return agent
