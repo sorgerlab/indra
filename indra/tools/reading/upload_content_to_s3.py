@@ -15,7 +15,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 4 or len(sys.argv) > 5:
         print(usage)
         sys.exit()
-    if len(sys.argv) == 5 and sys.argv[5] != 'force_fulltext':
+    if len(sys.argv) == 5 and sys.argv[4] != 'force_fulltext':
         print(usage)
         sys.exit()
     elif len(sys.argv) == 5:

@@ -53,7 +53,8 @@ def download_article(doi):
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
     res = requests.get(url, params)
     if not res.status_code == 200:
-        logger.error('Could not download article %s' % doi)
+        logger.error('Could not download article %s: status code %d' %
+                     (doi, res.status_code))
         return None
     # Parse the content from the stream and then return the tree
     xml_tree = ET.XML(res.content, parser=UTB())

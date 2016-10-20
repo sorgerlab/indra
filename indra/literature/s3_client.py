@@ -78,7 +78,8 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         # Try to retrieve from literature client
         logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
-        assert ft_content_type in ('pmc_oa_xml', 'txt', 'abstract', None)
+        assert ft_content_type in ('pmc_oa_xml', 'elsevier_xml',
+                                   'abstract', None)
         # If we tried to get the full text and didn't even get the abstract,
         # then there was probably a problem with the web service or the DOI
         if ft_content_type is None:
@@ -87,7 +88,7 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         # do nothing
         elif ft_content_type == 'abstract' and ft_content_type_s3 == 'abstract':
             logger.info("PMID%s: found abstract but already had it on " \
-                        "S3; skipping" % (pmid, ft_content_type))
+                        "S3; skipping" % pmid)
             return (ft_content, ft_content_type)
         # If we got the abstract, and we had nothing on S3, then upload
         elif ft_content_type == 'abstract' and ft_content_type_s3 is None:
@@ -133,8 +134,8 @@ def get_full_text(pmid):
     if len(ft_objs) > 0:
         ft_keys = [ft_obj.key for ft_obj in ft_objs]
         # Look for full texts in order of desirability
-        for content_type in ('pmc_oa_xml', 'pmc_auth_xml', 'pmc_oa_txt',
-                             'txt'):
+        for content_type in ('pmc_oa_xml', 'pmc_auth_xml', 'elsevier_xml',
+                             'pmc_oa_txt', 'txt'):
             ft_key = ft_prefix + content_type
             # We don't have this type of full text, move on
             if ft_key not in ft_keys:
