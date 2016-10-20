@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02196_IO-1504071" id="paragraph2195">MAP2K1 degrades MAPK1.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2262" pid="paragraph2195">MAP2K1 degrades MAPK1.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="21" id="V1504132" lisp="(ONT::EVENT ONT::V1504132 ONT::CONSUME :AGENT ONT::V1504127 :AFFECTED ONT::V1504145 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2195" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2262">
+		<type>ONT::CONSUME</type>
+		<force>ONT::TRUE</force>
+		<predicate end="21" id="V1504132" start="0">
+			<type>ONT::CONSUME</type>
+			<text>MAP2K1 degrades MAPK1</text>
+		</predicate>
+		<arg1 end="7" id="V1504127" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">MAP2K1</text>
+		</arg1>
+		<arg2 end="21" id="V1504145" role=":AFFECTED" start="16">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">MAPK1</text>
+		</arg2>
+		<text>MAP2K1 degrades MAPK1</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17808|UP:Q02750|HGNC:6840|NCIT:C52823" end="7" id="V1504127" lisp="(ONT::TERM ONT::V1504127 ONT::GENE-PROTEIN :NAME W::MAP-2-K-1 :DRUM ((:DRUM (TERM :ID HGNC::|6840| :NAME &quot;mitogen-activated protein kinase kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :DBXREFS (UP::Q02750) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52823 :NAME &quot;MAP2K1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17808 :NAME &quot;MAP2K1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :EXACT 2) (MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.81855 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2195" rule="-SIMPLE-REF" start="0" uttnum="2262">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAP-2-K-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6840" match-score="1.0" matched-name="MAP2K1" name="mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q02750"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52823" match-score="1.0" matched-name="MAP2K1" name="MAP2K1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17808" match-score="0.82857" matched-name="MAP2K1" name="MAP2K1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAP2K1</text>
+	</TERM>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="21" id="V1504145" lisp="(ONT::TERM ONT::V1504145 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2195" rule="-SIMPLE-REF" start="16" uttnum="2262">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAPK1</text>
+	</TERM>
+</ekb>

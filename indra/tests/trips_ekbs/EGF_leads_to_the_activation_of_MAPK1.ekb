@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02187_IO-1501118" id="paragraph2186">EGF leads to the activation of MAPK1.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2253" pid="paragraph2186">EGF leads to the activation of MAPK1.</sentence>
+		</sentences>
+	</input>
+	<CC end="36" id="V1501130" lisp="(ONT::CC ONT::V1501130 ONT::CAUSE :FACTOR ONT::V1501121 :OUTCOME ONT::V1501179 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2186" rule="-RULE5_3_AGENT_RESULT" start="0" uttnum="2253">
+		<type>ONT::CAUSE</type>
+		<force>ONT::TRUE</force>
+		<arg end="4" id="V1501121" role=":FACTOR" start="0"/>
+		<arg end="36" id="V1501179" role=":OUTCOME" start="10"/>
+		<text>EGF leads to the activation of MAPK1</text>
+	</CC>
+	<TERM dbid="UP:P01133|UP:P01132|NCIT:C20425|NCIT:C51421|XFAM:PF00058|XFAM:PF07645|HGNC:3229|XFAM:PF00008" end="4" id="V1501121" lisp="(ONT::TERM ONT::V1501121 ONT::GENE-PROTEIN :NAME W::EGF :DRUM ((:DRUM (TERM :ID HGNC::|3229| :NAME &quot;epidermal growth factor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01133) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P01133 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|3229| XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P01132 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C51421 :NAME &quot;EGF&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGF&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C20425 :NAME &quot;epidermal growth factor&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2186" rule="-SIMPLE-REF" start="0" uttnum="2253">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>EGF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3229" match-score="1.0" matched-name="EGF" name="epidermal growth factor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01133"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P01133" match-score="1.0" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:3229"/>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P01132" match-score="1.0" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C51421" match-score="1.0" matched-name="EGF" name="EGF">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C20425" match-score="0.82857" matched-name="EGF" name="epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>EGF</text>
+	</TERM>
+	<EVENT end="36" id="V1501179" lisp="(ONT::EVENT ONT::V1501179 ONT::ACTIVATE :AFFECTED ONT::V1501198)" paragraph="paragraph2186" rule="-RULE40_2_AGENT_AFFECTED-AFFECTED" start="10" uttnum="2253">
+		<type>ONT::ACTIVATE</type>
+		<predicate end="36" id="V1501179" start="10">
+			<type>ONT::ACTIVATE</type>
+			<text>to the activation of MAPK1</text>
+		</predicate>
+		<arg2 end="36" id="V1501198" role=":AFFECTED" start="28">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of MAPK1</text>
+		</arg2>
+		<text>to the activation of MAPK1</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="36" id="V1501198" lisp="(ONT::TERM ONT::V1501198 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2186" rule="-SIMPLE-REF" start="28" uttnum="2253">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>of MAPK1</text>
+	</TERM>
+</ekb>

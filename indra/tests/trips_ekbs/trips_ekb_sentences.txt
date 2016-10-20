@@ -1,0 +1,37 @@
+The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.
+The EGFR-EGF complex binds another EGFR-EGF complex.
+The EGFR-EGFR complex binds GRB2.
+EGFR-bound GRB2 binds SOS1.
+GRB2-bound SOS1 binds NRAS that is not bound to BRAF.
+SOS1-bound NRAS binds GTP.
+GTP-bound NRAS that is not bound to SOS1 binds BRAF.
+Vemurafenib binds BRAF.
+BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1.
+PP2A-alpha dephosphorylates MAP2K1 that is not bound to ERK2.
+Phosphorylated MAP2K1 is activated.
+Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2.
+DUSP6 dephosphorylates ERK2.
+MAP2K1 ubiquitinates MAPK1.
+MAP2K1 ribosylates MAPK1.
+MAP2K1 hydroxylates MAPK1.
+MAP2K1 acetylates MAPK1.
+MAP2K1 farnesylates MAPK1.
+MAP2K1 deubiquitinates MAPK1.
+MAP2K1 deribosylates MAPK1.
+MAP2K1 dehydroxylates MAPK1.
+MAP2K1 deacetylates MAPK1.
+MAP2K1 defarnesylates MAPK1.
+Ubiquitinated MAPK1 is degraded.
+MAPK1 is synthesized.
+MAP2K1 transcribes MAPK1.
+MAP2K1 synthesizes MAPK1.
+MAP2K1 degrades MAPK1.
+MAPK1 translocates to the nucleus.
+MAPK1 translocates from the nucleus.
+MAPK1 translocates from the plasma membrane to the nucleus.
+EGF leads to the activation of MAPK1.
+Stimulation by EGF activates MAPK1.
+Vemurafenib leads to the deactivation of MAPK1.
+EGFR autophosphorylates itself.
+EGFR autophosphorylates itself on Y1234.
+EGFR bound to EGFR transphosphorylates itself.

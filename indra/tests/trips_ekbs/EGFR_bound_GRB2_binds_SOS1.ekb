@@ -1,0 +1,185 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02164_IO-1484742" id="paragraph2163">EGFR-bound GRB2 binds SOS1.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2230" pid="paragraph2163">EGFR-bound GRB2 binds SOS1.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="26" id="V1484979" lisp="(ONT::EVENT ONT::V1484979 ONT::BIND :AGENT ONT::V1484975 :AFFECTED ONT::V1485000 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2163" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2230">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="26" id="V1484979" start="0">
+			<type>ONT::BIND</type>
+			<text>EGFR-bound GRB2 binds SOS1</text>
+		</predicate>
+		<arg1 end="16" id="V1484975" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">EGFR-bound GRB2</text>
+		</arg1>
+		<arg2 end="26" id="V1485000" role=":AFFECTED" start="22">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">SOS1</text>
+		</arg2>
+		<text>EGFR-bound GRB2 binds SOS1</text>
+	</EVENT>
+	<TERM dbid="HGNC:4566|NCIT:C26222|UP:P62993|NCIT:C52395" end="16" id="V1484975" lisp="(ONT::TERM ONT::V1484975 ONT::GENE-PROTEIN :INEVENT ONT::V1484935 :NAME W::GRB-2 :DRUM ((:DRUM (TERM :ID HGNC::|4566| :NAME &quot;growth factor receptor bound protein 2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GRB2&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P62993) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52395 :NAME &quot;GRB2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GRB2&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C26222 :NAME &quot;growth factor receptor-bound protein-2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;GRB2&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.82852 :MATCHED &quot;GRB-2&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2163" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="2230">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>GRB-2</name>
+		<features>
+			<inevent>
+				<event id="V1484935"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:4566" match-score="1.0" matched-name="GRB2" name="growth factor receptor bound protein 2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P62993"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52395" match-score="1.0" matched-name="GRB2" name="GRB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26222" match-score="0.82857" matched-name="GRB2" name="growth factor receptor-bound protein-2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>EGFR-bound GRB2</text>
+	</TERM>
+	<TERM dbid="NCIT:C116309|XFAM:PF00621|UP:Q07889|XFAM:PF00125|XFAM:PF00169|HGNC:11187|NCIT:C116311|UP:Q62245|XFAM:PF00618|XFAM:PF00617" end="26" id="V1485000" lisp="(ONT::TERM ONT::V1485000 ONT::GENE-PROTEIN :NAME W::SOS-1 :DRUM ((:DRUM (TERM :ID HGNC::|11187| :NAME &quot;SOS Ras/Rac guanine nucleotide exchange factor 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;SOS1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::Q07889) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C116309 :NAME &quot;SOS1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;SOS1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q07889 :NAME &quot;Son of sevenless homolog 1&quot; :SCORE 0.99995 :MATCHES ((MATCH :SCORE 0.99995 :MATCHED &quot;SOS-1&quot; :STATUS &quot;RecName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|11187| XFAM::PF00125 XFAM::PF00169 XFAM::PF00617 XFAM::PF00618 XFAM::PF00621) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q62245 :NAME &quot;Son of sevenless homolog 1&quot; :SCORE 0.99995 :MATCHES ((MATCH :SCORE 0.99995 :MATCHED &quot;SOS-1&quot; :STATUS &quot;RecName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00125 XFAM::PF00169 XFAM::PF00617 XFAM::PF00618 XFAM::PF00621) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C116311 :NAME &quot;son of sevenless homolog 1&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;SOS-1&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2163" rule="-SIMPLE-REF" start="22" uttnum="2230">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>SOS-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:11187" match-score="1.0" matched-name="SOS1" name="SOS Ras/Rac guanine nucleotide exchange factor 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q07889"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C116309" match-score="1.0" matched-name="SOS1" name="SOS1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q07889" match-score="0.99995" matched-name="SOS-1" name="Son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:11187"/>
+					<xref dbid="XFAM:PF00125"/>
+					<xref dbid="XFAM:PF00169"/>
+					<xref dbid="XFAM:PF00617"/>
+					<xref dbid="XFAM:PF00618"/>
+					<xref dbid="XFAM:PF00621"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:Q62245" match-score="0.99995" matched-name="SOS-1" name="Son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00125"/>
+					<xref dbid="XFAM:PF00169"/>
+					<xref dbid="XFAM:PF00617"/>
+					<xref dbid="XFAM:PF00618"/>
+					<xref dbid="XFAM:PF00621"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C116311" match-score="0.82852" matched-name="SOS-1" name="son of sevenless homolog 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>SOS1</text>
+	</TERM>
+	<EVENT end="16" id="V1484935" lisp="(ONT::EVENT ONT::V1484935 ONT::BIND :AGENT ONT::V1484924 :AFFECTED ONT::V1484975 :FORCE ONT::TRUE)" paragraph="paragraph2163" rule="-RULE40_4_AGENT_AFFECTED" start="0" uttnum="2230">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="16" id="V1484935" start="0">
+			<type>ONT::BIND</type>
+			<text>EGFR-bound GRB2</text>
+		</predicate>
+		<arg1 end="11" id="V1484924" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">EGFR-bound</text>
+		</arg1>
+		<arg2 end="16" id="V1484975" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">EGFR-bound GRB2</text>
+		</arg2>
+		<text>EGFR-bound GRB2</text>
+	</EVENT>
+	<TERM dbid="UP:P04412|XFAM:PF07714|NCIT:C17068|XFAM:PF14843|XFAM:PF00757|UP:P00533|XFAM:PF01030|HGNC:3236|GO:0005006|NCIT:C51744|UP:P0CY46|NCIT:C18436" end="11" id="V1484924" lisp="(ONT::TERM ONT::V1484924 ONT::GENE-PROTEIN :NAME W::EGFR :DRUM ((:DRUM (TERM :ID HGNC::|3236| :NAME &quot;epidermal growth factor receptor&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P00533) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51744 :NAME &quot;EGFR&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;EGFR&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P0CY46 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P04412 :NAME &quot;Epidermal growth factor receptor&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;egfr&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00757 XFAM::PF14843 XFAM::PF07714 XFAM::PF01030) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID GO::|0005006| :NAME &quot;epidermal growth factor-activated receptor activity&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;EXACT synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C18436 :NAME &quot;soluble ERBB-1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C17068 :NAME &quot;epidermal growth factor receptor&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;EGFR&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2163" rule="-SIMPLE-REF" start="0" uttnum="2230">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>EGFR</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3236" match-score="1.0" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P00533"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51744" match-score="1.0" matched-name="EGFR" name="EGFR">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:P0CY46" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P04412" match-score="0.99587" matched-name="egfr" name="Epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00757"/>
+					<xref dbid="XFAM:PF14843"/>
+					<xref dbid="XFAM:PF07714"/>
+					<xref dbid="XFAM:PF01030"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="GO:0005006" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor-activated receptor activity">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C18436" match-score="0.82857" matched-name="EGFR" name="soluble ERBB-1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17068" match-score="0.82857" matched-name="EGFR" name="epidermal growth factor receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>EGFR-bound</text>
+	</TERM>
+</ekb>

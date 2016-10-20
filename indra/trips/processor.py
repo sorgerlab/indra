@@ -206,33 +206,27 @@ class TripsProcessor(object):
             ev = self._get_evidence(cc)
             ev.epistemics['direct'] = False
             location = self._get_event_location(outcome_event)
-            if outcome_event_type.text == 'ONT::ACTIVATE':
-                affected = outcome_event.find(".//*[@role=':AFFECTED']")
-                if affected is None:
-                    continue
-                outcome_agent = self._get_agent_by_id(affected.attrib['id'],
-                                                      outcome_id)
-                if outcome_agent is None:
-                    continue
-                for a1, a2 in _agent_list_product((factor_agent,
-                                                   outcome_agent)):
-                    st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
-                                    evidence=[ev])
-                    _stmt_location_to_agents(st, location)
-                    self.statements.append(st)
-            elif outcome_event_type.text == 'ONT::ACTIVITY':
-                agent_tag = outcome_event.find(".//*[@role=':AGENT']")
+            if outcome_event_type.text in ['ONT::ACTIVATE', 'ONT::ACTIVITY',
+                                           'ONT::DEACTIVATE']:
+                if outcome_event_type.text in ['ONT::ACTIVATE',
+                                               'ONT::DEACTIVATE']:
+                    agent_tag = outcome_event.find(".//*[@role=':AFFECTED']")
+                elif outcome_event_type.text == 'ONT::ACTIVITY':
+                    agent_tag = outcome_event.find(".//*[@role=':AGENT']")
                 if agent_tag is None:
                     continue
                 outcome_agent = self._get_agent_by_id(agent_tag.attrib['id'],
                                                       outcome_id)
                 if outcome_agent is None:
                     continue
+                if outcome_event_type.text == 'ONT::DEACTIVATE':
+                    is_activation = False
+                else:
+                    is_activation = True
                 for a1, a2 in _agent_list_product((factor_agent,
                                                    outcome_agent)):
                     st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
+                                    a2, 'activity', is_activation,
                                     evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
@@ -554,6 +548,7 @@ class TripsProcessor(object):
                                                   m.position, evidence=ev)
                         _stmt_location_to_agents(st, location)
                         self.statements.append(st)
+                    continue
                 # Autophosphorylation
                 elif enzyme_agent is not None and (enzyme_id == affected_id):
                     for m in mods:
@@ -570,6 +565,7 @@ class TripsProcessor(object):
                                                      evidence=ev)
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
+                    continue
                 elif affected_agent is not None and \
                     'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                     for m in mods:
@@ -586,6 +582,7 @@ class TripsProcessor(object):
                                                      evidence=ev)
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
+                    continue
 
             mod = mod_names.get(event_type)
             if 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
@@ -807,8 +804,7 @@ class TripsProcessor(object):
             agent.location = loc
         # Get activity
         activity = term.find('features/active')
-        if activity is not None:
-            if activity.text.lower() == 'true':
+        if activity is not None and activity.text.lower() == 'true':
                 agent.active = 'activity'
 
         return agent
@@ -943,16 +939,17 @@ class TripsProcessor(object):
             neg_flag = precond_event.find(
                             'predicate/mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('negation')
-            if negation_sign is not None:
-                if _get_text(negation_sign) == '+':
-                    neg_flag = True
+            if negation_sign is not None and negation_sign.text == '+':
+                neg_flag = True
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
+            '''
             negation_sign = precond_event.find('predicate/negation')
             if negation_sign is not None:
-                if _get_text(negation_sign) == '+':
+                if negation_sign.text == '+':
                     neg_flag = True
+            '''
             for ba in bound_agents:
                 if neg_flag:
                     bc = BoundCondition(ba, False)
@@ -1191,13 +1188,6 @@ class TripsProcessor(object):
 
     def _add_extracted(self, event_type, event_id):
         self.extracted_events[event_type].append(event_id)
-
-def _get_text(element):
-    text_tag = element.find('text')
-    if text_tag is None:
-        return None
-    text = text_tag.text
-    return text
 
 def _get_type(element):
     type_tag = element.find('type')

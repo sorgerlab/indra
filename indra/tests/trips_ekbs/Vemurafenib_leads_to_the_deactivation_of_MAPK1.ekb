@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02188_IO-1501363" id="paragraph2187">Vemurafenib leads to the deactivation of MAPK1.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2254" pid="paragraph2187">Vemurafenib leads to the deactivation of MAPK1.</sentence>
+		</sentences>
+	</input>
+	<CC end="46" id="V1501384" lisp="(ONT::CC ONT::V1501384 ONT::CAUSE :FACTOR ONT::V1501368 :OUTCOME ONT::V1501434 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2187" rule="-RULE5_3_AGENT_RESULT" start="0" uttnum="2254">
+		<type>ONT::CAUSE</type>
+		<force>ONT::TRUE</force>
+		<arg end="12" id="V1501368" role=":FACTOR" start="0"/>
+		<arg end="46" id="V1501434" role=":OUTCOME" start="18"/>
+		<text>Vemurafenib leads to the deactivation of MAPK1</text>
+	</CC>
+	<TERM dbid="CHEBI:63637" end="12" id="V1501368" lisp="(ONT::TERM ONT::V1501368 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::VEMURAFENIB :DRUM ((:DRUM (TERM :ID CHEBI::|63637| :NAME &quot;vemurafenib&quot; :SCORE 0.99761 :MATCHES ((MATCH :SCORE 0.99761 :MATCHED &quot;vemurafenib&quot; :STATUS &quot;name&quot; :SENTENCE-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph2187" rule="-SIMPLE-REF" start="0" uttnum="2254">
+		<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+		<name>VEMURAFENIB</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:63637" match-score="0.99761" matched-name="vemurafenib" name="vemurafenib">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Vemurafenib</text>
+	</TERM>
+	<EVENT end="46" id="V1501434" lisp="(ONT::EVENT ONT::V1501434 ONT::DEACTIVATE :AFFECTED ONT::V1501452)" paragraph="paragraph2187" rule="-RULE40_4_AGENT_AFFECTED-AFFECTED" start="18" uttnum="2254">
+		<type>ONT::DEACTIVATE</type>
+		<predicate end="46" id="V1501434" start="18">
+			<type>ONT::DEACTIVATE</type>
+			<text>to the deactivation of MAPK1</text>
+		</predicate>
+		<arg2 end="46" id="V1501452" role=":AFFECTED" start="38">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of MAPK1</text>
+		</arg2>
+		<text>to the deactivation of MAPK1</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|NCIT:C52872|UP:P28482|HGNC:6871" end="46" id="V1501452" lisp="(ONT::TERM ONT::V1501452 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2187" rule="-SIMPLE-REF" start="38" uttnum="2254">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="1.0" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="1.0" matched-name="MAPK1" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82857" matched-name="MAPK1" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>of MAPK1</text>
+	</TERM>
+</ekb>

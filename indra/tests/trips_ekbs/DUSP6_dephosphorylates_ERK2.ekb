@@ -1,0 +1,128 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02174_IO-1494543" id="paragraph2173">DUSP6 dephosphorylates ERK2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2240" pid="paragraph2173">DUSP6 dephosphorylates ERK2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="27" id="V1494564" lisp="(ONT::EVENT ONT::V1494564 ONT::PHOSPHORYLATION :AGENT ONT::V1494555 :AFFECTED ONT::V1494579 :MODN (ONT::MANNER-UNDO W::DE-) :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2173" rule="-RULE60_4_AGENT_AFFECTED-MODN1_2" start="0" uttnum="2240">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<mods>
+			<mod>
+				<type>ONT::MANNER-UNDO</type>
+				<value>DE-</value>
+			</mod>
+		</mods>
+		<predicate end="27" id="V1494564" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>DUSP6 dephosphorylates ERK2</text>
+		</predicate>
+		<arg1 end="6" id="V1494555" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">DUSP6</text>
+		</arg1>
+		<arg2 end="27" id="V1494579" role=":AFFECTED" start="23">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">ERK2</text>
+		</arg2>
+		<text>DUSP6 dephosphorylates ERK2</text>
+	</EVENT>
+	<TERM dbid="UP:Q16828|NCIT:C106025|NCIT:C106026|HGNC:3072" end="6" id="V1494555" lisp="(ONT::TERM ONT::V1494555 ONT::GENE-PROTEIN :NAME W::DUSP-6 :DRUM ((:DRUM (TERM :ID HGNC::|3072| :NAME &quot;dual specificity phosphatase 6&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;DUSP6&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::Q16828) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C106025 :NAME &quot;DUSP6&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;DUSP6&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C106026 :NAME &quot;dual specificity protein phosphatase 6&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;DUSP6&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2173" rule="-SIMPLE-REF" start="0" uttnum="2240">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>DUSP-6</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3072" match-score="1.0" matched-name="DUSP6" name="dual specificity phosphatase 6">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q16828"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C106025" match-score="1.0" matched-name="DUSP6" name="DUSP6">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C106026" match-score="0.82857" matched-name="DUSP6" name="dual specificity protein phosphatase 6">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>DUSP6</text>
+	</TERM>
+	<TERM dbid="NCIT:C17589|UP:P46196|UP:Q54QB1|NCIT:C52872|XFAM:PF00069|UP:P63086|UP:P28482|HGNC:6871|UP:P63085" end="27" id="V1494579" lisp="(ONT::TERM ONT::V1494579 ONT::GENE-PROTEIN :NAME W::ERK-2 :DRUM ((:DRUM (TERM :ID UP::Q54QB1 :NAME &quot;Extracellular signal-regulated kinase 2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK2&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK2&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;ERK-2&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;ERK2&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P46196 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P28482 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|6871| XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63085 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63086 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2173" rule="-SIMPLE-REF" start="23" uttnum="2240">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK-2</name>
+		<drum-terms>
+			<drum-term dbid="UP:Q54QB1" match-score="1.0" matched-name="ERK2" name="Extracellular signal-regulated kinase 2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.82857" matched-name="ERK2" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82852" matched-name="ERK-2" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.65714" matched-name="ERK2" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P46196" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P28482" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:6871"/>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63085" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63086" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>ERK2</text>
+	</TERM>
+</ekb>

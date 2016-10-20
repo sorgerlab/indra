@@ -1,0 +1,111 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02173_IO-1494080" id="paragraph2172">Phosphorylated ERK2 is activated.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2239" pid="paragraph2172">Phosphorylated ERK2 is activated.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="32" id="V1494117" lisp="(ONT::EVENT ONT::V1494117 ONT::ACTIVATE :AFFECTED ONT::V1494093 :FORCE ONT::TRUE :TENSE W::PRES :PASSIVE +)" paragraph="paragraph2172" rule="-RULE40_2_AGENT_AFFECTED-AFFECTED" start="0" uttnum="2239">
+		<type>ONT::ACTIVATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="32" id="V1494117" start="0">
+			<type>ONT::ACTIVATE</type>
+			<text>Phosphorylated ERK2 is activated</text>
+		</predicate>
+		<arg2 end="20" id="V1494093" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Phosphorylated ERK2</text>
+		</arg2>
+		<text>Phosphorylated ERK2 is activated</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17589|UP:P46196|UP:Q54QB1|NCIT:C52872|XFAM:PF00069|UP:P63086|UP:P28482|HGNC:6871|UP:P63085" end="20" id="V1494093" lisp="(ONT::TERM ONT::V1494093 ONT::GENE-PROTEIN :INEVENT ONT::V1494083 :NAME W::ERK-2 :DRUM ((:DRUM (TERM :ID UP::Q54QB1 :NAME &quot;Extracellular signal-regulated kinase 2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK2&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK2&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;mitogen-activated protein kinase-1&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;ERK-2&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;ERK2&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P46196 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P28482 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|6871| XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63085 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P63086 :NAME &quot;Mitogen-activated protein kinase 1&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;ERK-2&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2172" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="2239">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK-2</name>
+		<features>
+			<inevent>
+				<event id="V1494083"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="UP:Q54QB1" match-score="1.0" matched-name="ERK2" name="Extracellular signal-regulated kinase 2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.82857" matched-name="ERK2" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.82852" matched-name="ERK-2" name="mitogen-activated protein kinase-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.65714" matched-name="ERK2" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P46196" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P28482" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:6871"/>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63085" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="UP:P63086" match-score="0.65709" matched-name="ERK-2" name="Mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>Phosphorylated ERK2</text>
+	</TERM>
+	<EVENT end="20" id="V1494083" lisp="(ONT::EVENT ONT::V1494083 ONT::PHOSPHORYLATION :AFFECTED ONT::V1494093 :FORCE ONT::TRUE)" paragraph="paragraph2172" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED" start="0" uttnum="2239">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="20" id="V1494083" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>Phosphorylated ERK2</text>
+		</predicate>
+		<arg2 end="20" id="V1494093" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Phosphorylated ERK2</text>
+		</arg2>
+		<text>Phosphorylated ERK2</text>
+	</EVENT>
+</ekb>

@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02169_IO-1488915" id="paragraph2168">BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2235" pid="paragraph2168">BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="65" id="V1489067" lisp="(ONT::EVENT ONT::V1489067 ONT::PHOSPHORYLATION :AGENT ONT::V1488918 :AFFECTED ONT::V1489125 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2168" rule="-RULE60_4_AGENT_AFFECTED" start="0" uttnum="2235">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="65" id="V1489067" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1</text>
+		</predicate>
+		<arg1 end="44" id="V1488918" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">BRAF V600E that is not bound to Vemurafenib</text>
+		</arg1>
+		<arg2 end="65" id="V1489125" role=":AFFECTED" start="59">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">MAP2K1</text>
+		</arg2>
+		<text>BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1</text>
+	</EVENT>
+	<TERM dbid="UP:P15056|NCIT:C17476|HGNC:1097|NCIT:C51194" end="44" id="V1488918" lisp="(ONT::TERM ONT::V1488918 ONT::GENE-PROTEIN :INEVENT ONT::V1489009 :MUTATION ONT::V1488951 :NAME W::BRAF :DRUM ((:DRUM (TERM :ID HGNC::|1097| :NAME &quot;B-Raf proto-oncogene, serine/threonine kinase&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P15056) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51194 :NAME &quot;BRAF&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;BRAF&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17476 :NAME &quot;B-RAF protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;BRAF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2168" rule="-INEVENT2B,-SIMPLE-REF-MUTATION1,-SIMPLE-REF" start="0" uttnum="2235">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>BRAF</name>
+		<features>
+			<mutation id="V1488951"/>
+			<inevent>
+				<event id="V1489009"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:1097" match-score="1.0" matched-name="BRAF" name="B-Raf proto-oncogene, serine/threonine kinase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P15056"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51194" match-score="1.0" matched-name="BRAF" name="BRAF">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17476" match-score="0.82857" matched-name="BRAF" name="B-RAF protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>BRAF V600E that is not bound to Vemurafenib</text>
+	</TERM>
+	<TERM dbid="NCIT:C17808|UP:Q02750|HGNC:6840|NCIT:C52823" end="65" id="V1489125" lisp="(ONT::TERM ONT::V1489125 ONT::GENE-PROTEIN :NAME W::MAP-2-K-1 :DRUM ((:DRUM (TERM :ID HGNC::|6840| :NAME &quot;mitogen-activated protein kinase kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :DBXREFS (UP::Q02750) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52823 :NAME &quot;MAP2K1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :EXACT 2) (MATCH :SCORE 1.0 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.98998 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17808 :NAME &quot;MAP2K1 protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :EXACT 2) (MATCH :SCORE 0.82857 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 2) (MATCH :SCORE 0.81855 :MATCHED &quot;MAP2K1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 2 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.85528755 :EXACT 1 :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2168" rule="-SIMPLE-REF" start="59" uttnum="2235">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAP-2-K-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6840" match-score="1.0" matched-name="MAP2K1" name="mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q02750"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52823" match-score="1.0" matched-name="MAP2K1" name="MAP2K1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17808" match-score="0.82857" matched-name="MAP2K1" name="MAP2K1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAP2K1</text>
+	</TERM>
+	<TERM end="11" id="V1488951" paragraph="paragraph2168" rule="-SIMPLE-REF" start="5" uttnum="2235">
+		<type>ONT::MUTATION</type>
+		<mutation>
+			<type>SUBSTITUTION</type>
+			<pos>600</pos>
+			<aa-from>
+				<aa>
+					<name>Valine</name>
+					<code>V</code>
+				</aa>
+			</aa-from>
+			<aa-to>
+				<aa>
+					<name>Glutamic acid</name>
+					<code>E</code>
+				</aa>
+			</aa-to>
+		</mutation>
+		<text normalization="">V600E</text>
+	</TERM>
+	<EVENT end="44" id="V1489009" lisp="(ONT::EVENT ONT::V1489009 ONT::BIND :AFFECTED ONT::V1488918 :AFFECTED1 ONT::V1489052 :FORCE ONT::FALSE :TENSE W::PRES :PASSIVE + :NEGATION +)" paragraph="paragraph2168" rule="-RULE40_4_AFFECTED_AFFECTED1" start="0" uttnum="2235">
+		<type>ONT::BIND</type>
+		<negation>+</negation>
+		<force>ONT::FALSE</force>
+		<predicate end="44" id="V1489009" start="0">
+			<type>ONT::BIND</type>
+			<text>BRAF V600E that is not bound to Vemurafenib</text>
+		</predicate>
+		<arg1 end="44" id="V1488918" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">BRAF V600E that is not bound to Vemurafenib</text>
+		</arg1>
+		<arg2 end="44" id="V1489052" role=":AFFECTED1" start="29">
+			<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+			<text normalization="">to Vemurafenib</text>
+		</arg2>
+		<text>BRAF V600E that is not bound to Vemurafenib</text>
+	</EVENT>
+	<TERM dbid="CHEBI:63637" end="44" id="V1489052" lisp="(ONT::TERM ONT::V1489052 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::VEMURAFENIB :DRUM ((:DRUM (TERM :ID CHEBI::|63637| :NAME &quot;vemurafenib&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;vemurafenib&quot; :STATUS &quot;name&quot; :INITIAL-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph2168" rule="-SIMPLE-REF" start="29" uttnum="2235">
+		<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+		<name>VEMURAFENIB</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:63637" match-score="0.99587" matched-name="vemurafenib" name="vemurafenib">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>to Vemurafenib</text>
+	</TERM>
+</ekb>
