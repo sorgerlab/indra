@@ -8,7 +8,8 @@ import subprocess
 import glob
 import json
 import logging
-from indra.literature import pmc_client, s3_client, get_full_text
+from indra.literature import pmc_client, s3_client, get_full_text, \
+                             elsevier_client
 
 if __name__ == '__main__':
 
