@@ -3,9 +3,11 @@ import os
 from indra import trips
 from indra.statements import *
 
+path_this = os.path.dirname(os.path.abspath(__file__))
+
 def process_sentence_xml(sentence):
     fname = re.sub('[^a-zA-Z0-9]', '_', sentence[:-1]) + '.ekb'
-    path = os.path.join('trips_ekbs', fname)
+    path = os.path.join(path_this, 'trips_ekbs', fname)
     with open(path, 'rb') as fh:
         xml = fh.read().decode('utf-8')
     tp = trips.process_xml(xml)
