@@ -194,9 +194,10 @@ def get_abstract(pubmed_id, prepend_title=True):
     title_tag = article.find('ArticleTitle')
     if title_tag is not None and prepend_title:
         title = title_tag.text
-        if not title.endswith('.'):
-            title += '.'
-        abstract_text = title + abstract_text
+        if title is not None:
+            if not title.endswith('.'):
+                title += '.'
+            abstract_text = title + ' ' + abstract_text
     return abstract_text
 
 
