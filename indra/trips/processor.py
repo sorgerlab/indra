@@ -943,16 +943,17 @@ class TripsProcessor(object):
             neg_flag = precond_event.find(
                             'predicate/mods/mod[type="ONT::NEG"]')
             negation_sign = precond_event.find('negation')
-            if negation_sign is not None:
-                if _get_text(negation_sign) == '+':
-                    neg_flag = True
+            if negation_sign is not None and negation_sign.text == '+':
+                neg_flag = True
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
+            '''
             negation_sign = precond_event.find('predicate/negation')
             if negation_sign is not None:
-                if _get_text(negation_sign) == '+':
+                if negation_sign.text == '+':
                     neg_flag = True
+            '''
             for ba in bound_agents:
                 if neg_flag:
                     bc = BoundCondition(ba, False)
@@ -1191,13 +1192,6 @@ class TripsProcessor(object):
 
     def _add_extracted(self, event_type, event_id):
         self.extracted_events[event_type].append(event_id)
-
-def _get_text(element):
-    text_tag = element.find('text')
-    if text_tag is None:
-        return None
-    text = text_tag.text
-    return text
 
 def _get_type(element):
     type_tag = element.find('type')
