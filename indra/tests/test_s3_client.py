@@ -104,5 +104,23 @@ def test_gzip_string():
     content_dec_uni = content_dec.decode('utf-8')
     assert content == content_dec_uni
 
+def test_get_upload_content():
+    pmid_s3_no_content = 'PMID000foobar'
+    (ct, ct_type) = s3_client.get_upload_content(pmid_s3_no_content)
+    assert ct == None
+    assert ct_type == None
+
+    pmid_s3_abstract_only = 'PMID000test4'
+    s3_client.put_abstract(pmid_s3_abstract_only, 'foo')
+    (ct, ct_type) = s3_client.get_upload_content(pmid_s3_abstract_only)
+    assert ct == 'foo'
+    assert ct_type == 'abstract'
+
+    pmid_s3_fulltext = 'PMID000test5'
+    s3_client.put_full_text(pmid_s3_fulltext, 'foo', full_text_type='txt')
+    (ct, ct_type) = s3_client.get_upload_content(pmid_s3_fulltext)
+    assert ct == 'foo'
+    assert ct_type == 'txt'
+
 if __name__ == '__main__':
-    test_gzip_string()
+    test_get_upload_content()

@@ -78,7 +78,7 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     if pmcid:
         nxml = pmc_client.get_xml(pmcid)
         if nxml:
-            return nxml, 'nxml'
+            return nxml, 'pmc_oa_xml'
     # If we got here, it means we didn't find the full text in PMC, so we'll
     # need either the DOI (for lookup in CrossRef) and/or the PMID (so we
     # can fall back on the abstract. If by some strange turn we have neither,
@@ -96,9 +96,11 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         # client directly, because the Clickthrough API key seems unreliable.
         # For now, return as text.
         if publisher == 'Elsevier BV':
-            article = elsevier_client.get_article(doi, output='txt')
-            if article is not None:
-                return (article, 'txt')
+            logger.info('Elsevier: %s' % pmid)
+            #article = elsevier_client.get_article(doi, output='txt')
+            article_xml = elsevier_client.download_article(doi)
+            if article_xml is not None:
+                return (article_xml, 'elsevier_xml')
 
         # FIXME FIXME FIXME
         # Because we don't yet have a way to process non-Elsevier content
@@ -190,8 +192,10 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         #elif pmid:
         if pmid:
             abstract = pubmed_client.get_abstract(pmid)
-            return abstract, 'abstract'
-
+            if abstract is None:
+                return (None, None)
+            else:
+                return abstract, 'abstract'
         # We have a useless DOI and no PMID. Give up.
         else:
             return (None, None)
@@ -199,8 +203,10 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
     # so we fall back to the abstract:
     else:
         abstract = pubmed_client.get_abstract(pmid)
-        return abstract, 'abstract'
-
+        if abstract is None:
+            return (None, None)
+        else:
+            return abstract, 'abstract'
     # We'll only get here if we've missed a combination of conditions
     assert False
 

@@ -52,11 +52,11 @@ def process_paper(model_name, pmid):
     # If the paper has not been parsed, download the text and parse
     else:
         txt, txt_format = get_full_text(pmid, 'pmid')
-        if txt_format == 'nxml':
+        if txt_format == 'pmc_oa_xml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
                 shutil.move('reach_output.json', fulltext_path)
-        elif txt_format == 'txt':
+        elif txt_format == 'elsevier_xml':
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
                 shutil.move('reach_output.json', fulltext_path)

@@ -7,7 +7,10 @@ import botocore
 import json
 import gzip
 from io import BytesIO
-
+from xml.etree import ElementTree as ET
+from indra import literature as lit
+from indra.literature import elsevier_client
+from indra.util import UnicodeXMLTreeBuilder as UTB
 # Python 2
 try:
     basestring
@@ -58,14 +61,61 @@ def check_key(key):
     return exists
 
 
+def get_upload_content(pmid, force_fulltext_lookup=False):
+    """Get full text and/or abstract for paper and upload to S3."""
+    # Make sure that the PMID doesn't start with PMID so that it doesn't
+    # screw up the literature clients
+    if pmid.startswith('PMID'):
+        pmid = pmid[4:]
+    # First, check S3:
+    (ft_content_s3, ft_content_type_s3) = get_full_text(pmid)
+    # The abstract is on S3 but there is no full text; if we're not forcing
+    # fulltext lookup, then we're done
+    if ft_content_type_s3 == 'abstract' and not force_fulltext_lookup:
+        return (ft_content_s3, ft_content_type_s3)
+    # If there's nothing (even an abstract on S3), or if there's an abstract
+    # and we're forcing fulltext lookup, do the lookup
+    elif ft_content_type_s3 is None or \
+            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup):
+        # Try to retrieve from literature client
+        logger.info("PMID%s: getting content using literature client" % pmid)
+        (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
+        assert ft_content_type in ('pmc_oa_xml', 'elsevier_xml',
+                                   'abstract', None)
+        # If we tried to get the full text and didn't even get the abstract,
+        # then there was probably a problem with the web service or the DOI
+        if ft_content_type is None:
+            return (None, None)
+        # If we got the abstract, and we already had the abstract on S3, then
+        # do nothing
+        elif ft_content_type == 'abstract' and ft_content_type_s3 == 'abstract':
+            logger.info("PMID%s: found abstract but already had it on " \
+                        "S3; skipping" % pmid)
+            return (ft_content, ft_content_type)
+        # If we got the abstract, and we had nothing on S3, then upload
+        elif ft_content_type == 'abstract' and ft_content_type_s3 is None:
+            logger.info("PMID%s: found abstract, uploading to S3" % pmid)
+            put_abstract(pmid, ft_content)
+        # We got a full text (or something other than None or abstract...)
+        else:
+            logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
+            put_full_text(pmid, ft_content, full_text_type=ft_content_type)
+            return (ft_content, ft_content_type)
+    # Some form of full text is already on S3
+    else:
+        # TODO
+        # In future, could check for abstract even if full text is found, and
+        # upload it just to have it
+        return (ft_content_s3, ft_content_type_s3)
+
+
 def get_gz_object(key):
     try:
         gz_obj = client.get_object(Bucket=bucket_name, Key=key)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('get_full_text: no object found for key %s' %
-                        key)
+            logger.debug('key %s not in S3' % key)
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
@@ -86,8 +136,8 @@ def get_full_text(pmid):
     if len(ft_objs) > 0:
         ft_keys = [ft_obj.key for ft_obj in ft_objs]
         # Look for full texts in order of desirability
-        for content_type in ('pmc_oa_xml', 'pmc_auth_xml', 'pmc_oa_txt',
-                             'txt'):
+        for content_type in ('pmc_oa_xml', 'pmc_auth_xml', 'elsevier_xml',
+                             'pmc_oa_txt', 'txt'):
             ft_key = ft_prefix + content_type
             # We don't have this type of full text, move on
             if ft_key not in ft_keys:
@@ -96,33 +146,33 @@ def get_full_text(pmid):
             else:
                 content = get_gz_object(ft_key)
                 if content:
-                    logger.info('Found %s for %s' % (content_type, pmid))
+                    logger.info('%s: found %s on S3' % (pmid, content_type))
                     return (content, content_type)
                 else:
-                    logger.info('Error getting %s for %s' %
-                                (content_type, pmid))
+                    logger.info('%s: error getting %s' %
+                                (pmid, content_type))
                     return (None, None)
         # If we've gotten here, it means there were full text keys not
         # included in the above
-        logger.info('Unrecognized full text key %s for %s' %
+        logger.error('Unrecognized full text key %s for %s' %
                     (ft_keys, pmid))
         return (None, None)
     else:
-        logger.info('No full texts found for %s, trying abstract' % pmid)
+        logger.debug('%s: no full texts found on S3, trying abstract' % pmid)
         abstract_key = get_pmid_key(pmid) + '/abstract'
         abstract = get_gz_object(abstract_key)
         if abstract is None:
-            logger.info('No abstract found for %s' % pmid)
+            logger.info('%s: no full text or abstract found on S3' % pmid)
             return (None, None)
         else:
-            logger.info('Found abstract for %s' % pmid)
+            logger.info('%s: found abstract on S3' % pmid)
             return (abstract, 'abstract')
 
 
 def put_full_text(pmid, text, full_text_type='pmc_oa_xml'):
     pmid = check_pmid(pmid)
     xml_key = prefix + pmid + '/fulltext/' + full_text_type
-    xml_gz = gzip_string(text, '%s.nxml' % pmid)
+    xml_gz = gzip_string(text, '%s.nxml' % pmid) # Encodes to UTF-8
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 

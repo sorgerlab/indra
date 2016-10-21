@@ -73,7 +73,7 @@ def get_xml(pmc_id):
     # Submit the request
     res = requests.get(pmc_url, params)
     if not res.status_code == 200:
-        logger.warning("Couldn't download PMC%d" % pmc_id)
+        logger.warning("Couldn't download %s" % pmc_id)
         return None
     # Read the bytestream
     xml_bytes = res.content

@@ -8,15 +8,16 @@ import subprocess
 import glob
 import json
 import logging
-from indra.literature import pmc_client, s3_client, get_full_text
+from indra.literature import pmc_client, s3_client, get_full_text, \
+                             elsevier_client
 
 if __name__ == '__main__':
 
     cleanup = False
     verbose = True
-    path_to_reach = '/pmc/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-assembly-1.3.2-SNAPSHOT.jar'
-    reach_version = '1.3.2'
+    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    reach_version = '1.3.3'
     force_read = True
 
     # Check the arguments
@@ -83,8 +84,10 @@ if __name__ == '__main__':
     num_pmc_oa_xml = 0
     num_pmc_auth_xml = 0
     num_txt = 0
+    num_elsevier_xml = 0
     num_abstract = 0
     num_not_found = 0
+    num_elsevier_xml_fail = 0
     # Keep a map of the content type we've downloaded for each PMID
     text_sources = {}
     for pmid in pmids_to_read:
@@ -126,6 +129,15 @@ if __name__ == '__main__':
             num_txt += 1
             text_sources[full_pmid] = 'pmc_oa_txt'
             content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+        elif content_type == 'elsevier_xml':
+            content = elsevier_client.extract_text(content)
+            if content is None:
+                logger.info("%s: Couldn't get text from Elsevier XML" % pmid)
+                num_elsevier_xml_fail += 1
+                continue
+            num_elsevier_xml += 1
+            text_sources[full_pmid] = 'elsevier_xml'
+            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
         elif content_type == 'txt':
             num_txt += 1
             text_sources[full_pmid] = 'txt'
@@ -144,10 +156,14 @@ if __name__ == '__main__':
             # The XML string is Unicode
             enc = content.encode('utf-8')
             f.write(enc)
-    logger.info('Found content PMIDs: (%d pmc_oa_xml, %d pmc_auth_xml, '
-                '%d txt (incl. Elsevier), %d abstract, %d no content' %
-                (num_pmc_oa_xml, num_pmc_auth_xml, num_txt, num_abstract,
-                 num_not_found))
+    logger.info('Found content PMIDs:')
+    logger.info('%d pmc_oa_xml' % num_pmc_oa_xml)
+    logger.info('%d pmc_auth_xml' % num_pmc_auth_xml)
+    logger.info('%d elsevier_xml' % num_elsevier_xml)
+    logger.info('%d elsevier_xml with no full text' % num_elsevier_xml_fail)
+    logger.info('%d txt (incl. some Elsevier)' % num_txt)
+    logger.info('%d abstract' % num_abstract)
+    logger.info('%d no content' % num_not_found)
 
     # Create the REACH configuration file
     conf_file_text = """
@@ -196,7 +212,7 @@ if __name__ == '__main__':
 
     # this log file gets overwritten every time ReachCLI is executed
     # so you should copy it if you want to keep it around
-    logFile = {base_dir}/log.txt
+    #logFile = {base_dir}/log.txt
 
     # grounding configuration
     grounding: {{
@@ -217,7 +233,12 @@ if __name__ == '__main__':
     # ReadPapers
     ReadPapers.papersDir = src/test/resources/inputs/nxml/
     ReadPapers.serializedPapers = mentions.ser
-    """.format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
+
+    logging {{
+      # defines project-wide logging level
+      loglevel = INFO
+      logfile = {base_dir}/reach.log
+    }}""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
     # Write the configuration file to the temp directory
@@ -233,7 +254,7 @@ if __name__ == '__main__':
             logger.info(line)
     (p_out, p_err) = p.communicate()
     if p.returncode:
-        raise Exception(p_out + '\n' + p_err)
+        raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
 
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes

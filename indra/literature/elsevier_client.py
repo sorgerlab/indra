@@ -53,16 +53,19 @@ def download_article(doi):
     params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
     res = requests.get(url, params)
     if not res.status_code == 200:
-        logger.error('Could not download article %s' % doi)
+        logger.error('Could not download article %s: status code %d' %
+                     (doi, res.status_code))
         return None
-    # Parse the content from the stream and then return the tree
-    xml_tree = ET.XML(res.content, parser=UTB())
-    return xml_tree
+    # Return the XML content as a unicode string, assuming UTF-8 encoding
+    return res.content.decode('utf-8')
 
 
 def get_abstract(doi):
     """Get the abstract of an article from Elsevier."""
-    xml_tree = download_article(doi)
+    xml_string = download_article(doi)
+    assert isinstance(xml_string, str)
+    # Build XML ElementTree
+    xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
     if xml_tree is None:
         return None
     coredata = xml_tree.find('article:coredata', elsevier_ns)
@@ -77,41 +80,52 @@ def get_article(doi, output='txt'):
     text, while 'xml' simply takes the tag containing the body of the article
     and returns it as is . In the latter case, downstream code needs to be
     able to interpret Elsever's XML format. """
-    xml_tree = download_article(doi)
-    if xml_tree is None:
+    xml_string = download_article(doi)
+    text = extract_text(xml_string)
+    return text
+
+
+def extract_text(xml_string):
+    if xml_string is None:
         return None
+    assert isinstance(xml_string, str)
+    # Build XML ElementTree
+    xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
+    # Look for full text element
     full_text = xml_tree.find('article:originalText', elsevier_ns)
     if full_text is None:
-        logger.info('Could not find full text for %s.' % doi)
+        logger.info('Could not find full text element article:originalText')
         return None
+    # Look for main body
     main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
                                elsevier_ns)
     if main_body is None:
+        logger.info("Could not find main body element "
+                    "xocs:doc/xocs:serial-item/ja:article/ja:body")
         return None
-    if output == 'xml':
-        return main_body
-    elif output == 'txt':
-        sections = main_body.findall('common:sections/common:section',
-                                     elsevier_ns)
-        full_txt = ''
-        for s in sections:
-            # Paragraphs that are directly under the section
-            pars = s.findall('common:para', elsevier_ns)
-            # Paragraphs that are under a section within the section
-            pars += s.findall('common:section/common:para', elsevier_ns)
-            for p in pars:
-                # Get the initial string inside the paragraph
-                if p.text is not None:
-                    full_txt += p.text
-                # When there are tags inside the paragraph (for instance
-                # references), we need to take those child elements one by one
-                # and get the corresponding tail strings and join these. 
-                full_txt += ''.join([c.tail if c.tail is not None 
-                                     else '' for c in p.getchildren()])
-                full_txt += '\n'
-    else:
-        logger.error('Unknown output format %s.' % output)
+    # Get content sections
+    sections = main_body.findall('common:sections/common:section',
+                                 elsevier_ns)
+    if len(sections) == 0:
+        logger.info("Found no sections in main body")
         return None
+    # Concatenate the section content
+    full_txt = ''
+    for s in sections:
+        # Paragraphs that are directly under the section
+        pars = s.findall('common:para', elsevier_ns)
+        # Paragraphs that are under a section within the section
+        pars += s.findall('common:section/common:para', elsevier_ns)
+        for p in pars:
+            # Get the initial string inside the paragraph
+            if p.text is not None:
+                full_txt += p.text
+            # When there are tags inside the paragraph (for instance
+            # references), we need to take those child elements one by one
+            # and get the corresponding tail strings and join these. 
+            full_txt += ''.join([c.tail if c.tail is not None 
+                                 else '' for c in p.getchildren()])
+            full_txt += '\n'
     return full_txt
 
 
