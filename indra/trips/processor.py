@@ -136,12 +136,6 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
-            affected_name = self._get_name_by_id(affected_id)
-            if affected_name is None:
-                logger.debug(
-                    'Skipping activation with missing affected agent')
-                continue
-
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
                 logger.debug(
