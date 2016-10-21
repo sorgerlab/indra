@@ -35,3 +35,4 @@ Vemurafenib leads to the deactivation of MAPK1.
 EGFR autophosphorylates itself.
 EGFR autophosphorylates itself on Y1234.
 EGFR bound to EGFR transphosphorylates itself.
+TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.

@@ -414,3 +414,10 @@ def test_37():
     assert(st.enz.bound_conditions)
     assert_evidence(st)
 
+def test_38():
+    sentence = 'TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.'
+    tp = process_sentence_xml(sentence)
+    assert(len(tp.statements) == 5)
+    for st in tp.statements:
+        assert(isinstance(st, Activation))
+
