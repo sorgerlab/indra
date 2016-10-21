@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from indra import trips
 from indra.assemblers import PysbAssembler
+from indra.util.plot_formatting import *
 from pysb import Observable, Parameter
 from pysb.integrate import Solver
 
@@ -63,13 +64,14 @@ def run_model(model):
     ts = np.linspace(0, sim_hours*3600, sim_hours*60)
     solver = Solver(model, ts)
     solver.run()
-    plt.figure()
+    plt.figure(figsize=(2,2), dpi=300)
+    set_fig_params()
     plt.plot(ts, solver.yobs['P53_active'], 'r')
     plt.xticks([])
     plt.xlabel('Time (a.u.)', fontsize=15)
     plt.ylabel('Active p53')
     plt.yticks([])
-    plt.savefig(model_name + '.png')
+    plt.savefig(model_name + '.pdf')
     return ts, solver
 
 if __name__ == '__main__':
