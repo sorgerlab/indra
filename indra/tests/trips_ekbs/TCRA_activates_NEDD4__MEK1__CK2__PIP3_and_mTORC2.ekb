@@ -1,0 +1,197 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02732_IO-5179606" id="paragraph2731">TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="3138" pid="paragraph2731">TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="48" id="V5179613" lisp="(ONT::EVENT ONT::V5179613 ONT::ACTIVATE :AGENT ONT::V5179609 :AFFECTED ONT::V5179691 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph2731" rule="-RULE40_2_AGENT_AFFECTED" start="0" uttnum="3138">
+		<type>ONT::ACTIVATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="48" id="V5179613" start="0">
+			<type>ONT::ACTIVATE</type>
+			<text>TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2</text>
+		</predicate>
+		<arg1 end="5" id="V5179609" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">TCRA</text>
+		</arg1>
+		<arg2 end="48" id="V5179691" role=":AFFECTED" start="15">
+			<type>ONT::MOLECULAR-PART</type>
+			<text normalization="">NEDD4, MEK1, CK2, PIP3 and mTORC2</text>
+		</arg2>
+		<text>TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2</text>
+	</EVENT>
+	<TERM dbid="NCIT:C26419|HGNC:12027|NCIT:C26426" end="5" id="V5179609" lisp="(ONT::TERM ONT::V5179609 ONT::GENE-PROTEIN :NAME W::TCRA :DRUM ((:DRUM (TERM :ID NCIT::C26419 :NAME &quot;T-cell receptor alpha locus&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;TCRA&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.81776 :MATCHED &quot;TCRA&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C26426 :NAME &quot;T-cell receptor alpha chain&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;TCRA&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.81776 :MATCHED &quot;TCRA&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|12027| :NAME &quot;T-cell receptor alpha locus&quot; :SCORE 0.31429 :MATCHES ((MATCH :SCORE 0.31429 :MATCHED &quot;TCRA&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1) (MATCH :SCORE 0.30347 :MATCHED &quot;TCRA&quot; :STATUS &quot;Previous Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="0" uttnum="3138">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>TCRA</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C26419" match-score="0.82857" matched-name="TCRA" name="T-cell receptor alpha locus">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26426" match-score="0.82857" matched-name="TCRA" name="T-cell receptor alpha chain">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:12027" match-score="0.31429" matched-name="TCRA" name="T-cell receptor alpha locus">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>TCRA</text>
+	</TERM>
+	<TERM end="48" id="V5179691" paragraph="paragraph2731" rule="-LOGICALOP-REF" start="15" uttnum="3138">
+		<type>ONT::MOLECULAR-PART</type>
+		<aggregate operator="AND">
+			<member id="V5179742"/>
+			<member id="V5179686"/>
+			<member id="V5179659"/>
+			<member id="V5179625"/>
+			<member id="V5179646"/>
+		</aggregate>
+		<text normalization="">NEDD4, MEK1, CK2, PIP3 and mTORC2</text>
+	</TERM>
+	<TERM dbid="XFAM:PF00397|UP:P46935|HGNC:7727|XFAM:PF00168|XFAM:PF00632|NCIT:C68584|NCIT:C68583|UP:P46934" end="20" id="V5179625" lisp="(ONT::TERM ONT::V5179625 ONT::GENE-PROTEIN :NAME W::NEDD-4 :DRUM ((:DRUM (TERM :ID HGNC::|7727| :NAME &quot;neural precursor cell expressed, developmentally down-regulated 4, E3 ubiquitin protein ligase&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;NEDD4&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P46934) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C68583 :NAME &quot;NEDD4&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;NEDD4&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C68584 :NAME &quot;E3 ubiquitin-protein ligase NEDD4 protein&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;NEDD-4&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P46934 :NAME &quot;E3 ubiquitin-protein ligase NEDD4&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;NEDD-4&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|7727| XFAM::PF00632 XFAM::PF00397) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P46935 :NAME &quot;E3 ubiquitin-protein ligase NEDD4&quot; :SCORE 0.65709 :MATCHES ((MATCH :SCORE 0.65709 :MATCHED &quot;NEDD-4&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00168 XFAM::PF00632 XFAM::PF00397) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="15" uttnum="3138">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>NEDD-4</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:7727" match-score="1.0" matched-name="NEDD4" name="neural precursor cell expressed, developmentally down-regulated 4, E3 ubiquitin protein ligase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P46934"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C68583" match-score="1.0" matched-name="NEDD4" name="NEDD4">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C68584" match-score="0.82852" matched-name="NEDD-4" name="E3 ubiquitin-protein ligase NEDD4 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:P46934" match-score="0.65709" matched-name="NEDD-4" name="E3 ubiquitin-protein ligase NEDD4">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:7727"/>
+					<xref dbid="XFAM:PF00632"/>
+					<xref dbid="XFAM:PF00397"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P46935" match-score="0.65709" matched-name="NEDD-4" name="E3 ubiquitin-protein ligase NEDD4">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00168"/>
+					<xref dbid="XFAM:PF00632"/>
+					<xref dbid="XFAM:PF00397"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+		</drum-terms>
+		<text>NEDD4</text>
+	</TERM>
+	<TERM dbid="XFAM:PF00069|NCIT:C17808|UP:Q05116|UP:Q02750|HGNC:6840|NCIT:C52823|NCIT:C105947|UP:Q91447" end="26" id="V5179646" lisp="(ONT::TERM ONT::V5179646 ONT::GENE-PROTEIN :NAME W::MEK-1 :DRUM ((:DRUM (TERM :ID NCIT::C105947 :NAME &quot;mitogen-activated protein kinase kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MEK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C52823 :NAME &quot;MAP2K1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MEK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17808 :NAME &quot;MAP2K1 protein&quot; :SCORE 0.82852 :MATCHES ((MATCH :SCORE 0.82852 :MATCHED &quot;MEK-1&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6840| :NAME &quot;mitogen-activated protein kinase kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;MEK1&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::Q02750) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q91447 :NAME &quot;Dual specificity mitogen-activated protein kinase kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;MEK1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q05116 :NAME &quot;Dual specificity mitogen-activated protein kinase kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;MEK1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="22" uttnum="3138">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MEK-1</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C105947" match-score="0.82857" matched-name="MEK1" name="mitogen-activated protein kinase kinase">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52823" match-score="0.82857" matched-name="MEK1" name="MAP2K1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17808" match-score="0.82852" matched-name="MEK-1" name="MAP2K1 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6840" match-score="0.65714" matched-name="MEK1" name="mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q02750"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q91447" match-score="0.65714" matched-name="MEK1" name="Dual specificity mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q05116" match-score="0.65714" matched-name="MEK1" name="Dual specificity mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>MEK1</text>
+	</TERM>
+	<TERM dbid="NCIT:C107559|FA:03101" end="31" id="V5179659" lisp="(ONT::TERM ONT::V5179659 ONT::GENE-PROTEIN :NAME W::CK-2 :DRUM ((:DRUM (TERM :ID FA::|03101| :NAME &quot;CK2 subfamily&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;CK2&quot; :STATUS &quot;ID&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C107559 :NAME &quot;casein kinase 2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;CK2&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="28" uttnum="3138">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>CK-2</name>
+		<drum-terms>
+			<drum-term dbid="FA:03101" match-score="1.0" matched-name="CK2" name="CK2 subfamily">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C107559" match-score="0.82857" matched-name="CK2" name="casein kinase 2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>CK2</text>
+	</TERM>
+	<TERM dbid="CHEBI:16618" end="38" id="V5179686" lisp="(ONT::TERM ONT::V5179686 ONT::MOLECULE :NAME W::PIP-3 :DRUM ((:DRUM (TERM :ID CHEBI::|16618| :NAME &quot;1-phosphatidyl-1D-myo-inositol 3,4,5-trisphosphate&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;PIP3&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="33" uttnum="3138">
+		<type>ONT::MOLECULE</type>
+		<name>PIP-3</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:16618" match-score="0.65714" matched-name="PIP3" name="1-phosphatidyl-1D-myo-inositol 3,4,5-trisphosphate">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>PIP3</text>
+	</TERM>
+	<TERM dbid="NCIT:C96315" end="48" id="V5179742" lisp="(ONT::TERM ONT::V5179742 ONT::PROTEIN :NAME W::MTORC-2 :DRUM ((:DRUM (TERM :ID NCIT::C96315 :NAME &quot;mTORC2&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;mTORC2&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph2731" rule="-SIMPLE-REF" start="42" uttnum="3138">
+		<type>ONT::PROTEIN</type>
+		<name>MTORC-2</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C96315" match-score="1.0" matched-name="mTORC2" name="mTORC2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>mTORC2</text>
+	</TERM>
+</ekb>
