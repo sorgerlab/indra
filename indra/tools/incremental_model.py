@@ -67,7 +67,7 @@ class IncrementalModel(object):
                 for ag in stmt.agent_list():
                     if ag is None:
                         continue
-                    if not ag.db_refs or ag.db_refs.keys() == ['TEXT']:
+                    if not ag.db_refs or list(ag.db_refs.keys()) == ['TEXT']:
                         stmts_to_add.remove(i)
                         break
 

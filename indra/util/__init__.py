@@ -104,7 +104,8 @@ def write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
                                 quotechar=quotechar.encode(encoding),
                                 quoting=quoting, lineterminator=lineterminator)
             for row in rows:
-                csv_writer.writerow([cell.encode(encoding) for cell in row])
+                csv_writer.writerow([unicode(cell).encode(encoding)
+                                     for cell in row])
 
 
 if sys.version_info[0] >= 3:

@@ -152,6 +152,8 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
 
 def agent_texts_with_grounding(stmts):
     allag = all_agents(stmts)
+    # Convert PFAM-DEF lists into tuples so that they are hashable and can
+    # be tabulated with a Counter
     for ag in allag:
         pfam_def = ag.db_refs.get('PFAM-DEF')
         if pfam_def is not None:
@@ -160,9 +162,8 @@ def agent_texts_with_grounding(stmts):
     refs_counter = Counter(refs)
     refs_counter_dict = [(dict(entry[0]), entry[1])
                          for entry in refs_counter.items()]
-    # First, sort by text
-    refs_counter_dict_sorted = \
-            refs_counter_dict.sort(key=lambda x: x[0].get('TEXT'))
+    # First, sort by text so that we can do a groupby
+    refs_counter_dict.sort(key=lambda x: x[0].get('TEXT'))
 
     # Then group by text
     grouped_by_text = []
@@ -173,7 +174,7 @@ def agent_texts_with_grounding(stmts):
         db_ref_list = []
         for db_refs, count in g:
             # Check if TEXT is our only key, indicating no grounding
-            if db_refs.keys() == ['TEXT']:
+            if list(db_refs.keys()) == ['TEXT']:
                 db_ref_list.append((None, None, count))
             # Add any other db_refs (not TEXT)
             for db, id in db_refs.items():
