@@ -99,7 +99,7 @@ class CyJSAssembler(object):
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
-        node = {'data': {'id': node_id, 'name': node_name, 'db_refs': db_refs}}
+        node = {'data': {'id': node_id, 'name': node_name, 'db_refs': db_refs, 'parent':''}}
         self._nodes.append(node)
         self._graph.add_node(node_id)
         return node_id
@@ -139,7 +139,6 @@ class CyJSAssembler(object):
 
     @staticmethod
     def _combine_identicals(identicals):
-
         combined = list(sorted(identicals))
         sets = []
         for a in combined:
@@ -163,54 +162,39 @@ class CyJSAssembler(object):
                 node_groupings.append(x)
         return node_groupings
 
-    def node_sets(self):
+    def _node_sets(self):
         node_dict = self._build_node_dict()
         identicals = self._identical_nodes_lists(node_dict)
         node_groupings = list(sorted(identicals))
-
         while True:
             pre_len = len(node_groupings)
             node_groupings = self._combine_identicals(node_groupings)
             post_len = len(node_groupings)
-
             if pre_len == post_len:
                 break
-
         return node_groupings
 
     def _collect_nodes(self):
-
-
+        node_groupings = self._node_sets()
         new_edges = []
         group_nodes = []
-
         for g in node_groupings:
-
             # make new group node
-
             new_group_node = {'data': {'id': (self._get_new_id()),
                                        'name': ('Group'+str(g)),
                                        'parent': ''}}
-
             self._nodes.append(new_group_node)
-
             # kill old edges, get their info
             # make new edges to group node with old info
-
             kill_edges = []
             kill_nodes = []
-
             source_list = []
             target_list = []
-
             for n in g:
                 edges = self._edges
-
                 for i in range(0, len(self._nodes)):
                     if self._nodes[i]['data']['id'] == n:
                         self._nodes[i]['data']['parent'] = 'Group'+str(g)
-
-
                 for e in edges:
                     if e['data']['target'] == n:
                         if e not in kill_edges:
@@ -221,9 +205,6 @@ class CyJSAssembler(object):
                             new_source_edge['data']['target'] = new_group_node['data']['id']
                             new_source_edge['data']['id'] = self._get_new_id()
                             new_edges.append(new_source_edge)
-
-
-
                     if e['data']['source'] == n:
                         if e not in kill_edges:
                             kill_edges.append(e)
@@ -233,13 +214,10 @@ class CyJSAssembler(object):
                             new_target_edge['data']['source'] = new_group_node['data']['id']
                             new_target_edge['data']['id'] = self._get_new_id()
                             new_edges.append(new_target_edge)
-
             for e in kill_edges:
                 self._edges.remove(e)
-
             for e in new_edges:
                 self._edges.append(e)
-
         return None
 
 
