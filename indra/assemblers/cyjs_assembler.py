@@ -46,7 +46,7 @@ class CyJSAssembler(object):
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
             else:
-                logger.warning('Unhandled statement type: %s' % 
+                logger.warning('Unhandled statement type: %s' %
                                stmt.__class_.__name__)
         # Check for nodes that should be grouped
         #   look at self._graph to find nodes with same incoming and outgoing
@@ -108,6 +108,140 @@ class CyJSAssembler(object):
         ret = self._id_counter
         self._id_counter += 1
         return ret
+
+    def _build_node_dict(self):
+        node_ids = [x['data']['id'] for x in self._nodes]
+        edge_data = [x['data'] for x in self._edges]
+        node_dict = {}
+        for n in node_ids:
+            n_sources = []
+            n_targets = []
+            for e in edge_data:
+                if e['target'] == n:
+                    keys = ['i','polarity','source']
+                    n_sources.append(_limit_dict(e, keys))
+                if e['source'] == n:
+                    keys = ['i','polarity','target']
+                    n_targets.append(_limit_dict(e, keys))
+            node_dict[n] = [n_sources,n_targets]
+        return node_dict
+
+    @staticmethod
+    def _identical_nodes_lists(node_dict):
+        identicals = []
+        for n1 in node_dict:
+            for n2 in node_dict:
+                if n1 != n2:
+                    if node_dict[n1][0] == node_dict[n2][0]:
+                        if node_dict[n1][1] == node_dict[n2][1]:
+                            identicals.append([n1,n2])
+        return identicals
+
+    @staticmethod
+    def _combine_identicals(identicals):
+
+        combined = list(sorted(identicals))
+        sets = []
+        for a in combined:
+            combos = []
+            trigger1 = False
+            for b in combined:
+                if a!=b:
+                    c = list(set(a+b))
+                    if len(c) < (len(a+b)):
+                        trigger1 = True
+                        combos = list(sorted(list(set(combos+c))))
+                    if len([x for x in a if x in b]) > 0:
+                        combos = list(sorted(list(set(combos+c))))
+                        trigger1 = True
+            if trigger1 == False:
+                combos = list(sorted(list(set(combos + a))))
+            sets.append(combos)
+        node_groupings = []
+        for x in sets:
+            if x not in node_groupings:
+                node_groupings.append(x)
+        return node_groupings
+
+    def node_sets(self):
+        node_dict = self._build_node_dict()
+        identicals = self._identical_nodes_lists(node_dict)
+        node_groupings = list(sorted(identicals))
+
+        while True:
+            pre_len = len(node_groupings)
+            node_groupings = self._combine_identicals(node_groupings)
+            post_len = len(node_groupings)
+
+            if pre_len == post_len:
+                break
+
+        return node_groupings
+
+    def _collect_nodes(self):
+
+
+        new_edges = []
+        group_nodes = []
+
+        for g in node_groupings:
+
+            # make new group node
+
+            new_group_node = {'data': {'id': (self._get_new_id()),
+                                       'name': ('Group'+str(g)),
+                                       'parent': ''}}
+
+            self._nodes.append(new_group_node)
+
+            # kill old edges, get their info
+            # make new edges to group node with old info
+
+            kill_edges = []
+            kill_nodes = []
+
+            source_list = []
+            target_list = []
+
+            for n in g:
+                edges = self._edges
+
+                for i in range(0, len(self._nodes)):
+                    if self._nodes[i]['data']['id'] == n:
+                        self._nodes[i]['data']['parent'] = 'Group'+str(g)
+
+
+                for e in edges:
+                    if e['data']['target'] == n:
+                        if e not in kill_edges:
+                            kill_edges.append(e)
+                        if e['data']['source'] not in source_list:
+                            source_list.append(e['data']['source'])
+                            new_source_edge = e
+                            new_source_edge['data']['target'] = new_group_node['data']['id']
+                            new_source_edge['data']['id'] = self._get_new_id()
+                            new_edges.append(new_source_edge)
+
+
+
+                    if e['data']['source'] == n:
+                        if e not in kill_edges:
+                            kill_edges.append(e)
+                        if e['data']['target'] not in target_list:
+                            target_list.append(e['data']['target'])
+                            new_target_edge = e
+                            new_target_edge['data']['source'] = new_group_node['data']['id']
+                            new_target_edge['data']['id'] = self._get_new_id()
+                            new_edges.append(new_target_edge)
+
+            for e in kill_edges:
+                self._edges.remove(e)
+
+            for e in new_edges:
+                self._edges.append(e)
+
+        return None
+
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
@@ -176,3 +310,7 @@ def _get_stmt_type(stmt):
         edge_type = stmt.__class__.__str__()
         edge_polarity = 'none'
     return edge_type, edge_polarity
+
+def _limit_dict(d, keys):
+    d2 = { k: d[k] for k in keys }
+    return d2
