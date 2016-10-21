@@ -1771,7 +1771,19 @@ def synthesis_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 def synthesis_assemble_one_step(stmt, model, agent_set):
+    # We get the monomer pattern just to get a valid monomer
+    # otherwise the patter will be replaced
     obj_pattern = get_monomer_pattern(model, stmt.obj)
+    obj_monomer = obj_pattern.monomer
+    # The obj Monomer needs to be synthesized in its "base" state
+    # but it needs a fully specified monomer pattern
+    sites_dict = {}
+    for site in obj_monomer.sites:
+        if site in obj_monomer.site_states:
+            sites_dict[site] = obj_monomer.site_states[site][0]
+        else:
+            sites_dict[site] = None
+    obj_pattern = obj_monomer(**sites_dict)
     rule_obj_str = get_agent_rule_str(stmt.obj)
 
     if stmt.subj is None:

@@ -601,6 +601,20 @@ def test_synthesis_one_step():
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
 
+def test_synthesis_monomer_pattern():
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    st1 = Activation(subj, 'activity', obj, 'activity', True)
+    st2 = Synthesis(subj, obj)
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1, st2])
+    model = pa.make_model()
+    assert(len(model.rules)==2)
+    assert(len(model.monomers)==2)
+    # This ensures that the synthesized BRAF monomer
+    # is in its fully specified "base" state
+    bng.generate_equations(model)
+
 def test_synthesis_interactions_only():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
