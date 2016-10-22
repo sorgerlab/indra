@@ -96,6 +96,7 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         elif ft_content_type == 'abstract' and ft_content_type_s3 is None:
             logger.info("PMID%s: found abstract, uploading to S3" % pmid)
             put_abstract(pmid, ft_content)
+            return (ft_content, ft_content_type)
         # We got a full text (or something other than None or abstract...)
         else:
             logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
@@ -107,7 +108,8 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         # In future, could check for abstract even if full text is found, and
         # upload it just to have it
         return (ft_content_s3, ft_content_type_s3)
-
+    # We should always return before we get here
+    assert False
 
 def get_gz_object(key):
     try:

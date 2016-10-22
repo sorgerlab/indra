@@ -93,7 +93,8 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
 
     # If it does not have PMC NXML then we attempt to obtain the full-text
     # through the CrossRef Click-through API
-    if doi:
+    #if doi:
+    if False:
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
 
