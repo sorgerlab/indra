@@ -191,14 +191,19 @@ class CyJSAssembler(object):
             source_list = []
             target_list = []
             for n in g:
-                edges = self._edges
+                # point the node to its parent
                 for i in range(0, len(self._nodes)):
                     if self._nodes[i]['data']['id'] == n:
-                        self._nodes[i]['data']['parent'] = 'Group'+str(g)
+                        self._nodes[i]['data']['parent'] = new_group_node['data']['id']
+                # begin edge operations
+                edges = self._edges
                 for e in edges:
+                    # look at edges pointing at n
                     if e['data']['target'] == n:
+                        # if these edges are not already accounted for add to list
                         if e not in kill_edges:
                             kill_edges.append(e)
+                        # if source node not accounted for add to list
                         if e['data']['source'] not in source_list:
                             source_list.append(e['data']['source'])
                             new_source_edge = e
