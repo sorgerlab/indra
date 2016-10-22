@@ -6,6 +6,7 @@ try:
     import pygraphviz as pgv
 except ImportError:
     pass
+from multiprocessing import Pool
 import itertools
 from copy import copy, deepcopy
 from indra.statements import *
@@ -216,6 +217,8 @@ class Preassembler(object):
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
+            logger.info('Preassembling %s (%s)' %
+                        (stmt_type, len(stmts_this_type)))
             no_comp_stmts = []
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
@@ -242,18 +245,16 @@ class Preassembler(object):
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
+            logger.info('Preassembling %d components' % (len(stmt_by_comp)))
+
             # This is the preassembly within each component ID group
-            for comp, stmts in stmt_by_comp.items():
-                comparisons = list(itertools.combinations(stmts, 2))
-                for stmt1, stmt2 in comparisons:
-                    if stmt1.refinement_of(stmt2, self.hierarchies):
-                        if stmt2 not in stmt1.supported_by:
-                            stmt1.supported_by.append(stmt2)
-                            stmt2.supports.append(stmt1)
-                    elif stmt2.refinement_of(stmt1, self.hierarchies):
-                        if stmt1 not in stmt2.supported_by:
-                            stmt2.supported_by.append(stmt1)
-                            stmt1.supports.append(stmt2)
+            for stmts in stmt_by_comp.values():
+                if len(stmts) > 100:
+                    logger.info('Component of size %d' % len(stmts))
+                self._combine_related_in_component(stmts)
+
+            logger.info('Preassembling %s no component statements' % 
+                        (len(no_comp_stmts)))
 
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
@@ -270,22 +271,28 @@ class Preassembler(object):
                             no_comp_keys[key] = [stmt]
             # This is the preassembly within each Statement group
             # keyed by the Agent entity_matches_key
-            for _, stmts in no_comp_keys.items():
-                comparisons = list(itertools.combinations(stmts, 2))
-                for stmt1, stmt2 in comparisons:
-                    if stmt1.refinement_of(stmt2, self.hierarchies):
-                        if stmt2 not in stmt1.supported_by:
-                            stmt1.supported_by.append(stmt2)
-                            stmt2.supports.append(stmt1)
-                    elif stmt2.refinement_of(stmt1, self.hierarchies):
-                        if stmt1 not in stmt2.supported_by:
-                            stmt2.supported_by.append(stmt1)
-                            stmt1.supports.append(stmt2)
+            # This is the preassembly within each component ID group
+            for key, stmts in no_comp_keys.items():
+                if len(stmts) > 100:
+                    logger.info('Component of size %d' % len(stmts))
+                self._combine_related_in_component(stmts)
+
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             related_stmts += toplevel_stmts
 
         self.related_stmts = related_stmts
         return self.related_stmts
+
+    def _combine_related_in_component(self, stmts):
+        for stmt1, stmt2 in itertools.combinations(stmts, 2):
+            if (stmt2 not in stmt1.supported_by) and \
+                stmt1.refinement_of(stmt2, self.hierarchies):
+                stmt1.supported_by.append(stmt2)
+                stmt2.supports.append(stmt1)
+            elif (stmt1 not in stmt2.supported_by) and \
+                stmt2.refinement_of(stmt1, self.hierarchies):
+                stmt2.supported_by.append(stmt1)
+                stmt1.supports.append(stmt2)
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.

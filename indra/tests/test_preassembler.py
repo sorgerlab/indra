@@ -9,17 +9,6 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              ActiveForm, MutCondition, Complex, Translocation
 from indra.preassembler.hierarchy_manager import hierarchies
 
-"""
-def test_from_text():
-    sentences = ['Src phosphorylates Ras, bound to GTP, at Tyr32.', 
-                'Src phosphorylates NRAS at Tyr32.',
-                'Src phosphorylates NRAS that is bound to GTP.']
-    pa = Preassembler()
-    for s in sentences:
-        tp = trips.process_text(s)
-        pa.add_statements(tp.statements)
-"""
-
 def test_duplicates():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
