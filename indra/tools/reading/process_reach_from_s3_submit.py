@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import str, dict
 import sys
 import subprocess
 
@@ -6,7 +8,7 @@ if __name__ == '__main__':
     usage = 'Usage: %s pmid_list tmp_dir num_nodes num_cores_per_node' % \
              sys.argv[0]
     if len(sys.argv) != 5:
-        print usage
+        print(usage)
         sys.exit()
 
     # The file containing the PMIDs to read
@@ -27,7 +29,7 @@ if __name__ == '__main__':
             pass
     num_pmids = i + 1
     if num_pmids == 0:
-        print "No papers in PMID list."
+        print("No papers in PMID list.")
         sys.exit(1)
 
     # Next, submit jobs for processing the REACH statements with INDRA. These
@@ -46,5 +48,5 @@ if __name__ == '__main__':
         cmd_list = ['qsub', '-b', 'y', '-V', '-cwd',
                     '-N', PROCESS_JOB_NAME, 'python', 'process_reach_from_s3.py',
                     pmid_list, str(core_start_ix), str(core_end_ix)]
-        print ' '.join(cmd_list)
-        #subprocess.call(cmd_list)
+        print(' '.join(cmd_list))
+        subprocess.call(cmd_list)
