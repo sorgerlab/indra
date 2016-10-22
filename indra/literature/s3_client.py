@@ -201,7 +201,7 @@ def get_reach_metadata(pmid):
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key' % reach_key)
+            logger.info('No REACH output found on S3 for key %s' % reach_key)
             reach_version = None
         # If there was some other kind of problem, re-raise the exception
         else:
@@ -227,7 +227,7 @@ def get_reach_json_str(pmid):
         reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key' % reach_key)
+            logger.info('No REACH output found on S3 for key %s' % reach_key)
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
