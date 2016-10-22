@@ -93,7 +93,7 @@ if __name__ == '__main__':
     for pmid in pmids_to_read:
         full_pmid = s3_client.check_pmid(pmid)
         # Look for the full text
-        (content, content_type) = s3_client.get_full_text(pmid)
+        (content, content_type) = s3_client.get_upload_content(pmid)
         # If we don't find the XML on S3, look for it using the PMC client
         #if xml:
         #    num_found_s3 += 1
