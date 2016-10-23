@@ -300,6 +300,19 @@ def test_translocation():
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
 
+def test_grounding_aggregation():
+    braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
+    braf2 = Agent('BRAF', db_refs={'TEXT': 'BRAF'})
+    braf3 = Agent('BRAF', db_refs={'TEXT': 'Braf', 'UP': 'P15056'})
+    st1 = Phosphorylation(None, braf1)
+    st2 = Phosphorylation(None, braf2)
+    st3 = Phosphorylation(None, braf3)
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    unique_stmts = pa.combine_duplicates()
+    assert(len(unique_stmts) == 1)
+    assert(unique_stmts[0].sub.db_refs.get('HGNC') == '1097')
+    assert(unique_stmts[0].sub.db_refs.get('UP') == 'P15056')
+
 def test_render_stmt_graph():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
