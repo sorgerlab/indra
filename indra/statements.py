@@ -291,8 +291,7 @@ class Agent(object):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
-        name_str = self.name
-        key = (name_str,
+        key = (self.entity_matches_key(),
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
                self.active, self.location,
