@@ -209,21 +209,19 @@ class Preassembler(object):
         unique_stmts = deepcopy(self.unique_stmts)
         eh = self.hierarchies['entity']
         # Make a list of Statement types
-        stmts_by_type = {}
+        stmts_by_type = collections.defaultdict(lambda: [])
         for stmt in unique_stmts:
-            try:
-                stmts_by_type[type(stmt)].append(stmt)
-            except KeyError:
-                stmts_by_type[type(stmt)] = [stmt]
+            stmts_by_type[type(stmt)].append(stmt)
+
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
             no_comp_stmts = []
+            stmt_by_group = collections.defaultdict(lambda: [])
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
-            stmt_by_comp = collections.defaultdict(lambda: [])
             for stmt in stmts_this_type:
                 any_component = False
                 for i, a in enumerate(stmt.agent_list()):
@@ -237,13 +235,20 @@ class Preassembler(object):
                         component = eh.components.get(uri)
                         if component is not None:
                             any_component = True
+                            # For Complexes we cannot optimize by argument
+                            # position because all permutations need to be
+                            # considered
                             if stmt_type == Complex:
                                 key = component
+                            # For Activation, we can separate positive/negative
+                            # activation into separate groups
                             elif stmt_type == Activation:
                                 key = (i, component, stmt.is_activation)
+                            # For all other statements, we separate groups by
+                            # the argument position of the Agent
                             else:
                                 key = (i, component)
-                            stmt_by_comp[key].append(stmt)
+                            stmt_by_group[key].append(stmt)
                 # If the Statement has no Agent belonging to any component
                 # then we put it in a special group
                 if not any_component:
@@ -256,28 +261,35 @@ class Preassembler(object):
             for stmt in no_comp_stmts:
                 for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
+                        # For Complexes we cannot optimize by argument
+                        # position because all permutations need to be
+                        # considered
                         if stmt_type == Complex:
                             key = a.entity_matches_key()
+                        # For Activation, we can separate positive/negative
+                        # activation into separate groups
                         elif stmt_type == Activation:
                             key = (i, a.entity_matches_key(),
                                    stmt.is_activation)
+                        # For all other statements, we separate groups by
+                        # the argument position of the Agent
                         else:
                             key = (i, a.entity_matches_key())
-                        stmt_by_comp[key].append(stmt)
+                        stmt_by_group[key].append(stmt)
 
-            logger.info('Preassembling %d components' % (len(stmt_by_comp)))
-
+            logger.info('Preassembling %d components' % (len(stmt_by_group)))
             # This is the preassembly within each Statement group
-            for key, stmts in stmt_by_comp.items():
-                self._combine_related_in_component(stmts)
+            for key, stmts in stmt_by_group.items():
+                self._combine_related_in_group(stmts)
 
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
+            logger.info('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
         self.related_stmts = related_stmts
         return self.related_stmts
 
-    def _combine_related_in_component(self, stmts):
+    def _combine_related_in_group(self, stmts):
         for stmt1, stmt2 in itertools.combinations(stmts, 2):
             if (stmt2 not in stmt1.supported_by) and \
                 stmt1.refinement_of(stmt2, self.hierarchies):
