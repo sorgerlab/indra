@@ -31,11 +31,13 @@ class GroundingMapper(object):
                 agent_text = agent.db_refs.get('TEXT')
                 # Look this string up in the grounding map
                 # If not in the map, leave agent alone and continue
-                if agent_text not in self.gm.keys():
-                    pass
+                try:
+                    map_db_refs = self.gm[agent_text]
+                except KeyError:
+                    continue
                 # If it's in the map but it maps to None, then filter out
                 # this statement by skipping it
-                elif self.gm.get(agent_text) is None:
+                if map_db_refs is None:
                     logger.debug("Skipping %s" % agent_text)
                     skip_stmt = True
                 # If it has a value that's not None, map it and add it
