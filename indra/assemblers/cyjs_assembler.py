@@ -174,10 +174,40 @@ class CyJSAssembler(object):
                 break
         return node_groupings
 
+    def _refactor_model_edges(self,kill_edges,new_edges):
+        for e in kill_edges:
+            self._edges.remove(e)
+        for e in new_edges:
+            # check if edge already exists
+            # check if edge source or target are contained in a parent
+            # if source or target in parent edit edge
+            # nodes may only point within their container
+            source = e['data']['source']
+            target = e['data']['target']
+            source_node = [x for x in self._nodes if x['data']['id'] == source][0]
+            target_node = [x for x in self._nodes if x['data']['id'] == target][0]
+            # because this checks if parent != ''
+            # we cannot have parents within parents
+            # not sure if cytoscape would even draw this
+            if source_node['data']['parent'] != '':
+                e['data']['source'] = source_node['data']['parent']
+            if target_node['data']['parent'] != '':
+                e['data']['target'] = target_node['data']['parent']
+            keys = ['i','polarity','source','target']
+            edges = [{'data':_limit_dict(x['data'], keys)} for x in self._edges]
+            if e not in edges:
+                e['data']['id'] = self._get_new_id()
+                self._edges.append(e)
+        return None
+
+
     def _collect_nodes(self):
         node_groupings = self._node_sets()
         new_edges = []
         group_nodes = []
+        kill_edges = []
+        keys = ['i','polarity','source','target']
+
         for g in node_groupings:
             # make new group node
             new_group_node = {'data': {'id': (self._get_new_id()),
@@ -186,8 +216,6 @@ class CyJSAssembler(object):
             self._nodes.append(new_group_node)
             # kill old edges, get their info
             # make new edges to group node with old info
-            kill_edges = []
-            kill_nodes = []
             source_list = []
             target_list = []
             for n in g:
@@ -206,24 +234,21 @@ class CyJSAssembler(object):
                         # if source node not accounted for add to list
                         if e['data']['source'] not in source_list:
                             source_list.append(e['data']['source'])
-                            new_source_edge = e
+                            new_source_edge = {}
+                            new_source_edge['data'] = _limit_dict(e['data'],keys)
                             new_source_edge['data']['target'] = new_group_node['data']['id']
-                            new_source_edge['data']['id'] = self._get_new_id()
                             new_edges.append(new_source_edge)
                     if e['data']['source'] == n:
                         if e not in kill_edges:
                             kill_edges.append(e)
                         if e['data']['target'] not in target_list:
                             target_list.append(e['data']['target'])
-                            new_target_edge = e
+                            new_target_edge = {}
+                            new_target_edge['data'] = _limit_dict(e['data'],keys)
                             new_target_edge['data']['source'] = new_group_node['data']['id']
-                            new_target_edge['data']['id'] = self._get_new_id()
                             new_edges.append(new_target_edge)
-            for e in kill_edges:
-                self._edges.remove(e)
-            for e in new_edges:
-                self._edges.append(e)
-        return None
+        self._refactor_model_edges(kill_edges, new_edges)
+        return kill_edges,new_edges
 
 
 def _get_db_refs(agent):
