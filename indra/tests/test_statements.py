@@ -399,90 +399,119 @@ def test_matches_complex():
 
 # Entity matching between statements ----------------------------------------
 def test_agent_entity_match():
-    """Agents match only on name."""
+    """Agents match on name and grounding."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     assert(nras1.entity_matches(nras2))
-    assert unicode_strs((nras1, nras2))
+    assert(not nras1.entity_matches(nras3))
+    assert unicode_strs((nras1, nras2, nras3))
 
 def test_entities_match_mod():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = Phosphorylation(src, nras1, 'tyrosine', '32',
                           evidence=Evidence(text='foo'))
     st2 = Phosphorylation(src, nras2,
                           evidence=Evidence(text='bar'))
+    st3 = Phosphorylation(src, nras3,
+                          evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    assert(not st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_selfmod():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = Autophosphorylation(nras1, 'tyrosine', '32',
                           evidence=Evidence(text='foo'))
     st2 = Autophosphorylation(nras2,
                           evidence=Evidence(text='bar'))
+    st3 = Autophosphorylation(nras3,
+                          evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    assert(not st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_activation():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = Activation(src, 'Kinase1',
                      nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
     st2 = Activation(src, 'Kinase2',
                      nras2, 'gtpbound2', True,
                      evidence=Evidence(text='bar'))
+    st3 = Activation(src, 'Kinase2',
+                     nras3, 'gtpbound2', True,
+                     evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    assert(not st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_activitymod():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     mc1 = ModCondition('phosphorylation', 'tyrosine', '32')
     mc2 = ModCondition('phosphorylation')
     nras1 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': '7989'})
-    nras2 = Agent('NRAS', mods=[mc2], db_refs={'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', mods=[mc2], db_refs={'HGNC': '7989'})
+    nras3 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': 'dummy'})
     st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
     st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
+    st3 = ActiveForm(nras3, 'gtpbound1', False,
+                     evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    assert(not st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_activatingsub():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     mc1 = MutCondition('12', 'G', 'D')
     mc2 = MutCondition('61', 'Q', 'L')
     nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': 'dummy'})
     st1 = ActiveForm(nras1, 'gtpbound1', True,
                      evidence=Evidence(text='foo'))
     st2 = ActiveForm(nras2, 'gtpbound2', False,
                      evidence=Evidence(text='bar'))
+    st3 = ActiveForm(nras3, 'gtpbound1', False,
+                     evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    assert(not st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_rasgef():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     sos1 = Agent('SOS1', db_refs = {'HGNC': 'sos1'})
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
+    sos3 = Agent('SOS1', db_refs = {'HGNC': 'sos1'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
+    nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = RasGef(sos1, 'gtpbound1', nras1,
                  evidence=Evidence(text='foo'))
     st2 = RasGef(sos2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
-    assert(st1.entities_match(st2))
-    assert unicode_strs((st1, st2))
+    st3 = RasGef(sos1, 'gtpbound2', nras2,
+                 evidence=Evidence(text='bar'))
+    assert(not st1.entities_match(st2))
+    assert(not st2.entities_match(st3))
+    assert(st1.entities_match(st3))
+    assert unicode_strs((st1, st2, st3))
 
 def test_entities_match_rasgap():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     rasa1 = Agent('RASA1', db_refs = {'HGNC': 'rasa1'})
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
@@ -491,10 +520,10 @@ def test_entities_match_rasgap():
                  evidence=Evidence(text='foo'))
     st2 = RasGap(rasa2, 'gtpbound2', nras2,
                  evidence=Evidence(text='bar'))
-    assert(st1.entities_match(st2))
+    assert(not st1.entities_match(st2))
 
 def test_entities_match_complex():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only, entities match on name and grounding."""
     ksr1 = Agent('KSR1', db_refs = {'HGNC': 'ksr1'})
     ksr2 = Agent('KSR1', db_refs = {'HGNC': 'ksr2'})
     braf1 = Agent('BRAF', db_refs = {'HGNC': 'braf1'})
@@ -504,9 +533,9 @@ def test_entities_match_complex():
     st1 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='foo'))
     st2 = Complex([ksr2, braf2, map2k2], evidence=Evidence(text='bar'))
     st3 = Complex([braf2, map2k2, ksr2], evidence=Evidence(text='baz'))
-    assert(st1.entities_match(st2))
+    assert(not st1.entities_match(st2))
     assert(st2.entities_match(st3))
-    assert(st3.entities_match(st1))
+    assert(not st3.entities_match(st1))
 
 def test_agent_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
