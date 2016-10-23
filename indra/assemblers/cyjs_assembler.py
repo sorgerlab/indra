@@ -174,10 +174,12 @@ class CyJSAssembler(object):
                 break
         return node_groupings
 
-    def _refactor_model_edges(self,kill_edges,new_edges):
-        for e in kill_edges:
-            self._edges.remove(e)
-        for e in new_edges:
+    def _update_model_edges(self):
+        edges = list(self._edges)
+        keys = ['i','polarity','source','target']
+        for e in edges:
+            # drop the id from each edge before comparing 
+            e['data'] = _limit_dict(e['data'], keys)
             # check if edge already exists
             # check if edge source or target are contained in a parent
             # if source or target in parent edit edge
@@ -190,22 +192,23 @@ class CyJSAssembler(object):
             # we cannot have parents within parents
             # not sure if cytoscape would even draw this
             if source_node['data']['parent'] != '':
+                if e in self._edges:
+                    self._edges.remove(e)
                 e['data']['source'] = source_node['data']['parent']
             if target_node['data']['parent'] != '':
+                if e in self._edges:
+                    self._edges.remove(e)
                 e['data']['target'] = target_node['data']['parent']
-            keys = ['i','polarity','source','target']
-            edges = [{'data':_limit_dict(x['data'], keys)} for x in self._edges]
-            if e not in edges:
-                e['data']['id'] = self._get_new_id()
+
+            edges_no_id = [{'data':_limit_dict(x['data'],keys)} for x in self._edges]
+            if e not in edges_no_id:
+                e['id'] = self._get_new_id()
                 self._edges.append(e)
         return None
 
 
     def _collect_nodes(self):
         node_groupings = self._node_sets()
-        new_edges = []
-        group_nodes = []
-        kill_edges = []
         keys = ['i','polarity','source','target']
         for g in node_groupings:
             # make new group node
@@ -222,31 +225,7 @@ class CyJSAssembler(object):
                 for i in range(0, len(self._nodes)):
                     if self._nodes[i]['data']['id'] == n:
                         self._nodes[i]['data']['parent'] = new_group_node['data']['id']
-                # begin edge operations
-                edges = self._edges
-                for e in edges:
-                    # look at edges pointing at n
-                    if e['data']['target'] == n:
-                        # if these edges are not already accounted for add to list
-                        if e not in kill_edges:
-                            kill_edges.append(e)
-                        # if source node not accounted for add to list
-                        if e['data']['source'] not in source_list:
-                            source_list.append(e['data']['source'])
-                            new_source_edge = {}
-                            new_source_edge['data'] = _limit_dict(e['data'],keys)
-                            new_source_edge['data']['target'] = new_group_node['data']['id']
-                            new_edges.append(new_source_edge)
-                    if e['data']['source'] == n:
-                        if e not in kill_edges:
-                            kill_edges.append(e)
-                        if e['data']['target'] not in target_list:
-                            target_list.append(e['data']['target'])
-                            new_target_edge = {}
-                            new_target_edge['data'] = _limit_dict(e['data'],keys)
-                            new_target_edge['data']['source'] = new_group_node['data']['id']
-                            new_edges.append(new_target_edge)
-        self._refactor_model_edges(kill_edges, new_edges)
+        self._update_model_edges()
         return None
 
 def _get_db_refs(agent):
