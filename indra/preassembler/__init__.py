@@ -1,14 +1,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
+import time
 import logging
+import itertools
+import collections
+from copy import copy, deepcopy
 try:
     import pygraphviz as pgv
 except ImportError:
     pass
-from multiprocessing import Pool
-import itertools
-from copy import copy, deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
 
@@ -218,14 +219,14 @@ class Preassembler(object):
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
-                        (stmt_type, len(stmts_this_type)))
+                        (stmt_type.__name__, len(stmts_this_type)))
             no_comp_stmts = []
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
-            stmt_by_comp = {}
+            stmt_by_comp = collections.defaultdict(lambda: [])
             for stmt in stmts_this_type:
                 any_component = False
-                for a in stmt.agent_list():
+                for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
                         a_ns, a_id = a.get_grounding()
                         if a_ns is None or a_id is None:
@@ -236,45 +237,38 @@ class Preassembler(object):
                         component = eh.components.get(uri)
                         if component is not None:
                             any_component = True
-                            try:
-                                stmt_by_comp[component].append(stmt)
-                            except KeyError:
-                                stmt_by_comp[component] = [stmt]
+                            if stmt_type == Complex:
+                                key = component
+                            elif stmt_type == Activation:
+                                key = (i, component, stmt.is_activation)
+                            else:
+                                key = (i, component)
+                            stmt_by_comp[key].append(stmt)
                 # If the Statement has no Agent belonging to any component
                 # then we put it in a special group
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
-            logger.info('Preassembling %d components' % (len(stmt_by_comp)))
-
-            # This is the preassembly within each component ID group
-            for stmts in stmt_by_comp.values():
-                if len(stmts) > 100:
-                    logger.info('Component of size %d' % len(stmts))
-                self._combine_related_in_component(stmts)
-
-            logger.info('Preassembling %s no component statements' % 
-                        (len(no_comp_stmts)))
-
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
             # We take all the Agent entity_matches_key()-s and group
             # Statements based on this key
-            no_comp_keys = {}
             for stmt in no_comp_stmts:
-                for a in stmt.agent_list():
+                for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
-                        key = a.entity_matches_key()
-                        try:
-                            no_comp_keys[key].append(stmt)
-                        except KeyError:
-                            no_comp_keys[key] = [stmt]
+                        if stmt_type == Complex:
+                            key = a.entity_matches_key()
+                        elif stmt_type == Activation:
+                            key = (i, a.entity_matches_key(),
+                                   stmt.is_activation)
+                        else:
+                            key = (i, a.entity_matches_key())
+                        stmt_by_comp[key].append(stmt)
+
+            logger.info('Preassembling %d components' % (len(stmt_by_comp)))
+
             # This is the preassembly within each Statement group
-            # keyed by the Agent entity_matches_key
-            # This is the preassembly within each component ID group
-            for key, stmts in no_comp_keys.items():
-                if len(stmts) > 100:
-                    logger.info('Component of size %d' % len(stmts))
+            for key, stmts in stmt_by_comp.items():
                 self._combine_related_in_component(stmts)
 
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
