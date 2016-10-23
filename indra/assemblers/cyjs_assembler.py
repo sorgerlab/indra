@@ -207,7 +207,6 @@ class CyJSAssembler(object):
         group_nodes = []
         kill_edges = []
         keys = ['i','polarity','source','target']
-
         for g in node_groupings:
             # make new group node
             new_group_node = {'data': {'id': (self._get_new_id()),
@@ -248,8 +247,7 @@ class CyJSAssembler(object):
                             new_target_edge['data']['source'] = new_group_node['data']['id']
                             new_edges.append(new_target_edge)
         self._refactor_model_edges(kill_edges, new_edges)
-        return kill_edges,new_edges
-
+        return None
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
