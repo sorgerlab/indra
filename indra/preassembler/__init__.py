@@ -130,6 +130,13 @@ class Preassembler(object):
                     continue
                 agent.db_refs[k] = v
 
+        def get_relevant_agents(stmt):
+            relevant_agents = [a for a in stmt.agent_list() if a is not None]
+            if isinstance(stmt, Complex):
+                relevant_agents = sorted(relevant_agents,
+                                         key=lambda x: x.matches_key())
+            return relevant_agents
+
         for key, duplicates in itertools.groupby(st,
                                                  key=lambda x: x.matches_key()):
             duplicates = list(duplicates)
@@ -141,10 +148,8 @@ class Preassembler(object):
             # information from all the other statements that are discarded.
             agent_lists = [[] for a in duplicates[0].agent_list()
                            if a is not None]
-            for stmt_ix, stmt in enumerate(duplicates):
-                relevant_agents = [a for a in stmt.agent_list()
-                                   if a is not None]
-                for agent_ix, agent in enumerate(relevant_agents):
+            for stmt in duplicates:
+                for agent_ix, agent in enumerate(get_relevant_agents(stmt)):
                     agent_lists[agent_ix].append(agent)
             db_refs_list = [aggregate_dbrefs(agents) for agents in agent_lists]
 
@@ -154,9 +159,7 @@ class Preassembler(object):
                 if stmt_ix == 0:
                     # This is where the aggregated grounding information
                     # is applied to the first_stmt's agents.
-                    relevant_agents = [a for a in stmt.agent_list()
-                                      if a is not None]
-                    for agent_ix, agent in enumerate(relevant_agents):
+                    for agent_ix, agent in enumerate(get_relevant_agents(stmt)):
                         apply_dbrefs(agent, db_refs_list[agent_ix])
                     first_stmt = stmt
                 else:
