@@ -306,8 +306,10 @@ class Agent(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
-        return self.name
-
+        db_refs_key = 'BE:%s;UP:%s;HGNC:%s' % (self.db_refs.get('BE'),
+                                               self.db_refs.get('UP'),
+                                               self.db_refs.get('HGNC'))
+        return str((self.name, db_refs_key))
     # Function to get the namespace to look in
     def get_grounding(self):
         be = self.db_refs.get('BE')

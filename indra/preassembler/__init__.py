@@ -113,54 +113,12 @@ class Preassembler(object):
         # Sort the statements in place by matches_key()
         st.sort(key=lambda x: x.matches_key())
 
-        def aggregate_dbrefs(agents):
-            db_refs = {}
-            for a in agents:
-                for k, v in a.db_refs.items():
-                    # Note how here the key is always overwritten. If several
-                    # agents in the list have different values for the same
-                    # key, one of them will be assigned here and the others
-                    # will be lost
-                    db_refs[k] = v
-            return db_refs
-
-        def apply_dbrefs(agent, db_refs):
-            for k, v in db_refs.items():
-                if k == 'TEXT':
-                    continue
-                agent.db_refs[k] = v
-
-        def get_relevant_agents(stmt):
-            relevant_agents = [a for a in stmt.agent_list() if a is not None]
-            if isinstance(stmt, Complex):
-                relevant_agents = sorted(relevant_agents,
-                                         key=lambda x: x.matches_key())
-            return relevant_agents
-
         for key, duplicates in itertools.groupby(st,
                                                  key=lambda x: x.matches_key()):
-            duplicates = list(duplicates)
-            # Here we assume that irrespective of grounding, two Agents
-            # are identical if their name and other properties match.
-            # But if they are identical then that implies that their grounding
-            # should also be identical. Consequently, the single first
-            # statement that gets preserved should aggregate all grounding
-            # information from all the other statements that are discarded.
-            agent_lists = [[] for a in duplicates[0].agent_list()
-                           if a is not None]
-            for stmt in duplicates:
-                for agent_ix, agent in enumerate(get_relevant_agents(stmt)):
-                    agent_lists[agent_ix].append(agent)
-            db_refs_list = [aggregate_dbrefs(agents) for agents in agent_lists]
-
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix == 0:
-                    # This is where the aggregated grounding information
-                    # is applied to the first_stmt's agents.
-                    for agent_ix, agent in enumerate(get_relevant_agents(stmt)):
-                        apply_dbrefs(agent, db_refs_list[agent_ix])
                     first_stmt = stmt
                 else:
                     first_stmt.evidence += stmt.evidence
