@@ -65,6 +65,9 @@ def get_uniprot_id(hgnc_id):
         The UniProt ID corresponding to the given HGNC ID.
     """
     uniprot_id = uniprot_ids.get(hgnc_id)
+    # The lookup can yield an empty string. Instead return None.
+    if not uniprot_id:
+        return None
     return uniprot_id
 
 def get_entrez_id(hgnc_id):
@@ -82,6 +85,9 @@ def get_entrez_id(hgnc_id):
         The Entrez ID corresponding to the given HGNC ID.
     """
     entrez_id = entrez_ids.get(hgnc_id)
+    # The lookup can yield an empty string. Instead return None.
+    if not entrez_id:
+        return None
     return entrez_id
 
 def get_hgnc_from_entrez(entrez_id):
