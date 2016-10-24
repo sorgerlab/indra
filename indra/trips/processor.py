@@ -897,11 +897,12 @@ class TripsProcessor(object):
             db_refs['UP'] = standard_up_id
         # If there is no HGNC entry but there is a UP entry we look at that
         elif up_id:
-            if up_client.is_human(protein_id):
-                gene_name = up_client.get_hgnc_id(up_id)
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                if hgnc_id is not None:
-                    db_refs['HGNC'] = hgnc_id
+            if up_client.is_human(up_id):
+                gene_name = up_client.get_gene_name(up_id)
+                if gene_name:
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_refs['HGNC'] = hgnc_id
         return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
