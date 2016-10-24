@@ -871,6 +871,8 @@ class TripsProcessor(object):
             sorted_db_refs = sorted(scores.items(),
                                     key=operator.itemgetter(1),
                                     reverse=True)
+            # Here the matches are sorted and so each dbname will only
+            # have its highest scoring entry added to db_refs
             for dbid_str, _ in sorted_db_refs:
                 dbname, dbid = dbid_str.split(':')
                 if not db_refs.get(dbname):
@@ -879,11 +881,27 @@ class TripsProcessor(object):
                         db_refs[dbname] = dbids
                     else:
                         db_refs[dbname] = dbid
+        # This is for backwards compatibility with EKBs without drum-term
+        # scored entries. It is important to keep for Bioagents compatibility.
         else:
             dbids = dbid.split('|')
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
+        # Here we fix some grounding standardization issues
+        hgnc_id = db_refs.get('HGNC')
+        up_id = db_refs.get('UP')
+        # If there is an HGNC entry, we prioritize that
+        if hgnc_id:
+            standard_up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            db_refs['UP'] = standard_up_id
+        # If there is no HGNC entry but there is a UP entry we look at that
+        elif up_id:
+            if up_client.is_human(protein_id):
+                gene_name = up_client.get_hgnc_id(up_id)
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if hgnc_id is not None:
+                    db_refs['HGNC'] = hgnc_id
         return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
