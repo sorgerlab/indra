@@ -171,3 +171,20 @@ def test_all_hgnc_ids():
             hgnc_id = bp._get_hgnc_id(bpe)
             if hgnc_id is not None:
                 assert(unicode_strs(hgnc_id))
+
+def test_all_protein_db_refs():
+    unmapped_uniprot_ids = []
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            db_refs = bpc.BiopaxProcessor._get_db_refs(bpe)
+            uniprot_id = db_refs.get('UP')
+            hgnc_id = db_refs.get('HGNC')
+            if uniprot_id:
+                if uniprot_client.is_human(uniprot_id):
+                    if not hgnc_id:
+                        unmapped_uniprot_ids.append(uniprot_id)
+    unmapped_uniprot_ids = sorted(list(set(unmapped_uniprot_ids)))
+    # The number of unmapped entries should not increase
+    # so we check for an upper limit here
+    assert(len(unmapped_uniprot_ids) < 95)

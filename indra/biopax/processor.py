@@ -641,8 +641,16 @@ class BiopaxProcessor(object):
         if _is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
+            # Handle missing HGNC/UP ids
+            if hgnc_id and not uniprot_id:
+                uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if uniprot_id and not hgnc_id:
+                if uniprot_client.is_human(uniprot_id):
+                    hgnc_name = uniprot_client.get_gene_name(uniprot_id, False)
+                    if hgnc_name:
+                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
             if hgnc_id is not None:
-                db_refs['HGNC'] = str(hgnc_id)
+                db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
         elif _is_small_molecule(bpe):
