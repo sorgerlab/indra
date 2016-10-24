@@ -9,7 +9,6 @@ def assert_if_hgnc_then_up(st):
     agents = st.agent_list()
     for a in agents:
         if a is not None:
-            print(a.db_refs)
             up_id = a.db_refs.get('UP')
             hgnc_id = a.db_refs.get('HGNC')
             if hgnc_id and not up_id:
@@ -530,3 +529,10 @@ def test_39():
     tp = process_sentence_xml(sentence)
     # For now, this should not return any statements
     assert(not tp.statements)
+
+def test_40():
+    sentence = 'Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element.'
+    tp = process_sentence_xml(sentence)
+    # All events here are static so nothing should be extracted
+    assert(not tp.statements)
+
