@@ -15,17 +15,6 @@ model_path = os.path.dirname(os.path.abspath(__file__)) +\
 bp = biopax.process_owl(model_path)
 uri_prefix = 'http://purl.org/pc2/7/'
 
-'''
-def test_hyphenated_agent_names():
-    """This query should contain reactions with agent names RAF1-BRAF,
-    which need to be canonicalized to Python-compatible names before
-    model assembly."""
-    bp.get_phosphorylation()
-    pa = PysbAssembler()
-    pa.add_statements(bp.statements)
-    pa.make_model()
-'''
-
 def test_paxtools_autoclass():
     autoclass('org.biopax.paxtools.impl.level3.ProteinImpl')
 
@@ -119,18 +108,18 @@ def test_uniprot_id_pe():
     bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117886.3')
     bpe = cast(bpc._bp('Protein'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(['Q15303'] == ids)
+    assert('Q15303' == ids)
 
 def test_uniprot_id_er():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc._bp('ProteinReference'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(['Q15303'] == ids)
+    assert('Q15303' == ids)
 
 def test_get_hgnc_id():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc._bp('ProteinReference'), bpe)
-    hgnc_id = bp._get_hgnc_id(bpe) 
+    hgnc_id = bp._get_hgnc_id(bpe)
     assert(hgnc_id == 3432)
 
 def test_get_hgnc_name():

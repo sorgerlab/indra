@@ -698,22 +698,45 @@ class BiopaxProcessor(object):
         # This usually corresponds to the primary accession ID and one or more
         # secondary accession IDs (these IDs are from deprecated entries that
         # have been merged into the primary.
+        def map_to_up_primary(ids):
+            primary_ids = []
+            for up_id in ids:
+                if not uniprot_client.is_secondary(up_id):
+                    primary_ids.append(up_id)
+                else:
+                    primary_id = uniprot_client.get_primary_id(up_id)
+                    primary_ids.append(primary_id)
+            # If there are no primary IDs, we return None
+            if not primary_ids:
+                return None
+            # Try to get primary IDs if there are 
+            # If there is more than one primary ID then we return the first one
+            if len(primary_ids) > 1:
+                logger.info('More than one primary id: %s' %
+                            ','.join(primary_ids))
+            return primary_ids[0]
+
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
             return None
         uri = bp_entref.getUri()
+        # First try to match the URI itself to see if it is a UniProt
+        # reference.
         m = re.match('http://identifiers.org/uniprot/([A-Z0-9]+)', uri)
         if m:
-            uniprot_ids = [m.groups()[0]]
-            return uniprot_ids
+            uniprot_id = m.groups()[0]
+            primary_id = map_to_up_primary([uniprot_id])
+            return primary_id
+        # If the URI is not a UniProt reference then we look through xrefs
+        import ipdb; ipdb.set_trace()
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if
                         x.getDb().lower() == 'uniprot knowledgebase']
-        uniprot_ids = [r.getId() for r in uniprot_refs]
-        if not uniprot_ids:
+        if not uniprot_refs:
             return None
-        else:
-            return uniprot_ids
+        uniprot_ids = [r.getId() for r in uniprot_refs]
+        primary_id = map_to_up_primary(uniprot_ids)
+        return primary_id
 
     @staticmethod
     def _get_chebi_id(bpe):
