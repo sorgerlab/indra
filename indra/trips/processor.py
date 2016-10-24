@@ -722,8 +722,19 @@ class TripsProcessor(object):
                 logger.debug('Skipping aggregate with operator %s.' % op)
                 return None
             member_ids = [m.attrib.get('id') for m in members]
-            member_agents = [self._get_agent_by_id(m, event_id)
-                             for m in member_ids]
+            member_agents = []
+            for member_id in member_ids:
+                agent = self._get_agent_by_id(member_id, event_id)
+                if agent is None:
+                    logger.warning('Could not extract term %s.' %
+                                   member_id)
+                    continue
+                member_agents.append(agent)
+            # Handle case where the individual member extraction fails
+            # to make sure we don't end up with None Agent arguments
+            # in Statements
+            if not member_agents:
+                return None
             return member_agents
 
         db_refs = self._get_db_refs(term)

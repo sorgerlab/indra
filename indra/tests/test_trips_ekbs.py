@@ -525,3 +525,8 @@ def test_38():
         # no corresponding protein
         #assert_if_hgnc_then_up(st)
 
+def test_39():
+    sentence = 'FGF2 activates PI3K/Akt/mTOR and MAPK/ERK.'
+    tp = process_sentence_xml(sentence)
+    # For now, this should not return any statements
+    assert(not tp.statements)
