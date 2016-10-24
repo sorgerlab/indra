@@ -4,7 +4,7 @@ import os
 from indra.java_vm import autoclass, cast
 from indra import biopax
 import indra.biopax.processor as bpc
-from indra.assemblers import PysbAssembler
+from indra.databases import uniprot_client
 from indra.util import unicode_strs
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -155,3 +155,10 @@ def test_pathsfromto():
     pre.combine_related()
     assert unicode_strs(pre.unique_stmts)
 
+def test_all_uniprot_ids():
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            uniprot_id = bp._get_uniprot_id(bpe)
+            if uniprot_id is not None:
+                assert(not uniprot_client.is_secondary(uniprot_id))

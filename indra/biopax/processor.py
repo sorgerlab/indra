@@ -703,9 +703,9 @@ class BiopaxProcessor(object):
             for up_id in ids:
                 if not uniprot_client.is_secondary(up_id):
                     primary_ids.append(up_id)
-                else:
-                    primary_id = uniprot_client.get_primary_id(up_id)
-                    primary_ids.append(primary_id)
+                    continue
+                primary_id = uniprot_client.get_primary_id(up_id)
+                primary_ids.append(primary_id)
             # If there are no primary IDs, we return None
             if not primary_ids:
                 return None
@@ -728,7 +728,6 @@ class BiopaxProcessor(object):
             primary_id = map_to_up_primary([uniprot_id])
             return primary_id
         # If the URI is not a UniProt reference then we look through xrefs
-        import ipdb; ipdb.set_trace()
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if
                         x.getDb().lower() == 'uniprot knowledgebase']
