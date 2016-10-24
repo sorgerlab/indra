@@ -655,7 +655,7 @@ class BiopaxProcessor(object):
                 db_refs['CHEBI'] = chebi_id
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             if hgnc_id is not None:
-                db_refs['HGNC'] = str(hgnc_id)
+                db_refs['HGNC'] = hgnc_id
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
@@ -686,10 +686,6 @@ class BiopaxProcessor(object):
                         bpe.getModelInterface().getName())
             name = bpe.getDisplayName()
 
-        # Canonicalize name
-        name = re.sub(r'[^\w]', '_', name)
-        if re.match('[0-9]', name) is not None:
-            name = 'p' + name
         return name
 
     @staticmethod
@@ -714,7 +710,9 @@ class BiopaxProcessor(object):
             if len(primary_ids) > 1:
                 logger.info('More than one primary id: %s' %
                             ','.join(primary_ids))
-            return primary_ids[0]
+            # Make sure it's unicode
+            primary_id = str(primary_ids[0])
+            return primary_id
 
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
@@ -769,25 +767,20 @@ class BiopaxProcessor(object):
             return None
         xrefs = bp_entref.getXref().toArray()
         hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
-        #hgnc_symbols = [x.getId() for x in xrefs if\
-        #                x.getDb().lower() == 'hgnc symbol']
         hgnc_id = None
         for hgnc_id in hgnc_ids:
             m = re.match('([0-9]+)', hgnc_id)
             if m:
-                hgnc_id = int(m.groups()[0])
+                hgnc_id = str(m.groups()[0])
             else:
                 m = re.match('hgnc:([0-9]+)', hgnc_id.lower())
                 if m:
-                    hgnc_id = int(m.groups()[0])
-        #if hgnc_id is None:
-        #    print [r.getId() for r in hgnc_ids]
-        #    print [r.getId() for r in hgnc_symbols]
+                    hgnc_id = str(m.groups()[0])
         return hgnc_id
 
     @staticmethod
     def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(str(hgnc_id))
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         return hgnc_name
 
     @staticmethod

@@ -120,10 +120,10 @@ def test_get_hgnc_id():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc._bp('ProteinReference'), bpe)
     hgnc_id = bp._get_hgnc_id(bpe)
-    assert(hgnc_id == 3432)
+    assert(hgnc_id == '3432')
 
 def test_get_hgnc_name():
-    hgnc_name = bp._get_hgnc_name(3432)
+    hgnc_name = bp._get_hgnc_name('3432')
     assert(hgnc_name == 'ERBB4')
 
 def test_get_mod_feature():
@@ -162,3 +162,12 @@ def test_all_uniprot_ids():
             uniprot_id = bp._get_uniprot_id(bpe)
             if uniprot_id is not None:
                 assert(not uniprot_client.is_secondary(uniprot_id))
+                assert(unicode_strs(uniprot_id))
+
+def test_all_hgnc_ids():
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            hgnc_id = bp._get_hgnc_id(bpe)
+            if hgnc_id is not None:
+                assert(unicode_strs(hgnc_id))
