@@ -4,7 +4,7 @@ import os
 from indra.java_vm import autoclass, cast
 from indra import biopax
 import indra.biopax.processor as bpc
-from indra.assemblers import PysbAssembler
+from indra.databases import uniprot_client
 from indra.util import unicode_strs
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -14,17 +14,6 @@ model_path = os.path.dirname(os.path.abspath(__file__)) +\
 
 bp = biopax.process_owl(model_path)
 uri_prefix = 'http://purl.org/pc2/7/'
-
-'''
-def test_hyphenated_agent_names():
-    """This query should contain reactions with agent names RAF1-BRAF,
-    which need to be canonicalized to Python-compatible names before
-    model assembly."""
-    bp.get_phosphorylation()
-    pa = PysbAssembler()
-    pa.add_statements(bp.statements)
-    pa.make_model()
-'''
 
 def test_paxtools_autoclass():
     autoclass('org.biopax.paxtools.impl.level3.ProteinImpl')
@@ -119,22 +108,22 @@ def test_uniprot_id_pe():
     bpe = bp.model.getByID('http://identifiers.org/reactome/REACT_117886.3')
     bpe = cast(bpc._bp('Protein'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(['Q15303'] == ids)
+    assert('Q15303' == ids)
 
 def test_uniprot_id_er():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc._bp('ProteinReference'), bpe)
     ids = bp._get_uniprot_id(bpe)
-    assert(['Q15303'] == ids)
+    assert('Q15303' == ids)
 
 def test_get_hgnc_id():
     bpe = bp.model.getByID('http://identifiers.org/uniprot/Q15303')
     bpe = cast(bpc._bp('ProteinReference'), bpe)
-    hgnc_id = bp._get_hgnc_id(bpe) 
-    assert(hgnc_id == 3432)
+    hgnc_id = bp._get_hgnc_id(bpe)
+    assert(hgnc_id == '3432')
 
 def test_get_hgnc_name():
-    hgnc_name = bp._get_hgnc_name(3432)
+    hgnc_name = bp._get_hgnc_name('3432')
     assert(hgnc_name == 'ERBB4')
 
 def test_get_mod_feature():
@@ -166,3 +155,36 @@ def test_pathsfromto():
     pre.combine_related()
     assert unicode_strs(pre.unique_stmts)
 
+def test_all_uniprot_ids():
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            uniprot_id = bp._get_uniprot_id(bpe)
+            if uniprot_id is not None:
+                assert(not uniprot_client.is_secondary(uniprot_id))
+                assert(unicode_strs(uniprot_id))
+
+def test_all_hgnc_ids():
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            hgnc_id = bp._get_hgnc_id(bpe)
+            if hgnc_id is not None:
+                assert(unicode_strs(hgnc_id))
+
+def test_all_protein_db_refs():
+    unmapped_uniprot_ids = []
+    for obj in bp.model.getObjects().toArray():
+        bpe = bpc._cast_biopax_element(obj)
+        if bpc._is_protein(bpe):
+            db_refs = bpc.BiopaxProcessor._get_db_refs(bpe)
+            uniprot_id = db_refs.get('UP')
+            hgnc_id = db_refs.get('HGNC')
+            if uniprot_id:
+                if uniprot_client.is_human(uniprot_id):
+                    if not hgnc_id:
+                        unmapped_uniprot_ids.append(uniprot_id)
+    unmapped_uniprot_ids = sorted(list(set(unmapped_uniprot_ids)))
+    # The number of unmapped entries should not increase
+    # so we check for an upper limit here
+    assert(len(unmapped_uniprot_ids) < 95)

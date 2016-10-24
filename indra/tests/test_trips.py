@@ -9,6 +9,25 @@ from indra.util import unicode_strs
 
 test_small_file = join(dirname(__file__), 'test_small.xml')
 
+def assert_if_hgnc_then_up(st):
+    agents = st.agent_list()
+    for a in agents:
+        if a is not None:
+            print(a.db_refs)
+            up_id = a.db_refs.get('UP')
+            hgnc_id = a.db_refs.get('HGNC')
+            if hgnc_id and not up_id:
+                assert(False)
+
+def assert_grounding_value_or_none(st):
+    agents = st.agent_list()
+    for a in agents:
+        if a is not None:
+            for k, v in a.db_refs.items():
+                # Make sure there are no empty strings/lists
+                if not v:
+                    assert(v is None)
+
 def test_phosphorylation():
     tp = trips.process_text('BRAF phosphorylates MEK1 at Ser222.')
     assert(len(tp.statements) == 1)
@@ -17,6 +36,8 @@ def test_phosphorylation():
     assert(st.residue == 'S')
     assert(st.position == '222')
     assert(st.evidence)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert unicode_strs((tp, st))
 
 def test_mod_cond():
@@ -31,6 +52,8 @@ def test_mod_cond():
     assert(len(mek.mods) == 1)
     assert(mek.mods[0].mod_type == 'ubiquitination')
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_ubiquitination():
@@ -39,6 +62,8 @@ def test_ubiquitination():
     st = tp.statements[0]
     assert(isinstance(st, ist.Ubiquitination))
     assert unicode_strs((tp, st))
+    assert_grounding_value_or_none(st)
+    assert_if_hgnc_then_up(st)
     assert(st.evidence)
 
 def test_phosphorylation_noresidue():
@@ -49,6 +74,8 @@ def test_phosphorylation_noresidue():
     assert(st.residue is None)
     assert(st.position is None)
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_phosphorylation_nosite():
@@ -59,6 +86,8 @@ def test_phosphorylation_nosite():
     assert(st.residue == 'S')
     assert(st.position is None)
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_actmod():
@@ -71,6 +100,8 @@ def test_actmod():
     assert(st.agent.mods[0].residue == 'S')
     assert(st.agent.mods[0].position == '222')
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_actmods():
@@ -84,6 +115,8 @@ def test_actmods():
     assert(st.agent.mods[0].residue == 'S')
     assert(st.agent.mods[0].position == '218')
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_actform_bound():
@@ -95,6 +128,8 @@ def test_actform_bound():
     assert(st.agent.bound_conditions[0].agent.name == 'GTP')
     assert(st.agent.bound_conditions[0].is_bound == True)
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_actform_muts():
@@ -107,6 +142,8 @@ def test_actform_muts():
     assert(st.agent.mutations[0].residue_to == 'E')
     assert(st.agent.mutations[0].position == '600')
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_actmods2():
@@ -119,6 +156,8 @@ def test_actmods2():
     assert(braf.mods[0].residue == 'S')
     assert(braf.mods[0].position == '536')
     assert unicode_strs((tp, st, braf))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_synthesis():
@@ -129,6 +168,8 @@ def test_synthesis():
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
 
 def test_degradation():
@@ -139,16 +180,6 @@ def test_degradation():
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert(st.evidence)
-
-def test_trips_processor_online():
-    """Smoke test to see if imports and executes without error. Doesn't
-    check for correctness of parse or of assembled model."""
-    tp = trips.process_text('BRAF phosphorylates MEK1 at Ser222.')
-    assert unicode_strs(tp)
-
-def test_trips_processor_offline():
-    """Smoke test to see if imports and executes without error. Doesn't
-    check for correctness of parse or of assembled model."""
-    tp = trips.process_xml(open(test_small_file).read())
-    assert unicode_strs(tp)

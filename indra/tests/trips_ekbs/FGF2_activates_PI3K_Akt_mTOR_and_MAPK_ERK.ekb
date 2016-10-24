@@ -1,0 +1,304 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT03315_IO-5505721" id="paragraph3314">FGF2 activates PI3K/Akt/mTOR and MAPK/ERK.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="3770" pid="paragraph3314">FGF2 activates PI3K/Akt/mTOR and MAPK/ERK.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="41" id="V5506295" lisp="(ONT::EVENT ONT::V5506295 ONT::ACTIVATE :AGENT ONT::V5506290 :AFFECTED ONT::V5506301 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph3314" rule="-RULE40_2_AGENT_AFFECTED" start="0" uttnum="3770">
+		<type>ONT::ACTIVATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="41" id="V5506295" start="0">
+			<type>ONT::ACTIVATE</type>
+			<text>FGF2 activates PI3K/Akt/mTOR and MAPK/ERK</text>
+		</predicate>
+		<arg1 end="5" id="V5506290" role=":AGENT" start="0">
+			<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+			<text normalization="">FGF2</text>
+		</arg1>
+		<arg2 end="41" id="V5506301" role=":AFFECTED" start="15">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">PI3K/Akt/mTOR and MAPK/ERK</text>
+		</arg2>
+		<text>FGF2 activates PI3K/Akt/mTOR and MAPK/ERK</text>
+	</EVENT>
+	<TERM dbid="NCIT:C1674" end="5" id="V5506290" lisp="(ONT::TERM ONT::V5506290 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::FGF-2 :DRUM ((:DRUM (TERM :ID NCIT::C1674 :NAME &quot;therapeutic fibroblast growth factor-2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;FGF2&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)))))" paragraph="paragraph3314" rule="-SIMPLE-REF" start="0" uttnum="3770">
+		<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+		<name>FGF-2</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C1674" match-score="0.82857" matched-name="FGF2" name="therapeutic fibroblast growth factor-2">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>FGF2</text>
+	</TERM>
+	<TERM end="41" id="V5506301" paragraph="paragraph3314" rule="-LOGICALOP-REF" start="15" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<aggregate operator="AND">
+			<member id="V5506322"/>
+			<member id="V5506316"/>
+		</aggregate>
+		<text normalization="">PI3K/Akt/mTOR and MAPK/ERK</text>
+	</TERM>
+	<TERM end="29" id="V5506322" paragraph="paragraph3314" rule="-EXPLICIT-REF-SEQ0B" start="15" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<components>
+			<component id="V5505852"/>
+			<component id="V5505809"/>
+			<component id="V5505817"/>
+		</components>
+		<text normalization="">PI3K/Akt/mTOR</text>
+	</TERM>
+	<TERM end="41" id="V5506316" paragraph="paragraph3314" rule="-EXPLICIT-REF-SEQ0B" start="33" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<components>
+			<component id="V5505724"/>
+			<component id="V5505732"/>
+		</components>
+		<text normalization="">MAPK/ERK</text>
+	</TERM>
+	<TERM dbid="XFAM:PF00792|XFAM:PF00454|UP:P54673|XFAM:PF00794|NCIT:C51162|NCIT:C51161|NCIT:C51160|NCIT:C17270|NCIT:C30170|NCIT:C30171|UP:etc|XFAM:PF00613|HGNC:8975|NCIT:C113629|NCIT:C30168|GO:0016303|UP:P42336" end="19" id="V5505809" lisp="(ONT::TERM ONT::V5505809 ONT::GENE-PROTEIN :NAME W::PI-3-K :DRUM ((:DRUM (TERM :ID UP::P54673 :NAME &quot;Phosphatidylinositol 3-kinase 1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;PI3K&quot; :STATUS &quot;RecName: Short&quot; :EXACT 2)) :DBXREFS (XFAM::PF00454 XFAM::PF00792 XFAM::PF00794 XFAM::PF00613) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID GO::|0016303| :NAME &quot;1-phosphatidylinositol-3-kinase activity&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;EXACT synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C51161 :NAME &quot;PIK3CB&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C30170 :NAME &quot;phosphoinositide-3-kinase catalytic beta polypeptide&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C113629 :NAME &quot;PIK3CD&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C30171 :NAME &quot;phosphoinositide-3-kinase catalytic gamma polypeptide&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C51160 :NAME &quot;PIK3CA&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51162 :NAME &quot;PIK3CG&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17270 :NAME &quot;phosphatidylinositol-3 kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C30168 :NAME &quot;phosphoinositide-3-kinase catalytic alpha polypeptide&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PI3K&quot; :STATUS &quot;synonym&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|8975| :NAME &quot;phosphatidylinositol-4,5-bisphosphate 3-kinase catalytic subunit alpha&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;PI3K&quot; :STATUS &quot;Synonym&quot; :EXACT 2)) :DBXREFS (UP::P42336) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::|etc| :SCORE 0.14286 :MATCHES ((MATCH :SCORE 0.14286 :MATCHED &quot;PI3K&quot; :STATUS &quot;fake&quot; :EXACT 2)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3314" rule="-SIMPLE-REF" start="15" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>PI-3-K</name>
+		<drum-terms>
+			<drum-term dbid="UP:P54673" match-score="1.0" matched-name="PI3K" name="Phosphatidylinositol 3-kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00454"/>
+					<xref dbid="XFAM:PF00792"/>
+					<xref dbid="XFAM:PF00794"/>
+					<xref dbid="XFAM:PF00613"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="GO:0016303" match-score="0.82857" matched-name="PI3K" name="1-phosphatidylinositol-3-kinase activity">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C51161" match-score="0.82857" matched-name="PI3K" name="PIK3CB">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C30170" match-score="0.82857" matched-name="PI3K" name="phosphoinositide-3-kinase catalytic beta polypeptide">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C113629" match-score="0.82857" matched-name="PI3K" name="PIK3CD">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C30171" match-score="0.82857" matched-name="PI3K" name="phosphoinositide-3-kinase catalytic gamma polypeptide">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C51160" match-score="0.82857" matched-name="PI3K" name="PIK3CA">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C51162" match-score="0.82857" matched-name="PI3K" name="PIK3CG">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17270" match-score="0.82857" matched-name="PI3K" name="phosphatidylinositol-3 kinase">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C30168" match-score="0.82857" matched-name="PI3K" name="phosphoinositide-3-kinase catalytic alpha polypeptide">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:8975" match-score="0.65714" matched-name="PI3K" name="phosphatidylinositol-4,5-bisphosphate 3-kinase catalytic subunit alpha">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P42336"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:etc" match-score="0.14286" matched-name="PI3K">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>PI3K</text>
+	</TERM>
+	<TERM dbid="HGNC:391|UP:Q8INB9|UP:P31749|XFAM:PF00069|XFAM:PF00169|XFAM:PF00433|NCIT:C41625" end="23" id="V5505817" lisp="(ONT::TERM ONT::V5505817 ONT::GENE-PROTEIN :NAME W::AKT :DRUM ((:DRUM (TERM :ID NCIT::C41625 :NAME &quot;protein kinase B&quot; :SCORE 0.82444 :MATCHES ((MATCH :SCORE 0.82444 :MATCHED &quot;AKT&quot; :STATUS &quot;synonym&quot; :INITIAL-CAP-ALL-CAPS 1) (MATCH :SCORE 0.82444 :MATCHED &quot;akt&quot; :STATUS &quot;synonym&quot; :INITIAL-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|391| :NAME &quot;AKT serine/threonine kinase 1&quot; :SCORE 0.65301 :MATCHES ((MATCH :SCORE 0.65301 :MATCHED &quot;AKT&quot; :STATUS &quot;Synonym&quot; :INITIAL-CAP-ALL-CAPS 1)) :DBXREFS (UP::P31749) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q8INB9 :NAME &quot;RAC serine/threonine-protein kinase&quot; :SCORE 0.65301 :MATCHES ((MATCH :SCORE 0.65301 :MATCHED &quot;akt&quot; :STATUS &quot;AltName: Full&quot; :INITIAL-CAP-NO-CAPS 1)) :DBXREFS (XFAM::PF00169 XFAM::PF00069 XFAM::PF00433) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3314" rule="-SIMPLE-REF" start="20" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>AKT</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C41625" match-score="0.82444" matched-name="AKT" name="protein kinase B">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:391" match-score="0.65301" matched-name="AKT" name="AKT serine/threonine kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P31749"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q8INB9" match-score="0.65301" matched-name="akt" name="RAC serine/threonine-protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00169"/>
+					<xref dbid="XFAM:PF00069"/>
+					<xref dbid="XFAM:PF00433"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>Akt</text>
+	</TERM>
+	<TERM dbid="XFAM:PF02259|XFAM:PF00454|NCIT:C38929|XFAM:PF11865|UP:Q9JLN9|HGNC:3942|UP:P42345|XFAM:PF02260|XFAM:PF08771|UP:P42346" end="29" id="V5505852" lisp="(ONT::TERM ONT::V5505852 ONT::GENE-PROTEIN :NAME W::MTOR :DRUM ((:DRUM (TERM :ID HGNC::|3942| :NAME &quot;mechanistic target of rapamycin&quot; :SCORE 0.99109 :MATCHES ((MATCH :SCORE 0.99109 :MATCHED &quot;MTOR&quot; :STATUS &quot;Approved Symbol&quot; :MIXED-CAPS-ALL-CAPS 1) (MATCH :SCORE 0.98442 :MATCHED &quot;MTOR&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :MIXED-CAPS-ALL-CAPS 1)) :DBXREFS (UP::P42345) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C38929 :NAME &quot;FKBP12-rapamycin complex associated protein-1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;mTOR&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.80822 :MATCHED &quot;mTOR&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :MIXED-CAPS-MIXED-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P42345 :NAME &quot;Serine/threonine-protein kinase mTOR&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1) (MATCH :SCORE 0.63679 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :MIXED-CAPS-MIXED-CAPS 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|3942| XFAM::PF11865 XFAM::PF02259 XFAM::PF02260 XFAM::PF00454 XFAM::PF08771) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q9JLN9 :NAME &quot;Serine/threonine-protein kinase mTOR&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1) (MATCH :SCORE 0.63679 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :MIXED-CAPS-MIXED-CAPS 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF11865 XFAM::PF02259 XFAM::PF02260 XFAM::PF00454 XFAM::PF08771) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P42346 :NAME &quot;Serine/threonine-protein kinase mTOR&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1) (MATCH :SCORE 0.63679 :MATCHED &quot;mTOR&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 1 :DEPLURALIZATION-SCORE 0.8831169 :MIXED-CAPS-MIXED-CAPS 1)) :DBXREFS (XFAM::PF11865 XFAM::PF02259 XFAM::PF02260 XFAM::PF00454 XFAM::PF08771) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3314" rule="-EXPLICIT-REF-SEQ0B-TERM" start="15" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MTOR</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3942" match-score="0.99109" matched-name="MTOR" name="mechanistic target of rapamycin">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P42345"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C38929" match-score="0.82857" matched-name="mTOR" name="FKBP12-rapamycin complex associated protein-1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:P42345" match-score="0.65714" matched-name="mTOR" name="Serine/threonine-protein kinase mTOR">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:3942"/>
+					<xref dbid="XFAM:PF11865"/>
+					<xref dbid="XFAM:PF02259"/>
+					<xref dbid="XFAM:PF02260"/>
+					<xref dbid="XFAM:PF00454"/>
+					<xref dbid="XFAM:PF08771"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:Q9JLN9" match-score="0.65714" matched-name="mTOR" name="Serine/threonine-protein kinase mTOR">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF11865"/>
+					<xref dbid="XFAM:PF02259"/>
+					<xref dbid="XFAM:PF02260"/>
+					<xref dbid="XFAM:PF00454"/>
+					<xref dbid="XFAM:PF08771"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="UP:P42346" match-score="0.65714" matched-name="mTOR" name="Serine/threonine-protein kinase mTOR">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF11865"/>
+					<xref dbid="XFAM:PF02259"/>
+					<xref dbid="XFAM:PF02260"/>
+					<xref dbid="XFAM:PF00454"/>
+					<xref dbid="XFAM:PF08771"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>PI3K/Akt/mTOR</text>
+	</TERM>
+	<TERM dbid="NCIT:C16376|XFAM:PF00069|NCIT:C26360|UP:P27638" end="41" id="V5505724" lisp="(ONT::TERM ONT::V5505724 ONT::GENE-PROTEIN :NAME W::MAPK :DRUM ((:DRUM (TERM :ID UP::P27638 :NAME &quot;Mitogen-activated protein kinase spk1&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MAPK&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;MAPK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph3314" rule="-EXPLICIT-REF-SEQ0B-TERM" start="33" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MAPK</name>
+		<drum-terms>
+			<drum-term dbid="UP:P27638" match-score="1.0" matched-name="MAPK" name="Mitogen-activated protein kinase spk1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.82857" matched-name="MAPK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.82857" matched-name="MAPK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MAPK/ERK</text>
+	</TERM>
+	<TERM dbid="NCIT:C26166|NCIT:C52872|NCIT:C16376|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="41" id="V5505732" lisp="(ONT::TERM ONT::V5505732 ONT::GENE-PROTEIN :NAME W::ERK :DRUM ((:DRUM (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.31429 :MATCHES ((MATCH :SCORE 0.31429 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph3314" rule="-SIMPLE-REF" start="38" uttnum="3770">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C52872" match-score="0.82857" matched-name="ERK" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52164" match-score="0.82857" matched-name="ERK" name="EPHB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.82857" matched-name="ERK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.82857" matched-name="ERK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26166" match-score="0.82857" matched-name="ERK" name="ephrin receptor-ephB2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.65714" matched-name="ERK" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="HGNC:3393" match-score="0.31429" matched-name="ERK" name="EPH receptor B2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P29323"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>ERK</text>
+	</TERM>
+</ekb>

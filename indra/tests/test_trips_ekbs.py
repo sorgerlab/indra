@@ -5,6 +5,26 @@ from indra.statements import *
 
 path_this = os.path.dirname(os.path.abspath(__file__))
 
+def assert_if_hgnc_then_up(st):
+    agents = st.agent_list()
+    for a in agents:
+        if a is not None:
+            print(a.db_refs)
+            up_id = a.db_refs.get('UP')
+            hgnc_id = a.db_refs.get('HGNC')
+            if hgnc_id and not up_id:
+                assert(False)
+
+def assert_grounding_value_or_none(st):
+    agents = st.agent_list()
+    for a in agents:
+        if a is not None:
+            for k, v in a.db_refs.items():
+                # Make sure there are no empty strings/lists
+                if not v:
+                    assert(v is None)
+
+
 def process_sentence_xml(sentence):
     fname = re.sub('[^a-zA-Z0-9]', '_', sentence[:-1]) + '.ekb'
     path = os.path.join(path_this, 'trips_ekbs', fname)
@@ -35,6 +55,8 @@ def test_1():
     st = tp.statements[0]
     assert(isinstance(st, Complex))
     assert(len(st.members) == 2)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_2():
@@ -48,6 +70,8 @@ def test_2():
     e1, e2 = st.members
     assert(e1.bound_conditions[0].is_bound)
     assert(e2.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_3():
@@ -60,6 +84,8 @@ def test_3():
     assert(len(st.members) == 2)
     e, g = st.members
     assert(e.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_4():
@@ -72,6 +98,8 @@ def test_4():
     assert(len(st.members) == 2)
     g, s = st.members
     assert(g.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_5():
@@ -85,6 +113,8 @@ def test_5():
     s, n = st.members
     assert(s.bound_conditions[0].is_bound)
     assert(not n.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_6():
@@ -97,6 +127,8 @@ def test_6():
     assert(len(st.members) == 2)
     n, g = st.members
     assert(n.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_7():
@@ -111,6 +143,8 @@ def test_7():
     assert(len(n.bound_conditions) == 2)
     assert(n.bound_conditions[0].is_bound)
     assert(not n.bound_conditions[1].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_8():
@@ -121,6 +155,8 @@ def test_8():
     st = tp.statements[0]
     assert(isinstance(st, Complex))
     assert(len(st.members) == 2)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_9():
@@ -134,6 +170,8 @@ def test_9():
     assert(st.sub is not None)
     assert(st.enz.mutations)
     assert(not st.enz.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_10():
@@ -146,6 +184,8 @@ def test_10():
     assert(st.enz is not None)
     assert(st.sub is not None)
     assert(not st.sub.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_11():
@@ -158,6 +198,8 @@ def test_11():
     assert(st.agent is not None)
     assert(st.agent.mods[0].mod_type == 'phosphorylation')
     assert(st.agent.mods[0].is_modified)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_12():
@@ -171,6 +213,8 @@ def test_12():
     assert(st.sub is not None)
     assert(st.enz.active == 'activity')
     assert(not st.enz.bound_conditions[0].is_bound)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_13():
@@ -182,77 +226,106 @@ def test_13():
     assert(isinstance(st, Dephosphorylation))
     assert(st.enz is not None)
     assert(st.sub is not None)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
     assert_evidence(st)
 
 def test_14():
     sentence = 'MAP2K1 ubiquitinates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Ubiquitination)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Ubiquitination)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_15():
     sentence = 'MAP2K1 ribosylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Ribosylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Ribosylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
 
 def test_16():
     sentence = 'MAP2K1 hydroxylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Hydroxylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Hydroxylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
 
 def test_17():
     sentence = 'MAP2K1 acetylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Acetylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Acetylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_18():
     sentence = 'MAP2K1 farnesylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Farnesylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Farnesylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_19():
     sentence = 'MAP2K1 deubiquitinates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Deubiquitination)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Deubiquitination)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_20():
     sentence = 'MAP2K1 deribosylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Deribosylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Deribosylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_21():
     sentence = 'MAP2K1 dehydroxylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Dehydroxylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Dehydroxylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_22():
     sentence = 'MAP2K1 deacetylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Deacetylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Deacetylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
 
 def test_23():
     sentence = 'MAP2K1 defarnesylates MAPK1.'
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
-    assert_modtype(tp.statements[0], Defarnesylation)
-    assert_evidence(tp.statements[0])
+    st = tp.statements[0]
+    assert_modtype(st, Defarnesylation)
+    assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_24():
     sentence = 'Ubiquitinated MAPK1 is degraded.'
@@ -265,6 +338,8 @@ def test_24():
     assert(len(st.obj.mods) == 1)
     assert(st.obj.mods[0].mod_type == 'ubiquitination')
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_25():
     sentence = 'MAPK1 is synthesized.'
@@ -275,6 +350,8 @@ def test_25():
     assert(st.subj is None)
     assert(st.obj is not None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_26():
     sentence = 'MAP2K1 transcribes MAPK1.'
@@ -285,6 +362,8 @@ def test_26():
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_27():
     sentence = 'MAP2K1 synthesizes MAPK1.'
@@ -295,6 +374,8 @@ def test_27():
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_28():
     sentence = 'MAP2K1 degrades MAPK1.'
@@ -305,6 +386,8 @@ def test_28():
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_29():
     sentence = 'MAPK1 translocates to the nucleus.'
@@ -316,6 +399,8 @@ def test_29():
     assert(st.to_location == 'nucleus')
     assert(st.from_location is None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_30():
     sentence = 'MAPK1 translocates from the nucleus.'
@@ -327,6 +412,8 @@ def test_30():
     assert(st.from_location == 'nucleus')
     assert(st.to_location is None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_31():
     sentence = 'MAPK1 translocates from the plasma membrane to the nucleus.'
@@ -338,6 +425,8 @@ def test_31():
     assert(st.to_location == 'nucleus')
     assert(st.from_location == 'plasma membrane')
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_32():
     sentence = 'EGF leads to the activation of MAPK1.'
@@ -352,6 +441,8 @@ def test_32():
     assert(st.is_activation)
     assert(not st.evidence[0].epistemics['direct'])
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 '''
 TODO: put back when this is implemented
@@ -383,6 +474,8 @@ def test_34():
     assert(not st.is_activation)
     assert(not st.evidence[0].epistemics['direct'])
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_35():
     sentence = 'EGFR autophosphorylates itself.'
@@ -392,6 +485,8 @@ def test_35():
     assert(isinstance(st, Autophosphorylation))
     assert(st.enz is not None)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_36():
     sentence = 'EGFR autophosphorylates itself on Y1234.'
@@ -403,6 +498,8 @@ def test_36():
     assert(st.residue == 'Y')
     assert(st.position == '1234')
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_37():
     sentence = 'EGFR bound to EGFR transphosphorylates itself.'
@@ -413,6 +510,8 @@ def test_37():
     assert(st.enz is not None)
     assert(st.enz.bound_conditions)
     assert_evidence(st)
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
 
 def test_38():
     sentence = 'TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.'
@@ -420,4 +519,14 @@ def test_38():
     assert(len(tp.statements) == 5)
     for st in tp.statements:
         assert(isinstance(st, Activation))
+        assert_grounding_value_or_none(st)
+        # Here we don't assert if_hgnc_then_up
+        # because TCRA maps to an HGNC gene that has
+        # no corresponding protein
+        #assert_if_hgnc_then_up(st)
 
+def test_39():
+    sentence = 'FGF2 activates PI3K/Akt/mTOR and MAPK/ERK.'
+    tp = process_sentence_xml(sentence)
+    # For now, this should not return any statements
+    assert(not tp.statements)

@@ -641,8 +641,16 @@ class BiopaxProcessor(object):
         if _is_protein(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
+            # Handle missing HGNC/UP ids
+            if hgnc_id and not uniprot_id:
+                uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if uniprot_id and not hgnc_id:
+                if uniprot_client.is_human(uniprot_id):
+                    hgnc_name = uniprot_client.get_gene_name(uniprot_id, False)
+                    if hgnc_name:
+                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
             if hgnc_id is not None:
-                db_refs['HGNC'] = str(hgnc_id)
+                db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
         elif _is_small_molecule(bpe):
@@ -655,7 +663,7 @@ class BiopaxProcessor(object):
                 db_refs['CHEBI'] = chebi_id
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             if hgnc_id is not None:
-                db_refs['HGNC'] = str(hgnc_id)
+                db_refs['HGNC'] = hgnc_id
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
@@ -686,10 +694,6 @@ class BiopaxProcessor(object):
                         bpe.getModelInterface().getName())
             name = bpe.getDisplayName()
 
-        # Canonicalize name
-        name = re.sub(r'[^\w]', '_', name)
-        if re.match('[0-9]', name) is not None:
-            name = 'p' + name
         return name
 
     @staticmethod
@@ -698,22 +702,46 @@ class BiopaxProcessor(object):
         # This usually corresponds to the primary accession ID and one or more
         # secondary accession IDs (these IDs are from deprecated entries that
         # have been merged into the primary.
+        def map_to_up_primary(ids):
+            primary_ids = []
+            for up_id in ids:
+                if not uniprot_client.is_secondary(up_id):
+                    primary_ids.append(up_id)
+                    continue
+                primary_id = uniprot_client.get_primary_id(up_id)
+                primary_ids.append(primary_id)
+            # If there are no primary IDs, we return None
+            if not primary_ids:
+                return None
+            # Try to get primary IDs if there are 
+            # If there is more than one primary ID then we return the first one
+            if len(primary_ids) > 1:
+                logger.info('More than one primary id: %s' %
+                            ','.join(primary_ids))
+            # Make sure it's unicode
+            primary_id = str(primary_ids[0])
+            return primary_id
+
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
             return None
         uri = bp_entref.getUri()
+        # First try to match the URI itself to see if it is a UniProt
+        # reference.
         m = re.match('http://identifiers.org/uniprot/([A-Z0-9]+)', uri)
         if m:
-            uniprot_ids = [m.groups()[0]]
-            return uniprot_ids
+            uniprot_id = m.groups()[0]
+            primary_id = map_to_up_primary([uniprot_id])
+            return primary_id
+        # If the URI is not a UniProt reference then we look through xrefs
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if
                         x.getDb().lower() == 'uniprot knowledgebase']
-        uniprot_ids = [r.getId() for r in uniprot_refs]
-        if not uniprot_ids:
+        if not uniprot_refs:
             return None
-        else:
-            return uniprot_ids
+        uniprot_ids = [r.getId() for r in uniprot_refs]
+        primary_id = map_to_up_primary(uniprot_ids)
+        return primary_id
 
     @staticmethod
     def _get_chebi_id(bpe):
@@ -747,25 +775,20 @@ class BiopaxProcessor(object):
             return None
         xrefs = bp_entref.getXref().toArray()
         hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
-        #hgnc_symbols = [x.getId() for x in xrefs if\
-        #                x.getDb().lower() == 'hgnc symbol']
         hgnc_id = None
         for hgnc_id in hgnc_ids:
             m = re.match('([0-9]+)', hgnc_id)
             if m:
-                hgnc_id = int(m.groups()[0])
+                hgnc_id = str(m.groups()[0])
             else:
                 m = re.match('hgnc:([0-9]+)', hgnc_id.lower())
                 if m:
-                    hgnc_id = int(m.groups()[0])
-        #if hgnc_id is None:
-        #    print [r.getId() for r in hgnc_ids]
-        #    print [r.getId() for r in hgnc_symbols]
+                    hgnc_id = str(m.groups()[0])
         return hgnc_id
 
     @staticmethod
     def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(str(hgnc_id))
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         return hgnc_name
 
     @staticmethod

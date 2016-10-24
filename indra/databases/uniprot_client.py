@@ -69,6 +69,55 @@ def query_protein(protein_id):
         return query_protein(replaced_by_id)
     return g
 
+def is_secondary(protein_id):
+    """Return True if the UniProt ID corresponds to a secondary accession.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID to check.
+
+    Returns
+    -------
+    True if it is a secondary accessing entry, False otherwise.
+    """
+    entry = uniprot_sec.get(protein_id)
+    if not entry:
+        return False
+    return True
+
+def get_primary_id(protein_id):
+    """Return a primary entry corresponding to the UniProt ID.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID to map to primary.
+
+    Returns
+    -------
+    primary_id : str
+        If the given ID is primary, it is returned as is. Othwewise the primary
+        IDs are looked up. If there are multiple primary IDs then the first
+        human one is returned. If there are no human primary IDs then the
+        first primary found is returned.
+    """
+    primaries = uniprot_sec.get(protein_id)
+    if primaries:
+        if len(primaries) > 1:
+            logger.debug('More than 1 primary ID for %s.' % protein_id)
+            for primary in primaries:
+                # Often secondary IDs were broken into multiple primary IDs
+                # for different organisms. In this case we return the human
+                # one if it exists.
+                if is_human(primary):
+                    return primary
+        # If we haven't returned anything then we just return the
+        # first primary id
+        return primaries[0]
+    # If there is not secondary entry the we assume this is a primary entry
+    return protein_id
+
 def get_family_members(family_name, human_only=True):
     """Return the HGNC gene symbols which are the members of a given family.
 
@@ -181,10 +230,13 @@ def get_gene_name(protein_id, web_fallback=True):
     """
     try:
         gene_name = uniprot_gene_name[protein_id]
-        # Handle empty string
-        if not gene_name:
-            return None
-        return gene_name
+        # There are cases when the entry is in the resource
+        # table but the gene name is empty. Often this gene
+        # name is actually available in the web service RDF
+        # so here we return only if the gene name is not None
+        # and not empty string.
+        if gene_name:
+            return gene_name
     except KeyError:
         pass
     if not web_fallback:
@@ -327,6 +379,25 @@ def verify_modification(protein_id, residue, location=None):
             if seq[ml - 1] == residue:
                 return True
         return False
+
+def is_human(protein_id):
+    """Return True if the given protein id corresponds to a human protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein
+
+    Returns
+    -------
+    True if the protein_id corresponds to a human protein, otherwise False.
+    """
+    mnemonic = get_mnemonic(protein_id)
+    if mnemonic is None:
+        return False
+    if mnemonic.endswith('HUMAN'):
+        return True
+    return False
 
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
