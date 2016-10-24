@@ -69,6 +69,55 @@ def query_protein(protein_id):
         return query_protein(replaced_by_id)
     return g
 
+def is_secondary(protein_id):
+    """Return True if the UniProt ID corresponds to a secondary accession.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID to check.
+
+    Returns
+    -------
+    True if it is a secondary accessing entry, False otherwise.
+    """
+    entry = uniprot_sec.get(protein_id)
+    if not entry:
+        return False
+    return True
+
+def get_primary_id(protein_id):
+    """Return a primary entry corresponding to the UniProt ID.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID to map to primary.
+
+    Returns
+    -------
+    primary_id : str
+        If the given ID is primary, it is returned as is. Othwewise the primary
+        IDs are looked up. If there are multiple primary IDs then the first
+        human one is returned. If there are no human primary IDs then the
+        first primary found is returned.
+    """
+    primaries = uniprot_sec.get(protein_id)
+    if primaries:
+        if len(primaries) > 1:
+            logger.debug('More than 1 primary ID for %s.' % protein_id)
+            for primary in primaries:
+                # Often secondary IDs were broken into multiple primary IDs
+                # for different organisms. In this case we return the human
+                # one if it exists.
+                if is_human(primary):
+                    return primary
+        # If we haven't returned anything then we just return the
+        # first primary id
+        return primaries[0]
+    # If there is not secondary entry the we assume this is a primary entry
+    return protein_id
+
 def get_family_members(family_name, human_only=True):
     """Return the HGNC gene symbols which are the members of a given family.
 

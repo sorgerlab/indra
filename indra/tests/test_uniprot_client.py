@@ -66,3 +66,18 @@ def test_get_mnemonic():
     assert(mnemonic == 'MP2K1_HUMAN')
     assert unicode_strs(mnemonic)
 
+def test_is_secondary_primary():
+    assert(not uniprot_client.is_secondary('Q02750'))
+
+def test_is_secondary_secondary():
+    assert(uniprot_client.is_secondary('Q96J62'))
+
+def test_get_primary_id_primary():
+    assert(uniprot_client.get_primary_id('Q02750') == 'Q02750')
+
+def test_get_primary_id_secondary_hashuman():
+    assert(uniprot_client.get_primary_id('Q96J62') == 'P61978')
+
+def test_get_primary_id_secondary_nohuman():
+    assert(uniprot_client.get_primary_id('P31848') in
+           ['P0A5M5', 'P9WIU6', 'P9WIU7'])
