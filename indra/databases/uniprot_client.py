@@ -230,10 +230,13 @@ def get_gene_name(protein_id, web_fallback=True):
     """
     try:
         gene_name = uniprot_gene_name[protein_id]
-        # Handle empty string
-        if not gene_name:
-            return None
-        return gene_name
+        # There are cases when the entry is in the resource
+        # table but the gene name is empty. Often this gene
+        # name is actually available in the web service RDF
+        # so here we return only if the gene name is not None
+        # and not empty string.
+        if gene_name:
+            return gene_name
     except KeyError:
         pass
     if not web_fallback:

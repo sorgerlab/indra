@@ -30,6 +30,20 @@ def test_get_gene_name_human():
     assert(gene_name == 'EGFR')
     assert unicode_strs(gene_name)
 
+def test_get_gene_name_no_table_entry():
+    gene_name = uniprot_client.get_gene_name('P01814', web_fallback=True)
+    assert(gene_name == 'IGHV2-70')
+    assert unicode_strs(gene_name)
+    gene_name = uniprot_client.get_gene_name('P01814', web_fallback=False)
+    assert(gene_name is None)
+
+def test_get_gene_name_no_table_entry2():
+    gene_name = uniprot_client.get_gene_name('Q5NV82', web_fallback=True)
+    assert(gene_name == 'V4-2')
+    assert unicode_strs(gene_name)
+    gene_name = uniprot_client.get_gene_name('Q5NV82', web_fallback=False)
+    assert(gene_name is None)
+
 def test_get_gene_name_nonhuman():
     gene_name = uniprot_client.get_gene_name('P31938')
     assert(gene_name == 'Map2k1')
