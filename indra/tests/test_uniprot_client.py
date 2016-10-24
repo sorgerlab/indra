@@ -35,6 +35,15 @@ def test_get_gene_name_nonhuman():
     assert(gene_name == 'Map2k1')
     assert unicode_strs(gene_name)
 
+def test_is_human():
+    assert(uniprot_client.is_human('P00533'))
+
+def test_not_is_human():
+    assert(not uniprot_client.is_human('P31938'))
+
+def test_noentry_is_human():
+    assert(not uniprot_client.is_human('XXXX'))
+
 def test_get_sequence():
     seq = uniprot_client.get_sequence('P00533')
     assert(len(seq) > 1000)

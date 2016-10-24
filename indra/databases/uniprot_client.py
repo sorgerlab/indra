@@ -328,6 +328,25 @@ def verify_modification(protein_id, residue, location=None):
                 return True
         return False
 
+def is_human(protein_id):
+    """Return True if the given protein id corresponds to a human protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein
+
+    Returns
+    -------
+    True if the protein_id corresponds to a human protein, otherwise False.
+    """
+    mnemonic = get_mnemonic(protein_id)
+    if mnemonic is None:
+        return False
+    if mnemonic.endswith('HUMAN'):
+        return True
+    return False
+
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
