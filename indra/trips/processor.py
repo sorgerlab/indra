@@ -948,14 +948,15 @@ class TripsProcessor(object):
                 if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
                     for c in components:
-                        bound_agent_name = self._get_name_by_id(c.attrib['id'])
-                        if bound_agent_name is not None:
-                            bound_agent = Agent(bound_agent_name)
+                        bound_agent = \
+                            self._get_basic_agent_by_id(c.attrib['id'])
+                        if bound_agent is not None:
                             bound_agents.append(bound_agent)
                 else:
-                    bound_agent_name = self._get_name_by_id(bound_to_term_id)
-                    if bound_agent_name is not None:
-                        bound_agents = [Agent(bound_agent_name)]
+                    bound_agent = \
+                        self._get_basic_agent_by_id(bound_to_term_id)
+                    if bound_agent is not None:
+                        bound_agents = [bound_agent]
 
             # Look for negative flag either in precondition event
             # predicate tag or in the term itself
@@ -987,6 +988,15 @@ class TripsProcessor(object):
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
+
+    def _get_basic_agent_by_id(self, term_id):
+        agent = self._get_agent_by_id(term_id, None)
+        if isinstance(agent, collections.Iterable):
+            agent = agent[0]
+            logger.warning('Extracting only one basic Agent from %s.'
+                            % term_id)
+        basic_agent = Agent(agent.name, db_refs=agent.db_refs)
+        return basic_agent
 
     def _get_name_by_id(self, entity_id):
         entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
