@@ -68,6 +68,7 @@ def test_hgnc_sym_but_not_up():
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.name == 'MAPK1'
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
@@ -81,6 +82,7 @@ def test_up_but_not_hgnc():
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.name == 'MAPK1'
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
@@ -94,6 +96,7 @@ def test_hgnc_but_not_up():
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.name == 'MAPK1'
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
@@ -125,18 +128,11 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 
 @raises(ValueError)
 def test_up_and_mismatched_hgnc():
-    """Nothing should happen but this should trigger a warning."""
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC':'MAPK3'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
-    assert len(mapped_stmts) == 1
-    mapped_erk = mapped_stmts[0].sub
-    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
-    assert mapped_erk.db_refs['HGNC'] == '6871'
-    assert mapped_erk.db_refs['UP'] == 'P28482'
-    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
 def up_id_with_no_hgnc_id():
     """Non human protein"""
@@ -147,6 +143,7 @@ def up_id_with_no_hgnc_id():
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     mapped_gag = mapped_stmts[0].sub
+    assert mapped_gag.name == 'gag-pol'
     assert mapped_gag.db_refs['TEXT'] == 'Gag'
     assert mapped_gag.db_refs.get('HGNC') == None
     assert mapped_gag.db_refs['UP'] == 'P04585'
@@ -154,13 +151,14 @@ def up_id_with_no_hgnc_id():
 
 def up_id_with_no_gene_name():
     """Expect no HGNC entry; no error raised."""
-    no_gn = Agent('NoGN', db_refs={'TEXT': 'NoGN'})
+    no_gn = Agent('NoGNname', db_refs={'TEXT': 'NoGN'})
     stmt = Phosphorylation(None, no_gn)
     g_map = {'NoGN': {'TEXT': 'NoGN', 'UP': 'A0K5Q6'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     mapped_ag = mapped_stmts[0].sub
+    assert mapped_ag.name == 'NoGNname'
     assert mapped_ag.db_refs['TEXT'] == 'NoGN'
     assert mapped_ag.db_refs.get('HGNC') == None
     assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
