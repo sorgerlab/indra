@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT03402_IO-5549040" id="paragraph3401">Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="3857" pid="paragraph3401">Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element.</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="UP:P56270|HGNC:6914|XFAM:PF00096" end="67" id="V5549527" lisp="(ONT::TERM ONT::V5549527 ONT::PROTEIN :INEVENT ONT::V5549501 :INEVENT ONT::V5549547 :NAME W::SAF-PUNC-MINUS-1 :DRUM ((:DRUM (TERM :ID UP::P56270 :NAME &quot;Myc-associated zinc finger protein&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;SAF-1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|6914| XFAM::PF00096) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3401" rule="-INEVENT2,-SIMPLE-REF" start="0" uttnum="3857">
+		<type>ONT::PROTEIN</type>
+		<name>SAF-1</name>
+		<features>
+			<inevent>
+				<event id="V5549501"/>
+				<event id="V5549547"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="UP:P56270" match-score="0.65714" matched-name="SAF-1" name="Myc-associated zinc finger protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:6914"/>
+					<xref dbid="XFAM:PF00096"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+		</drum-terms>
+		<text>Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+	</TERM>
+	<EVENT end="67" id="V5549501" lisp="(ONT::EVENT ONT::V5549501 ONT::ACTIVATE :AGENT ONT::V5549459 :AFFECTED ONT::V5549527 :FORCE ONT::TRUE)" paragraph="paragraph3401" rule="-RULE40_2_AGENT_AFFECTED" start="0" uttnum="3857">
+		<type>ONT::ACTIVATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="67" id="V5549501" start="0">
+			<type>ONT::ACTIVATE</type>
+			<text>Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+		</predicate>
+		<arg1 end="14" id="V5549459" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Ras-activated</text>
+		</arg1>
+		<arg2 end="67" id="V5549527" role=":AFFECTED" start="0">
+			<type>ONT::PROTEIN</type>
+			<text normalization="">Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+		</arg2>
+		<text>Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+	</EVENT>
+	<EVENT end="67" id="V5549547" lisp="(ONT::EVENT ONT::V5549547 ONT::BIND :AGENT ONT::V5549527 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph3401" rule="-RULE40_4_AGENT_AFFECTED-AGENT" start="0" uttnum="3857">
+		<type>ONT::BIND</type>
+		<force>ONT::TRUE</force>
+		<predicate end="67" id="V5549547" start="0">
+			<type>ONT::BIND</type>
+			<text>Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+		</predicate>
+		<arg1 end="67" id="V5549527" role=":AGENT" start="0">
+			<type>ONT::PROTEIN</type>
+			<text normalization="">Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+		</arg1>
+		<text>Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17061|FA:03663" end="14" id="V5549459" lisp="(ONT::TERM ONT::V5549459 ONT::GENE-PROTEIN :NAME W::RAS :DRUM ((:DRUM (TERM :ID FA::|03663| :NAME &quot;ras family&quot; :SCORE 0.99761 :MATCHES ((MATCH :SCORE 0.99761 :MATCHED &quot;ras&quot; :STATUS &quot;ID&quot; :SENTENCE-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C17061 :NAME &quot;RAS family oncogene&quot; :SCORE 0.82444 :MATCHES ((MATCH :SCORE 0.82444 :MATCHED &quot;RAS&quot; :STATUS &quot;synonym&quot; :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph3401" rule="-SIMPLE-REF" start="0" uttnum="3857">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>RAS</name>
+		<drum-terms>
+			<drum-term dbid="FA:03663" match-score="0.99761" matched-name="ras" name="ras family">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17061" match-score="0.82444" matched-name="RAS" name="RAS family oncogene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Ras-activated</text>
+	</TERM>
+	<TERM end="67" id="V5549672" lisp="(ONT::TERM ONT::V5549672 ONT::ELEMENT :NAME W::ELEMENT)" paragraph="paragraph3401" rule="-SIMPLE-REF" start="31" uttnum="3857">
+		<type>ONT::ELEMENT</type>
+		<name>ELEMENT</name>
+		<text>to a bona fide SAF-1-binding element</text>
+	</TERM>
+</ekb>

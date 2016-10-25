@@ -111,6 +111,8 @@ class TripsProcessor(object):
         inact_events += self.tree.findall("EVENT/[type='ONT::INHIBIT']")
         for event in (act_events + inact_events):
             event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
             # Get the activating agent in the event
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -233,6 +235,9 @@ class TripsProcessor(object):
         # Search for stimulation event
         stim_events = self.tree.findall("EVENT/[type='ONT::STIMULATE']")
         for event in stim_events:
+            event_id = event.attrib.get('id')
+            if event_id in self._static_events:
+                continue
             controller = event.find("arg1/[@role=':AGENT']")
             affected = event.find("arg2/[@role=':AFFECTED']")
             # If either the controller or the affected is missing, skip
@@ -756,7 +761,27 @@ class TripsProcessor(object):
                             [BoundCondition(ag, True) for ag in agents[1:]]
         # If the entity is not a complex
         else:
-            agent_name = self._get_name_by_id(entity_id)
+            # Determine the agent name
+            hgnc_id = db_refs.get('HGNC')
+            up_id = db_refs.get('UP')
+            agent_name = None
+            # HGNC name takes precedence
+            if hgnc_id:
+                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+                agent_name = hgnc_name
+            # If no HGNC name (for instance non-human protein) then
+            # look at UP and try to get gene name
+            elif up_id:
+                gene_name = up_client.get_gene_name(up_id)
+                if gene_name:
+                    agent_name = gene_name
+            # Otherwise, take the name of the term as agent name
+            else:
+                name = term.find("name")
+                if name is not None:
+                    agent_name = name.text
+            # If after all of this, the agent name is still None
+            # then we don't extract this term as an agent
             if agent_name is None:
                 return None
             agent = Agent(agent_name, db_refs=db_refs)
@@ -923,8 +948,10 @@ class TripsProcessor(object):
         if precond_event_type in mod_names.keys():
             mods = self._get_modification(precond_event)
             agent.mods = mods
+            return
+
         # Binding precondition
-        elif precond_event_type == 'ONT::BIND':
+        if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
             mod = precond_event.findall('mods/mod')
@@ -940,6 +967,8 @@ class TripsProcessor(object):
                     bound_to_term_id = arg2_id
                 else:
                     bound_to_term_id = arg1_id
+            if bound_to_term_id == agent_term.attrib['id']:
+                return
 
             bound_agents = []
             if bound_to_term_id is not None:
@@ -948,14 +977,17 @@ class TripsProcessor(object):
                 if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
                     for c in components:
-                        bound_agent_name = self._get_name_by_id(c.attrib['id'])
-                        if bound_agent_name is not None:
-                            bound_agent = Agent(bound_agent_name)
+                        bound_agent = \
+                            self._get_basic_agent_by_id(c.attrib['id'],
+                                        precond_event.attrib.get('id'))
+                        if bound_agent is not None:
                             bound_agents.append(bound_agent)
                 else:
-                    bound_agent_name = self._get_name_by_id(bound_to_term_id)
-                    if bound_agent_name is not None:
-                        bound_agents = [Agent(bound_agent_name)]
+                    bound_agent = \
+                        self._get_basic_agent_by_id(bound_to_term_id,
+                                        precond_event.attrib.get('id'))
+                    if bound_agent is not None:
+                        bound_agents = [bound_agent]
 
             # Look for negative flag either in precondition event
             # predicate tag or in the term itself
@@ -968,52 +1000,28 @@ class TripsProcessor(object):
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
-            '''
-            negation_sign = precond_event.find('predicate/negation')
-            if negation_sign is not None:
-                if negation_sign.text == '+':
-                    neg_flag = True
-            '''
             for ba in bound_agents:
                 if neg_flag:
                     bc = BoundCondition(ba, False)
                 else:
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
-        else:
-            logger.warning('Unhandled precondition event type: %s' %
-                           precond_event_type)
+            return
+        logger.warning('Unhandled precondition event type: %s' %
+                       precond_event_type)
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
         return tag
 
-    def _get_name_by_id(self, entity_id):
-        entity_term = self.tree.find("TERM/[@id='%s']" % entity_id)
-        if entity_term is None:
-            logger.debug('Term %s for entity not found' % entity_id)
-            return None
-        name = entity_term.find("name")
-        db_refs = self._get_db_refs(entity_term)
-        if name is None:
-            logger.debug('Entity without a name')
-            return None
-        if not db_refs:
-            return name.text
-
-        #TODO: handle protein families like 14-3-3 with IDs like
-        # XFAM:PF00244.15, FA:00007
-        hgnc_id = db_refs.get('HGNC')
-        if hgnc_id:
-            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-            return hgnc_name
-        up_id = db_refs.get('UP')
-        if up_id:
-            gene_name = up_client.get_gene_name(up_id)
-            if gene_name is not None:
-                return gene_name
-        # By default, return the text of the name tag
-        return name.text
+    def _get_basic_agent_by_id(self, term_id, event_id):
+        agent = self._get_agent_by_id(term_id, event_id)
+        if isinstance(agent, collections.Iterable):
+            agent = agent[0]
+            logger.warning('Extracting only one basic Agent from %s.'
+                            % term_id)
+        basic_agent = Agent(agent.name, db_refs=agent.db_refs)
+        return basic_agent
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):

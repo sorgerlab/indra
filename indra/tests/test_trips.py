@@ -13,7 +13,6 @@ def assert_if_hgnc_then_up(st):
     agents = st.agent_list()
     for a in agents:
         if a is not None:
-            print(a.db_refs)
             up_id = a.db_refs.get('UP')
             hgnc_id = a.db_refs.get('HGNC')
             if hgnc_id and not up_id:
