@@ -164,3 +164,14 @@ def up_id_with_no_gene_name():
     assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
     assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
+def test_in_place_overwrite_of_gm():
+    """Make sure HGNC lookups don't modify the original grounding map by adding
+    keys."""
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    gmap_after_mapping = gm.gm
+    assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
+

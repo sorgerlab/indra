@@ -42,7 +42,7 @@ class GroundingMapper(object):
                 else:
                     # Otherwise, update the agent's db_refs field
                     gene_name = None
-                    map_db_refs = self.gm.get(agent_text)
+                    map_db_refs = deepcopy(self.gm.get(agent_text))
                     up_id = map_db_refs.get('UP')
                     hgnc_sym = map_db_refs.get('HGNC')
                     if up_id and not hgnc_sym:
