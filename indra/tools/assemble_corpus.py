@@ -14,6 +14,7 @@ from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 logger = logging.getLogger('assemble_corpus')
+indra_logger = logging.getLogger('indra').setLevel(logging.DEBUG)
 
 def dump_statements(stmts, fname):
     logger.info('Dumping into %s' % fname)
@@ -66,6 +67,7 @@ def run_preassembly_duplicate(stmts_in, **kwargs):
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
     pa = kwargs.get('preassembler')
+    be = kwargs.get('beliefengine')
     if load_pkl:
         stmts_out = load_statements(load_pkl)
     else:
@@ -73,6 +75,7 @@ def run_preassembly_duplicate(stmts_in, **kwargs):
         if dump_pkl:
             dump_statements(stmts_out, dump_pkl)
     logger.info('Unique statements: %d' % len(stmts_out))
+    be.set_prior_probs(unique_stmts)
     return stmts_out
 
 def run_preassembly_related(stmts_in, **kwargs):
@@ -80,6 +83,7 @@ def run_preassembly_related(stmts_in, **kwargs):
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
     pa = kwargs.get('preassembler')
+    be = kwargs.get('beliefengine')
     if load_pkl:
         stmts_out = load_statements(load_pkl)
     else:
@@ -87,6 +91,7 @@ def run_preassembly_related(stmts_in, **kwargs):
         if dump_pkl:
             dump_statements(stmts_out, dump_pkl)
     logger.info('Top-level statements: %d' % len(stmts_out))
+    be.set_hierarchy_probs(stmts)
     return stmts_out
 
 def filter_by_type(stmts_in, stmt_type):
@@ -114,20 +119,17 @@ if __name__ == '__main__':
                'do_rename': True}
     stmts = map_grounding(stmts, **options)
 
-
     cache_pkl = os.path.join(out_folder, 'sequence_valid_stmts.pkl')
     options = {'dump_pkl': cache_pkl}
     mapped_stmts = map_sequence(stmts, **options)
 
+    be = BeliefEngine()
     pa = Preassembler(hierarchies, mapped_stmts)
+
     cache_pkl = os.path.join(out_folder, 'unique_stmts.pkl')
-    options = {'dump_pkl': cache_pkl, 'preassembler': pa}
+    options = {'dump_pkl': cache_pkl, 'preassembler': pa, 'beliefengine': be}
     unique_stmts = run_preassembly_duplicate(mapped_stmts, **options)
 
-    be = BeliefEngine(stmts)
-    be.set_prior_probs(stmts)
-
     cache_pkl = os.path.join(out_folder, 'top_stmts.pkl')
-    options = {'dump_pkl': cache_pkl, 'preassembler': pa}
+    options = {'dump_pkl': cache_pkl, 'preassembler': pa, 'beliefengine': be}
     stmts = run_preassembly_related(unique_stmts, **options)
-    be.set_hierarchy_probs(stmts)
