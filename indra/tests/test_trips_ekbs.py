@@ -536,3 +536,10 @@ def test_40():
     # All events here are static so nothing should be extracted
     assert(not tp.statements)
 
+def test_41():
+    sentence = 'NFKB synthesizes IKB in the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(st.obj.location is not None)
+

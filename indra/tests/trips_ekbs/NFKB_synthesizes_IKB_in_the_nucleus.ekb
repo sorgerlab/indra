@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT03844_IO-5787204" id="paragraph3843">NFKB synthesizes IKB in the nucleus.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="4316" pid="paragraph3843">NFKB synthesizes IKB in the nucleus.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="35" id="V5787211" lisp="(ONT::EVENT ONT::V5787211 ONT::PRODUCE :AGENT ONT::V5787207 :AFFECTED-RESULT ONT::V5787216 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph3843" rule="-RULE40_2_AGENT_AFFECTED-RESULT" start="0" uttnum="4316">
+		<type>ONT::PRODUCE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="35" id="V5787211" start="0">
+			<type>ONT::PRODUCE</type>
+			<text>NFKB synthesizes IKB in the nucleus</text>
+		</predicate>
+		<arg1 end="5" id="V5787207" role=":AGENT" start="0">
+			<type>ONT::PROTEIN</type>
+			<text normalization="">NFKB</text>
+		</arg1>
+		<arg2 end="35" id="V5787216" role=":AFFECTED-RESULT" start="17">
+			<type>ONT::PROTEIN</type>
+			<text normalization="">IKB in the nucleus</text>
+		</arg2>
+		<text>NFKB synthesizes IKB in the nucleus</text>
+	</EVENT>
+	<TERM dbid="NCIT:C17380" end="5" id="V5787207" lisp="(ONT::TERM ONT::V5787207 ONT::PROTEIN :NAME W::NFKB :DRUM ((:DRUM (TERM :ID NCIT::C17380 :NAME &quot;NF-kB&quot; :SCORE 0.99343 :MATCHES ((MATCH :SCORE 0.99343 :MATCHED &quot;NF-kB&quot; :STATUS &quot;name&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-MIXED-CAPS 1) (MATCH :SCORE 0.82857 :MATCHED &quot;NFKB&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3843" rule="-SIMPLE-REF" start="0" uttnum="4316">
+		<type>ONT::PROTEIN</type>
+		<name>NFKB</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C17380" match-score="0.99343" matched-name="NF-kB" name="NF-kB">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>NFKB</text>
+	</TERM>
+	<TERM dbid="NCIT:C17583" end="35" id="V5787216" lisp="(ONT::TERM ONT::V5787216 ONT::PROTEIN :LOC ONT::V5787281 :NAME W::IKB :DRUM ((:DRUM (TERM :ID NCIT::C17583 :NAME &quot;I-kappa-B protein&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;IKB&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3843" rule="-SIMPLE-REF-MODBP4-GD,-SIMPLE-REF" start="17" uttnum="4316">
+		<type>ONT::PROTEIN</type>
+		<name>IKB</name>
+		<features>
+			<location id="V5787281"/>
+		</features>
+		<drum-terms>
+			<drum-term dbid="NCIT:C17583" match-score="0.82857" matched-name="IKB" name="I-kappa-B protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>IKB in the nucleus</text>
+	</TERM>
+	<TERM dbid="UP:SL-0191|GO:0005634" end="35" id="V5787281" lisp="(ONT::TERM ONT::V5787281 ONT::CELL-PART :NAME W::NUCLEUS :DRUM ((:DRUM (TERM :ID UP::SL-0191 :NAME &quot;Nucleus&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :STATUS &quot;I*&quot; :EXACT 1)) :ONT-TYPES (ONT::CELL-PART)) (TERM :ID GO::|0005634| :NAME &quot;nucleus&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CELL-PART)) (SPECIALIST :EUI E0222333 :CITATION-FORM &quot;nucleus&quot; :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;nucleus&quot; :EXACT 1)) :COMPLEMENTS (&quot;compl=pphr(of,np(thalamus))&quot; &quot;compl=pphr(of,np(vagus nerve))&quot; &quot;compl=pphr(of,np(pretectal area))&quot; &quot;compl=pphr(of,np(lateral geniculate body))&quot; &quot;compl=pphr(of,np(medial geniculate body))&quot; &quot;compl=pphr(of,np(lens))&quot; &quot;compl=pphr(of,np(solitary tract))&quot; &quot;compl=pphr(of,np(abducens nerve))&quot; &quot;compl=pphr(of,np(ansa lenticularis))&quot; &quot;compl=pphr(of,np(facial nerve))&quot; &quot;compl=pphr(of,np(hypoglossal nerve))&quot; &quot;compl=pphr(of,np(Luys))&quot; &quot;compl=pphr(of,np(oculomotor nerve))&quot; &quot;compl=pphr(of,np(trochlear nerve))&quot; &quot;compl=pphr(of,np(Darkschewitsch))&quot; &quot;compl=pphr(of,np(origin),pphr(of,np))&quot; &quot;compl=pphr(of,np(accessory nerve))&quot; &quot;compl=pphr(of,np)&quot; &quot;compl=pphr(of,np(optic tract))&quot; &quot;compl=pphr(of,np(lateral lemniscus))&quot;)))))" paragraph="paragraph3843" rule="-SIMPLE-REF" start="24" uttnum="4316">
+		<type>ONT::CELL-PART</type>
+		<name>NUCLEUS</name>
+		<drum-terms>
+			<drum-term dbid="UP:SL-0191" match-score="1.0" matched-name="nucleus" name="Nucleus">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="GO:0005634" match-score="1.0" matched-name="nucleus" name="nucleus">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>the nucleus</text>
+	</TERM>
+</ekb>

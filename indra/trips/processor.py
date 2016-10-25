@@ -1240,6 +1240,8 @@ def _stmt_location_to_agents(stmt, location):
     If a Statement is in a given location we represent that by requiring all
     Agents in the Statement to be in that location.
     """
+    if location is None:
+        return
     agents = stmt.agent_list()
     for a in agents:
         if a is not None:
