@@ -41,24 +41,68 @@ class GroundingMapper(object):
                 # If it has a value that's not None, map it and add it
                 else:
                     # Otherwise, update the agent's db_refs field
-                    agent.db_refs = self.gm.get(agent_text)
+                    gene_name = None
+                    map_db_refs = self.gm.get(agent_text)
+                    up_id = map_db_refs.get('UP')
+                    hgnc_sym = map_db_refs.get('HGNC')
+                    if up_id and not hgnc_sym:
+                        gene_name = uniprot_client.get_gene_name(up_id)
+                        if gene_name:
+                            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                            if hgnc_id:
+                                map_db_refs['HGNC'] = hgnc_id
+                    elif hgnc_sym and not up_id:
+                        # Override the HGNC symbol entry from the grounding
+                        # map with an HGNC ID
+                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+                        if hgnc_id:
+                            map_db_refs['HGNC'] = hgnc_id
+                            # Now get the Uniprot ID for the gene
+                            up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                            if up_id:
+                                map_db_refs['UP'] = up_id
+                        # If there's no HGNC ID for this symbol, raise an
+                        # Exception
+                        else:
+                            raise ValueError('No HGNC ID corresponding to gene '
+                                             'symbol %s in grounding map.' %
+                                             hgnc_sym)
+                    # If we have both, check the gene symbol ID against the
+                    # mapping from Uniprot
+                    elif up_id and hgnc_sym:
+                        # Get HGNC Symbol from Uniprot
+                        gene_name = uniprot_client.get_gene_name(up_id)
+                        if not gene_name:
+                            raise ValueError('No gene name found for Uniprot '
+                                             'ID %s (expected %s)' %
+                                             (up_id, hgnc_sym))
+                        # We got gene name, compare it to the HGNC name
+                        else:
+                            if gene_name != hgnc_sym:
+                                raise ValueError('Gene name %s for Uniprot ID '
+                                                 '%s does not match HGNC '
+                                                 'symbol %s given in grounding '
+                                                 'map.' %
+                                                 (gene_name, up_id, hgnc_sym))
+                            else:
+                                hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+                                if not hgnc_id:
+                                    raise ValueError('No HGNC ID '
+                                                     'corresponding to gene '
+                                                     'symbol %s in grounding '
+                                                     'map.' % hgnc_sym)
+                    # Assign the DB refs from the grounding map to the agent
+                    agent.db_refs = map_db_refs
                     # Are we renaming right now?
                     if do_rename:
                         # If there's a Bioentities ID, prefer that for the name
                         if agent.db_refs.get('BE'):
                             agent.name = agent.db_refs.get('BE')
-                        # Take a HGNC name from Uniprot next
-                        elif agent.db_refs.get('UP'):
-                            # Try for gene name
-                            gene_name = uniprot_client.get_gene_name(
-                                                      agent.db_refs.get('UP'),
-                                                      web_fallback=False)
-                            if gene_name:
-                                agent.name = gene_name
-                                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                                if hgnc_id is not None:
-                                    agent.db_refs['HGNC'] = hgnc_id
-                                    continue
+                        # Get the HGNC symbol or gene name (retrieved above)
+                        elif hgnc_sym is not None:
+                            agent.name = hgnc_sym
+                        elif gene_name is not None:
+                            agent.name = gene_name
             # Check if we should skip the statement
             if not skip_stmt:
                 mapped_stmts.append(mapped_stmt)
