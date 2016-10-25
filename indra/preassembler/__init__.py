@@ -238,9 +238,10 @@ class Preassembler(object):
                             any_component = True
                             # For Complexes we cannot optimize by argument
                             # position because all permutations need to be
-                            # considered
+                            # considered but we can use the number of members
+                            # to statify into groups
                             if stmt_type == Complex:
-                                key = component
+                                key = (len(stmt.members), component)
                             # For Activation, we can separate positive/negative
                             # activation into separate groups
                             elif stmt_type == Activation:
@@ -255,10 +256,17 @@ class Preassembler(object):
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
+            logger.info('Preassembling %d components' % (len(stmt_by_group)))
+            for key, stmts in stmt_by_group.items():
+                for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                    self._set_supports(stmt1, stmt2)
+
+            #==========================================================
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
             # We take all the Agent entity_matches_key()-s and group
             # Statements based on this key
+            stmt_by_group = collections.defaultdict(lambda: [])
             for stmt in no_comp_stmts:
                 for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
@@ -266,7 +274,7 @@ class Preassembler(object):
                         # position because all permutations need to be
                         # considered
                         if stmt_type == Complex:
-                            key = a.entity_matches_key()
+                            key = (len(stmt.members), a.entity_matches_key())
                         # For Activation, we can separate positive/negative
                         # activation into separate groups
                         elif stmt_type == Activation:
@@ -281,8 +289,10 @@ class Preassembler(object):
             logger.info('Preassembling %d components' % (len(stmt_by_group)))
             # This is the preassembly within each Statement group
             for key, stmts in stmt_by_group.items():
-                self._combine_related_in_group(stmts)
-
+                for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                    if not stmt1.entities_match(stmt2):
+                        continue
+                    self._set_supports(stmt1, stmt2)
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.info('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
@@ -290,16 +300,16 @@ class Preassembler(object):
         self.related_stmts = related_stmts
         return self.related_stmts
 
-    def _combine_related_in_group(self, stmts):
-        for stmt1, stmt2 in itertools.combinations(stmts, 2):
-            if (stmt2 not in stmt1.supported_by) and \
-                stmt1.refinement_of(stmt2, self.hierarchies):
-                stmt1.supported_by.append(stmt2)
-                stmt2.supports.append(stmt1)
-            elif (stmt1 not in stmt2.supported_by) and \
-                stmt2.refinement_of(stmt1, self.hierarchies):
-                stmt2.supported_by.append(stmt1)
-                stmt1.supports.append(stmt2)
+    def _set_supports(self, stmt1, stmt2):
+        if (stmt2 not in stmt1.supported_by) and \
+            stmt1.refinement_of(stmt2, self.hierarchies):
+            stmt1.supported_by.append(stmt2)
+            stmt2.supports.append(stmt1)
+        elif (stmt1 not in stmt2.supported_by) and \
+            stmt2.refinement_of(stmt1, self.hierarchies):
+            stmt2.supported_by.append(stmt1)
+            stmt1.supports.append(stmt2)
+
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.
