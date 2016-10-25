@@ -6,7 +6,8 @@ from indra.preassembler import Preassembler, render_stmt_graph, \
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition, Complex, Translocation
+                             ActiveForm, MutCondition, Complex, \
+                             Translocation, Activation
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -392,3 +393,17 @@ def test_complex_refinement_order():
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
+
+def test_activation_refinement():
+    subj = Agent('alcohol', db_refs={'CHEBI': 'CHEBI:16236',
+                                     'HMDB': 'HMDB00108',
+                                     'PUBCHEM': '702',
+                                     'TEXT': 'alcohol'})
+    obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
+    st1 = Activation(subj, 'activity', obj, 'activity', False)
+    st2 = Activation(subj, 'activity', obj, 'activity', True)
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 2)
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 2)
