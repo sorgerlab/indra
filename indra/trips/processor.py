@@ -235,6 +235,9 @@ class TripsProcessor(object):
         # Search for stimulation event
         stim_events = self.tree.findall("EVENT/[type='ONT::STIMULATE']")
         for event in stim_events:
+            event_id = event.attrib.get('id')
+            if event_id in self._static_events:
+                continue
             controller = event.find("arg1/[@role=':AGENT']")
             affected = event.find("arg2/[@role=':AFFECTED']")
             # If either the controller or the affected is missing, skip
@@ -945,8 +948,10 @@ class TripsProcessor(object):
         if precond_event_type in mod_names.keys():
             mods = self._get_modification(precond_event)
             agent.mods = mods
+            return
+
         # Binding precondition
-        elif precond_event_type == 'ONT::BIND':
+        if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
             mod = precond_event.findall('mods/mod')
@@ -962,6 +967,8 @@ class TripsProcessor(object):
                     bound_to_term_id = arg2_id
                 else:
                     bound_to_term_id = arg1_id
+            if bound_to_term_id == agent_term.attrib['id']:
+                return
 
             bound_agents = []
             if bound_to_term_id is not None:
@@ -993,21 +1000,15 @@ class TripsProcessor(object):
             # (after this, neg_flag will be a boolean value)
             neg_flag = neg_flag or \
                        agent_term.find('mods/mod[type="ONT::NEG"]')
-            '''
-            negation_sign = precond_event.find('predicate/negation')
-            if negation_sign is not None:
-                if negation_sign.text == '+':
-                    neg_flag = True
-            '''
             for ba in bound_agents:
                 if neg_flag:
                     bc = BoundCondition(ba, False)
                 else:
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
-        else:
-            logger.warning('Unhandled precondition event type: %s' %
-                           precond_event_type)
+            return
+        logger.warning('Unhandled precondition event type: %s' %
+                       precond_event_type)
 
     def _find_in_term(self, term_id, path):
         tag = self.tree.find("TERM[@id='%s']/%s" % (term_id, path))
