@@ -602,12 +602,21 @@ class Statement(object):
         return self.matches_key() == other.matches_key()
 
     def entities_match(self, other):
-        return self.entities_match_key() == other.entities_match_key()
+        self_key = self.entities_match_key()
+        other_key = other.entities_match_key()
+        if len(self_key) != len(other_key):
+            return False
+        for self_agent, other_agent in zip(self_key, other_key):
+            if self_agent is None or other_agent is None:
+                continue
+            if self_agent != other_agent:
+                return False
+        return True
 
     def entities_match_key(self):
-        key = (type(self), tuple(a.entity_matches_key() if a is not None
-                                  else None for a in self.agent_list()))
-        return str(key)
+        key = tuple(a.entity_matches_key() if a is not None
+                    else None for a in self.agent_list())
+        return key
 
     def print_supports(self):
         print('%s supported_by:' % str(self))
@@ -1349,10 +1358,10 @@ class Complex(Statement):
         return str(key)
 
     def entities_match_key(self):
-        key = (type(self), tuple(a.entity_matches_key() if a is not None
-                                  else None for a in sorted(self.members,
-                                                key=lambda x: x.matches_key())))
-        return str(key)
+        key = tuple(a.entity_matches_key() if a is not None
+                    else None for a in sorted(self.members,
+                                              key=lambda x: x.matches_key()))
+        return key
 
     def agent_list(self):
         return self.members
