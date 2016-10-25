@@ -3,6 +3,7 @@ from builtins import dict, str
 from indra.preassembler.grounding_mapper import *
 from indra.statements import Agent, Phosphorylation, Evidence
 from indra.util import unicode_strs
+from nose.tools import raises
 
 # The grounding map
 # Format:
@@ -58,3 +59,93 @@ def test_save_sentences_unicode():
     assert unicode_strs(sent)
     twg = agent_texts_with_grounding([st])
     save_sentences(twg, [st], 'test_save_sentences.csv')
+
+def test_hgnc_sym_but_not_up():
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'MAPK1'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
+    assert mapped_erk.db_refs['HGNC'] == '6871'
+    assert mapped_erk.db_refs['UP'] == 'P28482'
+    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
+def test_up_but_not_hgnc():
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
+    assert mapped_erk.db_refs['HGNC'] == '6871'
+    assert mapped_erk.db_refs['UP'] == 'P28482'
+    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
+def test_up_but_not_hgnc():
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
+    assert mapped_erk.db_refs['HGNC'] == '6871'
+    assert mapped_erk.db_refs['UP'] == 'P28482'
+    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
+@raises(ValueError)
+def test_hgnc_sym_with_no_id():
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'foobar'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+
+def test_up_and_mismatched_hgnc():
+    """Nothing should happen but this should trigger a warning."""
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(None, erk)
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC':'foobar'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_erk = mapped_stmts[0].sub
+    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
+    assert mapped_erk.db_refs['HGNC'] == 'foobar'
+    assert mapped_erk.db_refs['UP'] == 'P28482'
+    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
+def up_id_with_no_hgnc_id():
+    """Non human protein"""
+    gag = Agent('Gag', db_refs={'TEXT': 'Gag'})
+    stmt = Phosphorylation(None, gag)
+    g_map = {'Gag': {'TEXT': 'Gag', 'UP': 'P04585'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_gag = mapped_stmts[0].sub
+    assert mapped_gag.db_refs['TEXT'] == 'Gag'
+    assert mapped_gag.db_refs.get('HGNC') == None
+    assert mapped_gag.db_refs['UP'] == 'P04585'
+    assert unicode_strs((gag, stmt, gm, mapped_stmts, mapped_gag))
+
+def up_id_with_no_gene_name():
+    """Expect no HGNC entry; no error raised."""
+    no_gn = Agent('NoGN', db_refs={'TEXT': 'NoGN'})
+    stmt = Phosphorylation(None, no_gn)
+    g_map = {'NoGN': {'TEXT': 'NoGN', 'UP': 'A0K5Q6'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    mapped_ag = mapped_stmts[0].sub
+    assert mapped_ag.db_refs['TEXT'] == 'NoGN'
+    assert mapped_ag.db_refs.get('HGNC') == None
+    assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
+    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
