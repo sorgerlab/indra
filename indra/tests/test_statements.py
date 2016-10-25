@@ -304,8 +304,12 @@ def test_matches_activation():
     st3 = Activation(src, 'kinase2',
                      nras2, 'gtpbound2', True,
                      evidence=Evidence(text='bar'))
+    st4 = Activation(src, 'kinase2',
+                     nras2, 'gtpbound2', False,
+                     evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
+    assert(not st3.matches(st4))
     assert unicode_strs((st1, st2, st3))
 
 def test_matches_activitymod():

@@ -996,7 +996,8 @@ class Activation(Statement):
 
     def matches_key(self):
         key = (type(self), self.subj.matches_key(), str(self.subj_activity),
-                self.obj.matches_key(), str(self.obj_activity))
+                self.obj.matches_key(), str(self.obj_activity),
+                str(self.is_activation))
         return str(key)
 
     def agent_list(self):
