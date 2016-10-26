@@ -682,6 +682,13 @@ class BelProcessor(object):
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    db_refs['UP'] = up_id
+                else:
+                    logger.warning('HGNC entity %s with HGNC ID %s has no '
+                                   'corresponding Uniprot ID.' %
+                                   (name, hgnc_id))
         elif namespace in ('MGI', 'RGD'):
             agent_name = name
         elif namespace in ('PFH', 'SFAM'):
