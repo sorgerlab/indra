@@ -75,7 +75,7 @@ def run_preassembly_duplicate(stmts_in, **kwargs):
         if dump_pkl:
             dump_statements(stmts_out, dump_pkl)
     logger.info('Unique statements: %d' % len(stmts_out))
-    be.set_prior_probs(unique_stmts)
+    be.set_prior_probs(stmts_out)
     return stmts_out
 
 def run_preassembly_related(stmts_in, **kwargs):
@@ -91,7 +91,7 @@ def run_preassembly_related(stmts_in, **kwargs):
         if dump_pkl:
             dump_statements(stmts_out, dump_pkl)
     logger.info('Top-level statements: %d' % len(stmts_out))
-    be.set_hierarchy_probs(stmts)
+    be.set_hierarchy_probs(stmts_out)
     return stmts_out
 
 def filter_by_type(stmts_in, stmt_type):

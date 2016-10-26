@@ -13,6 +13,8 @@ except ImportError:
 from indra.statements import *
 from indra.databases import uniprot_client
 
+logger = logging.getLogger('preassembler')
+
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
 
