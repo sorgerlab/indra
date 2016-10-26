@@ -27,17 +27,19 @@ def test_get_children():
     # should not return the intermediate families when a filter is applied.
     mapk = Agent('MAPK', db_refs={'BE':'MAPK'})
     mapks = exp.get_children(mapk, ns_filter=None)
-    assert len(mapks) == 3
+    assert len(mapks) == 12
     assert ('HGNC', 'MAPK1') in mapks
-    assert ('HGNC', 'MAPK3') in mapks
+    assert ('HGNC', 'MAPK9') in mapks
     assert ('BE', 'ERK') in mapks
+    assert ('BE', 'JNK') in mapks
     assert unicode_strs(mapks)
     # Now do the same expansion with a namespace filter
     mapks = exp.get_children(mapk, ns_filter='HGNC')
     assert unicode_strs(mapks)
-    assert len(mapks) == 2
-    assert ('HGNC', 'MAPK1') in mapks
+    assert len(mapks) == 9
     assert ('HGNC', 'MAPK3') in mapks
+    assert ('HGNC', 'MAPK10') in mapks
+    assert ('BE', 'ERK') not in mapks
     # Make sure we can also do this in a case involving both family and complex
     # relationships
     ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
