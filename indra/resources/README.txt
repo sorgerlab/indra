@@ -34,9 +34,11 @@ kinases.tsv
 - Download link: http://www.uniprot.org/uniprot/?query=reviewed%3Ayes+AND+organism%3A%22Homo+sapiens+%28Human%29+%5B9606%5D%22+AND+database%3A%28type%3Ainterpro+IPR000719%29&sort=score
 
 uniprot_entries.tsv
-- A table of all reviewed UniProt entries with UniProt ID, gene name, organism ID
-  and UniProt mnemonic
-- Download link: http://www.uniprot.org/uniprot/?query=reviewed%3Ayes&sort=id&desc=no&columns=id,genes(PREFERRED),organism-id,entry%20name
+- A table of all reviewed UniProt entries plus unreviewed human entries
+  with UniProt ID, gene name, organism ID and UniProt mnemonic
+- Download links: 
+    - http://www.uniprot.org/uniprot/?query=reviewed%3Ayes&sort=id&desc=no&columns=id,genes(PREFERRED),organism-id,entry%20name
+    - http://www.uniprot.org/uniprot/?sort=id&desc=no&compress=no&query=&fil=organism:%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name
 
 uniprot_sec_ac.txt
 - A table of secondary (deprecated) UniProt accession numbers with mappings to
@@ -47,6 +49,8 @@ uniprot_subcell_loc.tsv
 - A table containing UniProt subcellular locations and their descriptions
 - Download link: http://www.uniprot.org/locations/?sort=&desc=&compress=no&query=&force=no&preview=true&format=tab&columns=id
 
+[name]_hierarchy.rdf
+- The INDRA hierarchy graphs used for preassembly
 
 Files that are manually curated
 -------------------------------

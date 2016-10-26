@@ -6,7 +6,16 @@ import urllib
 import logging
 import requests
 from indra.preassembler.make_cellular_component_hierarchy import \
-    get_cellular_components 
+    get_cellular_components
+from indra.preassembler.make_cellular_component_hierarchy import \
+    main as make_ccomp_hierarchy
+from indra.preassembler.make_entity_hierarchy import \
+    main as make_ent_hierarchy
+from indra.preassembler.make_activity_hierarchy import \
+    main as make_act_hierarchy
+from indra.preassembler.make_modification_hierarchy import \
+    main as make_mod_hierarchy
+
 
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -112,7 +121,7 @@ def update_chebi_entries():
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
     url = 'http://purl.obolibrary.org/obo/go.owl'
-    fname = os.path.join(path, 'go.owl')
+    fname = os.path.join(path, '../../data/go.owl')
     save_from_http(url, fname)
     g = rdflib.Graph()
     g.parse(fname)
@@ -168,12 +177,33 @@ def update_bel_chebi_map():
             if chebi_id is not None:
                 fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
 
+def update_entity_hierarchy():
+    logger.info('--Updating entity hierarchy----')
+    fname = os.path.join(path, '../../bioentities/relations.csv')
+    make_ent_hierarchy(fname)
+
+def update_modification_hierarchy():
+    logger.info('--Updating modification hierarchy----')
+    make_mod_hierarchy()
+
+def update_activity_hierarchy():
+    logger.info('--Updating activity hierarchy----')
+    make_act_hierarchy()
+
+def update_cellular_component_hierarchy():
+    logger.info('--Updating cellular component hierarchy----')
+    make_ccomp_hierarchy()
+
 if __name__ == '__main__':
     #update_hgnc_entries()
     #update_kinases()
-    update_uniprot_entries()
+    #update_uniprot_entries()
     #update_uniprot_sec_ac()
     #update_uniprot_subcell_loc()
     #update_chebi_entries()
     #update_cellular_components()
     #update_bel_chebi_map()
+    update_entity_hierarchy()
+    update_modification_hierarchy()
+    update_activity_hierarchy()
+    update_cellular_component_hierarchy()
