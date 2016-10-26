@@ -88,6 +88,7 @@ def update_uniprot_sec_ac():
     urllib.urlretrieve(url, fname)
 
 def update_uniprot_subcell_loc():
+    # TODO: This file could be stored as a tsv instead after some processing
     logger.info('--Updating UniProt subcellular location--')
     url = 'http://www.uniprot.org/locations/?' + \
         '%20sort=&desc=&compress=no&query=&force=no&format=tab&columns=id'
@@ -195,14 +196,14 @@ def update_cellular_component_hierarchy():
     make_ccomp_hierarchy()
 
 if __name__ == '__main__':
-    #update_hgnc_entries()
-    #update_kinases()
-    #update_uniprot_entries()
-    #update_uniprot_sec_ac()
-    #update_uniprot_subcell_loc()
-    #update_chebi_entries()
-    #update_cellular_components()
-    #update_bel_chebi_map()
+    update_hgnc_entries()
+    update_kinases()
+    update_uniprot_entries()
+    update_uniprot_sec_ac()
+    update_uniprot_subcell_loc()
+    update_chebi_entries()
+    update_cellular_components()
+    update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
