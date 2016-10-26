@@ -14,41 +14,7 @@ except ImportError:
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
-# Download http://tinyurl.com/jgm29xp and save it in
-# the indra/data folder as hgnc_entries.txt
-hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-            '/../resources/hgnc_entries.txt'
-try:
-    csv_rows = read_unicode_csv(hgnc_file, delimiter='\t', encoding='utf-8')
-    hgnc_names = {}
-    hgnc_ids = {}
-    hgnc_withdrawn = []
-    uniprot_ids = {}
-    entrez_ids = {}
-    for row in csv_rows:
-        hgnc_id = row[0][5:]
-        hgnc_status = row[3]
-        if hgnc_status == 'Approved':
-            hgnc_name = row[1]
-            hgnc_names[hgnc_id] = hgnc_name
-            hgnc_ids[hgnc_name] = hgnc_id
-        elif hgnc_status == 'Symbol Withdrawn':
-            descr = row[2]
-            m = re.match(r'symbol withdrawn, see ([^ ]*)', descr)
-            new_name = m.groups()[0]
-            hgnc_withdrawn.append(hgnc_id)
-            hgnc_names[hgnc_id] = new_name
-        # Uniprot
-        uniprot_id = row[6]
-        uniprot_ids[hgnc_id] = uniprot_id
-        # Entrez
-        entrez_id = row[5]
-        entrez_ids[hgnc_id] = entrez_id
-except IOError:
-    hgnc_names = {}
-    hgnc_withdrawn = []
-    uniprot_ids = {}
-    entrez_ids = {}
+
 
 def get_uniprot_id(hgnc_id):
     """Return the UniProt ID corresponding to the given HGNC ID.
@@ -171,3 +137,37 @@ def get_hgnc_entry(hgnc_id):
         return None
     xml_tree = ET.XML(res.content, parser=UTB())
     return xml_tree
+
+
+def _read_hgnc_maps():
+    hgnc_file = os.path.dirname(os.path.abspath(__file__)) + \
+                '/../resources/hgnc_entries.tsv'
+    csv_rows = read_unicode_csv(hgnc_file, delimiter='\t', encoding='utf-8')
+    hgnc_names = {}
+    hgnc_ids = {}
+    hgnc_withdrawn = []
+    uniprot_ids = {}
+    entrez_ids = {}
+    for row in csv_rows:
+        hgnc_id = row[0][5:]
+        hgnc_status = row[3]
+        if hgnc_status == 'Approved':
+            hgnc_name = row[1]
+            hgnc_names[hgnc_id] = hgnc_name
+            hgnc_ids[hgnc_name] = hgnc_id
+        elif hgnc_status == 'Symbol Withdrawn':
+            descr = row[2]
+            m = re.match(r'symbol withdrawn, see ([^ ]*)', descr)
+            new_name = m.groups()[0]
+            hgnc_withdrawn.append(hgnc_id)
+            hgnc_names[hgnc_id] = new_name
+        # Uniprot
+        uniprot_id = row[6]
+        uniprot_ids[hgnc_id] = uniprot_id
+        # Entrez
+        entrez_id = row[5]
+        entrez_ids[hgnc_id] = entrez_id
+    return (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids)
+
+hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids = \
+        _read_hgnc_maps()

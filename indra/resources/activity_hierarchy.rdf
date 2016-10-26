@@ -3,10 +3,13 @@
    xmlns:ns1="http://sorger.med.harvard.edu/indra/relations/"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/gtpbound">
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/catalytic">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/activity"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/transcriptional">
+    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/activity"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/gtpbound">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/activity"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/phosphatase">
@@ -14,8 +17,5 @@
   </rdf:Description>
   <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/kinase">
     <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/catalytic"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/catalytic">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/activity"/>
   </rdf:Description>
 </rdf:RDF>
