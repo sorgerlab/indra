@@ -49,6 +49,11 @@ def test_get_gene_name_nonhuman():
     assert(gene_name == 'Map2k1')
     assert unicode_strs(gene_name)
 
+def test_get_gene_name_unreviewed():
+    gene_name = uniprot_client.get_gene_name('X6RK18', web_fallback=False)
+    assert(gene_name == 'EXO5')
+    assert unicode_strs(gene_name)
+
 def test_get_gene_name_no_gene_name():
     gene_name = uniprot_client.get_gene_name('P04434', web_fallback=False)
     assert(gene_name is None)

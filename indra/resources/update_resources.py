@@ -16,15 +16,21 @@ logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
 
-def save_from_http(url, fname):
+def load_from_http(url):
     logger.info('Downloading %s' % url)
     res = requests.get(url)
     if res.status_code != 200:
         logger.error('Failed to download %s' % url)
         return
+    return res.content
+
+def save_from_http(url, fname):
+    content = load_from_http(url)
+    if content is None:
+        return
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
-        fh.write(res.content)
+        fh.write(content)
 
 def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
@@ -48,8 +54,21 @@ def update_uniprot_entries():
         'sort=id&desc=no&compress=no&query=reviewed:yes&' + \
         'fil=&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,' + \
         'entry%20name'
+    reviewed_entries = load_from_http(url)
+    url = 'http://www.uniprot.org/uniprot/?' + \
+        'sort=id&desc=no&compress=no&query=&fil=organism:' + \
+        '%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&' + \
+        'format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
+    unreviewed_human_entries = load_from_http(url)
+    if not((reviewed_entries is not None) and
+            (unreviewed_human_entries is not None)):
+            return
+    lines = reviewed_entries.strip().split('\n')
+    lines += unreviewed_human_entries.strip().split('\n')[1:]
+    full_table = '\n'.join(lines)
     fname = os.path.join(path, 'uniprot_entries.tsv')
-    save_from_http(url, fname)
+    with open(fname, 'wb') as fh:
+        fh.write(full_table)
 
 def update_uniprot_sec_ac():
     logger.info('--Updating UniProt secondary accession--')
@@ -113,14 +132,11 @@ def update_bel_chebi_map():
         'equivalence/'
     url1 = url + 'chebi-ids.beleq'
     url2 = url + 'chebi.beleq'
-    logger.info('Downloading %s' % url1)
-    res1 = requests.get(url1)
-    logger.info('Downloading %s' % url2)
-    res2 = requests.get(url2)
-    if not (res1.status_code == 200 and res2.status_code == 200):
-        logger.info('Download failed.')
+    res1 = load_from_http(url1)
+    res2 = load_from_http(url2)
+    if not ((res1 is not None) and (res2 is not None)):
         return
-    id_lines = [lin.strip() for lin in res1.content.split('\n')]
+    id_lines = [lin.strip() for lin in res1.split('\n')]
     started = False
     id_map = {}
     for id_line in id_lines:
@@ -132,7 +148,7 @@ def update_bel_chebi_map():
                 id_map[uuid] = chebi_id
         if id_line == '[Values]':
             started = True
-    name_lines = [lin.strip() for lin in res2.content.split('\n')]
+    name_lines = [lin.strip() for lin in res2.split('\n')]
     started = False
     name_map = {}
     for name_line in name_lines:
@@ -153,11 +169,11 @@ def update_bel_chebi_map():
                 fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
 
 if __name__ == '__main__':
-    update_hgnc_entries()
-    update_kinases()
+    #update_hgnc_entries()
+    #update_kinases()
     update_uniprot_entries()
-    update_uniprot_sec_ac()
-    update_uniprot_subcell_loc()
-    update_chebi_entries()
-    update_cellular_components()
-    update_bel_chebi_map()
+    #update_uniprot_sec_ac()
+    #update_uniprot_subcell_loc()
+    #update_chebi_entries()
+    #update_cellular_components()
+    #update_bel_chebi_map()
