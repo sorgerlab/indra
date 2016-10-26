@@ -258,7 +258,7 @@ class Preassembler(object):
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
-            logger.info('Preassembling %d components' % (len(stmt_by_group)))
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
@@ -288,7 +288,7 @@ class Preassembler(object):
                             key = (i, a.entity_matches_key())
                         stmt_by_group[key].append(stmt)
 
-            logger.info('Preassembling %d components' % (len(stmt_by_group)))
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             # This is the preassembly within each Statement group
             for key, stmts in stmt_by_group.items():
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
@@ -296,7 +296,7 @@ class Preassembler(object):
                         continue
                     self._set_supports(stmt1, stmt2)
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
-            logger.info('%d top level' % len(toplevel_stmts))
+            logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
         self.related_stmts = related_stmts
