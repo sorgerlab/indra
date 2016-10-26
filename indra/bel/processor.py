@@ -689,10 +689,15 @@ class BelProcessor(object):
                     logger.warning('HGNC entity %s with HGNC ID %s has no '
                                    'corresponding Uniprot ID.' %
                                    (name, hgnc_id))
+            else:
+                logger.warning("Couldn't get HGNC ID for HGNC symbol %s" %
+                               name)
         elif namespace in ('MGI', 'RGD'):
             agent_name = name
+            db_refs[namespace] = name
         elif namespace in ('PFH', 'SFAM'):
             indra_name = bel_to_indra.get(name)
+            db_refs[namespace] = name
             if indra_name is None:
                 agent_name = name
                 msg = 'Could not find mapping for BEL family: %s' % name
@@ -710,9 +715,17 @@ class BelProcessor(object):
             agent_name = name
         elif namespace == 'EGID':
             hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+            db_refs['EGID'] = name
             if hgnc_id is not None:
                 db_refs['HGNC'] = str(hgnc_id)
                 agent_name = hgnc_client.get_hgnc_name(hgnc_id)
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    db_refs['UP'] = up_id
+                else:
+                    logger.warning('HGNC entity %s with HGNC ID %s has no '
+                                   'corresponding Uniprot ID.' %
+                                   (name, hgnc_id))
             else:
                 logger.warning('Could not map EGID%s to HGNC.' % name)
                 agent_name = 'E%s' % name
