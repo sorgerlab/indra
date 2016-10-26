@@ -19,11 +19,11 @@ cellular_components.tsv
 
 chebi_to_chembl.tsv
 - A table of ChEBI IDs and their corresponding ChEBML IDs
-- It is exported from ftp://ftp.ebi.ac.uk/pub/databases/chebi/Flat_file_tab_delimited/database_accession.tsv
+- It is exported from ftp://ftp.ebi.ac.uk/pub/databases/chebi/Flat_file_tab_delimited/relations.tsv.gz
 
 chebi_to_pubchem.tsv
 - A table of ChEBI IDs and their corresponding PUBCHEM IDs
-- It is exported from ftp://ftp.ebi.ac.uk/pub/databases/chebi/Flat_file_tab_delimited/database_accession.tsv
+- It is exported from ftp://ftp.ebi.ac.uk/pub/databases/chebi/Flat_file_tab_delimited/relations.tsv.gz
 
 hgnc_entries.txt
 - A table containing HGNC IDs, symbols and mappings to Entrez and UniProt
