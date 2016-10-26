@@ -20,6 +20,7 @@ class GroundingMapper(object):
     def map_agents(self, stmts, do_rename=True):
         # Make a copy of the stmts
         mapped_stmts = []
+        num_skipped = 0
         # Iterate over the statements
         for stmt in stmts:
             mapped_stmt = deepcopy(stmt)
@@ -38,6 +39,10 @@ class GroundingMapper(object):
                 # If it's in the map but it maps to None, then filter out
                 # this statement by skipping it
                 if map_db_refs is None:
+                    # Increase counter if this statement has not already
+                    # been skipped via another agent
+                    if not skip_stmt:
+                        num_skipped += 1
                     logger.debug("Skipping %s" % agent_text)
                     skip_stmt = True
                 # If it has a value that's not None, map it and add it
@@ -108,6 +113,7 @@ class GroundingMapper(object):
             # Check if we should skip the statement
             if not skip_stmt:
                 mapped_stmts.append(mapped_stmt)
+        logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
     def rename_agents(self, stmts):
@@ -174,7 +180,9 @@ def all_agents(stmts):
     agents = []
     for stmt in stmts:
         for agent in stmt.agent_list():
-            if agent is not None:
+            # Agents don't always have a TEXT db_refs entry (for instance
+            # in the case of Statements from databases) so we check for this.
+            if agent is not None and agent.db_refs.get('TEXT') is not None:
                 agents.append(agent)
     return agents
 
