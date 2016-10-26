@@ -15,7 +15,7 @@ bel_chebi_map.tsv
 
 cellular_components.tsv
 - A table of GO IDs and standardized names corresponding to cellular locations
-- It is exported from http://www.geneontology.org/ontology/go.owl
+- It is exported from http://purl.obolibrary.org/obo/go.owl
 
 chebi_to_chembl.tsv
 - A table of ChEBI IDs and their corresponding ChEBML IDs

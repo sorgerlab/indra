@@ -1,12 +1,12 @@
 import os
 import gzip
 import pandas
-import shutil
+import rdflib
 import urllib
-import urllib2
 import logging
 import requests
-from contextlib import closing
+from indra.preassembler.make_cellular_component_hierarchy import \
+    get_cellular_components 
 
 path = os.path.join(os.path.dirname(__file__), 'tmp')
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -90,10 +90,26 @@ def update_chebi_entries():
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI_ID', 'CHEMBL_ID'], index=False)
 
+def update_cellular_components():
+    logger.info('--Updating GO cellular components----')
+    url = 'http://purl.obolibrary.org/obo/go.owl'
+    fname = os.path.join(path, 'go.owl')
+    save_from_http(url, fname)
+    g = rdflib.Graph()
+    g.parse(fname)
+    component_map, component_part_map = get_cellular_components(g)
+    fname = os.path.join(path, 'cellular_components.tsv')
+    logger.info('Saving into %s' % fname)
+    with open(fname, 'wb') as fh:
+        fh.write('id\tname\n')
+        for comp_id, comp_name in component_map.items():
+            fh.write('%s\t%s\n' % (comp_id, comp_name))
+
 if __name__ == '__main__':
-    #update_hgnc_entries()
-    #update_kinases()
-    #update_uniprot_entries()
-    #update_uniprot_sec_ac()
-    #update_uniprot_subcell_loc()
+    update_hgnc_entries()
+    update_kinases()
+    update_uniprot_entries()
+    update_uniprot_sec_ac()
+    update_uniprot_subcell_loc()
     update_chebi_entries()
+    update_cellular_components()
