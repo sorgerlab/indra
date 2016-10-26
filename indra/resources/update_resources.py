@@ -8,7 +8,7 @@ import requests
 from indra.preassembler.make_cellular_component_hierarchy import \
     get_cellular_components 
 
-path = os.path.join(os.path.dirname(__file__), 'tmp')
+path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger('update_resources')
@@ -81,14 +81,14 @@ def update_chebi_entries():
     df_pubchem = df[df['REFERENCE_DB_NAME']=='PubChem']
     df_pubchem.sort_values('COMPOUND_ID', ascending=True, inplace=True)
     df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
-                      header=['CHEBI_ID', 'PUBCHEM_ID'], index=False)
+                      header=['CHEBI', 'PUBCHEM'], index=False)
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
     df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
     df_chembl.sort_values('COMPOUND_ID', ascending=True, inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
-                      header=['CHEBI_ID', 'CHEMBL_ID'], index=False)
+                      header=['CHEBI', 'CHEMBL'], index=False)
 
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
@@ -102,7 +102,9 @@ def update_cellular_components():
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
         fh.write('id\tname\n')
-        for comp_id, comp_name in component_map.items():
+
+        for comp_id, comp_name in sorted(component_map.items(),
+                                          key=lambda x: x[0]):
             fh.write('%s\t%s\n' % (comp_id, comp_name))
 
 if __name__ == '__main__':
