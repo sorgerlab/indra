@@ -1,21 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rdf:RDF
-   xmlns:ns1="http://sorger.med.harvard.edu/indra/relations/"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
->
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/hydroxylation">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/modification"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/sumoylation">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/modification"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/ubiquitination">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/modification"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/phosphorylation">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/modification"/>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://sorger.med.harvard.edu/indra/entities/acetylation">
-    <ns1:isa rdf:resource="http://sorger.med.harvard.edu/indra/entities/modification"/>
-  </rdf:Description>
-</rdf:RDF>
+<http://sorger.med.harvard.edu/indra/entities/acetylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
+<http://sorger.med.harvard.edu/indra/entities/hydroxylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
+<http://sorger.med.harvard.edu/indra/entities/phosphorylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
+<http://sorger.med.harvard.edu/indra/entities/sumoylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
+<http://sorger.med.harvard.edu/indra/entities/ubiquitination> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
