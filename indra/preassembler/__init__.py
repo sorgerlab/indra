@@ -1,15 +1,19 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
+import time
 import logging
+import itertools
+import collections
+from copy import copy, deepcopy
 try:
     import pygraphviz as pgv
 except ImportError:
     pass
-import itertools
-from copy import copy, deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
+
+logger = logging.getLogger('preassembler')
 
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
@@ -110,6 +114,7 @@ class Preassembler(object):
         # only in their evidence).
         # Sort the statements in place by matches_key()
         st.sort(key=lambda x: x.matches_key())
+
         for key, duplicates in itertools.groupby(st,
                                                  key=lambda x: x.matches_key()):
             # Get the first statement and add the evidence of all subsequent
@@ -207,22 +212,22 @@ class Preassembler(object):
         unique_stmts = deepcopy(self.unique_stmts)
         eh = self.hierarchies['entity']
         # Make a list of Statement types
-        stmts_by_type = {}
+        stmts_by_type = collections.defaultdict(lambda: [])
         for stmt in unique_stmts:
-            try:
-                stmts_by_type[type(stmt)].append(stmt)
-            except KeyError:
-                stmts_by_type[type(stmt)] = [stmt]
+            stmts_by_type[type(stmt)].append(stmt)
+
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
+            logger.info('Preassembling %s (%s)' %
+                        (stmt_type.__name__, len(stmts_this_type)))
             no_comp_stmts = []
+            stmt_by_group = collections.defaultdict(lambda: [])
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
-            stmt_by_comp = {}
             for stmt in stmts_this_type:
                 any_component = False
-                for a in stmt.agent_list():
+                for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
                         a_ns, a_id = a.get_grounding()
                         if a_ns is None or a_id is None:
@@ -233,59 +238,80 @@ class Preassembler(object):
                         component = eh.components.get(uri)
                         if component is not None:
                             any_component = True
-                            try:
-                                stmt_by_comp[component].append(stmt)
-                            except KeyError:
-                                stmt_by_comp[component] = [stmt]
+                            # For Complexes we cannot optimize by argument
+                            # position because all permutations need to be
+                            # considered but we can use the number of members
+                            # to statify into groups
+                            if stmt_type == Complex:
+                                key = (len(stmt.members), component)
+                            # For Activation, we can separate positive/negative
+                            # activation into separate groups
+                            elif stmt_type == Activation:
+                                key = (i, component, stmt.is_activation)
+                            # For all other statements, we separate groups by
+                            # the argument position of the Agent
+                            else:
+                                key = (i, component)
+                            stmt_by_group[key].append(stmt)
                 # If the Statement has no Agent belonging to any component
                 # then we put it in a special group
                 if not any_component:
                     no_comp_stmts.append(stmt)
 
-            # This is the preassembly within each component ID group
-            for comp, stmts in stmt_by_comp.items():
-                comparisons = list(itertools.combinations(stmts, 2))
-                for stmt1, stmt2 in comparisons:
-                    if stmt1.refinement_of(stmt2, self.hierarchies):
-                        if stmt2 not in stmt1.supported_by:
-                            stmt1.supported_by.append(stmt2)
-                            stmt2.supports.append(stmt1)
-                    elif stmt2.refinement_of(stmt1, self.hierarchies):
-                        if stmt1 not in stmt2.supported_by:
-                            stmt2.supported_by.append(stmt1)
-                            stmt1.supports.append(stmt2)
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
+            for key, stmts in stmt_by_group.items():
+                for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                    self._set_supports(stmt1, stmt2)
 
+            #==========================================================
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
             # We take all the Agent entity_matches_key()-s and group
             # Statements based on this key
-            no_comp_keys = {}
+            stmt_by_group = collections.defaultdict(lambda: [])
             for stmt in no_comp_stmts:
-                for a in stmt.agent_list():
+                for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
-                        key = a.entity_matches_key()
-                        try:
-                            no_comp_keys[key].append(stmt)
-                        except KeyError:
-                            no_comp_keys[key] = [stmt]
+                        # For Complexes we cannot optimize by argument
+                        # position because all permutations need to be
+                        # considered
+                        if stmt_type == Complex:
+                            key = (len(stmt.members), a.entity_matches_key())
+                        # For Activation, we can separate positive/negative
+                        # activation into separate groups
+                        elif stmt_type == Activation:
+                            key = (i, a.entity_matches_key(),
+                                   stmt.is_activation)
+                        # For all other statements, we separate groups by
+                        # the argument position of the Agent
+                        else:
+                            key = (i, a.entity_matches_key())
+                        stmt_by_group[key].append(stmt)
+
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             # This is the preassembly within each Statement group
-            # keyed by the Agent entity_matches_key
-            for _, stmts in no_comp_keys.items():
-                comparisons = list(itertools.combinations(stmts, 2))
-                for stmt1, stmt2 in comparisons:
-                    if stmt1.refinement_of(stmt2, self.hierarchies):
-                        if stmt2 not in stmt1.supported_by:
-                            stmt1.supported_by.append(stmt2)
-                            stmt2.supports.append(stmt1)
-                    elif stmt2.refinement_of(stmt1, self.hierarchies):
-                        if stmt1 not in stmt2.supported_by:
-                            stmt2.supported_by.append(stmt1)
-                            stmt1.supports.append(stmt2)
+            for key, stmts in stmt_by_group.items():
+                for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                    if not stmt1.entities_match(stmt2):
+                        continue
+                    self._set_supports(stmt1, stmt2)
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
+            logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
         self.related_stmts = related_stmts
         return self.related_stmts
+
+    def _set_supports(self, stmt1, stmt2):
+        if (stmt2 not in stmt1.supported_by) and \
+            stmt1.refinement_of(stmt2, self.hierarchies):
+            stmt1.supported_by.append(stmt2)
+            stmt2.supports.append(stmt1)
+        elif (stmt1 not in stmt2.supported_by) and \
+            stmt2.refinement_of(stmt1, self.hierarchies):
+            stmt2.supported_by.append(stmt1)
+            stmt1.supports.append(stmt2)
+
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.

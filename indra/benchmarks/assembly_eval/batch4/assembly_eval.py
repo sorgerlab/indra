@@ -108,7 +108,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     print('%d statements after combining duplicates.' % len(unique_stmts))
 
     # Run BeliefEngine on unique statements
-    epe = BeliefEngine(pa.unique_stmts)
+    epe = BeliefEngine()
     epe.set_prior_probs(pa.unique_stmts)
 
     # Build statement hierarchy

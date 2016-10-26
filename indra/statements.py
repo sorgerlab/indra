@@ -291,8 +291,7 @@ class Agent(object):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
-        name_str = self.name
-        key = (name_str,
+        key = (self.entity_matches_key(),
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
                self.active, self.location,
@@ -306,8 +305,10 @@ class Agent(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
-        return self.name
-
+        db_refs_key = 'BE:%s;UP:%s;HGNC:%s' % (self.db_refs.get('BE'),
+                                               self.db_refs.get('UP'),
+                                               self.db_refs.get('HGNC'))
+        return str((self.name, db_refs_key))
     # Function to get the namespace to look in
     def get_grounding(self):
         be = self.db_refs.get('BE')
@@ -601,12 +602,21 @@ class Statement(object):
         return self.matches_key() == other.matches_key()
 
     def entities_match(self, other):
-        return self.entities_match_key() == other.entities_match_key()
+        self_key = self.entities_match_key()
+        other_key = other.entities_match_key()
+        if len(self_key) != len(other_key):
+            return False
+        for self_agent, other_agent in zip(self_key, other_key):
+            if self_agent is None or other_agent is None:
+                continue
+            if self_agent != other_agent:
+                return False
+        return True
 
     def entities_match_key(self):
-        key = (type(self), tuple(a.entity_matches_key() if a is not None
-                                  else None for a in self.agent_list()))
-        return str(key)
+        key = tuple(a.entity_matches_key() if a is not None
+                    else None for a in self.agent_list())
+        return key
 
     def print_supports(self):
         print('%s supported_by:' % str(self))
@@ -996,7 +1006,8 @@ class Activation(Statement):
 
     def matches_key(self):
         key = (type(self), self.subj.matches_key(), str(self.subj_activity),
-                self.obj.matches_key(), str(self.obj_activity))
+                self.obj.matches_key(), str(self.obj_activity),
+                str(self.is_activation))
         return str(key)
 
     def agent_list(self):
@@ -1347,10 +1358,10 @@ class Complex(Statement):
         return str(key)
 
     def entities_match_key(self):
-        key = (type(self), tuple(a.entity_matches_key() if a is not None
-                                  else None for a in sorted(self.members,
-                                                key=lambda x: x.matches_key())))
-        return str(key)
+        key = tuple(a.entity_matches_key() if a is not None
+                    else None for a in sorted(self.members,
+                                              key=lambda x: x.matches_key()))
+        return key
 
     def agent_list(self):
         return self.members

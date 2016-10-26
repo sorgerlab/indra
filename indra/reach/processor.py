@@ -3,8 +3,8 @@ from builtins import dict, str
 import re
 import logging
 import objectpath
-
 from indra.statements import *
+from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
 
 logger = logging.getLogger('reach')
@@ -311,6 +311,11 @@ class ReachProcessor(object):
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name is not None:
                     agent_name = self._get_valid_name(gene_name)
+                    # If the gene name corresponds to an HGNC ID, add it to the
+                    # db_refs
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_refs['HGNC'] = hgnc_id
             elif ns == 'interpro':
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':

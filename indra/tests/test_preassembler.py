@@ -6,19 +6,9 @@ from indra.preassembler import Preassembler, render_stmt_graph, \
 from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition, Complex, Translocation
+                             ActiveForm, MutCondition, Complex, \
+                             Translocation, Activation
 from indra.preassembler.hierarchy_manager import hierarchies
-
-"""
-def test_from_text():
-    sentences = ['Src phosphorylates Ras, bound to GTP, at Tyr32.', 
-                'Src phosphorylates NRAS at Tyr32.',
-                'Src phosphorylates NRAS that is bound to GTP.']
-    pa = Preassembler()
-    for s in sentences:
-        tp = trips.process_text(s)
-        pa.add_statements(tp.statements)
-"""
 
 def test_duplicates():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
@@ -311,6 +301,29 @@ def test_translocation():
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
 
+def test_grounding_aggregation():
+    braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
+    braf2 = Agent('BRAF', db_refs={'TEXT': 'BRAF'})
+    braf3 = Agent('BRAF', db_refs={'TEXT': 'Braf', 'UP': 'P15056'})
+    st1 = Phosphorylation(None, braf1)
+    st2 = Phosphorylation(None, braf2)
+    st3 = Phosphorylation(None, braf3)
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    unique_stmts = pa.combine_duplicates()
+    assert(len(unique_stmts) == 3)
+
+def test_grounding_aggregation_complex():
+    mek = Agent('MEK')
+    braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
+    braf2 = Agent('BRAF', db_refs={'TEXT': 'BRAF', 'dummy': 'dummy'})
+    braf3 = Agent('BRAF', db_refs={'TEXT': 'Braf', 'UP': 'P15056'})
+    st1 = Complex([mek, braf1])
+    st2 = Complex([braf2, mek])
+    st3 = Complex([mek, braf3])
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    unique_stmts = pa.combine_duplicates()
+    assert(len(unique_stmts) == 3)
+
 def test_render_stmt_graph():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
@@ -380,3 +393,17 @@ def test_complex_refinement_order():
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
+
+def test_activation_refinement():
+    subj = Agent('alcohol', db_refs={'CHEBI': 'CHEBI:16236',
+                                     'HMDB': 'HMDB00108',
+                                     'PUBCHEM': '702',
+                                     'TEXT': 'alcohol'})
+    obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
+    st1 = Activation(subj, 'activity', obj, 'activity', False)
+    st2 = Activation(subj, 'activity', obj, 'activity', True)
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 2)
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 2)

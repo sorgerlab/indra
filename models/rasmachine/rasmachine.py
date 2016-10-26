@@ -13,7 +13,7 @@ import gmail_client
 import twitter_client
 import ndex.client
 from indra import reach
-from indra.literature import pubmed_client, get_full_text
+from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler, PysbAssembler
 from indra.tools.incremental_model import IncrementalModel
 
@@ -57,6 +57,8 @@ def process_paper(model_name, pmid):
             if os.path.exists('reach_output.json'):
                 shutil.move('reach_output.json', fulltext_path)
         elif txt_format == 'elsevier_xml':
+            # Extract the raw text from the Elsevier XML
+            txt = elsevier_client.extract_text(txt)
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
                 shutil.move('reach_output.json', fulltext_path)

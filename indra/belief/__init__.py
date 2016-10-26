@@ -4,8 +4,7 @@ import numpy
 import indra.preassembler.sitemapper as sm
 
 class BeliefEngine(object):
-    def __init__(self, statements):
-        self.statements = statements
+    def __init__(self):
         self.prior_probs_rand = {
             'biopax': 0.2,
             'bel': 0.1,
@@ -18,7 +17,7 @@ class BeliefEngine(object):
             'biopax': 0.01,
             'bel': 0.01,
             'trips': 0.2,
-            'reach': 0.,
+            'reach': 0.0,
             'biogrid': 0.01,
             'assertion': 0.0
             }
