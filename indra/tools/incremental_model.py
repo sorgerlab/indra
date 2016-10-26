@@ -250,7 +250,7 @@ class IncrementalModel(object):
         logger.info('%d unique Statements' % len(self.unique_stmts))
 
         # Run BeliefEngine on unique statements
-        be = BeliefEngine(self.unique_stmts)
+        be = BeliefEngine()
         be.set_prior_probs(self.unique_stmts)
 
         # Build statement hierarchy
