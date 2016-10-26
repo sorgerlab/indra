@@ -3,12 +3,13 @@ from builtins import dict, str
 import pickle
 import logging
 from indra.statements import Agent
-from indra.assemblers import PysbAssembler
-from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
-from indra.preassembler import grounding_mapper as gm
 from indra.belief import BeliefEngine
+from indra.assemblers import PysbAssembler
 from indra.databases import uniprot_client
+from indra.preassembler import Preassembler
+from indra.preassembler import grounding_mapper as gm
+from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 logger = logging.getLogger('incremental_model')
 
@@ -205,7 +206,8 @@ class IncrementalModel(object):
             A list of filter options to apply when choosing the statements.
             See description above for more details. Default: None
         """
-        stmts = self.get_statements_noprior()
+        stmts = self.get_statements()
+        logger.info('%d raw Statements in total' % len(stmts))
 
         # Fix grounding
         logger.info('Running grounding map')
@@ -213,11 +215,15 @@ class IncrementalModel(object):
         prot_map = gm.protein_map_from_twg(twg)
         gm.default_grounding_map.update(prot_map)
         gmap = gm.GroundingMapper(gm.default_grounding_map)
-        gmapped_stmts = gmap.map_agents(stmts, do_rename=True)
+        stmts = gmap.map_agents(stmts, do_rename=True)
 
-        # Merge the prior and the mapped non-prior
-        stmts = gmapped_stmts + self.get_statements_prior()
-        logger.info('%d unfiltered Statements' % len(stmts))
+        logger.info('%d Statements after grounding map' % len(stmts))
+
+        # Fix sites
+        sm = SiteMapper(default_site_map)
+        stmts, _ = sm.map_sites(stmts)
+
+        logger.info('%d Statements with valid sequence' % len(stmts))
 
         if filters:
             if 'grounding' in filters:
@@ -241,6 +247,7 @@ class IncrementalModel(object):
         logger.info('Preassembling %d Statements' % len(stmts))
         pa = Preassembler(hierarchies, stmts)
         self.unique_stmts = pa.combine_duplicates()
+        logger.info('%d unique Statements' % len(self.unique_stmts))
 
         # Run BeliefEngine on unique statements
         be = BeliefEngine(self.unique_stmts)
@@ -248,6 +255,7 @@ class IncrementalModel(object):
 
         # Build statement hierarchy
         self.toplevel_stmts = pa.combine_related()
+        logger.info('%d top-level Statements' % len(self.toplevel_stmts))
         # Run BeliefEngine on hierarchy
         be.set_hierarchy_probs(self.toplevel_stmts)
 
