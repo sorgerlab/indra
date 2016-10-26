@@ -21,7 +21,13 @@ def main():
     g.add((en.term('phosphatase'), isa, en.term('catalytic')))
 
     with open(hierarchy_path, 'wb') as out_file:
-        g_bytes = g.serialize(format='xml', encoding='utf-8')
+        g_bytes = g.serialize(format='nt')
+        # Replace extra new lines in string and get rid of empty line at end
+        g_bytes = g_bytes.replace('\n\n', '\n').strip()
+        # Split into rows and sort
+        rows = g_bytes.split('\n')
+        rows.sort()
+        g_bytes = '\n'.join(rows)
         out_file.write(g_bytes)
 
 if __name__ == '__main__':
