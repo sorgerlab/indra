@@ -30,7 +30,7 @@ class HierarchyManager(object):
     def __init__(self, rdf_file):
         """Initialize with the path to an RDF file"""
         self.graph = rdflib.Graph()
-        self.graph.parse(rdf_file)
+        self.graph.parse(rdf_file, format='nt')
         self.isa_closure = {}
         self.partof_closure = {}
         self.components = {}

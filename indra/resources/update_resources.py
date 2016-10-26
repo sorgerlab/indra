@@ -6,7 +6,16 @@ import urllib
 import logging
 import requests
 from indra.preassembler.make_cellular_component_hierarchy import \
-    get_cellular_components 
+    get_cellular_components
+from indra.preassembler.make_cellular_component_hierarchy import \
+    main as make_ccomp_hierarchy
+from indra.preassembler.make_entity_hierarchy import \
+    main as make_ent_hierarchy
+from indra.preassembler.make_activity_hierarchy import \
+    main as make_act_hierarchy
+from indra.preassembler.make_modification_hierarchy import \
+    main as make_mod_hierarchy
+
 
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -16,15 +25,21 @@ logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
 
-def save_from_http(url, fname):
+def load_from_http(url):
     logger.info('Downloading %s' % url)
     res = requests.get(url)
     if res.status_code != 200:
         logger.error('Failed to download %s' % url)
         return
+    return res.content
+
+def save_from_http(url, fname):
+    content = load_from_http(url)
+    if content is None:
+        return
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
-        fh.write(res.content)
+        fh.write(content)
 
 def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
@@ -48,8 +63,21 @@ def update_uniprot_entries():
         'sort=id&desc=no&compress=no&query=reviewed:yes&' + \
         'fil=&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,' + \
         'entry%20name'
+    reviewed_entries = load_from_http(url)
+    url = 'http://www.uniprot.org/uniprot/?' + \
+        'sort=id&desc=no&compress=no&query=&fil=organism:' + \
+        '%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&' + \
+        'format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
+    unreviewed_human_entries = load_from_http(url)
+    if not((reviewed_entries is not None) and
+            (unreviewed_human_entries is not None)):
+            return
+    lines = reviewed_entries.strip().split('\n')
+    lines += unreviewed_human_entries.strip().split('\n')[1:]
+    full_table = '\n'.join(lines)
     fname = os.path.join(path, 'uniprot_entries.tsv')
-    save_from_http(url, fname)
+    with open(fname, 'wb') as fh:
+        fh.write(full_table)
 
 def update_uniprot_sec_ac():
     logger.info('--Updating UniProt secondary accession--')
@@ -60,6 +88,7 @@ def update_uniprot_sec_ac():
     urllib.urlretrieve(url, fname)
 
 def update_uniprot_subcell_loc():
+    # TODO: This file could be stored as a tsv instead after some processing
     logger.info('--Updating UniProt subcellular location--')
     url = 'http://www.uniprot.org/locations/?' + \
         '%20sort=&desc=&compress=no&query=&force=no&format=tab&columns=id'
@@ -93,7 +122,7 @@ def update_chebi_entries():
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
     url = 'http://purl.obolibrary.org/obo/go.owl'
-    fname = os.path.join(path, 'go.owl')
+    fname = os.path.join(path, '../../data/go.owl')
     save_from_http(url, fname)
     g = rdflib.Graph()
     g.parse(fname)
@@ -113,14 +142,11 @@ def update_bel_chebi_map():
         'equivalence/'
     url1 = url + 'chebi-ids.beleq'
     url2 = url + 'chebi.beleq'
-    logger.info('Downloading %s' % url1)
-    res1 = requests.get(url1)
-    logger.info('Downloading %s' % url2)
-    res2 = requests.get(url2)
-    if not (res1.status_code == 200 and res2.status_code == 200):
-        logger.info('Download failed.')
+    res1 = load_from_http(url1)
+    res2 = load_from_http(url2)
+    if not ((res1 is not None) and (res2 is not None)):
         return
-    id_lines = [lin.strip() for lin in res1.content.split('\n')]
+    id_lines = [lin.strip() for lin in res1.split('\n')]
     started = False
     id_map = {}
     for id_line in id_lines:
@@ -132,7 +158,7 @@ def update_bel_chebi_map():
                 id_map[uuid] = chebi_id
         if id_line == '[Values]':
             started = True
-    name_lines = [lin.strip() for lin in res2.content.split('\n')]
+    name_lines = [lin.strip() for lin in res2.split('\n')]
     started = False
     name_map = {}
     for name_line in name_lines:
@@ -152,6 +178,23 @@ def update_bel_chebi_map():
             if chebi_id is not None:
                 fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
 
+def update_entity_hierarchy():
+    logger.info('--Updating entity hierarchy----')
+    fname = os.path.join(path, '../../bioentities/relations.csv')
+    make_ent_hierarchy(fname)
+
+def update_modification_hierarchy():
+    logger.info('--Updating modification hierarchy----')
+    make_mod_hierarchy()
+
+def update_activity_hierarchy():
+    logger.info('--Updating activity hierarchy----')
+    make_act_hierarchy()
+
+def update_cellular_component_hierarchy():
+    logger.info('--Updating cellular component hierarchy----')
+    make_ccomp_hierarchy()
+
 if __name__ == '__main__':
     update_hgnc_entries()
     update_kinases()
@@ -161,3 +204,7 @@ if __name__ == '__main__':
     update_chebi_entries()
     update_cellular_components()
     update_bel_chebi_map()
+    update_entity_hierarchy()
+    update_modification_hierarchy()
+    update_activity_hierarchy()
+    update_cellular_component_hierarchy()

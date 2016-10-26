@@ -23,6 +23,17 @@ ns_map = {'http://sorger.med.harvard.edu/indra/entities/': 'BE',
           'http://identifiers.org/hgnc.symbol/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
 
+def save_hierarchy(g, path):
+    with open(path, 'wb') as out_file:
+        g_bytes = g.serialize(format='nt')
+        # Replace extra new lines in string and get rid of empty line at end
+        g_bytes = g_bytes.replace(b'\n\n', b'\n').strip()
+        # Split into rows and sort
+        rows = g_bytes.split(b'\n')
+        rows.sort()
+        g_bytes = b'\n'.join(rows)
+        out_file.write(g_bytes)
+
 def make_term(ns_name, id):
     if ns_name == 'HGNC':
         term = hgnc_ns.term(id)
@@ -54,10 +65,7 @@ def main(relations_file):
             raise ValueError("Invalid relation %s" % rel)
         g.add((term1, rel_term, term2))
 
-    with open(hierarchy_path, 'wb') as out_file:
-        g_bytes = g.serialize(format='xml', encoding='utf-8')
-        out_file.write(g_bytes)
-
+    save_hierarchy(g, hierarchy_path)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

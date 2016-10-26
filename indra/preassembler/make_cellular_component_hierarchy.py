@@ -14,12 +14,16 @@ prefixes = """
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     """
 
-
-class CellularComponent(object):
-    def __init__(self, go_id, name):
-        self.go_id = go_id
-        self.name = name
-
+def save_hierarchy(g, path):
+    with open(path, 'wb') as out_file:
+        g_bytes = g.serialize(format='nt')
+        # Replace extra new lines in string and get rid of empty line at end
+        g_bytes = g_bytes.replace(b'\n\n', b'\n').strip()
+        # Split into rows and sort
+        rows = g_bytes.split(b'\n')
+        rows.sort()
+        g_bytes = b'\n'.join(rows)
+        out_file.write(g_bytes)
 
 def get_cellular_components(g):
     # Query for direct part_of relationships
@@ -115,10 +119,7 @@ def main():
     print('Getting cellular components')
     component_map, component_part_map = get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
-    with open(rdf_file, 'wb') as out_file:
-        gg_bytes = gg.serialize(format='xml', encoding='utf-8')
-        out_file.write(gg_bytes)
-
+    save_hierarchy(gg, rdf_file)
 
 if __name__ == '__main__':
     main()
