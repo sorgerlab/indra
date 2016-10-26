@@ -107,6 +107,51 @@ def update_cellular_components():
                                           key=lambda x: x[0]):
             fh.write('%s\t%s\n' % (comp_id, comp_name))
 
+def update_bel_chebi_map():
+    logger.info('--Updating BEL ChEBI map----')
+    url = 'http://resource.belframework.org/belframework/latest-release/' + \
+        'equivalence/'
+    url1 = url + 'chebi-ids.beleq'
+    url2 = url + 'chebi.beleq'
+    logger.info('Downloading %s' % url1)
+    res1 = requests.get(url1)
+    logger.info('Downloading %s' % url2)
+    res2 = requests.get(url2)
+    if not (res1.status_code == 200 and res2.status_code == 200):
+        logger.info('Download failed.')
+        return
+    id_lines = [lin.strip() for lin in res1.content.split('\n')]
+    started = False
+    id_map = {}
+    for id_line in id_lines:
+        if started:
+            if id_line:
+                # Instead of splitting on |, split using UUID fixed length
+                chebi_id = id_line[:-37]
+                uuid = id_line[-36:]
+                id_map[uuid] = chebi_id
+        if id_line == '[Values]':
+            started = True
+    name_lines = [lin.strip() for lin in res2.content.split('\n')]
+    started = False
+    name_map = {}
+    for name_line in name_lines:
+        if started:
+            if name_line:
+                # Instead of splitting on |, split using UUID fixed length
+                chebi_name = name_line[:-37]
+                uuid = name_line[-36:]
+                name_map[uuid] = chebi_name
+        if name_line == '[Values]':
+            started = True
+    fname = os.path.join(path, 'bel_chebi_map.tsv')
+    logger.info('Saving into %s' % fname)
+    with open(fname, 'wb') as fh:
+        for uuid, chebi_name in sorted(name_map.items(), key=lambda x: x[1]):
+            chebi_id = id_map.get(uuid)
+            if chebi_id is not None:
+                fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
+
 if __name__ == '__main__':
     update_hgnc_entries()
     update_kinases()
@@ -115,3 +160,4 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_cellular_components()
+    update_bel_chebi_map()

@@ -9,9 +9,9 @@ bel_chebi_map.tsv
 - A table containing mappings from ChEBI names in the BEL namespace to
   ChEBI IDs used in INDRA
 - It is created by cross-referencing
-  http://resource.belframework.org/belframework/1.0/equivalence/chebi-ids.beleq
+  http://resource.belframework.org/belframework/latest-release/equivalence/chebi-ids.beleq
   with
-  http://resource.belframework.org/belframework/1.0/equivalence/chebi-names.beleq
+  http://resource.belframework.org/belframework/latest-release/equivalence/chebi.beleq
 
 cellular_components.tsv
 - A table of GO IDs and standardized names corresponding to cellular locations
