@@ -1,9 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
+import logging
 from indra.statements import *
 from indra.literature import id_lookup
 from indra.databases import hgnc_client, uniprot_client, chebi_client
+
+logger = logging.getLogger('index_card_assembler')
 
 global_submitter = 'cure'
 

@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import json
+import logging
 import itertools
 from collections import OrderedDict
 from indra.statements import *
@@ -13,6 +14,14 @@ try:
 # Python 3
 except:
     basestring = str
+
+logger = logging.getLogger('cx_assembler')
+
+try:
+    import ndex.client
+    have_ndex_client = True
+except ImportError:
+    have_ndex_client = False
 
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.
@@ -70,6 +79,11 @@ class CxAssembler():
 
         This method assembles a CX network from the set of INDRA Statements.
         The assembled network is set as the assembler's cx argument.
+
+        Returns
+        -------
+        cx_str : str
+            The json serialized CX model.
         """
         for stmt in self.statements:
             if isinstance(stmt, Modification):
@@ -89,8 +103,23 @@ class CxAssembler():
                                              'v': self.network_name})
         self.cx['networkAttributes'].append({'n': 'description',
                                              'v': network_description})
-    def print_cx(self):
-        """Return the assembled CX network as a json string."""
+        cx_str = self.print_cx()
+        return cx_str
+
+    def print_cx(self, pretty=True):
+        """Return the assembled CX network as a json string.
+
+        Parameters
+        ----------
+        pretty : bool
+            If True, the CX string is formatted with indentation (for human
+            viewing) otherwise no indentation is used.
+
+        Returns
+        -------
+        json_str : str
+            A json formatted string representation of the CX network.
+        """
         full_cx = OrderedDict()
         full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
         full_cx['metaData'] = [{'idCounter': self._id_counter,
@@ -100,7 +129,11 @@ class CxAssembler():
         for k, v in self.cx.items():
             full_cx[k] = v
         full_cx = [{k: v} for k, v in full_cx.items()]
-        json_str = json.dumps(full_cx, indent=2)
+        if pretty:
+            indent = 2
+        else:
+            indent = 0
+        json_str = json.dumps(full_cx, indent=indent)
         return json_str
 
     def save_model(self, file_name='model.cx'):
@@ -149,6 +182,47 @@ class CxAssembler():
             self.cx['nodeAttributes'].append(node_attribute)
             counter += 1
         logger.info('Set context for %d nodes.' % counter)
+
+    def upload_model(self, ndex_cred):
+        """Creates a new NDEx network of the assembled CX model.
+
+        To upload the assembled CX model to NDEx, you need to have
+        a registered account on NDEx (http://ndexbio.org/) and have
+        the `ndex` python package installed. The uploaded network
+        is private by default.
+
+        Parameters
+        ----------
+        ndex_cred : dict
+            A dictionary with the following entries:
+            'user': NDEx user name
+            'password': NDEx password
+
+        Returns
+        -------
+        network_id :  str
+            The UUID of the NDEx network that was created by uploading
+            the assembled CX model.
+        """
+        if not have_ndex_client:
+            logger.warning('To use NDEx upload in the CX Assembler,'
+                            'install the `ndex` package.')
+            return
+        nd = ndex.client.Ndex('http://public.ndexbio.org',
+                            username=ndex_cred.get('user'),
+                            password=ndex_cred.get('password'))
+        cx_str = self.print_cx(pretty=False)
+        try:
+            logger.info('Uploading network to NDEx.')
+            network_id = nd.save_cx_stream_as_new_network(cx_str)
+        except Exception as e:
+            logger.error('Could not upload network to NDEx.')
+            logger.error(e)
+            return
+
+        logger.info('The UUID for the uploaded network is: %s' % network_id)
+        return network_id
+
 
     def _get_new_id(self):
         ret = self._id_counter
