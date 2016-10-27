@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import json
+import logging
 import itertools
 from collections import OrderedDict
 from indra.statements import *
@@ -13,6 +14,8 @@ try:
 # Python 3
 except:
     basestring = str
+
+logger = logging.getLogger('cx_assembler')
 
 class CxAssembler():
     """This class assembles a CX network from a set of INDRA Statements.

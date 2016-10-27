@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 import networkx as nx
 from indra.statements import *
+
+logger = logging.getLogger('sif_assembler')
 
 class SifAssembler(object):
     def __init__(self, stmts=None):
