@@ -302,10 +302,11 @@ texinfo_documents = [
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
 MOCK_MODULES = [
-    'pygraphviz', 'jnius', 'jnius_config', 'requests', 'functools32',
-    'rdflib', 'rdflib.namespace', 'rdflib.plugins', 'rdflib.plugins.parsers',
-    'rdflib.plugins.parsers.ntriples', 'pysb', 'pysb.core', 'pysb.export',
-    'objectpath', 'lxml', 'lxml.etree', 'lxml.builder', 'jsonpickle'
+    'pygraphviz', 'jnius', 'jnius_config', 'requests', 'requests.utils',
+    'functools32', 'rdflib', 'rdflib.namespace', 'rdflib.plugins',
+    'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples', 'pysb',
+    'pysb.core', 'pysb.export', 'objectpath', 'lxml', 'lxml.etree',
+    'lxml.builder', 'jsonpickle'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
