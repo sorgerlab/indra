@@ -79,6 +79,11 @@ class CxAssembler():
 
         This method assembles a CX network from the set of INDRA Statements.
         The assembled network is set as the assembler's cx argument.
+
+        Returns
+        -------
+        cx_str : str
+            The json serialized CX model.
         """
         for stmt in self.statements:
             if isinstance(stmt, Modification):
@@ -98,6 +103,9 @@ class CxAssembler():
                                              'v': self.network_name})
         self.cx['networkAttributes'].append({'n': 'description',
                                              'v': network_description})
+        cx_str = self.print_cx()
+        return cx_str
+
     def print_cx(self, pretty=True):
         """Return the assembled CX network as a json string.
 
