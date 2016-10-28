@@ -56,8 +56,10 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_translocation(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
-        model = ' '.join(stmt_strs)
-        return model
+        if stmt_strs:
+            return ' '.join(stmt_strs)
+        else:
+            return ''
 
 def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
@@ -259,6 +261,23 @@ def _get_is_direct(stmt):
         return False
     return True
 
+def _get_is_hypothesis(stmt):
+    '''Returns true if there is evidence that the statement is only
+    hypothetical. If all of the evidences associated with the statement
+    indicate a hypothetical interaction then we assume the interaction
+    is hypothetical.'''
+    for ev in stmt.evidence:
+        if not ev.epistemics.get('hypothesis') is True:
+            return True
+    return False
+
+def _get_is_hypothesis_adverb(stmt):
+    '''Returns the string associated with a statement being hypothetical.'''
+    if _get_is_hypothesis(stmt):
+        return ' hypothetically '
+    else:
+        return ''
+
 def _mod_process_verb(stmt):
     mod_name = stmt.__class__.__name__.lower()
     return mod_process_prefix.get(mod_name)
@@ -288,6 +307,7 @@ mod_state_prefix = {
     'farnesylation': 'farnesylated',
     'defarnesylation': 'defarnesylated',
     'glycosylation': 'glycosylated',
+    'deglycosylation': 'deglycosylated',
     'ribosylation': 'ribosylated',
     'deribosylation': 'deribosylated'
 }
@@ -306,6 +326,7 @@ mod_process_prefix = {
     'farnesylation': 'farnesylates',
     'defarnesylation': 'defarnesylates',
     'glycosylation': 'glycosylates',
+    'deglycosylation': 'deglycosylates',
     'ribosylation': 'ribosylates',
     'deribosylation': 'deribosylates'
     }
