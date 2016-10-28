@@ -680,7 +680,7 @@ class BiopaxProcessor(object):
                 if name is None:
                     name = bpe.getDisplayName()
             elif uniprot_id is not None:
-                name = uniprot_client.get_gene_name(uniprot_id[0])
+                name = uniprot_client.get_gene_name(uniprot_id)
                 if name is None:
                     name = bpe.getDisplayName()
             else:
