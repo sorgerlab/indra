@@ -63,6 +63,10 @@ class Expander(object):
             return []
         # Get the grounding for the agent
         (ns, id) = agent.get_grounding()
+        # If there is no grounding for this agent, then return no children
+        # (empty list)
+        if ns is None or id is None:
+            return []
         # Get URI for agent
         ag_uri = self.entities.get_uri(ns, id)
         # Look up the children for this family
