@@ -810,6 +810,7 @@ class BiopaxProcessor(object):
         'phosphorylated residue': ('phosphorylation', None),
         'phosphorylated': ('phosphorylation', None),
         'O-phospho-L-serine': ('phosphorylation', 'S'),
+        'O-phosphopantetheine-L-serine': ('phosphorylation', 'S'),
         'opser': ('phosphorylation', 'S'),
         'O-phospho-L-threonine': ('phosphorylation', 'T'),
         'opthr': ('phosphorylation', 'T'),
@@ -824,7 +825,10 @@ class BiopaxProcessor(object):
         'O-glycosyl-L-threonine': ('glycosylation', 'T'),
         'S-palmitoyl-L-cysteine': ('palmitoylation', 'C'),
         'N6-acetyl-L-lysine' : ('acetylation', 'K'),
-        'n6aclys': ('acetylation', 'K')
+        'n6aclys': ('acetylation', 'K'),
+        'naclys': ('acetylation', 'K'),
+        'N-acetylated L-lysine': ('acetylation', 'K'),
+        'hydroxylated proline': ('hydroxylation', 'P')
         }
 
 # Functions for accessing frequently used java classes with shortened path
