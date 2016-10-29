@@ -5166,7 +5166,7 @@ HGNC:40146	CHKB-AS1	CHKB antisense RNA 1 (head to head)	Approved		100144603
 HGNC:41998	CHKB-CPT1B	CHKB-CPT1B readthrough (NMD candidate)	Approved		386593	
 HGNC:1939	CHL1	cell adhesion molecule L1 like	Approved	CALL, L1CAM2, FLJ44930, MGC132578	10752	O00533
 HGNC:40148	CHL1-AS1	CHL1 antisense RNA 1	Approved		101927193	
-HGNC:40147	CHL1-AS2	CHL1 antisense RNA 2	Approved		642891	
+HGNC:40147	CHL1-AS2	CHL1 antisense RNA 2	Approved		101927174	
 HGNC:1940	CHM	CHM, Rab escort protein 1	Approved	REP-1	1121	P24386
 HGNC:1941	CHML	CHM like, Rab escort protein 2	Approved	REP-2	1122	P26374
 HGNC:8740	CHMP1A	charged multivesicular body protein 1A	Approved	KIAA0047, CHMP1, Vps46A	5119	Q9HD42
@@ -17182,7 +17182,7 @@ HGNC:52050	LINC01623	long intergenic non-protein coding RNA 1623	Approved		40124
 HGNC:52051	LINC01624	long intergenic non-protein coding RNA 1624	Approved	TCONS_00011425	401289	
 HGNC:52052	LINC01625	long intergenic non-protein coding RNA 1625	Approved	TCONS_00011139	645434	
 HGNC:52257	LINC01626	long intergenic non-protein coding RNA 1626	Approved		102724000	
-HGNC:52258	LINC01627	long intergenic non-protein coding RNA 1627	Approved	RP11-397D12.4	107075206	
+HGNC:52258	LINC01627	long intergenic non-protein coding RNA 1627	Approved	RP11-397D12.4	105376036	
 HGNC:52259	LINC01628	long intergenic non-protein coding RNA 1628	Approved	AC007403.1	102724321	
 HGNC:52260	LINC01629	long intergenic non-protein coding RNA 1629	Approved	linc-KIAA1737-2	105370578	
 HGNC:52295	LINC01630	long intergenic non-protein coding RNA 1630	Approved		100287225	
@@ -17872,6 +17872,7 @@ HGNC:6880	MAPK7	mitogen-activated protein kinase 7	Approved	BMK1, ERK5	5598	Q131
 HGNC:6881	MAPK8	mitogen-activated protein kinase 8	Approved	JNK, JNK1, SAPK1	5599	P45983
 HGNC:6882	MAPK8IP1	mitogen-activated protein kinase 8 interacting protein 1	Approved	IB1, JIP-1, JIP1	9479	Q9UQF2
 HGNC:6885	MAPK8IP1P1	mitogen-activated protein kinase 8 interacting protein 1 pseudogene 1	Approved		644253	
+HGNC:52402	MAPK8IP1P2	mitogen-activated protein kinase 8 interacting protein 1 pseudogene 2	Approved			
 HGNC:6883	MAPK8IP2	mitogen-activated protein kinase 8 interacting protein 2	Approved	IB2, JIP2	23542	Q13387
 HGNC:6884	MAPK8IP3	mitogen-activated protein kinase 8 interacting protein 3	Approved	KIAA1066, JSAP1, JIP3, syd	23162	Q9UPT6
 HGNC:6886	MAPK9	mitogen-activated protein kinase 9	Approved	JNK2, p54a, SAPK	5601	P45984
@@ -22296,6 +22297,9 @@ HGNC:7669	NCOA2	nuclear receptor coactivator 2	Approved	TIF2, GRIP1, NCoA-2, KAT
 HGNC:7670	NCOA3	nuclear receptor coactivator 3	Approved	RAC3, AIB1, ACTR, p/CIP, TRAM-1, CAGH16, TNRC16, KAT13B, bHLHe42, SRC-3, SRC3	8202	Q9Y6Q9
 HGNC:7671	NCOA4	nuclear receptor coactivator 4	Approved	ARA70, RFG, ELE1, PTC3, DKFZp762E1112	8031	Q13772
 HGNC:20022	NCOA4P1	nuclear receptor coactivator 4 pseudogene 1	Approved		326605	
+HGNC:52403	NCOA4P2	nuclear receptor coactivator 4 pseudogene 2	Approved			
+HGNC:52404	NCOA4P3	nuclear receptor coactivator 4 pseudogene 3	Approved			
+HGNC:52405	NCOA4P4	nuclear receptor coactivator 4 pseudogene 4	Approved			
 HGNC:15909	NCOA5	nuclear receptor coactivator 5	Approved	bA465L10.6, CIA	57727	Q9HCD5
 HGNC:15936	NCOA6	nuclear receptor coactivator 6	Approved	KIAA0181, RAP250, ASC2, AIB3, PRIP, TRBP, NRC	23054	Q14686
 HGNC:21081	NCOA7	nuclear receptor coactivator 7	Approved	ERAP140, dJ187J11.3, TLDC4	135112	Q8NI08
@@ -42770,6 +42774,7 @@ HGNC:30512	WDR44	WD repeat domain 44	Approved	DKFZp686L20145, RPH11, RAB11BP	545
 HGNC:28912	WDR45	WD repeat domain 45	Approved	JM5, WIPI4, NBIA5	11152	Q9Y484
 HGNC:25072	WDR45B	WD repeat domain 45B	Approved	WIPI3	56270	Q5MNZ6
 HGNC:26605	WDR45BP1	WD repeat domain 45B pseudogene 1	Approved		646086	
+HGNC:52406	WDR45P1	WD repeat domain 45 pseudogene 1	Approved			
 HGNC:13923	WDR46	WD repeat domain 46	Approved	BING4, UTP7	9277	O15213
 HGNC:29141	WDR47	WD repeat domain 47	Approved	KIAA0893	22911	O94967
 HGNC:30914	WDR48	WD repeat domain 48	Approved	KIAA1449, P80, SPG60	57599	Q8TAF3
