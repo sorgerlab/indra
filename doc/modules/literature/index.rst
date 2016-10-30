@@ -1,6 +1,9 @@
 Literature clients (:py:mod:`indra.literature`)
 ===============================================
 
+.. automodule:: indra.literature
+    :members
+
 Pubmed client (:py:mod:`indra.literature.pubmed_client`)
 --------------------------------------------------------
 

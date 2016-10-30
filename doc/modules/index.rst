@@ -12,5 +12,8 @@ INDRA modules reference
    databases/index
    literature/index
    preassembler/index
+   mechlinker/index
+   belief/index
    assemblers/index
    tools/index
+   resources/index

@@ -1,5 +1,5 @@
-Statements (:py:mod:`indra.statements`)
-=======================================
+INDRA Statements (:py:mod:`indra.statements`)
+=============================================
 
 .. automodule:: indra.statements
     :members:

@@ -7,6 +7,7 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    cx_assembler
    english_assembler
    graph_assembler
+   sif_assembler
    index_card_assembler
    pysb_assembler
    sbgn_assembler

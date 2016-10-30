@@ -13,15 +13,32 @@ Uniprot client (:py:mod:`indra.databases.uniprot_client`)
 .. automodule:: indra.databases.uniprot_client
     :members:
 
-CHEBI client (:py:mod:`indra.databases.chebi_client`)
+ChEBI client (:py:mod:`indra.databases.chebi_client`)
 -----------------------------------------------------
 
 .. automodule:: indra.databases.chebi_client
     :members:
 
-Protein context client (:py:mod:`indra.databases.context_client`)
------------------------------------------------------------------
+BioGRID client (:py:mod:`indra.databases.biogrid_client`)
+---------------------------------------------------------
+
+.. automodule:: indra.databases.biogrid_client
+    :members:
+
+Cell type context client (:py:mod:`indra.databases.context_client`)
+-------------------------------------------------------------------
 
 .. automodule:: indra.databases.context_client
     :members:
 
+Network relevance client (:py:mod:`indra.databases.relevance_client`)
+---------------------------------------------------------------------
+
+.. automodule:: indra.databases.relevance_client
+    :members:
+
+NDEx client (:py:mod:`indra.databases.ndex_client`)
+----------------------------------------------------
+
+.. automodule:: indra.databases.ndex_client
+    :members:
