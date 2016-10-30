@@ -52,6 +52,8 @@ class IncrementalModel(object):
     def save(self, model_fname='model.pkl'):
         """Save the state of the IncrementalModel in a pickle file.
 
+        Parameters
+        ----------
         model_fname : Optional[str]
             The name of the pickle file to save the state of the
             IncrementalModel in. Default: model.pkl
@@ -150,11 +152,9 @@ class IncrementalModel(object):
 
         Currently the following filter options are implemented:
         - grounding: require that all Agents in statements are grounded
-        - model_one: require that at least one Agent is in the incremental
-                      model
+        - model_one: require that at least one Agent is in the incremental model
         - model_all: require that all Agents are in the incremental model
-        - prior_one: require that at least one Agent is in the
-                      prior model
+        - prior_one: require that at least one Agent is in the prior model
         - prior_all: require that all Agents are in the prior model
         Note that model_one -> prior_all are increasingly more restrictive
         options.
@@ -191,11 +191,9 @@ class IncrementalModel(object):
 
         Currently the following filter options are implemented:
         - grounding: require that all Agents in statements are grounded
-        - model_one: require that at least one Agent is in the incremental
-                      model
+        - model_one: require that at least one Agent is in the incremental model
         - model_all: require that all Agents are in the incremental model
-        - prior_one: require that at least one Agent is in the
-                      prior model
+        - prior_one: require that at least one Agent is in the prior model
         - prior_all: require that all Agents are in the prior model
         Note that model_one -> prior_all are increasingly more restrictive
         options.
@@ -264,12 +262,23 @@ class IncrementalModel(object):
 
         The prior statements have a special key in the stmts dictionary
         called "prior".
+
+        Parameters
+        ----------
+        prior_fname : str
+            The name of the pickle file containing the prior Statements.
         """
         with open(prior_fname, 'rb') as fh:
             self.stmts['prior'] = pickle.load(fh)
 
     def get_model_agents(self):
-        """Return a list of all Agents from all Statements."""
+        """Return a list of all Agents from all Statements.
+
+        Returns
+        -------
+        agents : list[indra.statements.Agent]
+           A list of Agents that are in the model.
+        """
         model_stmts = self.get_statements_noprior()
         # First, get all unique name/db_refs pairs
         agents = set()
@@ -282,7 +291,13 @@ class IncrementalModel(object):
         return agents
 
     def get_prior_agents(self):
-        """Return a list of all Agents from the prior Statements."""
+        """Return a list of all Agents from the prior Statements.
+
+        Returns
+        -------
+        agents : list[indra.statements.Agent]
+           A list of Agents that are in the prior.
+        """
         prior_stmts = self.get_statements_prior()
         # First, get all unique name/db_refs pairs
         agents = set()
@@ -304,7 +319,14 @@ class IncrementalModel(object):
         return False
 
     def get_statements(self):
-        """Return a list of all Statements in a single list."""
+        """Return a list of all Statements in a single list.
+
+
+        Returns
+        -------
+        stmts : list[indra.statements.Statement]
+            A list of all the INDRA Statements in the model.
+        """
         stmt_lists = [v for k, v in self.stmts.items()]
         stmts = []
         for s in stmt_lists:
@@ -312,7 +334,14 @@ class IncrementalModel(object):
         return stmts
 
     def get_statements_noprior(self):
-        """Return a list of all non-prior Statements in a single list."""
+        """Return a list of all non-prior Statements in a single list.
+
+        Returns
+        -------
+        stmts : list[indra.statements.Statement]
+            A list of all the INDRA Statements in the model (excluding
+            the prior).
+        """
         stmt_lists = [v for k, v in self.stmts.items() if k != 'prior']
         stmts = []
         for s in stmt_lists:
@@ -320,7 +349,13 @@ class IncrementalModel(object):
         return stmts
 
     def get_statements_prior(self):
-        """Return a list of all prior Statements in a single list."""
+        """Return a list of all prior Statements in a single list.
+
+        Returns
+        -------
+        stmts : list[indra.statements.Statement]
+            A list of all the INDRA Statements in the prior.
+        """
         if self.stmts.get('prior') is not None:
             return self.stmts['prior']
         else:
