@@ -65,7 +65,7 @@ def update_uniprot_entries():
         'entry%20name'
     reviewed_entries = load_from_http(url)
     url = 'http://www.uniprot.org/uniprot/?' + \
-        'sort=id&desc=no&compress=no&query=&fil=organism:' + \
+        'sort=id&desc=no&compress=no&query=reviewed:no&fil=organism:' + \
         '%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&' + \
         'format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
     unreviewed_human_entries = load_from_http(url)
