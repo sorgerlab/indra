@@ -2,7 +2,7 @@ Tools (:py:mod:`indra.tools`)
 =============================
 
 Run all assembly components in a pipeline (:py:mod:`indra.preassembler.assemble_corpus`)
-------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 .. automodule:: indra.tools.assemble_corpus
     :members:
@@ -14,7 +14,7 @@ Build a network from a gene list (:py:mod:`indra.tools.gene_network`)
     :members:
 
 Build an executable model from a fragment of a large network (:py:mod:`indra.executable_subnetwork`)
--------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 .. automodule:: indra.tools.executable_subnetwork
     :members:

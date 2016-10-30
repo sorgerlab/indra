@@ -1,53 +1,5 @@
 """
 Search and get metadata for articles in Pubmed.
-
-Note
-----
-
-Structure of the XML output returned by queries to Pubmed database::
-
-    PubmedArticleSet
-      PubmedArticle
-        MedlineCitation
-          PMID
-          DateCreated
-          DateCompleted
-          DateRevised
-          MedlineJournalInfo
-            Country
-            MedlineTA
-            NlmUniqueID
-            ISSNLinking
-          ChemicalList
-          CitationSubset
-          CommentsCorrectionsList
-          MeshHeadingList
-          OtherID
-          Article
-            Journal
-              ISSN
-              JournalIssue
-              Title
-              ISOAbbreviation
-            ArticleTitle
-            Pagination
-              MedlinePgn
-            ELocationID
-            Abstract
-            AuthorList
-              Author
-                LastName
-                ForeName
-                Initials
-                AffiliationInfo
-            Language
-            PublicationTypeList
-              PublicationType
-            ArticleDate
-        PubmedData
-          History
-          PublicationStatus
-          ArticleIdList
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -382,3 +334,53 @@ def expand_pagination(pages):
     else: # More than one hyphen, something weird happened
         logger.warning("Multiple hyphens in page number: %s" % pages)
         return pages
+
+"""
+Note
+----
+
+Structure of the XML output returned by queries to Pubmed database::
+
+    PubmedArticleSet
+      PubmedArticle
+        MedlineCitation
+          PMID
+          DateCreated
+          DateCompleted
+          DateRevised
+          MedlineJournalInfo
+            Country
+            MedlineTA
+            NlmUniqueID
+            ISSNLinking
+          ChemicalList
+          CitationSubset
+          CommentsCorrectionsList
+          MeshHeadingList
+          OtherID
+          Article
+            Journal
+              ISSN
+              JournalIssue
+              Title
+              ISOAbbreviation
+            ArticleTitle
+            Pagination
+              MedlinePgn
+            ELocationID
+            Abstract
+            AuthorList
+              Author
+                LastName
+                ForeName
+                Initials
+                AffiliationInfo
+            Language
+            PublicationTypeList
+              PublicationType
+            ArticleDate
+        PubmedData
+          History
+          PublicationStatus
+          ArticleIdList
+"""
