@@ -60,6 +60,10 @@ def test_get_gene_name_no_gene_name():
     gene_name = uniprot_client.get_gene_name('P04434', web_fallback=True)
     assert(gene_name is None)
 
+def test_get_gene_name_multiple_gene_names():
+    gene_name = uniprot_client.get_gene_name('Q5VWM5')
+    assert(gene_name == 'PRAMEF9')
+
 def test_is_human():
     assert(uniprot_client.is_human('P00533'))
 

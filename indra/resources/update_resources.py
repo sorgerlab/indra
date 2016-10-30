@@ -65,7 +65,7 @@ def update_uniprot_entries():
         'entry%20name'
     reviewed_entries = load_from_http(url)
     url = 'http://www.uniprot.org/uniprot/?' + \
-        'sort=id&desc=no&compress=no&query=&fil=organism:' + \
+        'sort=id&desc=no&compress=no&query=reviewed:no&fil=organism:' + \
         '%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&' + \
         'format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
     unreviewed_human_entries = load_from_http(url)
@@ -74,8 +74,21 @@ def update_uniprot_entries():
             return
     lines = reviewed_entries.strip().split('\n')
     lines += unreviewed_human_entries.strip().split('\n')[1:]
+    # At this point, we need to clean up the gene names.
+    logging.info('Processing UniProt entries list.')
+    for i, line in enumerate(lines):
+        if i == 0:
+            continue
+        terms = line.split('\t')
+        # If there are multiple gene names, take the first one
+        gene_names = terms[1].split(';')
+        terms[1] = gene_names[0]
+        # Join the line again after the change
+        lines[i] = '\t'.join(terms)
+    # Join all lines into a single string
     full_table = '\n'.join(lines)
     fname = os.path.join(path, 'uniprot_entries.tsv')
+    logging.info('Saving into %s.' % fname)
     with open(fname, 'wb') as fh:
         fh.write(full_table)
 

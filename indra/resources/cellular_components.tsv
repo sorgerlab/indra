@@ -506,7 +506,6 @@ GO:0008250	oligosaccharyltransferase complex
 GO:0008274	gamma-tubulin ring complex
 GO:0008275	gamma-tubulin small complex
 GO:0008278	cohesin complex
-GO:0008280	cohesin core heterodimer
 GO:0008282	ATP-sensitive potassium channel complex
 GO:0008287	protein serine/threonine phosphatase complex
 GO:0008290	F-actin capping protein complex
@@ -2394,6 +2393,7 @@ GO:0061773	eNoSc complex
 GO:0061779	Tapasin-ERp57 complex
 GO:0061793	chromatin lock complex
 GO:0061800	fibronectin fibril
+GO:0061801	laminin-5B complex
 GO:0065010	extracellular membrane-bounded organelle
 GO:0070013	intracellular organelle lumen
 GO:0070014	sucrase-isomaltase complex

@@ -38,7 +38,7 @@ uniprot_entries.tsv
   with UniProt ID, gene name, organism ID and UniProt mnemonic
 - Download links: 
     - http://www.uniprot.org/uniprot/?query=reviewed%3Ayes&sort=id&desc=no&columns=id,genes(PREFERRED),organism-id,entry%20name
-    - http://www.uniprot.org/uniprot/?sort=id&desc=no&compress=no&query=&fil=organism:%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name
+    - http://www.uniprot.org/uniprot/?sort=id&desc=no&compress=no&query=reviewed%3Ano&fil=organism:%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name
 
 uniprot_sec_ac.txt
 - A table of secondary (deprecated) UniProt accession numbers with mappings to
