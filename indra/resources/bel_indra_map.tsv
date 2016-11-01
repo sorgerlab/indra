@@ -25,7 +25,7 @@ BMP Receptor Type I Family	BMP_receptor_type_I
 BMP Receptor Type II Family	BMP_receptor_type_II
 CALM Family	CALM
 CAMK Family	CAMK
-CAMK2 Family	CAMK2
+CAMK2 Family	CAMK2_family
 CAPN Family	CAPN
 CASP Family	Caspase
 CAV Family	CAV
@@ -124,7 +124,7 @@ INS Family	INS
 INSR Family	INSR
 IRS Family	IRS
 IRX Family	IRX
-IkappaB Kinase Family	IKK
+IkappaB Kinase Family	IKK_family
 JAK Family	JAK
 KLK Family	KLK
 LDH Family	LDH
@@ -240,3 +240,65 @@ VAV Family	VAV
 VEGF Family	VEGF
 VEGFR Family	VEGFR
 WNT Family	Wnt
+9-1-1 Complex	9_1_1
+Acetyl CoA Carboxylase Complex	ACC
+Adaptor Protein III Complex	Adaptor_protein_III
+Annexin II Heterotetramer Complex	Annexin_II_heterotetramer
+Arp2/3 Protein Complex	Arp2_3_protein
+Branched Chain Alpha Keto Acid Dehydrogenase Complex	BCKDC
+C1 Complex	C1
+C1q Complex	C1q
+Calcineurin Complex	PPP3
+CAMK2 Complex	CAMK2_complex
+CBF3 Complex	CBF3
+CCT Complex	CCT_complex
+CD3 Complex	CD3
+CHRN Complex	CHRN
+CK II Complex	CK2
+Clathrin Complex	Clathrin
+Cohesin Complex	Cohesin
+CRSP Complex	CRSP
+Cytochrome C Oxidase Complex Muscle	COX
+Cytochrome C Oxidase Complex Non Muscle	COX
+Cytoplasmic Dynein Complex	Cytoplasmic_dynein
+DNA Polymerase delta Complex	DNA_polymerase_delta
+Dystrophin Associated Glycoprotein Complex	DGC
+E1A Binding Protein Complex	E1A_binding_protein
+EIF2B Complex	EIF2B
+Fibrinogen Complex	Fibrinogen
+Follicle Stimulating Hormone Complex	FSH
+gamma Secretase Complex	Gamma_secretase
+GPIT Complex	GPIT
+GTF2E Complex	GTF2E
+GTF2F Complex	GTF2F
+HDL Complex	HDL
+Hemoglobin Complex	Hemoglobin
+Ib-V-IX Complex	GPIb_IX_V
+IkappaB Kinase Complex	IKK_complex
+Interferon Gamma Receptor Complex	Interferon_gamma_receptor
+Kinetochore Complex	Kinetochore
+Laminin 1 Complex	Laminin_111
+Laminin 5 Complex	Laminin_332
+Luteinizing Hormone Complex	LH
+Membrane Attack Complex	MAC
+Na/K Exchanging ATPase Complex	Na_K_ATPase
+NADH Dehydrogenase Complex	NADH_dehydrogenase
+NADPH Oxidase Complex	NADPH_oxidase
+Nfkb Complex	NFkappaB
+Nfy Complex	NFY
+Phosphorylase B Kinase Complex	PhK
+PRC1 Maintenance Complex	PRC1_Maintenance
+PRC2 Initiation Complex	PRC2_Initiation
+Propionyl CoA Carboxylase Complex	Propionyl_CoA_carboxylase
+Proteasome Complex	Proteasome
+Proton Transporting ATP Synthase Complex	ATP_synthase
+Pyruvate Dehydrogenase Complex	PDC
+Respiratory Chain Complex II	ETC_complex_II
+Respiratory Chain Complex III	ETC_complex_III
+RFC Complex	RFC
+RNApo I Complex	RNApo_I
+RNApo II Complex	RNApo_II
+SWI/SNF Complex	SWI_SNF
+Thrombin Antithrombin Complex	Thrombin_antithrombin
+TIF IB Complex	TIF_IB
+TORC2 Complex	mTORC2
