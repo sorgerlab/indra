@@ -706,6 +706,17 @@ class BelProcessor(object):
                 db_refs['BE'] = indra_name
                 db_refs['TEXT'] = name
                 agent_name = indra_name
+        elif namespace in ('NCH', 'SCOMP'):
+            indra_name = bel_to_indra.get(name)
+            db_refs[namespace] = name
+            if indra_name is None:
+                agent_name = name
+                msg = 'Could not find mapping for BEL complex: %s' % name
+                logger.warning(msg)
+            else:
+                db_refs['BE'] = indra_name
+                db_refs['TEXT'] = name
+                agent_name = indra_name
         elif namespace == 'CHEBI':
             chebi_id = chebi_name_id.get(name)
             if chebi_id:
