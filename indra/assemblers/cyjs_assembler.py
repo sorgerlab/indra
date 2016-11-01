@@ -45,15 +45,23 @@ class CyJSAssembler(object):
                 self._add_activation(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
+            elif isinstance(stmt, Modification):
+                self._add_modification(stmt)
             else:
                 logger.warning('Unhandled statement type: %s' %
-                               stmt.__class_.__name__)
+                               stmt.__class__.__name__)
+        return self.print_cyjs()
         # Check for nodes that should be grouped
         #   look at self._graph to find nodes with same incoming and outgoing
         #   edges and group them
         # Create groups for those nodes
         # Merge edges for grouped nodes
         # Store in an internal data structure
+
+    def group_nodes(self):
+        self._update_nodes()
+        self._update_model_edges()
+        return self.print_cyjs()
 
     def print_cyjs(self):
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
@@ -77,6 +85,16 @@ class CyJSAssembler(object):
         self._edges.append(edge)
         self._graph.add_edge(source_id, target_id)
 
+    def _add_modification(self, stmt):
+        edge_type, edge_polarity = _get_stmt_type(stmt)
+        edge_id = self._get_new_id()
+        source_id = self._add_node(stmt.enz)
+        target_id = self._add_node(stmt.sub)
+        edge = {'data': {'i': edge_type, 'id': edge_id,
+                         'source': source_id, 'target': target_id,
+                         'polarity': edge_polarity}}
+        self._edges.append(edge)
+        self._graph.add_edge(source_id, target_id)
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         for m1, m2 in itertools.combinations(stmt.members, 2):
@@ -178,7 +196,7 @@ class CyJSAssembler(object):
         edges = list(self._edges)
         keys = ['i','polarity','source','target']
         for e in edges:
-            # drop the id from each edge before comparing 
+            # drop the id from each edge before comparing
             e['data'] = _limit_dict(e['data'], keys)
             # check if edge already exists
             # check if edge source or target are contained in a parent
@@ -207,7 +225,7 @@ class CyJSAssembler(object):
         return None
 
 
-    def _collect_nodes(self):
+    def _update_nodes(self):
         node_groupings = self._node_sets()
         keys = ['i','polarity','source','target']
         for g in node_groupings:
@@ -225,7 +243,6 @@ class CyJSAssembler(object):
                 for i in range(0, len(self._nodes)):
                     if self._nodes[i]['data']['id'] == n:
                         self._nodes[i]['data']['parent'] = new_group_node['data']['id']
-        self._update_model_edges()
         return None
 
 def _get_db_refs(agent):
