@@ -134,7 +134,7 @@ def test_grouping_node_targeting_block_targeting_node():
     assert(parent_b_name.startswith('Group'))
     assert(len(cja._edges) == 2)
 
-def test_grouping_nodes_targeting_block():
+def test_grouping_block_targeting_block():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
     st2 = Phosphorylation(Agent('A'), Agent('C'))
     st3 = Phosphorylation(Agent('D'), Agent('B'))
