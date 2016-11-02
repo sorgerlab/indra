@@ -157,6 +157,7 @@ def test_get_entity_mods():
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
     bp.get_phosphorylation()
+    assert_pmids(bp.statements)
     pre = Preassembler(hierarchies, bp.statements)
     pre.combine_related()
     assert unicode_strs(pre.unique_stmts)
@@ -194,3 +195,9 @@ def test_all_protein_db_refs():
     # The number of unmapped entries should not increase
     # so we check for an upper limit here
     assert(len(unmapped_uniprot_ids) < 95)
+
+def assert_pmids(stmts):
+    for stmt in stmts:
+        for ev in stmt.evidence:
+            if ev.pmid is not None:
+                assert(ev.pmid.isdigit())
