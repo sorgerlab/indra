@@ -51,12 +51,6 @@ class CyJSAssembler(object):
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
         return self.print_cyjs()
-        # Check for nodes that should be grouped
-        #   look at self._graph to find nodes with same incoming and outgoing
-        #   edges and group them
-        # Create groups for those nodes
-        # Merge edges for grouped nodes
-        # Store in an internal data structure
 
     def group_nodes(self):
         self._update_nodes()
