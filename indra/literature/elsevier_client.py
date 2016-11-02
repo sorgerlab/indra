@@ -1,3 +1,9 @@
+"""
+For information on the Elsevier API, see:
+  - API Specification: http://dev.elsevier.com/api_docs.html
+  - Authentication: https://dev.elsevier.com/tecdoc_api_authentication.html
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
@@ -10,26 +16,17 @@ try:
 # Python2
 except ImportError:
     from functools32 import lru_cache
+from indra.util import read_unicode_csv
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('elsevier')
 
-# THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
-# For more information see http://dev.elsevier.com/
-api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            'elsevier_api_key')
-
-# Read the API key from the file
-try:
-    with open(api_key_file, 'rt') as fh:
-        api_key = fh.read().strip()
-except IOError:
-    api_key = None
 
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
 elsevier_article_url = '%s/article/doi' % elsevier_api_url
 elsevier_search_url = '%s/search/scidir' % elsevier_api_url
+elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
 # Namespaces for Elsevier XML elements
 elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
@@ -40,18 +37,73 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'atom': 'http://www.w3.org/2005/Atom',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 
+# THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
+# For more information see http://dev.elsevier.com/
+api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'elsevier_api_keys')
+api_key_env_name = 'ELSEVIER_API_KEY'
+inst_key_env_name = 'ELSEVIER_INST_KEY'
+
+# Try to read the API key from a file
+try:
+    elsevier_keys = dict(read_unicode_csv(api_key_file))
+    # Check whether the institution key is present
+    if not elsevier_keys.get('X-ELS-Insttoken'):
+        logger.info('Optional institution key X-ELS-Insttoken not found in '
+                    'elsevier key file.')
+    # Check that the API key entry has the right name
+    if not elsevier_keys.get('X-ELS-APIKey'):
+        logger.error('API key X-ELS-APIKey not found in elsevier key file.')
+        elsevier_keys = None
+except IOError:
+    logger.warning('Elsevier API keys file could not be read, trying '
+                   'environment variables $%s and $%s.' %
+                   (api_key_env_name, inst_key_env_name))
+    logger.debug('Tried key file: %s' % api_key_file)
+    # Try the environment variable for the api key. This one is optional,
+    # so if it is not found then we just leave it out of the keys dict
+    elsevier_keys = {}
+    if inst_key_env_name in os.environ:
+        elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
+    else:
+        logger.info('No Elsevier institution key found in environment '
+                    'variable %s.' % inst_key_env_name)
+    # Try the environment variable for the api key. This one is required, so
+    # if it is not found then we set the keys dict to None
+    if api_key_env_name in os.environ:
+        elsevier_keys['X-ELS-APIKey'] = os.environ.get(api_key_env_name)
+    else:
+        logger.warning('No Elsevier API key found in environment variable '
+                     '%s.' % api_key_env_name)
+        elsevier_keys = None
+
+
+def check_entitlement(doi):
+    if elsevier_keys is None:
+        logger.error('Missing API key, could not check article entitlement.')
+        return False
+    if doi.lower().startswith('doi:'):
+        doi = doi[4:]
+    url = '%s/%s' % (elsevier_entitlement_url, doi)
+    params = {'httpAccept': 'text/xml'}
+    res = requests.get(url, params, headers=elsevier_keys)
+    if not res.status_code == 200:
+        logger.error('Could not check entitlements for article %s: '
+                     'status code %d' % (doi, res.status_code))
+        logger.error('Response content: %s' % res.text)
+        return False
+
 
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
+    if elsevier_keys is None:
+        logger.error('Missing API key, could not download article.')
+        return None
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_article_url, doi)
-    if api_key is None:
-        logger.error('Missing API key at %s, could not download article.' %
-                      api_key_file)
-        return None
-    params = {'APIKey': api_key, 'httpAccept': 'text/xml'}
-    res = requests.get(url, params)
+    params = {'httpAccept': 'text/xml'}
+    res = requests.get(url, params, headers=elsevier_keys)
     if not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
                      (doi, res.status_code))
@@ -63,6 +115,8 @@ def download_article(doi):
 def get_abstract(doi):
     """Get the abstract of an article from Elsevier."""
     xml_string = download_article(doi)
+    if xml_string is None:
+        return None
     assert isinstance(xml_string, str)
     # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
@@ -138,12 +192,11 @@ def get_dois(query_str, count=100):
     cancer")'
     """
     url = '%s/%s' % (elsevier_search_url, query_str)
-    if api_key is None:
+    if elsevier_keys is None:
         logger.error('Missing API key at %s, could not perform search.' %
                       api_key_file)
         return None
-    params = {'APIKey': api_key,
-              'query': query_str,
+    params = {'query': query_str,
               'count': count,
               'httpAccept': 'application/xml',
               'sort': '-coverdate',

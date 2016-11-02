@@ -1,5 +1,5 @@
 # INDRA specific ignores
-elsevier_api_key
+elsevier_api_keys
 cr_clickthrough_key
 biogrid_api_key
 
