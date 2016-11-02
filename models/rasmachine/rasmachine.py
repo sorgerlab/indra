@@ -42,6 +42,8 @@ def process_paper(model_name, pmid):
     fulltext_path = os.path.join(model_path, model_name,
                                  'jsons', 'full', 'PMID%s.json' % pmid)
 
+    if pmid.startswith('api') or pmid.startswith('PMID'):
+        logger.warning('Invalid PMID: %s' % pmid)
     # If the paper has been parsed, use the parse output file
     if os.path.exists(abstract_path):
         rp = reach.process_json_file(abstract_path, citation=pmid)
@@ -68,6 +70,11 @@ def process_paper(model_name, pmid):
                 shutil.move('reach_output.json', abstract_path)
         else:
             rp = None
+    if rp is not None:
+        for stmt in rp.statements:
+            for ev in stmt.evidence:
+                if ev.pmid.startswith('api') or ev.pmid.startswith('PMID'):
+                    logger.warning('Invalid PMID: %s' % ev.pmid)
     return rp, txt_format
 
 def make_status_message(stats):
