@@ -39,8 +39,9 @@ def get_searchterm_pmids(search_terms, num_days=1):
 def check_pmids(stmts):
     for stmt in stmts:
         for ev in stmt.evidence:
-            if ev.pmid.startswith('api') or ev.pmid.startswith('PMID'):
-                logger.warning('Invalid PMID: %s' % ev.pmid)
+            if ev.pmid is not None:
+                if not ev.pmid.isdigit():
+                    logger.warning('Invalid PMID: %s' % ev.pmid)
 
 def process_paper(model_name, pmid):
     abstract_path = os.path.join(model_path, model_name,

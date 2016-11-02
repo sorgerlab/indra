@@ -371,22 +371,13 @@ class CxAssembler():
             pmid_txt = None
             if re.match('[0-9]+', pmid):
                 pmid_txt = 'pmid:' + pmid
-            else:
-                m = re.match('.*pubmed:([0-9]+)', pmid)
-                if m:
-                    pmid_txt = 'pmid:' + m.groups()[0]
-                m = re.match('.*pmid:([0-9]+)', pmid)
-                if m:
-                    pmid_txt = 'pmid:' + m.groups()[0]
-            if pmid_txt is None:
-                pmid_txt = pmid
-            if pmid_txt not in pmids_added:
-                citation_id = self._get_new_id()
-                citation = {'@id': citation_id,
-                            'dc:identifier': pmid_txt}
-                self.cx['citations'].append(citation)
-                edge_citations.append(citation_id)
-                pmids_added.append(pmid_txt)
+                if pmid_txt not in pmids_added:
+                    citation_id = self._get_new_id()
+                    citation = {'@id': citation_id,
+                                'dc:identifier': pmid_txt}
+                    self.cx['citations'].append(citation)
+                    edge_citations.append(citation_id)
+                    pmids_added.append(pmid_txt)
         if edge_citations:
             edge_citation = {'citations': edge_citations,
                              'po': [edge_id]}

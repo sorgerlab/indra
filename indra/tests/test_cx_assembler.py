@@ -13,10 +13,11 @@ st_act = Activation(mek, 'activity', erk, 'activity', True)
 st_rasgef = RasGef(Agent('SOS1'), 'activity', Agent('HRAS'))
 st_rasgap = RasGap(Agent('RASA1'), 'activity', Agent('HRAS'))
 st_act2 = Activation(dusp, 'activity', erk, 'activity', False)
-st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
-                                              text='MEK phosphorylates ERK'))
-st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',
-                                              text='MEK phosphorylates ERK'))
+st_not_cited = Phosphorylation(mek, erk, evidence=[Evidence()])
+st_cited = Phosphorylation(mek, erk, evidence=[Evidence(pmid='12345',
+                                              text='MEK phosphorylates ERK')])
+st_invalid_cited = Phosphorylation(mek, erk, evidence=[Evidence(pmid='api35',
+                                              text='MEK phosphorylates ERK')])
 
 def test_phos():
     cxa = CxAssembler()
@@ -78,13 +79,17 @@ def test_cited():
     cxa.make_model()
     assert(len(cxa.cx['citations']) == 1)
     assert(len(cxa.cx['edgeCitations']) == 1)
+    citation = cxa.cx['citations'][0]
+    assert(citation.get('dc:identifier') == 'pmid:12345')
+    cid = citation.get('@id')
+    assert(cxa.cx['edgeCitations'][0]['citations'][0] == cid)
 
-def test_cited2():
+def test_invalid_cited():
     cxa = CxAssembler()
-    cxa.add_statements([st_cited2])
+    cxa.add_statements([st_invalid_cited])
     cxa.make_model()
-    assert(len(cxa.cx['citations']) == 1)
-    assert(len(cxa.cx['edgeCitations']) == 1)
+    assert(not cxa.cx['citations'])
+    assert(not cxa.cx['edgeCitations'])
 
 def test_supports():
     cxa = CxAssembler()
@@ -105,3 +110,8 @@ def test_make_print_model():
     cxa.add_statements([st_phos])
     cx_str = cxa.make_model()
     assert(cx_str)
+
+def test_no_pmid():
+    cxa = CxAssembler([st_not_cited])
+    cxa.make_model()
+    assert(not cxa.cx['edgeCitations'])
