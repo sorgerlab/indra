@@ -5,6 +5,7 @@ import json
 import logging
 import tempfile
 import requests
+from indra.literature import id_lookup
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from indra.reach.processor import ReachProcessor
@@ -60,7 +61,9 @@ def process_pmc(pmc_id, offline=False):
     fname = pmc_id + '.nxml'
     with open(fname, 'wb') as fh:
         fh.write(xml_str.encode('utf-8'))
-    rp = process_nxml_file(fname, citation=pmc_id, offline=offline)
+    ids = id_lookup(pmc_id, 'pmcid')
+    pmid = ids.get('pmid')
+    rp = process_nxml_file(fname, citation=pmid, offline=offline)
     return rp
 
 
@@ -240,7 +243,7 @@ def process_nxml_file(file_name, citation=None, offline=False):
         json_str = result_map.get('resultJson')
         if isinstance(json_str, bytes):
             json_str = json_str.decode('utf-8')
-        return process_json_str(json_str)
+        return process_json_str(json_str, citation)
     # For the web service, we read the file and process it as a string
     else:
         with open(file_name, 'rb') as f:

@@ -27,6 +27,11 @@ def id_lookup(paper_id, idtype):
         ID of the article.
     idtype : 'pmid', 'pmcid', or 'doi
         Type of the ID.
+
+    Returns
+    -------
+    ids : dict
+        A dictionary with the following keys: pmid, pmcid and doi.
     """
     if idtype not in ('pmid', 'pmcid', 'doi'):
         raise ValueError("Invalid idtype %s; must be 'pmid', 'pmcid', "

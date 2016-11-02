@@ -6,7 +6,7 @@ from indra.util import unicode_strs
 
 # Change this list to control what modes of
 # reading are enabled in tests
-offline_modes = [False]
+offline_modes = [False, True]
 
 def test_parse_site_text():
     text = ['threonine 185', 'thr 185', 'thr-185',
@@ -86,6 +86,8 @@ def test_process_unicode():
 def test_process_pmc():
     for offline in offline_modes:
         rp = reach.process_pmc('PMC4338247', offline=offline)
+        for stmt in rp.statements:
+            assert_pmid(stmt)
         assert unicode_strs(rp.statements)
 
 def test_process_unicode_abstract():
@@ -107,3 +109,9 @@ def test_hgnc_from_up():
         assert mapk1.db_refs['HGNC'] == '6871'
         assert mapk1.db_refs['UP'] == 'P28482'
         assert unicode_strs(rp.statements)
+
+def assert_pmid(stmt):
+    for ev in stmt.evidence:
+        assert(ev.pmid is not None)
+        assert(not ev.pmid.startswith('api'))
+        assert(not ev.pmid.startswith('PMID'))
