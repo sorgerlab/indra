@@ -209,7 +209,7 @@ class TripsProcessor(object):
                     agent_tag = outcome_event.find(".//*[@role=':AFFECTED']")
                 elif outcome_event_type.text == 'ONT::ACTIVITY':
                     agent_tag = outcome_event.find(".//*[@role=':AGENT']")
-                if agent_tag is None:
+                if agent_tag is None or agent_tag.attrib.get('id') is None:
                     continue
                 outcome_agent = self._get_agent_by_id(agent_tag.attrib['id'],
                                                       outcome_id)
