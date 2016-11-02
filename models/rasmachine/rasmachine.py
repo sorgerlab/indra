@@ -36,6 +36,12 @@ def get_searchterm_pmids(search_terms, num_days=1):
         pmids[s] = ids
     return pmids
 
+def check_pmids(stmts):
+    for stmt in stmts:
+        for ev in stmt.evidence:
+            if ev.pmid.startswith('api') or ev.pmid.startswith('PMID'):
+                logger.warning('Invalid PMID: %s' % ev.pmid)
+
 def process_paper(model_name, pmid):
     abstract_path = os.path.join(model_path, model_name,
                                  'jsons', 'abstract', 'PMID%s.json' % pmid)
@@ -71,10 +77,7 @@ def process_paper(model_name, pmid):
         else:
             rp = None
     if rp is not None:
-        for stmt in rp.statements:
-            for ev in stmt.evidence:
-                if ev.pmid.startswith('api') or ev.pmid.startswith('PMID'):
-                    logger.warning('Invalid PMID: %s' % ev.pmid)
+        check_pmids(rp.statements)
     return rp, txt_format
 
 def make_status_message(stats):
@@ -371,6 +374,8 @@ if __name__ == '__main__':
     # Stats for Pysb assembled model
     #stats['new_monomers'] = len(pysb_assmb.model.monomers)
     #stats['new_rules'] = len(pysb_assmb.model.rules)
+
+    check_pmids(model.get_statements())
 
     # Save model
     logger.info(time.strftime('%c'))
