@@ -62,6 +62,7 @@ except IOError:
     logger.debug('Tried key file: %s' % api_key_file)
     # Try the environment variable for the api key. This one is optional,
     # so if it is not found then we just leave it out of the keys dict
+    elsevier_keys = {}
     if inst_key_env_name in os.environ:
         elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
         logger.info('No Elsevier institution key found in environment '
