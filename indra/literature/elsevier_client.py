@@ -65,6 +65,7 @@ except IOError:
     elsevier_keys = {}
     if inst_key_env_name in os.environ:
         elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
+    else:
         logger.info('No Elsevier institution key found in environment '
                     'variable %s.' % inst_key_env_name)
     # Try the environment variable for the api key. This one is required, so
