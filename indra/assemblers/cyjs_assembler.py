@@ -51,12 +51,6 @@ class CyJSAssembler(object):
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
         return self.print_cyjs()
-        # Check for nodes that should be grouped
-        #   look at self._graph to find nodes with same incoming and outgoing
-        #   edges and group them
-        # Create groups for those nodes
-        # Merge edges for grouped nodes
-        # Store in an internal data structure
 
     def group_nodes(self):
         self._update_nodes()
@@ -196,19 +190,11 @@ class CyJSAssembler(object):
         edges = list(self._edges)
         keys = ['i','polarity','source','target']
         for e in edges:
-            # drop the id from each edge before comparing
             e['data'] = _limit_dict(e['data'], keys)
-            # check if edge already exists
-            # check if edge source or target are contained in a parent
-            # if source or target in parent edit edge
-            # nodes may only point within their container
             source = e['data']['source']
             target = e['data']['target']
             source_node = [x for x in self._nodes if x['data']['id'] == source][0]
             target_node = [x for x in self._nodes if x['data']['id'] == target][0]
-            # because this checks if parent != ''
-            # we cannot have parents within parents
-            # not sure if cytoscape would even draw this
             if source_node['data']['parent'] != '':
                 if e in self._edges:
                     self._edges.remove(e)
@@ -217,29 +203,23 @@ class CyJSAssembler(object):
                 if e in self._edges:
                     self._edges.remove(e)
                 e['data']['target'] = target_node['data']['parent']
-
             edges_no_id = [{'data':_limit_dict(x['data'],keys)} for x in self._edges]
             if e not in edges_no_id:
                 e['id'] = self._get_new_id()
                 self._edges.append(e)
         return None
 
-
     def _update_nodes(self):
         node_groupings = self._node_sets()
         keys = ['i','polarity','source','target']
         for g in node_groupings:
-            # make new group node
             new_group_node = {'data': {'id': (self._get_new_id()),
                                        'name': ('Group'+str(g)),
                                        'parent': ''}}
             self._nodes.append(new_group_node)
-            # kill old edges, get their info
-            # make new edges to group node with old info
             source_list = []
             target_list = []
             for n in g:
-                # point the node to its parent
                 for i in range(0, len(self._nodes)):
                     if self._nodes[i]['data']['id'] == n:
                         self._nodes[i]['data']['parent'] = new_group_node['data']['id']
