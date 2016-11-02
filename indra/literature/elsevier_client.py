@@ -77,6 +77,7 @@ except IOError:
                      '%s.' % api_key_env_name)
         elsevier_keys = None
 
+
 def check_entitlement(doi):
     if elsevier_keys is None:
         logger.error('Missing API key, could not check article entitlement.')
@@ -85,17 +86,13 @@ def check_entitlement(doi):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_entitlement_url, doi)
     params = {'httpAccept': 'text/xml'}
-    #params = {'httpAccept': 'text/xml',
-              #'insttoken': elsevier_keys['X-ELS-Insttoken'],
-              #'apiKey': elsevier_keys['X-ELS-APIKey'],
-              #}
-    #res = requests.get(url, params)
     res = requests.get(url, params, headers=elsevier_keys)
     if not res.status_code == 200:
         logger.error('Could not check entitlements for article %s: '
                      'status code %d' % (doi, res.status_code))
+        logger.error('Response content: %s' % res.text)
         return False
-    import ipdb; ipdb.set_trace()
+
 
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
@@ -107,7 +104,6 @@ def download_article(doi):
     url = '%s/%s' % (elsevier_article_url, doi)
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
-    #res = requests.get(url, params)
     if not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
                      (doi, res.status_code))
@@ -119,6 +115,8 @@ def download_article(doi):
 def get_abstract(doi):
     """Get the abstract of an article from Elsevier."""
     xml_string = download_article(doi)
+    if xml_string is None:
+        return None
     assert isinstance(xml_string, str)
     # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
