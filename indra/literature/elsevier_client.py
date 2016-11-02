@@ -1,3 +1,9 @@
+"""
+For information on the Elsevier API, see:
+  - API Specification: http://dev.elsevier.com/api_docs.html
+  - Authentication: https://dev.elsevier.com/tecdoc_api_authentication.html
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
@@ -20,6 +26,7 @@ logger = logging.getLogger('elsevier')
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
 elsevier_article_url = '%s/article/doi' % elsevier_api_url
 elsevier_search_url = '%s/search/scidir' % elsevier_api_url
+elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
 # Namespaces for Elsevier XML elements
 elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
@@ -68,17 +75,37 @@ except IOError:
                      '%s.' % api_key_env_name)
         elsevier_keys = None
 
+def check_entitlement(doi):
+    if elsevier_keys is None:
+        logger.error('Missing API key, could not check article entitlement.')
+        return False
+    if doi.lower().startswith('doi:'):
+        doi = doi[4:]
+    url = '%s/%s' % (elsevier_entitlement_url, doi)
+    params = {'httpAccept': 'text/xml'}
+    #params = {'httpAccept': 'text/xml',
+              #'insttoken': elsevier_keys['X-ELS-Insttoken'],
+              #'apiKey': elsevier_keys['X-ELS-APIKey'],
+              #}
+    #res = requests.get(url, params)
+    res = requests.get(url, params, headers=elsevier_keys)
+    if not res.status_code == 200:
+        logger.error('Could not check entitlements for article %s: '
+                     'status code %d' % (doi, res.status_code))
+        return False
+    import ipdb; ipdb.set_trace()
+
 def download_article(doi):
     """Download an article in XML format from Elsevier."""
+    if elsevier_keys is None:
+        logger.error('Missing API key, could not download article.')
+        return None
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_article_url, doi)
-    if elsevier_keys is None:
-        logger.error('Missing API key at %s, could not download article.' %
-                      api_key_file)
-        return None
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
+    #res = requests.get(url, params)
     if not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
                      (doi, res.status_code))
