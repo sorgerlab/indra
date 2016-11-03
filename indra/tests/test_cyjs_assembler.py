@@ -79,6 +79,9 @@ def test_grouping_block_targeting_node():
             assert(parent_b == '')
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
+        assert_has_id(node)
+    for edge in cja._edges:
+        assert_has_id(edge)
     assert(parent_a == parent_c)
     parent_a_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_a][0]
@@ -99,6 +102,9 @@ def test_grouping_node_targeting_block():
             parent_b = node['data']['parent']
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
+        assert_has_id(node)
+    for edge in cja._edges:
+        assert_has_id(edge)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -124,6 +130,9 @@ def test_grouping_node_targeting_block_targeting_node():
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
             assert(parent_d == '')
+        assert_has_id(node)
+    for edge in cja._edges:
+        assert_has_id(edge)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -147,6 +156,9 @@ def test_grouping_block_targeting_block():
             parent_c = node['data']['parent']
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
+        assert_has_id(node)
+    for edge in cja._edges:
+        assert_has_id(edge)
     assert(parent_b == parent_c)
     assert(parent_a == parent_d)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
@@ -156,3 +168,8 @@ def test_grouping_block_targeting_block():
     assert(parent_b_name.startswith('Group'))
     assert(parent_a_name.startswith('Group'))
     assert(len(cja._edges) == 1)
+
+def assert_has_id(element):
+    assert(element['data']['id'] is not None)
+    assert(element['data']['id'] != '')
+
