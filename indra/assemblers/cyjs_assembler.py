@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from copy import deepcopy
 import json
 import logging
 import itertools
@@ -179,11 +180,9 @@ class CyJSAssembler(object):
         return node_groups
 
     def _group_edges(self):
-        keys = ['i', 'polarity', 'source', 'target']
         # Iterate over edges in a copied edge list
-        for e in list(self._edges):
-            # Drop the id from each edge before comparing
-            e['data'] = _limit_dict(e['data'], keys)
+        edges_to_add = []
+        for e in self._edges:
             # Check if edge source or target are contained in a parent
             # If source or target in parent edit edge
             # Nodes may only point within their container
@@ -195,22 +194,24 @@ class CyJSAssembler(object):
                            x['data']['id'] == target][0]
             # If the source node is in a group, we change the source of this
             # edge to the group
+            new_edge = None
             if source_node['data']['parent'] != '':
-                if e in self._edges:
-                    self._edges.remove(e)
-                e['data']['source'] = source_node['data']['parent']
+                new_edge = deepcopy(e)
+                new_edge['data']['source'] = source_node['data']['parent']
+                e['data']['i'] = 'Virtual'
             # If the targete node is in a group, we change the target of this
             # edge to the group
             if target_node['data']['parent'] != '':
-                if e in self._edges:
-                    self._edges.remove(e)
-                e['data']['target'] = target_node['data']['parent']
-
-            edges_no_id = [{'data': _limit_dict(x['data'], keys)}
-                           for x in self._edges]
-            if e not in edges_no_id:
-                e['id'] = self._get_new_id()
-                self._edges.append(e)
+                if new_edge is None:
+                    new_edge = deepcopy(e)
+                new_edge['data']['target'] = target_node['data']['parent']
+                e['data']['i'] = 'Virtual'
+            if new_edge is not None:
+                edges_to_add.append(new_edge)
+        for edge in edges_to_add:
+            new_id = self._get_new_id()
+            edge['data']['id'] = new_id
+            self._edges.append(edge)
 
     def _group_nodes(self):
         node_groups = self._get_node_groups()
@@ -292,7 +293,3 @@ def _get_stmt_type(stmt):
         edge_type = stmt.__class__.__str__()
         edge_polarity = 'none'
     return edge_type, edge_polarity
-
-def _limit_dict(d, keys):
-    d2 = { k: d[k] for k in keys }
-    return d2
