@@ -143,9 +143,6 @@ def get_article(doi, output='txt'):
 def extract_text(xml_string):
     if xml_string is None:
         return None
-    with open('/Users/johnbachman/Desktop/elsevier.xml', 'wb') as f:
-        f.write(xml_string.encode('utf-8'))
-
     assert isinstance(xml_string, str)
     # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
@@ -154,51 +151,14 @@ def extract_text(xml_string):
     if full_text is None:
         logger.info('Could not find full text element article:originalText')
         return None
-    #import ipdb; ipdb.set_trace()
     article_body = _get_article_body(full_text)
     if article_body:
         return article_body
-    """
     raw_text = _get_raw_text(full_text)
     if raw_text:
         return raw_text
-    """
-
     return None
 
-"""
-def _get_converted_body(full_text_elem):
-    # Look for main body
-    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
-                                    'converted-article/body', elsevier_ns)
-    if main_body is None:
-        logger.info("Could not find main body element "
-                    "xocs:doc/xocs:serial-item/converted-article/body")
-        return None
-    # Get content sections
-    sections = main_body.findall('ce:sections/ce:section', elsevier_ns)
-    if len(sections) == 0:
-        logger.info("Found no sections in main body")
-        return None
-    # Concatenate the section content
-    full_txt = ''
-    for s in sections:
-        # Paragraphs that are directly under the section
-        pars = s.findall('ce:para', elsevier_ns)
-        # Paragraphs that are under a section within the section
-        pars += s.findall('ce:section/ce:para', elsevier_ns)
-        for p in pars:
-            # Get the initial string inside the paragraph
-            if p.text is not None:
-                full_txt += p.text
-            # When there are tags inside the paragraph (for instance
-            # references), we need to take those child elements one by one
-            # and get the corresponding tail strings and join these. 
-            full_txt += ''.join([c.tail if c.tail is not None 
-                                 else '' for c in p.getchildren()])
-            full_txt += '\n'
-    return full_txt
-"""
 
 def _get_article_body(full_text_elem):
     # Look for ja:article
@@ -217,6 +177,7 @@ def _get_article_body(full_text_elem):
         return _get_sections(main_body)
     # If we haven't returned by this point, then return None
     return None
+
 
 def _get_sections(main_body_elem):
     # Get content sections
@@ -244,6 +205,7 @@ def _get_sections(main_body_elem):
             full_txt += '\n'
     return full_txt
 
+
 def _get_raw_text(full_text_elem):
     # Look for raw_text
     raw_text = full_text_elem.find('xocs:doc/xocs:rawtext', elsevier_ns)
@@ -251,7 +213,8 @@ def _get_raw_text(full_text_elem):
         logger.info("Could not find rawtext element xocs:doc/xocs:rawtext")
         return None
     else:
-        return raw_text
+        return raw_text.text
+
 
 @lru_cache(maxsize=100)
 def get_dois(query_str, count=100):

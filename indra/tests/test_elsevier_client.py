@@ -28,11 +28,11 @@ def test_get_converted_article_body():
     body = ec.extract_text(xml_str)
     assert body
 
-def test_get_ce_body():
-    pass
-
 def test_get_rawtext():
-    pass
-
-if __name__ == '__main__':
-    test_get_ja_body()
+    """Make sure we can get content of an article that has content in
+    xocs:rawtext"""
+    # PMID: 20072652
+    doi = '10.1593/neo.91196'
+    xml_str = ec.download_article(doi)
+    body = ec.extract_text(xml_str)
+    assert body
