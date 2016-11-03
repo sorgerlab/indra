@@ -86,7 +86,13 @@ def test_grouping_block_targeting_node():
     parent_a_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_a][0]
     assert(parent_a_name.startswith('Group'))
-    assert(len(cja._edges) == 1)
+    assert(len(cja._edges) == 3)
+    virtual_edges = [x for x in cja._edges if
+                     x['data']['i'] == 'Virtual']
+    assert(len(virtual_edges) == 2)
+    real_edges = [x for x in cja._edges if
+                  x['data']['i'] != 'Virtual']
+    assert(len(real_edges) == 1)
 
 def test_grouping_node_targeting_block():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -109,7 +115,13 @@ def test_grouping_node_targeting_block():
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
     assert(parent_b_name.startswith('Group'))
-    assert(len(cja._edges) == 1)
+    assert(len(cja._edges) == 3)
+    virtual_edges = [x for x in cja._edges if
+                     x['data']['i'] == 'Virtual']
+    assert(len(virtual_edges) == 2)
+    real_edges = [x for x in cja._edges if
+                  x['data']['i'] != 'Virtual']
+    assert(len(real_edges) == 1)
 
 def test_grouping_node_targeting_block_targeting_node():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -137,7 +149,13 @@ def test_grouping_node_targeting_block_targeting_node():
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
     assert(parent_b_name.startswith('Group'))
-    assert(len(cja._edges) == 2)
+    assert(len(cja._edges) == 6)
+    virtual_edges = [x for x in cja._edges if
+                     x['data']['i'] == 'Virtual']
+    assert(len(virtual_edges) == 4)
+    real_edges = [x for x in cja._edges if
+                  x['data']['i'] != 'Virtual']
+    assert(len(real_edges) == 2)
 
 def test_grouping_block_targeting_block():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -167,7 +185,13 @@ def test_grouping_block_targeting_block():
                      x['data']['id']==parent_a][0]
     assert(parent_b_name.startswith('Group'))
     assert(parent_a_name.startswith('Group'))
-    assert(len(cja._edges) == 1)
+    assert(len(cja._edges) == 5)
+    virtual_edges = [x for x in cja._edges if
+                     x['data']['i'] == 'Virtual']
+    assert(len(virtual_edges) == 4)
+    real_edges = [x for x in cja._edges if
+                  x['data']['i'] != 'Virtual']
+    assert(len(real_edges) == 1)
 
 def assert_has_id(element):
     assert(element['data']['id'] is not None)

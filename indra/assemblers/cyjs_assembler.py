@@ -197,6 +197,7 @@ class CyJSAssembler(object):
             new_edge = None
             if source_node['data']['parent'] != '':
                 new_edge = deepcopy(e)
+                new_edge['data'].pop('id', None)
                 new_edge['data']['source'] = source_node['data']['parent']
                 e['data']['i'] = 'Virtual'
             # If the targete node is in a group, we change the target of this
@@ -204,10 +205,15 @@ class CyJSAssembler(object):
             if target_node['data']['parent'] != '':
                 if new_edge is None:
                     new_edge = deepcopy(e)
+                    new_edge['data'].pop('id', None)
                 new_edge['data']['target'] = target_node['data']['parent']
                 e['data']['i'] = 'Virtual'
             if new_edge is not None:
-                edges_to_add.append(new_edge)
+                if new_edge not in edges_to_add:
+                    edges_to_add.append(new_edge)
+
+        # need to check if there are identical edges in edges to add
+        # identical on everything but id
         for edge in edges_to_add:
             new_id = self._get_new_id()
             edge['data']['id'] = new_id
