@@ -21,14 +21,19 @@ if __name__ == '__main__':
     force_read = True
 
     # Check the arguments
-    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index" \
-             % sys.argv[0]
+    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
+            "[force_fulltext]" % sys.argv[0]
     if len(sys.argv) < 6:
         print(usage)
         sys.exit()
+    if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
+        print(usage)
+        sys.exit()
+    elif len(sys.argv) == 7:
+        force_fulltext = True
 
     # Get the command line arguments
-    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:]
+    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
     start_index = int(start_index)
     end_index = int(end_index)
     num_cores = int(num_cores)
@@ -93,7 +98,7 @@ if __name__ == '__main__':
     for pmid in pmids_to_read:
         full_pmid = s3_client.check_pmid(pmid)
         # Look for the full text
-        (content, content_type) = s3_client.get_upload_content(pmid)
+        (content, content_type) = s3_client.get_upload_content(pmid, force_fulltext_lookup=force_fulltext)
         # If we don't find the XML on S3, look for it using the PMC client
         #if xml:
         #    num_found_s3 += 1

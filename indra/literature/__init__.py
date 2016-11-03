@@ -93,14 +93,13 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
 
     # If it does not have PMC NXML then we attempt to obtain the full-text
     # through the CrossRef Click-through API
-    #if doi:
-    if False:
+    if doi:
         # Get publisher
         publisher = crossref_client.get_publisher(doi)
 
         # First check for whether this is Elsevier--if so, use the Elsevier
         # client directly, because the Clickthrough API key seems unreliable.
-        # For now, return as text.
+        # Return full XML.
         if publisher == 'Elsevier BV':
             logger.info('Elsevier: %s' % pmid)
             #article = elsevier_client.get_article(doi, output='txt')
@@ -112,9 +111,9 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         # Because we don't yet have a way to process non-Elsevier content
         # obtained from CrossRef, which includes both XML of unknown format
         # and PDFs, we just comment this section out for now
+        """
         # Check if there are any full text links
         links = crossref_client.get_fulltext_links(doi)
-        """
         if links:
             headers = {}
             # Set the Cross Ref Clickthrough API key in the header, if we've
