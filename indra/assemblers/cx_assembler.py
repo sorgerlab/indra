@@ -23,7 +23,7 @@ try:
 except ImportError:
     have_ndex_client = False
 
-class CxAssembler():
+class CxAssembler(object):
     """This class assembles a CX network from a set of INDRA Statements.
 
     The CX format is an aspect oriented data mode for networks.
@@ -268,11 +268,9 @@ class CxAssembler():
 
     def _add_node(self, agent):
         node_key = agent.name
-        try:
-            node_id = self._existing_nodes[node_key]
+        node_id = self._existing_nodes.get(node_key)
+        if node_id is not None:
             return node_id
-        except KeyError:
-            pass
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node = {'@id': node_id,
@@ -282,7 +280,7 @@ class CxAssembler():
         return node_id
 
     def _add_node_metadata(self, node_id, agent):
-        agent_type = get_agent_type(agent)
+        agent_type = _get_agent_type(agent)
         node_attribute = {'po': node_id,
                           'n': 'type',
                           'v': agent_type}
@@ -354,7 +352,7 @@ class CxAssembler():
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
         # Add the type of statement as the edge type
-        stmt_type, stmt_polarity = get_stmt_type(stmt)
+        stmt_type, stmt_polarity = _get_stmt_type(stmt)
         edge_attribute = {'po': edge_id,
                           'n': 'type',
                           'v': stmt_type}
@@ -413,7 +411,7 @@ class CxAssembler():
                               'v': text}
             self.cx['edgeAttributes'].append(edge_attribute)
 
-def get_stmt_type(stmt):
+def _get_stmt_type(stmt):
     if isinstance(stmt, Modification):
         edge_type = 'Modification'
         edge_polarity = 'positive'
@@ -440,7 +438,7 @@ def get_stmt_type(stmt):
         edge_polarity = 'none'
     return edge_type, edge_polarity
 
-def get_agent_type(agent):
+def _get_agent_type(agent):
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
     pfam_id = agent.db_refs.get('PF')

@@ -26,3 +26,7 @@ try:
     from indra.assemblers.index_card_assembler import IndexCardAssembler
 except ImportError:
     pass
+try:
+    from indra.assemblers.cyjs_assembler import CyJSAssembler
+except ImportError:
+    pass
