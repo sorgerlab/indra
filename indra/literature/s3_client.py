@@ -76,7 +76,14 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
     # If there's nothing (even an abstract on S3), or if there's an abstract
     # and we're forcing fulltext lookup, do the lookup
     elif ft_content_type_s3 is None or \
-            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup):
+            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup) or \
+            (ft_content_type_s3 == 'elsevier_xml' and
+                    not elsevier_client.extract_text(ft_content_s3)):
+        # FIXME FIXME FIXME
+        if ft_content_type_s3 == 'elsevier_xml':
+            logger.info('elsevier_xml for %s missing full text element, '
+                        'getting again.' % pmid)
+        # FIXME FIXME FIXME
         # Try to retrieve from literature client
         logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
