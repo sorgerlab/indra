@@ -149,6 +149,11 @@ class CyJSAssembler(object):
         self._id_counter += 1
         return ret
 
+    def _get_node_key(self, node_dict):
+        s = tuple(sorted(node_dict['sources']))
+        t = tuple(sorted(node_dict['targets']))
+        return (s, t)
+
     def _get_node_groups(self):
         # First we construct a dictionary for each node's
         # source and target edges
@@ -164,49 +169,13 @@ class CyJSAssembler(object):
                          edge['data']['target'])
             node_dict[edge['data']['source']]['targets'].append(edge_data)
 
-        # We next construct groups of identical nodes by pairwise comparing
-        # them and then assigning group ids to them.
-        group_counter = 0
-        groups = {}
-        # Look at all pairs of nodes
-        for n1, n2 in itertools.combinations(self._nodes, 2):
-            n1_id = n1['data']['id']
-            n2_id = n2['data']['id']
-            # If the nodes are not identical then we don't do anything
-            if not ((set(node_dict[n1_id]['sources']) ==
-               set(node_dict[n2_id]['sources'])) and \
-               (set(node_dict[n1_id]['targets']) ==
-               set(node_dict[n2_id]['targets']))):
-                continue
-            # At this point we know that n1 and n2 are identical
-            g1 = groups.get(n1_id)
-            g2 = groups.get(n2_id)
-            if g1 is None and g2 is None:
-                # If neither n1 nor n2 are in a group then we create
-                # a new group for them
-                groups[n1_id] = group_counter
-                groups[n2_id] = group_counter
-                group_counter += 1
-            elif g1 is None and g2 is not None:
-                # If n2 is already in a group then we add n1 to that
-                groups[n1_id] = g2
-            elif g1 is not None and g2 is None:
-                # If n1 is already in a group then we add n2 to that
-                groups[n2_id] = g1
-            else:
-                # If they are both in different groups, we have to merge
-                # those groups into one
-                remove_group = max(g1, g2)
-                join_group = min(g1, g2)
-                for k, v in groups.items():
-                    if v == remove_group:
-                        groups[k] = join_group
-        # Get the list of nodes in each group
-        groups_rev = collections.defaultdict(lambda: [])
-        for k, v in groups.items():
-            groups_rev[v].append(k)
-        # Get the groups as a single list
-        node_groups = list(groups_rev.values())
+        # Make a dictionary of nodes based on source/target as a key
+        node_key_dict = collections.defaultdict(lambda: [])
+        for node_id, node_d in node_dict.items():
+            key = self._get_node_key(node_d)
+            node_key_dict[key].append(node_id)
+        # Constrain the groups to ones that have more than 1 member
+        node_groups = [g for g in node_key_dict.values() if (len(g) > 1)]
         return node_groups
 
     def _group_edges(self):
