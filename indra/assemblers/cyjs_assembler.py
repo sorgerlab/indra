@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
 import logging
-import networkx
 import itertools
+import collections
 from indra.statements import *
 
 # Python 2
@@ -23,7 +23,6 @@ class CyJSAssembler(object):
             self.statements = stmts
         self._edges = []
         self._nodes = []
-        self._graph = networkx.DiGraph()
         self._existing_nodes = {}
         self._id_counter = 0
 
@@ -39,7 +38,24 @@ class CyJSAssembler(object):
         for stmt in stmts:
             self.statements.append(stmt)
 
-    def make_model(self):
+    def make_model(self, grouping=False):
+        """Assemble a Cytoscape JS network from INDRA Statements.
+
+        This method assembles a Cytoscape JS network from the set of INDRA
+        Statements added to the assembler.
+
+        Parameters
+        ----------
+        grouping : bool
+            If True, the nodes with identical incoming and outgoing edges
+            are grouped and the corresponding edges are merged.
+            Default: False
+
+        Returns
+        -------
+        cyjs_str : str
+            The json serialized Cytoscape JS model.
+        """
         for stmt in self.statements:
             if isinstance(stmt, Activation):
                 self._add_activation(stmt)
@@ -50,19 +66,33 @@ class CyJSAssembler(object):
             else:
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
-        return self.print_cyjs()
+        if grouping:
+            self._group_nodes()
+            self._group_edges()
 
-    def group_nodes(self):
-        self._update_nodes()
-        self._update_model_edges()
         return self.print_cyjs()
 
     def print_cyjs(self):
+        """Return the assembled Cytoscape JS network as a json string.
+
+        Returns
+        -------
+        cyjs_str : str
+            A json string representation of the Cytoscape JS network.
+        """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
         cyjs_str = json.dumps(cyjs_dict, indent=1)
         return cyjs_str
 
     def save_model(self, fname='model.js'):
+        """Save the assembled Cytoscape JS network in a file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the Cytoscape JS network to.
+            Default: model.js
+        """
         cyjs_str = self.print_cyjs()
         s = 'var modelElements = %s;' % cyjs_str
         with open(fname, 'wt') as fh:
@@ -77,7 +107,6 @@ class CyJSAssembler(object):
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
         self._edges.append(edge)
-        self._graph.add_edge(source_id, target_id)
 
     def _add_modification(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
@@ -88,7 +117,7 @@ class CyJSAssembler(object):
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
         self._edges.append(edge)
-        self._graph.add_edge(source_id, target_id)
+
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         for m1, m2 in itertools.combinations(stmt.members, 2):
@@ -100,7 +129,6 @@ class CyJSAssembler(object):
                              'source': m1_id, 'target': m2_id,
                              'polarity': edge_polarity}}
             self._edges.append(edge)
-            self._graph.add_edge(m1_id, m2_id)
 
     def _add_node(self, agent):
         node_key = agent.name
@@ -111,9 +139,9 @@ class CyJSAssembler(object):
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
-        node = {'data': {'id': node_id, 'name': node_name, 'db_refs': db_refs, 'parent':''}}
+        node = {'data': {'id': node_id, 'name': node_name,
+                         'db_refs': db_refs, 'parent':''}}
         self._nodes.append(node)
-        self._graph.add_node(node_id)
         return node_id
 
     def _get_new_id(self):
@@ -121,123 +149,112 @@ class CyJSAssembler(object):
         self._id_counter += 1
         return ret
 
-    def _build_node_dict(self):
-        node_ids = [x['data']['id'] for x in self._nodes]
-        edge_data = [x['data'] for x in self._edges]
-        node_dict = {}
-        for n in node_ids:
-            n_sources = []
-            n_targets = []
-            for e in edge_data:
-                if e['target'] == n:
-                    keys = ['i','polarity','source']
-                    n_sources.append(_limit_dict(e, keys))
-                if e['source'] == n:
-                    keys = ['i','polarity','target']
-                    n_targets.append(_limit_dict(e, keys))
-            node_dict[n] = [n_sources,n_targets]
-        return node_dict
+    def _get_node_groups(self):
+        # First we construct a dictionary for each node's
+        # source and target edges
+        node_dict = {node['data']['id']: {'sources': [], 'targets': []}
+                     for node in self._nodes}
+        for edge in self._edges:
+            # Add edge as a source for its target node
+            edge_data = (edge['data']['i'], edge['data']['polarity'],
+                         edge['data']['source'])
+            node_dict[edge['data']['target']]['sources'].append(edge_data)
+            # Add edge as target for its source node
+            edge_data = (edge['data']['i'], edge['data']['polarity'],
+                         edge['data']['target'])
+            node_dict[edge['data']['source']]['targets'].append(edge_data)
 
-    @staticmethod
-    def _identical_nodes_lists(node_dict):
-        identicals = []
-        for n1 in node_dict:
-            for n2 in node_dict:
-                if n1 != n2:
-                    if node_dict[n1][0] == node_dict[n2][0]:
-                        if node_dict[n1][1] == node_dict[n2][1]:
-                            identicals.append([n1,n2])
-        return identicals
+        # We next construct groups of identical nodes by pairwise comparing
+        # them and then assigning group ids to them.
+        group_counter = 0
+        groups = {}
+        # Look at all pairs of nodes
+        for n1, n2 in itertools.combinations(self._nodes, 2):
+            n1_id = n1['data']['id']
+            n2_id = n2['data']['id']
+            # If the nodes are not identical then we don't do anything
+            if not ((set(node_dict[n1_id]['sources']) ==
+               set(node_dict[n2_id]['sources'])) and \
+               (set(node_dict[n1_id]['targets']) ==
+               set(node_dict[n2_id]['targets']))):
+                continue
+            # At this point we know that n1 and n2 are identical
+            g1 = groups.get(n1_id)
+            g2 = groups.get(n2_id)
+            if g1 is None and g2 is None:
+                # If neither n1 nor n2 are in a group then we create
+                # a new group for them
+                groups[n1_id] = group_counter
+                groups[n2_id] = group_counter
+                group_counter += 1
+            elif g1 is None and g2 is not None:
+                # If n2 is already in a group then we add n1 to that
+                groups[n1_id] = g2
+            elif g1 is not None and g2 is None:
+                # If n1 is already in a group then we add n2 to that
+                groups[n2_id] = g1
+            else:
+                # If they are both in different groups, we have to merge
+                # those groups into one
+                remove_group = max(g1, g2)
+                join_group = min(g1, g2)
+                for k, v in groups.items():
+                    if v == remove_group:
+                        groups[k] = join_group
+        # Get the list of nodes in each group
+        groups_rev = collections.defaultdict(lambda: [])
+        for k, v in groups.items():
+            groups_rev[v].append(k)
+        # Get the groups as a single list
+        node_groups = list(groups_rev.values())
+        return node_groups
 
-    @staticmethod
-    def _combine_identicals(identicals):
-        combined = list(sorted(identicals))
-        sets = []
-        for a in combined:
-            combos = []
-            trigger1 = False
-            for b in combined:
-                if a!=b:
-                    c = list(set(a+b))
-                    if len(c) < (len(a+b)):
-                        trigger1 = True
-                        combos = list(sorted(list(set(combos+c))))
-                    if len([x for x in a if x in b]) > 0:
-                        combos = list(sorted(list(set(combos+c))))
-                        trigger1 = True
-            if trigger1 == False:
-                combos = list(sorted(list(set(combos + a))))
-            sets.append(combos)
-        node_groupings = []
-        for x in sets:
-            if x not in node_groupings:
-                node_groupings.append(x)
-        return node_groupings
-
-    def _node_sets(self):
-        node_dict = self._build_node_dict()
-        identicals = self._identical_nodes_lists(node_dict)
-        node_groupings = list(sorted(identicals))
-        while True:
-            pre_len = len(node_groupings)
-            node_groupings = self._combine_identicals(node_groupings)
-            post_len = len(node_groupings)
-            if pre_len == post_len:
-                break
-        return node_groupings
-
-    def _update_model_edges(self):
-        edges = list(self._edges)
-        keys = ['i','polarity','source','target']
-        for e in edges:
-            # drop the id from each edge before comparing
+    def _group_edges(self):
+        keys = ['i', 'polarity', 'source', 'target']
+        # Iterate over edges in a copied edge list
+        for e in list(self._edges):
+            # Drop the id from each edge before comparing
             e['data'] = _limit_dict(e['data'], keys)
-            # check if edge already exists
-            # check if edge source or target are contained in a parent
-            # if source or target in parent edit edge
-            # nodes may only point within their container
+            # Check if edge source or target are contained in a parent
+            # If source or target in parent edit edge
+            # Nodes may only point within their container
             source = e['data']['source']
             target = e['data']['target']
-            source_node = [x for x in self._nodes if x['data']['id'] == source][0]
-            target_node = [x for x in self._nodes if x['data']['id'] == target][0]
-            # because this checks if parent != ''
-            # we cannot have parents within parents
-            # not sure if cytoscape would even draw this
+            source_node = [x for x in self._nodes if
+                           x['data']['id'] == source][0]
+            target_node = [x for x in self._nodes if
+                           x['data']['id'] == target][0]
+            # If the source node is in a group, we change the source of this
+            # edge to the group
             if source_node['data']['parent'] != '':
                 if e in self._edges:
                     self._edges.remove(e)
                 e['data']['source'] = source_node['data']['parent']
+            # If the targete node is in a group, we change the target of this
+            # edge to the group
             if target_node['data']['parent'] != '':
                 if e in self._edges:
                     self._edges.remove(e)
                 e['data']['target'] = target_node['data']['parent']
 
-            edges_no_id = [{'data':_limit_dict(x['data'],keys)} for x in self._edges]
+            edges_no_id = [{'data': _limit_dict(x['data'], keys)}
+                           for x in self._edges]
             if e not in edges_no_id:
                 e['id'] = self._get_new_id()
                 self._edges.append(e)
-        return None
 
-
-    def _update_nodes(self):
-        node_groupings = self._node_sets()
-        keys = ['i','polarity','source','target']
-        for g in node_groupings:
-            # make new group node
+    def _group_nodes(self):
+        node_groups = self._get_node_groups()
+        for group in node_groups:
+            # Make new group node
             new_group_node = {'data': {'id': (self._get_new_id()),
-                                       'name': ('Group'+str(g)),
+                                       'name': ('Group' + str(group)),
                                        'parent': ''}}
+            # Point the node to its parent
+            for node in self._nodes:
+                if node['data']['id'] in group:
+                    node['data']['parent'] = new_group_node['data']['id']
             self._nodes.append(new_group_node)
-            # kill old edges, get their info
-            # make new edges to group node with old info
-            source_list = []
-            target_list = []
-            for n in g:
-                # point the node to its parent
-                for i in range(0, len(self._nodes)):
-                    if self._nodes[i]['data']['id'] == n:
-                        self._nodes[i]['data']['parent'] = new_group_node['data']['id']
-        return None
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}

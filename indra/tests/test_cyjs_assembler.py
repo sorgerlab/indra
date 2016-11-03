@@ -60,8 +60,7 @@ def test_no_grouping():
     st3 = Phosphorylation(Agent('C'), Agent('B'))
     cja = CyJSAssembler()
     cja.add_statements([st1, st2, st3])
-    cja.make_model()
-    cja.group_nodes()
+    cja.make_model(grouping=True)
     parents = [node['data']['parent'] for node in cja._nodes]
     for parent in parents:
         assert parent == ''
@@ -71,8 +70,7 @@ def test_grouping_block_targeting_node():
     st2 = Phosphorylation(Agent('C'), Agent('B'))
     cja = CyJSAssembler()
     cja.add_statements([st1, st2])
-    cja.make_model()
-    cja.group_nodes()
+    cja.make_model(grouping=True)
     for node in cja._nodes:
         if node['data']['name'] == 'A':
             parent_a = node['data']['parent']
@@ -92,8 +90,7 @@ def test_grouping_node_targeting_block():
     st2 = Phosphorylation(Agent('A'), Agent('C'))
     cja = CyJSAssembler()
     cja.add_statements([st1, st2])
-    cja.make_model()
-    cja.group_nodes()
+    cja.make_model(grouping=True)
     for node in cja._nodes:
         if node['data']['name'] == 'A':
             parent_a = node['data']['parent']
@@ -115,8 +112,7 @@ def test_grouping_node_targeting_block_targeting_node():
     st4 = Phosphorylation(Agent('C'), Agent('D'))
     cja = CyJSAssembler()
     cja.add_statements([st1, st2, st3, st4])
-    cja.make_model()
-    cja.group_nodes()
+    cja.make_model(grouping=True)
     for node in cja._nodes:
         if node['data']['name'] == 'A':
             parent_a = node['data']['parent']
@@ -141,8 +137,7 @@ def test_grouping_block_targeting_block():
     st4 = Phosphorylation(Agent('D'), Agent('C'))
     cja = CyJSAssembler()
     cja.add_statements([st1, st2, st3, st4])
-    cja.make_model()
-    cja.group_nodes()
+    cja.make_model(grouping=True)
     for node in cja._nodes:
         if node['data']['name'] == 'A':
             parent_a = node['data']['parent']
@@ -161,5 +156,3 @@ def test_grouping_block_targeting_block():
     assert(parent_b_name.startswith('Group'))
     assert(parent_a_name.startswith('Group'))
     assert(len(cja._edges) == 1)
-
-
