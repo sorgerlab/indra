@@ -25,10 +25,11 @@ if __name__ == '__main__':
             end_ix = int(start_indices[ix + 1])
         else:
             end_ix = len(pmids)
+        out_filename = '%s_%d_%d.out' % (pmid_list, start_ix, end_ix)
         cmd_list = ['bsub', '-q', 'short', '-W', '12:00', '-N', '-o',
                     out_filename, 'python', '-m',
                     'indra.tools.reading.upload_content_to_s3',
-                    pmid_list, start_ix, end_ix]
+                    pmid_list, str(start_ix), str(end_ix), 'force_fulltext']
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
