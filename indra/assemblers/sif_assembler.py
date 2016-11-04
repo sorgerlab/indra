@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
+import itertools
 import networkx as nx
 from indra.statements import *
 
@@ -28,16 +29,33 @@ class SifAssembler(object):
             self.stmts = stmts
         self.graph = nx.DiGraph()
 
-    def make_model(self):
+    def make_model(self, use_name_as_key=False, include_mods=False,
+                   include_complexes=False):
         """Assemble the graph from the assembler's list of INDRA Statements."""
+        def add_node_edge(s, t, polarity):
+            if s is not None:
+                s = self._add_node(s, use_name_as_key=use_name_as_key)
+                t = self._add_node(t, use_name_as_key=use_name_as_key)
+                self._add_edge(s, t, {'polarity': polarity})
         for st in self.stmts:
             if isinstance(st, Activation):
-                s = self._add_node(st.subj)
-                t = self._add_node(st.obj)
-                if st.is_activation:
-                    self._add_edge(s, t, {'polarity': 'positive'})
-                else:
-                    self._add_edge(s, t, {'polarity': 'negative'})
+                polarity = 'positive' if st.is_activation else 'negative'
+                add_node_edge(st.subj, st.obj, polarity)
+            elif include_mods and isinstance(st, Modification):
+                add_node_edge(st.agent_list()[0], st.agent_list()[1], 'unknown')
+            elif include_mods and \
+                 (isinstance(st, RasGap) or isinstance(st, Degradation)):
+                add_node_edge(st.agent_list()[0], st.agent_list()[1],
+                              'negative')
+            elif include_mods and \
+                 (isinstance(st, RasGef) or isinstance(st, Synthesis)):
+                add_node_edge(st.agent_list()[0], st.agent_list()[1],
+                              'positive')
+            elif include_complexes and isinstance(st, Complex):
+                # Create s->t edges between all possible pairs of complex
+                # members
+                for node1, node2 in itertools.permutations(st.members, 2):
+                    add_node_edge(node1, node2, 'unknown')
 
     def print_boolean_net(self, out_file=None):
         """Return a Boolean network from the assembled graph.
@@ -100,8 +118,11 @@ class SifAssembler(object):
                 fh.write(full_str)
         return full_str
 
-    def _add_node(self, agent):
-        node_key = agent.matches_key()
+    def _add_node(self, agent, use_name_as_key=False):
+        if use_name_as_key:
+            node_key = agent.name
+        else:
+            node_key = agent.matches_key()
         self.graph.add_node(node_key, name=agent.name)
         return node_key
 
