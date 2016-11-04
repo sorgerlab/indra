@@ -1,5 +1,6 @@
 from indra.tools.gene_network import GeneNetwork, grounding_filter
 import csv
+import pickle
 
 # STEP 0: Get gene list
 gene_list = []
@@ -13,4 +14,6 @@ gn = GeneNetwork(gene_list, 'ras_genes')
 stmts = gn.get_statements(filter=True)
 grounded_stmts = grounding_filter(stmts)
 results = gn.run_preassembly(grounded_stmts)
+with open('ras_220_gn_stmts.pkl', 'wb') as f:
+    pickle.dump(results, f)
 
