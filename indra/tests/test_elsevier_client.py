@@ -36,3 +36,13 @@ def test_get_rawtext():
     xml_str = ec.download_article(doi)
     body = ec.extract_text(xml_str)
     assert body
+
+def test_article():
+    # PMID: 11302724
+    doi = '10.1006/bbrc.2001.4693'
+    xml_str = ec.download_article(doi)
+    body = ec.extract_text(xml_str)
+    assert body
+
+if __name__== '__main__':
+    test_article()
