@@ -16,4 +16,3 @@ INDRA modules reference
    belief/index
    assemblers/index
    tools/index
-   resources/index

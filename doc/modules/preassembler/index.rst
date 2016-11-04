@@ -8,7 +8,7 @@ Preassembler (:py:mod:`indra.preassembler`)
     :members:
 
 Entity grounding curation and mapping (:py:mod:`indra.preassembler.grounding_mapper`)
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 
 .. automodule:: indra.preassembler.grounding_mapper
     :members:
