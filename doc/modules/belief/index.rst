@@ -1,5 +1,5 @@
-Belief Engline (:py:mod:`indra.belief`)
----------------------------------------
+Belief Engine (:py:mod:`indra.belief`)
+--------------------------------------
 
 .. automodule:: indra.belief
     :members:
