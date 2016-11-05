@@ -1301,7 +1301,7 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
     obj = model.monomers[stmt.obj.name]
     if stmt.subj_activity is not None:
         subj_active_site = active_site_names[stmt.subj_activity]
-        obj_mod_site = default_mod_site_names[stmt.obj_activity]
+        obj_mod_site = default_mod_site_names[stmt.subj_activity]
     else:
         subj_active_site = active_site_names[stmt.obj_activity]
         obj_mod_site = default_mod_site_names[stmt.obj_activity]
