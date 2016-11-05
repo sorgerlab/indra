@@ -643,5 +643,20 @@ def test_missing_catalytic_default_site():
     pa.add_statements([stmt])
     model = pa.make_model()
 
-if __name__ == '__main__':
-    test_missing_catalytic_default_site()
+def test_missing_transcription_default_site():
+    p53 = Agent('TP53')
+    bax = Agent('BAX')
+    stmt = Activation(p53, 'transcription', bax, 'activity', True)
+    # Interactions only
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    # One step
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    # Two step
+    pa = PysbAssembler(policies='two_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+

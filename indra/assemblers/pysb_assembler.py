@@ -207,7 +207,8 @@ default_mod_site_names = {
     'gtpbound': 'rbd',
     'phosphatase': 'phospho',
     'activity': 'act',
-    'catalytic': 'act'
+    'catalytic': 'act',
+    'transcription': 'tf_site',
 }
 
 
