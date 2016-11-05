@@ -206,7 +206,8 @@ default_mod_site_names = {
     'kinase': 'phospho',
     'gtpbound': 'rbd',
     'phosphatase': 'phospho',
-    'activity': 'act'
+    'activity': 'act',
+    'catalytic': 'act'
 }
 
 

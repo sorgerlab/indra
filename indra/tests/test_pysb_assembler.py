@@ -630,10 +630,18 @@ def test_missing_catalytic_default_site():
     c8 = Agent('CASP8')
     c3 = Agent('CASP3')
     stmt = Activation(c8, 'catalytic', c3, 'catalytic', True)
+    # Interactions only
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    # One step
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    import ipdb; ipdb.set_trace()
+    # Two step
+    pa = PysbAssembler(policies='two_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
 
 if __name__ == '__main__':
     test_missing_catalytic_default_site()
