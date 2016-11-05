@@ -625,3 +625,15 @@ def test_synthesis_interactions_only():
     model = pa.make_model()
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
+
+def test_missing_catalytic_default_site():
+    c8 = Agent('CASP8')
+    c3 = Agent('CASP3')
+    stmt = Activation(c8, 'catalytic', c3, 'catalytic', True)
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([stmt])
+    model = pa.make_model()
+    import ipdb; ipdb.set_trace()
+
+if __name__ == '__main__':
+    test_missing_catalytic_default_site()
