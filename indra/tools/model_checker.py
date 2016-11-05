@@ -1,13 +1,15 @@
-from pysb.core import as_complex_pattern
-from pysb import kappa
-from pysb import Observable
-from indra.statements import *
-from indra.assemblers import pysb_assembler as pa
-from copy import deepcopy
-import networkx
-import itertools
+from __future__ import print_function, unicode_literals, absolute_import
+from builtins import dict, str
 import logging
 import numpy as np
+import networkx
+import itertools
+from copy import deepcopy
+from pysb import kappa
+from pysb import Observable
+from pysb.core import as_complex_pattern
+from indra.statements import *
+from indra.assemblers import pysb_assembler as pa
 
 logger = logging.getLogger('model_checker')
 
@@ -65,8 +67,8 @@ class ModelChecker(object):
         target_cons_rules = find_consumption_rules(sub_mp, self.model.rules)
         # The final list contains a list of rules along with their "polarities"
         # (production = 1, consumption = -1)
-        target_rules = zip(target_prod_rules, [1]*len(target_prod_rules)) + \
-                       zip(target_cons_rules, [-1]*len(target_cons_rules))
+        target_rules = (list(zip(target_prod_rules, [1]*len(target_prod_rules)))
+                    + list(zip(target_cons_rules, [-1]*len(target_cons_rules))))
         logger.info('Found %s target rules matching %s' %
                     (len(target_rules), str(sub_mp)))
         if input_rules and target_rules:

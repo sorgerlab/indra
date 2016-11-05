@@ -121,9 +121,10 @@ def test_two_step_phosphorylation():
     # Now create the PySB model
     Monomer('A', ['b', 'other'], {'other':['u','p']})
     Monomer('B', ['b', 'T185'], {'T185':['u', 'p']})
-    Rule('A_bind_B', A(b=None) + B(b=None, T185='u') <>
-                     A(b=1) % B(b=1, T185='u'),
-                 Parameter('kf', 1), Parameter('kr', 1))
+    Rule('A_bind_B', A(b=None) + B(b=None, T185='u') >>
+                     A(b=1) % B(b=1, T185='u'), Parameter('kf', 1))
+    Rule('A_bind_B_rev', A(b=1) % B(b=1, T185='u') >>
+                         A(b=None) + B(b=None, T185='u'), Parameter('kr', 1))
     Rule('A_phos_B', A(b=1) % B(b=1, T185='u') >>
                      A(b=None) + B(b=None, T185='p'),
                  Parameter('kcat', 1))
@@ -180,7 +181,7 @@ def test_ras_220_network():
     file_path = os.path.dirname(os.path.abspath(__file__))
     ras_220_results_path = os.path.join('../../models/ras_220_genes'
                                         '/ras_genes_results.pkl')
-    with open(ras_220_results_path) as f:
+    with open(ras_220_results_path, 'rb') as f:
         results = pickle.load(f)
     ras220_stmts = results['related2']
     # Build a PySB model from the Ras 220 statements
@@ -339,7 +340,7 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    #test_ras_220_network()
+    test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
-    test_dephosphorylation()
+    #test_dephosphorylation()
