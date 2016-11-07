@@ -39,7 +39,7 @@ class CyJSAssembler(object):
         for stmt in stmts:
             self.statements.append(stmt)
 
-    def make_model(self, grouping=False, *args, **kwargs):
+    def make_model(self, *args, **kwargs):
         """Assemble a Cytoscape JS network from INDRA Statements.
 
         This method assembles a Cytoscape JS network from the set of INDRA
