@@ -39,7 +39,7 @@ class CyJSAssembler(object):
         for stmt in stmts:
             self.statements.append(stmt)
 
-    def make_model(self, grouping=False):
+    def make_model(self, grouping=False, *args, **kwargs):
         """Assemble a Cytoscape JS network from INDRA Statements.
 
         This method assembles a Cytoscape JS network from the set of INDRA
@@ -67,9 +67,11 @@ class CyJSAssembler(object):
             else:
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
-        if grouping:
+        if kwargs.get('grouping', None):
             self._group_nodes()
             self._group_edges()
+        if kwargs.get('drop_virtual_edges', None):
+            self._drop_virtual_edges()
 
         return self.print_cyjs()
 
@@ -231,6 +233,9 @@ class CyJSAssembler(object):
                 if node['data']['id'] in group:
                     node['data']['parent'] = new_group_node['data']['id']
             self._nodes.append(new_group_node)
+
+    def _drop_virtual_edges(self):
+        self._edges = [x for x in self._edges if x['data']['i'] != 'Virtual']
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
