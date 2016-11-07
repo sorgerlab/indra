@@ -50,7 +50,15 @@ class CyJSAssembler(object):
         grouping : bool
             If True, the nodes with identical incoming and outgoing edges
             are grouped and the corresponding edges are merged.
-            Default: False
+
+        drop_virtual_edges : bool
+            If True, the original edges which have been collected and made
+            virtual are discarded. If these edges are discarded, they are
+            not seen by the cytoscape.js layout algorithms.
+
+        add_edge_weights : bool
+            If True, give edges that connect group nodes a weight of their
+            group size. All other edges get a weight of 1.
 
         Returns
         -------
@@ -72,7 +80,8 @@ class CyJSAssembler(object):
             self._group_edges()
         if kwargs.get('drop_virtual_edges', None):
             self._drop_virtual_edges()
-
+        if kwargs.get('add_edge_weights', None):
+            self._add_edge_weights()
         return self.print_cyjs()
 
     def print_cyjs(self):
@@ -236,6 +245,39 @@ class CyJSAssembler(object):
 
     def _drop_virtual_edges(self):
         self._edges = [x for x in self._edges if x['data']['i'] != 'Virtual']
+
+    def _add_edge_weights(self):
+        # make a list of group nodes
+        group_node_ids = []
+        for n in self._nodes:
+            if n['data']['parent'] != '':
+                group_node_ids.append(n['data']['parent'])
+        group_node_ids = list(set(group_node_ids))
+        # get sizes for each group
+        group_node_sizes = {}
+        for g in group_node_ids:
+            group_members = [x for x in self._nodes
+                             if x['data']['parent'] == g]
+            group_size = len(group_members)
+            group_node_sizes[g] = group_size
+        # iterate over edges
+        # if they point to/from group, weigh them acc to group size
+        # nodes between two groups get assigned heaviest of two weights
+        for e in self._edges:
+            source = e['data']['source']
+            target = e['data']['target']
+            if (source in group_node_ids) and (target in group_node_ids):
+                e['data']['weight'] = max(group_node_sizes[source],
+                                          group_node_sizes[target])
+            elif source in group_node_ids:
+                e['data']['weight'] = group_node_sizes[source]
+            elif target in group_node_ids:
+                e['data']['weight'] = group_node_sizes[target]
+        # once all group node edges have weights
+        # give non-group node edges weights of 1
+        for e in self._edges:
+            if e['data'].get('weight', None) is None:
+                e['data']['weight'] = 1
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
