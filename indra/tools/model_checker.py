@@ -56,7 +56,17 @@ class ModelChecker(object):
             unmodify_stmt = False
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
-        sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
+        # Check if the site and corresponding state exists in the
+        # model--if not, then it won't be observed. If we try to get a monomer
+        # pattern for a monomer that doesn't have the specified site, PySB
+        # throws a (generic) Exception; we catch this as an indication that
+        # the site doesn't exist, and hence the modification is not observed,
+        # and return False
+        try:
+            sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
+        except Exception as e:
+            logger.info("Couldn't create monomer pattern: %s" % e)
+            return False
         # Generate the influence map
         # Find rules in the model corresponding to the inputs and outputs
         input_rules = match_lhs(enz_mp, self.model.rules)

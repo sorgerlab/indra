@@ -287,6 +287,34 @@ def test_dephosphorylation():
     assert checks[0][0] == stmt
     assert checks[0][1] == True
 
+
+@with_model
+def test_invalid_modification():
+     # Override the shutoff of self export in psyb_assembler
+     # Create the statement
+     a = Agent('A')
+     b = Agent('B')
+     st = Phosphorylation(a, b, 'T', '185')
+     # Now create the PySB model
+     Monomer('A')
+     Monomer('B', ['Y187'], {'Y187':['u', 'p']})
+     Rule('A_phos_B', A() + B(Y187='u') >> A() + B(Y187='p'),
+          Parameter('k', 1))
+     #Initial(A(), Parameter('A_0', 100))
+     #Initial(B(T187='u'), Parameter('B_0', 100))
+     #with open('model_rxn.dot', 'w') as f:
+     #    f.write(render_reactions.run(model))
+     #with open('species_1step.dot', 'w') as f:
+     #    f.write(species_graph.run(model))
+     # Now check the model
+     mc = ModelChecker(model, [st])
+     results = mc.check_model()
+     #assert len(results) == 1
+     #assert isinstance(results[0], tuple)
+     #assert results[0][0] == st
+     #assert results[0][1] == True
+
+
 """
 def test_ubiquitination():
     xiap = Agent('XIAP')
@@ -340,7 +368,8 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_ras_220_network()
+    test_invalid_modification()
+    #test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
