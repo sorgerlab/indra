@@ -122,7 +122,12 @@ def doi_query(pmid, search_limit=10):
     # Now query CrossRef using the title we've got
     url = crossref_search_url
     params = {'q': pm_article_title, 'sort': 'score'}
-    res = requests.get(crossref_search_url, params)
+    try:
+        res = requests.get(crossref_search_url, params)
+    except requests.exceptions.ConnectionError as e:
+        logger.error('CrossRef service could not be reached.')
+        logger.error(e)
+        return None
     if res.status_code != 200:
         logger.info('PMID%s: no search results from CrossRef, code %d' %
                     (pmid, res.status_code))
