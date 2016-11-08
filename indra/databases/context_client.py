@@ -45,9 +45,9 @@ def get_mutations(gene_names, cell_types):
     Parameters
     ----------
     gene_names : list
-        HGNC gene symbols for which expression levels are queried.
+        HGNC gene symbols for which mutations are queried.
     cell_types : list
-        List of cell type names in which expression levels are queried.
+        List of cell type names in which mutations are queried.
         The cell type names follow the CCLE database conventions.
 
         Example: LOXIMVI_SKIN, BT20_BREAST

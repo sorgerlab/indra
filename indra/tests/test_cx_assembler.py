@@ -103,7 +103,8 @@ def test_set_context():
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
     cxa.set_context('BT20_BREAST')
-    assert(len(cxa.cx['nodeAttributes']) == 8)
+    print(cxa.cx['nodeAttributes'])
+    assert(len(cxa.cx['nodeAttributes']) == 10)
 
 def test_make_print_model():
     cxa = CxAssembler()
