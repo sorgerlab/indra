@@ -293,7 +293,8 @@ def get_create_parameter(model, name, value, unique=True):
     it does not exist, it will be created. If unique is true then upon conflict
     a number is added to the end of the parameter name.
     """
-    parameter = model.parameters.get(name)
+    norm_name = _n(name)
+    parameter = model.parameters.get(norm_name)
 
     if not unique and parameter is not None:
         return parameter
@@ -301,12 +302,12 @@ def get_create_parameter(model, name, value, unique=True):
     if unique:
         pnum = 1
         while True:
-            pname = name + '_%d' % pnum
+            pname = norm_name + '_%d' % pnum
             if model.parameters.get(pname) is None:
                 break
             pnum += 1
     else:
-        pname = name
+        pname = norm_name
 
     parameter = Parameter(pname, value)
     model.add_component(parameter)
@@ -1669,8 +1670,8 @@ def translocation_assemble_default(stmt, model, agent_set):
     monomer = model.monomers[_n(stmt.agent.name)]
     rule_agent_str = get_agent_rule_str(stmt.agent)
     rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
-                                              stmt.from_location,
-                                              stmt.to_location)
+                                              _n(stmt.from_location),
+                                              _n(stmt.to_location))
     agent_from = get_monomer_pattern(model, stmt.agent,
                                      extra_fields={'loc': stmt.from_location})
     agent_to = get_monomer_pattern(model, stmt.agent,
