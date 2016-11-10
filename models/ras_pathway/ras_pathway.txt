@@ -1,9 +1,7 @@
 Growth-factor proteins activate EGFR, ERBB2 and FGFR.
 Growth-factor proteins activate PDGFR.
 Growth-factor proteins activate MET, ROS1 and ALK.
-MET, ROS1 and ALK activate SOS/GRB2/SHC and RASGRF2.
 EGFR, ERBB2, PDGFR, MET, ROS1, ALK and FGFR activate SOS/GRB2/SHC and RASGRF2.
-PDGFR activates SOS/GRB2/SHC and RASGRF2.
 SOS/GRB2/SHC and RASGRF2 activate HRAS, NRAS and KRAS.
 RASGRP activates HRAS, KRAS and NRAS.
 SPRY deactivates HRAS, KRAS and NRAS.
