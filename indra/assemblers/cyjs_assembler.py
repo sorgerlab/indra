@@ -6,6 +6,13 @@ import logging
 import itertools
 import collections
 from indra.statements import *
+from indra.databases import context_client
+import indra.preassembler.hierarchy_manager as hm
+from numpy import histogram
+import indra.tools.expand_families # need to use get_children
+import indra.preassembler as pr
+
+hierarchies = hm.hierarchies
 
 # Python 2
 try:
@@ -17,6 +24,7 @@ except:
 logger = logging.getLogger('cyjs_assembler')
 
 class CyJSAssembler(object):
+
     def __init__(self, stmts=None):
         if not stmts:
             self.statements = []
@@ -36,9 +44,9 @@ class CyJSAssembler(object):
             A list of :py:class:`indra.statements.Statement`
             to be added to the statement list of the assembler.
         """
+        stmts = pr.Preassembler.combine_duplicate_stmts(stmts)
         for stmt in stmts:
             self.statements.append(stmt)
-
     def make_model(self, *args, **kwargs):
         """Assemble a Cytoscape JS network from INDRA Statements.
 
@@ -83,6 +91,54 @@ class CyJSAssembler(object):
         if kwargs.get('add_edge_weights', None):
             self._add_edge_weights()
         return self.print_cyjs()
+
+
+    def set_context(self, *args, **kwargs):
+        """Set protein expression data as node attribute
+
+        This method uses :py:mod:`indra.databases.context_client` to get
+        protein expression levels for a given cell type and set a node
+        attribute for proteins accordingly.
+
+        Parameters
+        ----------
+        cell_type : str
+            Cell type name for which expression levels are queried.
+            The cell type name follows the CCLE database conventions.
+
+        Example: LOXIMVI_SKIN, BT20_BREAST
+        """
+        if kwargs.get('cell_type', None) :
+            cell_type = kwargs.get('cell_type', None)
+            node_names = [node['data']['name'] for node in self._nodes]
+            res = context_client.get_protein_expression(node_names, cell_type)
+            if not res:
+                logger.warning('Could not get context for %s cell type.' %
+                               cell_type)
+                return
+
+            counter = 0
+            for node in self._nodes:
+                amount = res.get(node['data']['name'])
+                if amount is  None:
+                    node['data']['expression'] = None
+                if amount is not None:
+                    node['data']['expression'] = int(amount[cell_type])
+                    counter += 1
+            logger.info('Set context for %d nodes.' % counter)
+
+        if kwargs.get('bin_expression', None):
+            exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
+            exp_lvls = [x for x in exp_lvls if x != None]
+            bin_thr = histogram([x for x in exp_lvls if x != None], 5)[1]
+            for n in self._nodes:
+                if n['data']['expression'] ==  None:
+                    n['data']['expression'] = 5
+                else:
+                    for thr_idx, thr in enumerate(bin_thr):
+                        if n['data']['expression']<= thr:
+                            n['data']['expression'] = thr_idx
+                            break
 
     def print_cyjs(self):
         """Return the assembled Cytoscape JS network as a json string.
