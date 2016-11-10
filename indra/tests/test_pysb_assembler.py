@@ -660,3 +660,16 @@ def test_missing_transcription_default_site():
     pa.add_statements([stmt])
     model = pa.make_model()
 
+def test_translocation_loc_special_char():
+    st = Translocation(Agent('KSR1'), 'cytoplasm', 'cell surface')
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f1.site_conditions == {'loc': 'cytoplasm'})
+    f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f2.site_conditions == {'loc': 'cell surface'})
+    assert(r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1')
+
