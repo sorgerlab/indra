@@ -670,6 +670,6 @@ def test_translocation_loc_special_char():
     f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(f1.site_conditions == {'loc': 'cytoplasm'})
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f2.site_conditions == {'loc': 'cell surface'})
+    assert(f2.site_conditions == {'loc': 'cell_surface'})
     assert(r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1')
 

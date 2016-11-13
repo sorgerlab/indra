@@ -1659,7 +1659,7 @@ def translocation_monomers_default(stmt, agent_set):
     if stmt.from_location is None or stmt.to_location is None:
         return
     agent = agent_set.get_create_base_agent(stmt.agent)
-    agent.create_site('loc', [stmt.from_location, stmt.to_location])
+    agent.create_site('loc', [_n(stmt.from_location), _n(stmt.to_location)])
 
 def translocation_assemble_default(stmt, model, agent_set):
     if stmt.from_location is None or stmt.to_location is None:
@@ -1673,9 +1673,11 @@ def translocation_assemble_default(stmt, model, agent_set):
                                               _n(stmt.from_location),
                                               _n(stmt.to_location))
     agent_from = get_monomer_pattern(model, stmt.agent,
-                                     extra_fields={'loc': stmt.from_location})
+                                     extra_fields={'loc':
+                                                   _n(stmt.from_location)})
     agent_to = get_monomer_pattern(model, stmt.agent,
-                                   extra_fields={'loc': stmt.to_location})
+                                   extra_fields={'loc':
+                                                 _n(stmt.to_location)})
     r = Rule(rule_name, agent_from >> agent_to, kf_trans)
     add_rule_to_model(model, r)
 
