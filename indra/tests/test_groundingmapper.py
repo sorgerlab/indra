@@ -27,6 +27,13 @@ def test_simple_mapping():
     assert mapped_akt.db_refs['BE'] == 'AKT'
     assert unicode_strs((akt, stmt, gm, mapped_akt))
 
+def test_ignore():
+    agent = Agent('FA', db_refs={'TEXT': 'FA'})
+    stmt = Phosphorylation(None, agent)
+    gm = GroundingMapper(default_grounding_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 0
+
 def test_renaming():
     akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'BE':'AKT family',
                                         'UP': 'P31749'})
