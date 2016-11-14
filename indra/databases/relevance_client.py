@@ -28,6 +28,10 @@ def get_heat_kernel(network_id):
     """
     url = ndex_relevance + '/%s/generate_ndex_heat_kernel' % network_id
     res = ndex_client.send_request(url, {}, is_json=True, use_get=True)
+    if res is None:
+        logger.error('Could not get heat kernel for network.')
+        return None
+
     kernel_id = res.get('kernel_id')
     if kernel_id is None:
         logger.error('Could not get heat kernel for network.')

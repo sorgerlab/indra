@@ -45,6 +45,7 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
     # If there is a continuation of the message we get status 300, handled below.
     # Otherwise we return None.
     elif status != 300:
+        logger.error('Request returned with code %d' % status)
         return None
     # In case the response is not immediate, a task ID can be used to get
     # the result.
