@@ -6,7 +6,7 @@ import sys
 import pickle
 from copy import deepcopy
 from indra.databases import uniprot_client, hgnc_client
-from itertools import groupby
+from itertools import groupby, chain
 from collections import Counter
 import logging
 from indra.util import read_unicode_csv, write_unicode_csv
@@ -149,13 +149,23 @@ class GroundingMapper(object):
                 #    agent.name = agent.db_refs.get('TEXT')
         return mapped_stmts
 
+
 # TODO: handle the cases when there is more than one entry for the same
 # key (e.g., ROS, ER)
-def load_grounding_map(path):
+def load_grounding_map(grounding_map_path, ignore_path=None):
     g_map = {}
-    csv_rows = read_unicode_csv(path, delimiter=',', quotechar='"',
+    map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
+                                quotechar='"',
                                 quoting=csv.QUOTE_MINIMAL,
                                 lineterminator='\r\n')
+    if ignore_path and os.path.exists(ignore_path):
+        ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
+                                    quotechar='"',
+                                    quoting=csv.QUOTE_MINIMAL,
+                                    lineterminator='\r\n')
+    else:
+        ignore_rows = []
+    csv_rows = chain(map_rows, ignore_rows)
     for row in csv_rows:
         key = row[0]
         db_refs = {'TEXT': key}
@@ -341,9 +351,10 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
                                   '../../bioentities/grounding_map.csv')
-default_grounding_map = load_grounding_map(default_grounding_map_path)
+default_ignore_path = os.path.join(os.path.dirname(__file__),
+                                  '../../bioentities/ignore.csv')
+default_grounding_map = load_grounding_map(default_grounding_map_path, default_ignore_path)
 gm = default_grounding_map
-
 
 if __name__ == '__main__':
 
