@@ -3,24 +3,27 @@ from builtins import dict, str
 import numpy
 import indra.preassembler.sitemapper as sm
 
+
 class BeliefEngine(object):
     """Assigns beliefs to INDRA Statements based on supporting evidence."""
     def __init__(self):
-        self.prior_probs_rand = {
-            'biopax': 0.2,
-            'bel': 0.1,
-            'trips': 0.4,
-            'reach': 0.3,
-            'biogrid': 0.01,
-            'assertion': 0.0
-            }
-        self.prior_probs_syst = {
-            'biopax': 0.01,
-            'bel': 0.01,
-            'trips': 0.2,
-            'reach': 0.0,
-            'biogrid': 0.01,
-            'assertion': 0.0
+        self.prior_probs = {
+            'rand': {
+                'biopax': 0.2,
+                'bel': 0.1,
+                'trips': 0.4,
+                'reach': 0.3,
+                'biogrid': 0.01,
+                'assertion': 0.0
+                },
+            'syst': {
+                'biopax': 0.01,
+                'bel': 0.01,
+                'trips': 0.2,
+                'reach': 0.0,
+                'biogrid': 0.01,
+                'assertion': 0.0
+                }
             }
 
     def set_prior_probs(self, statements):
@@ -36,16 +39,17 @@ class BeliefEngine(object):
         ----------
         statements : list[indra.statements.Statement]
             A list of INDRA Statements whose belief scores are to
-            be calculated. Each Statement obejct's belief attribute is updated
+            be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
         for st in statements:
             sources = [ev.source_api for ev in st.evidence]
             uniq_sources = numpy.unique(sources)
-            syst_factors = {s: self.prior_probs_syst[s] for s in uniq_sources}
+            syst_factors = {s: self.prior_probs['syst'][s]
+                            for s in uniq_sources}
             rand_factors = {k: [] for k in uniq_sources}
             for s in sources:
-                rand_factors[s].append(self.prior_probs_rand[s])
+                rand_factors[s].append(self.prior_probs['rand'][s])
             neg_prob_prior = 1
             for s in uniq_sources:
                 neg_prob_prior *= (syst_factors[s] +
@@ -57,7 +61,7 @@ class BeliefEngine(object):
             st.belief = prob_prior
 
     def set_hierarchy_probs(self, statements):
-        """Sets the hierarchical belief probabilities for a list of INDRA Statements.
+        """Sets hierarchical belief probabilities for a list of INDRA Statements.
 
         The Statements are assumed to be in a hierarchical relation graph with
         the supports and supported_by attribute of each Statement object having
@@ -70,7 +74,7 @@ class BeliefEngine(object):
         ----------
         statements : list[indra.statements.Statement]
             A list of INDRA Statements whose belief scores are to
-            be calculated. Each Statement obejct's belief attribute is updated
+            be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
         for st in statements:
@@ -86,7 +90,7 @@ class BeliefEngine(object):
 
         Parameters
         ----------
-        linked_statements : list[indra.mechliner.LinkedStatement]
+        linked_statements : list[indra.mechlinker.LinkedStatement]
             A list of INDRA LinkedStatements whose belief scores are to
             be calculated. The belief attribute of the inferred Statement in
             the LinkedStatement object is updated by this function.
@@ -101,5 +105,5 @@ class BeliefEngine(object):
         neg_probs_rolling = 1
         for st in stmt.supports:
             neg_probs_rolling *= (1-self.get_rolling_prob(st))
-        return (1-neg_prob_self*neg_probs_rolling)
-
+        prob = (1-neg_prob_self*neg_probs_rolling)
+        return prob
