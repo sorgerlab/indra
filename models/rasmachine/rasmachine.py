@@ -384,6 +384,13 @@ if __name__ == '__main__':
     model.save(inc_model_file)
     logger.info(time.strftime('%c'))
 
+    # Save a time stamped version of the pickle for backup/diagnostic purposes
+    date = datetime.datetime.today()
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+    inc_model_bkp_file = os.path.join(model_path, model_name,
+                                      'model-%s.pkl' % date_str)
+    model.save(inc_model_bkp_file)
+
     # Upload the new, highly likely statements to NDEx
     if use_ndex:
         logger.info('Uploading to NDEx')
@@ -392,7 +399,7 @@ if __name__ == '__main__':
 
     # Print and tweet the status message
     logger.info('--- Final statistics ---')
-    for k, v in stats.items():
+    for k, v in sorted(stats.items(), key=lambda x: x[0]):
         logger.info('%s: %s' % (k, v))
     logger.info('------------------------')
 
