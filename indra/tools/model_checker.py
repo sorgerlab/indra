@@ -91,6 +91,7 @@ class ModelChecker(object):
             # indicates that constraint is satisfied by a single rule
             for input_rule, target_rule_info in \
                             itertools.product(input_rules, target_rules):
+                # Break if we've found even a single path
                 if paths:
                     break
                 (target_rule, rule_polarity) = target_rule_info
@@ -100,12 +101,13 @@ class ModelChecker(object):
                                                        target_rule.name)
                     # Iterate over paths until we find one with positive
                     # polarity
-                    for path_ix, sp in enumerate(sp_gen):
-                        need_positive_path = False if unmodify_stmt else True
+                    need_positive_path = False if unmodify_stmt else True
+                    for sp in sp_gen:
                         if need_positive_path == \
                                 positive_path(self.get_im(), sp, rule_polarity):
-                            logger.info('Found non-repeating path %s: %s' %
-                                        (path_ix, str(sp)))
+                            logger.info('Found non-repeating path, '
+                                        'length %d: %s' %
+                                        (len(sp), str(sp)))
                             logger.info('Rule polarity of target: %s' %
                                         rule_polarity)
                             paths.append(sp)

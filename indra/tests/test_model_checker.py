@@ -332,8 +332,21 @@ def test_ubiquitination():
 """
 
 
+# DIfferent combinations of input/target rules will produce different paths
+# So the paths don't come out in the shortest order this way
+# Using an observable will be a big advantage on the target rule side
 
 # TODO
+
+# Another issue--doesn't know that RAF1(phospho='p') should be satisfied
+# by RAF1(S259='p'). A big problem, even after pre-assembly--because longer
+# paths where a 'phospho' is the observable will never be satisfied.
+
+# Does this mean that we need a PySB ComplexPattern -> Agent mapping, that
+# we can subsequently use for refinements?
+
+# Why is
+
 # Need to handle complex statements. Would show that one_step approach
 # would not satisfy constraint, but two-step approach could, where the
 # Complex information was specified.

@@ -15,5 +15,5 @@ stmts = gn.get_statements(filter=True)
 grounded_stmts = grounding_filter(stmts)
 results = gn.run_preassembly(grounded_stmts)
 with open('ras_220_gn_stmts.pkl', 'wb') as f:
-    pickle.dump(results, f)
+    pickle.dump(results, f, protocol=2)
 
