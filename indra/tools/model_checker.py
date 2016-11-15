@@ -16,9 +16,12 @@ logger = logging.getLogger('model_checker')
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
 
-    def __init__(self, model, statements):
+    def __init__(self, model, stmts_to_check=None):
         self.model = model
-        self.statements = statements
+        if stmts_to_check:
+            self.statements = stmts_to_check
+        else:
+            self.statements = []
         self._im = None
 
     def get_im(self):
@@ -84,8 +87,12 @@ class ModelChecker(object):
         if input_rules and target_rules:
             # Generate the influence map
             paths = []
+            # Look for any rule that is both in the input and target set--
+            # indicates that constraint is satisfied by a single rule
             for input_rule, target_rule_info in \
                             itertools.product(input_rules, target_rules):
+                if paths:
+                    break
                 (target_rule, rule_polarity) = target_rule_info
                 try:
                     sp_gen = networkx.shortest_simple_paths(self.get_im(),
