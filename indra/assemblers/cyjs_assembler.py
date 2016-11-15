@@ -9,10 +9,11 @@ from indra.statements import *
 from indra.databases import context_client
 import indra.preassembler.hierarchy_manager as hm
 from numpy import histogram
-import indra.tools.expand_families # need to use get_children
+import indra.tools.expand_families as exp_fam
 import indra.preassembler as pr
 
 hierarchies = hm.hierarchies
+expander = exp_fam.Expander(hierarchies)
 
 # Python 2
 try:
@@ -111,22 +112,33 @@ class CyJSAssembler(object):
         if kwargs.get('cell_type', None) :
             cell_type = kwargs.get('cell_type', None)
             node_names = [node['data']['name'] for node in self._nodes]
-            res = context_client.get_protein_expression(node_names, cell_type)
-            if not res:
+            exp = context_client.get_protein_expression(node_names, cell_type)
+            mut = context_client.get_mutations(node_names, cell_type)
+            if not exp:
                 logger.warning('Could not get context for %s cell type.' %
                                cell_type)
                 return
-
-            counter = 0
+            if not mut:
+                logger.warning('Could not get mutations for %s cell type.' %
+                               cell_type)
+                return
+            counter_exp = 0
+            counter_mut = 0
             for node in self._nodes:
-                amount = res.get(node['data']['name'])
+                amount = exp.get(node['data']['name'])
                 if amount is  None:
                     node['data']['expression'] = None
                 if amount is not None:
                     node['data']['expression'] = int(amount[cell_type])
-                    counter += 1
-            logger.info('Set context for %d nodes.' % counter)
-
+                    counter_exp += 1
+                mutation = mut.get(node['data']['name'])
+                if mutation is  None:
+                    node['data']['mutation'] = None
+                if mutation is not None:
+                    node['data']['mutation'] = int(mutation[cell_type])
+                    counter_mut += 1
+            logger.info('Set expression context for %d nodes.' % counter_exp)
+            logger.info('Set mutation context for %d nodes.' % counter_mut)
         if kwargs.get('bin_expression', None):
             exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
             exp_lvls = [x for x in exp_lvls if x != None]
@@ -207,8 +219,11 @@ class CyJSAssembler(object):
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
+        expanded_families = expander.get_children(agent, ns_filter='HGNC')
+        members = {'HGNC':sorted([x[1] for x in expanded_families])}
         node = {'data': {'id': node_id, 'name': node_name,
-                         'db_refs': db_refs, 'parent':''}}
+                         'db_refs': db_refs, 'parent':'',
+                         'members': members}}
         self._nodes.append(node)
         return node_id
 
