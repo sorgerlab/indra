@@ -177,10 +177,12 @@ def _get_pdf_attachment(full_text_elem):
         pdf_purpose = web_pdf.find('xocs:web-pdf-purpose', elsevier_ns)
         if not pdf_purpose.text == 'MAIN':
             continue
-        locations = web_pdf.findall('xocs:ucs-locator', elsevier_ns)
-        for loc in locations:
-            logger.info("PDF location: %s" % loc.text)
-    logger.info('Could not find PDF attachment.')
+        else:
+            return 'pdf'
+        #locations = web_pdf.findall('xocs:ucs-locator', elsevier_ns)
+        #for loc in locations:
+        #    logger.info("PDF location: %s" % loc.text)
+    #logger.info('Could not find PDF attachment.')
     return None
 
 
