@@ -8,6 +8,7 @@ stmts2 = [Phosphorylation(None, Agent('B', db_refs={'UP': '123'}))]
 stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097',
                                                      'UP': 'P15056'}))
 stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'BE': 'RAF'}))
+stmt5 = Phosphorylation(Agent('X'), Agent('RAF', db_refs={'BE': 'RAF'}))
 
 def test_add_stmts_blank():
     im = IncrementalModel()
@@ -58,12 +59,19 @@ def test_add_stmts_prior_all():
     im.add_statements('12345', [stmts[1]], filters=['prior_all'])
     assert(len(im.get_statements()) == 1)
 
-def test_preassemble_grounded():
+def test_preassemble_grounded_prior_one():
     im = IncrementalModel()
     im.stmts['prior'] = [stmt3]
     im.stmts['12345'] = [stmt4]
     im.preassemble(filters=['prior_one'])
     assert(len(im.unique_stmts) == 2)
+
+def test_preassemble_grounded_prior_all():
+    im = IncrementalModel()
+    im.stmts['prior'] = [stmt3]
+    im.stmts['12345'] = [stmt5]
+    im.preassemble(filters=['prior_all'])
+    assert(len(im.unique_stmts) == 1)
 
 def test_grounding_not_all():
     im = IncrementalModel()

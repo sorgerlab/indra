@@ -280,28 +280,6 @@ class IncrementalModel(object):
         return []
 
 
-def _ref_agents_all_filter(stmts_in, ref_agents):
-    stmts_out = []
-    if ref_agents:
-        for st in stmts_in:
-            agents = [a for a in st.agent_list() if a is not None]
-            found_all = True
-            for st_agent in agents:
-                found = False
-                for ref_agent in ref_agents:
-                    if _agent_related(st_agent, ref_agent):
-                        found = True
-                        break
-                if not found:
-                    found_all = False
-                    break
-            if found_all:
-                stmts_out.append(st)
-    else:
-        stmts_out = stmts_in
-    return stmts_out
-
-
 def _get_agent_comp(agent):
     eh = hierarchies['entity']
     a_ns, a_id = agent.get_grounding()
@@ -310,6 +288,46 @@ def _get_agent_comp(agent):
     uri = eh.get_uri(a_ns, a_id)
     comp_id = eh.components.get(uri)
     return comp_id
+
+
+def _ref_agents_all_filter(stmts_in, ref_agents):
+    # If there is no reference, keep everything by default
+    if not ref_agents:
+        return stmts_in
+    stmts_out = []
+    # Preprocess reference Agents: make a list of entity hierarchy components
+    # that appear in the prior and also a list of prior Agents that are not
+    # part of any hierarchy component
+    no_comp_agents = []
+    prior_components = []
+    for a in ref_agents:
+        comp_id = _get_agent_comp(a)
+        if comp_id is None:
+            no_comp_agents.append(a)
+        elif comp_id not in prior_components:
+            prior_components.append(comp_id)
+    # Iterate over every Statement and check if any of its Agents are either
+    # in a component appearing in the prior, or match one of the prior Agents
+    # that isn't in any of the components.
+    for st in stmts_in:
+        agents = [a for a in st.agent_list() if a is not None]
+        found_all = True
+        for st_agent in agents:
+            found = False
+            comp_id = _get_agent_comp(st_agent)
+            if comp_id is None:
+                for ref_agent in no_comp_agents:
+                    if st_agent.matches(ref_agent):
+                        found = True
+            elif comp_id in prior_components:
+                found = True
+            if not found:
+                found_all = False
+                break
+        if found_all:
+            stmts_out.append(st)
+    return stmts_out
+
 
 def _ref_agents_one_filter(stmts_in, ref_agents):
     # If there is no reference, keep everything by default
