@@ -63,6 +63,8 @@ class IncrementalModel(object):
             pickle.dump(self.stmts, fh, protocol=2)
 
     def _relevance_filter(self, stmts_in, filters=None):
+        if filters is None:
+            filters = []
         stmts_out = stmts_in
         if 'grounding' in filters:
             stmts_out = _grounding_filter(stmts_out)
@@ -170,7 +172,7 @@ class IncrementalModel(object):
             for rel_key in ('prior_one', 'model_one',
                             'prior_all', 'model_all'):
                 if rel_key in filters:
-                    logger.info('Running relevance filter')
+                    logger.info('Running %s relevance filter' % rel_key)
                     stmts = self._relevance_filter(stmts, [rel_key])
                     logger.info('%s Statements after filter' % len(stmts))
 
@@ -213,14 +215,11 @@ class IncrementalModel(object):
            A list of Agents that are in the model.
         """
         model_stmts = self.get_statements_noprior()
-        # First, get all unique name/db_refs pairs
-        agents = set()
+        agents = []
         for stmt in model_stmts:
             for a in stmt.agent_list():
                 if a is not None:
-                    agents.add((a.name, a.get_grounding()))
-        # Then construct sateless name/db_refs Agents
-        agents = [Agent(n, db_refs={g[0]: g[1]}) for n, g in agents]
+                    agents.append(a)
         return agents
 
     def get_prior_agents(self):
@@ -232,15 +231,11 @@ class IncrementalModel(object):
            A list of Agents that are in the prior.
         """
         prior_stmts = self.get_statements_prior()
-        # First, get all unique name/db_refs pairs
-        agents = set()
-        if prior_stmts is None:
-            return agents
+        agents = []
         for stmt in prior_stmts:
             for a in stmt.agent_list():
                 if a is not None:
-                    agents.add((a.name, a.get_grounding()))
-        agents = [Agent(n, db_refs={g[0]: g[1]}) for n, g in agents]
+                    agents.append(a)
         return agents
 
     def get_statements(self):
@@ -282,8 +277,7 @@ class IncrementalModel(object):
         """
         if self.stmts.get('prior') is not None:
             return self.stmts['prior']
-        else:
-            return []
+        return []
 
 
 def _ref_agents_all_filter(stmts_in, ref_agents):
@@ -302,29 +296,55 @@ def _ref_agents_all_filter(stmts_in, ref_agents):
                     found_all = False
                     break
             if found_all:
-                stmts_out.append(stmts_in)
+                stmts_out.append(st)
     else:
         stmts_out = stmts_in
     return stmts_out
 
 
+def _get_agent_comp(agent):
+    eh = hierarchies['entity']
+    a_ns, a_id = agent.get_grounding()
+    if (a_ns is None) or (a_id is None):
+        return None
+    uri = eh.get_uri(a_ns, a_id)
+    comp_id = eh.components.get(uri)
+    return comp_id
+
 def _ref_agents_one_filter(stmts_in, ref_agents):
+    # If there is no reference, keep everything by default
+    if not ref_agents:
+        return stmts_in
     stmts_out = []
-    if ref_agents:
-        for st in stmts_in:
-            agents = [a for a in st.agent_list() if a is not None]
-            found = False
-            for st_agent in agents:
-                for ref_agent in ref_agents:
-                    if _agent_related(st_agent, ref_agent):
+    # Preprocess reference Agents: make a list of entity hierarchy components
+    # that appear in the prior and also a list of prior Agents that are not
+    # part of any hierarchy component
+    no_comp_agents = []
+    prior_components = []
+    for a in ref_agents:
+        comp_id = _get_agent_comp(a)
+        if comp_id is None:
+            no_comp_agents.append(a)
+        elif comp_id not in prior_components:
+            prior_components.append(comp_id)
+    # Iterate over every Statement and check if any of its Agents are either
+    # in a component appearing in the prior, or match one of the prior Agents
+    # that isn't in any of the components.
+    for st in stmts_in:
+        agents = [a for a in st.agent_list() if a is not None]
+        found = False
+        for st_agent in agents:
+            comp_id = _get_agent_comp(st_agent)
+            if comp_id is None:
+                for ref_agent in no_comp_agents:
+                    if st_agent.matches(ref_agent):
                         found = True
                         break
-                if found:
-                    break
-            if found:
-                stmts_out.append(stmts_in)
-    else:
-        stmts_out = stmts_in
+            elif comp_id in prior_components:
+                found = True
+                break
+        if found:
+            stmts_out.append(st)
     return stmts_out
 
 

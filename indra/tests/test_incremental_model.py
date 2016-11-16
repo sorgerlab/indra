@@ -5,6 +5,9 @@ from indra.tools.incremental_model import IncrementalModel
 
 stmts = [Complex([Agent('A'), Agent('B')]), Complex([Agent('B'), Agent('C')])]
 stmts2 = [Phosphorylation(None, Agent('B', db_refs={'UP': '123'}))]
+stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097',
+                                                     'UP': 'P15056'}))
+stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'BE': 'RAF'}))
 
 def test_add_stmts_blank():
     im = IncrementalModel()
@@ -54,6 +57,13 @@ def test_add_stmts_prior_all():
     im.stmts['prior'] = [stmts[0]]
     im.add_statements('12345', [stmts[1]], filters=['prior_all'])
     assert(len(im.get_statements()) == 1)
+
+def test_preassemble_grounded():
+    im = IncrementalModel()
+    im.stmts['prior'] = [stmt3]
+    im.stmts['12345'] = [stmt4]
+    im.preassemble(filters=['prior_one'])
+    assert(len(im.unique_stmts) == 2)
 
 def test_grounding_not_all():
     im = IncrementalModel()
