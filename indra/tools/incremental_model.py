@@ -296,19 +296,17 @@ def _ref_agents_all_filter(stmts_in, ref_agents):
         return stmts_in
     stmts_out = []
     # Preprocess reference Agents: make a list of entity hierarchy components
-    # that appear in the prior and also a list of prior Agents that are not
-    # part of any hierarchy component
-    no_comp_agents = []
-    prior_components = []
+    # that appear in the reference and also a list of reference Agent names
+    ref_agent_names = set()
+    ref_components = set()
     for a in ref_agents:
         comp_id = _get_agent_comp(a)
-        if comp_id is None:
-            no_comp_agents.append(a)
-        elif comp_id not in prior_components:
-            prior_components.append(comp_id)
+        if comp_id is not None:
+            ref_components.add(comp_id)
+        ref_agent_names.add(a.name)
     # Iterate over every Statement and check if any of its Agents are either
-    # in a component appearing in the prior, or match one of the prior Agents
-    # that isn't in any of the components.
+    # in a component appearing in the reference, or match one of the
+    # reference Agents that isn't in any of the components.
     for st in stmts_in:
         agents = [a for a in st.agent_list() if a is not None]
         found_all = True
@@ -316,10 +314,10 @@ def _ref_agents_all_filter(stmts_in, ref_agents):
             found = False
             comp_id = _get_agent_comp(st_agent)
             if comp_id is None:
-                for ref_agent in no_comp_agents:
-                    if st_agent.matches(ref_agent):
+                for ref_agent_name in ref_agent_names:
+                    if st_agent.name == ref_agent_name:
                         found = True
-            elif comp_id in prior_components:
+            elif comp_id in ref_components:
                 found = True
             if not found:
                 found_all = False
@@ -335,30 +333,29 @@ def _ref_agents_one_filter(stmts_in, ref_agents):
         return stmts_in
     stmts_out = []
     # Preprocess reference Agents: make a list of entity hierarchy components
-    # that appear in the prior and also a list of prior Agents that are not
-    # part of any hierarchy component
-    no_comp_agents = []
-    prior_components = []
+    # that appear in the reference and also a list of reference Agent names
+    ref_agent_names = set()
+    ref_components = set()
     for a in ref_agents:
         comp_id = _get_agent_comp(a)
-        if comp_id is None:
-            no_comp_agents.append(a)
-        elif comp_id not in prior_components:
-            prior_components.append(comp_id)
+        if comp_id is not None:
+            ref_components.add(comp_id)
+        ref_agent_names.add(a.name)
+
     # Iterate over every Statement and check if any of its Agents are either
-    # in a component appearing in the prior, or match one of the prior Agents
-    # that isn't in any of the components.
+    # in a component appearing in the reference, or match one of the
+    # reference Agents that isn't in any of the components.
     for st in stmts_in:
         agents = [a for a in st.agent_list() if a is not None]
         found = False
         for st_agent in agents:
             comp_id = _get_agent_comp(st_agent)
             if comp_id is None:
-                for ref_agent in no_comp_agents:
-                    if st_agent.matches(ref_agent):
+                for ref_agent_name in ref_agent_names:
+                    if st_agent.name == ref_agent_name:
                         found = True
                         break
-            elif comp_id in prior_components:
+            elif comp_id in ref_components:
                 found = True
                 break
         if found:
