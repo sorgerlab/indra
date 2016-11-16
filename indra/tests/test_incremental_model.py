@@ -5,6 +5,10 @@ from indra.tools.incremental_model import IncrementalModel
 
 stmts = [Complex([Agent('A'), Agent('B')]), Complex([Agent('B'), Agent('C')])]
 stmts2 = [Phosphorylation(None, Agent('B', db_refs={'UP': '123'}))]
+stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097',
+                                                     'UP': 'P15056'}))
+stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'BE': 'RAF'}))
+stmt5 = Phosphorylation(Agent('X'), Agent('RAF', db_refs={'BE': 'RAF'}))
 
 def test_add_stmts_blank():
     im = IncrementalModel()
@@ -55,6 +59,20 @@ def test_add_stmts_prior_all():
     im.add_statements('12345', [stmts[1]], filters=['prior_all'])
     assert(len(im.get_statements()) == 1)
 
+def test_preassemble_grounded_prior_one():
+    im = IncrementalModel()
+    im.stmts['prior'] = [stmt3]
+    im.stmts['12345'] = [stmt4]
+    im.preassemble(filters=['prior_one'])
+    assert(len(im.unique_stmts) == 2)
+
+def test_preassemble_grounded_prior_all():
+    im = IncrementalModel()
+    im.stmts['prior'] = [stmt3]
+    im.stmts['12345'] = [stmt5]
+    im.preassemble(filters=['prior_all'])
+    assert(len(im.unique_stmts) == 1)
+
 def test_grounding_not_all():
     im = IncrementalModel()
     stmt = Complex([Agent('A', db_refs={'UP': 'ABCD'}), 
@@ -83,7 +101,13 @@ def test_human_only():
     im = IncrementalModel()
     stmt1 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P15056'}))
     stmt2 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P28028'}))
+    stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': 'BRAF'}))
+    stmt4 = Phosphorylation(None, Agent('BRAF', db_refs={}))
     im.add_statements('12345', [stmt1], filters=['human_only'])
     assert(len(im.get_statements()) == 1)
     im.add_statements('12346', [stmt2], filters=['human_only'])
     assert(len(im.get_statements()) == 1)
+    im.add_statements('12346', [stmt3], filters=['human_only'])
+    assert (len(im.get_statements()) == 2)
+    im.add_statements('12346', [stmt4], filters=['human_only'])
+    assert (len(im.get_statements()) == 3)
