@@ -24,8 +24,8 @@ class ModelChecker(object):
             self.statements = []
         self._im = None
 
-    def get_im(self):
-        if self._im:
+    def get_im(self, force_update=True):
+        if self._im and not force_update:
             return self._im
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
@@ -66,9 +66,14 @@ class ModelChecker(object):
         # the site doesn't exist, and hence the modification is not observed,
         # and return False
         try:
-            sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
+            site_pattern = pa.get_site_pattern(modified_sub)
+            obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
+            monomer = self.model.monomers[modified_sub.name]
+            obs = Observable(obs_name, monomer(**site_pattern))
+            self.model.add_component(obs)
+            #sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
         except Exception as e:
-            logger.info("Couldn't create monomer pattern: %s" % e)
+            logger.info("Couldn't create observable: %s" % e)
             return False
         # Generate the influence map
         # Find rules in the model corresponding to the inputs and outputs
@@ -76,40 +81,36 @@ class ModelChecker(object):
         logger.info('Found %s input rules matching %s' %
                     (len(input_rules), str(enz_mp)))
         # Get the production and consumption rules for the target
-        target_prod_rules = find_production_rules(sub_mp, self.model.rules)
-        target_cons_rules = find_consumption_rules(sub_mp, self.model.rules)
+        #target_prod_rules = find_production_rules(sub_mp, self.model.rules)
+        #target_cons_rules = find_consumption_rules(sub_mp, self.model.rules)
         # The final list contains a list of rules along with their "polarities"
         # (production = 1, consumption = -1)
-        target_rules = (list(zip(target_prod_rules, [1]*len(target_prod_rules)))
-                    + list(zip(target_cons_rules, [-1]*len(target_cons_rules))))
-        logger.info('Found %s target rules matching %s' %
-                    (len(target_rules), str(sub_mp)))
-        if input_rules and target_rules:
+        #target_rules = (list(zip(target_prod_rules, [1]*len(target_prod_rules)))
+        #            + list(zip(target_cons_rules, [-1]*len(target_cons_rules))))
+        #logger.info('Found %s target rules matching %s' %
+        #            (len(target_rules), str(sub_mp)))
+        if input_rules: # and target_rules:
             # Generate the influence map
             paths = []
             # Look for any rule that is both in the input and target set--
             # indicates that constraint is satisfied by a single rule
-            for input_rule, target_rule_info in \
-                            itertools.product(input_rules, target_rules):
+            for input_rule in input_rules:
                 # Break if we've found even a single path
-                if paths:
+                if len(paths) > 3:
                     break
-                (target_rule, rule_polarity) = target_rule_info
                 try:
                     sp_gen = networkx.shortest_simple_paths(self.get_im(),
                                                        input_rule.name,
-                                                       target_rule.name)
+                                                       obs_name)
                     # Iterate over paths until we find one with positive
                     # polarity
                     need_positive_path = False if unmodify_stmt else True
                     for sp in sp_gen:
                         if need_positive_path == \
-                                positive_path(self.get_im(), sp, rule_polarity):
+                                positive_path(self.get_im(), sp):
                             logger.info('Found non-repeating path, '
                                         'length %d: %s' %
                                         (len(sp), str(sp)))
-                            logger.info('Rule polarity of target: %s' %
-                                        rule_polarity)
                             paths.append(sp)
                             break
                 except networkx.NetworkXNoPath as nopath:
@@ -151,6 +152,7 @@ def match_rhs(cp, rules):
                 break
     return rule_matches
 
+"""
 def find_production_rules(cp, rules):
     # Find rules where the CP matches the left hand side
     lhs_rule_set = set(match_lhs(cp, rules))
@@ -170,6 +172,7 @@ def find_consumption_rules(cp, rules):
     # side but not on the right hand side
     cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
     return cons_rules
+"""
 
 def cp_embeds_into(cp1, cp2):
     # Check that any state in cp2 is matched in cp2
@@ -198,13 +201,9 @@ def mp_embeds_into(mp1, mp2):
             return False
     return True
 
-def positive_path(im, path, rule_polarity):
+def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
-    if rule_polarity not in (1, -1):
-        raise ValueError('rule_polarity must be 1 or -1.')
-    if len(path) == 1:
-        return True if rule_polarity == 1 else False
     edge_polarities = []
     for rule_ix in range(len(path) - 1):
         from_rule = path[rule_ix]
@@ -219,7 +218,7 @@ def positive_path(im, path, rule_polarity):
         else:
             raise Exception('Unexpected edge color: %s' % edge.attr['color'])
     # Compute and return the overall path polarity
-    path_polarity = np.prod(edge_polarities) * rule_polarity
+    path_polarity = np.prod(edge_polarities)
     assert path_polarity == 1 or path_polarity == -1
     return True if path_polarity == 1 else False
 

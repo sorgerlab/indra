@@ -155,6 +155,7 @@ def test_pysb_assembler_phospho_policies():
     # Try two step
     pa.make_model(policies='two_step')
     mc = ModelChecker(pa.model, [st])
+    import ipdb; ipdb.set_trace()
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -177,6 +178,7 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     assert results[0][1] == False
 
+"""
 def test_ras_220_network():
     file_path = os.path.dirname(os.path.abspath(__file__))
     ras_220_results_path = os.path.join('../../models/ras_220_genes'
@@ -204,7 +206,8 @@ def test_ras_220_network():
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
     # Now try again, with a two_step policy
-    """
+"""
+"""
     # Skip this, building the influence map takes a very long time
     pa.make_model(policies='two_step')
     mc = ModelChecker(pa.model, [stmt1, stmt2])
@@ -216,7 +219,8 @@ def test_ras_220_network():
     assert checks[0][1] == True
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
-    """
+"""
+"""
     # Now with an interactions_only policy
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [stmt1, stmt2])
@@ -227,14 +231,15 @@ def test_ras_220_network():
     assert checks[0][1] == False
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
+"""
 
 def test_path_polarity():
     im = pgv.AGraph('im_polarity.dot')
     path1 = ['BRAF_phospho_MAPK1_T185_1', 'MAPK1_phospho_DUSP6_S159_1']
     path2 = ['BRAF_phospho_MAPK1_T185_1', 'BRAF_phospho_MAPK1_T185_3',
              'MAPK1_phospho_DUSP6_S159_1']
-    assert positive_path(im, path1, 1)
-    assert not positive_path(im, path2, 1)
+    assert positive_path(im, path1)
+    assert not positive_path(im, path2)
 
 @with_model
 def test_consumption_rule():
@@ -381,7 +386,8 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_invalid_modification()
+    test_pysb_assembler_phospho_policies()
+    #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
