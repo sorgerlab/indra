@@ -8,6 +8,7 @@ import time
 import json
 import shutil
 import logging
+import datetime
 import argparse
 import gmail_client
 import twitter_client
@@ -367,6 +368,7 @@ if __name__ == '__main__':
         elif s.belief > belief_threshold:
             new_likely.append(s)
     stats['new_likely'] = len(new_likely)
+    logger.info('%d likely statements' % len(new_likely))
 
     # Make a PySB model from filtered statements
     #pysb_assmb = PysbAssembler()
