@@ -13,6 +13,7 @@ from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 logger = logging.getLogger('incremental_model')
 
+
 class IncrementalModel(object):
     """Assemble a model incrementally by iteratively adding new Statements.
 
@@ -61,91 +62,25 @@ class IncrementalModel(object):
         with open(model_fname, 'wb') as fh:
             pickle.dump(self.stmts, fh, protocol=2)
 
-    def _relevance_filter(self, stmts, filters=None):
-        stmts_to_add = list(range(len(stmts)))
-        # Filter for grounding
+    def _relevance_filter(self, stmts_in, filters=None):
+        stmts_out = stmts_in
         if 'grounding' in filters:
-            for i, stmt in enumerate(stmts):
-                # Check that all agents are grounded
-                for ag in stmt.agent_list():
-                    if ag is None:
-                        continue
-                    if not ag.db_refs or list(ag.db_refs.keys()) == ['TEXT']:
-                        stmts_to_add.remove(i)
-                        break
-
-        if ('prior_all' in filters) or ('prior_one' in filters):
-            prior_agents = self.get_prior_agents()
-            if prior_agents:
-                for i in stmts_to_add:
-                    agents = [a for a in stmts[i].agent_list()
-                              if a is not None]
-                    if 'prior_all' in filters:
-                        for st_agent in agents:
-                            found = False
-                            for pr_agent in prior_agents:
-                                if self._agent_related(st_agent, pr_agent):
-                                    found = True
-                                    break
-                            if not found:
-                                stmts_to_add.remove(i)
-                                break
-                    if 'prior_one' in filters:
-                        found = False
-                        for st_agent in agents:
-                            for pr_agent in prior_agents:
-                                if self._agent_related(st_agent, pr_agent):
-                                    found = True
-                                    break
-                            if found:
-                                break
-                        if not found:
-                                stmts_to_add.remove(i)
-
-        if ('model_all' in filters) or ('model_one' in filters):
-            model_agents = self.get_model_agents()
-            if model_agents:
-                for i in stmts_to_add:
-                    agents = [a for a in stmts[i].agent_list()
-                              if a is not None]
-                    if 'model_all' in filters:
-                        for st_agent in agents:
-                            found = False
-                            for mo_agent in model_agents:
-                                if self._agent_related(st_agent, mo_agent):
-                                    found = True
-                                    break
-                            if not found:
-                                stmts_to_add.remove(i)
-                                break
-                    if 'model_one' in filters:
-                        found = False
-                        for st_agent in agents:
-                            for mo_agent in model_agents:
-                                if self._agent_related(st_agent, mo_agent):
-                                    found = True
-                                    break
-                            if found:
-                                break
-        if ('human_only' in filters):
-            for i in stmts_to_add:
-                agents = [a for a in stmts[i].agent_list()
-                          if a is not None]
-                for a in agents:
-                    up_id = a.db_refs.get('UP')
-                    hgnc_id = a.db_refs.get('HGNC')
-                    if not hgnc_id:
-                        if up_id:
-                            mnemonic = uniprot_client.get_mnemonic(up_id, True)
-                            if mnemonic is None:
-                                stmts_to_add.remove(i)
-                                break
-                            if not mnemonic.endswith('HUMAN'):
-                                stmts_to_add.remove(i)
-                                break
-
-        relevant_stmts = [stmts[i] for i in stmts_to_add]
-        return relevant_stmts
+            stmts_out = _grounding_filter(stmts_out)
+        if 'human_only' in filters:
+            stmts_out = _human_only_filter(stmts_out)
+        if 'model_all' in filters:
+            stmts_out = _ref_agents_all_filter(stmts_out,
+                                               self.get_model_agents())
+        if 'model_one' in filters:
+            stmts_out = _ref_agents_one_filter(stmts_out,
+                                               self.get_model_agents())
+        if 'prior_all' in filters:
+            stmts_out = _ref_agents_all_filter(stmts_out,
+                                               self.get_prior_agents())
+        if 'prior_one' in filters:
+            stmts_out = _ref_agents_one_filter(stmts_out,
+                                               self.get_prior_agents())
+        return stmts_out
 
     def add_statements(self, pmid, stmts, filters=None):
         """Add INDRA Statements to the incremental model indexed by PMID.
@@ -165,22 +100,20 @@ class IncrementalModel(object):
             The PMID of the paper from which statements were extracted.
         stmts : list[indra.statements.Statement]
             A list of INDRA Statements to be added to the model.
-        filter : Optional[list[str]]
+        filters : Optional[list[str]]
             A list of filter options to apply when adding the statements.
             See description above for more details. Default: None
         """
-        # If no filter is used, we add all statements to the model
-        if not filters:
-            self.stmts[pmid] = stmts
-            return
-        # If the statements are empty in the first place
-        if not stmts:
+        if pmid not in self.stmts:
             self.stmts[pmid] = []
+        if not stmts:
+            return
+        if not filters:
+            self.stmts[pmid] += stmts
             return
 
         relevant_stmts = self._relevance_filter(stmts, filters)
-        self.stmts[pmid] = relevant_stmts
-
+        self.stmts[pmid] += relevant_stmts
 
     def preassemble(self, filters=None):
         """Preassemble the Statements collected in the model.
@@ -200,7 +133,7 @@ class IncrementalModel(object):
 
         Parameters
         ----------
-        filter : Optional[list[str]]
+        filters : Optional[list[str]]
             A list of filter options to apply when choosing the statements.
             See description above for more details. Default: None
         """
@@ -235,7 +168,7 @@ class IncrementalModel(object):
                 stmts = self._relevance_filter(stmts, ['human_only'])
                 logger.info('%s Statements after filter' % len(stmts))
             for rel_key in ('prior_one', 'model_one',
-                             'prior_all', 'model_all'):
+                            'prior_all', 'model_all'):
                 if rel_key in filters:
                     logger.info('Running relevance filter')
                     stmts = self._relevance_filter(stmts, [rel_key])
@@ -310,17 +243,8 @@ class IncrementalModel(object):
         agents = [Agent(n, db_refs={g[0]: g[1]}) for n, g in agents]
         return agents
 
-    @staticmethod
-    def _agent_related(a1, a2):
-        if a1.matches(a2) or \
-            a1.isa(a2, hierarchies) or \
-            a2.isa(a1, hierarchies):
-            return True
-        return False
-
     def get_statements(self):
         """Return a list of all Statements in a single list.
-
 
         Returns
         -------
@@ -360,3 +284,84 @@ class IncrementalModel(object):
             return self.stmts['prior']
         else:
             return []
+
+
+def _ref_agents_all_filter(stmts_in, ref_agents):
+    stmts_out = []
+    if ref_agents:
+        for st in stmts_in:
+            agents = [a for a in st.agent_list() if a is not None]
+            found_all = True
+            for st_agent in agents:
+                found = False
+                for ref_agent in ref_agents:
+                    if _agent_related(st_agent, ref_agent):
+                        found = True
+                        break
+                if not found:
+                    found_all = False
+                    break
+            if found_all:
+                stmts_out.append(stmts_in)
+    else:
+        stmts_out = stmts_in
+    return stmts_out
+
+
+def _ref_agents_one_filter(stmts_in, ref_agents):
+    stmts_out = []
+    if ref_agents:
+        for st in stmts_in:
+            agents = [a for a in st.agent_list() if a is not None]
+            found = False
+            for st_agent in agents:
+                for ref_agent in ref_agents:
+                    if _agent_related(st_agent, ref_agent):
+                        found = True
+                        break
+                if found:
+                    break
+            if found:
+                stmts_out.append(stmts_in)
+    else:
+        stmts_out = stmts_in
+    return stmts_out
+
+
+def _grounding_filter(stmts_in):
+    stmts_out = []
+    for st in stmts_in:
+        # Check that all agents are grounded
+        grounded = True
+        for ag in st.agent_list():
+            if ag is None:
+                continue
+            if not ag.db_refs or list(ag.db_refs.keys()) == ['TEXT']:
+                grounded = False
+                break
+        if grounded:
+            stmts_out.append(st)
+    return stmts_out
+
+
+def _human_only_filter(stmts_in):
+    stmts_out = []
+    for st in stmts_in:
+        agents = [a for a in st.agent_list() if a is not None]
+        non_human = False
+        for a in agents:
+            hgnc_id = a.db_refs.get('HGNC')
+            up_id = a.db_refs.get('UP')
+            if not hgnc_id:
+                if up_id and not uniprot_client.is_human(up_id):
+                    non_human = True
+                    break
+        if not non_human:
+            stmts_out.append(st)
+    return stmts_out
+
+
+def _agent_related(a1, a2):
+    if a1.matches(a2) or a1.isa(a2, hierarchies) or a2.isa(a1, hierarchies):
+        return True
+    return False
