@@ -92,7 +92,6 @@ class ReachProcessor(object):
             args = r['arguments']
             site = None
             theme = None
-            controller = None
 
             for a in args:
                 if self._get_arg_type(a) == 'theme':
@@ -124,37 +123,14 @@ class ReachProcessor(object):
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
             args = [controller_agent, theme_agent, residue, pos, ev]
-            # Other subtypes that exist but we don't handle:
-            # methylation (not PTM), ribosylation, hydrolysis (not PTM)
-            if modification_type == 'phosphorylation':
-                self.statements.append(Phosphorylation(*args))
-            elif modification_type == 'dephosphorylation':
-                self.statements.append(Dephosphorylation(*args))
-            elif modification_type == 'ubiquitination':
-                self.statements.append(Ubiquitination(*args))
-            elif modification_type == 'deubiquitination':
-                self.statements.append(Deubiquitination(*args))
-            elif modification_type == 'acetylation':
-                self.statements.append(Acetylation(*args))
-            elif modification_type == 'deacetylation':
-                self.statements.append(Deacetylation(*args))
-            elif modification_type == 'hydroxylation':
-                self.statements.append(Hydroxylation(*args))
-            elif modification_type == 'dehydroxylation':
-                self.statements.append(Dehydroxylation(*args))
-            elif modification_type == 'sumoylation':
-                self.statements.append(Sumoylation(*args))
-            elif modification_type == 'desumoylation':
-                self.statements.append(Desumoylation(*args))
-            elif modification_type == 'glycosylation':
-                self.statements.append(Glycosylation(*args))
-            elif modification_type == 'deglycosylation':
-                self.statements.append(Deglycosylation(*args))
-            elif modification_type == 'farnesylation':
-                self.statements.append(Farnesylation(*args))
-            else:
+
+            # Here ModStmt is a sub-class of Modification
+            ModStmt = stmt_mod_map.get(modification_type)
+            if ModStmt is None:
                 logger.warning('Unhandled modification type: %s' %
                                modification_type)
+            else:
+                self.statements.append(ModStmt(*args))
 
     def get_complexes(self):
         """Extract INDRA Complex Statements."""
@@ -167,7 +143,6 @@ class ReachProcessor(object):
             if epistemics.get('negative'):
                 continue
             context = self._get_context(r)
-            frame_id = r['frame_id']
             args = r['arguments']
             sentence = r['verbose-text']
             members = []
@@ -194,7 +169,6 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           pmid=self.citation, annotations=context,
                           epistemics=epistemics)
-            frame_id = r['frame_id']
             args = r['arguments']
             for a in args:
                 if self._get_arg_type(a) == 'controller':
@@ -240,7 +214,6 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           pmid=self.citation, annotations=context,
                           epistemics=epistemics)
-            frame_id = r['frame_id']
             args = r['arguments']
             from_location = None
             to_location = None
@@ -254,7 +227,7 @@ class ReachProcessor(object):
                 elif self._get_arg_type(a) == 'destination':
                     to_location = self._get_location_by_id(a['arg'])
             st = Translocation(agent, from_location, to_location,
-                               evidence = ev)
+                               evidence=ev)
             self.statements.append(st)
 
     def _get_location_by_id(self, loc_id):
@@ -343,23 +316,29 @@ class ReachProcessor(object):
                     mut = self._parse_mutation(mutation_str)
                     if mut is not None:
                         muts.append(mut)
-                elif m['type'].lower() == 'phosphorylation' or\
-                     m['type'].lower() == 'phosphorylated':
-                    site = m.get('site')
-                    if site is not None:
-                        mod_res, mod_pos = self._parse_site_text(site)
-                        mod = ModCondition('phosphorylation', mod_res, mod_pos)
-                        mods.append(mod)
-                    else:
-                        mods.append(ModCondition('phosphorylation'))
-                elif m['type'].lower() == 'ubiquitination':
-                    mods.append(ModCondition('ubiquitination'))
                 else:
-                    logger.warning('Unhandled entity modification type: %s' %
-                                   m['type'])
+                    mc = self._get_mod_condition(m)
+                    if mc is not None:
+                        mods.append(mc)
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
+
+    def _get_mod_condition(self, mod_term):
+        site = mod_term.get('site')
+        if site is not None:
+            mod_res, mod_pos = self._parse_site_text(site)
+        else:
+            mod_res = None
+            mod_pos = None
+        mod_type_str = mod_term['type'].lower()
+        mod_type, is_modified = agent_mod_map.get(mod_type_str)
+        if mod_type is not None:
+            mc = ModCondition(mod_type, residue=mod_res, position=mod_pos,
+                              is_modified=is_modified)
+            return mc
+        logger.warning('Unhandled entity modification type: %s' % mod_type_str)
+        return None
 
     def _get_context(self, frame_term):
         context = {}
@@ -417,7 +396,6 @@ class ReachProcessor(object):
         section = self._get_section(event)
         epistemics['section_type'] = section
         return epistemics
-
 
     _section_list = ['title', 'abstract', 'introduction', 'background',
                      'results', 'methods', 'discussion', 'conclusion',
@@ -485,8 +463,7 @@ class ReachProcessor(object):
             position = parts[1]
             mut = MutCondition(position, residue_from, residue_to)
             return mut
-        else:
-            return None
+        return None
 
     @staticmethod
     def _parse_site_text(s):
@@ -513,5 +490,46 @@ class ReachProcessor(object):
             residue = get_valid_residue(m.groups()[0])
             site = None
             return residue, site
-
+        logger.warning('Could not parse site text %s' % s)
         return None, None
+
+
+# Subtypes that exist but we don't handle: methylation, hydrolysis
+agent_mod_map = {
+    'phosphorylation': ('phosphorylation', True),
+    'phosphorylated': ('phosphorylation', True),
+    'dephosphorylation': ('phosphorylation', False),
+    'acetylation': ('acetylation', True),
+    'deacetylation': ('acetylation', False),
+    'ubiquitination': ('ubiquitination', True),
+    'deubiquitination': ('ubiquitination', False),
+    'hydroxylation': ('hydroxylation', True),
+    'dehydroxylation': ('hydroxylation', False),
+    'sumoylation': ('sumoylation', True),
+    'desumoylation': ('sumoylation', False),
+    'glycosylation': ('glycosylation', True),
+    'deglycosylation': ('glycosylation', False),
+    'farnesylation': ('farnesylation', True),
+    'defarnesylation': ('farnesylation', False),
+    'ribosylation': ('ribosylation', True),
+    'deribosylation': ('ribosylation', False)
+}
+
+stmt_mod_map = {
+    'phosphorylation': Phosphorylation,
+    'dephosphorylation': Dephosphorylation,
+    'ubiquitination': Ubiquitination,
+    'deubiquitination': Deubiquitination,
+    'acetylation': Acetylation,
+    'deacetylation': Deacetylation,
+    'hydroxylation': Hydroxylation,
+    'dehydroxylation': Dehydroxylation,
+    'sumoylation': Sumoylation,
+    'desumoylation': Desumoylation,
+    'glycosylation': Glycosylation,
+    'deglycosylation': Deglycosylation,
+    'farnesylation': Farnesylation,
+    'defarnesylation': Defarnesylation,
+    'ribosylation': Ribosylation,
+    'deribosylation': Deribosylation
+}
