@@ -6,7 +6,7 @@ import itertools
 
 from pysb import (Model, Monomer, Parameter, Rule, Annotation,
         ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY,
-        InvalidInitialConditionError)
+        WILD, InvalidInitialConditionError)
 from pysb.core import SelfExporter
 import pysb.export
 
@@ -360,9 +360,9 @@ def get_site_pattern(agent):
         mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
         site_states = states[mod.mod_type]
         if mod.is_modified:
-            pattern[mod_site] = site_states[1]
+            pattern[mod_site] = (site_states[1], WILD)
         else:
-            pattern[mod_site] = site_states[0]
+            pattern[mod_site] = (site_states[0], WILD)
 
     # Handle mutations
     for mc in agent.mutations:
