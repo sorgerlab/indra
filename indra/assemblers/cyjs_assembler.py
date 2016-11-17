@@ -143,14 +143,15 @@ class CyJSAssembler(object):
                     node['data']['expression'] = int(amount[cell_type])
                     counter_exp += 1
                 mutation = mut.get(node['data']['name'])
-                if mutation is  None:
-                    node['data']['mutation'] = 2
-                    # 2 will be the value for when nothing is retrieved
                 if mutation is not None:
                     node['data']['mutation'] = int(mutation[cell_type])
                     # 0 for no mutation
                     # 1 for mutation
                     counter_mut += 1
+                if mutation is  None:
+                    node['data']['mutation'] = 0
+                    # NDEx mutation client returns None when mutation isn't found in any
+                    # cell line. Thus, set mutation to 0.
             logger.info('Set expression context for %d nodes.' % counter_exp)
             logger.info('Set mutation context for %d nodes.' % counter_mut)
         if kwargs.get('bin_expression', None):
