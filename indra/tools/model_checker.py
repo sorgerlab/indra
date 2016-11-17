@@ -6,7 +6,7 @@ import networkx
 import itertools
 from copy import deepcopy
 from pysb import kappa
-from pysb import Observable
+from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
@@ -59,66 +59,67 @@ class ModelChecker(object):
             unmodify_stmt = False
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
-        # Check if the site and corresponding state exists in the
-        # model--if not, then it won't be observed. If we try to get a monomer
-        # pattern for a monomer that doesn't have the specified site, PySB
-        # throws a (generic) Exception; we catch this as an indication that
-        # the site doesn't exist, and hence the modification is not observed,
-        # and return False
+        site_pattern = pa.get_site_pattern(modified_sub)
+        obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
+        monomer = self.model.monomers[modified_sub.name]
+        # If we try to get a monomer pattern for a monomer that doesn't have
+        # the specified site, PySB throws a (generic) Exception; we catch this
+        # as an indication that the site doesn't exist, and hence the
+        # modification is not observed, and return False.
         try:
-            site_pattern = pa.get_site_pattern(modified_sub)
-            obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-            monomer = self.model.monomers[modified_sub.name]
-            obs = Observable(obs_name, monomer(**site_pattern))
-            self.model.add_component(obs)
-            #sub_mp = pa.get_monomer_pattern(self.model, modified_sub)
+            obs = Observable(obs_name, monomer(**site_pattern), _export=False)
         except Exception as e:
-            logger.info("Couldn't create observable: %s" % e)
+            logger.info("Invalid site: %s" % e)
             return False
-        # Generate the influence map
-        # Find rules in the model corresponding to the inputs and outputs
+        # Reset the observables list
+        self.model.observables = ComponentSet([])
+        self.model.add_component(obs)
+        # Find rules in the model corresponding to the input
         input_rules = match_lhs(enz_mp, self.model.rules)
         logger.info('Found %s input rules matching %s' %
                     (len(input_rules), str(enz_mp)))
-        # Get the production and consumption rules for the target
-        #target_prod_rules = find_production_rules(sub_mp, self.model.rules)
-        #target_cons_rules = find_consumption_rules(sub_mp, self.model.rules)
-        # The final list contains a list of rules along with their "polarities"
-        # (production = 1, consumption = -1)
-        #target_rules = (list(zip(target_prod_rules, [1]*len(target_prod_rules)))
-        #            + list(zip(target_cons_rules, [-1]*len(target_cons_rules))))
-        #logger.info('Found %s target rules matching %s' %
-        #            (len(target_rules), str(sub_mp)))
-        if input_rules: # and target_rules:
+        if input_rules:
             # Generate the influence map
             paths = []
             # Look for any rule that is both in the input and target set--
             # indicates that constraint is satisfied by a single rule
-            for input_rule in input_rules:
-                # Break if we've found even a single path
-                if len(paths) > 3:
-                    break
-                try:
-                    sp_gen = networkx.shortest_simple_paths(self.get_im(),
-                                                       input_rule.name,
-                                                       obs_name)
-                    # Iterate over paths until we find one with positive
-                    # polarity
-                    need_positive_path = False if unmodify_stmt else True
-                    for sp in sp_gen:
-                        if need_positive_path == \
-                                positive_path(self.get_im(), sp):
-                            logger.info('Found non-repeating path, '
-                                        'length %d: %s' %
-                                        (len(sp), str(sp)))
-                            paths.append(sp)
-                            break
-                except networkx.NetworkXNoPath as nopath:
-                    pass
-            if paths:
+            input_rule_set = set([r.name for r in input_rules])
+                                  #if r.name.startswith(stmt.enz.name)])
+            pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
+            preds = set(pred_dict.keys())
+            source_influences = input_rule_set.intersection(set(preds))
+            logger.info('Source influences')
+            logger.info(source_influences)
+            if source_influences:
                 return True
             else:
                 return False
+            #logger.info("Trying input rule %s" % input_rule.name)
+            #sp_gen = networkx.all_simple_paths(self.get_im(),
+            #                                   input_rule.name,
+            #                                   obs_name)
+            #if networkx.has_path(self.get_im(), input_rule.name,
+            #                     obs_name):
+            #    logger.info('Found path between %s and %s' %
+            #                (input_rule.name, obs_name))
+            #    return True
+            #else:
+            #    logger.info('No path between %s and %s' %
+            #                (input_rule.name, obs_name))
+            #    continue
+            # Iterate over paths until we find one with positive
+            # polarity
+            #need_positive_path = False if unmodify_stmt else True
+            #for sp in sp_gen:
+            #    logger.info('Found path: %s' % str(sp))
+            #    if need_positive_path == \
+            #            positive_path(self.get_im(), sp):
+            #        logger.info('Found non-repeating path, '
+            #                    'length %d: %s' %
+            #                    (len(sp), str(sp)))
+            #        paths.append(sp)
+            #        break
+        # If there are no rules matching our source, then there is no path
         else:
             return False
 
