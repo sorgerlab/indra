@@ -155,7 +155,6 @@ def test_pysb_assembler_phospho_policies():
     # Try two step
     pa.make_model(policies='two_step')
     mc = ModelChecker(pa.model, [st])
-    import ipdb; ipdb.set_trace()
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -178,14 +177,18 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     assert results[0][1] == False
 
-"""
+    """
 def test_ras_220_network():
-    file_path = os.path.dirname(os.path.abspath(__file__))
     ras_220_results_path = os.path.join('../../models/ras_220_genes'
-                                        '/ras_genes_results.pkl')
+                                        '/ras_220_gn_related2_stmts.pkl')
+    #ras_220_results_path = 'braf_dusp6_stmts.pkl'
+    #ras_220_results_path = 'braf_dusp6_small.pkl'
     with open(ras_220_results_path, 'rb') as f:
-        results = pickle.load(f)
-    ras220_stmts = results['related2']
+        ras220_stmts = pickle.load(f)
+    ras220_stmts = [s for s in ras220_stmts
+                      if isinstance(s, Modification) or
+                         isinstance(s, ActiveForm)]
+    print("Done loading")
     # Build a PySB model from the Ras 220 statements
     pa = PysbAssembler()
     pa.add_statements(ras220_stmts)
@@ -197,17 +200,18 @@ def test_ras_220_network():
     stmt1 = Phosphorylation(braf, dusp6, 'S', '159')
     stmt2 = Phosphorylation(egfr, dusp6, 'S', '159')
     # Check model
-    mc = ModelChecker(pa.model, [stmt1, stmt2])
+    stmts = [stmt1, stmt2]
+    mc = ModelChecker(pa.model, stmts)
     checks = mc.check_model()
-    assert len(checks) == 2
-    assert isinstance(checks[0], tuple)
-    assert checks[0][0] == stmt1
-    assert checks[0][1] == True
-    assert checks[1][0] == stmt2
-    assert checks[1][1] == False
+    #assert len(checks) == 2
+    #assert isinstance(checks[0], tuple)
+    #assert checks[0][0] == stmt1
+    #assert checks[0][1] == True
+    #assert checks[1][0] == stmt2
+    #assert checks[1][1] == False
     # Now try again, with a two_step policy
-"""
-"""
+    """
+    """
     # Skip this, building the influence map takes a very long time
     pa.make_model(policies='two_step')
     mc = ModelChecker(pa.model, [stmt1, stmt2])
@@ -219,9 +223,9 @@ def test_ras_220_network():
     assert checks[0][1] == True
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
-"""
-"""
+    """
     # Now with an interactions_only policy
+    """
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [stmt1, stmt2])
     checks = mc.check_model()
@@ -231,7 +235,7 @@ def test_ras_220_network():
     assert checks[0][1] == False
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
-"""
+    """
 
 def test_path_polarity():
     im = pgv.AGraph('im_polarity.dot')
@@ -319,6 +323,31 @@ def test_invalid_modification():
      #assert results[0][0] == st
      #assert results[0][1] == True
 
+@with_model
+def test_distinguish_path_polarity():
+    """Test the ability to distinguish a positive from a negative regulation."""
+    a = Agent('A')
+    b = Agent('B')
+    st1 = Phosphorylation(a, b, 'T', '185')
+    st2 = Dephosphorylation(a, b, 'T', '185')
+    # Now create the PySB model
+    Monomer('A')
+    Monomer('B', ['T185'], {'T185':['u', 'p']})
+    Rule('A_dephos_B', A() + B(T185='p') >> A() + B(T185='u'),
+         Parameter('k', 1))
+    Initial(A(), Parameter('A_0', 100))
+    Initial(B(T185='p'), Parameter('B_0', 100))
+    mc = ModelChecker(model, [st1, st2])
+    results = mc.check_model()
+    im = mc.get_im()
+    im.draw('dist_pp_im.pdf', prog='dot')
+    assert len(results) == 2
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st1
+    assert results[0][1] == False
+    assert results[0][0] == st2
+    assert results[0][1] == True
+
 
 """
 def test_ubiquitination():
@@ -336,12 +365,37 @@ def test_ubiquitination():
     assert checks[0][1] == True
 """
 
+# 
 
-# DIfferent combinations of input/target rules will produce different paths
-# So the paths don't come out in the shortest order this way
-# Using an observable will be a big advantage on the target rule side
+# Issues--if a rule activity isn't contingent on a particular mod,
+# then were will be no causal connection between any upstream modifying
+# rules and the downstream rule.
 
-# TODO
+# Active Form vs. Conditions on enzymes
+# Identify conflicting ModConditions?
+# Refactor out active forms as a preassembly step
+
+# Add "active" into assembled Pysb models as a requirement of every enzyme,
+# and add ActiveForms in as rules in the model. This has the advantage of
+# working when the activeform is not known (allows tying together activation
+# and mods). Problem is what to do with the rules that have mod conditions
+# already--add active in? Active flag approach has the advantage of a single
+# role for a each substrate, which (I think) would prevent an explosion of
+# paths
+
+# Simplest thing: take any rule where the enzyme has no conditions on it
+# and replace it with a comparable rule for each activeform.
+
+# Create rules for each active form
+
+# So what's needed is an assembly procedure where an active form is applied
+# across all rules for which that protein is the enzyme.
+
+# Need to know which agent is the "enzyme" in rules, so that these can
+# be prioritized, and activeforms applied
+
+# Apply weights based on evidence/belief scores;
+# Apply weights based on positive
 
 # Another issue--doesn't know that RAF1(phospho='p') should be satisfied
 # by RAF1(S259='p'). A big problem, even after pre-assembly--because longer
@@ -386,9 +440,11 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_pysb_assembler_phospho_policies()
+    #test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()
-    #test_consumption_rule()
+    test_consumption_rule()
     #test_dephosphorylation()
+    test_distinguish_path_polarity()
+
