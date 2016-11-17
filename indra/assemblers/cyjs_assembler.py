@@ -15,6 +15,9 @@ import indra.preassembler as pr
 hierarchies = hm.hierarchies
 expander = exp_fam.Expander(hierarchies)
 
+from indra.preassembler.grounding_mapper import GroundingMapper, gm
+GM = GroundingMapper(gm)
+
 # Python 2
 try:
     basestring
@@ -56,6 +59,9 @@ class CyJSAssembler(object):
 
         Parameters
         ----------
+        ground_to_BE : bool
+            If True, nodes are grounded to the appropriate bioentity entry.
+
         grouping : bool
             If True, the nodes with identical incoming and outgoing edges
             are grouped and the corresponding edges are merged.
@@ -74,6 +80,8 @@ class CyJSAssembler(object):
         cyjs_str : str
             The json serialized Cytoscape JS model.
         """
+        if kwargs.get('ground_to_BE', None):
+            self.statements = GM.map_agents(self.statements, do_rename=True)
         for stmt in self.statements:
             if isinstance(stmt, Activation):
                 self._add_activation(stmt)
@@ -93,7 +101,6 @@ class CyJSAssembler(object):
             self._add_edge_weights()
         return self.print_cyjs()
 
-
     def set_context(self, *args, **kwargs):
         """Set protein expression data as node attribute
 
@@ -106,8 +113,12 @@ class CyJSAssembler(object):
         cell_type : str
             Cell type name for which expression levels are queried.
             The cell type name follows the CCLE database conventions.
-
         Example: LOXIMVI_SKIN, BT20_BREAST
+
+        bin_expression: bool
+            If True, the gene expression will be put into 5 bins based on
+            all gene expression values. An additional bin is used to indicate
+            that the context_client returned None.
         """
         if kwargs.get('cell_type', None) :
             cell_type = kwargs.get('cell_type', None)
@@ -133,9 +144,12 @@ class CyJSAssembler(object):
                     counter_exp += 1
                 mutation = mut.get(node['data']['name'])
                 if mutation is  None:
-                    node['data']['mutation'] = None
+                    node['data']['mutation'] = 2
+                    # 2 will be the value for when nothing is retrieved
                 if mutation is not None:
                     node['data']['mutation'] = int(mutation[cell_type])
+                    # 0 for no mutation
+                    # 1 for mutation
                     counter_mut += 1
             logger.info('Set expression context for %d nodes.' % counter_exp)
             logger.info('Set mutation context for %d nodes.' % counter_mut)
@@ -221,6 +235,9 @@ class CyJSAssembler(object):
         node_name = agent.name
         expanded_families = expander.get_children(agent, ns_filter='HGNC')
         members = {'HGNC':sorted([x[1] for x in expanded_families])}
+        #if len(members['HGNC']) > 0:
+        #    logger.info('Expanded %s family with %d members.' \
+        #                % (node_name,len(members['HGNC'])))
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent':'',
                          'members': members}}
