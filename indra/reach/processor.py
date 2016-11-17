@@ -332,10 +332,10 @@ class ReachProcessor(object):
             mod_res = None
             mod_pos = None
         mod_type_str = mod_term['type'].lower()
-        mod_type, is_modified = agent_mod_map.get(mod_type_str)
-        if mod_type is not None:
-            mc = ModCondition(mod_type, residue=mod_res, position=mod_pos,
-                              is_modified=is_modified)
+        mod_state = agent_mod_map.get(mod_type_str)
+        if mod_state is not None:
+            mc = ModCondition(mod_state[0], residue=mod_res, position=mod_pos,
+                              is_modified=mod_state[1])
             return mc
         logger.warning('Unhandled entity modification type: %s' % mod_type_str)
         return None
