@@ -52,7 +52,13 @@ class ModelChecker(object):
         # may not exist!
         # The observable is the modified form of the substrate
         logger.info('Checking stmt: %s' % stmt)
-        enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
+        # Look for an agent with the appropriate grounding in the model
+        #enz_db_refs = stmt.enz.db_refs
+        if stmt.enz is not None:
+            enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
+        else:
+            enz_mp = None
+
         if type(stmt) in (Dephosphorylation,):
             unmodify_stmt = True
         else:
@@ -75,53 +81,66 @@ class ModelChecker(object):
         self.model.observables = ComponentSet([])
         self.model.add_component(obs)
         # Find rules in the model corresponding to the input
-        input_rules = match_lhs(enz_mp, self.model.rules)
-        logger.info('Found %s input rules matching %s' %
-                    (len(input_rules), str(enz_mp)))
-        if input_rules:
-            # Generate the influence map
-            paths = []
-            # Look for any rule that is both in the input and target set--
-            # indicates that constraint is satisfied by a single rule
+        if enz_mp is not None:
+            input_rules = match_lhs(enz_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])
-            pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
-            preds = set(pred_dict.keys())
-            source_influences = input_rule_set.intersection(set(preds))
-            logger.info('Source influences')
-            logger.info(source_influences)
-            if source_influences:
-                return True
-            else:
+            logger.info('Found %s input rules matching %s' %
+                        (len(input_rules), str(enz_mp)))
+            # If we have enzyme information but there are no input rules matching
+            # the enzyme, then there is no path
+            if not input_rules:
                 return False
-            #logger.info("Trying input rule %s" % input_rule.name)
-            #sp_gen = networkx.all_simple_paths(self.get_im(),
-            #                                   input_rule.name,
-            #                                   obs_name)
-            #if networkx.has_path(self.get_im(), input_rule.name,
-            #                     obs_name):
-            #    logger.info('Found path between %s and %s' %
-            #                (input_rule.name, obs_name))
-            #    return True
-            #else:
-            #    logger.info('No path between %s and %s' %
-            #                (input_rule.name, obs_name))
-            #    continue
-            # Iterate over paths until we find one with positive
-            # polarity
-            #need_positive_path = False if unmodify_stmt else True
-            #for sp in sp_gen:
-            #    logger.info('Found path: %s' % str(sp))
-            #    if need_positive_path == \
-            #            positive_path(self.get_im(), sp):
-            #        logger.info('Found non-repeating path, '
-            #                    'length %d: %s' %
-            #                    (len(sp), str(sp)))
-            #        paths.append(sp)
-            #        break
-        # If there are no rules matching our source, then there is no path
+        # Generate the predecessors to our observable
+        pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
+        preds = set(pred_dict.keys())
+        # If we're missing participant A (no enzyme), then we only need to check
+        # that there are any predecessors to our observable for this statement
+        # to be valid
+        if enz_mp is None and preds:
+            return True
+        elif enz_mp is None:
+            return False
+        # If we've got this far, then we know that we have an enzyme (enz_mp is
+        # not None), and there are input rules matching this enzyme
+        # (input_rule_set is not empty)
+        assert enz_mp and input_rule_set
+        # Check to see if any of our input rules are in our set of upstream
+        # influencer rules
+        source_influences = input_rule_set.intersection(set(preds))
+        logger.info('Source influences')
+        logger.info(source_influences)
+        # If the set is non-empty, then we have a causal path
+        if source_influences:
+            return True
+        # Otherwise, there is no path
         else:
             return False
+        #logger.info("Trying input rule %s" % input_rule.name)
+        #sp_gen = networkx.all_simple_paths(self.get_im(),
+        #                                   input_rule.name,
+        #                                   obs_name)
+        #if networkx.has_path(self.get_im(), input_rule.name,
+        #                     obs_name):
+        #    logger.info('Found path between %s and %s' %
+        #                (input_rule.name, obs_name))
+        #    return True
+        #else:
+        #    logger.info('No path between %s and %s' %
+        #                (input_rule.name, obs_name))
+        #    continue
+        # Iterate over paths until we find one with positive
+        # polarity
+        #need_positive_path = False if unmodify_stmt else True
+        #for sp in sp_gen:
+        #    logger.info('Found path: %s' % str(sp))
+        #    if need_positive_path == \
+        #            positive_path(self.get_im(), sp):
+        #        logger.info('Found non-repeating path, '
+        #                    'length %d: %s' %
+        #                    (len(sp), str(sp)))
+        #        paths.append(sp)
+        #        break
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
     new_mod = ModCondition(mod_type, residue, position)

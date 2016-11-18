@@ -382,10 +382,12 @@ def test_none_phosphorylation_stmt():
     Initial(B(T185='u', Y187='p'), Parameter('B_0', 100))
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
-    assert len(results) == 1
+    assert len(results) == 2
     assert isinstance(results[0], tuple)
-    assert results[0][0] == st
+    assert results[0][0] == st1
     assert results[0][1] == True
+    assert results[1][0] == st2
+    assert results[1][1] == False
 
 """
 def test_ubiquitination():
