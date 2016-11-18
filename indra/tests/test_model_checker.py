@@ -88,7 +88,6 @@ def test_match_rhs():
 
 @with_model
 def test_one_step_phosphorylation():
-    # Override the shutoff of self export in psyb_assembler
     # Create the statement
     a = Agent('A')
     b = Agent('B')
@@ -100,11 +99,6 @@ def test_one_step_phosphorylation():
          Parameter('k', 1))
     Initial(A(), Parameter('A_0', 100))
     Initial(B(T185='u'), Parameter('B_0', 100))
-    #with open('model_rxn.dot', 'w') as f:
-    #    f.write(render_reactions.run(model))
-    #with open('species_1step.dot', 'w') as f:
-    #    f.write(species_graph.run(model))
-    # Now check the model
     mc = ModelChecker(model, [st])
     results = mc.check_model()
     assert len(results) == 1
@@ -349,6 +343,50 @@ def test_distinguish_path_polarity():
     assert results[0][1] == True
 
 
+@with_model
+def test_phosphorylation_annotations():
+    # Override the shutoff of self export in psyb_assembler
+    # Create the statement
+    a = Agent('MEK1', db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    st = Phosphorylation(a, b, 'T', '185')
+    # Now create the PySB model
+    Monomer('A_monomer')
+    Monomer('B_monomer', ['Thr185'], {'Thr185':['un', 'phos']})
+
+    Rule('A_phos_B', A_monomer() + B_monomer(Thr185='un') >>
+                     A_monomer() + B_monomer(Thr185='phos'),
+         Parameter('k', 1))
+    Initial(A_monomer(), Parameter('A_0', 100))
+    Initial(B_monomer(Thr185='un'), Parameter('B_0', 100))
+    mc = ModelChecker(model, [st])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == True
+
+@with_model
+def test_none_phosphorylation_stmt():
+    # Create the statement
+    b = Agent('B')
+    st1 = Phosphorylation(None, b, 'T', '185')
+    st2 = Phosphorylation(None, b, 'Y', '187')
+    stmts = [st1, st2]
+    # Now create the PySB model
+    Monomer('A')
+    Monomer('B', ['T185', 'Y187'], {'T185':['u', 'p'], 'Y187': ['u', 'p']})
+    Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
+         Parameter('k', 1))
+    Initial(A(), Parameter('A_0', 100))
+    Initial(B(T185='u', Y187='p'), Parameter('B_0', 100))
+    mc = ModelChecker(model, stmts)
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == True
+
 """
 def test_ubiquitination():
     xiap = Agent('XIAP')
@@ -440,11 +478,13 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
+    test_none_phosphorylation_stmt()
+    #test_phosphorylation_annotations()
     #test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()
-    test_consumption_rule()
+    #test_consumption_rule()
     #test_dephosphorylation()
-    test_distinguish_path_polarity()
+    #test_distinguish_path_polarity()
 
