@@ -201,6 +201,7 @@ HGNC:16754	ACAP3	ArfGAP with coiled-coil, ankyrin repeat and PH domains 3	Approv
 HGNC:93	ACAT1	acetyl-CoA acetyltransferase 1	Approved	THIL	38	P24752
 HGNC:94	ACAT2	acetyl-CoA acetyltransferase 2	Approved		39	Q9BWD1
 HGNC:15453	ACBD3	acyl-CoA binding domain containing 3	Approved	GCP60, PAP7	64746	Q9H3P7
+HGNC:40701	ACBD3-AS1	ACBD3 antisense RNA 1	Approved		107985353	
 HGNC:23337	ACBD4	acyl-CoA binding domain containing 4	Approved	FLJ13322	79777	Q8NC06
 HGNC:23338	ACBD5	acyl-CoA binding domain containing 5	Approved	DKFZp434A2417, KIAA1996	91452	Q5T8D3
 HGNC:23339	ACBD6	acyl-CoA binding domain containing 6	Approved	MGC2404	84320	Q9BR61
@@ -211,7 +212,7 @@ HGNC:14594	ACCPN~withdrawn	symbol withdrawn, see SLC12A6	Symbol Withdrawn
 HGNC:23989	ACCS	1-aminocyclopropane-1-carboxylate synthase homolog (inactive)	Approved	PHACS, ACS	84680	Q96QU6
 HGNC:34391	ACCSL	1-aminocyclopropane-1-carboxylate synthase homolog (inactive) like	Approved		390110	Q4AC99
 HGNC:97	ACC~withdrawn	symbol withdrawn, see ACACA	Symbol Withdrawn			
-HGNC:25070	ACD	adrenocortical dysplasia homolog	Approved	Ptop, Pip1, Tpp1, Tint1	65057	Q96AP0
+HGNC:25070	ACD	ACD, shelterin complex subunit and telomerase recruitment factor	Approved	Ptop, Pip1, Tpp1, Tint1	65057	Q96AP0
 HGNC:2707	ACE	angiotensin I converting enzyme	Approved	ACE1, CD143	1636	P12821
 HGNC:13557	ACE2	angiotensin I converting enzyme 2	Approved		59272	Q9BYF1
 HGNC:44365	ACE3P	angiotensin I converting enzyme 3, pseudogene	Approved		100129123	
@@ -252,11 +253,12 @@ HGNC:119	ACOX1	acyl-CoA oxidase 1	Approved	PALMCOX	51	Q15067
 HGNC:120	ACOX2	acyl-CoA oxidase 2	Approved	BRCACOX, BRCOX, THCCox	8309	Q99424
 HGNC:121	ACOX3	acyl-CoA oxidase 3, pristanoyl	Approved		8310	O15254
 HGNC:25621	ACOXL	acyl-CoA oxidase-like	Approved	FLJ11042	55289	Q9NUZ1
-HGNC:122	ACP1	acid phosphatase 1, soluble	Approved	HAAP, LMW-PTP	52	P24666
+HGNC:41112	ACOXL-AS1	ACOXL antisense RNA 1	Approved		400997	
+HGNC:122	ACP1	acid phosphatase 1, soluble	Approved	HAAP, LMW-PTP, LMWPTP	52	P24666
 HGNC:123	ACP2	acid phosphatase 2, lysosomal	Approved	LAP	53	P11117
 HGNC:124	ACP5	acid phosphatase 5, tartrate resistant	Approved	TRAP, HPAP	54	P13686
 HGNC:29609	ACP6	acid phosphatase 6, lysophosphatidic	Approved	LPAP, ACPL1	51205	Q9NPH0
-HGNC:33781	ACP7	acid phosphatase 7, tartrate resistant (putative)	Approved	FLJ16165, PAPL1	390928	Q6ZNF0
+HGNC:33781	ACP7	acid phosphatase 7, tartrate resistant (putative)	Approved	FLJ16165, PAPL1, PAPL	390928	Q6ZNF0
 HGNC:125	ACPP	acid phosphatase, prostate	Approved	ACP3, ACP-3, PAP	55	P15309
 HGNC:14376	ACPT	acid phosphatase, testicular	Approved		93650	Q9BZG2
 HGNC:126	ACR	acrosin	Approved		49	P10323
@@ -1600,7 +1602,7 @@ HGNC:14350	ARID3B	AT-rich interaction domain 3B	Approved	BDP, DRIL2	10620	Q8IVW6
 HGNC:21209	ARID3C	AT-rich interaction domain 3C	Approved		138715	A6NKF2
 HGNC:9885	ARID4A	AT-rich interaction domain 4A	Approved	RBP1, RBP-1	5926	P29374
 HGNC:15550	ARID4B	AT-rich interaction domain 4B	Approved	BCAA, BRCAA1, SAP180	51742	Q4LE39
-HGNC:41407	ARID4B-IT1	ARID4B intronic transcript 1	Approved		100874336	
+HGNC:41407	ARID4B-IT1~withdrawn	entry withdrawn	Entry Withdrawn			
 HGNC:17361	ARID5A	AT-rich interaction domain 5A	Approved	MRF-1, RP11-363D14	10865	Q03989
 HGNC:17362	ARID5B	AT-rich interaction domain 5B	Approved	FLJ21150, MRF2	84159	Q14865
 HGNC:689	ARIH1	ariadne RBR E3 ubiquitin protein ligase 1	Approved	HARI, HHARI, UBCH7BP, ARI	25820	Q9Y4X5
@@ -1949,6 +1951,7 @@ HGNC:51370	ATP2A1-AS1	ATP2A1 antisense RNA 1	Approved		100289092
 HGNC:812	ATP2A2	ATPase sarcoplasmic/endoplasmic reticulum Ca2+ transporting 2	Approved	SERCA2	488	P16615
 HGNC:813	ATP2A3	ATPase sarcoplasmic/endoplasmic reticulum Ca2+ transporting 3	Approved	SERCA3	489	Q93084
 HGNC:814	ATP2B1	ATPase plasma membrane Ca2+ transporting 1	Approved	PMCA1	490	P20020
+HGNC:27883	ATP2B1-AS1	ATP2B1 antisense RNA 1	Approved		338758	
 HGNC:815	ATP2B2	ATPase plasma membrane Ca2+ transporting 2	Approved	PMCA2	491	Q01814
 HGNC:41309	ATP2B2-IT1	ATP2B2 intronic transcript 1	Approved		100874324	
 HGNC:41310	ATP2B2-IT2	ATP2B2 intronic transcript 2	Approved		100874325	
@@ -1964,7 +1967,7 @@ HGNC:827	ATP5A1P1	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha
 HGNC:828	ATP5A1P2	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 2	Approved		504	
 HGNC:829	ATP5A1P3	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 3	Approved		645443	
 HGNC:23563	ATP5A1P4	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 4	Approved		100129782	
-HGNC:825	ATP5A1P5	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 5	Approved		442416	
+HGNC:825	ATP5A1P5~withdrawn	symbol withdrawn, see ATP5A1P1	Symbol Withdrawn			
 HGNC:37664	ATP5A1P6~withdrawn	symbol withdrawn, see ATP5A1P5	Symbol Withdrawn			
 HGNC:37665	ATP5A1P7	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 7	Approved		442415	
 HGNC:37666	ATP5A1P8	ATP synthase, H+ transporting, mitochondrial F1 complex, alpha subunit 1 pseudogene 8	Approved		392322	
@@ -2344,7 +2347,7 @@ HGNC:972	BCAR2~withdrawn	symbol withdrawn, see TRERF1	Symbol Withdrawn
 HGNC:973	BCAR3	breast cancer anti-estrogen resistance 3	Approved	NSP2, SH2D3B	8412	O75815
 HGNC:22170	BCAR4	breast cancer anti-estrogen resistance 4 (non-protein coding)	Approved		400500	
 HGNC:974	BCAS1	breast carcinoma amplified sequence 1	Approved	NABC1, AIBC1	8537	O75363
-HGNC:975	BCAS2	breast carcinoma amplified sequence 2	Approved	DAM1, SPF27, Snt309	10286	O75934
+HGNC:975	BCAS2	BCAS2, pre-mRNA processing factor	Approved	DAM1, SPF27, Snt309	10286	O75934
 HGNC:39594	BCAS2P1	breast carcinoma amplified sequence 2 pseudogene 1	Approved		100127960	
 HGNC:39595	BCAS2P2	breast carcinoma amplified sequence 2 pseudogene 2	Approved		100421045	
 HGNC:39596	BCAS2P3	breast carcinoma amplified sequence 2 pseudogene 3	Approved		100128339	
@@ -2572,12 +2575,12 @@ HGNC:1077	BMPR1B	bone morphogenetic protein receptor type 1B	Approved	ALK6, CDw2
 HGNC:50864	BMPR1B-AS1	BMPR1B antisense RNA 1 (head to head)	Approved	TCONS_00007797	100507012	
 HGNC:1078	BMPR2	bone morphogenetic protein receptor type 2	Approved	BRK-3, T-ALK, BMPR3, BMPR-II	659	Q13873
 HGNC:23505	BMS1	BMS1, ribosome biogenesis factor	Approved	KIAA0187	9790	Q14692
-HGNC:23649	BMS1P1	BMS1, ribosome biogenesis factor pseudogene 1	Approved	bA556L1.3, OTTHUMG00000018098		
-HGNC:23650	BMS1P2	BMS1, ribosome biogenesis factor pseudogene 2	Approved	bA144G6.1, OTTHUMG00000018113		
+HGNC:23649	BMS1P1	BMS1, ribosome biogenesis factor pseudogene 1	Approved			
+HGNC:23650	BMS1P2	BMS1, ribosome biogenesis factor pseudogene 2	Approved	bA144G6.1, OTTHUMG00000018113, bA302K17.2, OTTHUMG00000018142		
 HGNC:23651	BMS1P3	BMS1, ribosome biogenesis factor pseudogene 3	Approved	bA96C23.1, OTTHUMG00000018662	414217	
 HGNC:23652	BMS1P4	BMS1, ribosome biogenesis factor pseudogene 4	Approved	OTTHUMG00000018478	729096	
-HGNC:23653	BMS1P5	BMS1, ribosome biogenesis factor pseudogene 5	Approved	bA508M1.1, OTTHUMG00000018157	399761	
-HGNC:23654	BMS1P6	BMS1, ribosome biogenesis factor pseudogene 6	Approved	bA302K17.2, OTTHUMG00000018142	642826	
+HGNC:23653	BMS1P5~withdrawn	symbol withdrawn, see BMS1P1	Symbol Withdrawn			
+HGNC:23654	BMS1P6~withdrawn	symbol withdrawn, see BMS1P2	Symbol Withdrawn			
 HGNC:23655	BMS1P7	BMS1, ribosome biogenesis factor pseudogene 7	Approved	bA164N7.1, OTTHUMG00000018163	100133265	
 HGNC:49152	BMS1P8	BMS1, ribosome biogenesis factor pseudogene 8	Approved		653557	
 HGNC:49155	BMS1P9	BMS1, ribosome biogenesis factor pseudogene 9	Approved		653458	
@@ -2917,7 +2920,7 @@ HGNC:30780	C1orf61	chromosome 1 open reading frame 61	Approved	CROC4	10485	Q1353
 HGNC:28339	C1orf64	chromosome 1 open reading frame 64	Approved	MGC24047, ERRF	149563	Q8NEQ6
 HGNC:28411	C1orf67~withdrawn	symbol withdrawn, see DNAH14	Symbol Withdrawn			
 HGNC:29468	C1orf68	chromosome 1 open reading frame 68	Approved	LEP7, XP32	100129271	Q5T750
-HGNC:26319	C1orf74	chromosome 1 open reading frame 74	Approved	FLJ25078	148304	Q96LT6
+HGNC:26319	C1orf74	chromosome 1 open reading frame 74	Approved	FLJ25078, URLC4	148304	Q96LT6
 HGNC:27144	C1orf84~withdrawn	symbol withdrawn, see SZT2	Symbol Withdrawn			
 HGNC:28547	C1orf87	chromosome 1 open reading frame 87	Approved	MGC34837, CREF	127795	Q8N0U7
 HGNC:28250	C1orf94	chromosome 1 open reading frame 94	Approved	MGC15882	84970	Q6P1W5
@@ -2926,7 +2929,6 @@ HGNC:28491	C1orf101	chromosome 1 open reading frame 101	Approved	MGC33370	257044
 HGNC:29591	C1orf105	chromosome 1 open reading frame 105	Approved		92346	O95561
 HGNC:25599	C1orf106	chromosome 1 open reading frame 106	Approved	FLJ10901	55765	Q3KP66
 HGNC:26039	C1orf109	chromosome 1 open reading frame 109	Approved	FLJ20508	54955	Q9NX04
-HGNC:27648	C1orf111	chromosome 1 open reading frame 111	Approved		284680	Q5T0L3
 HGNC:25565	C1orf112	chromosome 1 open reading frame 112	Approved	FLJ10706	55732	Q9NSG2
 HGNC:25873	C1orf115	chromosome 1 open reading frame 115	Approved	FLJ14146	79762	Q9H7X2
 HGNC:28667	C1orf116	chromosome 1 open reading frame 116	Approved	SARG, FLJ36507, MGC2742, MGC4309	79098	Q9BW04
@@ -3029,7 +3031,6 @@ HGNC:26322	C2orf48	chromosome 2 open reading frame 48	Approved	FLJ25102	348738	Q
 HGNC:28772	C2orf49	chromosome 2 open reading frame 49	Approved	MGC5509, asw	79074	Q9BVC5
 HGNC:26324	C2orf50	chromosome 2 open reading frame 50	Approved	FLJ25143	130813	Q96LR7
 HGNC:26216	C2orf54	chromosome 2 open reading frame 54	Approved	FLJ22671	79919	Q08AI8
-HGNC:28563	C2orf57	chromosome 2 open reading frame 57	Approved	MGC35154	165100	Q53QW1
 HGNC:26850	C2orf61	chromosome 2 open reading frame 61	Approved	FLJ40172	285051	Q8N801
 HGNC:33809	C2orf66	chromosome 2 open reading frame 66	Approved	UNQ6411	401027	Q6UXQ4
 HGNC:34353	C2orf68	chromosome 2 open reading frame 68	Approved		388969	Q2NKX9
@@ -3061,7 +3062,7 @@ HGNC:25024	C3orf14	chromosome 3 open reading frame 14	Approved	HT021	57415	Q9HBI
 HGNC:24837	C3orf18	chromosome 3 open reading frame 18	Approved	G20	51161	Q9UK00
 HGNC:25320	C3orf20	chromosome 3 open reading frame 20	Approved	DKFZP434N1817	84077	Q8ND61
 HGNC:28534	C3orf22	chromosome 3 open reading frame 22	Approved	MGC34728	152065	Q8N5N4
-HGNC:26553	C3orf30	chromosome 3 open reading frame 30	Approved	FLJ32859	152405	Q96M34
+HGNC:26553	C3orf30	chromosome 3 open reading frame 30	Approved	FLJ32859, TSCPA	152405	Q96M34
 HGNC:26434	C3orf33	chromosome 3 open reading frame 33	Approved	FLJ31139, AC3-33	285315	Q6P1S2
 HGNC:24082	C3orf35	chromosome 3 open reading frame 35	Approved	APRG1	339883	Q8IVJ8
 HGNC:26170	C3orf36	chromosome 3 open reading frame 36	Approved	FLJ22173	80111	Q3SXR2
@@ -3491,7 +3492,7 @@ HGNC:33796	C15orf53	chromosome 15 open reading frame 53	Approved	FLJ35695	400359
 HGNC:33797	C15orf54	chromosome 15 open reading frame 54	Approved	FLJ39531	400360	Q8N8G6
 HGNC:33868	C15orf56	chromosome 15 open reading frame 56	Approved	FLJ38596	644809	Q8N910
 HGNC:28295	C15orf57	chromosome 15 open reading frame 57	Approved	MGC20481	90416	Q9BV29
-HGNC:33753	C15orf59	chromosome 15 open reading frame 59	Approved	MGC131524, LOC388135	388135	Q2T9L4
+HGNC:33753	C15orf59	chromosome 15 open reading frame 59	Approved	MGC131524, LOC388135, INSYN1	388135	Q2T9L4
 HGNC:51422	C15orf59-AS1	C15orf59 antisense RNA 1	Approved	TCONS_00023459	101929221	
 HGNC:34453	C15orf61	chromosome 15 open reading frame 61	Approved	LOC145853	145853	A6NNL5
 HGNC:34489	C15orf62	chromosome 15 open reading frame 62	Approved	LOC643338	643338	A8K5M9
@@ -3533,7 +3534,7 @@ HGNC:33755	C16orf86	chromosome 16 open reading frame 86	Approved	FLJ41802	388284
 HGNC:33754	C16orf87	chromosome 16 open reading frame 87	Approved		388272	Q6PH81
 HGNC:28687	C16orf89	chromosome 16 open reading frame 89	Approved	MGC45438	146556	Q6UX73
 HGNC:34455	C16orf90	chromosome 16 open reading frame 90	Approved	LOC646174	646174	A8MZG2
-HGNC:27558	C16orf91	chromosome 16 open reading frame 91	Approved	gs103, CCSMST1	283951	Q4G0I0
+HGNC:27558	C16orf91	chromosome 16 open reading frame 91	Approved	gs103, CCSMST1, URLC5	283951	Q4G0I0
 HGNC:26346	C16orf92	chromosome 16 open reading frame 92	Approved	FLJ25404	146378	Q96LL3
 HGNC:40033	C16orf95	chromosome 16 open reading frame 95	Approved		100506581	Q9H693
 HGNC:40031	C16orf96	chromosome 16 open reading frame 96	Approved		342346	A6NNT2
@@ -3576,7 +3577,6 @@ HGNC:26831	C17orf78	chromosome 17 open reading frame 78	Approved	FLJ39647	284099
 HGNC:29601	C17orf80	chromosome 17 open reading frame 80	Approved	HLC-8, MIG3, FLJ20721, SPEP1	55028	Q9BSJ5
 HGNC:32699	C17orf82	chromosome 17 open reading frame 82	Approved		388407	Q86X59
 HGNC:26206	C17orf84~withdrawn	entry withdrawn	Entry Withdrawn			
-HGNC:34493	C17orf96	chromosome 17 open reading frame 96	Approved	LOC100170841, PRR28	100170841	A6NHQ4
 HGNC:33800	C17orf97	chromosome 17 open reading frame 97	Approved	LOC400566, LIAT1	400566	Q6ZQX7
 HGNC:34492	C17orf98	chromosome 17 open reading frame 98	Approved	LOC388381	388381	A8MV24
 HGNC:34490	C17orf99	chromosome 17 open reading frame 99	Approved	GLPG464, UNQ464	100141515	Q6UX52
@@ -3604,7 +3604,7 @@ HGNC:40037	C18orf63	chromosome 18 open reading frame 63	Approved	DKFZP781G0119	6
 HGNC:51248	C18orf65	chromosome 18 open reading frame 65	Approved		400658	Q6ZTR6
 HGNC:17974	C19orf8~withdrawn	entry withdrawn	Entry Withdrawn			
 HGNC:20172	C19orf9~withdrawn	symbol withdrawn, see ZNF99	Symbol Withdrawn			
-HGNC:25443	C19orf12	chromosome 19 open reading frame 12	Approved	MGC10922, DKFZP762D096, NBIA4	83636	Q9NSK7
+HGNC:25443	C19orf12	chromosome 19 open reading frame 12	Approved	MGC10922, DKFZP762D096, NBIA4, MPAN	83636	Q9NSK7
 HGNC:25293	C19orf17~withdrawn	symbol withdrawn, see ELL	Symbol Withdrawn			
 HGNC:28642	C19orf18	chromosome 19 open reading frame 18	Approved	MGC41906	147685	Q8NEA5
 HGNC:26073	C19orf24	chromosome 19 open reading frame 24	Approved	FLJ20640	55009	Q9BVV8
@@ -6102,7 +6102,7 @@ HGNC:304	CRISP1	cysteine rich secretory protein 1	Approved	CRISP-1, ARP, HUMARP,
 HGNC:12024	CRISP2	cysteine rich secretory protein 2	Approved	CRISP-2, CT36	7180	P16562
 HGNC:16904	CRISP3	cysteine rich secretory protein 3	Approved	SGP28, CRISP-3, CRS3, dJ442L6.3, Aeg2	10321	P54108
 HGNC:18206	CRISPLD1	cysteine rich secretory protein LCCL domain containing 1	Approved	Cocoacrisp, DKFZp762F133	83690	Q9H336
-HGNC:25248	CRISPLD2	cysteine rich secretory protein LCCL domain containing 2	Approved	DKFZP434B044	83716	Q9H0B8
+HGNC:25248	CRISPLD2	cysteine rich secretory protein LCCL domain containing 2	Approved	DKFZP434B044, LGL1	83716	Q9H0B8
 HGNC:2362	CRK	CRK proto-oncogene, adaptor protein	Approved		1398	P46108
 HGNC:2363	CRKL	CRK like proto-oncogene, adaptor protein	Approved		1399	P46109
 HGNC:2364	CRLF1	cytokine receptor like factor 1	Approved	CLF-1, CLF, CISS, CISS1	9244	O75462
@@ -6608,6 +6608,7 @@ HGNC:2584	CYLD	CYLD lysine 63 deubiquitinase	Approved	KIAA0849, USPL2	1540	Q9NQC
 HGNC:2585	CYLD1~withdrawn	symbol withdrawn, see CYLD	Symbol Withdrawn			
 HGNC:2587	CYMD	cystoid macular dystrophy	Approved	DCMD, MDDC	1541	
 HGNC:2588	CYMP	chymosin pseudogene	Approved		643160	
+HGNC:52509	CYMP-AS1	CYMP antisense RNA 1	Approved		440602	
 HGNC:18577	CYorf15B~withdrawn	symbol withdrawn, see TXLNGY	Symbol Withdrawn			
 HGNC:2595	CYP1A1	cytochrome P450 family 1 subfamily A member 1	Approved	P450DX, P1-450, P450-C, CP11	1543	P04798
 HGNC:2596	CYP1A2	cytochrome P450 family 1 subfamily A member 2	Approved	P3-450, CP12	1544	P05177
@@ -8647,6 +8648,52 @@ HGNC:19853	ELMSAN1	ELM2 and Myb/SANT domain containing 1	Approved	LSR68	91748	Q6
 HGNC:3327	ELN	elastin	Approved	WBS, WS, SVAS	2006	P15502
 HGNC:3328	ELNL1~withdrawn	entry withdrawn	Entry Withdrawn			
 HGNC:3329	ELNR1~withdrawn	symbol withdrawn, see GLB1	Symbol Withdrawn			
+HGNC:11620	ELOA	elongin A	Approved	SIII, TCEB3A	6924	Q14241
+HGNC:50582	ELOA-AS1	ELOA antisense RNA 1	Approved		100506963	
+HGNC:30771	ELOA2	elongin A2	Approved	HsT832, TCEB3L	51224	Q8IYF1
+HGNC:24617	ELOA3	elongin A3	Approved	HsT829, TCEB3L2, ELOA3A	162699	Q8NG57
+HGNC:31007	ELOA3B	elongin A3 family member B	Approved	HsT828	728929	Q3SY89
+HGNC:52410	ELOA3C	elongin A3 family member C	Approved		107983955	
+HGNC:33511	ELOA3D	elongin A3 family member D	Approved		100506888	A6NLF2
+HGNC:11619	ELOB	elongin B	Approved	SIII	6923	Q15370
+HGNC:39719	ELOBP1	elongin B pseudogene 1	Approved		246717	
+HGNC:39720	ELOBP2	elongin B pseudogene 2	Approved		253665	
+HGNC:39721	ELOBP3	elongin B pseudogene 3	Approved		100856810	
+HGNC:39722	ELOBP4	elongin B pseudogene 4	Approved		100874519	
+HGNC:11617	ELOC	elongin C	Approved	SIII	6921	Q15369
+HGNC:17762	ELOCP2	elongin C pseudogene 2	Approved		283747	
+HGNC:29457	ELOCP3	elongin C pseudogene 3	Approved	dJ254P11.1	644540	
+HGNC:38141	ELOCP4	elongin C pseudogene 4	Approved		100462873	
+HGNC:38140	ELOCP5	elongin C pseudogene 5	Approved		100288493	
+HGNC:38142	ELOCP6	elongin C pseudogene 6	Approved		100462867	
+HGNC:38143	ELOCP7	elongin C pseudogene 7	Approved		100462868	
+HGNC:38144	ELOCP8	elongin C pseudogene 8	Approved		100462869	
+HGNC:38145	ELOCP9	elongin C pseudogene 9	Approved		100462870	
+HGNC:38146	ELOCP10	elongin C pseudogene 10	Approved		100462871	
+HGNC:38147	ELOCP11	elongin C pseudogene 11	Approved		100462872	
+HGNC:38148	ELOCP12	elongin C pseudogene 12	Approved		100462874	
+HGNC:38149	ELOCP13	elongin C pseudogene 13	Approved		100462875	
+HGNC:38150	ELOCP14	elongin C pseudogene 14	Approved		100462876	
+HGNC:38151	ELOCP15	elongin C pseudogene 15	Approved		100462877	
+HGNC:38152	ELOCP16	elongin C pseudogene 16	Approved		100462878	
+HGNC:38153	ELOCP17	elongin C pseudogene 17	Approved		100462879	
+HGNC:38154	ELOCP18	elongin C pseudogene 18	Approved		100130626	
+HGNC:38155	ELOCP19	elongin C pseudogene 19	Approved		100462880	
+HGNC:38156	ELOCP20	elongin C pseudogene 20	Approved		100287778	
+HGNC:38157	ELOCP21	elongin C pseudogene 21	Approved		100462866	
+HGNC:38158	ELOCP22	elongin C pseudogene 22	Approved		100287579	
+HGNC:38159	ELOCP23	elongin C pseudogene 23	Approved		100462881	
+HGNC:38160	ELOCP24	elongin C pseudogene 24	Approved		100287692	
+HGNC:38731	ELOCP26	elongin C pseudogene 26	Approved		101059905	
+HGNC:31692	ELOCP27	elongin C pseudogene 27	Approved		107133523	
+HGNC:49169	ELOCP28	elongin C pseudogene 28	Approved		100287483	
+HGNC:49170	ELOCP29	elongin C pseudogene 29	Approved		100132973	
+HGNC:49171	ELOCP30	elongin C pseudogene 30	Approved		106481670	
+HGNC:49172	ELOCP31	elongin C pseudogene 31	Approved		100422582	
+HGNC:49173	ELOCP32	elongin C pseudogene 32	Approved		106481964	
+HGNC:49174	ELOCP33	elongin C pseudogene 33	Approved		101928827	
+HGNC:49175	ELOCP34	elongin C pseudogene 34	Approved		106481671	
+HGNC:49176	ELOCP35	elongin C pseudogene 35	Approved		106480250	
 HGNC:28691	ELOF1	elongation factor 1 homolog	Approved	MGC4549, ELF1	84337	P60002
 HGNC:14418	ELOVL1	ELOVL fatty acid elongase 1	Approved	Ssc1	64834	Q9BW60
 HGNC:14416	ELOVL2	ELOVL fatty acid elongase 2	Approved	Ssc2	54898	Q9NXB9
@@ -8842,6 +8889,7 @@ HGNC:40849	EPN2-AS1	EPN2 antisense RNA 1	Approved		100874018
 HGNC:41445	EPN2-IT1	EPN2 intronic transcript 1	Approved		100874309	
 HGNC:18235	EPN3	epsin 3	Approved	FLJ20778, MGC129899	55040	Q9H201
 HGNC:3415	EPO	erythropoietin	Approved	EP	2056	P01588
+HGNC:34493	EPOP	elongin BC and polycomb repressive complex 2 associated protein	Approved	LOC100170841, PRR28	100170841	A6NHQ4
 HGNC:3416	EPOR	erythropoietin receptor	Approved		2057	P19235
 HGNC:15932	EPPIN	epididymal peptidase inhibitor	Approved	EPPIN1, EPPIN2, EPPIN3, dJ461P17.2, WAP7, WFDC7, CT71	57119	O95925
 HGNC:38825	EPPIN-WFDC6	EPPIN-WFDC6 readthrough	Approved		100526773	O95925, Q9BQY6
@@ -9315,7 +9363,6 @@ HGNC:23015	FAM20A	FAM20A, golgi associated secretory pathway pseudokinase	Approv
 HGNC:23017	FAM20B	FAM20B, glycosaminoglycan xylosylkinase	Approved	KIAA0475, GXK1	9917	O75063
 HGNC:22140	FAM20C	FAM20C, golgi associated secretory pathway kinase	Approved	IMAGE:4942737, DKFZp547D065, DMP4, G-CK	56975	Q8IXL6
 HGNC:23417	FAM21B~withdrawn	symbol withdrawn, see FAM21A	Symbol Withdrawn			
-HGNC:23418	FAM21D	family with sequence similarity 21 member D	Approved	bA592B15.4		Q5SRD0
 HGNC:45010	FAM21EP	family with sequence similarity 21 member E, pseudogene	Approved	FLJ31813	100421577	
 HGNC:45011	FAM21FP	family with sequence similarity 21 member F, pseudogene	Approved		100288690	
 HGNC:23446	FAM22C~withdrawn	entry withdrawn	Entry Withdrawn			
@@ -9673,7 +9720,7 @@ HGNC:29856	FAM192A	family with sequence similarity 192 member A	Approved	NIP30	8
 HGNC:37194	FAM192BP	family with sequence similarity 192 member B, pseudogene	Approved	rcNIP30	152667	
 HGNC:16822	FAM193A	family with sequence similarity 193 member A	Approved	RES4-22	8603	P78312
 HGNC:25524	FAM193B	family with sequence similarity 193 member B	Approved	KIAA1931, FLJ10404, IRIZIO	54540	Q96PV7
-HGNC:33859	FAM196A	family with sequence similarity 196 member A	Approved	FLJ45557	642938	Q6ZSG2
+HGNC:33859	FAM196A	family with sequence similarity 196 member A	Approved	FLJ45557, INSYN2	642938	Q6ZSG2
 HGNC:37271	FAM196B	family with sequence similarity 196 member B	Approved		100131897	A6NMK8
 HGNC:37464	FAM197Y1P	family with sequence similarity 197 Y-linked member 1, pseudogene	Approved		100289265	
 HGNC:18848	FAM197Y2P	family with sequence similarity 197 Y-linked member 2, pseudogene	Approved		252946	
@@ -9721,6 +9768,8 @@ HGNC:32480	FAM212A	family with sequence similarity 212 member A	Approved		389119
 HGNC:28045	FAM212B	family with sequence similarity 212 member B	Approved	FLJ31105	55924	Q9NTI7
 HGNC:49446	FAM212B-AS1	FAM212B antisense RNA 1	Approved		100506343	
 HGNC:28651	FAM213A	family with sequence similarity 213 member A	Approved	MGC4248, PAMM	84293	Q9BRX8
+HGNC:52407	FAM213AP1	family with sequence similarity 213 member A pseudogene 1	Approved		100420900	
+HGNC:52408	FAM213AP2	family with sequence similarity 213 member A pseudogene 2	Approved		100131252	
 HGNC:28390	FAM213B	family with sequence similarity 213 member B	Approved	MGC26818	127281	Q8TBF2
 HGNC:25609	FAM214A	family with sequence similarity 214 member A	Approved	FLJ10980	56204	Q32MH5
 HGNC:25666	FAM214B	family with sequence similarity 214 member B	Approved	FLJ11560, bA182N22.6	80256	Q7L5A3
@@ -9941,7 +9990,7 @@ HGNC:44623	FCF1P11	FCF1 pseudogene 11	Approved		100132310
 HGNC:13572	FCGBP	Fc fragment of IgG binding protein	Approved	FC(GAMMA)BP	8857	Q9Y6R7
 HGNC:3613	FCGR1A	Fc fragment of IgG receptor Ia	Approved	CD64, CD64A	2209	P12314
 HGNC:3614	FCGR1B	Fc fragment of IgG receptor Ib	Approved	CD64b	2210	Q92637
-HGNC:3615	FCGR1CP	Fc fragment of IgG receptor Ic, pseudogene	Approved	CD64c	100132417	A6NKC4
+HGNC:3615	FCGR1CP	Fc fragment of IgG receptor Ic, pseudogene	Approved	CD64c	100132417	
 HGNC:3616	FCGR2A	Fc fragment of IgG receptor IIa	Approved	CD32, CD32A, IGFR2, CDw32	2212	P12318
 HGNC:3617	FCGR2A1~withdrawn	symbol withdrawn, see FCGR2A	Symbol Withdrawn			
 HGNC:3618	FCGR2B	Fc fragment of IgG receptor IIb	Approved	CD32, CD32B	2213	P31994
@@ -10167,7 +10216,7 @@ HGNC:44038	FKBP4P1	FK506 binding protein 4 pseudogene 1	Approved		100132656
 HGNC:50371	FKBP4P2	FK506 binding protein 4 pseudogene 2	Approved		389727	
 HGNC:50372	FKBP4P3~withdrawn	symbol withdrawn, see FKBP4P7	Symbol Withdrawn			
 HGNC:50373	FKBP4P4~withdrawn	symbol withdrawn, see FKBP4P6	Symbol Withdrawn			
-HGNC:50374	FKBP4P5	FK506 binding protein 4 pseudogene 5	Approved			
+HGNC:50374	FKBP4P5~withdrawn	symbol withdrawn, see FKBP4P6	Symbol Withdrawn			
 HGNC:50375	FKBP4P6	FK506 binding protein 4 pseudogene 6	Approved		100132268	
 HGNC:50376	FKBP4P7	FK506 binding protein 4 pseudogene 7	Approved		441410	
 HGNC:50377	FKBP4P8	FK506 binding protein 4 pseudogene 8	Approved		643880	
@@ -10505,8 +10554,8 @@ HGNC:3884	FRA22B	fragile site, aphidicolin type, common, fra(22)(q12.2)	Approved
 HGNC:3943	FRAP2~withdrawn	symbol withdrawn, see MTOR	Symbol Withdrawn			
 HGNC:3941	FRAP~withdrawn	symbol withdrawn, see MTOR	Symbol Withdrawn			
 HGNC:19185	FRAS1	Fraser extracellular matrix complex subunit 1	Approved	FLJ22031, FLJ14927, KIAA1500	80144	Q86XX4
-HGNC:3944	FRAT1	frequently rearranged in advanced T-cell lymphomas 1	Approved		10023	Q92837
-HGNC:16048	FRAT2	frequently rearranged in advanced T-cell lymphomas 2	Approved		23401	O75474
+HGNC:3944	FRAT1	FRAT1, WNT signaling pathway regulator	Approved		10023	Q92837
+HGNC:16048	FRAT2	FRAT2, WNT signaling pathway regulator	Approved		23401	O75474
 HGNC:3945	FRAXA	fragile site, folic acid type, rare, fra(X)(q27.3) A (macroorchidism, mental retardation)	Approved		2477	
 HGNC:3946	FRAXB	fragile site, aphidicolin type, common, fra(X)(p22.31) B	Approved		2478	
 HGNC:3947	FRAXC	fragile site, aphidicolin type, common, fra(X)(q22.1) C	Approved		2479	
@@ -11286,7 +11335,7 @@ HGNC:48823	GLIDR	glioblastoma down-regulated RNA	Approved	MGC21881, TCONS_000155
 HGNC:4321	GLIF~withdrawn	symbol withdrawn, see MIF	Symbol Withdrawn			
 HGNC:17001	GLIPR1	GLI pathogenesis related 1	Approved	RTVP1, GliPR	11010	P48060
 HGNC:28392	GLIPR1L1	GLI pathogenesis related 1 like 1	Approved	MGC26856	256710	Q6UWM5
-HGNC:28592	GLIPR1L2	GLI pathogenesis-related 1 like 2	Approved	MGC39497	144321	Q4G1C9
+HGNC:28592	GLIPR1L2	GLI pathogenesis related 1 like 2	Approved	MGC39497	144321	Q4G1C9
 HGNC:18007	GLIPR2	GLI pathogenesis related 2	Approved	GAPR-1	152007	Q9H4G4
 HGNC:29525	GLIS1	GLIS family zinc finger 1	Approved	FLJ36155	148979	Q8NBF1
 HGNC:29450	GLIS2	GLIS family zinc finger 2	Approved	NPHP7	84662	Q9BZE0
@@ -11331,12 +11380,12 @@ HGNC:4333	GLTSCR2	glioma tumor suppressor candidate region gene 2	Approved	PICT-
 HGNC:51587	GLTSCR2-AS1	GLTSCR2 antisense RNA 1	Approved		106144593	
 HGNC:4334	GLUC~withdrawn	symbol withdrawn, see GBA	Symbol Withdrawn			
 HGNC:4335	GLUD1	glutamate dehydrogenase 1	Approved	GDH	2746	P00367
-HGNC:4337	GLUD1P2	glutamate dehydrogenase 1 pseudogene 2	Approved			
+HGNC:4337	GLUD1P2	glutamate dehydrogenase 1 pseudogene 2	Approved	bA342C24.3		
 HGNC:4338	GLUD1P3	glutamate dehydrogenase 1 pseudogene 3	Approved	Em:AC022400.11	2749	
 HGNC:4339	GLUD1P4	glutamate dehydrogenase 1 pseudogene 4	Approved		2750	
 HGNC:4340	GLUD1P5	glutamate dehydrogenase 1 pseudogene 5	Approved		2751	
 HGNC:23610	GLUD1P6	glutamate dehydrogenase 1 pseudogene 6	Approved	bK2173J9.1		
-HGNC:23636	GLUD1P7	glutamate dehydrogenase 1 pseudogene 7	Approved	bA342C24.3	414212	
+HGNC:23636	GLUD1P7~withdrawn	symbol withdrawn, see GLUD1P2	Symbol Withdrawn			
 HGNC:23637	GLUD1P8	glutamate dehydrogenase 1 pseudogene 8	Approved	bA144G6.5	414213	
 HGNC:37696	GLUD1P9	glutamate dehydrogenase 1 pseudogene 9	Approved		100131281	
 HGNC:4336	GLUD2	glutamate dehydrogenase 2	Approved		2747	P49448
@@ -13770,6 +13819,7 @@ HGNC:24093	IGFL1	IGF like family member 1	Approved	UNQ644	374918	Q6UW32
 HGNC:32956	IGFL1P1	IGF like family member 1 pseudogene 1	Approved	IGFL-5P	727703	
 HGNC:32957	IGFL1P2	IGF like family member 1 pseudogene 2	Approved	IGFL-6P	727704	
 HGNC:32929	IGFL2	IGF like family member 2	Approved	UNQ645	147920	Q6UWQ7
+HGNC:52559	IGFL2-AS1	IGFL2 antisense RNA 1	Approved		645553	
 HGNC:32930	IGFL3	IGF like family member 3	Approved	UNQ483	388555	Q6UXB1
 HGNC:32931	IGFL4	IGF like family member 4	Approved		444882	Q6B9Z1
 HGNC:23620	IGFLR1	IGF like family receptor 1	Approved	FLJ22573	79713	Q9H665
@@ -13880,7 +13930,7 @@ HGNC:5578	IGHV2@~withdrawn	entry withdrawn	Entry Withdrawn
 HGNC:5579	IGHV2OR16-5	immunoglobulin heavy variable 2/OR16-5 (non-functional)	Approved	IGHV2/OR16-5	100129631	
 HGNC:5613	IGHV3-6	immunoglobulin heavy variable 3-6 (pseudogene)	Approved		28453	
 HGNC:5620	IGHV3-7	immunoglobulin heavy variable 3-7	Approved		28452	P01780
-HGNC:5628	IGHV3-9	immunoglobulin heavy variable 3-9	Approved		28451	
+HGNC:5628	IGHV3-9	immunoglobulin heavy variable 3-9	Approved		28451	P01782
 HGNC:5580	IGHV3-11	immunoglobulin heavy variable 3-11 (gene/pseudogene)	Approved		28450	P01762
 HGNC:5581	IGHV3-13	immunoglobulin heavy variable 3-13	Approved		28449	P01766
 HGNC:5582	IGHV3-15	immunoglobulin heavy variable 3-15	Approved		28448	
@@ -13978,6 +14028,7 @@ HGNC:5673	IGHVII-22-1	immunoglobulin heavy variable (II)-22-1 (pseudogene)	Appro
 HGNC:5674	IGHVII-26-2	immunoglobulin heavy variable (II)-26-2 (pseudogene)	Approved	IGHV(II)-26-2	28373	
 HGNC:5675	IGHVII-28-1	immunoglobulin heavy variable (II)-28-1 (pseudogene)	Approved	IGHV(II)-28-1	28372	
 HGNC:5676	IGHVII-30-1	immunoglobulin heavy variable (II)-30-1 (pseudogene)	Approved	IGHV(II)-30-1	28371	
+HGNC:52400	IGHVII-30-21	immunoglobulin heavy variable (II)-30-21 (pseudogene)	Approved	IGHV(II)-30-21	107548099	
 HGNC:5677	IGHVII-31-1	immunoglobulin heavy variable (II)-31-1 (pseudogene)	Approved	IGHV(II)-31-1	28370	
 HGNC:5678	IGHVII-33-1	immunoglobulin heavy variable (II)-33-1 (pseudogene)	Approved	IGHV(II)-33-1	28369	
 HGNC:5679	IGHVII-40-1	immunoglobulin heavy variable (II)-40-1 (pseudogene)	Approved	IGHV(II)-40-1	28368	
@@ -14033,30 +14084,30 @@ HGNC:5741	IGKV1-5	immunoglobulin kappa variable 1-5	Approved		28299	P01602
 HGNC:5742	IGKV1-6	immunoglobulin kappa variable 1-6	Approved		28943	
 HGNC:5743	IGKV1-8	immunoglobulin kappa variable 1-8	Approved	IGKV18, L9	28942	
 HGNC:5744	IGKV1-9	immunoglobulin kappa variable 1-9	Approved	IGKV19, L8	28941	
-HGNC:5730	IGKV1-12	immunoglobulin kappa variable 1-12	Approved	IGKV112, L19	28940	
+HGNC:5730	IGKV1-12	immunoglobulin kappa variable 1-12	Approved	IGKV112, L19	28940	A0A0C4DH73
 HGNC:5731	IGKV1-13	immunoglobulin kappa variable 1-13 (gene/pseudogene)	Approved		28939	
-HGNC:5732	IGKV1-16	immunoglobulin kappa variable 1-16	Approved	IGKV116, L1	28938	
+HGNC:5732	IGKV1-16	immunoglobulin kappa variable 1-16	Approved	IGKV116, L1	28938	P04430
 HGNC:5733	IGKV1-17	immunoglobulin kappa variable 1-17	Approved	IGKV117, A30	28937	P01599
 HGNC:5734	IGKV1-22	immunoglobulin kappa variable 1-22 (pseudogene)	Approved		28936	
 HGNC:5735	IGKV1-27	immunoglobulin kappa variable 1-27	Approved	IGKV127, A20	28935	
 HGNC:5736	IGKV1-32	immunoglobulin kappa variable 1-32 (pseudogene)	Approved		28934	
-HGNC:5737	IGKV1-33	immunoglobulin kappa variable 1-33	Approved	IGKV133, O18	28933	
+HGNC:5737	IGKV1-33	immunoglobulin kappa variable 1-33	Approved	IGKV133, O18	28933	P01594
 HGNC:5738	IGKV1-35	immunoglobulin kappa variable 1-35 (pseudogene)	Approved		28932	
 HGNC:5739	IGKV1-37	immunoglobulin kappa variable 1-37 (non-functional)	Approved	IGKV137, O14	28931	
-HGNC:5740	IGKV1-39	immunoglobulin kappa variable 1-39 (gene/pseudogene)	Approved		28930	
+HGNC:5740	IGKV1-39	immunoglobulin kappa variable 1-39 (gene/pseudogene)	Approved		28930	P01597
 HGNC:5745	IGKV1@~withdrawn	symbol withdrawn, see IGKV@	Symbol Withdrawn			
 HGNC:5759	IGKV1D-8	immunoglobulin kappa variable 1D-8	Approved		28904	
-HGNC:5746	IGKV1D-12	immunoglobulin kappa variable 1D-12	Approved		28903	
+HGNC:5746	IGKV1D-12	immunoglobulin kappa variable 1D-12	Approved		28903	P01611
 HGNC:5747	IGKV1D-13	immunoglobulin kappa variable 1D-13	Approved		28902	
 HGNC:5748	IGKV1D-16	immunoglobulin kappa variable 1D-16	Approved		28901	P01601
 HGNC:5749	IGKV1D-17	immunoglobulin kappa variable 1D-17	Approved		28900	
 HGNC:5750	IGKV1D-22	immunoglobulin kappa variable 1D-22 (pseudogene)	Approved		28899	
 HGNC:5751	IGKV1D-27	immunoglobulin kappa variable 1D-27 (pseudogene)	Approved		28898	
 HGNC:5752	IGKV1D-32	immunoglobulin kappa variable 1D-32 (pseudogene)	Approved		28897	
-HGNC:5753	IGKV1D-33	immunoglobulin kappa variable 1D-33	Approved		28896	
+HGNC:5753	IGKV1D-33	immunoglobulin kappa variable 1D-33	Approved		28896	P01593
 HGNC:5754	IGKV1D-35	immunoglobulin kappa variable 1D-35 (pseudogene)	Approved		28895	
 HGNC:5755	IGKV1D-37	immunoglobulin kappa variable 1D-37 (non-functional)	Approved	IGKV1D37, O4	28894	
-HGNC:5756	IGKV1D-39	immunoglobulin kappa variable 1D-39	Approved		28893	
+HGNC:5756	IGKV1D-39	immunoglobulin kappa variable 1D-39	Approved		28893	P04432
 HGNC:5757	IGKV1D-42	immunoglobulin kappa variable 1D-42 (non-functional)	Approved		28892	
 HGNC:5758	IGKV1D-43	immunoglobulin kappa variable 1D-43	Approved		28891	
 HGNC:5761	IGKV1OR-2	immunoglobulin kappa variable 1/OR-2 (pseudogene)	Approved	IGKV1/OR-2	3532	
@@ -14089,9 +14140,9 @@ HGNC:5779	IGKV2-19	immunoglobulin kappa variable 2-19 (pseudogene)	Approved		289
 HGNC:5780	IGKV2-23	immunoglobulin kappa variable 2-23 (pseudogene)	Approved		28924	
 HGNC:5781	IGKV2-24	immunoglobulin kappa variable 2-24	Approved		28923	
 HGNC:5782	IGKV2-26	immunoglobulin kappa variable 2-26 (pseudogene)	Approved		28922	
-HGNC:5783	IGKV2-28	immunoglobulin kappa variable 2-28	Approved		28921	
+HGNC:5783	IGKV2-28	immunoglobulin kappa variable 2-28	Approved		28921	A0A075B6P5
 HGNC:5784	IGKV2-29	immunoglobulin kappa variable 2-29 (gene/pseudogene)	Approved		28920	
-HGNC:5785	IGKV2-30	immunoglobulin kappa variable 2-30	Approved		28919	
+HGNC:5785	IGKV2-30	immunoglobulin kappa variable 2-30	Approved		28919	P06310
 HGNC:5786	IGKV2-36	immunoglobulin kappa variable 2-36 (pseudogene)	Approved		28918	
 HGNC:5787	IGKV2-38	immunoglobulin kappa variable 2-38 (pseudogene)	Approved		28917	
 HGNC:5789	IGKV2-40	immunoglobulin kappa variable 2-40	Approved		28916	
@@ -14103,12 +14154,12 @@ HGNC:5795	IGKV2D-19	immunoglobulin kappa variable 2D-19 (pseudogene)	Approved		2
 HGNC:5796	IGKV2D-23	immunoglobulin kappa variable 2D-23 (pseudogene)	Approved		28886	
 HGNC:5797	IGKV2D-24	immunoglobulin kappa variable 2D-24 (non-functional)	Approved		28885	
 HGNC:5798	IGKV2D-26	immunoglobulin kappa variable 2D-26	Approved		28884	
-HGNC:5799	IGKV2D-28	immunoglobulin kappa variable 2D-28	Approved		28883	
+HGNC:5799	IGKV2D-28	immunoglobulin kappa variable 2D-28	Approved		28883	P01615
 HGNC:5800	IGKV2D-29	immunoglobulin kappa variable 2D-29	Approved		28882	
-HGNC:5801	IGKV2D-30	immunoglobulin kappa variable 2D-30	Approved		28881	
+HGNC:5801	IGKV2D-30	immunoglobulin kappa variable 2D-30	Approved		28881	A0A075B6S6
 HGNC:5802	IGKV2D-36	immunoglobulin kappa variable 2D-36 (pseudogene)	Approved		28880	
 HGNC:5803	IGKV2D-38	immunoglobulin kappa variable 2D-38 (pseudogene)	Approved		28879	
-HGNC:5804	IGKV2D-40	immunoglobulin kappa variable 2D-40	Approved		28878	
+HGNC:5804	IGKV2D-40	immunoglobulin kappa variable 2D-40	Approved		28878	P01614
 HGNC:5805	IGKV2OR2-1	immunoglobulin kappa variable 2/OR2-1 (pseudogene)	Approved	IGKV2/OR2-1, IGKV2/OR2-1A	28861	
 HGNC:5807	IGKV2OR2-1A~withdrawn	symbol withdrawn, see IGKV2OR2-1	Symbol Withdrawn			
 HGNC:5808	IGKV2OR2-2	immunoglobulin kappa variable 2/OR2-2 (pseudogene)	Approved	IGKV2/OR2-2	28859	
@@ -14121,9 +14172,9 @@ HGNC:5812	IGKV2OR22-3	immunoglobulin kappa variable 2/OR22-3 (pseudogene)	Approv
 HGNC:5813	IGKV2OR22-4	immunoglobulin kappa variable 2/OR22-4 (pseudogene)	Approved	IGKV2/OR22-4	28847	
 HGNC:5775	IGKV2~withdrawn	symbol withdrawn, see IGKV@	Symbol Withdrawn			
 HGNC:5821	IGKV3-7	immunoglobulin kappa variable 3-7 (non-functional)	Approved		28915	
-HGNC:5815	IGKV3-11	immunoglobulin kappa variable 3-11	Approved		28914	
-HGNC:5816	IGKV3-15	immunoglobulin kappa variable 3-15	Approved		28913	
-HGNC:5817	IGKV3-20	immunoglobulin kappa variable 3-20	Approved		28912	
+HGNC:5815	IGKV3-11	immunoglobulin kappa variable 3-11	Approved		28914	P04433
+HGNC:5816	IGKV3-15	immunoglobulin kappa variable 3-15	Approved		28913	P01624
+HGNC:5817	IGKV3-20	immunoglobulin kappa variable 3-20	Approved		28912	P01619
 HGNC:5818	IGKV3-25	immunoglobulin kappa variable 3-25 (pseudogene)	Approved		28911	
 HGNC:5819	IGKV3-31	immunoglobulin kappa variable 3-31 (pseudogene)	Approved		28910	
 HGNC:5820	IGKV3-34	immunoglobulin kappa variable 3-34 (pseudogene)	Approved		28909	
@@ -14131,7 +14182,7 @@ HGNC:5822	IGKV3@~withdrawn	symbol withdrawn, see IGKV@	Symbol Withdrawn
 HGNC:5829	IGKV3D-7	immunoglobulin kappa variable 3D-7	Approved		28877	
 HGNC:5823	IGKV3D-11	immunoglobulin kappa variable 3D-11	Approved		28876	
 HGNC:5824	IGKV3D-15	immunoglobulin kappa variable 3D-15 (gene/pseudogene)	Approved		28875	
-HGNC:5825	IGKV3D-20	immunoglobulin kappa variable 3D-20	Approved		28874	
+HGNC:5825	IGKV3D-20	immunoglobulin kappa variable 3D-20	Approved		28874	A0A0C4DH25
 HGNC:5826	IGKV3D-25	immunoglobulin kappa variable 3D-25 (pseudogene)	Approved		28873	
 HGNC:5827	IGKV3D-31	immunoglobulin kappa variable 3D-31 (pseudogene)	Approved		28872	
 HGNC:5828	IGKV3D-34	immunoglobulin kappa variable 3D-34 (pseudogene)	Approved		28871	
@@ -14141,7 +14192,7 @@ HGNC:5831	IGKV3OR2-268A~withdrawn	symbol withdrawn, see IGKV3OR2-268	Symbol With
 HGNC:5833	IGKV3OR22-2	immunoglobulin kappa variable 3/OR22-2 (pseudogene)	Approved	IGKV3/OR22-2	3527	
 HGNC:5814	IGKV3~withdrawn	symbol withdrawn, see IGKV@	Symbol Withdrawn			
 HGNC:5834	IGKV4-1	immunoglobulin kappa variable 4-1	Approved	IGKV41, B3	28908	P06312
-HGNC:5835	IGKV5-2	immunoglobulin kappa variable 5-2	Approved	IGKV52, B2	28907	
+HGNC:5835	IGKV5-2	immunoglobulin kappa variable 5-2	Approved	IGKV52, B2	28907	P06315
 HGNC:5836	IGKV6-21	immunoglobulin kappa variable 6-21 (non-functional)	Approved	IGKV621, A26	28906	
 HGNC:5837	IGKV6D-21	immunoglobulin kappa variable 6D-21 (non-functional)	Approved	IGKV6D21, A10	28870	
 HGNC:5838	IGKV6D-41	immunoglobulin kappa variable 6D-41 (non-functional)	Approved		28869	
@@ -14191,23 +14242,23 @@ HGNC:34550	IGLON5	IgLON family member 5	Approved	LOC402665	402665	A6NGN9
 HGNC:5873	IGLP1	immune response to synthetic polypeptides 1	Approved		7925	
 HGNC:5874	IGLP2	immune response to synthetic polypeptides 2	Approved		7926	
 HGNC:5876	IGLV1-36	immunoglobulin lambda variable 1-36	Approved		28826	
-HGNC:5877	IGLV1-40	immunoglobulin lambda variable 1-40	Approved		28825	
+HGNC:5877	IGLV1-40	immunoglobulin lambda variable 1-40	Approved		28825	P01703
 HGNC:5878	IGLV1-41	immunoglobulin lambda variable 1-41 (pseudogene)	Approved		28824	
-HGNC:5879	IGLV1-44	immunoglobulin lambda variable 1-44	Approved		28823	
-HGNC:5880	IGLV1-47	immunoglobulin lambda variable 1-47	Approved		28822	
+HGNC:5879	IGLV1-44	immunoglobulin lambda variable 1-44	Approved		28823	P01699
+HGNC:5880	IGLV1-47	immunoglobulin lambda variable 1-47	Approved		28822	P01700
 HGNC:5881	IGLV1-50	immunoglobulin lambda variable 1-50 (non-functional)	Approved		28821	
 HGNC:5882	IGLV1-51	immunoglobulin lambda variable 1-51	Approved		28820	P01701
 HGNC:5883	IGLV1-62	immunoglobulin lambda variable 1-62 (pseudogene)	Approved		28819	
 HGNC:5894	IGLV2-5	immunoglobulin lambda variable 2-5 (pseudogene)	Approved		28818	
-HGNC:5895	IGLV2-8	immunoglobulin lambda variable 2-8	Approved		28817	
-HGNC:5887	IGLV2-11	immunoglobulin lambda variable 2-11	Approved		28816	
-HGNC:5888	IGLV2-14	immunoglobulin lambda variable 2-14	Approved		28815	
+HGNC:5895	IGLV2-8	immunoglobulin lambda variable 2-8	Approved		28817	P01709
+HGNC:5887	IGLV2-11	immunoglobulin lambda variable 2-11	Approved		28816	P01706
+HGNC:5888	IGLV2-14	immunoglobulin lambda variable 2-14	Approved		28815	P01704
 HGNC:5889	IGLV2-18	immunoglobulin lambda variable 2-18	Approved		28814	
-HGNC:5890	IGLV2-23	immunoglobulin lambda variable 2-23	Approved		28813	
+HGNC:5890	IGLV2-23	immunoglobulin lambda variable 2-23	Approved		28813	P01705
 HGNC:5891	IGLV2-28	immunoglobulin lambda variable 2-28 (pseudogene)	Approved		28812	
 HGNC:5892	IGLV2-33	immunoglobulin lambda variable 2-33 (non-functional)	Approved		28811	
 HGNC:5893	IGLV2-34	immunoglobulin lambda variable 2-34 (pseudogene)	Approved		28810	
-HGNC:5896	IGLV3-1	immunoglobulin lambda variable 3-1	Approved		28809	
+HGNC:5896	IGLV3-1	immunoglobulin lambda variable 3-1	Approved		28809	P01715
 HGNC:5904	IGLV3-2	immunoglobulin lambda variable 3-2 (pseudogene)	Approved		28808	
 HGNC:5915	IGLV3-4	immunoglobulin lambda variable 3-4 (pseudogene)	Approved		28807	
 HGNC:5916	IGLV3-6	immunoglobulin lambda variable 3-6 (pseudogene)	Approved		28806	
@@ -14219,13 +14270,13 @@ HGNC:5899	IGLV3-13	immunoglobulin lambda variable 3-13 (pseudogene)	Approved		28
 HGNC:5900	IGLV3-15	immunoglobulin lambda variable 3-15 (pseudogene)	Approved		28800	
 HGNC:5901	IGLV3-16	immunoglobulin lambda variable 3-16	Approved		28799	
 HGNC:5902	IGLV3-17	immunoglobulin lambda variable 3-17 (pseudogene)	Approved		28798	
-HGNC:5903	IGLV3-19	immunoglobulin lambda variable 3-19	Approved		28797	
-HGNC:5905	IGLV3-21	immunoglobulin lambda variable 3-21	Approved		28796	
+HGNC:5903	IGLV3-19	immunoglobulin lambda variable 3-19	Approved		28797	P01714
+HGNC:5905	IGLV3-21	immunoglobulin lambda variable 3-21	Approved		28796	P80748
 HGNC:5906	IGLV3-22	immunoglobulin lambda variable 3-22 (gene/pseudogene)	Approved		28795	
 HGNC:5907	IGLV3-24	immunoglobulin lambda variable 3-24 (pseudogene)	Approved		28794	
-HGNC:5908	IGLV3-25	immunoglobulin lambda variable 3-25	Approved		28793	
+HGNC:5908	IGLV3-25	immunoglobulin lambda variable 3-25	Approved		28793	P01717
 HGNC:5909	IGLV3-26	immunoglobulin lambda variable 3-26 (pseudogene)	Approved		28792	
-HGNC:5910	IGLV3-27	immunoglobulin lambda variable 3-27	Approved		28791	
+HGNC:5910	IGLV3-27	immunoglobulin lambda variable 3-27	Approved		28791	P01718
 HGNC:5911	IGLV3-29	immunoglobulin lambda variable 3-29 (pseudogene)	Approved		28790	
 HGNC:5912	IGLV3-30	immunoglobulin lambda variable 3-30 (pseudogene)	Approved		28789	
 HGNC:5913	IGLV3-31	immunoglobulin lambda variable 3-31 (pseudogene)	Approved		28788	
@@ -14238,9 +14289,9 @@ HGNC:5923	IGLV5-39	immunoglobulin lambda variable 5-39	Approved		28782
 HGNC:5924	IGLV5-45	immunoglobulin lambda variable 5-45	Approved		28781	
 HGNC:5925	IGLV5-48	immunoglobulin lambda variable 5-48 (non-functional)	Approved		28780	
 HGNC:5926	IGLV5-52	immunoglobulin lambda variable 5-52	Approved		28779	
-HGNC:5927	IGLV6-57	immunoglobulin lambda variable 6-57	Approved		28778	
+HGNC:5927	IGLV6-57	immunoglobulin lambda variable 6-57	Approved		28778	P01721
 HGNC:5928	IGLV7-35	immunoglobulin lambda variable 7-35 (pseudogene)	Approved		28777	
-HGNC:5929	IGLV7-43	immunoglobulin lambda variable 7-43	Approved		28776	
+HGNC:5929	IGLV7-43	immunoglobulin lambda variable 7-43	Approved		28776	P04211
 HGNC:5930	IGLV7-46	immunoglobulin lambda variable 7-46 (gene/pseudogene)	Approved		28775	
 HGNC:5931	IGLV8-61	immunoglobulin lambda variable 8-61	Approved		28774	
 HGNC:5932	IGLV8OR8-1	immunoglobulin lambda variable 8/OR8-1 (pseudogene)	Approved	IGLV8/OR8-1	28756	
@@ -14782,7 +14833,7 @@ HGNC:48959	JHDM1D-AS1	JHDM1D antisense RNA 1 (head to head)	Approved		100134229
 HGNC:20184	JKAMP	JNK1/MAPK8-associated membrane protein	Approved	HSPC213, JAMP, HSPC327, CDA06	51528	Q9P055
 HGNC:49759	JKAMPP1	JNK1/MAPK8-associated membrane protein pseudogene 1	Approved		100049717	
 HGNC:6195	JK~withdrawn	symbol withdrawn, see SLC14A1	Symbol Withdrawn			
-HGNC:12313	JMJD1C	jumonji domain containing 1C	Approved	DKFZp761F0118, KIAA1380, FLJ14374	221037	Q15652
+HGNC:12313	JMJD1C	jumonji domain containing 1C	Approved	DKFZp761F0118, KIAA1380, FLJ14374, KDM3C	221037	Q15652
 HGNC:28222	JMJD1C-AS1	JMJD1C antisense RNA 1	Approved		84989	
 HGNC:25724	JMJD4	jumonji domain containing 4	Approved	FLJ12517	65094	Q9H9V9
 HGNC:19355	JMJD6	arginine demethylase and lysine hydroxylase	Approved	PTDSR1, KIAA0585	23210	Q6NYC1
@@ -15041,7 +15092,8 @@ HGNC:40528	KDM4A-AS1	KDM4A antisense RNA 1	Approved		100132774
 HGNC:29136	KDM4B	lysine demethylase 4B	Approved	KIAA0876, TDRD14B	23030	O94953
 HGNC:17071	KDM4C	lysine demethylase 4C	Approved	GASC1, KIAA0780, TDRD14C	23081	Q9H3R0
 HGNC:25498	KDM4D	lysine demethylase 4D	Approved	FLJ10251	55693	Q6B0I6
-HGNC:37098	KDM4E	lysine demethylase 4E	Approved	JMJD2E	390245	B2RXH2
+HGNC:37098	KDM4E	lysine demethylase 4E	Approved	JMJD2E, KDM5E	390245	B2RXH2
+HGNC:52413	KDM4F	lysine demethylase 4F	Approved	JMJD2F	100129053	
 HGNC:9886	KDM5A	lysine demethylase 5A	Approved		5927	P29375
 HGNC:18039	KDM5B	lysine demethylase 5B	Approved	RBBP2H1A, PLU-1, CT31, PPP1R98	10765	Q9UGL1
 HGNC:11114	KDM5C	lysine demethylase 5C	Approved	DXS1272E, XE169	8242	P41229
@@ -15077,7 +15129,6 @@ HGNC:39198	KHSRPP1	KH-type splicing regulatory protein pseudogene 1	Approved		40
 HGNC:28950	KIAA0040	KIAA0040	Approved		9674	Q15053
 HGNC:22191	KIAA0087	KIAA0087	Approved		9808	Q14695
 HGNC:28960	KIAA0100	KIAA0100	Approved	DKFZp686M0843, MGC111488, BCOX1, CT101, BCOX, FMP27	9703	Q14667
-HGNC:28961	KIAA0101	KIAA0101	Approved	NS5ATP9, OEATC-1, p15(PAF), PAF15	9768	Q15004
 HGNC:20211	KIAA0125~withdrawn	symbol withdrawn, see FAM30A	Symbol Withdrawn			
 HGNC:28969	KIAA0141	KIAA0141	Approved	DELE	9812	Q14154
 HGNC:43440	KIAA0196-AS1	KIAA0196 antisense RNA 1	Approved		106479020	
@@ -15142,7 +15193,7 @@ HGNC:29387	KIAA1841	KIAA1841	Approved		84542	Q6NSI8
 HGNC:23427	KIAA1958	KIAA1958	Approved	FLJ39294	158405	Q8N8K9
 HGNC:51250	KIAA2012	KIAA2012	Approved		100652824	Q0VF49
 HGNC:28513	KIAA2013	KIAA2013	Approved	MGC33867, RP5-1077B9.1	90231	Q8IYS2
-HGNC:29433	KIAA2022	KIAA2022	Approved	XPN, MRX98	340533	Q5QGS0
+HGNC:29433	KIAA2022	KIAA2022	Approved	XPN, MRX98, KIDLIA	340533	Q5QGS0
 HGNC:23378	KIAA2026	KIAA2026	Approved	FLJ20375	158358	Q5HYC2
 HGNC:29508	KIDINS220	kinase D-interacting substrate 220kDa	Approved	ARMS	57498	Q9ULH0
 HGNC:888	KIF1A	kinesin family member 1A	Approved	UNC104	547	Q12756
@@ -16251,7 +16302,7 @@ HGNC:16425	LINC00334	long intergenic non-protein coding RNA 334	Approved		114042
 HGNC:33813	LINC00336	long intergenic non-protein coding RNA 336	Approved	FLJ43752	401253	Q6ZUF6
 HGNC:28620	LINC00337	long intergenic non-protein coding RNA 337	Approved	MGC40168	148645	Q8N6G1
 HGNC:25011	LINC00339	long intergenic non-protein coding RNA 339	Approved	HSPC157	29092	
-HGNC:20353	LINC00341	long intergenic non-protein coding RNA 341	Approved		79686	Q9H761
+HGNC:20353	LINC00341	long intergenic non-protein coding RNA 341	Approved			Q9H761
 HGNC:42470	LINC00342	long intergenic non-protein coding RNA 342	Approved		150759	
 HGNC:42500	LINC00343	long intergenic non-protein coding RNA 343	Approved		144920	
 HGNC:42501	LINC00344~withdrawn	symbol withdrawn, see LINC00343	Symbol Withdrawn			
@@ -16465,7 +16516,7 @@ HGNC:43931	LINC00606	long intergenic non-protein coding RNA 606	Approved		285370
 HGNC:43944	LINC00607	long intergenic non-protein coding RNA 607	Approved		646324	
 HGNC:27179	LINC00608	long intergenic non-protein coding RNA 608	Approved		151300	
 HGNC:43960	LINC00609	long intergenic non-protein coding RNA 609	Approved		101101773	
-HGNC:23262	LINC00610	long intergenic non-protein coding RNA 610	Approved	FLJ45212	399879	Q6ZST8
+HGNC:23262	LINC00610~withdrawn	entry withdrawn	Entry Withdrawn			
 HGNC:28621	LINC00612	long intergenic non-protein coding RNA 612	Approved	MGC40170, FLJ41814	253128	Q8N6U2
 HGNC:44060	LINC00613	long intergenic non-protein coding RNA 613	Approved		100507528	
 HGNC:30165	LINC00614	long intergenic non-protein coding RNA 614	Approved	FLJ35853	645587	P0C842
@@ -16628,7 +16679,6 @@ HGNC:48620	LINC00930	long intergenic non-protein coding RNA 930	Approved		100144
 HGNC:48625	LINC00933	long intergenic non-protein coding RNA 933	Approved		100506874	
 HGNC:27059	LINC00934	long intergenic non-protein coding RNA 934	Approved		144742	
 HGNC:48628	LINC00935	long intergenic non-protein coding RNA 935	Approved		255411	
-HGNC:27883	LINC00936	long intergenic non-protein coding RNA 936	Approved		338758	
 HGNC:48629	LINC00937	long intergenic non-protein coding RNA 937	Approved		389634	
 HGNC:48630	LINC00938	long intergenic non-protein coding RNA 938	Approved		400027	
 HGNC:48631	LINC00939	long intergenic non-protein coding RNA 939	Approved		400084	
@@ -16795,6 +16845,7 @@ HGNC:49456	LINC01142	long intergenic non-protein coding RNA 1142	Approved		28468
 HGNC:49458	LINC01143	long intergenic non-protein coding RNA 1143	Approved		104355141	
 HGNC:49460	LINC01144	long intergenic non-protein coding RNA 1144	Approved	TCONS_00000513	400752	
 HGNC:49467	LINC01146	long intergenic non-protein coding RNA 1146	Approved		283587	
+HGNC:27507	LINC01148	long intergenic non-protein coding RNA 1148	Approved	LOC283585		
 HGNC:39757	LINC01149	long intergenic non-protein coding RNA 1149	Approved	XXbac-BPG181B23.4	101929111	
 HGNC:49469	LINC01150	long intergenic non-protein coding RNA 1150	Approved	2G7, TCONS_00019134	101927624	
 HGNC:49471	LINC01151	long intergenic non-protein coding RNA 1151	Approved		104266958	
@@ -16949,6 +17000,7 @@ HGNC:49457	LINC01341	long intergenic non-protein coding RNA 1341	Approved		14913
 HGNC:50551	LINC01342	long intergenic non-protein coding RNA 1342	Approved		254099	
 HGNC:50553	LINC01343	long intergenic non-protein coding RNA 1343	Approved		339442	
 HGNC:50554	LINC01344	long intergenic non-protein coding RNA 1344	Approved		400799	
+HGNC:50564	LINC01345	long intergenic non-protein coding RNA 1345	Approved			
 HGNC:50563	LINC01346	long intergenic non-protein coding RNA 1346	Approved		728716	
 HGNC:50566	LINC01347	long intergenic non-protein coding RNA 1347	Approved		731275	
 HGNC:50567	LINC01348	long intergenic non-protein coding RNA 1348	Approved		731656	
@@ -17186,6 +17238,188 @@ HGNC:52258	LINC01627	long intergenic non-protein coding RNA 1627	Approved	RP11-3
 HGNC:52259	LINC01628	long intergenic non-protein coding RNA 1628	Approved	AC007403.1	102724321	
 HGNC:52260	LINC01629	long intergenic non-protein coding RNA 1629	Approved	linc-KIAA1737-2	105370578	
 HGNC:52295	LINC01630	long intergenic non-protein coding RNA 1630	Approved		100287225	
+HGNC:52419	LINC01632	long intergenic non-protein coding RNA 1632	Approved		101929826	
+HGNC:52420	LINC01633	long intergenic non-protein coding RNA 1633	Approved		101929069	
+HGNC:52421	LINC01634	long intergenic non-protein coding RNA 1634	Approved		100192420	
+HGNC:52422	LINC01635	long intergenic non-protein coding RNA 1635	Approved		101928043	
+HGNC:52424	LINC01637	long intergenic non-protein coding RNA 1637	Approved		101928891	
+HGNC:52425	LINC01638	long intergenic non-protein coding RNA 1638	Approved		105372978	
+HGNC:52426	LINC01639	long intergenic non-protein coding RNA 1639	Approved		105373054	
+HGNC:52427	LINC01640	long intergenic non-protein coding RNA 1640	Approved		105373006	
+HGNC:52428	LINC01641	long intergenic non-protein coding RNA 1641	Approved		107985463	
+HGNC:52430	LINC01643	long intergenic non-protein coding RNA 1643	Approved		105373010	
+HGNC:52431	LINC01644	long intergenic non-protein coding RNA 1644	Approved		101927722	
+HGNC:52432	LINC01645	long intergenic non-protein coding RNA 1645	Approved		102724661	
+HGNC:52433	LINC01646	long intergenic non-protein coding RNA 1646	Approved		105376679	
+HGNC:52434	LINC01647	long intergenic non-protein coding RNA 1647	Approved		101929181	
+HGNC:52435	LINC01648	long intergenic non-protein coding RNA 1648	Approved		101929406	
+HGNC:52436	LINC01649	long intergenic non-protein coding RNA 1649	Approved		101928995	
+HGNC:52437	LINC01650	long intergenic non-protein coding RNA 1650	Approved		101928169	
+HGNC:52439	LINC01651	long intergenic non-protein coding RNA 1651	Approved		105372944	
+HGNC:52441	LINC01653	long intergenic non-protein coding RNA 1653	Approved		101929631	
+HGNC:52442	LINC01654	long intergenic non-protein coding RNA 1654	Approved		101927876	
+HGNC:52443	LINC01655	long intergenic non-protein coding RNA 1655	Approved		101929771	
+HGNC:52444	LINC01656	long intergenic non-protein coding RNA 1656	Approved		101927526	
+HGNC:52445	LINC01657	long intergenic non-protein coding RNA 1657	Approved		101928751	
+HGNC:52446	LINC01658	long intergenic non-protein coding RNA 1658	Approved		388882	
+HGNC:52447	LINC01659	long intergenic non-protein coding RNA 1659	Approved		101929374	
+HGNC:52448	LINC01660	long intergenic non-protein coding RNA 1660	Approved		729461	
+HGNC:52449	LINC01661	long intergenic non-protein coding RNA 1661	Approved		105378889	
+HGNC:52450	LINC01662	long intergenic non-protein coding RNA 1662	Approved		642643	
+HGNC:52451	LINC01663	long intergenic non-protein coding RNA 1663	Approved		100996432	
+HGNC:52452	LINC01664	long intergenic non-protein coding RNA 1664	Approved		100996342	
+HGNC:52453	LINC01665	long intergenic non-protein coding RNA 1665	Approved		101929350	
+HGNC:52454	LINC01666	long intergenic non-protein coding RNA 1666	Approved		105372730	
+HGNC:52455	LINC01667	long intergenic non-protein coding RNA 1667	Approved		441058	
+HGNC:52456	LINC01668	long intergenic non-protein coding RNA 1668	Approved		101928311	
+HGNC:52457	LINC01669	long intergenic non-protein coding RNA 1669	Approved		102724354	
+HGNC:52458	LINC01670	long intergenic non-protein coding RNA 1670	Approved		105379487	
+HGNC:52459	LINC01671	long intergenic non-protein coding RNA 1671	Approved		101928233	
+HGNC:52460	LINC01672	long intergenic non-protein coding RNA 1672	Approved		100505887	
+HGNC:52461	LINC01673	long intergenic non-protein coding RNA 1673	Approved		105372763	
+HGNC:52462	LINC01674	long intergenic non-protein coding RNA 1674	Approved		102724188	
+HGNC:52463	LINC01675	long intergenic non-protein coding RNA 1675	Approved		105371590	
+HGNC:52464	LINC01676	long intergenic non-protein coding RNA 1676	Approved		101928476	
+HGNC:52465	LINC01677	long intergenic non-protein coding RNA 1677	Approved		105378884	
+HGNC:52466	LINC01678	long intergenic non-protein coding RNA 1678	Approved		105377138	
+HGNC:52469	LINC01679	long intergenic non-protein coding RNA 1679	Approved		101928399	
+HGNC:52467	LINC01680	long intergenic non-protein coding RNA 1680	Approved		105371660	
+HGNC:52468	LINC01681	long intergenic non-protein coding RNA 1681	Approved		105371609	
+HGNC:52470	LINC01682	long intergenic non-protein coding RNA 1682	Approved		101927504	
+HGNC:52471	LINC01683	long intergenic non-protein coding RNA 1683	Approved		105372746	
+HGNC:52472	LINC01684	long intergenic non-protein coding RNA 1684	Approved		105372751	
+HGNC:52473	LINC01685	long intergenic non-protein coding RNA 1685	Approved		105378656	
+HGNC:27643	LINC01686	long intergenic non-protein coding RNA 1686	Approved		284648	
+HGNC:52474	LINC01687	long intergenic non-protein coding RNA 1687	Approved		101927843	
+HGNC:52475	LINC01688	long intergenic non-protein coding RNA 1688	Approved		105371644	
+HGNC:52476	LINC01689	long intergenic non-protein coding RNA 1689	Approved		101927869	
+HGNC:52479	LINC01691	long intergenic non-protein coding RNA 1691	Approved		107985195	
+HGNC:52480	LINC01692	long intergenic non-protein coding RNA 1692	Approved		339622	
+HGNC:52478	LINC01693	long intergenic non-protein coding RNA 1693	Approved		105748977	
+HGNC:52481	LINC01694	long intergenic non-protein coding RNA 1694	Approved		105372840	
+HGNC:52483	LINC01695	long intergenic non-protein coding RNA 1695	Approved		101927973	
+HGNC:52484	LINC01696	long intergenic non-protein coding RNA 1696	Approved		105372897	
+HGNC:52485	LINC01697	long intergenic non-protein coding RNA 1697	Approved		284825	
+HGNC:52486	LINC01698	long intergenic non-protein coding RNA 1698	Approved		101929476	
+HGNC:52487	LINC01699	long intergenic non-protein coding RNA 1699	Approved	GM140	100287948	
+HGNC:52488	LINC01700	long intergenic non-protein coding RNA 1700	Approved		101928435	
+HGNC:52489	LINC01701	long intergenic non-protein coding RNA 1701	Approved		107985456	
+HGNC:52490	LINC01702	long intergenic non-protein coding RNA 1702	Approved		102724481	
+HGNC:52491	LINC01703	long intergenic non-protein coding RNA 1703	Approved		105373113	
+HGNC:52492	LINC01704	long intergenic non-protein coding RNA 1704	Approved		646268	
+HGNC:52493	LINC01705	long intergenic non-protein coding RNA 1705	Approved		107985307	
+HGNC:52494	LINC01706	long intergenic non-protein coding RNA 1706	Approved		101929312	
+HGNC:52495	LINC01707	long intergenic non-protein coding RNA 1707	Approved		105378785	
+HGNC:52496	LINC01708	long intergenic non-protein coding RNA 1708	Approved		101928270	
+HGNC:52497	LINC01709	long intergenic non-protein coding RNA 1709	Approved		105378872	
+HGNC:52498	LINC01710	long intergenic non-protein coding RNA 1710	Approved		105372925	
+HGNC:28663	LINC01711	long intergenic non-protein coding RNA 1711	Approved	MGC4294	79160	
+HGNC:52499	LINC01712	long intergenic non-protein coding RNA 1712	Approved		101927542	
+HGNC:52500	LINC01713	long intergenic non-protein coding RNA 1713	Approved		105372516	
+HGNC:52501	LINC01714	long intergenic non-protein coding RNA 1714	Approved		102724539	
+HGNC:52502	LINC01715	long intergenic non-protein coding RNA 1715	Approved		105378616	
+HGNC:52503	LINC01716	long intergenic non-protein coding RNA 1716	Approved		105372682	
+HGNC:52504	LINC01717	long intergenic non-protein coding RNA 1717	Approved		105372893	
+HGNC:52505	LINC01718	long intergenic non-protein coding RNA 1718	Approved		100506470	
+HGNC:52506	LINC01719	long intergenic non-protein coding RNA 1719	Approved		101928979	
+HGNC:52507	LINC01720	long intergenic non-protein coding RNA 1720	Approved		440704	
+HGNC:52508	LINC01721	long intergenic non-protein coding RNA 1721	Approved		400839	
+HGNC:52510	LINC01722	long intergenic non-protein coding RNA 1722	Approved		101929486	
+HGNC:52511	LINC01723	long intergenic non-protein coding RNA 1723	Approved		100505515	
+HGNC:52512	LINC01724	long intergenic non-protein coding RNA 1724	Approved		105371673	
+HGNC:52513	LINC01725	long intergenic non-protein coding RNA 1725	Approved		101927587	
+HGNC:52514	LINC01726	long intergenic non-protein coding RNA 1726	Approved		101929608	
+HGNC:52515	LINC01727	long intergenic non-protein coding RNA 1727	Approved		101929625	
+HGNC:52516	LINC01728	long intergenic non-protein coding RNA 1728	Approved		105372626	
+HGNC:52517	LINC01729	long intergenic non-protein coding RNA 1729	Approved		101929207	
+HGNC:52518	LINC01730	long intergenic non-protein coding RNA 1730	Approved		101929125	
+HGNC:52519	LINC01731	long intergenic non-protein coding RNA 1731	Approved		105371226	
+HGNC:52520	LINC01732	long intergenic non-protein coding RNA 1732	Approved		101928973	
+HGNC:52521	LINC01733	long intergenic non-protein coding RNA 1733	Approved		101926955	
+HGNC:52522	LINC01734	long intergenic non-protein coding RNA 1734	Approved		339568	
+HGNC:52523	LINC01735	long intergenic non-protein coding RNA 1735	Approved		107985254	
+HGNC:52524	LINC01736	long intergenic non-protein coding RNA 1736	Approved		101927532	
+HGNC:52525	LINC01737	long intergenic non-protein coding RNA 1737	Approved		101927553	
+HGNC:52526	LINC01738	long intergenic non-protein coding RNA 1738	Approved		107984953	
+HGNC:52527	LINC01739	long intergenic non-protein coding RNA 1739	Approved		105378769	
+HGNC:52528	LINC01740	long intergenic non-protein coding RNA 1740	Approved		101929565	
+HGNC:52529	LINC01741	long intergenic non-protein coding RNA 1741	Approved		101928778	
+HGNC:52530	LINC01742	long intergenic non-protein coding RNA 1742	Approved		105376992	
+HGNC:52531	LINC01743	long intergenic non-protein coding RNA 1743	Approved		255654	
+HGNC:52532	LINC01744	long intergenic non-protein coding RNA 1744	Approved		101927683	
+HGNC:52533	LINC01745	long intergenic non-protein coding RNA 1745	Approved		105373199	
+HGNC:52534	LINC01746	long intergenic non-protein coding RNA 1746	Approved		105372608	
+HGNC:52536	LINC01747	long intergenic non-protein coding RNA 1747	Approved		105372566	
+HGNC:52535	LINC01748	long intergenic non-protein coding RNA 1748	Approved		105378763	
+HGNC:52537	LINC01749	long intergenic non-protein coding RNA 1749	Approved		63930	
+HGNC:52538	LINC01750	long intergenic non-protein coding RNA 1750	Approved		643355	
+HGNC:52539	LINC01751	long intergenic non-protein coding RNA 1751	Approved		101929288	
+HGNC:52540	LINC01752	long intergenic non-protein coding RNA 1752	Approved		101929395	
+HGNC:52541	LINC01753	long intergenic non-protein coding RNA 1753	Approved		105378739	
+HGNC:52542	LINC01754	long intergenic non-protein coding RNA 1754	Approved		102723442	
+HGNC:52543	LINC01755	long intergenic non-protein coding RNA 1755	Approved		105378738	
+HGNC:52545	LINC01756	long intergenic non-protein coding RNA 1756	Approved		101928460	
+HGNC:52546	LINC01757	long intergenic non-protein coding RNA 1757	Approved		105376827	
+HGNC:52547	LINC01758	long intergenic non-protein coding RNA 1758	Approved		105378788	
+HGNC:52548	LINC01759	long intergenic non-protein coding RNA 1759	Approved		102724571	
+HGNC:52549	LINC01760	long intergenic non-protein coding RNA 1760	Approved		100996630	
+HGNC:52551	LINC01761	long intergenic non-protein coding RNA 1761	Approved		440594	
+HGNC:52552	LINC01762	long intergenic non-protein coding RNA 1762	Approved		101929023	
+HGNC:52554	LINC01763	long intergenic non-protein coding RNA 1763	Approved		105378854	
+HGNC:52553	LINC01764	long intergenic non-protein coding RNA 1764	Approved		105372290	
+HGNC:52555	LINC01765	long intergenic non-protein coding RNA 1765	Approved		105378916	
+HGNC:52556	LINC01766	long intergenic non-protein coding RNA 1766	Approved		102723617	
+HGNC:52557	LINC01767	long intergenic non-protein coding RNA 1767	Approved		105378744	
+HGNC:52558	LINC01768	long intergenic non-protein coding RNA 1768	Approved		107985167	
+HGNC:52560	LINC01770	long intergenic non-protein coding RNA 1770	Approved		102724312	
+HGNC:52561	LINC01771	long intergenic non-protein coding RNA 1771	Approved		105378732	
+HGNC:52562	LINC01772	long intergenic non-protein coding RNA 1772	Approved		107984921	
+HGNC:52563	LINC01773	long intergenic non-protein coding RNA 1773	Approved		107985519	
+HGNC:52564	LINC01774	long intergenic non-protein coding RNA 1774	Approved		105372894	
+HGNC:52565	LINC01775	long intergenic non-protein coding RNA 1775	Approved		101928602	
+HGNC:52566	LINC01776	long intergenic non-protein coding RNA 1776	Approved		729987	
+HGNC:52567	LINC01777	long intergenic non-protein coding RNA 1777	Approved		284661	
+HGNC:52568	LINC01778	long intergenic non-protein coding RNA 1778	Approved		105378622	
+HGNC:52569	LINC01779	long intergenic non-protein coding RNA 1779	Approved		107985190	
+HGNC:52570	LINC01780	long intergenic non-protein coding RNA 1780	Approved		105378934	
+HGNC:52571	LINC01781	long intergenic non-protein coding RNA 1781	Approved		101927412	
+HGNC:52572	LINC01782	long intergenic non-protein coding RNA 1782	Approved		101927411	
+HGNC:52573	LINC01783	long intergenic non-protein coding RNA 1783	Approved		100132147	
+HGNC:52574	LINC01784	long intergenic non-protein coding RNA 1784	Approved		105376745	
+HGNC:25060	LINC01785	long intergenic non-protein coding RNA 1785	Approved		374890	
+HGNC:52575	LINC01786	long intergenic non-protein coding RNA 1786	Approved		101928895	
+HGNC:52576	LINC01787	long intergenic non-protein coding RNA 1787	Approved		101928241	
+HGNC:52577	LINC01788	long intergenic non-protein coding RNA 1788	Approved		101927244	
+HGNC:52578	LINC01789	long intergenic non-protein coding RNA 1789	Approved		105373536	
+HGNC:52579	LINC01790	long intergenic non-protein coding RNA 1790	Approved		101927431	
+HGNC:52581	LINC01791	long intergenic non-protein coding RNA 1791	Approved		107985312	
+HGNC:52582	LINC01792	long intergenic non-protein coding RNA 1792	Approved		100507140	
+HGNC:52583	LINC01793	long intergenic non-protein coding RNA 1793	Approved		101927285	
+HGNC:52584	LINC01794	long intergenic non-protein coding RNA 1794	Approved		101929700	
+HGNC:52585	LINC01795	long intergenic non-protein coding RNA 1795	Approved		105374744	
+HGNC:52586	LINC01796	long intergenic non-protein coding RNA 1796	Approved		105373518	
+HGNC:52587	LINC01797	long intergenic non-protein coding RNA 1797	Approved		101927577	
+HGNC:52588	LINC01798	long intergenic non-protein coding RNA 1798	Approved		100507073	
+HGNC:52589	LINC01799	long intergenic non-protein coding RNA 1799	Approved		101060019	
+HGNC:52590	LINC01800	long intergenic non-protein coding RNA 1800	Approved		101927438	
+HGNC:52592	LINC01801	long intergenic non-protein coding RNA 1801	Approved		400685	
+HGNC:52591	LINC01802	long intergenic non-protein coding RNA 1802	Approved		105373852	
+HGNC:52595	LINC01803	long intergenic non-protein coding RNA 1803	Approved		105373889	
+HGNC:52596	LINC01804	long intergenic non-protein coding RNA 1804	Approved		101926966	
+HGNC:52597	LINC01805	long intergenic non-protein coding RNA 1805	Approved		105374774	
+HGNC:52599	LINC01806	long intergenic non-protein coding RNA 1806	Approved		100996579	
+HGNC:52610	LINC01807	long intergenic non-protein coding RNA 1807	Approved		101928765	
+HGNC:52611	LINC01808	long intergenic non-protein coding RNA 1808	Approved		105373460	
+HGNC:52612	LINC01809	long intergenic non-protein coding RNA 1809	Approved		101928031	
+HGNC:52613	LINC01810	long intergenic non-protein coding RNA 1810	Approved		105373400	
+HGNC:52615	LINC01811	long intergenic non-protein coding RNA 1811	Approved		101928114	
+HGNC:52616	LINC01812	long intergenic non-protein coding RNA 1812	Approved			
+HGNC:52617	LINC01813	long intergenic non-protein coding RNA 1813	Approved			
+HGNC:52618	LINC01814	long intergenic non-protein coding RNA 1814	Approved			
+HGNC:52619	LINC01815	long intergenic non-protein coding RNA 1815	Approved			
+HGNC:52621	LINC01816	long intergenic non-protein coding RNA 1816	Approved			
+HGNC:52622	LINC01817	long intergenic non-protein coding RNA 1817	Approved			
+HGNC:52623	LINC01818	long intergenic non-protein coding RNA 1818	Approved			
 HGNC:49089	LINCMD1	long intergenic non-protein coding RNA, muscle differentiation 1	Approved		101154644	
 HGNC:21205	LINGO1	leucine rich repeat and Ig domain containing 1	Approved	FLJ14594, LERN1	84894	Q96FE5
 HGNC:27368	LINGO1-AS1	LINGO1 antisense RNA 1	Approved		253044	
@@ -17580,7 +17814,7 @@ HGNC:13934	LY6G6E	lymphocyte antigen 6 complex, locus G6E	Approved	G6e	79136
 HGNC:13933	LY6G6F	lymphocyte antigen 6 complex, locus G6F	Approved	G6f, NG32	259215	Q5SQ64
 HGNC:6728	LY6H	lymphocyte antigen 6 complex, locus H	Approved	NMLY6	4062	O94772
 HGNC:24225	LY6K	lymphocyte antigen 6 complex, locus K	Approved	HSJ001348, FLJ35226, CT97	54742	Q17RY6
-HGNC:52284	LY6L	lymphocyte antigen 6 complex, locus L	Approved		101928108	
+HGNC:52284	LY6L	lymphocyte antigen 6 complex, locus L	Approved		101928108	H3BQJ8
 HGNC:6730	LY9	lymphocyte antigen 9	Approved	CD229, mLY9, SLAMF3, hly9	4063	Q9HBG7
 HGNC:6729	LY75	lymphocyte antigen 75	Approved	DEC-205, CLEC13B, CD205	4065	O60449
 HGNC:38828	LY75-CD302	LY75-CD302 readthrough	Approved		100526664	
@@ -17641,7 +17875,7 @@ HGNC:6742	LZTR1	leucine zipper like transcription regulator 1	Approved	LZTR-1, B
 HGNC:13861	LZTS1	leucine zipper tumor suppressor 1	Approved	FEZ1	11178	Q9Y250
 HGNC:43630	LZTS1-AS1	LZTS1 antisense RNA 1	Approved		100874051	
 HGNC:29381	LZTS2	leucine zipper tumor suppressor 2	Approved	KIAA1813, LAPSER1	84445	Q9BRK4
-HGNC:30139	LZTS3	leucine zipper tumor suppressor family member 3	Approved	ProSAPiP1, KIAA0552	9762	
+HGNC:30139	LZTS3	leucine zipper tumor suppressor family member 3	Approved	ProSAPiP1, KIAA0552	9762	O60299
 HGNC:25183	M1AP	meiosis 1 associated protein	Approved	D6Mm5e, SPATA37	130951	Q8TC57
 HGNC:6748	M1S1~withdrawn	symbol withdrawn, see TACSTD2	Symbol Withdrawn			
 HGNC:6749	M3S1~withdrawn	symbol withdrawn, see TM4SF1	Symbol Withdrawn			
@@ -17872,7 +18106,7 @@ HGNC:6880	MAPK7	mitogen-activated protein kinase 7	Approved	BMK1, ERK5	5598	Q131
 HGNC:6881	MAPK8	mitogen-activated protein kinase 8	Approved	JNK, JNK1, SAPK1	5599	P45983
 HGNC:6882	MAPK8IP1	mitogen-activated protein kinase 8 interacting protein 1	Approved	IB1, JIP-1, JIP1	9479	Q9UQF2
 HGNC:6885	MAPK8IP1P1	mitogen-activated protein kinase 8 interacting protein 1 pseudogene 1	Approved		644253	
-HGNC:52402	MAPK8IP1P2	mitogen-activated protein kinase 8 interacting protein 1 pseudogene 2	Approved			
+HGNC:52402	MAPK8IP1P2	mitogen-activated protein kinase 8 interacting protein 1 pseudogene 2	Approved		644172	
 HGNC:6883	MAPK8IP2	mitogen-activated protein kinase 8 interacting protein 2	Approved	IB2, JIP2	23542	Q13387
 HGNC:6884	MAPK8IP3	mitogen-activated protein kinase 8 interacting protein 3	Approved	KIAA1066, JSAP1, JIP3, syd	23162	Q9UPT6
 HGNC:6886	MAPK9	mitogen-activated protein kinase 9	Approved	JNK2, p54a, SAPK	5601	P45984
@@ -18127,7 +18361,7 @@ HGNC:42660	MEAF6P1	MYST/Esa1-associated factor 6 pseudogene 1	Approved		10087404
 HGNC:6987	MEAX~withdrawn	symbol withdrawn, see VMA21	Symbol Withdrawn			
 HGNC:6988	MEB~withdrawn	symbol withdrawn, see POMGNT1	Symbol Withdrawn			
 HGNC:6989	MECL1~withdrawn	symbol withdrawn, see PSMB10	Symbol Withdrawn			
-HGNC:3498	MECOM	MDS1 and EVI1 complex locus	Approved	MDS1-EVI1, PRDM3	2122	Q03112, Q13465
+HGNC:3498	MECOM	MDS1 and EVI1 complex locus	Approved	MDS1-EVI1, PRDM3, KMT8E	2122	Q03112, Q13465
 HGNC:6990	MECP2	methyl-CpG binding protein 2	Approved		4204	P51608
 HGNC:19691	MECR	mitochondrial trans-2-enoyl-CoA reductase	Approved	CGI-63, NRBF1, FASN2B	51102	Q9BV79
 HGNC:9234	MED1	mediator complex subunit 1	Approved	PBP, TRAP220, RB18A, DRIP230, CRSP200, CRSP1	5469	Q15648
@@ -19256,6 +19490,7 @@ HGNC:35291	MIR1300~withdrawn	entry withdrawn	Entry Withdrawn
 HGNC:35253	MIR1301	microRNA 1301	Approved	hsa-mir-1301	100302246	
 HGNC:35293	MIR1302-1	microRNA 1302-1	Approved	hsa-mir-1302-1	100302227	
 HGNC:35294	MIR1302-2	microRNA 1302-2	Approved	hsa-mir-1302-2	100302278	
+HGNC:52482	MIR1302-2HG	MIR1302-2 host gene	Approved		107985730	
 HGNC:35295	MIR1302-3	microRNA 1302-3	Approved	hsa-mir-1302-3	100302128	
 HGNC:35296	MIR1302-4	microRNA 1302-4	Approved	hsa-mir-1302-4	100302130	
 HGNC:35297	MIR1302-5	microRNA 1302-5	Approved	hsa-mir-1302-5	100302146	
@@ -20451,7 +20686,7 @@ HGNC:1286	MIS18A	MIS18 kinetochore protein A	Approved	B28, FASP1, hMis18alpha	54
 HGNC:40106	MIS18A-AS1	MIS18A antisense RNA 1	Approved		100874202	
 HGNC:20190	MIS18BP1	MIS18 binding protein 1	Approved	M18BP1, FLJ11186, KIAA1903, KNL2	55320	Q6P0N0
 HGNC:27000	MISP	mitotic spindle positioning	Approved	DKFZp686H18209, Caprice, MISP1	126353	Q8IVT2
-HGNC:26963	MISP3	MISP family member 3	Approved		113230	
+HGNC:26963	MISP3	MISP family member 3	Approved		113230	Q96FF7
 HGNC:25207	MITD1	microtubule interacting and trafficking domain containing 1	Approved	LOC129531	129531	Q8WV92
 HGNC:7105	MITF	melanogenesis associated transcription factor	Approved	MI, bHLHe32	4286	O75030
 HGNC:13363	MIXL1	Mix paired-like homeobox	Approved	MILD1, MIXL	83881	Q9H2W2
@@ -22297,9 +22532,9 @@ HGNC:7669	NCOA2	nuclear receptor coactivator 2	Approved	TIF2, GRIP1, NCoA-2, KAT
 HGNC:7670	NCOA3	nuclear receptor coactivator 3	Approved	RAC3, AIB1, ACTR, p/CIP, TRAM-1, CAGH16, TNRC16, KAT13B, bHLHe42, SRC-3, SRC3	8202	Q9Y6Q9
 HGNC:7671	NCOA4	nuclear receptor coactivator 4	Approved	ARA70, RFG, ELE1, PTC3, DKFZp762E1112	8031	Q13772
 HGNC:20022	NCOA4P1	nuclear receptor coactivator 4 pseudogene 1	Approved		326605	
-HGNC:52403	NCOA4P2	nuclear receptor coactivator 4 pseudogene 2	Approved			
-HGNC:52404	NCOA4P3	nuclear receptor coactivator 4 pseudogene 3	Approved			
-HGNC:52405	NCOA4P4	nuclear receptor coactivator 4 pseudogene 4	Approved			
+HGNC:52403	NCOA4P2	nuclear receptor coactivator 4 pseudogene 2	Approved		728333	
+HGNC:52404	NCOA4P3	nuclear receptor coactivator 4 pseudogene 3	Approved		729497	
+HGNC:52405	NCOA4P4	nuclear receptor coactivator 4 pseudogene 4	Approved		642262	
 HGNC:15909	NCOA5	nuclear receptor coactivator 5	Approved	bA465L10.6, CIA	57727	Q9HCD5
 HGNC:15936	NCOA6	nuclear receptor coactivator 6	Approved	KIAA0181, RAP250, ASC2, AIB3, PRIP, TRBP, NRC	23054	Q14686
 HGNC:21081	NCOA7	nuclear receptor coactivator 7	Approved	ERAP140, dJ187J11.3, TLDC4	135112	Q8NI08
@@ -25325,6 +25560,7 @@ HGNC:16200	PCIF1	PDX1 C-terminal inhibiting factor 1	Approved	bA465L10.1, PPP1R1
 HGNC:13878	PCI~withdrawn	symbol withdrawn, see SERPINA5	Symbol Withdrawn			
 HGNC:8724	PCK1	phosphoenolpyruvate carboxykinase 1	Approved	PEPCK-C	5105	P35558
 HGNC:8725	PCK2	phosphoenolpyruvate carboxykinase 2, mitochondrial	Approved	PEPCK, PEPCK2	5106	Q16822
+HGNC:28961	PCLAF	PCNA clamp associated factor	Approved	NS5ATP9, OEATC-1, p15(PAF), PAF15	9768	Q15004
 HGNC:8726	PCLD~withdrawn	symbol withdrawn, see PRKCSH	Symbol Withdrawn			
 HGNC:13406	PCLO	piccolo presynaptic cytomatrix protein	Approved	KIAA0559, DKFZp779G1236, ACZ	27445	Q9Y6V0
 HGNC:8727	PCM1	pericentriolar material 1	Approved	PTC4	5108	Q15154
@@ -25766,7 +26002,7 @@ HGNC:8917	PHC~withdrawn	symbol withdrawn, see SLC25A3	Symbol Withdrawn
 HGNC:8918	PHEX	phosphate regulating endopeptidase homolog, X-linked	Approved	PEX, HPDR1, HYP1, XLH	5251	P78562
 HGNC:40445	PHEX-AS1	PHEX antisense RNA 1	Approved		100873942	
 HGNC:8919	PHF1	PHD finger protein 1	Approved	MTF2L2, TDRD19C, PCL1	5252	O43189
-HGNC:8920	PHF2	PHD finger protein 2	Approved	KIAA0662, JHDM1E, CENP-35	5253	O75151
+HGNC:8920	PHF2	PHD finger protein 2	Approved	KIAA0662, JHDM1E, CENP-35, KDM7C	5253	O75151
 HGNC:30241	PHF2P1	PHD finger protein 2 pseudogene 1	Approved	DKFZp686A1627	266695	
 HGNC:38808	PHF2P2	PHD finger protein 2 pseudogene 2	Approved		100873793	
 HGNC:8921	PHF3	PHD finger protein 3	Approved		23469	Q92576
@@ -25780,7 +26016,7 @@ HGNC:23269	PHF5GP	PHD finger protein 5G pseudogene	Approved		450234
 HGNC:23264	PHF5HP	PHD finger protein 5H pseudogene	Approved		450250	
 HGNC:18145	PHF6	PHD finger protein 6	Approved	KIAA1823, MGC14797, CENP-31	84295	Q8IWS0
 HGNC:18458	PHF7	PHD finger protein 7	Approved	NYD-SP6, HSPC226	51533	Q9BWX1
-HGNC:20672	PHF8	PHD finger protein 8	Approved	ZNF422, KIAA1111, JHDM1F	23133	Q9UPP1
+HGNC:20672	PHF8	PHD finger protein 8	Approved	ZNF422, KIAA1111, JHDM1F, KDM7B	23133	Q9UPP1
 HGNC:18250	PHF10	PHD finger protein 10	Approved	FLJ10975, XAP135, BAF45a	55274	Q8WUB8
 HGNC:23210	PHF10P1	PHD finger protein 10 pseudogene 1	Approved	XAP135P	158905	
 HGNC:17024	PHF11	PHD finger protein 11	Approved	NY-REN-34, BCAP, IGER	51131	Q9UIL8
@@ -26149,6 +26385,7 @@ HGNC:9024	PKP2	plakophilin 2	Approved		5318	Q99959
 HGNC:13413	PKP2P1	plakophilin 2 pseudogene 1	Approved		82500	
 HGNC:9025	PKP3	plakophilin 3	Approved		11187	Q9Y446
 HGNC:9026	PKP4	plakophilin 4	Approved	p0071	8502	Q99569
+HGNC:52580	PKP4-AS1	PKP4 antisense RNA 1	Approved		100129029	
 HGNC:42661	PKP4P1	plakophilin 4 pseudogene 1	Approved		402116	
 HGNC:17661	PLA1A	phospholipase A1 member A	Approved	ps-PLA1	51365	Q53H76
 HGNC:9027	PLA2A~withdrawn	symbol withdrawn, see PLA2G1B	Symbol Withdrawn			
@@ -26922,20 +27159,20 @@ HGNC:32528	PRCD	progressive rod-cone degeneration	Approved	RP36	768206	Q00LT1
 HGNC:9344	PRCP	prolylcarboxypeptidase	Approved	PCP, HUMPCP	5547	P42785
 HGNC:9345	PRD	primary retinal dysplasia	Approved		5548	
 HGNC:9346	PRDM1	PR/SET domain 1	Approved	PRDI-BF1	639	O75626
-HGNC:9347	PRDM2	PR/SET domain 2	Approved	RIZ, RIZ1, RIZ2, KMT8, MTB-ZF, HUMHOXY1	7799	Q13029
+HGNC:9347	PRDM2	PR/SET domain 2	Approved	RIZ, RIZ1, RIZ2, KMT8, MTB-ZF, HUMHOXY1, KMT8A	7799	Q13029
 HGNC:9348	PRDM4	PR/SET domain 4	Approved	PFM1	11108	Q9UKN5
 HGNC:9349	PRDM5	PR/SET domain 5	Approved	PFM2	11107	Q9NQX1
-HGNC:9350	PRDM6	PR/SET domain 6	Approved	PRISM	93166	Q9NQX0
+HGNC:9350	PRDM6	PR/SET domain 6	Approved	PRISM, KMT8C	93166	Q9NQX0
 HGNC:9351	PRDM7	PR/SET domain 7	Approved	ZNF910	11105	Q9NQW5
-HGNC:13993	PRDM8	PR/SET domain 8	Approved		56978	Q9NQV8
-HGNC:13994	PRDM9	PR/SET domain 9	Approved	PFM6, ZNF899	56979	Q9NQV7
+HGNC:13993	PRDM8	PR/SET domain 8	Approved	KMT8D	56978	Q9NQV8
+HGNC:13994	PRDM9	PR/SET domain 9	Approved	PFM6, ZNF899, KMT8B	56979	Q9NQV7
 HGNC:13995	PRDM10	PR/SET domain 10	Approved	KIAA1231, PFM7, MGC131802	56980	Q9NQV6
 HGNC:13996	PRDM11	PR/SET domain 11	Approved	PFM8	56981	Q9NQV5
 HGNC:13997	PRDM12	PR/SET domain 12	Approved		59335	Q9H4Q4
 HGNC:13998	PRDM13	PR/SET domain 13	Approved		59336	Q9H4Q3
 HGNC:14001	PRDM14	PR/SET domain 14	Approved		63978	Q9GZV8
 HGNC:13999	PRDM15	PR/SET domain 15	Approved		63977	P57071
-HGNC:14000	PRDM16	PR/SET domain 16	Approved	MEL1, PFM13, KIAA1675, MGC166915	63976	Q9HAZ2
+HGNC:14000	PRDM16	PR/SET domain 16	Approved	MEL1, PFM13, KIAA1675, MGC166915, KMT8F	63976	Q9HAZ2
 HGNC:9352	PRDX1	peroxiredoxin 1	Approved	NKEFA	5052	Q06830
 HGNC:11711	PRDX1P1	peroxiredoxin 1 pseudogene 1	Approved		7002	
 HGNC:9353	PRDX2	peroxiredoxin 2	Approved	PRP, NKEFB, TSA, PRXII, PRX2, MGC4104	7001	P32119
@@ -27317,6 +27554,7 @@ HGNC:9522	PSG5	pregnancy specific beta-1-glycoprotein 5	Approved	FL-NCA-3, PSG	5
 HGNC:9523	PSG6	pregnancy specific beta-1-glycoprotein 6	Approved		5675	Q00889
 HGNC:9524	PSG7	pregnancy specific beta-1-glycoprotein 7 (gene/pseudogene)	Approved		5676	Q13046
 HGNC:9525	PSG8	pregnancy specific beta-1-glycoprotein 8	Approved		440533	Q9UQ74
+HGNC:52550	PSG8-AS1	PSG8 antisense RNA 1	Approved		100289650	
 HGNC:9526	PSG9	pregnancy specific beta-1-glycoprotein 9	Approved	PSGII	5678	Q00887
 HGNC:9515	PSG10P	pregnancy specific beta-1-glycoprotein 10, pseudogene	Approved		653492	
 HGNC:9516	PSG11	pregnancy specific beta-1-glycoprotein 11	Approved	MGC22484	5680	Q9UQ72
@@ -37631,6 +37869,7 @@ HGNC:26463	SPATA33	spermatogenesis associated 33	Approved	FLJ31606	124045	Q96N06
 HGNC:48613	SPATA41	spermatogenesis associated 41 (non-protein coding)	Approved	FLJ42289, HSD47	388182	
 HGNC:41198	SPATA42	spermatogenesis associated 42 (non-protein coding) 	Approved	SRG7, AKNAD1-AS1	642864	
 HGNC:33709	SPATA45	spermatogenesis associated 45	Approved	LOC149643	149643	Q537H7
+HGNC:27648	SPATA46	spermatogenesis associated 46	Approved		284680	Q5T0L3
 HGNC:30510	SPATC1	spermatogenesis and centriole associated 1	Approved	MGC61633, SPATA15, SPERIOLIN	375686	Q76KD6
 HGNC:1298	SPATC1L	spermatogenesis and centriole associated 1-like	Approved		84221	Q9H0A9
 HGNC:22957	SPATS1	spermatogenesis associated serine rich 1	Approved	SPATA8, FLJ25442, SRSP1	221409	Q496A3
@@ -37751,7 +37990,7 @@ HGNC:29486	SPINK6	serine peptidase inhibitor, Kazal type 6	Approved	MGC21394, UN
 HGNC:24643	SPINK7	serine peptidase inhibitor, Kazal type 7 (putative)	Approved	ECG2, ECRG2	84651	P58062
 HGNC:33160	SPINK8	serine peptidase inhibitor, Kazal type 8 (putative)	Approved		646424	P0C7L1
 HGNC:32951	SPINK9	serine peptidase inhibitor, Kazal type 9	Approved		643394	Q5DT21
-HGNC:27200	SPINK13	serine peptidase inhibitor, Kazal type 13 (putative)	Approved	SPINK5L3, LiESP6, HESPINTOR, MGC149260, HBVDNAPTP1	153218	Q1W4C9
+HGNC:27200	SPINK13	serine peptidase inhibitor, Kazal type 13 (putative)	Approved	SPINK5L3, LiESP6, HESPINTOR, MGC149260	153218	Q1W4C9
 HGNC:33825	SPINK14	serine peptidase inhibitor, Kazal type 14 (putative)	Approved	SPINK5L2	408187	Q6IE38
 HGNC:11246	SPINT1	serine peptidase inhibitor, Kunitz type 1	Approved	HAI, MANSC2	6692	O43278
 HGNC:11247	SPINT2	serine peptidase inhibitor, Kunitz type 2	Approved	Kop, HAI-2	10653	O43291
@@ -38832,53 +39071,8 @@ HGNC:45245	TCEAL8P1	transcription elongation factor A like 8 pseudogene 1	Approv
 HGNC:30084	TCEAL9	transcription elongation factor A like 9	Approved	DKFZp313K1940, WEX6	51186	Q9UHQ7
 HGNC:28277	TCEANC	transcription elongation factor A N-terminal and central domain containing	Approved	MGC17403	170082	Q8N8B7
 HGNC:26494	TCEANC2	transcription elongation factor A N-terminal and central domain containing 2	Approved	FLJ32112	127428	Q96MN5
-HGNC:11617	TCEB1	transcription elongation factor B subunit 1	Approved	SIII	6921	Q15369
 HGNC:11618	TCEB1P1~withdrawn	symbol withdrawn, see SKP1P1	Symbol Withdrawn			
-HGNC:17762	TCEB1P2	transcription elongation factor B subunit 1 pseudogene 2	Approved		283747	
-HGNC:29457	TCEB1P3	transcription elongation factor B subunit 1 pseudogene 3	Approved	dJ254P11.1	644540	
-HGNC:38141	TCEB1P4	transcription elongation factor B subunit 1 pseudogene 4	Approved		100462873	
-HGNC:38140	TCEB1P5	transcription elongation factor B subunit 1 pseudogene 5	Approved		100288493	
-HGNC:38142	TCEB1P6	transcription elongation factor B subunit 1 pseudogene 6	Approved		100462867	
-HGNC:38143	TCEB1P7	transcription elongation factor B subunit 1 pseudogene 7	Approved		100462868	
-HGNC:38144	TCEB1P8	transcription elongation factor B subunit 1 pseudogene 8	Approved		100462869	
-HGNC:38145	TCEB1P9	transcription elongation factor B subunit 1 pseudogene 9	Approved		100462870	
-HGNC:38146	TCEB1P10	transcription elongation factor B subunit 1 pseudogene 10	Approved		100462871	
-HGNC:38147	TCEB1P11	transcription elongation factor B subunit 1 pseudogene 11	Approved		100462872	
-HGNC:38148	TCEB1P12	transcription elongation factor B subunit 1 pseudogene 12	Approved		100462874	
-HGNC:38149	TCEB1P13	transcription elongation factor B subunit 1 pseudogene 13	Approved		100462875	
-HGNC:38150	TCEB1P14	transcription elongation factor B subunit 1 pseudogene 14	Approved		100462876	
-HGNC:38151	TCEB1P15	transcription elongation factor B subunit 1 pseudogene 15	Approved		100462877	
-HGNC:38152	TCEB1P16	transcription elongation factor B subunit 1 pseudogene 16	Approved		100462878	
-HGNC:38153	TCEB1P17	transcription elongation factor B subunit 1 pseudogene 17	Approved		100462879	
-HGNC:38154	TCEB1P18	transcription elongation factor B subunit 1 pseudogene 18	Approved		100130626	
-HGNC:38155	TCEB1P19	transcription elongation factor B subunit 1 pseudogene 19	Approved		100462880	
-HGNC:38156	TCEB1P20	transcription elongation factor B subunit 1 pseudogene 20	Approved		100287778	
-HGNC:38157	TCEB1P21	transcription elongation factor B subunit 1 pseudogene 21	Approved		100462866	
-HGNC:38158	TCEB1P22	transcription elongation factor B subunit 1 pseudogene 22	Approved		100287579	
-HGNC:38159	TCEB1P23	transcription elongation factor B subunit 1 pseudogene 23	Approved		100462881	
-HGNC:38160	TCEB1P24	transcription elongation factor B subunit 1 pseudogene 24	Approved		100287692	
 HGNC:38525	TCEB1P25~withdrawn	symbol withdrawn, see TCEB1P24	Symbol Withdrawn			
-HGNC:38731	TCEB1P26	transcription elongation factor B subunit 1 pseudogene 26	Approved		101059905	
-HGNC:31692	TCEB1P27	transcription elongation factor B subunit 1 pseudogene 27	Approved		107133523	
-HGNC:49169	TCEB1P28	transcription elongation factor B subunit 1 pseudogene 28	Approved		100287483	
-HGNC:49170	TCEB1P29	transcription elongation factor B subunit 1 pseudogene 29	Approved		100132973	
-HGNC:49171	TCEB1P30	transcription elongation factor B subunit 1 pseudogene 30	Approved		106481670	
-HGNC:49172	TCEB1P31	transcription elongation factor B subunit 1 pseudogene 31	Approved		100422582	
-HGNC:49173	TCEB1P32	transcription elongation factor B subunit 1 pseudogene 32	Approved		106481964	
-HGNC:49174	TCEB1P33	transcription elongation factor B subunit 1 pseudogene 33	Approved		101928827	
-HGNC:49175	TCEB1P34	transcription elongation factor B subunit 1 pseudogene 34	Approved		106481671	
-HGNC:49176	TCEB1P35	transcription elongation factor B subunit 1 pseudogene 35	Approved		106480250	
-HGNC:11619	TCEB2	transcription elongation factor B subunit 2	Approved	SIII	6923	Q15370
-HGNC:39719	TCEB2P1	transcription elongation factor B subunit 2 pseudogene 1	Approved		246717	
-HGNC:39720	TCEB2P2	transcription elongation factor B subunit 2 pseudogene 2	Approved		253665	
-HGNC:39721	TCEB2P3	transcription elongation factor B subunit 2 pseudogene 3	Approved		100856810	
-HGNC:39722	TCEB2P4	transcription elongation factor B subunit 2 pseudogene 4	Approved		100874519	
-HGNC:11620	TCEB3	transcription elongation factor B subunit 3	Approved	SIII, TCEB3A	6924	Q14241
-HGNC:50582	TCEB3-AS1	TCEB3 antisense RNA 1	Approved		100506963	
-HGNC:30771	TCEB3B	transcription elongation factor B subunit 3B	Approved	HsT832, TCEB3L	51224	Q8IYF1
-HGNC:24617	TCEB3C	transcription elongation factor B subunit 3C	Approved	HsT829, TCEB3L2	162699	Q8NG57
-HGNC:31007	TCEB3CL	transcription elongation factor B subunit 3C like	Approved	HsT828	728929	Q3SY89
-HGNC:33511	TCEB3CL2	transcription elongation factor B subunit 3C like 2	Approved		100506888	A6NLF2
 HGNC:15630	TCERG1	transcription elongation regulator 1	Approved	CA150, Urn1	10915	O14776
 HGNC:23533	TCERG1L	transcription elongation regulator 1 like	Approved	FLJ38950	256536	Q5VWI1
 HGNC:49532	TCERG1L-AS1	TCERG1L antisense RNA 1	Approved		101927489	
@@ -39098,6 +39292,7 @@ HGNC:29589	TEX38	testis expressed 38	Approved	LOC374973, THEG4	374973	Q6PEX7
 HGNC:19231	TEX40	testis expressed 40	Approved	DKFZP566E164	25858	Q9NTU4
 HGNC:48667	TEX41	testis expressed 41 (non-protein coding)	Approved	DKFZp686O1327, LINC00953	401014	
 HGNC:33767	TEX43	testis expressed 43	Approved	MGC163367, MGC163369, FLJ27505, Tseg7	389320	Q6ZNM6
+HGNC:28563	TEX44	testis expressed 44	Approved	MGC35154	165100	Q53QW1
 HGNC:30722	TEX101	testis expressed 101	Approved	MGC4766, SGRG, CT131, SPATA44	83639	Q9BY14
 HGNC:30712	TEX261	testis expressed 261	Approved	MGC32043, TEG-261	113419	Q6UWH6
 HGNC:30247	TEX264	testis expressed 264	Approved	ZSIG11, FLJ13935	51368	Q9Y6I9
@@ -39485,7 +39680,7 @@ HGNC:25120	TMEM44	transmembrane protein 44	Approved	DKFZp686O18124	93109	Q2T9K0
 HGNC:44272	TMEM44-AS1	TMEM44 antisense RNA 1	Approved		100507297	
 HGNC:25480	TMEM45A	transmembrane protein 45A	Approved	FLJ10134, DERP7	55076	Q9NWC5
 HGNC:25194	TMEM45B	transmembrane protein 45B	Approved	BC016153, FLJ40787	120224	Q96B21
-HGNC:18515	TMEM47	transmembrane protein 47	Approved	BCMP1, DKFZP761J17121, DKFZp564E153	83604	Q9BQJ4
+HGNC:18515	TMEM47	transmembrane protein 47	Approved	BCMP1, DKFZP761J17121, DKFZp564E153, VAB-9	83604	Q9BQJ4
 HGNC:30590	TMEM50A	transmembrane protein 50A	Approved	SMP1	23585	O95807
 HGNC:1280	TMEM50B	transmembrane protein 50B	Approved		757	P56557
 HGNC:25488	TMEM51	transmembrane protein 51	Approved	FLJ10199	55092	Q9NW97
@@ -39591,9 +39786,9 @@ HGNC:25633	TMEM144	transmembrane protein 144	Approved	FLJ11155	55314	Q7Z5S9
 HGNC:26912	TMEM145	transmembrane protein 145	Approved	FLJ90805	284339	Q8NBT3
 HGNC:30414	TMEM147	transmembrane protein 147	Approved	NIFIE14, MGC1936	10430	Q9BVK8
 HGNC:51273	TMEM147-AS1	TMEM147 antisense RNA 1	Approved		100506469	
-HGNC:24677	TMEM150A	transmembrane protein 150A	Approved	TM6P1, FLJ90024	129303	Q86TG1
-HGNC:34415	TMEM150B	transmembrane protein 150B	Approved		284417	A6NC51
-HGNC:37263	TMEM150C	transmembrane protein 150C	Approved	FLJ12993	441027	B9EJG8
+HGNC:24677	TMEM150A	transmembrane protein 150A	Approved	TM6P1, FLJ90024, TTN1	129303	Q86TG1
+HGNC:34415	TMEM150B	transmembrane protein 150B	Approved	TTN2	284417	A6NC51
+HGNC:37263	TMEM150C	transmembrane protein 150C	Approved	FLJ12993, TTN3	441027	B9EJG8
 HGNC:28497	TMEM151A	transmembrane protein 151A	Approved	MGC33486	256472	Q8N4L1
 HGNC:21315	TMEM151B	transmembrane protein 151B	Approved	bA444E17.5	441151	Q8IW70
 HGNC:26489	TMEM154	transmembrane protein 154	Approved	FLJ32028	201799	Q6P9G4
@@ -39617,7 +39812,7 @@ HGNC:25130	TMEM169	transmembrane protein 169	Approved	FLJ34263	92691	Q96HH4
 HGNC:29577	TMEM170A	transmembrane protein 170A	Approved	FLJ37611	124491	Q8WVE7
 HGNC:34244	TMEM170B	transmembrane protein 170B	Approved		100113407	Q5T4T1
 HGNC:27031	TMEM171	transmembrane protein 171	Approved	PRP2	134285	Q8WVE6
-HGNC:27962	TMEM173	transmembrane protein 173	Approved	FLJ38577, NET23	340061	Q86WV6
+HGNC:27962	TMEM173	transmembrane protein 173	Approved	FLJ38577, NET23, ERIS, MPYS, STING, MITA	340061	Q86WV6
 HGNC:28187	TMEM174	transmembrane protein 174	Approved	MGC13034, FLJ31268	134288	Q8WUU8
 HGNC:28709	TMEM175	transmembrane protein 175	Approved	MGC4618	84286	Q9BSA9
 HGNC:24930	TMEM176A	transmembrane protein 176A	Approved	HCA112, MS4B1	55365	Q96HP8
@@ -39729,6 +39924,7 @@ HGNC:51241	TMEM265	transmembrane protein 265	Approved		100862671	A0A087WTH1
 HGNC:26763	TMEM266	transmembrane protein 266	Approved	FLJ38190	123591	Q2M3C6
 HGNC:26139	TMEM267	transmembrane protein 267	Approved	FLJ21657	64417	Q0VDI3
 HGNC:24513	TMEM268	transmembrane protein 268	Approved	DKFZp547P234, FLJ38045	203197	Q5VZI3
+HGNC:52381	TMEM269	transmembrane protein 269	Approved		100129924	
 HGNC:11870	TMF1	TATA element modulatory factor 1	Approved	ARA160, TMF	7110	P82094
 HGNC:51353	TMF1P1	TATA element modulatory factor 1 pseudogene 1	Approved		106480320	
 HGNC:30800	TMIE	transmembrane inner ear	Approved		259236	Q8NEW7
@@ -40900,6 +41096,7 @@ HGNC:23141	TRMT5	tRNA methyltransferase 5	Approved	TRM5	57570	Q32P41
 HGNC:20900	TRMT6	tRNA methyltransferase 6	Approved	GCD10, MGC5029, Gcd10p, CGI-09	51605	Q9UJA5
 HGNC:28403	TRMT10A	tRNA methyltransferase 10A	Approved	MGC27034, TRM10	93587	Q8TBZ6
 HGNC:26454	TRMT10B	tRNA methyltransferase 10B	Approved	FLJ31455, bA3J10.9	158234	Q6PF06
+HGNC:52409	TRMT10BP1	tRNA methyltransferase 10B pseudogene 1	Approved		101060002	
 HGNC:26022	TRMT10C	tRNA methyltransferase 10C, mitochondrial RNase P subunit	Approved	FLJ20432, MRPP1	54931	Q7L0Y3
 HGNC:21080	TRMT11	tRNA methyltransferase 11 homolog	Approved	MDS024, dJ187J11.2, TRM11, TRMT11-1	60487	Q7Z4G4
 HGNC:26091	TRMT12	tRNA methyltransferase 12 homolog	Approved	FLJ20772, Trm12, TYW2	55039	Q53H54
@@ -41829,6 +42026,9 @@ HGNC:44894	UBE2V1P9	ubiquitin conjugating enzyme E2 V1 pseudogene 9	Approved		10
 HGNC:44895	UBE2V1P10	ubiquitin conjugating enzyme E2 V1 pseudogene 10	Approved		102724605	
 HGNC:44896	UBE2V1P11	ubiquitin conjugating enzyme E2 V1 pseudogene 11	Approved		102723977	
 HGNC:44897	UBE2V1P12	ubiquitin conjugating enzyme E2 V1 pseudogene 12	Approved		106479048	
+HGNC:52411	UBE2V1P13	ubiquitin conjugating enzyme E2 V1 pseudogene 13	Approved		100505982	
+HGNC:52412	UBE2V1P14	ubiquitin conjugating enzyme E2 V1 pseudogene 14	Approved		100289623	
+HGNC:52414	UBE2V1P15	ubiquitin conjugating enzyme E2 V1 pseudogene 15	Approved		100288170	
 HGNC:12495	UBE2V2	ubiquitin conjugating enzyme E2 V2	Approved	UEV-2, DDVit-1, EDPF-1, MMS2	7336	Q15819
 HGNC:44885	UBE2V2P1	ubiquitin conjugating enzyme E2 V2 pseudogene 1	Approved		100128493	
 HGNC:44887	UBE2V2P2	ubiquitin conjugating enzyme E2 V2 pseudogene 2	Approved		104548970	
@@ -42286,7 +42486,7 @@ HGNC:12635	UTRN	utrophin	Approved	DRP, DRP1	7402	P46939
 HGNC:12636	UTS2	urotensin 2	Approved	UII, U-II, UCN2, PRO1068	10911	O95399
 HGNC:30894	UTS2B	urotensin 2B	Approved	URP, U2B	257313	Q765I0
 HGNC:4468	UTS2R	urotensin 2 receptor	Approved		2837	Q9UKP6
-HGNC:12638	UTY	ubiquitously transcribed tetratricopeptide repeat containing, Y-linked	Approved	KDM6AL	7404	O14607
+HGNC:12638	UTY	ubiquitously transcribed tetratricopeptide repeat containing, Y-linked	Approved	KDM6AL, KDM6C	7404	O14607
 HGNC:12639	UVO~withdrawn	symbol withdrawn, see CDH1	Symbol Withdrawn			
 HGNC:12640	UVRAG	UV radiation resistance associated	Approved	VPS38	7405	Q9P2Y5
 HGNC:29304	UVSSA	UV stimulated scaffold protein A	Approved		57654	Q2YD98
@@ -42690,6 +42890,7 @@ HGNC:38034	WASH7P	WAS protein family homolog 7 pseudogene	Approved	FAM39F	653635
 HGNC:24361	WASHC1	WASH complex subunit 1	Approved	FLJ00038	100287171	A8K0Z3
 HGNC:23416	WASHC2A	WASH complex subunit 2A	Approved	bA56A21.1, bA98I6.1, FLJ10824	387680	Q641Q2
 HGNC:23414	WASHC2C	WASH complex subunit 2C	Approved	Em:AC012044.3, KIAA0592	253725	Q9Y4E1
+HGNC:23418	WASHC2D	WASH complex subunit 2D	Approved	bA592B15.4		Q5SRD0
 HGNC:24256	WASHC3	WASH complex subunit 3	Approved	CGI-116	51019	Q9Y3C0
 HGNC:29174	WASHC4	WASH complex subunit 4	Approved	SWIP	23325	Q2M389
 HGNC:28984	WASHC5	WASH complex subunit 5	Approved		9897	Q12768
@@ -42774,7 +42975,7 @@ HGNC:30512	WDR44	WD repeat domain 44	Approved	DKFZp686L20145, RPH11, RAB11BP	545
 HGNC:28912	WDR45	WD repeat domain 45	Approved	JM5, WIPI4, NBIA5	11152	Q9Y484
 HGNC:25072	WDR45B	WD repeat domain 45B	Approved	WIPI3	56270	Q5MNZ6
 HGNC:26605	WDR45BP1	WD repeat domain 45B pseudogene 1	Approved		646086	
-HGNC:52406	WDR45P1	WD repeat domain 45 pseudogene 1	Approved			
+HGNC:52406	WDR45P1	WD repeat domain 45 pseudogene 1	Approved		594841	
 HGNC:13923	WDR46	WD repeat domain 46	Approved	BING4, UTP7	9277	O15213
 HGNC:29141	WDR47	WD repeat domain 47	Approved	KIAA0893	22911	O94967
 HGNC:30914	WDR48	WD repeat domain 48	Approved	KIAA1449, P80, SPG60	57599	Q8TAF3
@@ -42844,8 +43045,8 @@ HGNC:32360	WHAMMP2	WAS protein homolog associated with actin, golgi membranes an
 HGNC:27892	WHAMMP3	WAS protein homolog associated with actin, golgi membranes and microtubules pseudogene 3	Approved		339005	Q1A5X7
 HGNC:12764	WHCR	Wolf-Hirschhorn syndrome chromosome region	Approved		7467	
 HGNC:16361	WHRN	whirlin	Approved	CIP98, USH2D, PDZD7B	25861	Q9P202
-HGNC:12766	WHSC1	Wolf-Hirschhorn syndrome candidate 1	Approved	MMSET, NSD2	7468	O96028
-HGNC:12767	WHSC1L1	Wolf-Hirschhorn syndrome candidate 1-like 1	Approved	FLJ20353, NSD3, WHISTLE	54904	Q9BZ95
+HGNC:12766	WHSC1	Wolf-Hirschhorn syndrome candidate 1	Approved	MMSET, NSD2, KMT3G	7468	O96028
+HGNC:12767	WHSC1L1	Wolf-Hirschhorn syndrome candidate 1-like 1	Approved	FLJ20353, NSD3, WHISTLE, KMT3F	54904	Q9BZ95
 HGNC:24189	WHSC1L1P~withdrawn	symbol withdrawn, see WHSC1L2P	Symbol Withdrawn			
 HGNC:14647	WHSC1L2P	Wolf-Hirschhorn syndrome candidate 1-like 2, pseudogene	Approved	NSD4P, HsT36289	100128016	
 HGNC:18081	WIF1	WNT inhibitory factor 1	Approved		11197	Q9Y5W5

@@ -18,7 +18,7 @@ ARRB Family	ARRB
 ATP2A Family	ATP2A
 ATP5G Family	ATP5G
 AXIN Family	AXIN
-Acetyl-CoA Synthetase Family	Acetyl_CoA_synthase
+Acetyl-CoA Synthetase Family	Acetyl_CoA_synthetase
 BIRC Family	BIRC
 BMP Family	BMP
 BMP Receptor Type I Family	BMP_receptor_type_I
@@ -92,8 +92,8 @@ GATA Family	GATA
 GNA Gq Family	G_q
 GNA Gs Family	G_s
 GNAI Family	G_i
-GNB Family	GNB
-GNG Family	GNG
+GNB Family	G_beta
+GNG Family	G_gamma
 GPX Family	GPX
 GRIA Family	GRIA
 GRK Family	GRK
@@ -287,8 +287,8 @@ NADPH Oxidase Complex	NADPH_oxidase
 Nfkb Complex	NFkappaB
 Nfy Complex	NFY
 Phosphorylase B Kinase Complex	PhK
-PRC1 Maintenance Complex	PRC1_Maintenance
-PRC2 Initiation Complex	PRC2_Initiation
+PRC1 Maintenance Complex	PRC1_complex
+PRC2 Initiation Complex	PRC2_complex
 Propionyl CoA Carboxylase Complex	Propionyl_CoA_carboxylase
 Proteasome Complex	Proteasome
 Proton Transporting ATP Synthase Complex	ATP_synthase

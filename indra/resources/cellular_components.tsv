@@ -2394,6 +2394,8 @@ GO:0061779	Tapasin-ERp57 complex
 GO:0061793	chromatin lock complex
 GO:0061800	fibronectin fibril
 GO:0061801	laminin-5B complex
+GO:0061802	anterior cell cortex
+GO:0061803	posterior cell cortex
 GO:0065010	extracellular membrane-bounded organelle
 GO:0070013	intracellular organelle lumen
 GO:0070014	sucrase-isomaltase complex
@@ -2888,6 +2890,7 @@ GO:0090692	mitochondrial membrane scission site
 GO:0090694	Scc2-Scc4 cohesin loading complex
 GO:0090695	Wpl/Pds5 cohesin loading/unloading complex
 GO:0090705	trichome papilla
+GO:0090712	basal pole of outer hair cell
 GO:0097002	mitochondrial inner boundary membrane
 GO:0097013	phagocytic vesicle lumen
 GO:0097014	ciliary plasm
