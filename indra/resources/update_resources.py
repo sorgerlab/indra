@@ -121,14 +121,16 @@ def update_chebi_entries():
     fname = os.path.join(path, 'chebi_to_pubchem.tsv')
     logger.info('Saving into %s' % fname)
     df_pubchem = df[df['REFERENCE_DB_NAME']=='PubChem']
-    df_pubchem.sort_values('COMPOUND_ID', ascending=True, inplace=True)
+    df_pubchem.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
+                           inplace=True)
     df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'PUBCHEM'], index=False)
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
     df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
-    df_chembl.sort_values('COMPOUND_ID', ascending=True, inplace=True)
+    df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
+                          inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
@@ -209,15 +211,19 @@ def update_cellular_component_hierarchy():
     make_ccomp_hierarchy()
 
 if __name__ == '__main__':
+    '''
     update_hgnc_entries()
     update_kinases()
     update_uniprot_entries()
     update_uniprot_sec_ac()
     update_uniprot_subcell_loc()
+    '''
     update_chebi_entries()
+    '''
     update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
+    '''

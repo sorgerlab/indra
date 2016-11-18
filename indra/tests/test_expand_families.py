@@ -44,7 +44,7 @@ def test_get_children():
     # relationships
     ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
     ampks = exp.get_children(ampk, ns_filter=None)
-    assert len(ampks) == 10
+    assert len(ampks) == 22
     ampks = exp.get_children(ampk, ns_filter='HGNC')
     assert len(ampks) == 7
     # Test that the default filter is HGNC
