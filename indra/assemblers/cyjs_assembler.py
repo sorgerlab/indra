@@ -152,19 +152,70 @@ class CyJSAssembler(object):
                     node['data']['mutation'] = 0
                     # NDEx mutation client returns None when mutation isn't found in any
                     # cell line. Thus, set mutation to 0.
+                if node['data'].get('members', None):
+                    members = node['data']['members']['HGNC']
+                    # FIXME this works, but it makes a bunch of calls
+                    # FIXME it can be optimized to make only one call, then parse return
+                    for m in members:
+                        exp2 = context_client.get_protein_expression(m, cell_type)
+                        mut2 = context_client.get_mutations(m, cell_type)
+                        amount = exp2.get(m)
+                        mutation = mut2.get(m)
+                        if amount is  None:
+                            node['data']['members']['HGNC'][m]['expression'] = None
+                        if amount is not None:
+                            node['data']['members']['HGNC'][m]['expression'] = \
+                                int(amount[cell_type])
+                            counter_exp += 1
+                        if mutation is not None:
+                            node['data']['members']['HGNC'][m]['mutation'] = \
+                                int(mutation[cell_type])
+                            # 0 for no mutation
+                            # 1 for mutation
+                            counter_mut += 1
+                        if mutation is  None:
+                            node['data']['members']['HGNC'][m]['mutation'] = 0
             logger.info('Set expression context for %d nodes.' % counter_exp)
             logger.info('Set mutation context for %d nodes.' % counter_mut)
         if kwargs.get('bin_expression', None):
+            # capture the expression levels of every gene in nodes
             exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
-            exp_lvls = [x for x in exp_lvls if x != None]
-            bin_thr = histogram([x for x in exp_lvls if x != None], 5)[1]
+            # capture the expression levels of every gene in family members
+            m_exp_lvls = []
             for n in self._nodes:
+                if n['data'].get('members', None):
+                    members = n['data']['members']['HGNC']
+                    for m in members:
+                        m_exp_lvls.append(members[m]['expression'])
+            # combine node expressions and family expressions
+            exp_lvls = exp_lvls + m_exp_lvls
+            # get rid of None gene expressions
+            exp_lvls = [x for x in exp_lvls if x != None]
+            # bin expression levels into 5 equally sized bins 0-4
+            # bin 5 reserved for None
+            # this returns the left bound of each bin
+            bin_thr = histogram([x for x in exp_lvls if x != None], 5)[1]
+            # iterate over nodes
+            for n in self._nodes:
+                # if node has members set member bin_expression values
+                if n['data'].get('members', None):
+                    members = n['data']['members']['HGNC']
+                    for m in members:
+                        # if expression is None, set to bin index 5
+                        if members[m]['expression'] == None:
+                            members[m]['bin_expression'] = 5
+                        else:
+                            for thr_idx, thr in enumerate(bin_thr):
+                                if members[m]['expression']<= thr:
+                                    members[m]['bin_expression'] = thr_idx
+                                    break
+                # set bin_expression for the node itself
                 if n['data']['expression'] ==  None:
-                    n['data']['expression'] = 5
+                    n['data']['bin_expression'] = 5
                 else:
                     for thr_idx, thr in enumerate(bin_thr):
                         if n['data']['expression']<= thr:
-                            n['data']['expression'] = thr_idx
+                            n['data']['bin_expression'] = thr_idx
                             break
 
     def print_cyjs(self):
@@ -235,7 +286,8 @@ class CyJSAssembler(object):
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
         expanded_families = expander.get_children(agent, ns_filter='HGNC')
-        members = {'HGNC':sorted([x[1] for x in expanded_families])}
+        members = {'HGNC':{x[1]:{'mutation':None,'expression':None} \
+                   for x in expanded_families}}
         #if len(members['HGNC']) > 0:
         #    logger.info('Expanded %s family with %d members.' \
         #                % (node_name,len(members['HGNC'])))
