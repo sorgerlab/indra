@@ -734,7 +734,10 @@ class TripsProcessor(object):
                     logger.warning('Could not extract term %s.' %
                                    member_id)
                     continue
-                member_agents.append(agent)
+                if isinstance(agent, Agent):
+                    member_agents.append(agent)
+                else:
+                    member_agents += agent
             # Handle case where the individual member extraction fails
             # to make sure we don't end up with None Agent arguments
             # in Statements
