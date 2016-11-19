@@ -77,7 +77,20 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        for st in statements:
+        def get_rolling_prob(stmt):
+            # Start with probability of this statement being incorrect and
+            # Iterate over supported statements and get the joint probability
+            # of all of them being jointly incorrect
+            neg_probs_rolling = (1-stmt.belief)
+            for st in stmt.supports:
+                neg_probs_rolling *= (1-self.get_rolling_prob(st))
+            # The probability of not being incorrect is 1 minus the joint
+            # probability of this statement being incorrect and all the ones
+            # that support it.
+            prob = (1-neg_probs_rolling)
+            return prob
+        ranked_stmts = get_ranked_stmts(statements)
+        for st in ranked_stmts[0]:
             prob = self.get_rolling_prob(st)
             st.belief = prob
 
@@ -107,3 +120,23 @@ class BeliefEngine(object):
             neg_probs_rolling *= (1-self.get_rolling_prob(st))
         prob = (1-neg_prob_self*neg_probs_rolling)
         return prob
+
+def get_ranked_stmts(self, statements):
+    def get_next_level(stmts):
+        above_stmts = []
+        for st in stmts:
+            all_leaf = True
+            for st_supp in st.supported_by:
+                if st_supp not in stmts:
+                    all_leaf = False
+                    break
+            if all_leaf:
+                above_stmts.append(st)
+         return above_stmts
+    ranked_stmts = [[st for st in statements if not st.supported_by]]
+    while True:
+        next_stmts = get_next_level(ranked_stmts[-1])
+        if not next_stmts:
+            break
+        ranked_stmts.append(next_stmts)
+    return ranked_stmts

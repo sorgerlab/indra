@@ -187,10 +187,12 @@ class IncrementalModel(object):
         be.set_prior_probs(self.unique_stmts)
 
         # Build statement hierarchy
-        self.toplevel_stmts = pa.combine_related()
+        self.unique_stmts = pa.combine_related(return_toplevel=False)
+        self.toplevel_stmts = [st for st in self.unique_stmts
+                               if not st.supports]
         logger.info('%d top-level Statements' % len(self.toplevel_stmts))
         # Run BeliefEngine on hierarchy
-        be.set_hierarchy_probs(self.toplevel_stmts)
+        be.set_hierarchy_probs(self.unique_stmts)
 
     def load_prior(self, prior_fname):
         """Load a set of prior statements from a pickle file.
