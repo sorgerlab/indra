@@ -420,6 +420,47 @@ class CyJSAssembler(object):
             if e['data'].get('weight', None) is None:
                 e['data']['weight'] = 1
 
+    def _add_attractors(self):
+        parent_node_ids = [x['data']['parent'] for x in self._nodes
+                           if x['data']['parent'] != '']
+        parent_node_ids = list(set(parent_node_ids))
+        attr_dict = {}
+        for parent_node_id in parent_node_ids:
+            child_node_ids = [x['data']['id'] for x in self._nodes
+                              if x['data']['parent'] == parent_node_id]
+            #  pick the middle node of the children
+            #  this actually produces some spread group nodes, not ideal
+            for i in list(range(len(child_node_ids))):
+                if i >= len(child_node_ids)/2:
+                    break
+                else:
+                    attr_node_id = child_node_ids[i]
+            # sets attractor to last child node
+            #attr_node_id = child_node_ids[-1]
+            attr_dict[parent_node_id] = attr_node_id
+        # for any existing edges to/from parent
+        # give attractors same edges
+        attr_edges_list = []
+        for edge in self._edges:
+            source = edge['data']['source']
+            target = edge['data']['target']
+            attr_edge = None
+            # check source and target against attr_dict to point to attractors
+            # edges sourcing or targeting parents will be ignored
+            if source in attr_dict or target in attr_dict:
+                attr_edge = deepcopy(edge)
+                if source in attr_dict:
+                    attr_edge['data']['source'] = attr_dict[source]
+                if target in attr_dict:
+                    attr_edge['data']['target'] = attr_dict[target]
+                attr_edge['data']['id'] = self._get_new_id()
+                attr_edge['data']['i'] = 'Attractor'
+            if attr_edge is not None:
+                if attr_edge not in attr_edges_list:
+                    attr_edges_list.append(attr_edge)
+        for attr_edge in attr_edges_list:
+            self._edges.append(attr_edge)
+
 def _get_db_refs(agent):
     cyjs_db_refs = {}
     for db_name, db_ids in agent.db_refs.items():
