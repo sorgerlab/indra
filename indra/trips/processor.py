@@ -906,7 +906,10 @@ class TripsProcessor(object):
                 xr_tags = dt.findall('xrefs/xref')
                 for xrt in xr_tags:
                     dbid_str = xrt.attrib.get('dbid')
-                    scores[dbid_str] = float(match_score)
+                    old_score = scores.get(dbid_str)
+                    new_score = float(match_score)
+                    if old_score is not None and old_score < new_score:
+                        scores[dbid_str] = new_score
             sorted_db_refs = sorted(scores.items(),
                                     key=operator.itemgetter(1),
                                     reverse=True)

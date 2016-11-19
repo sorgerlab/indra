@@ -543,3 +543,11 @@ def test_41():
     st = tp.statements[0]
     assert(st.obj.location is not None)
 
+def test_42():
+    sentence = 'RAF1 activates MAP2K1.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    raf1 = st.subj
+    assert(raf1.name == 'RAF1')
+    assert(raf1.db_refs.get('HGNC') == '9829')
