@@ -142,6 +142,7 @@ class ModelChecker(object):
         #        paths.append(sp)
         #        break
 
+
 def _add_modification_to_agent(agent, mod_type, residue, position):
     new_mod = ModCondition(mod_type, residue, position)
     # Check if this modification already exists
@@ -152,6 +153,7 @@ def _add_modification_to_agent(agent, mod_type, residue, position):
     new_agent.mods.append(new_mod)
     return new_agent
 
+
 def match_lhs(cp, rules):
     rule_matches = []
     for rule in rules:
@@ -161,6 +163,7 @@ def match_lhs(cp, rules):
                 rule_matches.append(rule)
                 break
     return rule_matches
+
 
 def match_rhs(cp, rules):
     rule_matches = []
@@ -194,6 +197,7 @@ def find_consumption_rules(cp, rules):
     return cons_rules
 """
 
+
 def cp_embeds_into(cp1, cp2):
     # Check that any state in cp2 is matched in cp2
     # If the thing we're matching to is just a monomer pattern, that makes
@@ -210,6 +214,7 @@ def cp_embeds_into(cp1, cp2):
                 return True
     return False
 
+
 def mp_embeds_into(mp1, mp2):
     sc_matches = []
     if mp1.monomer.name != mp2.monomer.name:
@@ -221,6 +226,7 @@ def mp_embeds_into(mp1, mp2):
             return False
     return True
 
+
 def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
@@ -229,17 +235,24 @@ def positive_path(im, path):
         from_rule = path[rule_ix]
         to_rule = path[rule_ix + 1]
         edge = im.get_edge(from_rule, to_rule)
-        if edge.attr.get('color') is None:
-            raise Exception('No color attribute for edge.')
-        elif edge.attr['color'] == 'green':
+        if _is_positive_edge(edge):
             edge_polarities.append(1)
-        elif edge.attr['color'] == 'red':
-            edge_polarities.append(-1)
         else:
-            raise Exception('Unexpected edge color: %s' % edge.attr['color'])
+            edge_polarities.append(-1)
     # Compute and return the overall path polarity
     path_polarity = np.prod(edge_polarities)
     assert path_polarity == 1 or path_polarity == -1
     return True if path_polarity == 1 else False
+
+
+def _is_positive_edge(edge):
+    if edge.attr.get('color') is None:
+        raise Exception('No color attribute for edge.')
+    elif edge.attr['color'] == 'green':
+        return True
+    elif edge.attr['color'] == 'red':
+        return False
+    else:
+        raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
 
