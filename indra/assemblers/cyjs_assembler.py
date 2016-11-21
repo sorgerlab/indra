@@ -440,7 +440,7 @@ class CyJSAssembler(object):
             attr_dict[parent_node_id] = attr_node_id
         # for any existing edges to/from parent
         # give attractors same edges
-        attr_edges_list = []
+        attr_edges = []
         for edge in self._edges:
             source = edge['data']['source']
             target = edge['data']['target']
@@ -456,10 +456,92 @@ class CyJSAssembler(object):
                 attr_edge['data']['id'] = self._get_new_id()
                 attr_edge['data']['i'] = 'Attractor'
             if attr_edge is not None:
-                if attr_edge not in attr_edges_list:
-                    attr_edges_list.append(attr_edge)
-        for attr_edge in attr_edges_list:
+                if attr_edge not in attr_edges:
+                    attr_edges.append(attr_edge)
+        for attr_edge in attr_edges:
             self._edges.append(attr_edge)
+
+    def _add_ext_attractors(self):
+        parent_node_ids = [x['data']['parent'] for x in self._nodes
+                           if x['data']['parent'] != '']
+        parent_node_ids = list(set(parent_node_ids))
+        # this is in the format {parent_node_id : [child_node_ids]}
+        # parent child dict
+        pc_dict = {}
+        for parent_node_id in parent_node_ids:
+            child_node_ids = [x['data']['id'] for x in self._nodes
+                              if x['data']['parent'] == parent_node_id]
+            pc_dict[parent_node_id] = {'children': child_node_ids,
+                                       'sources': [],
+                                       'src_attr_id': None,
+                                       'targets': [],
+                                       'targ_attr_id': None}
+        # discover all sources and targets for group nodes
+        for e in self._edges:
+            source = e['data']['source']
+            target = e['data']['target']
+            if source in pc_dict or target in pc_dict:
+                # any edge that has a parent node as its source is a target
+                # for that parent node
+                if source in pc_dict:
+                    pc_dict[source]['targets'].append(target)
+                # any edge that has a parent node as a target is a source
+                # for that parent node
+                if target in pc_dict:
+                    pc_dict[target]['sources'].append(source)
+        # create external attractor nodes for each parent node
+        for p in pc_dict:
+            # if there are sources that point at the parent node
+            # init and append a source attractor
+            children = pc_dict[p]['children']
+            sources = pc_dict[p]['sources']
+            if len(sources) > 0:
+                src_attr_id = self._get_new_id()
+                pc_dict[p]['srt_attr_id'] = src_attr_id
+                src_attr = {'data': {'id': src_attr_id,
+                                     'name': ('Attractor'),
+                                     'parent':''}}
+                self._nodes.append(src_attr)
+                # create edges from the sources to the source attractor
+                for s in sources:
+                    edge = {'data': {'i': 'Attractor',
+                                     'id': self._get_new_id(),
+                                     'source': s,
+                                     'target': src_attr_id}}
+                    self._edges.append(edge)
+                # create edges from the src attractor pointing to children
+                for c in children:
+                    edge = {'data': {'i': 'Attractor',
+                                     'id': self._get_new_id(),
+                                     'source': src_attr_id,
+                                     'target': c}}
+                    self._edges.append(edge)
+            # if there are nodes targeted by the parent node
+            # init and append a target attractor
+            targets = pc_dict[p]['targets']
+            if len(targets) > 0:
+                targ_attr_id = self._get_new_id()
+                pc_dict[p]['targ_attr_id'] = src_attr_id
+                targ_attr = {'data': {'id': targ_attr_id,
+                                      'name': ('Attractor'),
+                                      'parent':''}}
+                self._nodes.append(targ_attr)
+                # create edges from the target attractor to targets
+                for t in targets:
+                    edge = {'data': {'i': 'Attractor',
+                                     'id': self._get_new_id(),
+                                     'source': targ_attr_id,
+                                     'target': t}}
+                    self._edges.append(edge)
+                # create edges from the src attractor pointing to children
+                for c in children:
+                    edge = {'data': {'i': 'Attractor',
+                                     'id': self._get_new_id(),
+                                     'source': c,
+                                     'target': targ_attr_id}}
+                    self._edges.append(edge)
+
+
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
