@@ -171,7 +171,6 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     assert results[0][1] == False
 
-    """
 def test_ras_220_network():
     ras_220_results_path = os.path.join('../../models/ras_220_genes'
                                         '/ras_220_gn_related2_stmts.pkl')
@@ -197,14 +196,13 @@ def test_ras_220_network():
     stmts = [stmt1, stmt2]
     mc = ModelChecker(pa.model, stmts)
     checks = mc.check_model()
-    #assert len(checks) == 2
-    #assert isinstance(checks[0], tuple)
-    #assert checks[0][0] == stmt1
-    #assert checks[0][1] == True
-    #assert checks[1][0] == stmt2
-    #assert checks[1][1] == False
+    assert len(checks) == 2
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt1
+    assert checks[0][1] == True
+    assert checks[1][0] == stmt2
+    assert checks[1][1] == False
     # Now try again, with a two_step policy
-    """
     """
     # Skip this, building the influence map takes a very long time
     pa.make_model(policies='two_step')
@@ -317,30 +315,67 @@ def test_invalid_modification():
      #assert results[0][0] == st
      #assert results[0][1] == True
 
-@with_model
-def test_distinguish_path_polarity():
-    """Test the ability to distinguish a positive from a negative regulation."""
+def _path_polarity_stmt_list():
     a = Agent('A')
-    b = Agent('B')
-    st1 = Phosphorylation(a, b, 'T', '185')
-    st2 = Dephosphorylation(a, b, 'T', '185')
-    # Now create the PySB model
+    b = Agent('B1')
+    c = Agent('C')
+    st1 = Phosphorylation(a, c, 'T', '185')
+    st2 = Dephosphorylation(a, c, 'T', '185')
+    st3 = Phosphorylation(None, c, 'T', '185')
+    st4 = Dephosphorylation(None, c, 'T', '185')
+    return [st1, st2, st3, st4]
+
+@with_model
+def test_distinguish_path_polarity1():
+    """Test the ability to distinguish a positive from a negative regulation."""
     Monomer('A')
-    Monomer('B', ['T185'], {'T185':['u', 'p']})
-    Rule('A_dephos_B', A() + B(T185='p') >> A() + B(T185='u'),
-         Parameter('k', 1))
-    Initial(A(), Parameter('A_0', 100))
-    Initial(B(T185='p'), Parameter('B_0', 100))
-    mc = ModelChecker(model, [st1, st2])
+    Monomer('B', ['act'], {'act' :['y', 'n']})
+    Monomer('C', ['T185'], {'T185':['u', 'p']})
+    Parameter('k', 1)
+    Rule('A_activate_B', A() + B(act='n') >> A() + B(act='y'), k)
+    Rule('B_dephos_C', B(act='y') + C(T185='p') >>
+                       B(act='y') + C(T185='u'), k)
+    Initial(A(), k)
+    Initial(B(act='y'), k)
+    Initial(C(T185='p'), k)
+    # Create the model checker
+    stmts = _path_polarity_stmt_list()
+    mc = ModelChecker(model, stmts)
     results = mc.check_model()
     im = mc.get_im()
-    im.draw('dist_pp_im.pdf', prog='dot')
-    assert len(results) == 2
+    im.draw('dist_pp_im1.pdf', prog='dot')
+    assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][0] == st1
     assert results[0][1] == False
-    assert results[0][0] == st2
+    assert results[1][1] == True
+    assert results[2][1] == False
+    assert results[3][1] == True
+
+@with_model
+def test_distinguish_path_polarity2():
+    """Test the ability to distinguish a positive from a negative regulation."""
+    Monomer('A')
+    Monomer('B', ['act'], {'act' :['y', 'n']})
+    Monomer('C', ['T185'], {'T185':['u', 'p']})
+    Parameter('k', 1)
+    Rule('A_inhibit_B', A() + B(act='y') >> A() + B(act='n'), k)
+    Rule('B_dephos_C', B(act='y') + C(T185='p') >>
+                       B(act='y') + C(T185='u'), k)
+    Initial(A(), k)
+    Initial(B(act='y'), k)
+    Initial(C(T185='p'), k)
+    # Create the model checker
+    stmts = _path_polarity_stmt_list()
+    mc = ModelChecker(model, stmts)
+    results = mc.check_model()
+    im = mc.get_im()
+    im.draw('dist_pp_im2.pdf', prog='dot')
+    assert len(results) ==  len(stmts)
+    assert isinstance(results[0], tuple)
     assert results[0][1] == True
+    assert results[1][1] == False
+    assert results[2][1] == True
+    assert results[3][1] == True
 
 
 @with_model
@@ -480,7 +515,11 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_none_phosphorylation_stmt()
+    pass
+    #test_none_phosphorylation_stmt()
+    #test_distinguish_path_polarity1()
+    #test_distinguish_path_polarity2()
+    #test_distinguish_path_polarity_none_stmt()
     #test_phosphorylation_annotations()
     #test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
@@ -488,5 +527,4 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
-    #test_distinguish_path_polarity()
 

@@ -5,12 +5,12 @@ import numpy as np
 import networkx
 import itertools
 from copy import deepcopy
+from collections import deque
 from pysb import kappa
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
-
 logger = logging.getLogger('model_checker')
 
 class ModelChecker(object):
@@ -60,9 +60,9 @@ class ModelChecker(object):
             enz_mp = None
 
         if type(stmt) in (Dephosphorylation,):
-            unmodify_stmt = True
+            target_polarity = -1
         else:
-            unmodify_stmt = False
+            target_polarity = 1
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
         site_pattern = pa.get_site_pattern(modified_sub)
@@ -81,7 +81,9 @@ class ModelChecker(object):
         self.model.observables = ComponentSet([])
         self.model.add_component(obs)
         # Find rules in the model corresponding to the input
-        if enz_mp is not None:
+        if enz_mp is None:
+            input_rule_set = None
+        else:
             input_rules = match_lhs(enz_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])
@@ -92,8 +94,18 @@ class ModelChecker(object):
             if not input_rules:
                 return False
         # Generate the predecessors to our observable
-        pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
-        preds = set(pred_dict.keys())
+        num_paths = 0
+        for (source, polarity, path_length) in \
+                    _find_sources(self.get_im(), obs_name, input_rule_set,
+                                  target_polarity):
+            num_paths += 1
+        if num_paths > 0:
+            return True
+        else:
+            return False
+
+        #pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
+        #preds = set(pred_dict.keys())
         # If we're missing participant A (no enzyme), then we only need to check
         # that there are any predecessors to our observable for this statement
         # to be valid
@@ -227,6 +239,53 @@ def mp_embeds_into(mp1, mp2):
     return True
 
 
+def _get_signed_predecessors(im, node, polarity):
+    signed_pred_list = []
+    predecessors = im.predecessors_iter
+    for pred in predecessors(node):
+        pred_edge = im.get_edge(pred, node)
+        yield (pred, _get_edge_sign(pred_edge) * polarity)
+
+def _find_sources(im, target, sources, polarity):
+    # First, generate a list of visited nodes
+    # Copied/adapted from networkx
+    visited = set([(target, 1)])
+    # Generate list of predecessor nodes with a sign updated according to the sign
+    # of the target node
+    target_tuple = (target, 1)
+    # The queue holds tuples of "parents" (in this case downstream nodes) and their
+    # "children" (in this case their upstream influencers)
+    queue = deque([(target_tuple, _get_signed_predecessors(im, target, 1), 1)])
+    while queue:
+        parent, children, path_length = queue[0]
+        try:
+            # Get the next child in the list
+            (child, sign) = next(children)
+            # The sign of the child should be updated according to the sign of
+            # the parent!
+            # Could do this in the expansion step itself, or here;
+            # If done during the expansion step, 
+            # Check this child against the visited list. If we haven't visited it,
+            # then we return the parent/child pair
+            if (sources is None or child in sources) and sign == polarity:
+                logger.info("Found path to %s from %s with desired sign %s with "
+                            "length %d" %
+                            (target, child, polarity, path_length))
+                yield (child, sign, path_length)
+            if (child, sign) not in visited:
+                # TODO: Update this to include the path length, and perhaps to
+                # check for sources matching the list
+                visited.add((child, sign))
+                queue.append((child, _get_signed_predecessors(im, child, sign),
+                              path_length + 1))
+                # Add in the new parent child pair after expanding out
+        # Once we've finished iterating over the children of the current node,
+        # pop the node off and go to the next one in the queue
+        except StopIteration:
+            queue.popleft()
+            path_length += 1
+    return None
+
 def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
@@ -235,23 +294,20 @@ def positive_path(im, path):
         from_rule = path[rule_ix]
         to_rule = path[rule_ix + 1]
         edge = im.get_edge(from_rule, to_rule)
-        if _is_positive_edge(edge):
-            edge_polarities.append(1)
-        else:
-            edge_polarities.append(-1)
+        edge_polarities.append(_get_edge_sign(edge))
     # Compute and return the overall path polarity
     path_polarity = np.prod(edge_polarities)
     assert path_polarity == 1 or path_polarity == -1
     return True if path_polarity == 1 else False
 
 
-def _is_positive_edge(edge):
+def _get_edge_sign(edge):
     if edge.attr.get('color') is None:
         raise Exception('No color attribute for edge.')
     elif edge.attr['color'] == 'green':
-        return True
+        return 1
     elif edge.attr['color'] == 'red':
-        return False
+        return -1
     else:
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
