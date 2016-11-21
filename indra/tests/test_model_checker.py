@@ -317,7 +317,7 @@ def test_invalid_modification():
 
 def _path_polarity_stmt_list():
     a = Agent('A')
-    b = Agent('B1')
+    b = Agent('B')
     c = Agent('C')
     st1 = Phosphorylation(a, c, 'T', '185')
     st2 = Dephosphorylation(a, c, 'T', '185')
@@ -440,7 +440,27 @@ def test_ubiquitination():
     assert checks[0][1] == True
 """
 
-# 
+"""
+@with_model
+def test_check_activation():
+    a = Agent('A')
+    b = Agent('B')
+    c = Agent('C')
+    st1 = Activation(a, 'activity', b, 'activity', True)
+    st2 = Activation(b, 'activity', c, 'activity', False)
+    stmts = [st1, st2]
+    # Create the model
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    # Try two step
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, stmts)
+    results = mc.check_model()
+    assert len(results) ==  len(stmts)
+    assert isinstance(results[0], tuple)
+    assert results[0][1] == True
+    assert results[1][1] == True
+"""
 
 # Issues--if a rule activity isn't contingent on a particular mod,
 # then were will be no causal connection between any upstream modifying
@@ -527,4 +547,5 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
-
+    #test_check_ubiquitination()
+    test_check_activation()

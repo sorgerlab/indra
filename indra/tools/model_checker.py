@@ -47,6 +47,28 @@ class ModelChecker(object):
         else:
             return False
 
+
+    """
+    def check_activation(self, stmt):
+        logger.info('Checking stmt: %s' % stmt)
+        # FIXME Currently this will match rules with the corresponding monomer
+        # pattern from the Activation statement, which will nearly always have no
+        # state conditions on it. In future, this statement should also match rules
+        # in which 1) the agent is in its active form, or 2) the agent is tagged
+        # as the enzyme in a rule of the appropriate activity (e.g., a phosphorylation
+        # rule) FIXME
+        subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
+        target_polarity = 1 if stmt.is_activation else -1
+        # This may fail, since there may be no rule in the model activating the
+        # object, and the object may not have an "active" site of the appropriate
+        # type
+        try:
+            activated_obj = _get_active_agent_monomer(stmt.obj, stmt.obj_activity)
+        except Exception as e:
+            logger.info("Invalid site: %s" % e)
+            return False
+    """
+
     def check_modification(self, stmt):
         # Identify the observable we're looking for in the model, which
         # may not exist!
@@ -59,7 +81,9 @@ class ModelChecker(object):
         else:
             enz_mp = None
 
-        if type(stmt) in (Dephosphorylation,):
+        if type(stmt) in (Dephosphorylation, Dehydroxylation, Desumoylation,
+                          Deacetylation, Deglycosylation, Deribosylation,
+                          Deubiquitination, Defarnesylation):
             target_polarity = -1
         else:
             target_polarity = 1
@@ -68,27 +92,32 @@ class ModelChecker(object):
         site_pattern = pa.get_site_pattern(modified_sub)
         obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
         monomer = self.model.monomers[modified_sub.name]
+        try:
+            obj_mp = monomer(**site_pattern)
+        except Exception as e:
+            logger.info("Invalid site: %s" % e)
+            return False
+
+        return self._find_im_paths(enz_mp, obj_mp, obs_name, target_polarity)
+
+    def _find_im_paths(self, subj_mp, obj_mp, obs_name, target_polarity):
         # If we try to get a monomer pattern for a monomer that doesn't have
         # the specified site, PySB throws a (generic) Exception; we catch this
         # as an indication that the site doesn't exist, and hence the
         # modification is not observed, and return False.
-        try:
-            obs = Observable(obs_name, monomer(**site_pattern), _export=False)
-        except Exception as e:
-            logger.info("Invalid site: %s" % e)
-            return False
+        obs = Observable(obs_name, obj_mp, _export=False)
         # Reset the observables list
         self.model.observables = ComponentSet([])
         self.model.add_component(obs)
         # Find rules in the model corresponding to the input
-        if enz_mp is None:
+        if subj_mp is None:
             input_rule_set = None
         else:
-            input_rules = match_lhs(enz_mp, self.model.rules)
+            input_rules = match_lhs(subj_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])
             logger.info('Found %s input rules matching %s' %
-                        (len(input_rules), str(enz_mp)))
+                        (len(input_rules), str(subj_mp)))
             # If we have enzyme information but there are no input rules matching
             # the enzyme, then there is no path
             if not input_rules:
@@ -103,57 +132,6 @@ class ModelChecker(object):
             return True
         else:
             return False
-
-        #pred_dict = networkx.bfs_predecessors(self.get_im(), obs_name)
-        #preds = set(pred_dict.keys())
-        # If we're missing participant A (no enzyme), then we only need to check
-        # that there are any predecessors to our observable for this statement
-        # to be valid
-        if enz_mp is None and preds:
-            return True
-        elif enz_mp is None:
-            return False
-        # If we've got this far, then we know that we have an enzyme (enz_mp is
-        # not None), and there are input rules matching this enzyme
-        # (input_rule_set is not empty)
-        assert enz_mp and input_rule_set
-        # Check to see if any of our input rules are in our set of upstream
-        # influencer rules
-        source_influences = input_rule_set.intersection(set(preds))
-        logger.info('Source influences')
-        logger.info(source_influences)
-        # If the set is non-empty, then we have a causal path
-        if source_influences:
-            return True
-        # Otherwise, there is no path
-        else:
-            return False
-        #logger.info("Trying input rule %s" % input_rule.name)
-        #sp_gen = networkx.all_simple_paths(self.get_im(),
-        #                                   input_rule.name,
-        #                                   obs_name)
-        #if networkx.has_path(self.get_im(), input_rule.name,
-        #                     obs_name):
-        #    logger.info('Found path between %s and %s' %
-        #                (input_rule.name, obs_name))
-        #    return True
-        #else:
-        #    logger.info('No path between %s and %s' %
-        #                (input_rule.name, obs_name))
-        #    continue
-        # Iterate over paths until we find one with positive
-        # polarity
-        #need_positive_path = False if unmodify_stmt else True
-        #for sp in sp_gen:
-        #    logger.info('Found path: %s' % str(sp))
-        #    if need_positive_path == \
-        #            positive_path(self.get_im(), sp):
-        #        logger.info('Found non-repeating path, '
-        #                    'length %d: %s' %
-        #                    (len(sp), str(sp)))
-        #        paths.append(sp)
-        #        break
-
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
     new_mod = ModCondition(mod_type, residue, position)
