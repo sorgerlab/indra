@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
-from indra.assemblers.pysb_assembler import get_agent_rule_str, _n
+from indra.assemblers.pysb_assembler import get_agent_rule_str, _n, \
+                                            parse_identifiers_url
 from indra.statements import *
-from pysb import bng
+from pysb import bng, WILD
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -414,7 +415,7 @@ def test_neg_act_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'u'})
+    assert(braf.site_conditions == {'S123': ('u', WILD)})
 
 def test_pos_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', True)
@@ -426,7 +427,7 @@ def test_pos_agent_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'p'})
+    assert(braf.site_conditions == {'S123': ('p', WILD)})
 
 def test_neg_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
@@ -438,7 +439,7 @@ def test_neg_agent_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'u'})
+    assert(braf.site_conditions == {'S123': ('u', WILD)})
 
 def test_mut():
     mut = MutCondition('600', 'V', 'E')
@@ -673,3 +674,25 @@ def test_translocation_loc_special_char():
     assert(f2.site_conditions == {'loc': 'cell_surface'})
     assert(r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1')
 
+def test_parse_identifiers_url():
+    url1 = 'http://identifiers.org/foo/bar'
+    url2 = 'http://identifiers.org/hgnc/12345'
+    url3 = 'http://identifiers.org/hgnc/HGNC:12345'
+    url4 = 'http://identifiers.org/uniprot/12345'
+    url5 = 'http://identifiers.org/chebi/12345'
+    url6 = 'http://identifiers.org/interpro/12345'
+    url7 = 'http://identifiers.org/pfam/12345'
+    (ns, id) = parse_identifiers_url(url1)
+    assert ns is None and id is None
+    (ns, id) = parse_identifiers_url(url2)
+    assert ns is None and id is None
+    (ns, id) = parse_identifiers_url(url3)
+    assert ns == 'HGNC' and id == '12345'
+    (ns, id) = parse_identifiers_url(url4)
+    assert ns == 'UP' and id == '12345'
+    (ns, id) = parse_identifiers_url(url5)
+    assert ns == 'CHEBI' and id == '12345'
+    (ns, id) = parse_identifiers_url(url6)
+    assert ns == 'IP' and id == '12345'
+    (ns, id) = parse_identifiers_url(url7)
+    assert ns == 'XFAM' and id == '12345'

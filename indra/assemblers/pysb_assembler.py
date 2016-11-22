@@ -447,11 +447,34 @@ def get_annotation(component, db_name, db_ref):
         obj = url + 'interpro/%s' % db_ref
         pred = 'is'
     elif db_name == 'CHEBI':
-        obj = url + 'chebi/CHEBI:%s' % db_ref
+        obj = url + 'chebi/%s' % db_ref
         pred = 'is'
     else:
         return None
     return Annotation(subj, obj, pred)
+
+def parse_identifiers_url(url):
+    url_pattern = 'http://identifiers.org/([A-Za-z]+)/([A-Za-z0-9:]+)'
+    match = re.match(url_pattern, url)
+    if match is not None:
+        g = match.groups()
+        if not len(g) == 2:
+            return (None, None)
+        ns_map = {'hgnc': 'HGNC', 'uniprot': 'UP', 'chebi':'CHEBI',
+                  'interpro':'IP', 'pfam':'XFAM'}
+        ns = g[0]
+        id = g[1]
+        if not ns in ns_map.keys():
+            return (None, None)
+        if ns == 'hgnc':
+            if id.startswith('HGNC:'):
+                id = id[5:]
+            else:
+                logger.warning('HGNC URL missing "HGNC:" prefix: %s' % url)
+                return (None, None)
+        indra_ns = ns_map[ns]
+        return (indra_ns, id)
+    return (None, None)
 
 # PysbAssembler #######################################################
 
