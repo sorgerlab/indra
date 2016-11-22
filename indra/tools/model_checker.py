@@ -135,6 +135,7 @@ class ModelChecker(object):
         else:
             return False
 
+
 def _add_modification_to_agent(agent, mod_type, residue, position):
     new_mod = ModCondition(mod_type, residue, position)
     # Check if this modification already exists

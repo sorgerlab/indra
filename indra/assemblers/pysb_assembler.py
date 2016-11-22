@@ -323,16 +323,41 @@ def get_uncond_agent(agent):
     agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
 
-def get_monomer_pattern(model, agent, extra_fields=None):
+def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
     """Construct a PySB MonomerPattern from an Agent."""
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
         for k, v in extra_fields.items():
             pattern[k] = v
 
+    if use_grounding:
+        if not agent.db_refs:
+            
+        # Iterate over all model annotations
+        for ann in model.annotations:
+            if not ann.predicate == 'is':
+                continue
+            if not isinstance(ann.subject, Monomer):
+                continue
+            (ns, id) = parse_identifiers_url(ann.object)
+            if ns is None and id is None:
+                return None
+            # We now have an identifiers.org namespace/ID for a given monomer;
+            # we check to see if there is a matching identifier in the db_refs
+            # for this agent
+            for db_ns, db_id in agent.db_refs.items():
+                # We've found a match! Return the monomer
+                if db_ns == ns and db_id == id:
+                    return ann.subject
+    return None
+        monomer = find_monomer_with_grounding(model, agent.db_refs)
+        if monomer is None:
+            return None
+    else:
+        monomer = model.monomers[_n(agent.name)]
+
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
-    monomer = model.monomers[_n(agent.name)]
     monomer_pattern = monomer(**pattern)
     return monomer_pattern
 

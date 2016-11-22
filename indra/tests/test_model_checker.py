@@ -460,6 +460,7 @@ def test_check_activation():
     assert results[0][1] == True
     assert results[1][1] == True
 
+
 # Issues--if a rule activity isn't contingent on a particular mod,
 # then were will be no causal connection between any upstream modifying
 # rules and the downstream rule.

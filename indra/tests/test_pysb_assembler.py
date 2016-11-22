@@ -2,9 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
 from indra.assemblers.pysb_assembler import get_agent_rule_str, _n, \
-                                            parse_identifiers_url
+                                            parse_identifiers_url,
+                                            find_monomer_with_grounding
 from indra.statements import *
 from pysb import bng, WILD
+from pysb.testing import with_model
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -696,3 +698,17 @@ def test_parse_identifiers_url():
     assert ns == 'IP' and id == '12345'
     (ns, id) = parse_identifiers_url(url7)
     assert ns == 'XFAM' and id == '12345'
+
+@with_model
+def test_find_monomer_with_grounding():
+    Monomer('A_monomer')
+    Monomer('B_monomer')
+    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    mono = mc._find_monomer_with_grounding({'HGNC': 'foo'})
+    assert mono is None
+    mono = mc._find_monomer_with_grounding({'HGNC': '6840'})
+    assert mono == A_monomer
+    mono = mc._find_monomer_with_grounding({'HGNC': '6871'})
+    assert mono == B_monomer
+
