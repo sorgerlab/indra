@@ -13,6 +13,10 @@ bel_chebi_map.tsv
   with
   http://resource.belframework.org/belframework/latest-release/equivalence/chebi.beleq
 
+bioentities_map.tsv
+- A table containing mappings from outside name spaces into Bioentities.
+- It is generated from bioentities/equivalences.csv
+
 cellular_components.tsv
 - A table of GO IDs and standardized names corresponding to cellular locations
 - It is exported from http://purl.obolibrary.org/obo/go.owl
@@ -57,10 +61,6 @@ Files that are manually curated
 curated_site_map.tsv
 - A table containing mappings for amino acid sites on proteins
   that are often misannotated
-
-bel_indra_map.tsv
-- A table mapping BEL family names to Bioentities entries
-
 
 Files that don't need periodical updates
 ========================================
