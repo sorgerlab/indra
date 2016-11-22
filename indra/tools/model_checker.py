@@ -44,11 +44,11 @@ class ModelChecker(object):
     def check_statement(self, stmt):
         if isinstance(stmt, Modification):
             return self.check_modification(stmt)
+        elif isinstance(stmt, Activation):
+            return self.check_activation(stmt)
         else:
             return False
 
-
-    """
     def check_activation(self, stmt):
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
@@ -62,12 +62,17 @@ class ModelChecker(object):
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the appropriate
         # type
+        obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
         try:
-            activated_obj = _get_active_agent_monomer(stmt.obj, stmt.obj_activity)
+            obj_site_pattern = pa.get_site_pattern(stmt.obj)
+            obj_site_pattern.update({pa.active_site_names[stmt.obj_activity]: 'active'})
+            obj_monomer = self.model.monomers[stmt.obj.name]
+            obj_mp = obj_monomer(**obj_site_pattern)
         except Exception as e:
-            logger.info("Invalid site: %s" % e)
+            logger.info("Could not create obj monomer pattern: %s" % e)
             return False
-    """
+        obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
+        return self._find_im_paths(subj_mp, obj_obs, target_polarity)
 
     def check_modification(self, stmt):
         # Identify the observable we're looking for in the model, which
@@ -87,6 +92,7 @@ class ModelChecker(object):
             target_polarity = -1
         else:
             target_polarity = 1
+
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
         site_pattern = pa.get_site_pattern(modified_sub)
@@ -97,18 +103,14 @@ class ModelChecker(object):
         except Exception as e:
             logger.info("Invalid site: %s" % e)
             return False
+        obj_obs = Observable(obs_name, obj_mp, _export=False)
 
-        return self._find_im_paths(enz_mp, obj_mp, obs_name, target_polarity)
+        return self._find_im_paths(enz_mp, obj_obs, target_polarity)
 
-    def _find_im_paths(self, subj_mp, obj_mp, obs_name, target_polarity):
-        # If we try to get a monomer pattern for a monomer that doesn't have
-        # the specified site, PySB throws a (generic) Exception; we catch this
-        # as an indication that the site doesn't exist, and hence the
-        # modification is not observed, and return False.
-        obs = Observable(obs_name, obj_mp, _export=False)
+    def _find_im_paths(self, subj_mp, obj_obs, target_polarity):
         # Reset the observables list
         self.model.observables = ComponentSet([])
-        self.model.add_component(obs)
+        self.model.add_component(obj_obs)
         # Find rules in the model corresponding to the input
         if subj_mp is None:
             input_rule_set = None
@@ -125,7 +127,7 @@ class ModelChecker(object):
         # Generate the predecessors to our observable
         num_paths = 0
         for (source, polarity, path_length) in \
-                    _find_sources(self.get_im(), obs_name, input_rule_set,
+                    _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
         if num_paths > 0:
@@ -224,6 +226,7 @@ def _get_signed_predecessors(im, node, polarity):
         pred_edge = im.get_edge(pred, node)
         yield (pred, _get_edge_sign(pred_edge) * polarity)
 
+
 def _find_sources(im, target, sources, polarity):
     # First, generate a list of visited nodes
     # Copied/adapted from networkx
@@ -263,6 +266,7 @@ def _find_sources(im, target, sources, polarity):
             queue.popleft()
             path_length += 1
     return None
+
 
 def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the

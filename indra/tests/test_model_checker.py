@@ -440,14 +440,13 @@ def test_ubiquitination():
     assert checks[0][1] == True
 """
 
-"""
 @with_model
 def test_check_activation():
     a = Agent('A')
     b = Agent('B')
     c = Agent('C')
     st1 = Activation(a, 'activity', b, 'activity', True)
-    st2 = Activation(b, 'activity', c, 'activity', False)
+    st2 = Activation(b, 'activity', c, 'kinase', False)
     stmts = [st1, st2]
     # Create the model
     pa = PysbAssembler()
@@ -460,7 +459,6 @@ def test_check_activation():
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
     assert results[1][1] == True
-"""
 
 # Issues--if a rule activity isn't contingent on a particular mod,
 # then were will be no causal connection between any upstream modifying
@@ -535,7 +533,7 @@ def test_check_activation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    pass
+    test_check_activation()
     #test_none_phosphorylation_stmt()
     #test_distinguish_path_polarity1()
     #test_distinguish_path_polarity2()
@@ -548,4 +546,3 @@ if __name__ == '__main__':
     #test_consumption_rule()
     #test_dephosphorylation()
     #test_check_ubiquitination()
-    test_check_activation()
