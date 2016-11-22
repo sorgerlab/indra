@@ -325,14 +325,11 @@ def get_uncond_agent(agent):
 
 def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
     """Construct a PySB MonomerPattern from an Agent."""
-    pattern = get_site_pattern(agent)
-    if extra_fields is not None:
-        for k, v in extra_fields.items():
-            pattern[k] = v
-
     if use_grounding:
         if not agent.db_refs:
-            
+            logger.warning('use_grounding is True but agent %s has no '
+                           'db_refs.' % agent)
+            return None
         # Iterate over all model annotations
         for ann in model.annotations:
             if not ann.predicate == 'is':
@@ -341,21 +338,30 @@ def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
                 continue
             (ns, id) = parse_identifiers_url(ann.object)
             if ns is None and id is None:
-                return None
+                continue
             # We now have an identifiers.org namespace/ID for a given monomer;
             # we check to see if there is a matching identifier in the db_refs
             # for this agent
             for db_ns, db_id in agent.db_refs.items():
                 # We've found a match! Return the monomer
                 if db_ns == ns and db_id == id:
-                    return ann.subject
-    return None
-        monomer = find_monomer_with_grounding(model, agent.db_refs)
-        if monomer is None:
-            return None
+                    monomer = ann.subject
+        # We looked at all the annotations in the model and didn't find a
+        # match
+        return None
+    # Try to get the monomer using the agent name
     else:
-        monomer = model.monomers[_n(agent.name)]
-
+        try:
+            monomer = model.monomers[_n(agent.name)]
+        except KeyError as e:
+            logger.warning('Monomer with name %s not found in model' %
+                           _n(agent.name))
+            return None
+    # Get the agent site pattern
+    pattern = get_site_pattern(agent)
+    if extra_fields is not None:
+        for k, v in extra_fields.items():
+            pattern[k] = v
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
     monomer_pattern = monomer(**pattern)

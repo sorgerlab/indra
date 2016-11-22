@@ -2,8 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
 from indra.assemblers.pysb_assembler import get_agent_rule_str, _n, \
-                                            parse_identifiers_url,
-                                            find_monomer_with_grounding
+                                            parse_identifiers_url
 from indra.statements import *
 from pysb import bng, WILD
 from pysb.testing import with_model
@@ -700,15 +699,17 @@ def test_parse_identifiers_url():
     assert ns == 'XFAM' and id == '12345'
 
 @with_model
-def test_find_monomer_with_grounding():
+def test_get_mp_with_grounding():
+    foo = Agent('Foo', db_refs={'HGNC': 'foo'})
+    a = Agent('A', db_refs={'HGNC': '6840'})
+    b = Agent('B', db_refs={'HGNC': '6871'})
     Monomer('A_monomer')
     Monomer('B_monomer')
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
-    mono = mc._find_monomer_with_grounding({'HGNC': 'foo'})
+    mono = pa.get_monomer_pattern(model, foo, use_grounding=True)
     assert mono is None
-    mono = mc._find_monomer_with_grounding({'HGNC': '6840'})
+    mono = pa.get_monomer_pattern(model, a, use_grounding=True)
     assert mono == A_monomer
-    mono = mc._find_monomer_with_grounding({'HGNC': '6871'})
+    mono = pa.get_monomer_pattern(model, b, use_grounding=True)
     assert mono == B_monomer
-
