@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import re
 import logging
 import collections
@@ -815,20 +816,24 @@ class BelProcessor(object):
         mc.position = mod_pos
         return mc
 
-def _build_bel_indra_map():
-    fname = os.path.dirname(os.path.abspath(__file__)) +\
-                '/../resources/bel_indra_map.tsv'
+
+def _build_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
     bel_to_indra = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
-        bel_name = row[0]
-        indra_name = row[1]
-        bel_to_indra[bel_name] = indra_name
+        namespace = row[0]
+        entry = row[1]
+        indra_name = row[2]
+        if namespace == 'BEL':
+            bel_to_indra[entry] = indra_name
     return bel_to_indra
 
+
 def _build_chebi_map():
-    fname = os.path.dirname(os.path.abspath(__file__)) +\
-                '/../resources/bel_chebi_map.tsv'
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bel_chebi_map.tsv')
     chebi_name_id = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
@@ -837,5 +842,5 @@ def _build_chebi_map():
         chebi_name_id[chebi_name] = chebi_id
     return chebi_name_id
 
-bel_to_indra = _build_bel_indra_map()
+bel_to_indra = _build_bioentities_map()
 chebi_name_id = _build_chebi_map()
