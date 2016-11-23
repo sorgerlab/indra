@@ -323,15 +323,23 @@ def get_uncond_agent(agent):
     agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
 
-def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
+def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
-    if use_grounding:
-        if not agent.db_refs:
-            logger.warning('use_grounding is True but agent %s has no '
-                           'db_refs.' % agent)
+    # When there is no grounding for the agent, use agent name
+    if not agent.db_refs or list(agent.db_refs.keys()) == ['TEXT']:
+        try:
+            monomer = model.monomers[_n(agent.name)]
+        except KeyError as e:
+            logger.warning('Monomer with name %s not found in model' %
+                           _n(agent.name))
             return None
+    # Look for monomers based on grounding
+    else:
         # Iterate over all model annotations
+        monomer = None
         for ann in model.annotations:
+            if monomer:
+                break
             if not ann.predicate == 'is':
                 continue
             if not isinstance(ann.subject, Monomer):
@@ -343,23 +351,16 @@ def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
             # we check to see if there is a matching identifier in the db_refs
             # for this agent
             for db_ns, db_id in agent.db_refs.items():
-                # We've found a match! Return first match.
+                # We've found a match! Return first match
                 # FIXME Could also update this to check for alternative
                 # FIXME matches, or make sure that all grounding IDs match,
                 # FIXME etc.
                 if db_ns == ns and db_id == id:
                     monomer = ann.subject
-                    return monomer
+                    break
         # We looked at all the annotations in the model and didn't find a
         # match
-        return None
-    # Try to get the monomer using the agent name
-    else:
-        try:
-            monomer = model.monomers[_n(agent.name)]
-        except KeyError as e:
-            logger.warning('Monomer with name %s not found in model' %
-                           _n(agent.name))
+        if monomer is None:
             return None
     # Get the agent site pattern
     pattern = get_site_pattern(agent)

@@ -706,12 +706,12 @@ def test_get_mp_with_grounding():
     Monomer('B_monomer')
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
-    mono = pa.get_monomer_pattern(model, foo, use_grounding=True)
+    mono = pa.get_monomer_pattern(model, foo)
     assert mono is None
-    mono = pa.get_monomer_pattern(model, a, use_grounding=True)
-    assert mono == A_monomer
-    mono = pa.get_monomer_pattern(model, b, use_grounding=True)
-    assert mono == B_monomer
+    mono = pa.get_monomer_pattern(model, a)
+    assert mono.monomer == A_monomer
+    mono = pa.get_monomer_pattern(model, b)
+    assert mono.monomer == B_monomer
 
 if __name__ == '__main__':
     test_get_mp_with_grounding()
