@@ -32,6 +32,7 @@ molecule_types = protein_types + \
     ['ONT::CHEMICAL', 'ONT::MOLECULE', 'ONT::SUBSTANCE',
      'ONT::PHARMACOLOGIC-SUBSTANCE']
 
+
 class TripsProcessor(object):
     """The TripsProcessor extracts INDRA Statements from a TRIPS XML.
 
@@ -81,8 +82,9 @@ class TripsProcessor(object):
 
         self.statements = []
         self._static_events = self._find_static_events()
+        self.all_events = {}
         self.get_all_events()
-        self.extracted_events = {k:[] for k in self.all_events.keys()}
+        self.extracted_events = {k: [] for k in self.all_events.keys()}
         logger.debug('All events by type')
         logger.debug('------------------')
         for k, v in self.all_events.items():
@@ -146,9 +148,9 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
+            is_activation = True
+            activator_act = 'activity'
             if _is_type(event, 'ONT::ACTIVATE'):
-                is_activation = True
-                activator_act = 'activity'
                 self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
             elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
@@ -156,7 +158,6 @@ class TripsProcessor(object):
                 self._add_extracted('ONT::INHIBIT', event.attrib['id'])
             elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
-                activator_act = 'activity'
                 self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
 
             ev = self._get_evidence(event)
@@ -165,7 +166,7 @@ class TripsProcessor(object):
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
                 st = Activation(a1, activator_act, a2, 'activity',
-                                is_activation=is_activation, evidence=ev)
+                                is_activation=is_activation, evidence=[ev])
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
 
@@ -192,7 +193,7 @@ class TripsProcessor(object):
             factor_term_type = factor_term.find('type')
             # The factor term must be a molecular entity
             if factor_term_type is None or \
-                factor_term_type.text not in molecule_types:
+               factor_term_type.text not in molecule_types:
                 continue
             factor_agent = self._get_agent_by_id(factor_id, None)
             if factor_agent is None:
@@ -258,7 +259,7 @@ class TripsProcessor(object):
             controller_term_type = controller_term.find('type')
             # The controller term must be a molecular entity
             if controller_term_type is None or \
-                controller_term_type.text not in molecule_types:
+               controller_term_type.text not in molecule_types:
                 continue
             controller_agent = self._get_agent_by_id(controller_id, None)
             if controller_agent is None:
@@ -275,7 +276,7 @@ class TripsProcessor(object):
                 if affected is None:
                     continue
                 affected_agent = self._get_agent_by_id(affected.attrib['id'],
-                                                      affected_id)
+                                                       affected_id)
                 if affected_agent is None:
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
@@ -290,7 +291,7 @@ class TripsProcessor(object):
                 if agent_tag is None:
                     continue
                 affected_agent = self._get_agent_by_id(agent_tag.attrib['id'],
-                                                      affected_id)
+                                                       affected_id)
                 if affected_agent is None:
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
@@ -316,7 +317,7 @@ class TripsProcessor(object):
             # Make sure the degradation is affecting a molecule type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in molecule_types:
+               affected_type.text not in molecule_types:
                 continue
 
             affected_id = affected.attrib.get('id')
@@ -364,7 +365,7 @@ class TripsProcessor(object):
             # Make sure the synthesis is affecting a molecule type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in molecule_types:
+               affected_type.text not in molecule_types:
                 continue
 
             affected_id = affected.attrib.get('id')
@@ -426,7 +427,7 @@ class TripsProcessor(object):
             # The affected agent has to be protein-like type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in protein_types:
+               affected_type.text not in protein_types:
                 continue
             # If the Agent state is at the base state then this is not an
             # ActiveForm statement
@@ -450,7 +451,7 @@ class TripsProcessor(object):
             arg1 = event.find("arg1")
             arg2 = event.find("arg2")
             if (arg1 is None or arg1.attrib.get('id') is None) or \
-                (arg2 is None or arg2.attrib.get('id') is None):
+               (arg2 is None or arg2.attrib.get('id') is None):
                 logger.debug('Skipping complex with less than 2 members')
                 continue
 
@@ -517,7 +518,7 @@ class TripsProcessor(object):
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 logger.debug('Skipping modification event with no '
-                              'affected term.')
+                             'affected term.')
                 continue
             affected_id = affected.attrib.get('id')
             if affected_id is None:
@@ -525,7 +526,7 @@ class TripsProcessor(object):
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
                 logger.debug('Skipping modification event with no '
-                              'affected term.')
+                             'affected term.')
                 continue
 
             # Get modification sites
@@ -546,7 +547,7 @@ class TripsProcessor(object):
                         [BoundCondition(agent_bound, True)]
                     for m in mods:
                         st = Transphosphorylation(enzyme_agent, m.residue,
-                                                  m.position, evidence=ev)
+                                                  m.position, evidence=[ev])
                         _stmt_location_to_agents(st, location)
                         self.statements.append(st)
                     continue
@@ -557,30 +558,30 @@ class TripsProcessor(object):
                             for ea in enzyme_agent:
                                 st = Autophosphorylation(ea,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                                 _stmt_location_to_agents(st, location)
                                 self.statements.append(st)
                         else:
                             st = Autophosphorylation(enzyme_agent,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
                     continue
                 elif affected_agent is not None and \
-                    'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
+                     'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                     for m in mods:
                         if isinstance(affected_agent, list):
                             for aa in affected_agent:
                                 st = Autophosphorylation(aa,
                                                          m.residue, m.position,
-                                                         evidence=ev)
+                                                         evidence=[ev])
                                 _stmt_location_to_agents(st, location)
                                 self.statements.append(st)
                         else:
                             st = Autophosphorylation(affected_agent,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
                     continue
@@ -763,7 +764,7 @@ class TripsProcessor(object):
             # the complex is the one that mediates binding
             agent = agents[0]
             agent.bound_conditions = \
-                            [BoundCondition(ag, True) for ag in agents[1:]]
+                [BoundCondition(ag, True) for ag in agents[1:]]
         # If the entity is not a complex
         else:
             # Determine the agent name
@@ -797,9 +798,9 @@ class TripsProcessor(object):
             for precond_id in precond_ids:
                 if precond_id == event_id:
                     logger.debug('Circular reference to event %s.' %
-                                   precond_id)
+                                 precond_id)
                 precond_event = self.tree.find("EVENT[@id='%s']" % 
-                                                precond_id)
+                                               precond_id)
                 if precond_event is None:
                     # Sometimes, if there are multiple preconditions
                     # they are numbered with <id>.1, <id>.2, etc.
@@ -817,8 +818,7 @@ class TripsProcessor(object):
             mut_id = mut.attrib.get('id')
             if mut_id is None:
                 continue
-            mut_term = self.tree.find("TERM/[@id='%s']" %\
-                mut.attrib.get('id'))
+            mut_term = self.tree.find("TERM/[@id='%s']" % mut.attrib.get('id'))
             if mut_term is None:
                 continue
             mut_values = self._get_mutation(mut_term)
@@ -908,7 +908,7 @@ class TripsProcessor(object):
                             dbids.append(dbid)
                         key_name = 'PFAM-DEF:' + '|'.join(dbids)
                         scores[key_name] = float(match_score)
-                # Next
+                # Next look at the xref tags
                 xr_tags = dt.findall('xrefs/xref')
                 for xrt in xr_tags:
                     dbid_str = xrt.attrib.get('dbid')
@@ -966,8 +966,6 @@ class TripsProcessor(object):
         if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
-            mod = precond_event.findall('mods/mod')
-            bound_to_term_id = None
             if arg1 is None:
                 bound_to_term_id = arg2.attrib.get('id')
             elif arg2 is None:
@@ -984,7 +982,7 @@ class TripsProcessor(object):
 
             bound_agents = []
             if bound_to_term_id is not None:
-                bound_to_term = self.tree.find("TERM/[@id='%s']" % \
+                bound_to_term = self.tree.find("TERM/[@id='%s']" %
                                                bound_to_term_id)
                 if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
@@ -1153,7 +1151,6 @@ class TripsProcessor(object):
             return None
 
     def _get_evidence(self, event_tag):
-        api = 'trips'
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
         epi = {'section_type': sec}
@@ -1233,6 +1230,7 @@ class TripsProcessor(object):
     def _add_extracted(self, event_type, event_id):
         self.extracted_events[event_type].append(event_id)
 
+
 def _get_type(element):
     type_tag = element.find('type')
     if type_tag is None:
@@ -1240,11 +1238,13 @@ def _get_type(element):
     type_text = type_tag.text
     return type_text
 
+
 def _is_type(element, type_text):
     element_type = _get_type(element)
     if element_type == type_text:
         return True
     return False
+
 
 def _stmt_location_to_agents(stmt, location):
     """Apply an event location to the Agents in the corresponding Statement.
@@ -1259,6 +1259,7 @@ def _stmt_location_to_agents(stmt, location):
         if a is not None:
             a.location = location
 
+
 def _agent_list_product(lists):
     def _listify(lst):
         if not isinstance(lst, collections.Iterable):
@@ -1268,20 +1269,22 @@ def _agent_list_product(lists):
     ll = [_listify(l) for l in lists]
     return itertools.product(*ll)
 
+
 def _is_base_agent_state(agent):
     if agent.location is None and \
-        not agent.mods and \
-        not agent.mutations and \
-        not agent.bound_conditions:
+       not agent.mods and \
+       not agent.mutations and \
+       not agent.bound_conditions:
             return True
     return False
+
 
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '../resources/ncit_map.tsv')
     ncit_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
-    csv_rows.next()
+    next(csv_rows)
     for row in csv_rows:
         ncit_id = row[0]
         target_ns = row[1]
@@ -1303,5 +1306,4 @@ def _read_bioentities_map():
         bioentities_map[(source_ns, source_id)] = be_id
     return bioentities_map
 
-ncit_map = _read_ncit_map()
 bioentities_map = _read_bioentities_map()
