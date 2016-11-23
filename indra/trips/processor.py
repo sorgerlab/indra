@@ -1,11 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import re
 import logging
 import operator
 import itertools
 import collections
 import xml.etree.ElementTree as ET
+from indra.util import read_unicode_csv
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
@@ -878,7 +880,7 @@ class TripsProcessor(object):
             scores = {}
             score_started = False
             for dt in drum_terms:
-                dbid_str = dt.attrib.get('dbid')
+                # Handling corner cases for unscored matches
                 match_score = dt.attrib.get('match-score')
                 if not score_started:
                     if match_score is not None:
@@ -892,7 +894,12 @@ class TripsProcessor(object):
                         # This is a match after other scored matches
                         # default to a small value
                         match_score = 0.1
-                if dbid_str is None:
+                dbid_str = dt.attrib.get('dbid')
+                # Scores are then saved in a dict with the dbid strings
+                # as keys (e.g. 'HGNC:1234': 0.85)
+                if dbid_str is not None:
+                    scores[dbid_str] = float(match_score)
+                else:
                     if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                         members = term.findall('members/member')
                         dbids = []
@@ -901,8 +908,7 @@ class TripsProcessor(object):
                             dbids.append(dbid)
                         key_name = 'PFAM-DEF:' + '|'.join(dbids)
                         scores[key_name] = float(match_score)
-                else:
-                    scores[dbid_str] = float(match_score)
+                # Next
                 xr_tags = dt.findall('xrefs/xref')
                 for xrt in xr_tags:
                     dbid_str = xrt.attrib.get('dbid')
@@ -1269,3 +1275,33 @@ def _is_base_agent_state(agent):
         not agent.bound_conditions:
             return True
     return False
+
+def _read_ncit_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/ncit_map.tsv')
+    ncit_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    csv_rows.next()
+    for row in csv_rows:
+        ncit_id = row[0]
+        target_ns = row[1]
+        target_id = row[2]
+        ncit_map[ncit_id] = (target_ns, target_id)
+    return ncit_map
+
+ncit_map = _read_ncit_map()
+
+def _read_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
+    bioentities_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        bioentities_map[(source_ns, source_id)] = be_id
+    return bioentities_map
+
+ncit_map = _read_ncit_map()
+bioentities_map = _read_bioentities_map()
