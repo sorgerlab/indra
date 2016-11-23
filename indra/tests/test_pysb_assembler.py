@@ -1,10 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
-from indra.assemblers.pysb_assembler import get_agent_rule_str, _n, \
-                                            parse_identifiers_url
+from indra.assemblers import pysb_assembler as pa
 from indra.statements import *
-from pysb import bng, WILD
+from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
 
 def test_pysb_assembler_complex1():
@@ -380,29 +379,29 @@ def test_activity_activity3():
     assert(len(model.monomers)==2)
 
 def test_rule_name_str_1():
-    s = get_agent_rule_str(Agent('BRAF'))
+    s = pa.get_agent_rule_str(Agent('BRAF'))
     assert(s == 'BRAF')
 
 def test_rule_name_str_2():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), True)])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'GRB2_EGFR')
 
 def test_rule_name_str_3():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), False)])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'GRB2_nEGFR')
 
 def test_rule_name_str_4():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine')])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'BRAF_phosphoS')
 
 def test_rule_name_str_5():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine', '123')])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'BRAF_phosphoS123')
 
 def test_neg_act_mod():
@@ -536,13 +535,13 @@ def test_save_rst():
     pa.save_rst('/dev/null')
 
 def test_name_standardize():
-    n = _n('.*/- ^&#@$')
+    n = pa._n('.*/- ^&#@$')
     assert(isinstance(n, str))
     assert(n == '__________')
-    n = _n('14-3-3')
+    n = pa._n('14-3-3')
     assert(isinstance(n, str))
     assert(n == 'p14_3_3')
-    n = _n('\U0001F4A9bar')
+    n = pa._n('\U0001F4A9bar')
     assert(isinstance(n, str))
     assert(n == 'bar')
 
@@ -683,19 +682,19 @@ def test_parse_identifiers_url():
     url5 = 'http://identifiers.org/chebi/12345'
     url6 = 'http://identifiers.org/interpro/12345'
     url7 = 'http://identifiers.org/pfam/12345'
-    (ns, id) = parse_identifiers_url(url1)
+    (ns, id) = pa.parse_identifiers_url(url1)
     assert ns is None and id is None
-    (ns, id) = parse_identifiers_url(url2)
+    (ns, id) = pa.parse_identifiers_url(url2)
     assert ns is None and id is None
-    (ns, id) = parse_identifiers_url(url3)
+    (ns, id) = pa.parse_identifiers_url(url3)
     assert ns == 'HGNC' and id == '12345'
-    (ns, id) = parse_identifiers_url(url4)
+    (ns, id) = pa.parse_identifiers_url(url4)
     assert ns == 'UP' and id == '12345'
-    (ns, id) = parse_identifiers_url(url5)
+    (ns, id) = pa.parse_identifiers_url(url5)
     assert ns == 'CHEBI' and id == '12345'
-    (ns, id) = parse_identifiers_url(url6)
+    (ns, id) = pa.parse_identifiers_url(url6)
     assert ns == 'IP' and id == '12345'
-    (ns, id) = parse_identifiers_url(url7)
+    (ns, id) = pa.parse_identifiers_url(url7)
     assert ns == 'XFAM' and id == '12345'
 
 @with_model
@@ -713,3 +712,6 @@ def test_get_mp_with_grounding():
     assert mono == A_monomer
     mono = pa.get_monomer_pattern(model, b, use_grounding=True)
     assert mono == B_monomer
+
+if __name__ == '__main__':
+    test_get_mp_with_grounding()

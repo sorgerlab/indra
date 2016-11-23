@@ -343,9 +343,13 @@ def get_monomer_pattern(model, agent, extra_fields=None, use_grounding=False):
             # we check to see if there is a matching identifier in the db_refs
             # for this agent
             for db_ns, db_id in agent.db_refs.items():
-                # We've found a match! Return the monomer
+                # We've found a match! Return first match.
+                # FIXME Could also update this to check for alternative
+                # FIXME matches, or make sure that all grounding IDs match,
+                # FIXME etc.
                 if db_ns == ns and db_id == id:
                     monomer = ann.subject
+                    return monomer
         # We looked at all the annotations in the model and didn't find a
         # match
         return None
