@@ -895,10 +895,11 @@ class TripsProcessor(object):
                         # default to a small value
                         match_score = 0.1
                 dbid_str = dt.attrib.get('dbid')
-                # Scores are then saved in a dict with the dbid strings
-                # as keys (e.g. 'HGNC:1234': 0.85)
+                # Scores are then saved in a dict with tuples
+                # as keys (e.g. ('HGNC', '1234'): 0.85)
                 if dbid_str is not None:
-                    scores[dbid_str] = float(match_score)
+                    db_ns, db_id = dbid_str.split(':')
+                    scores[(db_ns, db_id)] = float(match_score)
                 else:
                     if _is_type(term, 'ONT::PROTEIN-FAMILY'):
                         members = term.findall('members/member')
@@ -906,7 +907,7 @@ class TripsProcessor(object):
                         for m in members:
                             dbid = m.attrib.get('dbid')
                             dbids.append(dbid)
-                        key_name = 'PFAM-DEF:' + '|'.join(dbids)
+                        key_name = ('PFAM-DEF', '|'.join(dbids))
                         scores[key_name] = float(match_score)
                 # Next look at the xref tags
                 xr_tags = dt.findall('xrefs/xref')
@@ -916,13 +917,33 @@ class TripsProcessor(object):
                     new_score = float(match_score)
                     if old_score is not None and old_score < new_score:
                         scores[dbid_str] = new_score
+
+            # Next we look at alternatives for each dbid_str. For instance
+            # we check if NCIT has maps to HGNC, CHEBI, GO or BE. These entries
+            # are then added to the scores.
+            for entry, score in scores.items():
+                dbname, dbid = entry
+                db_mappings = _get_db_mappings(dbname, dbid)
+                for db_mapping in db_mappings:
+                    old_score = scores.get(db_mapping)
+                    # If the entry doesn't exist yet, add it with the
+                    # corresponding score
+                    if old_score is None:
+                        scores[db_mapping] = score
+                    # If the entry exists and this score is higher than the
+                    # original one then add the higher score
+                    elif score > old_score:
+                        scores[db_mapping] = score
+                    # Otherwise no score changes
+
+            # Finally, the scores are sorted in descending order
             sorted_db_refs = sorted(scores.items(),
                                     key=operator.itemgetter(1),
                                     reverse=True)
             # Here the matches are sorted and so each dbname will only
             # have its highest scoring entry added to db_refs
-            for dbid_str, _ in sorted_db_refs:
-                dbname, dbid = dbid_str.split(':')
+            for entry, score in sorted_db_refs:
+                dbname, dbid = entry
                 if not db_refs.get(dbname):
                     if dbname == 'PFAM-DEF':
                         dbids = [{p[0]: p[1]} for p in dbid.split('|')]
@@ -936,6 +957,7 @@ class TripsProcessor(object):
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
+
         # Here we fix some grounding standardization issues
         hgnc_id = db_refs.get('HGNC')
         up_id = db_refs.get('UP')
@@ -1277,6 +1299,18 @@ def _is_base_agent_state(agent):
        not agent.bound_conditions:
             return True
     return False
+
+
+def _get_db_mappings(dbname, dbid):
+    db_mappings = []
+    be_id = bioentities_map.get((dbname, dbid))
+    if be_id is not None:
+        db_mappings.append(('BE', be_id))
+    if dbname == 'NCIT':
+        target = ncit_map.get(dbid)
+        if target is not None:
+            db_mappings.append((target[0], target[1]))
+    return db_mappings
 
 
 def _read_ncit_map():
