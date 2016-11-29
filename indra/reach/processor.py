@@ -297,6 +297,8 @@ class ReachProcessor(object):
                 db_refs['GO'] = xr['id']
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id']
+            elif ns == 'be':
+                db_refs['BE'] = xr['id']
         db_refs['TEXT'] = entity_term['text']
 
         mod_terms = entity_term.get('modifications')

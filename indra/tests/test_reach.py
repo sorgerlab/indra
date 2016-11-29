@@ -59,6 +59,16 @@ def test_bind():
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
 
+def test_be_grounding():
+    for offline in offline_modes:
+        rp = reach.process_text('MEK activates ERK.', offline=offline)
+        assert(len(rp.statements) == 1)
+        assert unicode_strs(rp.statements)
+        if offline == True:
+            st = rp.statements[0]
+            assert(st.subj.db_refs.get('BE') == 'MEK')
+            assert(st.obj.db_refs.get('BE') == 'ERK')
+
 def test_activity():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 activates ERK2.', offline=offline)
