@@ -178,9 +178,24 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         in rp.statements.
     """
     if offline:
-        fname = 'tmp.nxml'
-        with open(fname, 'wb') as fh:
-            fh.write(nxml_str.encode('utf-8'))
+        if not try_offline:
+            logger.error('Offline reading is not available.')
+            return None
+        api_ruler = reach_reader.get_api_ruler()
+        if api_ruler is None:
+            logger.error('Cannot read offline because the REACH ApiRuler' +\
+                         'could not be instantiated.')
+            return None
+        try:
+            result_map = api_ruler.annotateNxml(nxml_str, 'fries')
+        except JavaException as e:
+            logger.error('Could not process NXML.')
+            logger.error(e)
+            return None
+        json_str = result_map.get('resultJson')
+        if isinstance(json_str, bytes):
+            json_str = json_str.decode('utf-8')
+        return process_json_str(json_str, citation)
         rp = process_nxml_file(fname, citation, True)
         return rp
     else:
@@ -224,32 +239,9 @@ def process_nxml_file(file_name, citation=None, offline=False):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    # Offline we use the API ruler directly to read the nxml fle
-    if offline:
-        if not try_offline:
-            logger.error('Offline reading is not available.')
-            return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler' +\
-                         'could not be instantiated.')
-            return None
-        try:
-            result_map = api_ruler.annotateNxml(file_name, 'fries')
-        except JavaException as e:
-            logger.error('Could not process NXML.')
-            logger.error(e)
-            return None
-        json_str = result_map.get('resultJson')
-        if isinstance(json_str, bytes):
-            json_str = json_str.decode('utf-8')
-        return process_json_str(json_str, citation)
-    # For the web service, we read the file and process it as a string
-    else:
-        with open(file_name, 'rb') as f:
-            nxml_str = f.read().decode('utf-8')
+    with open(file_name, 'rb') as f:
+        nxml_str = f.read().decode('utf-8')
         return process_nxml_str(nxml_str, citation, False)
-
 
 def process_json_file(file_name, citation=None):
     """Return a ReachProcessor by processing the given REACH json file.
