@@ -474,7 +474,7 @@ class PysbAssembler(object):
         and values to the policy to be applied to that type of Statement.
         For Statement types whose policy is undefined, the 'default'
         policy is applied.
-        Example: {'phosphorylation': 'two_step'}
+        Example: {'Phosphorylation': 'two_step'}
 
     Attributes
     ----------
