@@ -407,3 +407,15 @@ def test_activation_refinement():
     assert(len(pa.unique_stmts) == 2)
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
+
+def test_homodimer_refinement():
+    egfr = Agent('EGFR')
+    erbb = Agent('ERBB2')
+    st1 = Complex([erbb, erbb])
+    st2 = Complex([erbb, egfr])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_duplicates()
+    assert(len(pa.unique_stmts) == 2)
+    pa.combine_related()
+    assert(len(pa.related_stmts) == 2)
+

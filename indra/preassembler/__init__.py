@@ -252,7 +252,9 @@ class Preassembler(object):
                             # the argument position of the Agent
                             else:
                                 key = (i, component)
-                            stmt_by_group[key].append(stmt)
+                            # Don't add the same Statement (same object) twice
+                            if stmt not in stmt_by_group[key]:
+                                stmt_by_group[key].append(stmt)
                 # If the Statement has no Agent belonging to any component
                 # then we put it in a special group
                 if not any_component:
@@ -286,7 +288,9 @@ class Preassembler(object):
                         # the argument position of the Agent
                         else:
                             key = (i, a.entity_matches_key())
-                        stmt_by_group[key].append(stmt)
+                        # Don't add the same Statement (same object) twice
+                        if stmt not in stmt_by_group[key]:
+                            stmt_by_group[key].append(stmt)
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             # This is the preassembly within each Statement group
