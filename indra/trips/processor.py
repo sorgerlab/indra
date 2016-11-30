@@ -1252,13 +1252,17 @@ def _get_grounding_terms(term):
         # This is the primary ID
         dbid_str = dt.attrib.get('dbid')
 
-        if not dbid_str and _is_type(dt.find('types'), 'ONT::PROTEIN-FAMILY'):
-            members = dt.findall('members/member')
-            dbids = []
-            for m in members:
-                dbid = m.attrib.get('dbid')
-                dbids.append(dbid)
-            refs = {'PFAM-DEF': '|'.join(dbids)}
+        if not dbid_str:
+            if _is_type(dt.find('types'), 'ONT::PROTEIN-FAMILY'):
+                members = dt.findall('members/member')
+                dbids = []
+                for m in members:
+                    dbid = m.attrib.get('dbid')
+                    dbids.append(dbid)
+                refs = {'PFAM-DEF': '|'.join(dbids)}
+            # This is to handle the occasional empty drum-term
+            else:
+                refs = {}
         else:
             db_ns, db_id = dbid_str.split(':')
             refs = {db_ns: db_id}
@@ -1296,6 +1300,10 @@ def _get_grounding_terms(term):
         else:
             match_score = float(match_score)
             score_started = True
+        # This is a special case to handle unscored blank drum-terms
+        # at the top of the list
+        if not refs:
+            match_score = 0
 
         grounding_term = {'score': match_score,
                           'refs': refs}
