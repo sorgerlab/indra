@@ -1,8 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import pickle
 import pandas
 import logging
+from indra.databases import hgnc_client
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -163,13 +165,15 @@ def compare_overlap(stmts_pred, stmts_ref):
 
 
 def get_kinase_activities():
-    kinase_file = '../../indra/resources/kinases.tsv'
+    kinase_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../../resources/kinases.tsv')
     kinases = []
     with open(kinase_file, 'rt') as fh:
         lines = [l.strip() for l in fh.readlines()]
-        for lin in lines:
-            up_id, hgnc_name = lin.split('\t')
-            agent = Agent(hgnc_name, db_refs={'UP': up_id})
+        for lin in lines[1:]:
+            up_id, hgnc_name, _, _ = lin.split('\t')
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+            agent = Agent(hgnc_name, db_refs={'UP': up_id, 'HGNC': hgnc_id})
             kinases.append(agent)
     kin_activities = []
     from indra.statements import HasActivity
