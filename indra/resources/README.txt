@@ -13,6 +13,10 @@ bel_chebi_map.tsv
   with
   http://resource.belframework.org/belframework/latest-release/equivalence/chebi.beleq
 
+bioentities_map.tsv
+- A table containing mappings from outside name spaces into Bioentities.
+- It is generated from bioentities/equivalences.csv
+
 cellular_components.tsv
 - A table of GO IDs and standardized names corresponding to cellular locations
 - It is exported from http://purl.obolibrary.org/obo/go.owl
@@ -32,6 +36,12 @@ hgnc_entries.txt
 kinases.tsv
 - A list of human kinases with their Uniprot IDs and HGNC symbols
 - Download link: http://www.uniprot.org/uniprot/?query=reviewed%3Ayes+AND+organism%3A%22Homo+sapiens+%28Human%29+%5B9606%5D%22+AND+database%3A%28type%3Ainterpro+IPR000719%29&sort=score
+
+ncit_map.tsv
+- A table of NCIT IDs and their corresponding HGNC, CHEBI or GO IDs.
+- It is based on https://ncit.nci.nih.gov/ncitbrowser/ajax?action=export_mapping&dictionary=NCIt_to_HGNC_Mapping&version=1.0,
+https://ncit.nci.nih.gov/ncitbrowser/ajax?action=export_mapping&dictionary=GO_to_NCIt_Mapping&version=1.1 and
+https://ncit.nci.nih.gov/ncitbrowser/ajax?action=export_mapping&dictionary=NCIt_to_ChEBI_Mapping&version=1.0
 
 uniprot_entries.tsv
 - A table of all reviewed UniProt entries plus unreviewed human entries
@@ -57,10 +67,6 @@ Files that are manually curated
 curated_site_map.tsv
 - A table containing mappings for amino acid sites on proteins
   that are often misannotated
-
-bel_indra_map.tsv
-- A table mapping BEL family names to Bioentities entries
-
 
 Files that don't need periodical updates
 ========================================

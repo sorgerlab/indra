@@ -1,0 +1,429 @@
+BEL	14-3-3 Family	p14_3_3
+BEL	9-1-1 Complex	9_1_1
+BEL	ACAD Family	ACAD
+BEL	Acetyl CoA Carboxylase Complex	ACC
+BEL	Acetyl-CoA Synthetase Family	Acetyl_CoA_synthetase
+BEL	ACOX Family	ACOX
+BEL	ACSL Family	ACSL
+BEL	ACT Family	Actin
+BEL	ACTN Family	ACTN
+BEL	Adaptor Protein III Complex	Adaptor_protein_III
+BEL	ADCY Family	ADCY
+BEL	ADH Family	ADH
+BEL	ADRA2 Family	ADRA2
+BEL	ADRA Family	ADRA
+BEL	ADRB Family	ADRB
+BEL	ADRBK Family	ADRBK
+BEL	AKT Family	AKT
+BEL	ALDH Family	ALDH
+BEL	ALDO Family	ALDO
+BEL	Annexin II Heterotetramer Complex	Annexin_II_heterotetramer
+BEL	APOA Family	APOA
+BEL	Arp2/3 Protein Complex	Arp2_3_protein
+BEL	ARRB Family	ARRB
+BEL	ATP2A Family	ATP2A
+BEL	ATP5G Family	ATP5G
+BEL	AXIN Family	AXIN
+BEL	BIRC Family	BIRC
+BEL	BMP Family	BMP
+BEL	BMP Receptor Type I Family	BMP_receptor_type_I
+BEL	BMP Receptor Type II Family	BMP_receptor_type_II
+BEL	Branched Chain Alpha Keto Acid Dehydrogenase Complex	BCKDC
+BEL	C1 Complex	C1
+BEL	C1q Complex	C1q
+BEL	Calcineurin Complex	PPP3
+BEL	CALM Family	CALM
+BEL	CAMK2 Complex	CAMK2_complex
+BEL	CAMK2 Family	CAMK2_family
+BEL	CAMK Family	CAMK
+BEL	CAPN Family	CAPN
+BEL	Carboxylesterase Family	Carboxylesterase
+BEL	CASP Family	Caspase
+BEL	CAV Family	CAV
+BEL	CBF3 Complex	CBF3
+BEL	CCNA Family	Cyclin_A
+BEL	CCND Family	Cyclin_D
+BEL	CCNE Family	Cyclin_E
+BEL	CCT Complex	CCT_complex
+BEL	CD16 Family	CD16
+BEL	CD32 Family	CD32
+BEL	CD3 Complex	CD3
+BEL	CD64 Family	CD64
+BEL	CDC25 Family	CDC25
+BEL	CDH Family	Cadherin
+BEL	CEBP Family	CEBP
+BEL	Chemokine Receptor Family	Chemokine_receptor
+BEL	Cholinesterase Family	Cholinesterase
+BEL	CHRM Family	CHRM
+BEL	CHRN Complex	CHRN
+BEL	CK II Complex	CK2
+BEL	Clathrin Complex	Clathrin
+BEL	Cohesin Complex	Cohesin
+BEL	COL1 Family	COL1
+BEL	COL4 Family	COL4
+BEL	COL5 Family	COL5
+BEL	COX4 Family	COX4
+BEL	COX6A Family	COX6A
+BEL	COX6B Family	COX6B
+BEL	COX7A Family	COX7A
+BEL	COX7B Family	COX7B
+BEL	COX8 Family	COX8
+BEL	CREB Family	CREB
+BEL	CRISP Family	CRISP
+BEL	CRSP Complex	CRSP
+BEL	CSNK1 Family	CSNK1
+BEL	CSNK2 Family	CSNK2
+BEL	CTNNA Family	CTNNA
+BEL	CUL Family	CUL
+BEL	Cu-Zn SOD Family	SOD
+BEL	CXCL ELR-Negative Family	CXCL_ELR_negative
+BEL	CXCL ELR-Positive Family	CXCL_ELR_positive
+BEL	Cyclophilin Family	Cyclophilin
+BEL	Cytochrome C Oxidase Complex Muscle	COX
+BEL	Cytochrome C Oxidase Complex Non Muscle	COX
+BEL	Cytoplasmic Dynein Complex	Cytoplasmic_dynein
+BEL	DDR Family	DDR
+BEL	Desmoglein Family	Desmoglein
+BEL	DGK Family	DGK
+BEL	DNA Polymerase delta Complex	DNA_polymerase_delta
+BEL	DNM Family	DNM
+BEL	DRD Family	DRD
+BEL	DVL Family	DVL
+BEL	Dystrophin Associated Glycoprotein Complex	DGC
+BEL	E1A Binding Protein Complex	E1A_binding_protein
+BEL	E2F Family	E2F
+BEL	EDN Family	EDN
+BEL	EGFR/ERBB Family	ERBB
+BEL	EGFR Ligand Family	EGFR_ligand
+BEL	EGR Family	EGR
+BEL	EIF2B Complex	EIF2B
+BEL	EIF4A Family	EIF4A
+BEL	EIF4EBP Family	EIF4EBP
+BEL	ELA Family	ELA
+BEL	ENO Family	ENO
+BEL	Ephrin Receptor Family	Ephrin_receptor
+BEL	EPN Family	EPN
+BEL	ESR Family	ESR
+BEL	ETS Family	ETS
+BEL	FGF Family	FGF
+BEL	FGFR Family	FGFR
+BEL	Fibrinogen Complex	Fibrinogen
+BEL	FLOT Family	FLOT
+BEL	FLRT Family	FLRT
+BEL	Follicle Stimulating Hormone Complex	FSH
+BEL	FOXO Family	FOXO
+BEL	FZD Family	FZD
+BEL	GABR Family	GABR
+BEL	gamma Secretase Complex	Gamma_secretase
+BEL	GAS6 Receptor Family	GAS6_receptor
+BEL	GATA Family	GATA
+BEL	GNA Gq Family	G_q
+BEL	GNA Gs Family	G_s
+BEL	GNAI Family	G_i
+BEL	GNB Family	G_beta
+BEL	GNG Family	G_gamma
+BEL	GPIT Complex	GPIT
+BEL	GPX Family	GPX
+BEL	GRIA Family	GRIA
+BEL	GRK Family	GRK
+BEL	GRM Family	GRM
+BEL	GSK3 Family	GSK3
+BEL	GST Family	GST
+BEL	GTF2E Complex	GTF2E
+BEL	GTF2F Complex	GTF2F
+BEL	GUCY Family	GUCY
+BEL	GYS Family	GYS
+BEL	HDAC Class I Family	HDAC_I
+BEL	HDAC Class II Family	HDAC_II
+BEL	HDAC Family	HDAC
+BEL	HDL Complex	HDL
+BEL	Hedgehog Family	Hedgehog
+BEL	Hemoglobin Complex	Hemoglobin
+BEL	HES Family	HES
+BEL	Histone H1 Family	Histone_H1
+BEL	Histone H2A Family	Histone_H2A
+BEL	Histone H2B Family	Histone_H2B
+BEL	Histone H3 Family	Histone_H3
+BEL	Histone H4 Family	Histone_H4
+BEL	HLA-DR Family	HLA_DR
+BEL	HMOX Family	HMOX
+BEL	HSP90 Family	HSP90
+BEL	HSPA Family	HSPA
+BEL	HSPB Family	HSPB
+BEL	Ib-V-IX Complex	GPIb_IX_V
+BEL	IFNA Family	IFNA
+BEL	IGFBP Family	IGFBP
+BEL	IkappaB Kinase Complex	IKK_complex
+BEL	IkappaB Kinase Family	IKK_family
+BEL	IL1 Family	IL1
+BEL	INS Family	INS
+BEL	INSR Family	INSR
+BEL	Interferon Gamma Receptor Complex	Interferon_gamma_receptor
+BEL	IRS Family	IRS
+BEL	IRX Family	IRX
+BEL	JAK Family	JAK
+BEL	Kinetochore Complex	Kinetochore
+BEL	KLK Family	KLK
+BEL	Laminin 1 Complex	Laminin_111
+BEL	Laminin 5 Complex	Laminin_332
+BEL	LDH Family	LDH
+BEL	Luteinizing Hormone Complex	LH
+BEL	MAF Family	MAF
+BEL	MAPK Erk1/2 Family	ERK
+BEL	MAPK Erk1/3 Family	ERK
+BEL	MAPK JNK Family	JNK
+BEL	MAPK p38 Family	p38
+BEL	MEF2 Family	MEF2
+BEL	MEK1/2 Family	MEK
+BEL	Membrane Attack Complex	MAC
+BEL	MMP Family	MMP
+BEL	MYH Family	MYH
+BEL	MYL Alkali Family	MYL_alkali
+BEL	MYL Family	MYL
+BEL	MYL Regulatory Family	MYL_regulatory
+BEL	MYL Slow Family	MYL_slow
+BEL	MYST Family	MYST
+BEL	NADH Dehydrogenase Complex	NADH_dehydrogenase
+BEL	NADPH Oxidase Complex	NADPH_oxidase
+BEL	Na/K Exchanging ATPase Complex	Na_K_ATPase
+BEL	NCOR Family	NCOR
+BEL	NDRG Family	NDRG
+BEL	NFAT Family	NFAT
+BEL	Nfkb Complex	NFkappaB
+BEL	Nfy Complex	NFY
+BEL	NKD Family	NKD
+BEL	NOS Family	NOS
+BEL	NOTCH Family	Notch
+BEL	NRG1/2 Family	NRG_1_2
+BEL	NRG3/4 Family	NRG_3_4
+BEL	NTRK Family	NTRK
+BEL	p160/SRC Family	NCOA
+BEL	P2RX Family	P2RX
+BEL	P2RY Family	P2RY
+BEL	PAK Family	PAK
+BEL	PARV Family	PARV
+BEL	PBX Family	PBX
+BEL	PDE1 Family	PDE1
+BEL	PDE3 Family	PDE3
+BEL	PDE4 Family	PDE4
+BEL	PDE6 Family	PDE6
+BEL	PDE Family	PDE
+BEL	PDGF Family	PDGF
+BEL	PDGFR Family	PDGFR
+BEL	PDK Family	PDK
+BEL	PFN Family	PFN
+BEL	Phosphorylase B Kinase Complex	PhK
+BEL	PIK3C Class IA Family	PI3K_p110
+BEL	PIK3R Class IA Family	PIK3R_I
+BEL	PKI Family	PKI
+BEL	PLA2 Family	PLA2
+BEL	PLA2G2 Family	PLA2G2
+BEL	PLCB Family	PLCB
+BEL	PLC Family	PLC
+BEL	PLCG Family	PLCG
+BEL	PLD Family	PLD
+BEL	PPAP2 Family	PPAP2
+BEL	PPAR Family	PPAR
+BEL	PPP1C Family	PPP1C
+BEL	PPP1R Family	PPP1R
+BEL	PPP2C Family	PPP2C
+BEL	PPP2R Subunit A Family	PPP2R_A
+BEL	PPP2R Subunit B Family	PPP2R_B
+BEL	PPP3C Family	PPP3C
+BEL	PPP3 Family	PPP3
+BEL	PPP3R Family	PPP3R
+BEL	PRC1 Maintenance Complex	PRC1_complex
+BEL	PRC2 Initiation Complex	PRC2_complex
+BEL	PRDX Family	PRDX
+BEL	PRKAA Family	AMPK_alpha
+BEL	PRKAB Family	AMPK_beta
+BEL	PRKA Family	AMPK
+BEL	PRKAG Family	AMPK_gamma
+BEL	PRKAR Family	PRKAR
+BEL	PRKC Family	PRKC
+BEL	PRKG Family	PRKG
+BEL	Propionyl CoA Carboxylase Complex	Propionyl_CoA_carboxylase
+BEL	Proteasome Complex	Proteasome
+BEL	Proton Transporting ATP Synthase Complex	ATP_synthase
+BEL	PTGER Family	PTGER
+BEL	Pyruvate Dehydrogenase Complex	PDC
+BEL	RAB Family	RAB
+BEL	RAC Family	RAC
+BEL	RAF Family	RAF
+BEL	RAR Family	RAR
+BEL	RAS Family	RAS
+BEL	Respiratory Chain Complex II	ETC_complex_II
+BEL	Respiratory Chain Complex III	ETC_complex_III
+BEL	RFC Complex	RFC
+BEL	RFX Family	RFX
+BEL	RHO Family	RHO
+BEL	RNApo I Complex	RNApo_I
+BEL	RNApo II Complex	RNApo_II
+BEL	ROCK Family	ROCK
+BEL	ROR Family	ROR
+BEL	RPS6KA Family	P90RSK
+BEL	RPS6KB Family	P70RSK
+BEL	RXR Family	RXR
+BEL	S100A Family	S100A
+BEL	S1PR Family	S1PR
+BEL	SAA Family	SAA
+BEL	SCD Family	SCD
+BEL	SERPINB Family	SERPINB
+BEL	SLC2A Family	SLC2A
+BEL	SMAD Family	SMAD
+BEL	SMC1 Family	SMC1
+BEL	SNAI Family	SNAI
+BEL	SOS Family	SOS
+BEL	SRC Family	SRC
+BEL	SREBF Family	SREBF
+BEL	STAT5 Family	STAT5
+BEL	STAT Family	STAT
+BEL	Sulfonylurea Receptor Family	Sulfonylurea_receptor
+BEL	SWI/SNF Complex	SWI_SNF
+BEL	TAP Family	TAP
+BEL	TCF/LEF Family	TCF_LEF
+BEL	TFAP2 Family	TFAP2
+BEL	TFDP Family	TFDP
+BEL	TGFB Family	TGFB
+BEL	THBS Family	THBS
+BEL	THR Family	THR
+BEL	Thrombin Antithrombin Complex	Thrombin_antithrombin
+BEL	TIF IB Complex	TIF_IB
+BEL	TN Family	TN
+BEL	TNFRSF Family	TNFRSF
+BEL	TOP2 Family	TOP2
+BEL	TORC2 Complex	mTORC2
+BEL	Tryptase Family	Tryptase
+BEL	TUBA Family	TUBA
+BEL	TUBB Family	TUBB
+BEL	TXN Family	TXN
+BEL	TXNRD Family	TXNRD
+BEL	UBE2 Family	UBE2
+BEL	VAV Family	VAV
+BEL	VEGF Family	VEGF
+BEL	VEGFR Family	VEGFR
+BEL	WNT Family	Wnt
+GO	GO:0005680	APC_C
+GO	GO:0031941	F_actin
+IP	IPR015615	TGFB
+MESH	C072194	PDGF_BB
+NCIT	C104194	Cyclin_D
+NCIT	C107559	CK2
+NCIT	C116019	AMPK_alpha
+NCIT	C118892	FOXO
+NCIT	C16258	Actin
+NCIT	C16373	Cadherin
+NCIT	C16376	ERK
+NCIT	C16376	MAPK
+NCIT	C16479	PKA
+NCIT	C16650	GTPase
+NCIT	C16682	HDAC
+NCIT	C16685	Histone_H3
+NCIT	C16686	Histone_H4
+NCIT	C16687	Histone
+NCIT	C16748	Integrins
+NCIT	C16965	Protease
+NCIT	C16981	Phosphatase
+NCIT	C17017	PKC
+NCIT	C17061	RAS
+NCIT	C17065	TCR
+NCIT	C17219	Tubulin
+NCIT	C17227	Ubiquitin
+NCIT	C17270	PI3K
+NCIT	C17274	BMP
+NCIT	C17286	CREB
+NCIT	C17297	FGFR
+NCIT	C17298	GAP
+NCIT	C17322	PDGFR
+NCIT	C17349	Cyclin
+NCIT	C17380	NFkappaB
+NCIT	C17438	FOS_family
+NCIT	C17450	AP1
+NCIT	C17494	GEF
+NCIT	C17583	IKB
+NCIT	C17660	RTK
+NCIT	C17690	HIF1
+NCIT	C17763	ERBB
+NCIT	C17766	HSP90
+NCIT	C17767	CDK
+NCIT	C17903	NFAT
+NCIT	C18153	Caspase
+NCIT	C18164	MMP
+NCIT	C18239	GPCR
+NCIT	C19618	STAT
+NCIT	C20448	PDGF
+NCIT	C20456	Activin
+NCIT	C20493	Interferon
+NCIT	C20506	IL1
+NCIT	C20514	IL12
+NCIT	C20591	SWI_SNF
+NCIT	C2275	hCG
+NCIT	C25184	LDH
+NCIT	C26360	ERK
+NCIT	C38897	CD3
+NCIT	C41625	AKT
+NCIT	C51209	KSR
+NCIT	C52887	FOS_family
+NCIT	C736	Pertussis_toxin
+NCIT	C94701	AMPK
+NCIT	C96314	mTORC1
+NCIT	C96315	mTORC2
+NXP	FA:00078	Actin
+NXP	FA:00408	FOS_family
+NXP	FA:00818	Cyclin_D
+NXP	FA:01764	Histone_H3
+NXP	FA:01765	Histone_H4
+NXP	FA:01820	IL1
+NXP	FA:02022	LDH
+NXP	FA:02506	Notch
+NXP	FA:03065	PKC
+NXP	FA:03066	RAC
+NXP	FA:03087	GSK3
+NXP	FA:03101	CK2
+NXP	FA:03114	RAF
+NXP	FA:03129	JAK
+NXP	FA:03483	SAA
+NXP	FA:03663	RAS
+NXP	FA:03668	RHO
+NXP	FA:04239	Tubulin
+NXP	FA:04243	TNF
+NXP	FA:04276	Ubiquitin
+NXP	FA:04686	Wnt
+NXP	FA:04773	RAP1
+PF	PF00022	Actin
+PF	PF00028	Cadherin
+PF	PF00028	Cadherin
+PF	PF00066	Notch
+PF	PF00071	RAS
+PF	PF00110	Wnt
+PF	PF00143	Interferon
+PF	PF00167	FGF
+PF	PF00167	FGF
+PF	PF00178	ETS
+PF	PF00183	HSP90
+PF	PF00183	HSP90
+PF	PF00219	IGFBP
+PF	PF00229	TNF
+PF	PF00244	p14_3_3
+PF	PF00277	SAA
+PF	PF00320	GATA
+PF	PF00340	IL1
+PF	PF00616	RasGAP
+PF	PF01756	ACOX
+PF	PF02046	COX6A
+PF	PF02174	IRS
+PF	PF02238	COX7A
+PF	PF02285	COX8
+PF	PF02297	COX6B
+PF	PF02545	MAF
+PF	PF02608	BMP
+PF	PF02827	PKI
+PF	PF02854	EIF4G
+PF	PF02936	COX4
+PF	PF03039	IL12
+PF	PF05392	COX7B
+PF	PF08137	DVL
+PF	PF08562	CRISP
+PF	PF08841	DDR
+PF	PF11413	HIF1
+PF	PF15975	FLOT

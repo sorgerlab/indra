@@ -5,6 +5,7 @@ import rdflib
 import urllib
 import logging
 import requests
+from indra.util import read_unicode_csv, write_unicode_csv
 from indra.preassembler.make_cellular_component_hierarchy import \
     get_cellular_components
 from indra.preassembler.make_cellular_component_hierarchy import \
@@ -210,20 +211,65 @@ def update_cellular_component_hierarchy():
     logger.info('--Updating cellular component hierarchy----')
     make_ccomp_hierarchy()
 
+def update_bioentities_map():
+    logger.info('--Updating Bioentities map----')
+    # Currently this is a trivial "copy" of the Bioentities equivalences.csv
+    # file. Later, name spaces may need to be adapted and other format changes
+    # may be needed.
+    fname_in = os.path.join(path, '../../bioentities/equivalences.csv')
+    fname_out = os.path.join(path, 'bioentities_map.tsv')
+    rows = read_unicode_csv(fname_in)
+    write_unicode_csv(fname_out, rows, delimiter='\t')
+
+def update_ncit_map():
+    logger.info('--Updating NCIT map----')
+    url_hgnc = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
+               'export_mapping&dictionary=NCIt_to_HGNC_Mapping&version=1.0'
+
+    url_go = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
+             'export_mapping&dictionary=GO_to_NCIt_Mapping&version=1.1'
+
+    url_chebi = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
+                'export_mapping&dictionary=NCIt_to_ChEBI_Mapping&version=1.0'
+
+    def get_ncit_df(url):
+        df = pandas.read_csv(url)
+        df = df[df['Association Name'] == 'mapsTo']
+        df.sort_values(['Source Code', 'Target Code'], ascending=True,
+                       inplace=True)
+        df = df[['Source Code', 'Target Code', 'Source Coding Scheme',
+                 'Target Coding Scheme']]
+        return df
+
+    df_hgnc = get_ncit_df(url_hgnc)
+    df_hgnc.replace('HGNC:(.*)', '\\1', inplace=True, regex=True)
+    df_go = get_ncit_df(url_go)
+    df_go.rename(columns={'Source Code': 'Target Code',
+                       'Target Code': 'Source Code',
+                       'Source Coding Scheme': 'Target Coding Scheme',
+                       'Target Coding Scheme': 'Source Coding Scheme'},
+              inplace=True)
+    df_chebi = get_ncit_df(url_chebi)
+    df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
+    df_all = pandas.concat([df_chebi, df_go, df_hgnc])
+
+    fname = os.path.join(path, 'ncit_map.tsv')
+    df_all.to_csv(fname, sep='\t', columns=['Source Code', 'Target Coding Scheme',
+                                        'Target Code'],
+              header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
+
 if __name__ == '__main__':
-    '''
     update_hgnc_entries()
     update_kinases()
     update_uniprot_entries()
     update_uniprot_sec_ac()
     update_uniprot_subcell_loc()
-    '''
     update_chebi_entries()
-    '''
     update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
-    '''
+    update_bioentities_map()
+    update_ncit_map()

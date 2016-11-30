@@ -1,11 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import re
 import logging
 import operator
 import itertools
 import collections
 import xml.etree.ElementTree as ET
+from indra.util import read_unicode_csv
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
@@ -29,6 +31,7 @@ protein_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
 molecule_types = protein_types + \
     ['ONT::CHEMICAL', 'ONT::MOLECULE', 'ONT::SUBSTANCE',
      'ONT::PHARMACOLOGIC-SUBSTANCE']
+
 
 class TripsProcessor(object):
     """The TripsProcessor extracts INDRA Statements from a TRIPS XML.
@@ -79,8 +82,9 @@ class TripsProcessor(object):
 
         self.statements = []
         self._static_events = self._find_static_events()
+        self.all_events = {}
         self.get_all_events()
-        self.extracted_events = {k:[] for k in self.all_events.keys()}
+        self.extracted_events = {k: [] for k in self.all_events.keys()}
         logger.debug('All events by type')
         logger.debug('------------------')
         for k, v in self.all_events.items():
@@ -144,9 +148,9 @@ class TripsProcessor(object):
                     'Skipping activation with missing affected agent')
                 continue
 
+            is_activation = True
+            activator_act = 'activity'
             if _is_type(event, 'ONT::ACTIVATE'):
-                is_activation = True
-                activator_act = 'activity'
                 self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
             elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
@@ -154,7 +158,6 @@ class TripsProcessor(object):
                 self._add_extracted('ONT::INHIBIT', event.attrib['id'])
             elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
-                activator_act = 'activity'
                 self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
 
             ev = self._get_evidence(event)
@@ -163,7 +166,7 @@ class TripsProcessor(object):
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
                 st = Activation(a1, activator_act, a2, 'activity',
-                                is_activation=is_activation, evidence=ev)
+                                is_activation=is_activation, evidence=[ev])
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
 
@@ -190,7 +193,7 @@ class TripsProcessor(object):
             factor_term_type = factor_term.find('type')
             # The factor term must be a molecular entity
             if factor_term_type is None or \
-                factor_term_type.text not in molecule_types:
+               factor_term_type.text not in molecule_types:
                 continue
             factor_agent = self._get_agent_by_id(factor_id, None)
             if factor_agent is None:
@@ -256,7 +259,7 @@ class TripsProcessor(object):
             controller_term_type = controller_term.find('type')
             # The controller term must be a molecular entity
             if controller_term_type is None or \
-                controller_term_type.text not in molecule_types:
+               controller_term_type.text not in molecule_types:
                 continue
             controller_agent = self._get_agent_by_id(controller_id, None)
             if controller_agent is None:
@@ -273,7 +276,7 @@ class TripsProcessor(object):
                 if affected is None:
                     continue
                 affected_agent = self._get_agent_by_id(affected.attrib['id'],
-                                                      affected_id)
+                                                       affected_id)
                 if affected_agent is None:
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
@@ -288,7 +291,7 @@ class TripsProcessor(object):
                 if agent_tag is None:
                     continue
                 affected_agent = self._get_agent_by_id(agent_tag.attrib['id'],
-                                                      affected_id)
+                                                       affected_id)
                 if affected_agent is None:
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
@@ -314,7 +317,7 @@ class TripsProcessor(object):
             # Make sure the degradation is affecting a molecule type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in molecule_types:
+               affected_type.text not in molecule_types:
                 continue
 
             affected_id = affected.attrib.get('id')
@@ -362,7 +365,7 @@ class TripsProcessor(object):
             # Make sure the synthesis is affecting a molecule type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in molecule_types:
+               affected_type.text not in molecule_types:
                 continue
 
             affected_id = affected.attrib.get('id')
@@ -424,7 +427,7 @@ class TripsProcessor(object):
             # The affected agent has to be protein-like type
             affected_type = affected.find('type')
             if affected_type is None or \
-                affected_type.text not in protein_types:
+               affected_type.text not in protein_types:
                 continue
             # If the Agent state is at the base state then this is not an
             # ActiveForm statement
@@ -448,7 +451,7 @@ class TripsProcessor(object):
             arg1 = event.find("arg1")
             arg2 = event.find("arg2")
             if (arg1 is None or arg1.attrib.get('id') is None) or \
-                (arg2 is None or arg2.attrib.get('id') is None):
+               (arg2 is None or arg2.attrib.get('id') is None):
                 logger.debug('Skipping complex with less than 2 members')
                 continue
 
@@ -515,7 +518,7 @@ class TripsProcessor(object):
             affected = event.find(".//*[@role=':AFFECTED']")
             if affected is None:
                 logger.debug('Skipping modification event with no '
-                              'affected term.')
+                             'affected term.')
                 continue
             affected_id = affected.attrib.get('id')
             if affected_id is None:
@@ -523,7 +526,7 @@ class TripsProcessor(object):
             affected_agent = self._get_agent_by_id(affected_id, event_id)
             if affected_agent is None:
                 logger.debug('Skipping modification event with no '
-                              'affected term.')
+                             'affected term.')
                 continue
 
             # Get modification sites
@@ -544,7 +547,7 @@ class TripsProcessor(object):
                         [BoundCondition(agent_bound, True)]
                     for m in mods:
                         st = Transphosphorylation(enzyme_agent, m.residue,
-                                                  m.position, evidence=ev)
+                                                  m.position, evidence=[ev])
                         _stmt_location_to_agents(st, location)
                         self.statements.append(st)
                     continue
@@ -555,30 +558,30 @@ class TripsProcessor(object):
                             for ea in enzyme_agent:
                                 st = Autophosphorylation(ea,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                                 _stmt_location_to_agents(st, location)
                                 self.statements.append(st)
                         else:
                             st = Autophosphorylation(enzyme_agent,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
                     continue
                 elif affected_agent is not None and \
-                    'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
+                     'ONT::MANNER-REFL' in [mt.text for mt in mod_types]:
                     for m in mods:
                         if isinstance(affected_agent, list):
                             for aa in affected_agent:
                                 st = Autophosphorylation(aa,
                                                          m.residue, m.position,
-                                                         evidence=ev)
+                                                         evidence=[ev])
                                 _stmt_location_to_agents(st, location)
                                 self.statements.append(st)
                         else:
                             st = Autophosphorylation(affected_agent,
                                                      m.residue, m.position,
-                                                     evidence=ev)
+                                                     evidence=[ev])
                             _stmt_location_to_agents(st, location)
                             self.statements.append(st)
                     continue
@@ -745,7 +748,7 @@ class TripsProcessor(object):
                 return None
             return member_agents
 
-        db_refs = self._get_db_refs(term)
+        db_refs = _get_db_refs(term)
 
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
@@ -761,7 +764,7 @@ class TripsProcessor(object):
             # the complex is the one that mediates binding
             agent = agents[0]
             agent.bound_conditions = \
-                            [BoundCondition(ag, True) for ag in agents[1:]]
+                [BoundCondition(ag, True) for ag in agents[1:]]
         # If the entity is not a complex
         else:
             # Determine the agent name
@@ -795,9 +798,9 @@ class TripsProcessor(object):
             for precond_id in precond_ids:
                 if precond_id == event_id:
                     logger.debug('Circular reference to event %s.' %
-                                   precond_id)
+                                 precond_id)
                 precond_event = self.tree.find("EVENT[@id='%s']" % 
-                                                precond_id)
+                                               precond_id)
                 if precond_event is None:
                     # Sometimes, if there are multiple preconditions
                     # they are numbered with <id>.1, <id>.2, etc.
@@ -815,8 +818,7 @@ class TripsProcessor(object):
             mut_id = mut.attrib.get('id')
             if mut_id is None:
                 continue
-            mut_term = self.tree.find("TERM/[@id='%s']" %\
-                mut.attrib.get('id'))
+            mut_term = self.tree.find("TERM/[@id='%s']" % mut.attrib.get('id'))
             if mut_term is None:
                 continue
             mut_values = self._get_mutation(mut_term)
@@ -842,111 +844,6 @@ class TripsProcessor(object):
 
         return agent
 
-    @staticmethod
-    def _get_db_refs(term):
-        """Extract database references for a TERM."""
-
-        db_refs = {}
-        # Here we extract the text name of the Agent
-        # There are two relevant tags to consider here.
-        # The <text> tag typically contains a larger phrase surrounding the
-        # term but it contains the term in a raw, non-canonicalized form.
-        # The <name> tag only contains the name of the entity but it is
-        # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
-        agent_text_tag = term.find('name')
-        if agent_text_tag is not None:
-            db_refs['TEXT'] = agent_text_tag.text
-
-        dbid = term.attrib.get('dbid')
-
-        # If there are no dbids listed then we check whether it's an ad-hoc
-        # protein family definition.
-        if dbid is None:
-            if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-                members = term.findall('members/member')
-                dbids = []
-                for m in members:
-                    dbid = m.attrib.get('dbid')
-                    parts = dbid.split(':')
-                    dbids.append({parts[0]: parts[1]})
-                db_refs['PFAM-DEF'] = dbids
-            return db_refs
-
-        # In case there are dbids listed then we look at the match scores
-        drum_terms = term.findall('drum-terms/drum-term')
-        if drum_terms:
-            scores = {}
-            score_started = False
-            for dt in drum_terms:
-                dbid_str = dt.attrib.get('dbid')
-                match_score = dt.attrib.get('match-score')
-                if not score_started:
-                    if match_score is not None:
-                        score_started = True
-                    else:
-                        # This is a match before other scored terms so we
-                        # default to 1.0
-                        match_score = 1.0
-                else:
-                    if match_score is None:
-                        # This is a match after other scored matches
-                        # default to a small value
-                        match_score = 0.1
-                if dbid_str is None:
-                    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-                        members = term.findall('members/member')
-                        dbids = []
-                        for m in members:
-                            dbid = m.attrib.get('dbid')
-                            dbids.append(dbid)
-                        key_name = 'PFAM-DEF:' + '|'.join(dbids)
-                        scores[key_name] = float(match_score)
-                else:
-                    scores[dbid_str] = float(match_score)
-                xr_tags = dt.findall('xrefs/xref')
-                for xrt in xr_tags:
-                    dbid_str = xrt.attrib.get('dbid')
-                    old_score = scores.get(dbid_str)
-                    new_score = float(match_score)
-                    if old_score is not None and old_score < new_score:
-                        scores[dbid_str] = new_score
-            sorted_db_refs = sorted(scores.items(),
-                                    key=operator.itemgetter(1),
-                                    reverse=True)
-            # Here the matches are sorted and so each dbname will only
-            # have its highest scoring entry added to db_refs
-            for dbid_str, _ in sorted_db_refs:
-                dbname, dbid = dbid_str.split(':')
-                if not db_refs.get(dbname):
-                    if dbname == 'PFAM-DEF':
-                        dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                        db_refs[dbname] = dbids
-                    else:
-                        db_refs[dbname] = dbid
-        # This is for backwards compatibility with EKBs without drum-term
-        # scored entries. It is important to keep for Bioagents compatibility.
-        else:
-            dbids = dbid.split('|')
-            for dbname, dbid in [d.split(':') for d in dbids]:
-                if not db_refs.get(dbname):
-                    db_refs[dbname] = dbid
-        # Here we fix some grounding standardization issues
-        hgnc_id = db_refs.get('HGNC')
-        up_id = db_refs.get('UP')
-        # If there is an HGNC entry, we prioritize that
-        if hgnc_id:
-            standard_up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            db_refs['UP'] = standard_up_id
-        # If there is no HGNC entry but there is a UP entry we look at that
-        elif up_id:
-            if up_client.is_human(up_id):
-                gene_name = up_client.get_gene_name(up_id)
-                if gene_name:
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
-        return db_refs
-
     def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = _get_type(precond_event)
 
@@ -960,8 +857,6 @@ class TripsProcessor(object):
         if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
             arg2 = precond_event.find('arg2')
-            mod = precond_event.findall('mods/mod')
-            bound_to_term_id = None
             if arg1 is None:
                 bound_to_term_id = arg2.attrib.get('id')
             elif arg2 is None:
@@ -978,7 +873,7 @@ class TripsProcessor(object):
 
             bound_agents = []
             if bound_to_term_id is not None:
-                bound_to_term = self.tree.find("TERM/[@id='%s']" % \
+                bound_to_term = self.tree.find("TERM/[@id='%s']" %
                                                bound_to_term_id)
                 if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
@@ -1147,7 +1042,6 @@ class TripsProcessor(object):
             return None
 
     def _get_evidence(self, event_tag):
-        api = 'trips'
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
         epi = {'section_type': sec}
@@ -1227,6 +1121,7 @@ class TripsProcessor(object):
     def _add_extracted(self, event_type, event_id):
         self.extracted_events[event_type].append(event_id)
 
+
 def _get_type(element):
     type_tag = element.find('type')
     if type_tag is None:
@@ -1234,11 +1129,13 @@ def _get_type(element):
     type_text = type_tag.text
     return type_text
 
+
 def _is_type(element, type_text):
     element_type = _get_type(element)
     if element_type == type_text:
         return True
     return False
+
 
 def _stmt_location_to_agents(stmt, location):
     """Apply an event location to the Agents in the corresponding Statement.
@@ -1253,6 +1150,7 @@ def _stmt_location_to_agents(stmt, location):
         if a is not None:
             a.location = location
 
+
 def _agent_list_product(lists):
     def _listify(lst):
         if not isinstance(lst, collections.Iterable):
@@ -1262,10 +1160,236 @@ def _agent_list_product(lists):
     ll = [_listify(l) for l in lists]
     return itertools.product(*ll)
 
+
 def _is_base_agent_state(agent):
     if agent.location is None and \
-        not agent.mods and \
-        not agent.mutations and \
-        not agent.bound_conditions:
+       not agent.mods and \
+       not agent.mutations and \
+       not agent.bound_conditions:
             return True
     return False
+
+
+def _get_db_refs(term):
+    """Extract database references for a TERM."""
+    db_refs = {}
+    # Here we extract the text name of the Agent
+    # There are two relevant tags to consider here.
+    # The <text> tag typically contains a larger phrase surrounding the
+    # term but it contains the term in a raw, non-canonicalized form.
+    # The <name> tag only contains the name of the entity but it is
+    # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
+    agent_text_tag = term.find('name')
+    if agent_text_tag is not None:
+        db_refs['TEXT'] = agent_text_tag.text
+
+    # We make a list of scored grounding terms from the DRUM terms
+    grounding_terms = _get_grounding_terms(term)
+    if not grounding_terms:
+        # This is for backwards compatibility with EKBs without drum-term
+        # scored entries. It is important to keep for Bioagents
+        # compatibility.
+        dbid = term.attrib.get('dbid')
+        if dbid:
+            dbids = dbid.split('|')
+            for dbname, dbid in [d.split(':') for d in dbids]:
+                if not db_refs.get(dbname):
+                    db_refs[dbname] = dbid
+        return db_refs
+
+    # This is the INDRA prioritization of grounding name spaces. Lower score
+    # takes precedence.
+    ns_priority = {
+        'BE': 1,
+        'HGNC': 2,
+        'UP': 2,
+        'CHEBI': 2,
+        'GO': 4,
+        'FA': 5,
+        'XFAM': 5,
+        'NCIT': 5
+    }
+    # We get the top priority entry from each score group
+    score_groups = itertools.groupby(grounding_terms, lambda x: x['score'])
+    top_per_score_group = []
+    for score, group in score_groups:
+        entries = list(group)
+        for entry in entries:
+            priority = 100
+            for ref_ns, ref_id in entry['refs'].items():
+                try:
+                    priority = min(priority, ns_priority[ref_ns])
+                except KeyError:
+                    pass
+                if ref_ns == 'UP':
+                    if not up_client.is_human(ref_id):
+                        priority = 3
+            entry['priority'] = priority
+        if len(entries) > 1:
+            top_entry = entries[0]
+            for entry in entries:
+                if entry['priority'] > top_entry['priority']:
+                    top_entry = entry
+        else:
+            top_entry = entries[0]
+        top_per_score_group.append(top_entry)
+
+    # By default, we coose the top priority entry from the highest score group
+    top_grounding = top_per_score_group[0]
+    for k, v in top_grounding['refs'].items():
+        db_refs[k] = v
+
+    return db_refs
+
+
+def _get_grounding_terms(term):
+    drum_terms = term.findall('drum-terms/drum-term')
+    if not drum_terms:
+        return None
+    terms = []
+    score_started = False
+    for dt in drum_terms:
+        # This is the primary ID
+        dbid_str = dt.attrib.get('dbid')
+
+        if not dbid_str:
+            if _is_type(dt.find('types'), 'ONT::PROTEIN-FAMILY'):
+                members = dt.findall('members/member')
+                dbids = []
+                for m in members:
+                    dbid = m.attrib.get('dbid')
+                    dbids.append(dbid)
+                refs = {'PFAM-DEF': '|'.join(dbids)}
+            # This is to handle the occasional empty drum-term
+            else:
+                refs = {}
+        else:
+            db_ns, db_id = dbid_str.split(':')
+            refs = {db_ns: db_id}
+
+        # Next look at the xref tags
+        xr_tags = dt.findall('xrefs/xref')
+        for xrt in xr_tags:
+            dbid_str = xrt.attrib.get('dbid')
+            db_ns, db_id = dbid_str.split(':')
+            # XFAM xrefs are added to proteins but are
+            # not desirable here
+            if db_ns == 'XFAM':
+                continue
+            refs[db_ns] = db_id
+
+        # Next we look at alternatives for the entry. For instance
+        # we check if NCIT maps to HGNC, CHEBI, GO or BE.
+        new_refs = {}
+        for ref_ns, ref_id in refs.items():
+            db_mappings = _get_db_mappings(ref_ns, ref_id)
+            for ref_mapped in db_mappings:
+                new_refs[ref_mapped[0]] = ref_mapped[1]
+        for k, v in new_refs.items():
+            refs[k] = v
+
+        # Now get the match score associated with the term
+        match_score = dt.attrib.get('match-score')
+        # Handling corner cases for unscored matches
+        if match_score is None:
+            if not score_started:
+                # This is a match before other scored terms so we
+                # default to 1.0
+                match_score = 1.0
+            else:
+                # This is a match after other scored matches
+                # default to a small value
+                match_score = 0.1
+        else:
+            match_score = float(match_score)
+            score_started = True
+        # This is a special case to handle unscored blank drum-terms
+        # at the top of the list
+        if not refs:
+            match_score = 0
+
+        grounding_term = {'score': match_score,
+                          'refs': refs}
+        terms.append(grounding_term)
+    # Finally, the scores are sorted in descending order
+    terms = sorted(terms, key=operator.itemgetter('score'), reverse=True)
+    # Merge grounding terms that are identical based on the references
+    # that they contain. The identical references are merged into the
+    # highest scoring term. Example:
+    # [{'refs': {'NCIT': '123', 'HGNC': '234'}, score: 1.0},
+    # {'refs': {'HGNC': '234', 'UP', 'P123'}, score: 0.829}]
+    # ==>
+    # [{'refs': {'NCIT': '123', 'HGNC': '234', 'UP': 'P123'}, score: 1.0}]
+    if len(terms) > 1:
+        independent_terms = [terms[0]]
+        for t in terms[1:]:
+            any_match = False
+            for it in independent_terms:
+                match = False
+                for k, v in t['refs'].items():
+                    if k in it['refs'] and it['refs'][k] == v:
+                        match = True
+                        any_match = True
+                if match:
+                    for k, v in t['refs'].items():
+                        it['refs'][k] = v
+            if not any_match:
+                independent_terms.append(t)
+        terms = independent_terms
+    return terms
+
+
+def _get_db_mappings(dbname, dbid):
+    db_mappings = []
+    be_id = bioentities_map.get((dbname, dbid))
+    if be_id is not None:
+        db_mappings.append(('BE', be_id))
+    if dbname == 'NCIT':
+        target = ncit_map.get(dbid)
+        if target is not None:
+            db_mappings.append((target[0], target[1]))
+    elif dbname == 'HGNC':
+        standard_up_id = hgnc_client.get_uniprot_id(dbid)
+        # standard_up_id will be None if the gene doesn't have a corresponding
+        # protein product
+        if standard_up_id:
+            db_mappings.append(('UP', standard_up_id))
+    elif dbname == 'UP':
+        # Handle special case of UP:etc
+        if not dbid == 'etc' and up_client.is_human(dbid):
+            gene_name = up_client.get_gene_name(dbid)
+            if gene_name:
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if hgnc_id:
+                    db_mappings.append(('HGNC', hgnc_id))
+    return db_mappings
+
+
+def _read_ncit_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/ncit_map.tsv')
+    ncit_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    next(csv_rows)
+    for row in csv_rows:
+        ncit_id = row[0]
+        target_ns = row[1]
+        target_id = row[2]
+        ncit_map[ncit_id] = (target_ns, target_id)
+    return ncit_map
+
+ncit_map = _read_ncit_map()
+
+def _read_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
+    bioentities_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        bioentities_map[(source_ns, source_id)] = be_id
+    return bioentities_map
+
+bioentities_map = _read_bioentities_map()
