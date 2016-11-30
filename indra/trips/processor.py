@@ -859,104 +859,47 @@ class TripsProcessor(object):
         if agent_text_tag is not None:
             db_refs['TEXT'] = agent_text_tag.text
 
-        dbid = term.attrib.get('dbid')
-
-        # If there are no dbids listed then we check whether it's an ad-hoc
-        # protein family definition.
-        if dbid is None:
-            if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-                members = term.findall('members/member')
-                dbids = []
-                for m in members:
-                    dbid = m.attrib.get('dbid')
-                    parts = dbid.split(':')
-                    dbids.append({parts[0]: parts[1]})
-                db_refs['PFAM-DEF'] = dbids
+        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
+            members = term.findall('members/member')
+            dbids = []
+            for m in members:
+                dbid = m.attrib.get('dbid')
+                dbids_member = {p[0]: p[1] for p in dbid.split('|')}
+                dbids.append(dbids_member)
+            db_refs['PFAM-DEF'] = dbids
             return db_refs
 
-        # In case there are dbids listed then we look at the match scores
-        drum_terms = term.findall('drum-terms/drum-term')
-        if drum_terms:
-            scores = {}
-            score_started = False
-            for dt in drum_terms:
-                # Handling corner cases for unscored matches
-                match_score = dt.attrib.get('match-score')
-                if not score_started:
-                    if match_score is not None:
-                        score_started = True
-                    else:
-                        # This is a match before other scored terms so we
-                        # default to 1.0
-                        match_score = 1.0
-                else:
-                    if match_score is None:
-                        # This is a match after other scored matches
-                        # default to a small value
-                        match_score = 0.1
-                dbid_str = dt.attrib.get('dbid')
-                # Scores are then saved in a dict with tuples
-                # as keys (e.g. ('HGNC', '1234'): 0.85)
-                if dbid_str is not None:
-                    db_ns, db_id = dbid_str.split(':')
-                    scores[(db_ns, db_id)] = float(match_score)
-                else:
-                    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-                        members = term.findall('members/member')
-                        dbids = []
-                        for m in members:
-                            dbid = m.attrib.get('dbid')
-                            dbids.append(dbid)
-                        key_name = ('PFAM-DEF', '|'.join(dbids))
-                        scores[key_name] = float(match_score)
-                # Next look at the xref tags
-                xr_tags = dt.findall('xrefs/xref')
-                for xrt in xr_tags:
-                    dbid_str = xrt.attrib.get('dbid')
-                    old_score = scores.get(dbid_str)
-                    new_score = float(match_score)
-                    if old_score is not None and old_score < new_score:
-                        scores[dbid_str] = new_score
 
-            # Next we look at alternatives for each dbid_str. For instance
-            # we check if NCIT has maps to HGNC, CHEBI, GO or BE. These entries
-            # are then added to the scores.
-            for entry, score in scores.items():
-                dbname, dbid = entry
-                db_mappings = _get_db_mappings(dbname, dbid)
-                for db_mapping in db_mappings:
-                    old_score = scores.get(db_mapping)
-                    # If the entry doesn't exist yet, add it with the
-                    # corresponding score
-                    if old_score is None:
-                        scores[db_mapping] = score
-                    # If the entry exists and this score is higher than the
-                    # original one then add the higher score
-                    elif score > old_score:
-                        scores[db_mapping] = score
-                    # Otherwise no score changes
-
-            # Finally, the scores are sorted in descending order
-            sorted_db_refs = sorted(scores.items(),
-                                    key=operator.itemgetter(1),
-                                    reverse=True)
-            # Here the matches are sorted and so each dbname will only
-            # have its highest scoring entry added to db_refs
-            for entry, score in sorted_db_refs:
-                dbname, dbid = entry
-                if not db_refs.get(dbname):
-                    if dbname == 'PFAM-DEF':
-                        dbids = [{p[0]: p[1]} for p in dbid.split('|')]
-                        db_refs[dbname] = dbids
-                    else:
+        # We make a list of scored grounding terms from the DRUM terms
+        grounding_terms = _get_grounding_terms(term)
+        if not grounding_terms:
+            # This is for backwards compatibility with EKBs without drum-term
+            # scored entries. It is important to keep for Bioagents
+            # compatibility.
+            dbid = term.attrib.get('dbid')
+            if dbid:
+                dbids = dbid.split('|')
+                for dbname, dbid in [d.split(':') for d in dbids]:
+                    if not db_refs.get(dbname):
                         db_refs[dbname] = dbid
-        # This is for backwards compatibility with EKBs without drum-term
-        # scored entries. It is important to keep for Bioagents compatibility.
-        else:
-            dbids = dbid.split('|')
-            for dbname, dbid in [d.split(':') for d in dbids]:
-                if not db_refs.get(dbname):
-                    db_refs[dbname] = dbid
+
+        top_grounding = grounding_terms[0]
+        for ref in top_grounding['refs']:
+            db_refs[ref['ns']] = ref['id']
+
+        '''
+        def has_grounding_ns(grounding_term, nss):
+            for ref in term['refs']:
+                if ref['ns'] in nss:
+                    return True
+            return False
+
+        canonical_grounding = False
+        for gr_term in grounding_terms:
+            if not has_grounding_ns(gr_term,
+                                    ['BE', 'UP', 'HGNC', 'CHEBI', 'GO']):
+                continue
+        '''
 
         # Here we fix some grounding standardization issues
         hgnc_id = db_refs.get('HGNC')
@@ -1299,6 +1242,64 @@ def _is_base_agent_state(agent):
        not agent.bound_conditions:
             return True
     return False
+
+
+def _get_grounding_terms(term):
+    drum_terms = term.findall('drum-terms/drum-term')
+    if not drum_terms:
+        return None
+    terms = []
+    score_started = False
+    for dt in drum_terms:
+        # This is the primary ID
+        dbid_str = dt.attrib.get('dbid')
+        db_ns, db_id = dbid_str.split(':')
+        refs = [{'ns': db_ns, 'id': db_id}]
+
+        # Next look at the xref tags
+        xr_tags = dt.findall('xrefs/xref')
+        for xrt in xr_tags:
+            dbid_str = xrt.attrib.get('dbid')
+            db_ns, db_id = dbid_str.split(':')
+            # XFAM xrefs are added to proteins but are
+            # not desirable here
+            if db_ns == 'XFAM':
+                continue
+            refs.append({'ns': db_ns, 'id': db_id})
+
+        # Next we look at alternatives for the entry. For instance
+        # we check if NCIT maps to HGNC, CHEBI, GO or BE.
+        for ref in refs:
+            db_mappings = _get_db_mappings(ref['ns'], ref['id'])
+            for ref_mapped in db_mappings:
+                new_ref = {'ns': ref_mapped[0], 'id': ref_mapped[1]}
+                if new_ref not in refs:
+                    refs.append(new_ref)
+
+        # Now get the match score associated with the term
+        match_score = dt.attrib.get('match-score')
+        # Handling corner cases for unscored matches
+        if match_score is None:
+            if not score_started:
+                # This is a match before other scored terms so we
+                # default to 1.0
+                match_score = 1.0
+            else:
+                # This is a match after other scored matches
+                # default to a small value
+                match_score = 0.1
+        else:
+            match_score = float(match_score)
+            score_started = True
+
+        grounding_term = {'score': match_score,
+                          'refs': refs}
+        terms.append(grounding_term)
+    # Finally, the scores are sorted in descending order
+    sorted_terms = sorted(terms,
+                          key=operator.itemgetter('score'),
+                          reverse=True)
+    return sorted_terms
 
 
 def _get_db_mappings(dbname, dbid):
