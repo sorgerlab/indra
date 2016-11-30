@@ -1186,15 +1186,6 @@ def _get_db_refs(term):
     # We make a list of scored grounding terms from the DRUM terms
     grounding_terms = _get_grounding_terms(term)
     if not grounding_terms:
-        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-            members = term.findall('members/member')
-            dbids = []
-            for m in members:
-                dbid = m.attrib.get('dbid')
-                dbids_member = {p[0]: p[1] for p in dbid.split('|')}
-                dbids.append(dbids_member)
-            db_refs['PFAM-DEF'] = dbids
-            return db_refs
         # This is for backwards compatibility with EKBs without drum-term
         # scored entries. It is important to keep for Bioagents
         # compatibility.
@@ -1260,8 +1251,17 @@ def _get_grounding_terms(term):
     for dt in drum_terms:
         # This is the primary ID
         dbid_str = dt.attrib.get('dbid')
-        db_ns, db_id = dbid_str.split(':')
-        refs = {db_ns: db_id}
+
+        if not dbid_str and _is_type(dt.find('types'), 'ONT::PROTEIN-FAMILY'):
+            members = dt.findall('members/member')
+            dbids = []
+            for m in members:
+                dbid = m.attrib.get('dbid')
+                dbids.append(dbid)
+            refs = {'PFAM-DEF': '|'.join(dbids)}
+        else:
+            db_ns, db_id = dbid_str.split(':')
+            refs = {db_ns: db_id}
 
         # Next look at the xref tags
         xr_tags = dt.findall('xrefs/xref')
