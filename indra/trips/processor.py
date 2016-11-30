@@ -1206,6 +1206,8 @@ def _get_db_refs(term):
                     db_refs[dbname] = dbid
         return db_refs
 
+    # This is the INDRA prioritization of grounding name spaces. Lower score
+    # takes precedence.
     ns_priority = {
         'BE': 1,
         'HGNC': 2,
@@ -1216,9 +1218,12 @@ def _get_db_refs(term):
         'XFAM': 5,
         'NCIT': 5
     }
+    # We get the top priority entry from each score group
     score_groups = itertools.groupby(grounding_terms, lambda x: x['score'])
+    top_per_score_group = []
     for score, group in score_groups:
-        for entry in group:
+        entries = list(group)
+        for entry in entries:
             priority = 100
             for ref_ns, ref_id in entry['refs'].items():
                 try:
@@ -1229,12 +1234,22 @@ def _get_db_refs(term):
                     if not up_client.is_human(ref_id):
                         priority = 3
             entry['priority'] = priority
+        if len(entries) > 1:
+            top_entry = entries[0]
+            for entry in entries:
+                if entry['priority'] > top_entry['priority']:
+                    top_entry = entry
+        else:
+            top_entry = entries[0]
+        top_per_score_group.append(top_entry)
 
-    top_grounding = grounding_terms[0]
+    # By default, we coose the top priority entry from the highest score group
+    top_grounding = top_per_score_group[0]
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
 
     return db_refs
+
 
 def _get_grounding_terms(term):
     drum_terms = term.findall('drum-terms/drum-term')
@@ -1324,9 +1339,13 @@ def _get_db_mappings(dbname, dbid):
             db_mappings.append((target[0], target[1]))
     elif dbname == 'HGNC':
         standard_up_id = hgnc_client.get_uniprot_id(dbid)
-        db_mappings.append(('UP', standard_up_id))
+        # standard_up_id will be None if the gene doesn't have a corresponding
+        # protein product
+        if standard_up_id:
+            db_mappings.append(('UP', standard_up_id))
     elif dbname == 'UP':
-        if up_client.is_human(dbid):
+        # Handle special case of UP:etc
+        if not dbid == 'etc' and up_client.is_human(dbid):
             gene_name = up_client.get_gene_name(dbid)
             if gene_name:
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
