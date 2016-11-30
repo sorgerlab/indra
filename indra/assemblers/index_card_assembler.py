@@ -223,7 +223,11 @@ def get_participant(agent):
     elif pfam_def_ids:
         participant['entity_type'] = 'protein_family'
         participant['entities'] = []
-        for pdi in pfam_def_ids:
+        pfam_def_list = []
+        for p in pfam_def_ids.split('|'):
+            dbname, dbid = p.split(':')
+            pfam_def_list.append({dbname: dbid})
+        for pdi in pfam_def_list:
             # TODO: handle non-uniprot protein IDs here
             uniprot_id = pdi.get('UP')
             if uniprot_id:
