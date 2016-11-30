@@ -1280,10 +1280,13 @@ def _get_grounding_terms(term):
 
         # Next we look at alternatives for the entry. For instance
         # we check if NCIT maps to HGNC, CHEBI, GO or BE.
+        new_refs = {}
         for ref_ns, ref_id in refs.items():
             db_mappings = _get_db_mappings(ref_ns, ref_id)
             for ref_mapped in db_mappings:
-                refs[ref_mapped[0]] = ref_mapped[1]
+                new_refs[ref_mapped[0]] = ref_mapped[1]
+        for k, v in new_refs.items():
+            refs[k] = v
 
         # Now get the match score associated with the term
         match_score = dt.attrib.get('match-score')
