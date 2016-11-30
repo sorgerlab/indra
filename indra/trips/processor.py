@@ -748,7 +748,7 @@ class TripsProcessor(object):
                 return None
             return member_agents
 
-        db_refs = self._get_db_refs(term)
+        db_refs = _get_db_refs(term)
 
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
@@ -843,80 +843,6 @@ class TripsProcessor(object):
                 agent.active = 'activity'
 
         return agent
-
-    @staticmethod
-    def _get_db_refs(term):
-        """Extract database references for a TERM."""
-
-        db_refs = {}
-        # Here we extract the text name of the Agent
-        # There are two relevant tags to consider here.
-        # The <text> tag typically contains a larger phrase surrounding the
-        # term but it contains the term in a raw, non-canonicalized form.
-        # The <name> tag only contains the name of the entity but it is
-        # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
-        agent_text_tag = term.find('name')
-        if agent_text_tag is not None:
-            db_refs['TEXT'] = agent_text_tag.text
-
-        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-            members = term.findall('members/member')
-            dbids = []
-            for m in members:
-                dbid = m.attrib.get('dbid')
-                dbids_member = {p[0]: p[1] for p in dbid.split('|')}
-                dbids.append(dbids_member)
-            db_refs['PFAM-DEF'] = dbids
-            return db_refs
-
-
-        # We make a list of scored grounding terms from the DRUM terms
-        grounding_terms = _get_grounding_terms(term)
-        if not grounding_terms:
-            # This is for backwards compatibility with EKBs without drum-term
-            # scored entries. It is important to keep for Bioagents
-            # compatibility.
-            dbid = term.attrib.get('dbid')
-            if dbid:
-                dbids = dbid.split('|')
-                for dbname, dbid in [d.split(':') for d in dbids]:
-                    if not db_refs.get(dbname):
-                        db_refs[dbname] = dbid
-
-        top_grounding = grounding_terms[0]
-        for ref in top_grounding['refs']:
-            db_refs[ref['ns']] = ref['id']
-
-        '''
-        def has_grounding_ns(grounding_term, nss):
-            for ref in term['refs']:
-                if ref['ns'] in nss:
-                    return True
-            return False
-
-        canonical_grounding = False
-        for gr_term in grounding_terms:
-            if not has_grounding_ns(gr_term,
-                                    ['BE', 'UP', 'HGNC', 'CHEBI', 'GO']):
-                continue
-        '''
-
-        # Here we fix some grounding standardization issues
-        hgnc_id = db_refs.get('HGNC')
-        up_id = db_refs.get('UP')
-        # If there is an HGNC entry, we prioritize that
-        if hgnc_id:
-            standard_up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            db_refs['UP'] = standard_up_id
-        # If there is no HGNC entry but there is a UP entry we look at that
-        elif up_id:
-            if up_client.is_human(up_id):
-                gene_name = up_client.get_gene_name(up_id)
-                if gene_name:
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
-        return db_refs
 
     def _add_condition(self, agent, precond_event, agent_term):
         precond_event_type = _get_type(precond_event)
@@ -1244,6 +1170,71 @@ def _is_base_agent_state(agent):
     return False
 
 
+def _get_db_refs(term):
+    """Extract database references for a TERM."""
+    db_refs = {}
+    # Here we extract the text name of the Agent
+    # There are two relevant tags to consider here.
+    # The <text> tag typically contains a larger phrase surrounding the
+    # term but it contains the term in a raw, non-canonicalized form.
+    # The <name> tag only contains the name of the entity but it is
+    # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
+    agent_text_tag = term.find('name')
+    if agent_text_tag is not None:
+        db_refs['TEXT'] = agent_text_tag.text
+
+    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
+        members = term.findall('members/member')
+        dbids = []
+        for m in members:
+            dbid = m.attrib.get('dbid')
+            dbids_member = {p[0]: p[1] for p in dbid.split('|')}
+            dbids.append(dbids_member)
+        db_refs['PFAM-DEF'] = dbids
+        return db_refs
+
+    # We make a list of scored grounding terms from the DRUM terms
+    grounding_terms = _get_grounding_terms(term)
+    if not grounding_terms:
+        # This is for backwards compatibility with EKBs without drum-term
+        # scored entries. It is important to keep for Bioagents
+        # compatibility.
+        dbid = term.attrib.get('dbid')
+        if dbid:
+            dbids = dbid.split('|')
+            for dbname, dbid in [d.split(':') for d in dbids]:
+                if not db_refs.get(dbname):
+                    db_refs[dbname] = dbid
+
+    ns_priority = {
+        'BE': 1,
+        'HGNC': 2,
+        'UP': 2,
+        'CHEBI': 2,
+        'GO': 4,
+        'FA': 5,
+        'XFAM': 5,
+        'NCIT': 5
+    }
+    score_groups = itertools.groupby(grounding_terms, lambda x: x['score'])
+    for score, group in score_groups:
+        for entry in group:
+            priority = 100
+            for ref_ns, ref_id in entry['refs'].items():
+                try:
+                    priority = min(priority, ns_priority[ref_ns])
+                except KeyError:
+                    pass
+                if ref_ns == 'UP':
+                    if not up_client.is_human(ref_id):
+                        priority = 3
+            entry['priority'] = priority
+
+    top_grounding = grounding_terms[0]
+    db_refs = top_grounding['refs']
+
+    return db_refs
+
 def _get_grounding_terms(term):
     drum_terms = term.findall('drum-terms/drum-term')
     if not drum_terms:
@@ -1254,7 +1245,7 @@ def _get_grounding_terms(term):
         # This is the primary ID
         dbid_str = dt.attrib.get('dbid')
         db_ns, db_id = dbid_str.split(':')
-        refs = [{'ns': db_ns, 'id': db_id}]
+        refs = {db_ns: db_id}
 
         # Next look at the xref tags
         xr_tags = dt.findall('xrefs/xref')
@@ -1265,16 +1256,14 @@ def _get_grounding_terms(term):
             # not desirable here
             if db_ns == 'XFAM':
                 continue
-            refs.append({'ns': db_ns, 'id': db_id})
+            refs[db_ns] = db_id
 
         # Next we look at alternatives for the entry. For instance
         # we check if NCIT maps to HGNC, CHEBI, GO or BE.
-        for ref in refs:
-            db_mappings = _get_db_mappings(ref['ns'], ref['id'])
+        for ref_ns, ref_id in refs.items():
+            db_mappings = _get_db_mappings(ref_ns, ref_id)
             for ref_mapped in db_mappings:
-                new_ref = {'ns': ref_mapped[0], 'id': ref_mapped[1]}
-                if new_ref not in refs:
-                    refs.append(new_ref)
+                refs[ref_mapped[0]] = ref_mapped[1]
 
         # Now get the match score associated with the term
         match_score = dt.attrib.get('match-score')
@@ -1296,10 +1285,31 @@ def _get_grounding_terms(term):
                           'refs': refs}
         terms.append(grounding_term)
     # Finally, the scores are sorted in descending order
-    sorted_terms = sorted(terms,
-                          key=operator.itemgetter('score'),
-                          reverse=True)
-    return sorted_terms
+    terms = sorted(terms, key=operator.itemgetter('score'), reverse=True)
+    # Merge grounding terms that are identical based on the references
+    # that they contain. The identical references are merged into the
+    # highest scoring term. Example:
+    # [{'refs': {'NCIT': '123', 'HGNC': '234'}, score: 1.0},
+    # {'refs': {'HGNC': '234', 'UP', 'P123'}, score: 0.829}]
+    # ==>
+    # [{'refs': {'NCIT': '123', 'HGNC': '234', 'UP': 'P123'}, score: 1.0}]
+    if len(terms) > 1:
+        independent_terms = [terms[0]]
+        for t in terms[1:]:
+            any_match = False
+            for it in independent_terms:
+                match = False
+                for k, v in t['refs'].items():
+                    if k in it['refs'] and it['refs'][k] == v:
+                        match = True
+                        any_match = True
+                if match:
+                    for k, v in t['refs'].items():
+                        it['refs'][k] = v
+            if not any_match:
+                independent_terms.append(t)
+        terms = independent_terms
+    return terms
 
 
 def _get_db_mappings(dbname, dbid):
@@ -1311,6 +1321,16 @@ def _get_db_mappings(dbname, dbid):
         target = ncit_map.get(dbid)
         if target is not None:
             db_mappings.append((target[0], target[1]))
+    elif dbname == 'HGNC':
+        standard_up_id = hgnc_client.get_uniprot_id(dbid)
+        db_mappings.append(('UP', standard_up_id))
+    elif dbname == 'UP':
+        if up_client.is_human(dbid):
+            gene_name = up_client.get_gene_name(dbid)
+            if gene_name:
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if hgnc_id:
+                    db_mappings.append(('HGNC', hgnc_id))
     return db_mappings
 
 
