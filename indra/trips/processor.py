@@ -1183,19 +1183,18 @@ def _get_db_refs(term):
     if agent_text_tag is not None:
         db_refs['TEXT'] = agent_text_tag.text
 
-    if _is_type(term, 'ONT::PROTEIN-FAMILY'):
-        members = term.findall('members/member')
-        dbids = []
-        for m in members:
-            dbid = m.attrib.get('dbid')
-            dbids_member = {p[0]: p[1] for p in dbid.split('|')}
-            dbids.append(dbids_member)
-        db_refs['PFAM-DEF'] = dbids
-        return db_refs
-
     # We make a list of scored grounding terms from the DRUM terms
     grounding_terms = _get_grounding_terms(term)
     if not grounding_terms:
+        if _is_type(term, 'ONT::PROTEIN-FAMILY'):
+            members = term.findall('members/member')
+            dbids = []
+            for m in members:
+                dbid = m.attrib.get('dbid')
+                dbids_member = {p[0]: p[1] for p in dbid.split('|')}
+                dbids.append(dbids_member)
+            db_refs['PFAM-DEF'] = dbids
+            return db_refs
         # This is for backwards compatibility with EKBs without drum-term
         # scored entries. It is important to keep for Bioagents
         # compatibility.
@@ -1205,6 +1204,7 @@ def _get_db_refs(term):
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
+        return db_refs
 
     ns_priority = {
         'BE': 1,
@@ -1231,7 +1231,8 @@ def _get_db_refs(term):
             entry['priority'] = priority
 
     top_grounding = grounding_terms[0]
-    db_refs = top_grounding['refs']
+    for k, v in top_grounding['refs'].items():
+        db_refs[k] = v
 
     return db_refs
 
