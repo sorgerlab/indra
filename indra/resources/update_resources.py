@@ -154,45 +154,59 @@ def update_cellular_components():
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
-    url = 'http://resource.belframework.org/belframework/latest-release/' + \
-        'equivalence/'
-    url1 = url + 'chebi-ids.beleq'
-    url2 = url + 'chebi.beleq'
-    res1 = load_from_http(url1)
-    res2 = load_from_http(url2)
-    if not ((res1 is not None) and (res2 is not None)):
-        return
-    id_lines = [lin.strip() for lin in res1.split('\n')]
-    started = False
+    id_lines = []
+    name_lines = []
+    for release in ('1.0', 'latest-release'):
+        url = 'http://resource.belframework.org/belframework/%s/' % release + \
+              'equivalence/'
+        url1 = url + 'chebi-ids.beleq'
+        if release == '1.0':
+            url2 = url + 'chebi-names.beleq'
+        else:
+            url2 = url + 'chebi.beleq'
+        res1 = load_from_http(url1)
+        res2 = load_from_http(url2)
+        id_lines1 = [lin.strip() for lin in res1.split('\n') if lin]
+        start = id_lines1.index('[Values]')
+        id_lines1 = id_lines1[start+1:]
+        id_lines += id_lines1
+        name_lines1 = [lin.strip() for lin in res2.split('\n') if lin]
+        start = name_lines1.index('[Values]')
+        name_lines1 = name_lines1[start + 1:]
+        name_lines += name_lines1
     id_map = {}
     for id_line in id_lines:
-        if started:
-            if id_line:
-                # Instead of splitting on |, split using UUID fixed length
-                chebi_id = id_line[:-37]
-                uuid = id_line[-36:]
-                id_map[uuid] = chebi_id
-        if id_line == '[Values]':
-            started = True
-    name_lines = [lin.strip() for lin in res2.split('\n')]
-    started = False
+        if id_line:
+            # Instead of splitting on |, split using UUID fixed length
+            chebi_id = id_line[:-37]
+            uuid = id_line[-36:]
+            id_map[uuid] = chebi_id
+
     name_map = {}
     for name_line in name_lines:
-        if started:
-            if name_line:
-                # Instead of splitting on |, split using UUID fixed length
-                chebi_name = name_line[:-37]
-                uuid = name_line[-36:]
-                name_map[uuid] = chebi_name
-        if name_line == '[Values]':
-            started = True
+        if name_line:
+            # Instead of splitting on |, split using UUID fixed length
+            chebi_name = name_line[:-37]
+            uuid = name_line[-36:]
+            name_map[uuid] = chebi_name
+
+    name_to_id = {}
+    for uuid, chebi_name in name_map.items():
+        chebi_id = id_map.get(uuid)
+        if chebi_id is not None:
+            if chebi_name in name_to_id:
+                old_id = int(name_to_id[chebi_name])
+                new_id = int(chebi_id)
+                if new_id <= old_id:
+                    continue
+            name_to_id[chebi_name] = chebi_id
+
     fname = os.path.join(path, 'bel_chebi_map.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
-        for uuid, chebi_name in sorted(name_map.items(), key=lambda x: x[1]):
-            chebi_id = id_map.get(uuid)
-            if chebi_id is not None:
-                fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
+        for chebi_name, chebi_id in sorted(name_to_id.items(),
+                                           key=lambda x: x[0]):
+            fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
 
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')

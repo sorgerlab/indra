@@ -723,7 +723,7 @@ class BelProcessor(object):
             if chebi_id:
                 db_refs['CHEBI'] = chebi_id
             else:
-                logger.warning('CHEBI name %s not found in map.' % chebi_id)
+                logger.warning('CHEBI name %s not found in map.' % name)
             agent_name = name
         elif namespace == 'EGID':
             hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
