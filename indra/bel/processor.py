@@ -265,8 +265,8 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.statements.append(
-                    ActiveForm(species, act_type, is_active, evidence))
+            st = ActiveForm(species, act_type, is_active, evidence)
+            self.statements.append(st)
 
     def get_activating_mods(self):
         """Extract INDRA ActiveForm Statements with a single mod from BEL."""
@@ -310,8 +310,8 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.statements.append(
-                    ActiveForm(species, act_type, is_active, evidence))
+            st = ActiveForm(species, act_type, is_active, evidence)
+            self.statements.append(st)
 
     def get_complexes(self):
         """Extract INDRA Complex Statements from BEL."""
@@ -395,7 +395,7 @@ class BelProcessor(object):
             # Parse out the elements of the query
             enz = self.get_agent(stmt[0], stmt[5])
             sub_expr = term_from_uri(stmt[1])
-            act_type = term_from_uri(stmt[2])
+            act_type = term_from_uri(stmt[2]).lower()
             # Parse the WT and substituted residues from the node label.
             # Strangely, the RDF for substituted residue doesn't break the
             # terms of the BEL expression down into their meaning, as happens
@@ -423,8 +423,8 @@ class BelProcessor(object):
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
             self.converted_stmts.append(stmt_str)
-            self.statements.append(
-                    ActiveForm(enz, act_type, is_active, evidence))
+            st = ActiveForm(enz, act_type, is_active, evidence)
+            self.statements.append(st)
 
     def get_activation(self):
         """Extract INDRA Activation Statements from BEL."""
