@@ -159,9 +159,9 @@ def extract_text(xml_string):
     raw_text = _get_raw_text(full_text)
     if raw_text:
         return raw_text
-    pdf = _get_pdf_attachment(full_text)
-    if pdf:
-        return pdf
+    #pdf = _get_pdf_attachment(full_text)
+    #if pdf:
+    #    return pdf
     return None
 
 
