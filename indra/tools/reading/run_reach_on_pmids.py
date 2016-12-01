@@ -216,9 +216,15 @@ if __name__ == '__main__':
         }}
     }}
 
+    logging {{
+      # defines project-wide logging level
+      loglevel = INFO
+      logfile = {base_dir}/reach.log
+    }}
+
     # this log file gets overwritten every time ReachCLI is executed
     # so you should copy it if you want to keep it around
-    #logFile = {base_dir}/log.txt
+    logFile = {base_dir}/log.txt
 
     # grounding configuration
     grounding: {{
@@ -226,7 +232,7 @@ if __name__ == '__main__':
       # Each element of the list is a map of KB filename and optional meta info (not yet used):
       #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
       adHocFiles: [
-    #    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
+        {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
       ]
 
       # flag to turn off the influence of species on grounding
@@ -239,12 +245,7 @@ if __name__ == '__main__':
     # ReadPapers
     ReadPapers.papersDir = src/test/resources/inputs/nxml/
     ReadPapers.serializedPapers = mentions.ser
-
-    logging {{
-      # defines project-wide logging level
-      loglevel = INFO
-      logfile = {base_dir}/reach.log
-    }}""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
+""".format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
     # Write the configuration file to the temp directory
