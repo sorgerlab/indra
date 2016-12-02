@@ -210,6 +210,7 @@ def get_reach_metadata(pmid):
         if e.response['Error']['Code'] =='NoSuchKey':
             logger.info('No REACH output found on S3 for key %s' % reach_key)
             reach_version = None
+            source_text = None
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
