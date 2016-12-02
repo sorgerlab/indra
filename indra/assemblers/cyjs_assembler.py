@@ -227,7 +227,7 @@ class CyJSAssembler(object):
             A json string representation of the Cytoscape JS network.
         """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        cyjs_str = json.dumps(cyjs_dict, indent=1)
+        cyjs_str = json.dumps(cyjs_dict, indent=1, sort_keys = True)
         return cyjs_str
 
     def save_model(self, fname='model.js'):
