@@ -1,6 +1,7 @@
 from indra import sparser
 
-xml_str = '''<interpretation>
+xml_str = '''
+ <interpretation>
  <sentence-text>MEK1 phosphorylates ERK1</sentence-text>
  <sem>
  <ref category="phosphorylate">
@@ -13,7 +14,8 @@ xml_str = '''<interpretation>
  <var name="present"><ref category="present"></ref></var>
  </ref>
  </sem>
-</interpretation>'''
+</interpretation>
+'''
 
 def test_invalid_xml():
     sp = sparser.process_xml('xyz')
