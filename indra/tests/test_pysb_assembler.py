@@ -581,40 +581,40 @@ def test_non_python_name_bind():
     pa.make_model()
     bng.generate_equations(pa.model)
 
-def test_degradation_one_step():
+def test_decreaseamount_one_step():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Degradation(subj, obj)
-    st2 = Degradation(None, obj)
+    st1 = DecreaseAmount(subj, 'activity', obj)
+    st2 = DecreaseAmount(None, None, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
 
-def test_degradation_interactions_only():
+def test_decreaseamount_interactions_only():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Degradation(subj, obj)
-    st2 = Degradation(None, obj)
+    st1 = DecreaseAmount(subj, 'activity', obj)
+    st2 = DecreaseAmount(None, None, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
-def test_synthesis_one_step():
+def test_increaseamount_one_step():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Synthesis(subj, obj)
-    st2 = Synthesis(None, obj)
+    st1 = IncreaseAmount(subj, 'activity', obj)
+    st2 = IncreaseAmount(None, None, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
 
-def test_synthesis_monomer_pattern():
+def test_increaseamount_monomer_pattern():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
     st1 = Activation(subj, obj)
@@ -628,11 +628,11 @@ def test_synthesis_monomer_pattern():
     # is in its fully specified "base" state
     bng.generate_equations(model)
 
-def test_synthesis_interactions_only():
+def test_increaseamount_interactions_only():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Synthesis(subj, obj)
-    st2 = Synthesis(None, obj)
+    st1 = IncreaseAmount(subj, 'activity', obj)
+    st2 = IncreaseAmount(None, None, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
