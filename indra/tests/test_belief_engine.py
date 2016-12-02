@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.statements import *
 from indra.belief import BeliefEngine
+from indra.belief import _get_belief_package
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -63,8 +64,62 @@ def test_prior_prob_assertion():
 def test_hierarchy_probs1():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
-    st2 = Phosphorylation(None, Agent('a'), evidence=[ev2], supports=[st1])
-    assert(st.belief == 1)
-    be.set_prior_probs([st])
-    assert(st.belief == 1)
+    st2 = Phosphorylation(None, Agent('a'), evidence=[ev2])
+    st2.supports = [st1]
+    st1.belief = 0.5
+    st2.belief = 0.8
+    be.set_hierarchy_probs([st1, st2])
+    print(st1.belief, st2.belief)
+    assert(st1.belief == 0.5)
+    assert(st2.belief == 0.94)
 '''
+
+def test_get_belief_package1():
+    st1 = Phosphorylation(None, Agent('a'))
+    st1.belief = 0.53
+    package = _get_belief_package(st1)
+    assert(len(package) == 1)
+    assert(package[0][0] == 0.53)
+    assert(package[0][1] == st1.matches_key())
+
+
+def test_get_belief_package2():
+    st1 = Phosphorylation(None, Agent('A1'))
+    st2 = Phosphorylation(None, Agent('A'))
+    st1.supported_by = [st2]
+    st2.supports = [st1]
+    st1.belief = 0.8
+    st2.belief = 0.6
+    package = _get_belief_package(st1)
+    assert(len(package) == 1)
+    assert(package[0][0] == 0.8)
+    assert(package[0][1] == st1.matches_key())
+    package = _get_belief_package(st2)
+    assert(len(package) == 2)
+    assert(package[0][0] == 0.8)
+    assert(package[0][1] == st1.matches_key())
+    assert(package[1][0] == 0.6)
+    assert(package[1][1] == st2.matches_key())
+
+
+def test_get_belief_package3():
+    st1 = Phosphorylation(Agent('B'), Agent('A1'))
+    st2 = Phosphorylation(None, Agent('A1'))
+    st3 = Phosphorylation(None, Agent('A'))
+    st1.supported_by = [st2, st3]
+    st2.supported_by = [st3]
+    st2.supports = [st1]
+    st3.supports = [st1, st2]
+    st1.belief = 0.8
+    st2.belief = 0.6
+    st3.belief = 0.7
+    package = _get_belief_package(st1)
+    assert(len(package) == 1)
+    assert(set([p[0] for p in package]) == set([0.8]))
+    package = _get_belief_package(st2)
+    assert(len(package) == 2)
+    assert(set([p[0] for p in package]) == set([0.6, 0.8]))
+    package = _get_belief_package(st3)
+    assert(len(package) == 3)
+    assert(set([p[0] for p in package]) == set([0.6, 0.7, 0.8]))
+

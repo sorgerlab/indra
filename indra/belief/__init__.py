@@ -112,16 +112,26 @@ class BeliefEngine(object):
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
-    @staticmethod
-    def get_rolling_prob(stmt):
-        neg_prob_self = (1-stmt.belief)
-        neg_probs_rolling = 1
-        for st in stmt.supports:
-            neg_probs_rolling *= (1-self.get_rolling_prob(st))
-        prob = (1-neg_prob_self*neg_probs_rolling)
-        return prob
 
-def get_ranked_stmts(self, statements):
+def _get_belief_package(stmt):
+    def belief_stmts(belief_pkgs):
+        return [pkg[1] for pkg in belief_pkgs]
+
+    belief_packages = []
+    for st in stmt.supports:
+        parent_packages = _get_belief_package(st)
+        belief_st = belief_stmts(belief_packages)
+        for package in parent_packages:
+            if not package[1] in belief_st:
+                belief_packages.append(package)
+
+    belief_package = (stmt.belief, stmt.matches_key())
+    belief_packages.append(belief_package)
+    print(stmt, belief_packages)
+    return belief_packages
+
+
+def get_ranked_stmts(statements):
     def get_next_level(stmts):
         above_stmts = []
         for st in stmts:
@@ -132,7 +142,8 @@ def get_ranked_stmts(self, statements):
                     break
             if all_leaf:
                 above_stmts.append(st)
-         return above_stmts
+        return above_stmts
+
     ranked_stmts = [[st for st in statements if not st.supported_by]]
     while True:
         next_stmts = get_next_level(ranked_stmts[-1])
