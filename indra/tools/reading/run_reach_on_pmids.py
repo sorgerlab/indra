@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import glob
 import json
+import pickle
 import logging
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     reach_version = '1.3.3'
-    force_read = True
+    force_read = False
     force_fulltext = False
 
     # Check the arguments
@@ -69,14 +70,14 @@ if __name__ == '__main__':
             (read_reach_version, read_source_text) = \
                                     s3_client.get_reach_metadata(pmid)
             # Found it, same version
-            if found_reach_version is not None and \
-               found_reach_version == reach_version:
+            if read_reach_version is not None and \
+               read_reach_version == reach_version:
                 logger.info('%s: found same version (%s), skipping' %
-                            (pmid, found_reach_version))
+                            (pmid, read_reach_version))
             # Found it, different version
             else:
                 logger.info('%s: found %s, current %s; will re-read' %
-                            (pmid, found_reach_version, reach_version))
+                            (pmid, read_reach_version, reach_version))
                 pmids_to_read.append(pmid)
 
     if not pmids_to_read:
@@ -162,6 +163,10 @@ if __name__ == '__main__':
             # The XML string is Unicode
             enc = content.encode('utf-8')
             f.write(enc)
+    logger.info('Saving text sources...')
+    text_source_file = os.path.join(base_dir, 'content_types.pkl')
+    with open(text_source_file, 'wb') as f:
+        pickle.dump(text_sources, f, protocol=2)
     logger.info('Found content PMIDs:')
     logger.info('%d pmc_oa_xml' % num_pmc_oa_xml)
     logger.info('%d pmc_auth_xml' % num_pmc_auth_xml)
