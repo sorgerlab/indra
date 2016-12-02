@@ -1601,11 +1601,20 @@ class Translocation(Statement):
         return str(key)
 
 @python_2_unicode_compatible
-class DirectedInteraction(Statement):
+class RegulateAmount(Statement):
     """Superclass handling operations on directed, two-element interactions."""
-    def __init__(self, subj, obj, evidence=None):
-        super(DirectedInteraction, self).__init__(evidence)
+    def __init__(self, subj, subj_activity, obj, evidence=None):
+        super(RegulateAmount, self).__init__(evidence)
         self.subj = subj
+
+        if self.subj is None and subj_activity is not None:
+            raise ValueError('Cannot have a subject activity for subject '
+                             'None.')
+        elif self.subj is not None and subj_activity is None:
+            raise ValueError('Subject activity cannot be None for a subject '
+                             'that is not None.')
+        self.subj_activity = subj_activity
+
         if obj is None:
             raise ValueError('Object of %s cannot be None.' %
                               type(self).__name__)
@@ -1616,7 +1625,7 @@ class DirectedInteraction(Statement):
             subj_key = None
         else:
             subj_key = self.subj.matches_key()
-        key = (type(self), subj_key, self.obj.matches_key())
+        key = (type(self), subj_key, self.subj_activity, self.obj.matches_key())
         return str(key)
 
     def agent_list(self):
@@ -1644,28 +1653,37 @@ class DirectedInteraction(Statement):
         else:
             subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
         obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
-        if subj_refinement and obj_refinement:
+        subj_act_match = (self.subj_activity == other.subj_activity) or \
+            hierarchies['activity'].isa('INDRA', self.subj_activity,
+                                        'INDRA', other.subj_activity)
+        if subj_refinement and obj_refinement and subj_act_match:
             return True
         else:
             return False
 
     def equals(self, other):
-        matches = super(Statement, self).equals(other)
+        matches = super(RegulateAmount, self).equals(other)
+        matches = matches and (self.subj_activity == other.subj_activity)
         return matches
 
     def __str__(self):
-        s = ("%s(%s, %s)" %
-                  (type(self).__name__, self.subj, self.obj))
+        s = ("%s(%s, %s, %s)" %
+                  (type(self).__name__, self.subj, self.subj_activity,
+                   self.obj))
         return s
 
-
-class Degradation(DirectedInteraction):
+class DecreaseAmount(RegulateAmount):
     """Degradation of a protein, possibly mediated by another protein.
+
+    Note that this statement can also be used to represent inhibitors of
+    synthesis (e.g., cycloheximide).
 
     Parameters
     ----------
     subj : :py:class`indra.statement.Agent`
         The protein mediating the degradation.
+    subj_activity : str
+        The relevant activity of the protein mediating the degradation.
     obj : :py:class:`indra.statement.Agent`
         The protein that is degraded.
     evidence : list of :py:class:`Evidence`
@@ -1674,19 +1692,22 @@ class Degradation(DirectedInteraction):
     pass
 
 
-class Synthesis(DirectedInteraction):
+class IncreaseAmount(RegulateAmount):
     """Synthesis of a protein, possibly mediated by another protein.
 
     Parameters
     ----------
     subj : :py:class`indra.statement.Agent`
         The protein mediating the synthesis.
+    subj_activity : str
+        The relevant activity of the protein mediating the synthesis, e.g.,
+        'transcription'.
     obj : :py:class:`indra.statement.Agent`
         The protein that is synthesized.
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
-
+    pass
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
