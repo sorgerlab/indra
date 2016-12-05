@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 import collections
+from indra.literature import id_lookup
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.databases import uniprot_client
 
@@ -12,6 +13,7 @@ class SparserProcessor(object):
     def __init__(self, xml_etree):
         self.tree = xml_etree
         self.statements = []
+        # Extract all sems by category
         self._sems = collections.defaultdict(list)
         for interp in self.tree.findall('interpretation'):
             sentence = interp.find('sentence-text').text
@@ -21,6 +23,17 @@ class SparserProcessor(object):
                 if ref is not None:
                     category = ref.attrib['category']
                     self._sems[category].append((sem, sentence))
+        # Get citation info
+        pmcid = self.tree.attrib.get('pmcid')
+        pmid = self.tree.attrib.get('pmid')
+        self.pmid = None
+        if pmid:
+            self.pmid = pmid
+        elif pmcid:
+            ids = id_lookup(pmcid, 'pmcid')
+            pmid = ids.get('pmid')
+            if pmid is not None:
+                self.pmid = pmid
 
     def get_phosphorylations(self):
         phos_events = self._sems.get('phosphorylate')
@@ -38,9 +51,11 @@ class SparserProcessor(object):
             substrate = event.find("ref/var/[@name='substrate']/ref")
             # TODO: handle agent-or-substrate
             if substrate is None:
+                logger.info('Skipping phosphorylation without substrate.')
                 continue
             sub = self._get_agent_from_ref(substrate)
             if sub is None:
+                logger.info('Skipping phosphorylation without substrate.')
                 continue
 
             # Get site
@@ -50,7 +65,10 @@ class SparserProcessor(object):
             if site is not None:
                 residue, position = self._get_site(site)
 
-            st = Phosphorylation(enz, sub, residue, position)
+            # Get evidence
+            ev = self._get_evidence(sentence)
+
+            st = Phosphorylation(enz, sub, residue, position, evidence=[ev])
             self.statements.append(st)
 
     def _get_agent_from_ref(self, ref):
@@ -58,18 +76,16 @@ class SparserProcessor(object):
         if ref.attrib.get('category') == 'collection':
             logger.warning('Skipping collection Agent.')
             return None
-        name = ref.attrib.get('name')
-        uid = ref.attrib.get('uid')
-        if name is None:
-            name_tag = ref.find("var/[@name='name']")
-            if name_tag is not None:
-                name = name_tag.text
-            else:
-                return None
-        if uid is None:
-            uid_tag = ref.find("var/[@name='uid']")
-            if uid_tag is not None:
-                uid = uid_tag.text
+        name_tag = ref.find("var/[@name='name']")
+        if name_tag is not None:
+            name = name_tag.text
+        else:
+            return None
+        uid_tag = ref.find("var/[@name='uid']")
+        if uid_tag is not None:
+            uid = uid_tag.text
+        else:
+            uid = None
 
         db_refs = {}
         if uid is not None and uid.startswith('UP:'):
@@ -107,6 +123,6 @@ class SparserProcessor(object):
                     position = position_tag.text.strip()
         return residue, position
 
-    def _get_evidence(self, sem):
-        ev = Evidence(source_api='sparser')
+    def _get_evidence(self, text):
+        ev = Evidence(source_api='sparser', pmid=self.pmid, text=text)
         return ev
