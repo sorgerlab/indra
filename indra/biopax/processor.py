@@ -277,6 +277,88 @@ class BiopaxProcessor(object):
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
+    def get_regulate_amounts(self):
+        pb = _bpp('PatternBox')
+
+        p = pb.controlsExpressionWithTemplateReac()
+        s = _bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [_match_to_array(m) for m in res.toArray()]
+        stmts = []
+        for res in res_array:
+            # FIXME: for some reason labels are not accessible
+            # for these queries. It would be more reliable
+            # to get results by label instead of index.
+            '''
+            controller_er = res[p.indexOf('controller ER')]
+            generic_controller_er = res[p.indexOf('generic controller ER')]
+            controller_simple_pe = res[p.indexOf('controller simple PE')]
+            controller_pe = res[p.indexOf('controller PE')]
+            control = res[p.indexOf('Control')]
+            conversion = res[p.indexOf('Conversion')]
+            input_pe = res[p.indexOf('input PE')]
+            input_simple_pe = res[p.indexOf('input simple PE')]
+            changed_generic_er = res[p.indexOf('changed generic ER')]
+            output_pe = res[p.indexOf('output PE')]
+            output_simple_pe = res[p.indexOf('output simple PE')]
+            changed_er = res[p.indexOf('changed ER')]
+            '''
+            # TODO: here, res[3] is the complex physical entity
+            # for instance http://pathwaycommons.org/pc2/
+            # Complex_43c6b8330562c1b411d21e9d1185bae9
+            # consists of 3 components: JUN, FOS and NFAT
+            # where NFAT further contains 3 member physical entities.
+            #
+            # However, res[2] iterates over all 5 member physical entities
+            # of the complex which doesn't represent the underlying
+            # structure faithfully. It would be better to use res[3]
+            # (the complex itself) and look at components and then
+            # members. However, then, it would not be clear how to
+            # construct an INDRA Agent for the controller.
+            controller = self._get_agents_from_entity(res[2])
+            controlled_pe = res[6]
+            controlled = self._get_agents_from_entity(controlled_pe)
+
+            conversion = res[5]
+            direction = conversion.getTemplateDirection()
+            if direction is not None:
+                direction = direction.name()
+                if direction != 'FORWARD':
+                    logger.warning('Unhandled conversion direction %s' %
+                                   direction)
+                    continue
+            # Sometimes interaction type is annotated as
+            # term=='TRANSCRIPTION'. Other times this is not
+            # annotated.
+            int_type = conversion.getInteractionType().toArray()
+            if int_type:
+                for it in int_type:
+                    for term in it.getTerm().toArray():
+                        pass
+            control = res[4]
+            control_type = control.getControlType()
+            if control_type:
+                control_type = control_type.name()
+            citations = BiopaxProcessor._get_citations(control)
+            source_id = control.getUri()
+            if not citations:
+                citations = [None]
+            ev = [Evidence(source_api='biopax', pmid=cit,
+                           source_id=source_id)
+                  for cit in citations]
+            for subj, obj in itertools.product(_listify(controller),
+                                               _listify(controlled)):
+                if control_type == 'ACTIVATION':
+                    st = IncreaseAmount(subj, 'transcription', obj,
+                                        evidence=ev)
+                elif control_type == 'INHIBITION':
+                    st = DecreaseAmount(subj, 'transcription', obj,
+                                        evidence=ev)
+                else:
+                    logger.warning('Unhandled control type %s' % control_type)
+                    continue
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
 
     @staticmethod
     def _get_complex_members(cplx):
