@@ -52,20 +52,21 @@ class ModelChecker(object):
     def check_activation(self, stmt):
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
-        # pattern from the Activation statement, which will nearly always have no
-        # state conditions on it. In future, this statement should also match rules
-        # in which 1) the agent is in its active form, or 2) the agent is tagged
-        # as the enzyme in a rule of the appropriate activity (e.g., a phosphorylation
-        # rule) FIXME
+        # pattern from the Activation statement, which will nearly always have
+        # no state conditions on it. In future, this statement should also match
+        # rules in which 1) the agent is in its active form, or 2) the agent is
+        # tagged as the enzyme in a rule of the appropriate activity (e.g., a
+        # phosphorylation rule) FIXME
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
         target_polarity = 1 if stmt.is_activation else -1
         # This may fail, since there may be no rule in the model activating the
-        # object, and the object may not have an "active" site of the appropriate
-        # type
+        # object, and the object may not have an "active" site of the
+        # appropriate type
         obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
         try:
             obj_site_pattern = pa.get_site_pattern(stmt.obj)
-            obj_site_pattern.update({pa.active_site_names[stmt.obj_activity]: 'active'})
+            obj_site_pattern.update({pa.active_site_names[stmt.obj_activity]:
+                                     'active'})
             obj_monomer = self.model.monomers[stmt.obj.name]
             obj_mp = obj_monomer(**obj_site_pattern)
         except Exception as e:
@@ -80,28 +81,34 @@ class ModelChecker(object):
         # The observable is the modified form of the substrate
         logger.info('Checking stmt: %s' % stmt)
         # Look for an agent with the appropriate grounding in the model
-        #enz_db_refs = stmt.enz.db_refs
         if stmt.enz is not None:
             enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
+            if enz_mp is None:
+                logger.info('No monomer found corresponding to agent %s' %
+                             stmt.enz)
+                return False
         else:
             enz_mp = None
-
-        if type(stmt) in (Dephosphorylation, Dehydroxylation, Desumoylation,
-                          Deacetylation, Deglycosylation, Deribosylation,
-                          Deubiquitination, Defarnesylation):
-            target_polarity = -1
-        else:
-            target_polarity = 1
-
+        # Get target polarity
+        demodify_list = (Dephosphorylation, Dehydroxylation, Desumoylation,
+                         Deacetylation, Deglycosylation, Deribosylation,
+                         Deubiquitination, Defarnesylation)
+        target_polarity = -1 if type(stmt) in demodify_list else 1
+        # Add modification to substrate agent
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
-        site_pattern = pa.get_site_pattern(modified_sub)
+        # Now look up the modified agent in the model
         obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-        monomer = self.model.monomers[modified_sub.name]
-        try:
-            obj_mp = monomer(**site_pattern)
-        except Exception as e:
-            logger.info("Invalid site: %s" % e)
+        obj_mp = pa.get_monomer_pattern(self.model, modified_sub)
+        #site_pattern = pa.get_site_pattern(modified_sub)
+        #monomer = self.model.monomers[modified_sub.name]
+        #try:
+        #    obj_mp = monomer(**site_pattern)
+        #except Exception as e:
+        #    logger.info("Invalid site: %s" % e)
+        #    return False
+        if obj_mp is None:
+            logger.info('Failed to create observable; returning False')
             return False
         obj_obs = Observable(obs_name, obj_mp, _export=False)
 

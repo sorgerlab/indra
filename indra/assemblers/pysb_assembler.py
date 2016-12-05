@@ -369,7 +369,12 @@ def get_monomer_pattern(model, agent, extra_fields=None):
             pattern[k] = v
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
-    monomer_pattern = monomer(**pattern)
+    try:
+        monomer_pattern = monomer(**pattern)
+    except Exception as e:
+        logger.info("Invalid site pattern %s for monomer %s" %
+                      (pattern, monomer))
+        return None
     return monomer_pattern
 
 def get_site_pattern(agent):

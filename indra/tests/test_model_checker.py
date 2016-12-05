@@ -36,8 +36,8 @@ def test_cp_embedding():
     cp3 = A(b=1, other='u') % B(b=1)
     cp4 = A(other='p')
     cp5 = A(b=1) % B(b=1)
-    # Some tests not performed because ComplexPatterns for second term are not
-    # yet supported
+    # FIXME Some tests not performed because ComplexPatterns for second term
+    # FIXME are not yet supported
     assert cp_embeds_into(cp1, cp2)
     #assert not cp_embeds_into(cp1, cp3)
     assert cp_embeds_into(cp1, cp4)
@@ -288,7 +288,6 @@ def test_dephosphorylation():
     assert checks[0][0] == stmt
     assert checks[0][1] == True
 
-
 @with_model
 def test_invalid_modification():
      # Override the shutoff of self export in psyb_assembler
@@ -377,7 +376,6 @@ def test_distinguish_path_polarity2():
     assert results[2][1] == True
     assert results[3][1] == True
 
-
 @with_model
 def test_phosphorylation_annotations():
     # Override the shutoff of self export in psyb_assembler
@@ -451,7 +449,6 @@ def test_check_activation():
     # Create the model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    # Try two step
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, stmts)
     results = mc.check_model()
