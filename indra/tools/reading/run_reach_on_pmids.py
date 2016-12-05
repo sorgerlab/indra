@@ -12,6 +12,56 @@ import logging
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 
+# Logger
+logger = logging.getLogger('runreach')
+
+def upload_reach_json(output_dir, text_sources):
+    # At this point, we have a directory full of JSON files
+    # Collect all the prefixes into a set, then iterate over the prefixes
+    def join_parts(prefix):
+        """Join different REACH output JSON files into a single JSON."""
+        try:
+            with open(prefix + '.uaz.entities.json', 'rt') as f:
+                entities = json.load(f)
+            with open(prefix + '.uaz.events.json', 'rt') as f:
+                events = json.load(f)
+            with open(prefix + '.uaz.sentences.json', 'rt') as f:
+                sentences = json.load(f)
+        except IOError as e:
+            logger.error('Failed to open JSON files for %s; REACH error?' %
+                          prefix)
+            return None
+        return {'events': events, 'entities': entities, 'sentences': sentences}
+
+    # Collect prefixes
+    json_files = glob.glob(os.path.join(output_dir, '*.json'))
+    json_prefixes = set([])
+    for json_file in json_files:
+        filename = os.path.basename(json_file)
+        prefix = filename.split('.')[0]
+        json_prefixes.add(prefix)
+    # Now iterate over the collected prefixes, combine the JSON, and send to S3
+    num_uploaded = 0
+    num_failures = 0
+    # The prefixes should be PMIDs
+    for json_ix, json_prefix in enumerate(json_prefixes):
+        prefix_with_path = os.path.join(output_dir, json_prefix)
+        full_json = join_parts(prefix_with_path)
+        if full_json is None:
+            num_failures += 1
+        else:
+            # Look up the paper source type
+            source_text = text_sources.get(json_prefix)
+            logger.info('%s (%d of %d): source %s' %
+                      (json_prefix, json_ix + 1, len(json_prefixes), source_text))
+            s3_client.put_reach_output(full_json, json_prefix, reach_version,
+                                       source_text)
+            num_uploaded += 1
+
+    logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
+                (num_uploaded, num_failures))
+
+
 if __name__ == '__main__':
 
     cleanup = False
@@ -24,8 +74,13 @@ if __name__ == '__main__':
 
     # Check the arguments
     usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
-            "[force_fulltext]" % sys.argv[0]
-    if len(sys.argv) < 6:
+            "[force_fulltext]\n" % sys.argv[0]
+    usage += "Alternative usage: %s upload_json output_dir content_types_file" % \
+              sys.argv[0]
+    if len(sys.argv) not in  (4, 6, 7):
+        print(usage)
+        sys.exit()
+    if len(sys.argv) == 4 and sys.argv[1] != 'upload_json':
         print(usage)
         sys.exit()
     if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
@@ -34,14 +89,22 @@ if __name__ == '__main__':
     elif len(sys.argv) == 7:
         force_fulltext = True
 
+    # One type of operation: just upload previously read JSON files
+    if len(sys.argv) == 4 and sys.argv[1] == 'upload_json':
+        output_dir = sys.argv[2]
+        text_sources_file = sys.argv[3]
+        with open(text_sources_file, 'rb') as f:
+            text_sources = pickle.load(f)
+        upload_reach_json(output_dir, text_sources)
+        sys.exit()
+
+    # =======================
+    # Alternatively, run the whole process
     # Get the command line arguments
     (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
     start_index = int(start_index)
     end_index = int(end_index)
     num_cores = int(num_cores)
-
-    # Logger
-    logger = logging.getLogger('runreach')
 
     # Load the list of PMIDs from the given file
     with open(pmid_list_file) as f:
@@ -268,48 +331,6 @@ if __name__ == '__main__':
     if p.returncode:
         raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
 
-    # At this point, we have a directory full of JSON files
-    # Collect all the prefixes into a set, then iterate over the prefixes
-    def join_parts(prefix):
-        """Join different REACH output JSON files into a single JSON."""
-        try:
-            with open(prefix + '.uaz.entities.json', 'rt') as f:
-                entities = json.load(f)
-            with open(prefix + '.uaz.events.json', 'rt') as f:
-                events = json.load(f)
-            with open(prefix + '.uaz.sentences.json', 'rt') as f:
-                sentences = json.load(f)
-        except IOError as e:
-            logger.error('Failed to open JSON files for %s; REACH error?' %
-                          prefix)
-            return None
-        return {'events': events, 'entities': entities, 'sentences': sentences}
-
-    # Collect prefixes
-    json_files = glob.glob(os.path.join(output_dir, '*.json'))
-    json_prefixes = set([])
-    for json_file in json_files:
-        filename = os.path.basename(json_file)
-        prefix = filename.split('.')[0]
-        json_prefixes.add(prefix)
-    # Now iterate over the collected prefixes, combine the JSON, and send to S3
-    num_uploaded = 0
-    num_failures = 0
-    for json_prefix in json_prefixes: # The prefixes should be PMIDs
-        prefix_with_path = os.path.join(output_dir, json_prefix)
-        full_json = join_parts(prefix_with_path)
-        if full_json is None:
-            num_failures += 1
-        else:
-            # Look up the paper source type
-            source_text = text_sources.get(json_prefix)
-            logger.info('%s: source %s' % (json_prefix, source_text))
-            s3_client.put_reach_output(full_json, json_prefix, reach_version,
-                                       source_text)
-            num_uploaded += 1
-
-    logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
-                (num_uploaded, num_failures))
 
     if cleanup:
         shutil.rmtree(base_dir)
