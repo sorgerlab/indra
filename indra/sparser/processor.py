@@ -3,7 +3,7 @@ from builtins import dict, str
 import logging
 import collections
 from indra.literature import id_lookup
-from indra.statements import Phosphorylation, Agent, Evidence
+from indra.statements import *
 from indra.databases import uniprot_client
 
 logger = logging.getLogger('sparser')
@@ -35,41 +35,50 @@ class SparserProcessor(object):
             if pmid is not None:
                 self.pmid = pmid
 
-    def get_phosphorylations(self):
-        phos_events = self._sems.get('phosphorylate')
-        if not phos_events:
+    def get_modifications(self):
+        mod_events = {}
+        for mod_type in _mod_class_map.keys():
+            mod_events[mod_type] = self._sems.get(mod_type)
+        if not mod_events:
             return
-        for event, sentence in phos_events:
-            # Get enzyme agent
-            enzyme = event.find("ref/var/[@name='agent']/ref")
-            if enzyme is None:
-                enz = None
-            else:
-                enz = self._get_agent_from_ref(enzyme)
-
-            # Get substrate agent
-            substrate = event.find("ref/var/[@name='substrate']/ref")
-            # TODO: handle agent-or-substrate
-            if substrate is None:
-                logger.info('Skipping phosphorylation without substrate.')
+        for mod_type, sems in mod_events.items():
+            if not sems:
                 continue
-            sub = self._get_agent_from_ref(substrate)
-            if sub is None:
-                logger.info('Skipping phosphorylation without substrate.')
+            indra_class = _mod_class_map.get(mod_type)
+            if indra_class is None:
+                logger.warning('Unhandled modification type %s' % mod_type)
                 continue
+            for event, sentence in sems:
+                # Get enzyme agent
+                enzyme = event.find("ref/var/[@name='agent']/ref")
+                if enzyme is None:
+                    enz = None
+                else:
+                    enz = self._get_agent_from_ref(enzyme)
 
-            # Get site
-            residue = None
-            position = None
-            site = event.find("ref/var/[@name='site']")
-            if site is not None:
-                residue, position = self._get_site(site)
+                # Get substrate agent
+                substrate = event.find("ref/var/[@name='substrate']/ref")
+                # TODO: handle agent-or-substrate
+                if substrate is None:
+                    logger.debug('Skipping phosphorylation without substrate.')
+                    continue
+                sub = self._get_agent_from_ref(substrate)
+                if sub is None:
+                    logger.debug('Skipping phosphorylation without substrate.')
+                    continue
 
-            # Get evidence
-            ev = self._get_evidence(sentence)
+                # Get site
+                residue = None
+                position = None
+                site = event.find("ref/var/[@name='site']")
+                if site is not None:
+                    residue, position = self._get_site(site)
 
-            st = Phosphorylation(enz, sub, residue, position, evidence=[ev])
-            self.statements.append(st)
+                # Get evidence
+                ev = self._get_evidence(sentence)
+
+                st = indra_class(enz, sub, residue, position, evidence=[ev])
+                self.statements.append(st)
 
     def _get_agent_from_ref(self, ref):
         # TODO: handle collections
@@ -126,3 +135,12 @@ class SparserProcessor(object):
     def _get_evidence(self, text):
         ev = Evidence(source_api='sparser', pmid=self.pmid, text=text)
         return ev
+
+_mod_class_map = {
+    'phosphorylate': Phosphorylation,
+    'dephosphorylate': Dephosphorylation,
+    'ubiquitination': Ubiquitination,
+    'deubiquitination': Deubiquitination,
+    'farnesylation': Farnesylation,
+    'defarnesylation': Defarnesylation
+    }
