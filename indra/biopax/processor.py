@@ -912,7 +912,8 @@ class BiopaxProcessor(object):
         'N-acetylated L-lysine': ('acetylation', 'K'),
         'hydroxylated proline': ('hydroxylation', 'P'),
         'N-myristoylglycine': ('myristoylation', 'G'),
-        'N-myristoyl-glycine': ('myristoylation', 'G')
+        'N-myristoyl-glycine': ('myristoylation', 'G'),
+        'sumoylated lysine': ('sumoylation', 'K'),
         }
 
 # Functions for accessing frequently used java classes with shortened path
