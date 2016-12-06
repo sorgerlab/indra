@@ -742,6 +742,7 @@ def test_get_mp_with_grounding_2():
     assert mp.site_conditions == {'Y187': 'p'}
     # TODO Add test for unmodified agent!
     # TODO Add test involving multiple (possibly degenerate) modifications!
+    # TODO Add test for generic double phosphorylation
 
 if __name__ == '__main__':
     test_get_mp_with_grounding()

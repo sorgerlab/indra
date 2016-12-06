@@ -6,6 +6,7 @@ import networkx
 import itertools
 from copy import deepcopy
 from collections import deque
+from itertools import product
 from pysb import kappa
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
@@ -75,6 +76,17 @@ class ModelChecker(object):
         obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
         return self._find_im_paths(subj_mp, obj_obs, target_polarity)
 
+    # Need to be able to take an arbitrary set of agent modification/mut etc.
+    # conditions and generate an appropriate set of monomer patterns and/or
+    # observables. This has to apply to both input rules/agents as well as
+    # targets. Imagine the case of
+    # Phosphorylation(MAP2K1(mods:[phosphorylation, None, None]), MAPK1)
+    # Here, we need to match any rule where MEK (in any phosphorylated state)
+    # phosphoryaltes ERK on any site.
+    # If this can be done, then resolving activations becomes simply a matter of
+    # looking up which states are active, just like looking up phosphorylations.
+    # So we'll start by looking through the modification conditions of an agent.
+
     def check_modification(self, stmt):
         # Identify the observable we're looking for in the model, which
         # may not exist!
@@ -82,13 +94,13 @@ class ModelChecker(object):
         logger.info('Checking stmt: %s' % stmt)
         # Look for an agent with the appropriate grounding in the model
         if stmt.enz is not None:
-            enz_mp = pa.get_monomer_pattern(self.model, stmt.enz)
-            if enz_mp is None:
-                logger.info('No monomer found corresponding to agent %s' %
+            enz_mps = list(pa.grounded_monomer_patterns(self.model, stmt.enz))
+            if not enz_mps:
+                logger.info('No monomers found corresponding to agent %s' %
                              stmt.enz)
                 return False
         else:
-            enz_mp = None
+            enz_mps = []
         # Get target polarity
         demodify_list = (Dephosphorylation, Dehydroxylation, Desumoylation,
                          Deacetylation, Deglycosylation, Deribosylation,
@@ -98,8 +110,7 @@ class ModelChecker(object):
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
         # Now look up the modified agent in the model
-        obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-        obj_mp = pa.get_monomer_pattern(self.model, modified_sub)
+        #obj_mp = pa.get_monomer_pattern(self.model, modified_sub)
         #site_pattern = pa.get_site_pattern(modified_sub)
         #monomer = self.model.monomers[modified_sub.name]
         #try:
@@ -107,12 +118,17 @@ class ModelChecker(object):
         #except Exception as e:
         #    logger.info("Invalid site: %s" % e)
         #    return False
-        if obj_mp is None:
+        obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
+        obj_mps = list(pa.grounded_monomer_patterns(self.model, modified_sub))
+        if not obj_mps:
             logger.info('Failed to create observable; returning False')
             return False
-        obj_obs = Observable(obs_name, obj_mp, _export=False)
-
-        return self._find_im_paths(enz_mp, obj_obs, target_polarity)
+        for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
+            obj_obs = Observable(obs_name, obj_mp, _export=False)
+            if self._find_im_paths(enz_mp, obj_obs, target_polarity):
+                return True
+        # If we got here, then there was no path for any observable
+        return False
 
     def _find_im_paths(self, subj_mp, obj_obs, target_polarity):
         # Reset the observables list
@@ -122,6 +138,7 @@ class ModelChecker(object):
         if subj_mp is None:
             input_rule_set = None
         else:
+            import ipdb; ipdb.set_trace()
             input_rules = match_lhs(subj_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])

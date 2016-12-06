@@ -350,7 +350,8 @@ def grounded_monomer_patterns(model, agent):
     # We looked at all the annotations in the model and didn't find a
     # match
     if monomer is None:
-        return None
+        logger.info('No monomer found corresponding to agent %s' % agent)
+        return iter(())
 
     # Now that we have a monomer for the agent, look for site/state
     # combinations corresponding to the state of the agent.

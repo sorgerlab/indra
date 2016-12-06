@@ -377,27 +377,23 @@ def test_distinguish_path_polarity2():
     assert results[3][1] == True
 
 @with_model
-def test_phosphorylation_annotations():
-    # Override the shutoff of self export in psyb_assembler
-    # Create the statement
-    a = Agent('MEK1', db_refs={'HGNC': '6840'})
-    b = Agent('ERK2', db_refs={'HGNC': '6871'})
-    st = Phosphorylation(a, b, 'T', '185')
-    # Now create the PySB model
-    Monomer('A_monomer')
-    Monomer('B_monomer', ['Thr185'], {'Thr185':['un', 'phos']})
-
-    Rule('A_phos_B', A_monomer() + B_monomer(Thr185='un') >>
-                     A_monomer() + B_monomer(Thr185='phos'),
-         Parameter('k', 1))
-    Initial(A_monomer(), Parameter('A_0', 100))
-    Initial(B_monomer(Thr185='un'), Parameter('B_0', 100))
-    mc = ModelChecker(model, [st])
+def test_check_activation():
+    a = Agent('A')
+    b = Agent('B')
+    c = Agent('C')
+    st1 = Activation(a, 'activity', b, 'activity', True)
+    st2 = Activation(b, 'activity', c, 'kinase', False)
+    stmts = [st1, st2]
+    # Create the model
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, stmts)
     results = mc.check_model()
-    assert len(results) == 1
+    assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][0] == st
     assert results[0][1] == True
+    assert results[1][1] == True
 
 @with_model
 def test_none_phosphorylation_stmt():
@@ -422,6 +418,40 @@ def test_none_phosphorylation_stmt():
     assert results[1][0] == st2
     assert results[1][1] == False
 
+@with_model
+def test_phosphorylation_annotations():
+    # Override the shutoff of self export in psyb_assembler
+    # Create the statement
+    a = Agent('MEK1', db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    st = Phosphorylation(a, b, 'T', '185')
+    # Now create the PySB model
+    Monomer('A_monomer')
+    Monomer('B_monomer', ['Thr185'], {'Thr185':['un', 'phos']})
+
+    Rule('A_phos_B', A_monomer() + B_monomer(Thr185='un') >>
+                     A_monomer() + B_monomer(Thr185='phos'),
+         Parameter('k', 1))
+    Initial(A_monomer(), Parameter('A_0', 100))
+    Initial(B_monomer(Thr185='un'), Parameter('B_0', 100))
+    # Add agent grounding
+    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    # Add annotations to the sites/states of the Monomer itself
+    B_annot = [
+        Annotation('Thr185', 'T', 'is_residue'),
+        Annotation('Thr185', '185', 'is_position'),
+        Annotation(('Thr185', 'phos'), 'phosphorylation', 'is_modification'),
+    ]
+    B_monomer.site_annotations = B_annot
+    mc = ModelChecker(model, [st])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == st
+    assert results[0][1] == True
+
+
 """
 def test_ubiquitination():
     xiap = Agent('XIAP')
@@ -438,26 +468,19 @@ def test_ubiquitination():
     assert checks[0][1] == True
 """
 
-@with_model
-def test_check_activation():
-    a = Agent('A')
-    b = Agent('B')
-    c = Agent('C')
-    st1 = Activation(a, 'activity', b, 'activity', True)
-    st2 = Activation(b, 'activity', c, 'kinase', False)
-    stmts = [st1, st2]
-    # Create the model
-    pa = PysbAssembler()
-    pa.add_statements(stmts)
-    pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, stmts)
-    results = mc.check_model()
-    assert len(results) ==  len(stmts)
-    assert isinstance(results[0], tuple)
-    assert results[0][1] == True
-    assert results[1][1] == True
 
-
+# Goal: Be able to check generic phosphorylations against specific rules
+# and vice versa.
+# 0. Need to make model checker work with multiple downstream observables and
+#    multiple input rules
+# 1. Need PySB assembler to generate appropriate annotations for
+#    sites/states
+# 2. Need to be able to annotate specific site/state combinations as
+#    active forms
+# 3. Need to make grounded_mp generation work with MutConditions and
+#    bound conditions (bound conditions would need to check for bonds to
+# 4. Grounded monomer patterns for check_activation
+#
 # Issues--if a rule activity isn't contingent on a particular mod,
 # then were will be no causal connection between any upstream modifying
 # rules and the downstream rule.
@@ -531,12 +554,12 @@ def test_check_activation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_check_activation()
+    test_phosphorylation_annotations()
+    #test_check_activation()
     #test_none_phosphorylation_stmt()
     #test_distinguish_path_polarity1()
     #test_distinguish_path_polarity2()
     #test_distinguish_path_polarity_none_stmt()
-    #test_phosphorylation_annotations()
     #test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
     #test_ras_220_network()
