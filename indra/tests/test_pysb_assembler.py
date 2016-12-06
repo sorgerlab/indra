@@ -706,12 +706,43 @@ def test_get_mp_with_grounding():
     Monomer('B_monomer')
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
-    mono = pa.get_monomer_pattern(model, foo)
-    assert mono is None
-    mono = pa.get_monomer_pattern(model, a)
-    assert mono.monomer == A_monomer
-    mono = pa.get_monomer_pattern(model, b)
-    assert mono.monomer == B_monomer
+    mps = list(pa.grounded_monomer_patterns(model, foo))
+    assert len(mps) == 0
+    mps = list(pa.grounded_monomer_patterns(model, a))
+    assert len(mps) == 1
+    assert mps[0].monomer == A_monomer
+    mps = list(pa.grounded_monomer_patterns(model, b))
+    assert len(mps) == 1
+    assert mps[0].monomer == B_monomer
+
+@with_model
+def test_get_mp_with_grounding_2():
+    a1 = Agent('A', mods=[ModCondition('phosphorylation', None, None)],
+                db_refs={'HGNC': '6840'})
+    a2 = Agent('A', mods=[ModCondition('phosphorylation', 'Y', '187')],
+                db_refs={'HGNC': '6840'})
+    Monomer('A_monomer', ['phospho', 'T185', 'Y187'],
+            {'phospho': 'y', 'T185':['u', 'p'], 'Y187':['u','p']})
+    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+    A_monomer.site_annotations = [
+        Annotation(('phospho', 'y'), 'phosphorylation', 'is_modification'),
+        Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('T185', 'T', 'is_residue'),
+        Annotation('T185', '185', 'is_position'),
+        Annotation('Y187', 'Y', 'is_residue'),
+        Annotation('Y187', '187', 'is_position')
+    ]
+    mps_1 = list(pa.grounded_monomer_patterns(model, a1))
+    assert len(mps_1) == 3
+    mps_2 = list(pa.grounded_monomer_patterns(model, a2))
+    assert len(mps_2) == 1
+    mp = mps_2[0]
+    assert mp.monomer == A_monomer
+    assert mp.site_conditions == {'Y187': 'p'}
+    # TODO Add test for unmodified agent!
+    # TODO Add test involving multiple (possibly degenerate) modifications!
 
 if __name__ == '__main__':
     test_get_mp_with_grounding()
+    test_get_mp_with_grounding_2()

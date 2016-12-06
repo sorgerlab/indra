@@ -323,45 +323,92 @@ def get_uncond_agent(agent):
     agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
 
+def grounded_monomer_patterns(model, agent):
+    # Iterate over all model annotations
+    monomer = None
+    for ann in model.annotations:
+        if monomer:
+            break
+        if not ann.predicate == 'is':
+            continue
+        if not isinstance(ann.subject, Monomer):
+            continue
+        (ns, id) = parse_identifiers_url(ann.object)
+        if ns is None and id is None:
+            continue
+        # We now have an identifiers.org namespace/ID for a given monomer;
+        # we check to see if there is a matching identifier in the db_refs
+        # for this agent
+        for db_ns, db_id in agent.db_refs.items():
+            # We've found a match! Return first match
+            # FIXME Could also update this to check for alternative
+            # FIXME matches, or make sure that all grounding IDs match,
+            # FIXME etc.
+            if db_ns == ns and db_id == id:
+                monomer = ann.subject
+                break
+    # We looked at all the annotations in the model and didn't find a
+    # match
+    if monomer is None:
+        return None
+
+    # Now that we have a monomer for the agent, look for site/state
+    # combinations corresponding to the state of the agent.
+    # For every one of the modifications specified in the agent
+    # signature, check to see if it can be satisfied based on the agent's
+    # annotations.
+    # For every one we find that is consistent, we yield it--there may be
+    # more than one.
+    # FIXME
+    if not agent.mods:
+        yield monomer()
+
+    for mod in agent.mods:
+        # Find all site/state combinations that have the appropriate
+        # modification type
+        # As we iterate, build up a dict identifying the annotations of
+        # particular sites
+        mod_sites = {}
+        res_sites = set([])
+        pos_sites = set([])
+        for ann in monomer.site_annotations:
+            # Don't forget to handle Nones!
+            if ann.predicate == 'is_modification' and \
+               ann.object == mod.mod_type:
+                site_state = ann.subject
+                assert isinstance(site_state, tuple)
+                assert len(site_state) == 2
+                mod_sites[site_state[0]] = site_state[1]
+            elif ann.predicate == 'is_residue' and \
+                 ann.object == mod.residue:
+                res_sites.add(ann.subject)
+            elif ann.predicate == 'is_position' and \
+                 ann.object == mod.position:
+                pos_sites.add(ann.subject)
+        # If the residue field of the agent is specified,
+        viable_sites = set(mod_sites.keys())
+        if mod.residue is not None:
+            viable_sites = viable_sites.intersection(res_sites)
+        if mod.position is not None:
+            viable_sites = viable_sites.intersection(pos_sites)
+        # If there are no viable sites, return None
+        if not viable_sites:
+            return iter(())
+        # If there are any sites left after we subject them to residue
+        # and position constraints, then return the relevant monomer patterns!
+        for site_name in viable_sites:
+            pattern = {}
+            pattern[site_name] = mod_sites[site_name]
+            yield monomer(**pattern)
+
 def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
-    # When there is no grounding for the agent, use agent name
-    if not agent.db_refs or list(agent.db_refs.keys()) == ['TEXT']:
-        try:
-            monomer = model.monomers[_n(agent.name)]
-        except KeyError as e:
-            logger.warning('Monomer with name %s not found in model' %
-                           _n(agent.name))
-            return None
-    # Look for monomers based on grounding
-    else:
-        # Iterate over all model annotations
-        monomer = None
-        for ann in model.annotations:
-            if monomer:
-                break
-            if not ann.predicate == 'is':
-                continue
-            if not isinstance(ann.subject, Monomer):
-                continue
-            (ns, id) = parse_identifiers_url(ann.object)
-            if ns is None and id is None:
-                continue
-            # We now have an identifiers.org namespace/ID for a given monomer;
-            # we check to see if there is a matching identifier in the db_refs
-            # for this agent
-            for db_ns, db_id in agent.db_refs.items():
-                # We've found a match! Return first match
-                # FIXME Could also update this to check for alternative
-                # FIXME matches, or make sure that all grounding IDs match,
-                # FIXME etc.
-                if db_ns == ns and db_id == id:
-                    monomer = ann.subject
-                    break
-        # We looked at all the annotations in the model and didn't find a
-        # match
-        if monomer is None:
-            return None
+    try:
+        monomer = model.monomers[_n(agent.name)]
+    except KeyError as e:
+        logger.warning('Monomer with name %s not found in model' %
+                       _n(agent.name))
+        return None
     # Get the agent site pattern
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
