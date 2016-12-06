@@ -744,6 +744,22 @@ def test_get_mp_with_grounding_2():
     # TODO Add test involving multiple (possibly degenerate) modifications!
     # TODO Add test for generic double phosphorylation
 
+def test_assemble_model_with_grounding():
+    a = Agent('MEK1', db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    b_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
+                    db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(a, b, 'T', '185')
+    #st2 = Phosphorylation(a, b, None, None)
+    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb.add_statements([st1])
+    model = pysb_asmb.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, b_phos))
+    assert len(mps) == 1
+    assert mps[0].monomer.name == 'ERK2'
+    assert mps[0].site_conditions == {'T185':'p'}
+
+
+
 if __name__ == '__main__':
-    test_get_mp_with_grounding()
-    test_get_mp_with_grounding_2()
+    test_assemble_model_with_grounding()
