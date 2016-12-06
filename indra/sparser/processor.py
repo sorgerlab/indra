@@ -80,6 +80,37 @@ class SparserProcessor(object):
                 st = indra_class(enz, sub, residue, position, evidence=[ev])
                 self.statements.append(st)
 
+    def get_activations(self):
+        act_events = self._sems.get('bio-activate')
+        if not act_events:
+            return
+        for event, sentence in act_events:
+            # Get the subject of the activation
+            subj_ref = event.find("ref/var/[@name='by-means-of-or-agent']/ref")
+            if subj_ref is None:
+                subj_ref = event.find("ref/var/[@name='agent']/ref")
+            if subj_ref is None:
+                logger.debug('Skipping activation without subject.')
+                continue
+            subj = self._get_agent_from_ref(subj_ref)
+            if subj is None:
+                logger.debug('Skipping activation without subject.')
+                continue
+            # Get the object of the activation
+            obj_ref = event.find("ref/var/[@name='object']/ref")
+            if obj_ref is None:
+                logger.debug('Skipping activation without object.')
+                continue
+            obj = self._get_agent_from_ref(obj_ref)
+            if obj is None:
+                logger.debug('Skipping activation without object.')
+                continue
+            # Get evidence
+            ev = self._get_evidence(sentence)
+            st = Activation(subj, 'activity', obj, 'activity', True,
+                            evidence=[ev])
+            self.statements.append(st)
+
     def _get_agent_from_ref(self, ref):
         # TODO: handle collections
         if ref.attrib.get('category') == 'collection':
@@ -97,6 +128,10 @@ class SparserProcessor(object):
             uid = None
 
         db_refs = {}
+        text_tag = ref.find("var/[@name='raw-text']")
+        if text_tag is not None:
+            db_refs['TExT'] = text_tag.text
+
         if uid is not None and uid.startswith('UP:'):
             up_mnemonic = uid[3:]
             up_id = uniprot_client.get_id_from_mnemonic(up_mnemonic)

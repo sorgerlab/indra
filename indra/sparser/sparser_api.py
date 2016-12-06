@@ -20,4 +20,5 @@ def process_xml(xml_str):
 def _process_elementtree(tree):
     sp = SparserProcessor(tree)
     sp.get_modifications()
+    sp.get_activations()
     return sp
