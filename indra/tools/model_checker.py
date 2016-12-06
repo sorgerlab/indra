@@ -138,7 +138,6 @@ class ModelChecker(object):
         if subj_mp is None:
             input_rule_set = None
         else:
-            import ipdb; ipdb.set_trace()
             input_rules = match_lhs(subj_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])
