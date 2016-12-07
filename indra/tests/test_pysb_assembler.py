@@ -750,16 +750,26 @@ def test_assemble_model_with_grounding():
     b_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
                     db_refs={'HGNC': '6871'})
     st1 = Phosphorylation(a, b, 'T', '185')
-    #st2 = Phosphorylation(a, b, None, None)
-    pysb_asmb = pa.PysbAssembler(policies='one_step')
-    pysb_asmb.add_statements([st1])
-    model = pysb_asmb.make_model()
-    mps = list(pa.grounded_monomer_patterns(model, b_phos))
-    assert len(mps) == 1
-    assert mps[0].monomer.name == 'ERK2'
-    assert mps[0].site_conditions == {'T185':'p'}
+    # One step
+    def check_policy(policy):
+        pysb_asmb = pa.PysbAssembler(policies=policy)
+        pysb_asmb.add_statements([st1])
+        model = pysb_asmb.make_model()
+        mps = list(pa.grounded_monomer_patterns(model, b_phos))
+        assert len(mps) == 1
+        assert mps[0].monomer.name == 'ERK2'
+        assert mps[0].site_conditions == {'T185':'p'}
+    for policy in ('one_step', 'interactions_only', 'two_step',
+                   'atp_dependent'):
+        check_policy(policy)
 
 
+# TODO test grounded assembly where the modification is on the agent, not
+# part of the statement.
+# TODO Do the same for mutation condition
+# TODO Localization condition
+# TODO Bound condition
+# TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
     test_assemble_model_with_grounding()

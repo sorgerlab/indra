@@ -119,6 +119,7 @@ class _BaseAgent(object):
         self.name = name
         self.sites = []
         self.site_states = {}
+        self.site_annotations = []
         # The list of site/state configurations that lead to this agent
         # being active (where the agent is currently assumed to have only
         # one type of activity)
@@ -137,6 +138,16 @@ class _BaseAgent(object):
             except TypeError:
                 return
             self.add_site_states(site, states)
+
+    def create_mod_site(self, mc):
+        site_name = get_mod_site_name('phosphorylation',
+                                      mc.residue, mc.position)
+        self.create_site(site_name, ('u', 'p'))
+        site_anns = [
+            Annotation((site_name, 'p'), 'phosphorylation', 'is_modification'),
+            Annotation(site_name, mc.residue, 'is_residue'),
+            Annotation(site_name, mc.position, 'is_position')]
+        self.site_annotations += site_anns
 
     def add_site_states(self, site, states):
         """Create new states on an agent site if the state doesn't exist."""
@@ -667,6 +678,7 @@ class PysbAssembler(object):
         # Add the monomers to the model based on our BaseAgentSet
         for agent_name, agent in self.agent_set.items():
             m = Monomer(_n(agent_name), agent.sites, agent.site_states)
+            m.site_annotations = agent.site_annotations
             self.model.add_component(m)
             for db_name, db_ref in agent.db_refs.items():
                 a = get_annotation(m, db_name, db_ref)
@@ -995,9 +1007,8 @@ def phosphorylation_monomers_interactions_only(stmt, agent_set):
     enz.create_site(active_site_names['kinase'])
     sub = agent_set.get_create_base_agent(stmt.sub)
     # See NOTE in monomers_one_step, below
-    site_name = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(site_name, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
 
 
 def phosphorylation_monomers_one_step(stmt, agent_set):
@@ -1011,9 +1022,8 @@ def phosphorylation_monomers_one_step(stmt, agent_set):
     # Phosphorylation statements, i.e., phosphorylation is assumed to be
     # distributive. If this is not the case, this assumption will need to
     # be revisited.
-    site_name = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(site_name, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
 
 
 def phosphorylation_monomers_two_step(stmt, agent_set):
@@ -1021,9 +1031,8 @@ def phosphorylation_monomers_two_step(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    site_name = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(site_name, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
 
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(sub.name))
@@ -1034,10 +1043,8 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    site_name = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(site_name, ('u', 'p'))
-
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(sub.name))
     sub.create_site(get_binding_site_name(enz.name))
