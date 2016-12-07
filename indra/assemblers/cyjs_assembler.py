@@ -21,6 +21,8 @@ expander = exp_fam.Expander(hierarchies)
 from indra.preassembler.grounding_mapper import GroundingMapper, gm
 GM = GroundingMapper(gm)
 
+import math
+
 # Python 2
 try:
     basestring
@@ -149,7 +151,8 @@ class CyJSAssembler(object):
                 if amount is  None:
                     node['data']['expression'] = None
                 if amount is not None:
-                    node['data']['expression'] = int(amount[cell_type])
+                    node['data']['expression'] = \
+                        math.log(int(amount[cell_type]), 10)
                     counter_exp += 1
                 mutation = mut.get(node['data']['name'])
                 if mutation is not None:
@@ -179,7 +182,7 @@ class CyJSAssembler(object):
                                 ['members']['HGNC'][m]['expression'] = None
                         if amount is not None:
                             node['data']['members']['HGNC'][m]['expression'] = \
-                                int(amount[cell_type])
+                                math.log(int(amount[cell_type]), 10)
                             counter_exp += 1
                         if mutation is not None:
                             node['data']['members']['HGNC'][m]['mutation'] = \
@@ -205,15 +208,19 @@ class CyJSAssembler(object):
                     logger.info('Need at least 1 bin. Setting n_bins = 1.')
             # Create color scale for unmutated gene expression
             # feed in hex values from colorbrewer2 9-class PuBuGn
-            PuBuGn9 = ['#fff7fb', '#ece2f0', '#d0d1e6', '#a6bddb', '#67a9cf',
-                       '#3690c0', '#02818a', '#016c59','#014636']
-            exp_wt_colorscale = _build_color_scale(PuBuGn9, n_bins)
+            wt_hexes = ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476',
+                        '#41ab5d','#238b45','#006d2c','#00441b']
+            exp_wt_colorscale = _build_color_scale(wt_hexes, n_bins)
+            #tack on a gray for no expression data
+            exp_wt_colorscale.append('#bdbdbd')
             self._exp_colorscale = exp_wt_colorscale
             # create color scale for mutated gene expression
             # feed in hex values from colorbrewer2 9-class YlOrRd
-            YlOrRd9 = ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c',
-                      '#fc4e2a','#e31a1c','#bd0026','#800026']
-            exp_mut_colorscale = _build_color_scale(YlOrRd9, n_bins)
+            mut_hexes = ['#fff5eb','#fee6ce','#fdd0a2','#fdae6b','#fd8d3c',
+                         '#f16913','#d94801','#a63603','#7f2704']
+            exp_mut_colorscale = _build_color_scale(mut_hexes, n_bins)
+            # tack on a gray for no expression data
+            exp_mut_colorscale.append('#bdbdbd')
             self._mut_colorscale = exp_mut_colorscale
             # capture the expression levels of every gene in nodes
             exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
@@ -241,7 +248,7 @@ class CyJSAssembler(object):
                     for m in members:
                         # if expression is None, set to bin index n_bins + 1
                         if members[m]['expression'] == None:
-                            members[m]['bin_expression'] = n_bins + 1
+                            members[m]['bin_expression'] = n_bins
                         else:
                             for thr_idx, thr in enumerate(bin_thr):
                                 if members[m]['expression']<= thr:
@@ -249,7 +256,7 @@ class CyJSAssembler(object):
                                     break
                 # set bin_expression for the node itself
                 if n['data']['expression'] ==  None:
-                    n['data']['bin_expression'] = n_bins + 1
+                    n['data']['bin_expression'] = n_bins
                 else:
                     for thr_idx, thr in enumerate(bin_thr):
                         if n['data']['expression']<= thr:
