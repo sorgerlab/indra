@@ -71,10 +71,7 @@ class _BaseAgentSet(object):
 
         # Handle modification conditions
         for mc in agent.mods:
-            mod_site_name =\
-                get_mod_site_name(mc.mod_type, mc.residue, mc.position)
-            site_states = states[mc.mod_type]
-            base_agent.create_site(mod_site_name, site_states)
+            base_agent.create_mod_site(mc)
 
         # Handle mutation conditions
         for mc in agent.mutations:

@@ -744,7 +744,7 @@ def test_get_mp_with_grounding_2():
     # TODO Add test involving multiple (possibly degenerate) modifications!
     # TODO Add test for generic double phosphorylation
 
-def test_assemble_model_with_grounding():
+def test_phospho_assemble_grounding():
     a = Agent('MEK1', db_refs={'HGNC': '6840'})
     b = Agent('ERK2', db_refs={'HGNC': '6871'})
     b_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
@@ -763,13 +763,29 @@ def test_assemble_model_with_grounding():
                    'atp_dependent'):
         check_policy(policy)
 
+def test_phospho_mod_grounding():
+    a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
+                            ModCondition('phosphorylation', 'S', '222')],
+              db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    a_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
+                    db_refs={'HGNC': '6840'})
+    st1 = Phosphorylation(a, b, 'T', '185')
+    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb.add_statements([st1])
+    model = pysb_asmb.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, a_phos))
+    assert len(mps) == 2
+    assert mps[0].monomer.name == 'MEK1'
+    assert mps[1].monomer.name == 'MEK1'
+    sc = [mp.site_conditions for mp in mps]
+    assert {'S218':'p'} in sc
+    assert {'S222':'p'} in sc
 
-# TODO test grounded assembly where the modification is on the agent, not
-# part of the statement.
 # TODO Do the same for mutation condition
 # TODO Localization condition
 # TODO Bound condition
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
-    test_assemble_model_with_grounding()
+    test_phospho_mod_grounding()
