@@ -200,12 +200,12 @@ class CyJSAssembler(object):
             user_bins = kwargs.get('n_bins', None)
             if type(user_bins) == int:
                 n_bins = user_bins
-                if n_bins > 10:
-                    n_bins = 10
-                    logger.info('Only 10 bins allowed. Setting n_bins = 10.')
-                if n_bins < 1:
-                    n_bins = 1
-                    logger.info('Need at least 1 bin. Setting n_bins = 1.')
+                if n_bins > 9:
+                    n_bins = 9
+                    logger.info('Only 9 bins allowed. Setting n_bins = 9.')
+                if n_bins < 3:
+                    n_bins = 3
+                    logger.info('Need at least 3 bin. Setting n_bins = 3.')
             # Create color scale for unmutated gene expression
             # feed in hex values from colorbrewer2 9-class PuBuGn
             wt_hexes = ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476',
@@ -237,16 +237,17 @@ class CyJSAssembler(object):
             exp_lvls = [x for x in exp_lvls if x != None]
             # bin expression levels into n equally sized bins
             # bin n+1 reserved for None
-            # this returns the left bound of each bin
-            bin_thr = np.histogram([x for x in exp_lvls if x != None],\
-                                   n_bins)[1]
+            # this returns the bounds of each bin. so n_bins+1 bounds.
+            # get rid of first value which is the leftmost bound
+            bin_thr = np.histogram(exp_lvls, n_bins)[1][1:]
+            print(bin_thr)
             # iterate over nodes
             for n in self._nodes:
                 # if node has members set member bin_expression values
                 if n['data'].get('members', None):
                     members = n['data']['members']['HGNC']
                     for m in members:
-                        # if expression is None, set to bin index n_bins + 1
+                        # if expression is None, set to bin index n_bins
                         if members[m]['expression'] == None:
                             members[m]['bin_expression'] = n_bins
                         else:
