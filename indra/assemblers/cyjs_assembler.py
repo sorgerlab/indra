@@ -8,9 +8,12 @@ import collections
 from indra.statements import *
 from indra.databases import context_client
 import indra.preassembler.hierarchy_manager as hm
-from numpy import histogram
+import numpy as np
 import indra.tools.expand_families as exp_fam
 import indra.preassembler as pr
+
+from matplotlib.colors import LinearSegmentedColormap as colormap
+from matplotlib.colors import rgb2hex, hex2color
 
 hierarchies = hm.hierarchies
 expander = exp_fam.Expander(hierarchies)
@@ -38,6 +41,8 @@ class CyJSAssembler(object):
         self._nodes = []
         self._existing_nodes = {}
         self._id_counter = 0
+        self._exp_colorscale = []
+        self._mut_colorscale = []
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -115,10 +120,14 @@ class CyJSAssembler(object):
             The cell type name follows the CCLE database conventions.
         Example: LOXIMVI_SKIN, BT20_BREAST
 
-        bin_expression: bool
+        bin_expression : bool
             If True, the gene expression will be put into 5 bins based on
             all gene expression values. An additional bin is used to indicate
             that the context_client returned None.
+
+        user_bins : int
+            If specified, split the expression levels into the given number
+            of bins. If not specified, default will be 5.
         """
         if kwargs.get('cell_type', None) :
             cell_type = kwargs.get('cell_type', None)
@@ -150,19 +159,24 @@ class CyJSAssembler(object):
                     counter_mut += 1
                 if mutation is  None:
                     node['data']['mutation'] = 0
-                    # NDEx mutation client returns None when mutation isn't found in any
+                    # NDEx mutation client returns None when mutation
+                    # isn't found in any
                     # cell line. Thus, set mutation to 0.
                 if node['data'].get('members', None):
                     members = node['data']['members']['HGNC']
                     # FIXME this works, but it makes a bunch of calls
-                    # FIXME it can be optimized to make only one call, then parse return
+                    # FIXME it can be optimized to make only one call,
+                    # FIXME then parse return
                     for m in members:
-                        exp2 = context_client.get_protein_expression(m, cell_type)
+                        exp2 = context_client.get_protein_expression(
+                                m, cell_type
+                                )
                         mut2 = context_client.get_mutations(m, cell_type)
                         amount = exp2.get(m)
                         mutation = mut2.get(m)
                         if amount is  None:
-                            node['data']['members']['HGNC'][m]['expression'] = None
+                            node['data'] \
+                                ['members']['HGNC'][m]['expression'] = None
                         if amount is not None:
                             node['data']['members']['HGNC'][m]['expression'] = \
                                 int(amount[cell_type])
@@ -178,6 +192,29 @@ class CyJSAssembler(object):
             logger.info('Set expression context for %d nodes.' % counter_exp)
             logger.info('Set mutation context for %d nodes.' % counter_mut)
         if kwargs.get('bin_expression', None):
+            # how many bins? If not specified, set to 5
+            n_bins = 5
+            user_bins = kwargs.get('n_bins', None)
+            if type(user_bins) == int:
+                n_bins = user_bins
+                if n_bins > 10:
+                    n_bins = 10
+                    logger.info('Only 10 bins allowed. Setting n_bins = 10.')
+                if n_bins < 1:
+                    n_bins = 1
+                    logger.info('Need at least 1 bin. Setting n_bins = 1.')
+            # Create color scale for unmutated gene expression
+            # feed in hex values from colorbrewer2 9-class PuBuGn
+            PuBuGn9 = ['#fff7fb', '#ece2f0', '#d0d1e6', '#a6bddb', '#67a9cf',
+                       '#3690c0', '#02818a', '#016c59','#014636']
+            exp_wt_colorscale = _build_color_scale(PuBuGn9, n_bins)
+            self._exp_colorscale = exp_wt_colorscale
+            # create color scale for mutated gene expression
+            # feed in hex values from colorbrewer2 9-class YlOrRd
+            YlOrRd9 = ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c',
+                      '#fc4e2a','#e31a1c','#bd0026','#800026']
+            exp_mut_colorscale = _build_color_scale(YlOrRd9, n_bins)
+            self._mut_colorscale = exp_mut_colorscale
             # capture the expression levels of every gene in nodes
             exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
             # capture the expression levels of every gene in family members
@@ -191,19 +228,20 @@ class CyJSAssembler(object):
             exp_lvls = exp_lvls + m_exp_lvls
             # get rid of None gene expressions
             exp_lvls = [x for x in exp_lvls if x != None]
-            # bin expression levels into 5 equally sized bins 0-4
-            # bin 5 reserved for None
+            # bin expression levels into n equally sized bins
+            # bin n+1 reserved for None
             # this returns the left bound of each bin
-            bin_thr = histogram([x for x in exp_lvls if x != None], 5)[1]
+            bin_thr = np.histogram([x for x in exp_lvls if x != None],\
+                                   n_bins)[1]
             # iterate over nodes
             for n in self._nodes:
                 # if node has members set member bin_expression values
                 if n['data'].get('members', None):
                     members = n['data']['members']['HGNC']
                     for m in members:
-                        # if expression is None, set to bin index 5
+                        # if expression is None, set to bin index n_bins + 1
                         if members[m]['expression'] == None:
-                            members[m]['bin_expression'] = 5
+                            members[m]['bin_expression'] = n_bins + 1
                         else:
                             for thr_idx, thr in enumerate(bin_thr):
                                 if members[m]['expression']<= thr:
@@ -211,7 +249,7 @@ class CyJSAssembler(object):
                                     break
                 # set bin_expression for the node itself
                 if n['data']['expression'] ==  None:
-                    n['data']['bin_expression'] = 5
+                    n['data']['bin_expression'] = n_bins + 1
                 else:
                     for thr_idx, thr in enumerate(bin_thr):
                         if n['data']['expression']<= thr:
@@ -221,13 +259,19 @@ class CyJSAssembler(object):
     def print_cyjs(self):
         """Return the assembled Cytoscape JS network as a json string.
 
-        Returns
-        -------
-        cyjs_str : str
+            Returns
+            -------
+            cyjs_str : str
             A json string representation of the Cytoscape JS network.
         """
+        exp_colorscale_str = json.dumps(self._exp_colorscale)
+        mut_colorscale_str = json.dumps(self._mut_colorscale)
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        cyjs_str = json.dumps(cyjs_dict, indent=1, sort_keys = True)
+        model_str = json.dumps(cyjs_dict, indent=1, sort_keys = True)
+        model_dict = {'exp_colorscale_str' : exp_colorscale_str,
+                      'mut_colorscale_str' : mut_colorscale_str,
+                      'model_elements_str' : model_str}
+        cyjs_str = json.dumps(model_dict, indent=1)
         return cyjs_str
 
     def save_model(self, fname='model.js'):
@@ -239,8 +283,11 @@ class CyJSAssembler(object):
             The name of the file to save the Cytoscape JS network to.
             Default: model.js
         """
-        cyjs_str = self.print_cyjs()
-        s = 'var modelElements = %s;' % cyjs_str
+        model_dict = json.loads(self.print_cyjs())
+        s = ''
+        s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
+        s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
+        s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
         with open(fname, 'wt') as fh:
             fh.write(s)
 
@@ -610,3 +657,23 @@ def _get_stmt_type(stmt):
         edge_type = stmt.__class__.__str__()
         edge_polarity = 'none'
     return edge_type, edge_polarity
+
+def _build_color_scale(hex_colors_list, n_bins):
+    rgb_colors = [hex2color(x) for x in hex_colors_list]
+    rgb_colors_array = np.array(rgb_colors)
+    rgb_names = {'red':0, 'green':1, 'blue':2}
+    linear_mapping = np.linspace(0,1,len(rgb_colors_array))
+    cdict = {}
+    for rgb_name in rgb_names:
+        color_list = []
+        rgb_idx = rgb_names[rgb_name]
+        for lin, val in zip(linear_mapping, rgb_colors_array[:,rgb_idx]):
+            color_list.append((lin, val, val))
+        cdict[rgb_name] = color_list
+    cmap = colormap('expression_colormap', cdict, 256, 1)
+    color_scale = []
+    for i in np.linspace(0,1,n_bins):
+        color_scale.append(rgb2hex(cmap(i)))
+
+    return color_scale
+
