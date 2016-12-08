@@ -7,6 +7,7 @@ import itertools
 import collections
 from indra.statements import *
 from indra.databases import context_client
+from indra.databases import hgnc_client
 import indra.preassembler.hierarchy_manager as hm
 import numpy as np
 import indra.tools.expand_families as exp_fam
@@ -166,7 +167,7 @@ class CyJSAssembler(object):
                     # isn't found in any
                     # cell line. Thus, set mutation to 0.
                 if node['data'].get('members', None):
-                    members = node['data']['members']['HGNC']
+                    members = node['data']['members']
                     # FIXME this works, but it makes a bunch of calls
                     # FIXME it can be optimized to make only one call,
                     # FIXME then parse return
@@ -179,19 +180,19 @@ class CyJSAssembler(object):
                         mutation = mut2.get(m)
                         if amount is  None:
                             node['data'] \
-                                ['members']['HGNC'][m]['expression'] = None
+                                ['members'][m]['expression'] = None
                         if amount is not None:
-                            node['data']['members']['HGNC'][m]['expression'] = \
+                            node['data']['members'][m]['expression'] = \
                                 math.log(int(amount[cell_type]), 10)
                             counter_exp += 1
                         if mutation is not None:
-                            node['data']['members']['HGNC'][m]['mutation'] = \
+                            node['data']['members'][m]['mutation'] = \
                                 int(mutation[cell_type])
                             # 0 for no mutation
                             # 1 for mutation
                             counter_mut += 1
                         if mutation is  None:
-                            node['data']['members']['HGNC'][m]['mutation'] = 0
+                            node['data']['members'][m]['mutation'] = 0
             logger.info('Set expression context for %d nodes.' % counter_exp)
             logger.info('Set mutation context for %d nodes.' % counter_mut)
         if kwargs.get('bin_expression', None):
@@ -228,7 +229,7 @@ class CyJSAssembler(object):
             m_exp_lvls = []
             for n in self._nodes:
                 if n['data'].get('members', None):
-                    members = n['data']['members']['HGNC']
+                    members = n['data']['members']
                     for m in members:
                         m_exp_lvls.append(members[m]['expression'])
             # combine node expressions and family expressions
@@ -245,7 +246,7 @@ class CyJSAssembler(object):
             for n in self._nodes:
                 # if node has members set member bin_expression values
                 if n['data'].get('members', None):
-                    members = n['data']['members']['HGNC']
+                    members = n['data']['members']
                     for m in members:
                         # if expression is None, set to bin index n_bins
                         if members[m]['expression'] == None:
@@ -340,14 +341,24 @@ class CyJSAssembler(object):
         node_id = self._get_new_id()
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
+        node_name = node_name.replace('_', ' ')
         expanded_families = expander.get_children(agent, ns_filter='HGNC')
-        members = {'HGNC':{x[1]:{'mutation':None,'expression':None} \
-                   for x in expanded_families}}
-        #if len(members['HGNC']) > 0:
-        #    logger.info('Expanded %s family with %d members.' \
-        #                % (node_name,len(members['HGNC'])))
+        members = {}
+        for member in expanded_families:
+            hgnc_symbol = member[1]
+            hgnc_id = hgnc_client.get_id(hgnc_symbol)
+            if hgnc_id:
+                member_agent = Agent(hgnc_symbol, db_refs={'HGNC': hgnc_id})
+                member_db_refs = _get_db_refs(member_agent)
+            else:
+                member_db_refs = {}
+            members[x[1]] = {
+                    'mutation': None,
+                    'expression': None,
+                    'db_refs' : member_db_refs
+                    }
         node = {'data': {'id': node_id, 'name': node_name,
-                         'db_refs': db_refs, 'parent':'',
+                         'db_refs': db_refs, 'parent': '',
                          'members': members}}
         self._nodes.append(node)
         return node_id
