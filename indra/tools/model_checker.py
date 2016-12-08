@@ -100,7 +100,7 @@ class ModelChecker(object):
                              stmt.enz)
                 return False
         else:
-            enz_mps = []
+            enz_mps = [None]
         # Get target polarity
         demodify_list = (Dephosphorylation, Dehydroxylation, Desumoylation,
                          Deacetylation, Deglycosylation, Deribosylation,

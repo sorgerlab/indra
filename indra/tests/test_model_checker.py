@@ -89,8 +89,8 @@ def test_match_rhs():
 @with_model
 def test_one_step_phosphorylation():
     # Create the statement
-    a = Agent('A')
-    b = Agent('B')
+    a = Agent('A', db_refs={'HGNC':'1'})
+    b = Agent('B', db_refs={'HGNC':'2'})
     st = Phosphorylation(a, b, 'T', '185')
     # Now create the PySB model
     Monomer('A')
@@ -99,6 +99,14 @@ def test_one_step_phosphorylation():
          Parameter('k', 1))
     Initial(A(), Parameter('A_0', 100))
     Initial(B(T185='u'), Parameter('B_0', 100))
+    # Add annotations
+    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    B.site_annotations = [
+        Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('T185', 'T', 'is_residue'),
+        Annotation('T185', '185', 'is_position'),
+    ]
     mc = ModelChecker(model, [st])
     results = mc.check_model()
     assert len(results) == 1
@@ -109,8 +117,8 @@ def test_one_step_phosphorylation():
 @with_model
 def test_two_step_phosphorylation():
     # Create the statement
-    a = Agent('A')
-    b = Agent('B')
+    a = Agent('A', db_refs={'HGNC':'1'})
+    b = Agent('B', db_refs={'HGNC':'2'})
     st = Phosphorylation(a, b, 'T', '185')
     # Now create the PySB model
     Monomer('A', ['b', 'other'], {'other':['u','p']})
@@ -125,6 +133,14 @@ def test_two_step_phosphorylation():
     Initial(A(b=None, other='p'), Parameter('Ap_0', 100))
     Initial(A(b=None, other='u'), Parameter('Au_0', 100))
     Initial(B(b=None, T185='u'), Parameter('B_0', 100))
+    # Add annotations
+    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    B.site_annotations = [
+        Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('T185', 'T', 'is_residue'),
+        Annotation('T185', '185', 'is_position'),
+    ]
     #with open('model_rxn.dot', 'w') as f:
     #    f.write(render_reactions.run(model))
     #with open('species_2step.dot', 'w') as f:
@@ -141,8 +157,8 @@ def test_two_step_phosphorylation():
     assert results[0][1] == True
 
 def test_pysb_assembler_phospho_policies():
-    a = Agent('A')
-    b = Agent('B')
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
     st = Phosphorylation(a, b, 'T', '185')
     pa = PysbAssembler()
     pa.add_statements([st])
@@ -171,6 +187,7 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     assert results[0][1] == False
 
+"""
 def test_ras_220_network():
     ras_220_results_path = os.path.join('../../models/ras_220_genes'
                                         '/ras_220_gn_related2_stmts.pkl')
@@ -203,21 +220,18 @@ def test_ras_220_network():
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
     # Now try again, with a two_step policy
-    """
     # Skip this, building the influence map takes a very long time
-    pa.make_model(policies='two_step')
-    mc = ModelChecker(pa.model, [stmt1, stmt2])
-    checks = mc.check_model()
-    print checks
-    assert len(checks) == 2
-    assert isinstance(checks[0], tuple)
-    assert checks[0][0] == stmt1
-    assert checks[0][1] == True
-    assert checks[1][0] == stmt2
-    assert checks[1][1] == False
-    """
+    #pa.make_model(policies='two_step')
+    #mc = ModelChecker(pa.model, [stmt1, stmt2])
+    #checks = mc.check_model()
+    #print checks
+    #assert len(checks) == 2
+    #assert isinstance(checks[0], tuple)
+    #assert checks[0][0] == stmt1
+    #assert checks[0][1] == True
+    #assert checks[1][0] == stmt2
+    #assert checks[1][1] == False
     # Now with an interactions_only policy
-    """
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [stmt1, stmt2])
     checks = mc.check_model()
@@ -227,7 +241,7 @@ def test_ras_220_network():
     assert checks[0][1] == False
     assert checks[1][0] == stmt2
     assert checks[1][1] == False
-    """
+"""
 
 def test_path_polarity():
     im = pgv.AGraph('im_polarity.dot')
@@ -239,8 +253,8 @@ def test_path_polarity():
 
 @with_model
 def test_consumption_rule():
-    pvd = Agent('Pervanadate')
-    erk = Agent('MAPK1')
+    pvd = Agent('Pervanadate', db_refs={'HGNC': '1'})
+    erk = Agent('MAPK1', db_refs={'HGNC': '2'})
     stmt = Phosphorylation(pvd, erk, 'T', '185')
     # Now make the model
     Monomer('Pervanadate', ['b'])
@@ -266,6 +280,13 @@ def test_consumption_rule():
          DUSP(b=1) % MAPK1(b=1, T185='p') >>
          DUSP(b=None) % MAPK1(b=None, T185='u'),
          Parameter('k5', 1))
+    Annotation(Pervanadate, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(MAPK1, 'http://identifiers.org/hgnc/HGNC:2')
+    MAPK1.site_annotations = [
+            Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+            Annotation('T185', 'T', 'is_residue'),
+            Annotation('T185', '185', 'is_position'),
+        ]
     # Now check the model against the statement
     mc = ModelChecker(model, [stmt])
     checks = mc.check_model()
@@ -315,13 +336,14 @@ def test_invalid_modification():
      #assert results[0][1] == True
 
 def _path_polarity_stmt_list():
-    a = Agent('A')
-    b = Agent('B')
-    c = Agent('C')
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
+    c = Agent('C', db_refs={'HGNC': '3'})
     st1 = Phosphorylation(a, c, 'T', '185')
     st2 = Dephosphorylation(a, c, 'T', '185')
     st3 = Phosphorylation(None, c, 'T', '185')
     st4 = Dephosphorylation(None, c, 'T', '185')
+
     return [st1, st2, st3, st4]
 
 @with_model
@@ -337,6 +359,14 @@ def test_distinguish_path_polarity1():
     Initial(A(), k)
     Initial(B(act='y'), k)
     Initial(C(T185='p'), k)
+    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    C.site_annotations = [
+            Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+            Annotation('T185', 'T', 'is_residue'),
+            Annotation('T185', '185', 'is_position'),
+        ]
     # Create the model checker
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
@@ -480,10 +510,10 @@ def test_ubiquitination():
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
-# 0. Need to make model checker work with multiple downstream observables and
-#    multiple input rules
 # 1. Need PySB assembler to generate appropriate annotations for
 #    sites/states
+# 1b. Add test making sure modifications can be checked from pysb_assembled
+#     model
 # 2. Need to be able to annotate specific site/state combinations as
 #    active forms
 # 3. Need to make grounded_mp generation work with MutConditions and
@@ -563,13 +593,13 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_phosphorylation_annotations()
+    #test_phosphorylation_annotations()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
     #test_distinguish_path_polarity1()
     #test_distinguish_path_polarity2()
     #test_distinguish_path_polarity_none_stmt()
-    #test_pysb_assembler_phospho_policies()
+    test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()

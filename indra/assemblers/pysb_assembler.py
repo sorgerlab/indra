@@ -406,8 +406,7 @@ def grounded_monomer_patterns(model, agent):
         # If there are any sites left after we subject them to residue
         # and position constraints, then return the relevant monomer patterns!
         for site_name in viable_sites:
-            pattern = {}
-            pattern[site_name] = mod_sites[site_name]
+            pattern = {site_name: (mod_sites[site_name], WILD)}
             yield monomer(**pattern)
 
 def get_monomer_pattern(model, agent, extra_fields=None):
