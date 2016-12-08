@@ -346,13 +346,16 @@ class CyJSAssembler(object):
         members = {}
         for member in expanded_families:
             hgnc_symbol = member[1]
-            hgnc_id = hgnc_client.get_id(hgnc_symbol)
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
             if hgnc_id:
-                member_agent = Agent(hgnc_symbol, db_refs={'HGNC': hgnc_id})
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                member_agent = Agent(hgnc_symbol,
+                                     db_refs={'HGNC': hgnc_id,
+                                              'UP': up_id})
                 member_db_refs = _get_db_refs(member_agent)
             else:
                 member_db_refs = {}
-            members[x[1]] = {
+            members[member[1]] = {
                     'mutation': None,
                     'expression': None,
                     'db_refs' : member_db_refs
