@@ -1478,21 +1478,27 @@ def dephosphorylation_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     phos = agent_set.get_create_base_agent(stmt.enz)
-    phos.create_site(active_site_names['phosphatase'])
-    dephos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    sub.create_site(dephos_site, ('u', 'p'))
+    phos.create_site(active_site_names['phosphatase'])
+    #dephos_site = get_mod_site_name('phosphorylation',
+    #                              stmt.residue, stmt.position)
+    #sub = agent_set.get_create_base_agent(stmt.sub)
+    #sub.create_site(dephos_site, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
 
 
 def dephosphorylation_monomers_one_step(stmt, agent_set):
     if stmt.enz is None:
         return
     phos = agent_set.get_create_base_agent(stmt.enz)
-    dephos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    sub.create_site(dephos_site, ('u', 'p'))
+    #dephos_site = get_mod_site_name('phosphorylation',
+    #                              stmt.residue, stmt.position)
+    #sub = agent_set.get_create_base_agent(stmt.sub)
+    #sub.create_site(dephos_site, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
 
 
 def dephosphorylation_monomers_two_step(stmt, agent_set):
@@ -1500,10 +1506,11 @@ def dephosphorylation_monomers_two_step(stmt, agent_set):
         return
     phos = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    dephos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(dephos_site, ('u', 'p'))
-
+    #dephos_site = get_mod_site_name('phosphorylation',
+    #                              stmt.residue, stmt.position)
+    #sub.create_site(dephos_site, ('u', 'p'))
+    sub.create_mod_site(ist.ModCondition('phosphorylation',
+                                     stmt.residue, stmt.position))
     # Create site for binding the substrate
     phos.create_site(get_binding_site_name(sub.name))
     sub.create_site(get_binding_site_name(phos.name))

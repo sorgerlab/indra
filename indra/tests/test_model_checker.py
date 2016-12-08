@@ -296,18 +296,24 @@ def test_consumption_rule():
     assert checks[0][1] == True
 
 def test_dephosphorylation():
-    dusp = Agent('DUSP6')
-    mapk1 = Agent('MAPK1')
+    dusp = Agent('DUSP6', db_refs={'HGNC':'1'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC':'2'})
     stmt = Dephosphorylation(dusp, mapk1, 'T', '185')
-    pysba = PysbAssembler()
-    pysba.add_statements([stmt])
-    pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt])
-    checks = mc.check_model()
-    assert len(checks) == 1
-    assert isinstance(checks[0], tuple)
-    assert checks[0][0] == stmt
-    assert checks[0][1] == True
+    def check_policy(policy, result):
+        pysba = PysbAssembler()
+        pysba.add_statements([stmt])
+        pysba.make_model(policies=policy)
+        mc = ModelChecker(pysba.model, [stmt])
+        checks = mc.check_model()
+        #im = mc.get_im()
+        #im.draw('test_dephosphorylation.pdf', prog='dot')
+        assert len(checks) == 1
+        assert isinstance(checks[0], tuple)
+        assert checks[0][0] == stmt
+        assert checks[0][1] == result
+    check_policy('one_step', True)
+    check_policy('two_step', True)
+    check_policy('interactions_only', False)
 
 @with_model
 def test_invalid_modification():
@@ -508,6 +514,10 @@ def test_ubiquitination():
 """
 
 
+# TODO Add tests for autophosphorylation
+# TODO Add test for transphosphorylation
+# TODO Add test for dephosphorylation
+
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
 # 1. Need PySB assembler to generate appropriate annotations for
@@ -599,10 +609,10 @@ if __name__ == '__main__':
     #test_distinguish_path_polarity1()
     #test_distinguish_path_polarity2()
     #test_distinguish_path_polarity_none_stmt()
-    test_pysb_assembler_phospho_policies()
+    #test_pysb_assembler_phospho_policies()
     #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
-    #test_dephosphorylation()
+    test_dephosphorylation()
     #test_check_ubiquitination()
