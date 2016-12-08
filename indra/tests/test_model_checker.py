@@ -399,6 +399,14 @@ def test_distinguish_path_polarity2():
     Initial(A(), k)
     Initial(B(act='y'), k)
     Initial(C(T185='p'), k)
+    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    C.site_annotations = [
+            Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+            Annotation('T185', 'T', 'is_residue'),
+            Annotation('T185', '185', 'is_position'),
+        ]
     # Create the model checker
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
@@ -434,7 +442,7 @@ def test_check_activation():
 @with_model
 def test_none_phosphorylation_stmt():
     # Create the statement
-    b = Agent('B')
+    b = Agent('B', db_refs={'HGNC':'2'})
     st1 = Phosphorylation(None, b, 'T', '185')
     st2 = Phosphorylation(None, b, 'Y', '187')
     stmts = [st1, st2]
@@ -445,6 +453,16 @@ def test_none_phosphorylation_stmt():
          Parameter('k', 1))
     Initial(A(), Parameter('A_0', 100))
     Initial(B(T185='u', Y187='p'), Parameter('B_0', 100))
+    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
+    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    B.site_annotations = [
+        Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('T185', 'T', 'is_residue'),
+        Annotation('T185', '185', 'is_position'),
+        Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('Y187', 'Y', 'is_residue'),
+        Annotation('Y187', '187', 'is_position'),
+    ]
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
     assert len(results) == 2
