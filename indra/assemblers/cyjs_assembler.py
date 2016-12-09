@@ -241,7 +241,6 @@ class CyJSAssembler(object):
             # this returns the bounds of each bin. so n_bins+1 bounds.
             # get rid of first value which is the leftmost bound
             bin_thr = np.histogram(exp_lvls, n_bins)[1][1:]
-            print(bin_thr)
             # iterate over nodes
             for n in self._nodes:
                 # if node has members set member bin_expression values
