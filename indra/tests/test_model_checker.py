@@ -562,6 +562,38 @@ def test_activation_subtype():
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
 
+def test_check_autophosphorylation():
+    egfr = Agent('EGFR', db_refs={'HGNC':'3236'})
+    stmts = [Autophosphorylation(egfr, 'Y', '1016')]
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    stmts_to_check = [Phosphorylation(None, egfr),
+                      Phosphorylation(None, egfr, 'Y', '1016')]
+    mc = ModelChecker(pa.model, stmts_to_check)
+    results = mc.check_model()
+    assert len(results) == len(stmts_to_check)
+    assert isinstance(results[0], tuple)
+    assert results[0][1] == True
+    assert results[1][1] == True
+
+def test_check_transphosphorylation():
+    egfr = Agent('EGFR', db_refs={'HGNC':'3236'})
+    erbb2_egfr = Agent('ERBB2', bound_conditions=[BoundCondition(egfr)],
+                       db_refs={'HGNC':'3430'})
+    stmts = [Transphosphorylation(erbb2_egfr, 'Y', '1016')]
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    stmts_to_check = [Phosphorylation(None, egfr),
+                      Phosphorylation(None, egfr, 'Y', '1016')]
+    mc = ModelChecker(pa.model, stmts_to_check)
+    results = mc.check_model()
+    assert len(results) == len(stmts_to_check)
+    assert isinstance(results[0], tuple)
+    assert results[0][1] == True
+    assert results[1][1] == True
+
 """
 def test_ubiquitination():
     xiap = Agent('XIAP')
@@ -584,6 +616,9 @@ def test_ubiquitination():
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
+# 0. (('T185', 'p'),('Y187','p'), ...,), 'kinase', 'is_active')
+# 1. (('T185', 'p'),('Y187','p'), ...,), 'kinase', 'is_inactive')
+# 2. How to figure out that 'kinase'
 # 1. Add activity states to agents, and have check_activation work with
 #    grounded monomers
 # 2. Also need activity observable matching to account for different types of
@@ -593,7 +628,8 @@ def test_ubiquitination():
 # 3. Need to make grounded_mp generation work with MutConditions and
 #    bound conditions (bound conditions would need to check for bonds to
 # 4. Grounded monomer patterns for check_activation
-#
+# 5. Check for complexes (using contact map? Or express the complex as an
+#    observable and look for paths?
 # Issues--if a rule activity isn't contingent on a particular mod,
 # then were will be no causal connection between any upstream modifying
 # rules and the downstream rule.
@@ -667,7 +703,9 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_activation_subtype()
+    #test_activation_subtype()
+    test_check_transphosphorylation()
+    test_check_autophosphorylation()
     #test_multitype_path()
     #test_phosphorylation_annotations()
     #test_check_activation()
