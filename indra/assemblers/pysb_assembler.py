@@ -1769,11 +1769,11 @@ def activeform_assemble_one_step(stmt, model, agent_set):
 activeform_assemble_default = activeform_assemble_one_step
 
 # RASGTPACTIVITIACTIVITY ######################################
-def rasgtpactivation_monomers_default(stmt, agent_set):
-    pass
 
-def rasgtpactivation_assemble_default(stmt, model, agent_set):
-    pass
+rasgtpactivation_monomers_default = activation_monomers_default
+
+rasgtpactivation_assemble_default = activation_assemble_default
+
 
 # TRANSLOCATION ###############################################
 def translocation_monomers_default(stmt, agent_set):

@@ -514,6 +514,53 @@ def test_phosphorylation_annotations():
     assert results[2][0] == st3
     assert results[2][1] == False
 
+def test_multitype_path():
+    """Test causal chain involving Complex, RasGef, Activation"""
+    egfr = Agent('EGFR', db_refs={'HGNC':'3236'})
+    grb2 = Agent('GRB2', db_refs={'HGNC': '4566'})
+    grb2_egfr = Agent('GRB2', bound_conditions=[BoundCondition(egfr)],
+                      db_refs={'HGNC': '4566'})
+    sos1 = Agent('SOS1', db_refs={'HGNC':'11187'}, )
+    sos1_grb2 = Agent('SOS1', bound_conditions=[BoundCondition(grb2)],
+                 db_refs={'HGNC':'11187'}, )
+    kras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    stmts = [
+        Complex([egfr, grb2]),
+        Complex([sos1, grb2_egfr]),
+        ActiveForm(sos1_grb2, 'activity', True),
+        Activation(sos1_grb2, 'activity', kras, 'gtpbound', True),
+        Activation(kras, 'gtpbound', braf, 'kinase', True)
+      ]
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    stmts_to_check = [
+            Activation(egfr, 'activity', kras, 'gtpbound', True),
+            Activation(egfr, 'activity', braf, 'kinase', True)
+        ]
+    mc = ModelChecker(pa.model, stmts_to_check)
+    results = mc.check_model()
+    im = mc.get_im()
+    im.draw('test_multitype_path.pdf', prog='dot')
+    assert len(results) == len(stmts_to_check)
+    assert isinstance(results[0], tuple)
+    assert results[0][1] == True
+    assert results[1][1] == True
+
+def test_activation_subtype():
+    sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
+    kras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    stmts =[Activation(sos1, 'activity', kras, 'gtpbound', True)]
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    stmts_to_check = [Activation(sos1, 'activity', kras, 'activity', True)]
+    mc = ModelChecker(pa.model, stmts_to_check)
+    results = mc.check_model()
+    assert len(results) == len(stmts_to_check)
+    assert isinstance(results[0], tuple)
+    assert results[0][1] == True
 
 """
 def test_ubiquitination():
@@ -534,14 +581,13 @@ def test_ubiquitination():
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
-# TODO Add test for dephosphorylation
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
-# 1. Need PySB assembler to generate appropriate annotations for
-#    sites/states
-# 1b. Add test making sure modifications can be checked from pysb_assembled
-#     model
+# 1. Add activity states to agents, and have check_activation work with
+#    grounded monomers
+# 2. Also need activity observable matching to account for different types of
+#    activity, so that different types of activity can be checked
 # 2. Need to be able to annotate specific site/state combinations as
 #    active forms
 # 3. Need to make grounded_mp generation work with MutConditions and
@@ -621,6 +667,8 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
+    test_activation_subtype()
+    #test_multitype_path()
     #test_phosphorylation_annotations()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
@@ -632,5 +680,5 @@ if __name__ == '__main__':
     #test_ras_220_network()
     #test_path_polarity()
     #test_consumption_rule()
-    test_dephosphorylation()
+    #test_dephosphorylation()
     #test_check_ubiquitination()

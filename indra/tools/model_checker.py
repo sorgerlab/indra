@@ -135,6 +135,8 @@ class ModelChecker(object):
         self.model.observables = ComponentSet([])
         self.model.add_component(obj_obs)
         # Find rules in the model corresponding to the input
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obj_obs, target_polarity))
         if subj_mp is None:
             input_rule_set = None
         else:
@@ -143,8 +145,8 @@ class ModelChecker(object):
                                   #if r.name.startswith(stmt.enz.name)])
             logger.info('Found %s input rules matching %s' %
                         (len(input_rules), str(subj_mp)))
-            # If we have enzyme information but there are no input rules matching
-            # the enzyme, then there is no path
+            # If we have enzyme information but there are no input rules
+            # matching the enzyme, then there is no path
             if not input_rules:
                 return False
         # Generate the predecessors to our observable
@@ -255,11 +257,11 @@ def _find_sources(im, target, sources, polarity):
     # First, generate a list of visited nodes
     # Copied/adapted from networkx
     visited = set([(target, 1)])
-    # Generate list of predecessor nodes with a sign updated according to the sign
-    # of the target node
+    # Generate list of predecessor nodes with a sign updated according to the
+    # sign of the target node
     target_tuple = (target, 1)
-    # The queue holds tuples of "parents" (in this case downstream nodes) and their
-    # "children" (in this case their upstream influencers)
+    # The queue holds tuples of "parents" (in this case downstream nodes) and
+    # their "children" (in this case their upstream influencers)
     queue = deque([(target_tuple, _get_signed_predecessors(im, target, 1), 1)])
     while queue:
         parent, children, path_length = queue[0]
@@ -270,11 +272,11 @@ def _find_sources(im, target, sources, polarity):
             # the parent!
             # Could do this in the expansion step itself, or here;
             # If done during the expansion step, 
-            # Check this child against the visited list. If we haven't visited it,
-            # then we return the parent/child pair
+            # Check this child against the visited list. If we haven't visited
+            # it, then we return the parent/child pair
             if (sources is None or child in sources) and sign == polarity:
-                logger.info("Found path to %s from %s with desired sign %s with "
-                            "length %d" %
+                logger.info("Found path to %s from %s with desired sign %s "
+                            "with length %d" %
                             (target, child, polarity, path_length))
                 yield (child, sign, path_length)
             if (child, sign) not in visited:
