@@ -132,69 +132,73 @@ class CyJSAssembler(object):
             If specified, split the expression levels into the given number
             of bins. If not specified, default will be 5.
         """
-        if kwargs.get('cell_type', None) :
-            cell_type = kwargs.get('cell_type', None)
-            node_names = [node['data']['name'] for node in self._nodes]
-            exp = context_client.get_protein_expression(node_names, cell_type)
-            mut = context_client.get_mutations(node_names, cell_type)
-            if not exp:
-                logger.warning('Could not get context for %s cell type.' %
-                               cell_type)
-                return
-            if not mut:
-                logger.warning('Could not get mutations for %s cell type.' %
-                               cell_type)
-                return
-            counter_exp = 0
-            counter_mut = 0
-            for node in self._nodes:
-                amount = exp.get(node['data']['name'])
-                if amount is  None:
+        cell_type = kwargs.get('cell_type')
+        if not cell_type:
+            logger.warning('No cell type given.')
+            return
+
+        # Collect all gene names in network
+        gene_names = []
+        for node in self._nodes:
+            members = node['data'].get('members')
+            if members:
+                gene_names += list(members.keys())
+            else:
+                if node['data']['name'].startswith('Group'):
+                    continue
+                gene_names.append(node['data']['name'])
+
+        # Get expression and mutation from context client
+        exp = context_client.get_protein_expression(gene_names, cell_type)
+        mut = context_client.get_mutations(gene_names, cell_type)
+        if not exp:
+            logger.warning('Could not get context for %s cell type.' %
+                           cell_type)
+            return
+        else:
+            exp = {k: v[cell_type] for k, v in exp.items()}
+        if not mut:
+            logger.warning('Could not get mutations for %s cell type.' %
+                           cell_type)
+            return
+        else:
+            mut = {k: v[cell_type] for k, v in mut.items()}
+
+        # Get expression and mutation for specific gene
+        def get_expr_mut(name, expr_data, mut_data):
+            amount = expr_data.get(name)
+            if amount is None:
+                expression = None
+            else:
+                expression = math.log(int(amount), 10)
+            mutation = mut_data.get(name)
+            if mutation is not None:
+                mutation = int(mutation)
+            else:
+                mutation = 0
+            return expression, mutation
+
+        # Set node properties for expression and mutation
+        for node in self._nodes:
+            members = node['data'].get('members')
+            if members:
+                for member in members.keys():
+                    expression, mutation = get_expr_mut(member, exp, mut)
+                    node['data']['members'][member]['expression'] = expression
+                    node['data']['members'][member]['mutation'] = mutation
+                node['data']['expression'] = None
+                node['data']['mutation'] = 0
+            else:
+                if node['data']['name'].startswith('Group'):
                     node['data']['expression'] = None
-                if amount is not None:
-                    node['data']['expression'] = \
-                        math.log(int(amount[cell_type]), 10)
-                    counter_exp += 1
-                mutation = mut.get(node['data']['name'])
-                if mutation is not None:
-                    node['data']['mutation'] = int(mutation[cell_type])
-                    # 0 for no mutation
-                    # 1 for mutation
-                    counter_mut += 1
-                if mutation is  None:
                     node['data']['mutation'] = 0
-                    # NDEx mutation client returns None when mutation
-                    # isn't found in any
-                    # cell line. Thus, set mutation to 0.
-                if node['data'].get('members', None):
-                    members = node['data']['members']
-                    # FIXME this works, but it makes a bunch of calls
-                    # FIXME it can be optimized to make only one call,
-                    # FIXME then parse return
-                    for m in members:
-                        exp2 = context_client.get_protein_expression(
-                                m, cell_type
-                                )
-                        mut2 = context_client.get_mutations(m, cell_type)
-                        amount = exp2.get(m)
-                        mutation = mut2.get(m)
-                        if amount is  None:
-                            node['data'] \
-                                ['members'][m]['expression'] = None
-                        if amount is not None:
-                            node['data']['members'][m]['expression'] = \
-                                math.log(int(amount[cell_type]), 10)
-                            counter_exp += 1
-                        if mutation is not None:
-                            node['data']['members'][m]['mutation'] = \
-                                int(mutation[cell_type])
-                            # 0 for no mutation
-                            # 1 for mutation
-                            counter_mut += 1
-                        if mutation is  None:
-                            node['data']['members'][m]['mutation'] = 0
-            logger.info('Set expression context for %d nodes.' % counter_exp)
-            logger.info('Set mutation context for %d nodes.' % counter_mut)
+                else:
+                    expression, mutation = get_expr_mut(node['data']['name'],
+                                                        exp, mut)
+                    node['data']['expression'] = expression
+                    node['data']['mutation'] = mutation
+
+        # Binning for the purpose of assigning colors
         if kwargs.get('bin_expression', None):
             # how many bins? If not specified, set to 5
             n_bins = 5
@@ -224,11 +228,11 @@ class CyJSAssembler(object):
             exp_mut_colorscale.append('#bdbdbd')
             self._mut_colorscale = exp_mut_colorscale
             # capture the expression levels of every gene in nodes
-            exp_lvls = [n['data'].get('expression', None) for n in self._nodes]
+            exp_lvls = [n['data'].get('expression') for n in self._nodes]
             # capture the expression levels of every gene in family members
             m_exp_lvls = []
             for n in self._nodes:
-                if n['data'].get('members', None):
+                if n['data'].get('members'):
                     members = n['data']['members']
                     for m in members:
                         m_exp_lvls.append(members[m]['expression'])
@@ -244,7 +248,7 @@ class CyJSAssembler(object):
             # iterate over nodes
             for n in self._nodes:
                 # if node has members set member bin_expression values
-                if n['data'].get('members', None):
+                if n['data'].get('members'):
                     members = n['data']['members']
                     for m in members:
                         # if expression is None, set to bin index n_bins
