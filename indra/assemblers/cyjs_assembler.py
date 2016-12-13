@@ -5,24 +5,18 @@ import json
 import logging
 import itertools
 import collections
-from indra.statements import *
-from indra.databases import context_client
-from indra.databases import hgnc_client
-import indra.preassembler.hierarchy_manager as hm
 import numpy as np
-import indra.tools.expand_families as exp_fam
-import indra.preassembler as pr
-
 from matplotlib.colors import LinearSegmentedColormap as colormap
 from matplotlib.colors import rgb2hex, hex2color
+from indra.statements import Activation, Complex, Modification, \
+                             SelfModification, Agent
+from indra.databases import hgnc_client
+from indra.databases import context_client
+from indra.preassembler import Preassembler
+from indra.tools.expand_families import Expander
+from indra.preassembler.hierarchy_manager import hierarchies
 
-hierarchies = hm.hierarchies
-expander = exp_fam.Expander(hierarchies)
-
-from indra.preassembler.grounding_mapper import GroundingMapper, gm
-GM = GroundingMapper(gm)
-
-import math
+expander = Expander(hierarchies)
 
 # Python 2
 try:
@@ -33,8 +27,8 @@ except:
 
 logger = logging.getLogger('cyjs_assembler')
 
-class CyJSAssembler(object):
 
+class CyJSAssembler(object):
     def __init__(self, stmts=None):
         if not stmts:
             self.statements = []
@@ -56,9 +50,10 @@ class CyJSAssembler(object):
             A list of :py:class:`indra.statements.Statement`
             to be added to the statement list of the assembler.
         """
-        stmts = pr.Preassembler.combine_duplicate_stmts(stmts)
+        stmts = Preassembler.combine_duplicate_stmts(stmts)
         for stmt in stmts:
             self.statements.append(stmt)
+
     def make_model(self, *args, **kwargs):
         """Assemble a Cytoscape JS network from INDRA Statements.
 
@@ -67,9 +62,6 @@ class CyJSAssembler(object):
 
         Parameters
         ----------
-        ground_to_BE : bool
-            If True, nodes are grounded to the appropriate bioentity entry.
-
         grouping : bool
             If True, the nodes with identical incoming and outgoing edges
             are grouped and the corresponding edges are merged.
@@ -88,8 +80,6 @@ class CyJSAssembler(object):
         cyjs_str : str
             The json serialized Cytoscape JS model.
         """
-        if kwargs.get('ground_to_BE', None):
-            self.statements = GM.map_agents(self.statements, do_rename=True)
         for stmt in self.statements:
             if isinstance(stmt, Activation):
                 self._add_activation(stmt)
@@ -100,12 +90,12 @@ class CyJSAssembler(object):
             else:
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
-        if kwargs.get('grouping', None):
+        if kwargs.get('grouping'):
             self._group_nodes()
             self._group_edges()
-        if kwargs.get('drop_virtual_edges', None):
+        if kwargs.get('drop_virtual_edges'):
             self._drop_virtual_edges()
-        if kwargs.get('add_edge_weights', None):
+        if kwargs.get('add_edge_weights'):
             self._add_edge_weights()
         return self.print_cyjs()
 
@@ -170,7 +160,7 @@ class CyJSAssembler(object):
             if amount is None:
                 expression = None
             else:
-                expression = math.log(int(amount), 10)
+                expression = np.log10(amount)
             mutation = mut_data.get(name)
             if mutation is not None:
                 mutation = int(mutation)
@@ -199,10 +189,10 @@ class CyJSAssembler(object):
                     node['data']['mutation'] = mutation
 
         # Binning for the purpose of assigning colors
-        if kwargs.get('bin_expression', None):
+        if kwargs.get('bin_expression'):
             # how many bins? If not specified, set to 5
             n_bins = 5
-            user_bins = kwargs.get('n_bins', None)
+            user_bins = kwargs.get('n_bins')
             if type(user_bins) == int:
                 n_bins = user_bins
                 if n_bins > 9:
@@ -213,16 +203,16 @@ class CyJSAssembler(object):
                     logger.info('Need at least 3 bin. Setting n_bins = 3.')
             # Create color scale for unmutated gene expression
             # feed in hex values from colorbrewer2 9-class PuBuGn
-            wt_hexes = ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476',
-                        '#41ab5d','#238b45','#006d2c','#00441b']
+            wt_hexes = ['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476',
+                        '#41ab5d', '#238b45', '#006d2c', '#00441b']
             exp_wt_colorscale = _build_color_scale(wt_hexes, n_bins)
-            #tack on a gray for no expression data
+            # tack on a gray for no expression data
             exp_wt_colorscale.append('#bdbdbd')
             self._exp_colorscale = exp_wt_colorscale
             # create color scale for mutated gene expression
             # feed in hex values from colorbrewer2 9-class YlOrRd
-            mut_hexes = ['#fff5eb','#fee6ce','#fdd0a2','#fdae6b','#fd8d3c',
-                         '#f16913','#d94801','#a63603','#7f2704']
+            mut_hexes = ['#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c',
+                         '#f16913', '#d94801', '#a63603', '#7f2704']
             exp_mut_colorscale = _build_color_scale(mut_hexes, n_bins)
             # tack on a gray for no expression data
             exp_mut_colorscale.append('#bdbdbd')
@@ -239,7 +229,7 @@ class CyJSAssembler(object):
             # combine node expressions and family expressions
             exp_lvls = exp_lvls + m_exp_lvls
             # get rid of None gene expressions
-            exp_lvls = [x for x in exp_lvls if x != None]
+            exp_lvls = [x for x in exp_lvls if x is not None]
             # bin expression levels into n equally sized bins
             # bin n+1 reserved for None
             # this returns the bounds of each bin. so n_bins+1 bounds.
@@ -252,19 +242,19 @@ class CyJSAssembler(object):
                     members = n['data']['members']
                     for m in members:
                         # if expression is None, set to bin index n_bins
-                        if members[m]['expression'] == None:
+                        if members[m]['expression'] is None:
                             members[m]['bin_expression'] = n_bins
                         else:
                             for thr_idx, thr in enumerate(bin_thr):
-                                if members[m]['expression']<= thr:
+                                if members[m]['expression'] <= thr:
                                     members[m]['bin_expression'] = thr_idx
                                     break
                 # set bin_expression for the node itself
-                if n['data']['expression'] ==  None:
+                if n['data']['expression'] is None:
                     n['data']['bin_expression'] = n_bins
                 else:
                     for thr_idx, thr in enumerate(bin_thr):
-                        if n['data']['expression']<= thr:
+                        if n['data']['expression'] <= thr:
                             n['data']['bin_expression'] = thr_idx
                             break
 
@@ -279,10 +269,10 @@ class CyJSAssembler(object):
         exp_colorscale_str = json.dumps(self._exp_colorscale)
         mut_colorscale_str = json.dumps(self._mut_colorscale)
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        model_str = json.dumps(cyjs_dict, indent=1, sort_keys = True)
-        model_dict = {'exp_colorscale_str' : exp_colorscale_str,
-                      'mut_colorscale_str' : mut_colorscale_str,
-                      'model_elements_str' : model_str}
+        model_str = json.dumps(cyjs_dict, indent=1, sort_keys=True)
+        model_dict = {'exp_colorscale_str': exp_colorscale_str,
+                      'mut_colorscale_str': mut_colorscale_str,
+                      'model_elements_str': model_str}
         cyjs_str = json.dumps(model_dict, indent=1)
         return cyjs_str
 
@@ -361,7 +351,7 @@ class CyJSAssembler(object):
             members[member[1]] = {
                     'mutation': None,
                     'expression': None,
-                    'db_refs' : member_db_refs
+                    'db_refs': member_db_refs
                     }
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
@@ -489,7 +479,7 @@ class CyJSAssembler(object):
         # once all group node edges have weights
         # give non-group node edges weights of 1
         for e in self._edges:
-            if e['data'].get('weight', None) is None:
+            if e['data'].get('weight') is None:
                 e['data']['weight'] = 1
 
     def _add_attractors(self):
@@ -508,7 +498,7 @@ class CyJSAssembler(object):
                 else:
                     attr_node_id = child_node_ids[i]
             # sets attractor to last child node
-            #attr_node_id = child_node_ids[-1]
+            # attr_node_id = child_node_ids[-1]
             attr_dict[parent_node_id] = attr_node_id
         # for any existing edges to/from parent
         # give attractors same edges
@@ -572,7 +562,7 @@ class CyJSAssembler(object):
                 pc_dict[p]['srt_attr_id'] = src_attr_id
                 src_attr = {'data': {'id': src_attr_id,
                                      'name': ('Attractor'),
-                                     'parent':''}}
+                                     'parent': ''}}
                 self._nodes.append(src_attr)
                 # create edges from the sources to the source attractor
                 for s in sources:
@@ -596,7 +586,7 @@ class CyJSAssembler(object):
                 pc_dict[p]['targ_attr_id'] = src_attr_id
                 targ_attr = {'data': {'id': targ_attr_id,
                                       'name': ('Attractor'),
-                                      'parent':''}}
+                                      'parent': ''}}
                 self._nodes.append(targ_attr)
                 # create edges from the target attractor to targets
                 for t in targets:
@@ -612,7 +602,6 @@ class CyJSAssembler(object):
                                      'source': c,
                                      'target': targ_attr_id}}
                     self._edges.append(edge)
-
 
 
 def _get_db_refs(agent):
@@ -656,6 +645,7 @@ def _get_db_refs(agent):
         cyjs_db_refs[name] = val
     return cyjs_db_refs
 
+
 def _get_stmt_type(stmt):
     if isinstance(stmt, Modification):
         edge_type = 'Modification'
@@ -683,22 +673,22 @@ def _get_stmt_type(stmt):
         edge_polarity = 'none'
     return edge_type, edge_polarity
 
+
 def _build_color_scale(hex_colors_list, n_bins):
     rgb_colors = [hex2color(x) for x in hex_colors_list]
     rgb_colors_array = np.array(rgb_colors)
-    rgb_names = {'red':0, 'green':1, 'blue':2}
-    linear_mapping = np.linspace(0,1,len(rgb_colors_array))
+    rgb_names = {'red': 0, 'green': 1, 'blue': 2}
+    linear_mapping = np.linspace(0, 1, len(rgb_colors_array))
     cdict = {}
     for rgb_name in rgb_names:
         color_list = []
         rgb_idx = rgb_names[rgb_name]
-        for lin, val in zip(linear_mapping, rgb_colors_array[:,rgb_idx]):
+        for lin, val in zip(linear_mapping, rgb_colors_array[:, rgb_idx]):
             color_list.append((lin, val, val))
         cdict[rgb_name] = color_list
     cmap = colormap('expression_colormap', cdict, 256, 1)
     color_scale = []
-    for i in np.linspace(0,1,n_bins):
+    for i in np.linspace(0, 1, n_bins):
         color_scale.append(rgb2hex(cmap(i)))
 
     return color_scale
-
