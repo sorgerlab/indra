@@ -126,8 +126,7 @@ class ModelChecker(object):
         for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
             # If there's a path, return the first one
-            for path in self._find_im_paths(enz_mp, obj_obs, target_polarity):
-                return True
+            return self._find_im_paths(enz_mp, obj_obs, target_polarity)
         # If we got here, then there was no path for any observable
         return False
 
