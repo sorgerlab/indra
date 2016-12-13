@@ -548,6 +548,7 @@ def test_multitype_path():
     assert results[0][1] == True
     assert results[1][1] == True
 
+"""
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
@@ -593,6 +594,7 @@ def test_check_transphosphorylation():
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
     assert results[1][1] == True
+"""
 
 """
 def test_ubiquitination():
