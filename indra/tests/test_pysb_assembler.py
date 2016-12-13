@@ -739,7 +739,7 @@ def test_get_mp_with_grounding_2():
     assert len(mps_2) == 1
     mp = mps_2[0]
     assert mp.monomer == A_monomer
-    assert mp.site_conditions == {'Y187': 'p'}
+    assert mp.site_conditions == {'Y187': ('p', WILD)}
     # TODO Add test for unmodified agent!
     # TODO Add test involving multiple (possibly degenerate) modifications!
     # TODO Add test for generic double phosphorylation
@@ -758,7 +758,7 @@ def test_phospho_assemble_grounding():
         mps = list(pa.grounded_monomer_patterns(model, b_phos))
         assert len(mps) == 1
         assert mps[0].monomer.name == 'ERK2'
-        assert mps[0].site_conditions == {'T185':'p'}
+        assert mps[0].site_conditions == {'T185': ('p', WILD)}
     for policy in ('one_step', 'interactions_only', 'two_step',
                    'atp_dependent'):
         check_policy(policy)
@@ -779,8 +779,8 @@ def test_phospho_mod_grounding():
     assert mps[0].monomer.name == 'MEK1'
     assert mps[1].monomer.name == 'MEK1'
     sc = [mp.site_conditions for mp in mps]
-    assert {'S218':'p'} in sc
-    assert {'S222':'p'} in sc
+    assert {'S218': ('p', WILD)} in sc
+    assert {'S222': ('p', WILD)} in sc
 
 # TODO Do the same for mutation condition
 # TODO Localization condition
@@ -788,4 +788,8 @@ def test_phospho_mod_grounding():
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
+    test_get_mp_with_grounding()
+    test_get_mp_with_grounding_2()
+    test_phospho_assemble_grounding()
     test_phospho_mod_grounding()
+

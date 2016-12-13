@@ -125,7 +125,8 @@ class ModelChecker(object):
             return False
         for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
-            if self._find_im_paths(enz_mp, obj_obs, target_polarity):
+            # If there's a path, return the first one
+            for path in self._find_im_paths(enz_mp, obj_obs, target_polarity):
                 return True
         # If we got here, then there was no path for any observable
         return False
@@ -149,10 +150,10 @@ class ModelChecker(object):
             # matching the enzyme, then there is no path
             if not input_rules:
                 return False
-        # Generate the predecessors to our observable
+        # Generate the predecessors to our observable and count the paths
+        # TODO: Make it optionally possible to return on the first path?
         num_paths = 0
-        for (source, polarity, path_length) in \
-                    _find_sources(self.get_im(), obj_obs.name, input_rule_set,
+        for path in _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
         if num_paths > 0:
@@ -291,8 +292,8 @@ def _find_sources(im, target, sources, polarity):
         except StopIteration:
             queue.popleft()
             path_length += 1
-    return None
-
+    # There was no path; this will produce an empty generator
+    return
 
 def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the

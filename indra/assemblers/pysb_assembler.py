@@ -359,8 +359,7 @@ def grounded_monomer_patterns(model, agent):
     # match
     if monomer is None:
         logger.info('No monomer found corresponding to agent %s' % agent)
-        return iter(())
-
+        return
     # Now that we have a monomer for the agent, look for site/state
     # combinations corresponding to the state of the agent.
     # For every one of the modifications specified in the agent
@@ -402,7 +401,7 @@ def grounded_monomer_patterns(model, agent):
             viable_sites = viable_sites.intersection(pos_sites)
         # If there are no viable sites, return None
         if not viable_sites:
-            return iter(())
+            return
         # If there are any sites left after we subject them to residue
         # and position constraints, then return the relevant monomer patterns!
         for site_name in viable_sites:
