@@ -2,6 +2,11 @@ language: python
 python:
   - "2.7"
   - "3.5"
+addons:
+    apt:
+        packages:
+            - ocaml-nox
+            - opam
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
@@ -29,6 +34,17 @@ install:
   - tar xzf BioNetGen-2.2.6-stable.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
+  # Kappa
+  # First install ocamlfind via opam (needed to build KaSim/KaSa)
+  - opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env)
+  - opam install ocamlfind --yes
+  # Install KaSim/KaSa
+  - git clone https://github.com/Kappa-Dev/KaSim.git
+  - cd KaSim
+  - git checkout f87eada
+  - make all
+  - export KAPPAPATH=`pwd`
+  - cd ../
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Download a number of useful resource files for testing purposes
