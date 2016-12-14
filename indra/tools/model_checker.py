@@ -145,10 +145,13 @@ class ModelChecker(object):
         if not obj_mps:
             logger.info('Failed to create observable; returning False')
             return False
+        # Try to find paths between pairs of matching subj and object monomer
+        # patterns
         for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
-            # If there's a path, return the first one
-            return self._find_im_paths(enz_mp, obj_obs, target_polarity)
+            # Return True for the first valid path we find
+            if self._find_im_paths(enz_mp, obj_obs, target_polarity):
+                return True
         # If we got here, then there was no path for any observable
         return False
 

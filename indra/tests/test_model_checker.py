@@ -3,9 +3,9 @@ from indra.statements import *
 from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
-from indra.tools.model_checker import ModelChecker, mp_embeds_into, \
-                                      cp_embeds_into, match_lhs, match_rhs, \
-                                      positive_path
+from indra.tools.model_checker import ModelChecker, _mp_embeds_into, \
+                                      _cp_embeds_into, _match_lhs
+#from indra.tools.model_checker import _match_rhs, _positive_path
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
@@ -20,12 +20,12 @@ def test_mp_embedding():
     mp1 = A(other='u')
     mp2 = A()
     mp3 = A(other='p')
-    assert mp_embeds_into(mp1, mp2)
-    assert not mp_embeds_into(mp2, mp1)
-    assert mp_embeds_into(mp3, mp2)
-    assert not mp_embeds_into(mp2, mp3)
-    assert not mp_embeds_into(mp3, mp1)
-    assert not mp_embeds_into(mp1, mp3)
+    assert _mp_embeds_into(mp1, mp2)
+    assert not _mp_embeds_into(mp2, mp1)
+    assert _mp_embeds_into(mp3, mp2)
+    assert not _mp_embeds_into(mp2, mp3)
+    assert not _mp_embeds_into(mp3, mp1)
+    assert not _mp_embeds_into(mp1, mp3)
 
 @with_model
 def test_cp_embedding():
@@ -38,53 +38,55 @@ def test_cp_embedding():
     cp5 = A(b=1) % B(b=1)
     # FIXME Some tests not performed because ComplexPatterns for second term
     # FIXME are not yet supported
-    assert cp_embeds_into(cp1, cp2)
-    #assert not cp_embeds_into(cp1, cp3)
-    assert cp_embeds_into(cp1, cp4)
-    #assert not cp_embeds_into(cp1, cp5)
-    #assert not cp_embeds_into(cp2, cp1)
-    #assert not cp_embeds_into(cp2, cp3)
-    assert not cp_embeds_into(cp2, cp4)
-    #assert not cp_embeds_into(cp2, cp5)
-    #assert not cp_embeds_into(cp3, cp1)
-    assert cp_embeds_into(cp3, cp2)
-    assert not cp_embeds_into(cp3, cp4)
-    #assert cp_embeds_into(cp3, cp5)
-    #assert not cp_embeds_into(cp4, cp1)
-    assert cp_embeds_into(cp4, cp2)
-    #assert not cp_embeds_into(cp4, cp3)
-    #assert not cp_embeds_into(cp4, cp5)
-    #assert not cp_embeds_into(cp5, cp1)
-    assert cp_embeds_into(cp5, cp2)
-    #assert not cp_embeds_into(cp5, cp3)
-    assert not cp_embeds_into(cp5, cp4)
+    assert _cp_embeds_into(cp1, cp2)
+    #assert not _cp_embeds_into(cp1, cp3)
+    assert _cp_embeds_into(cp1, cp4)
+    #assert not _cp_embeds_into(cp1, cp5)
+    #assert not _cp_embeds_into(cp2, cp1)
+    #assert not _cp_embeds_into(cp2, cp3)
+    assert not _cp_embeds_into(cp2, cp4)
+    #assert not _cp_embeds_into(cp2, cp5)
+    #assert not _cp_embeds_into(cp3, cp1)
+    assert _cp_embeds_into(cp3, cp2)
+    assert not _cp_embeds_into(cp3, cp4)
+    #assert _cp_embeds_into(cp3, cp5)
+    #assert not _cp_embeds_into(cp4, cp1)
+    assert _cp_embeds_into(cp4, cp2)
+    #assert not _cp_embeds_into(cp4, cp3)
+    #assert not _cp_embeds_into(cp4, cp5)
+    #assert not _cp_embeds_into(cp5, cp1)
+    assert _cp_embeds_into(cp5, cp2)
+    #assert not _cp_embeds_into(cp5, cp3)
+    assert not _cp_embeds_into(cp5, cp4)
 
 @with_model
-def test_match_lhs():
+def test__match_lhs():
     Monomer('A', ['other'], {'other':['u', 'p']})
     Monomer('B', ['T185'], {'T185':['u', 'p']})
     rule = Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
                 Parameter('k', 1))
-    matching_rules = match_lhs(A(), model.rules)
+    matching_rules = _match_lhs(A(), model.rules)
     assert len(matching_rules) == 1
     assert matching_rules[0] == rule
-    matching_rules = match_lhs(A(other='u'), model.rules)
+    matching_rules = _match_lhs(A(other='u'), model.rules)
     assert len(matching_rules) == 0
 
+"""
 @with_model
 def test_match_rhs():
     Monomer('A', ['other'], {'other':['u', 'p']})
     Monomer('B', ['T185'], {'T185':['u', 'p']})
     rule = Rule('A_phos_B', A() + B(T185='u') >> A() + B(T185='p'),
                 Parameter('k', 1))
-    matching_rules = match_rhs(B(T185='p'), model.rules)
+    matching_rules = _match_rhs(B(T185='p'), model.rules)
     assert len(matching_rules) == 1
     assert matching_rules[0] == rule
-    matching_rules = match_rhs(B(T185='u'), model.rules)
+    matching_rules = _match_rhs(B(T185='u'), model.rules)
     assert len(matching_rules) == 0
-    matching_rules = match_rhs(B(), model.rules)
+    matching_rules = _match_rhs(B(), model.rules)
     assert len(matching_rules) == 1
     assert matching_rules[0] == rule
+"""
 
 @with_model
 def test_one_step_phosphorylation():
@@ -243,13 +245,15 @@ def test_ras_220_network():
     assert checks[1][1] == False
 """
 
+"""
 def test_path_polarity():
     im = pgv.AGraph('im_polarity.dot')
     path1 = ['BRAF_phospho_MAPK1_T185_1', 'MAPK1_phospho_DUSP6_S159_1']
     path2 = ['BRAF_phospho_MAPK1_T185_1', 'BRAF_phospho_MAPK1_T185_3',
              'MAPK1_phospho_DUSP6_S159_1']
-    assert positive_path(im, path1)
-    assert not positive_path(im, path2)
+    assert _positive_path(im, path1)
+    assert not _positive_path(im, path2)
+"""
 
 @with_model
 def test_consumption_rule():
@@ -705,11 +709,12 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
+    pass
     #test_activation_subtype()
-    test_check_transphosphorylation()
-    test_check_autophosphorylation()
+    #test_check_transphosphorylation()
+    #test_check_autophosphorylation()
     #test_multitype_path()
-    #test_phosphorylation_annotations()
+    test_phosphorylation_annotations()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
     #test_distinguish_path_polarity1()
