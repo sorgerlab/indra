@@ -141,11 +141,12 @@ class _BaseAgent(object):
                                       mc.residue, mc.position)
         (unmod_site_state, mod_site_state) = states[mc.mod_type]
         self.create_site(site_name, (unmod_site_state, mod_site_state))
-        site_anns = [
-            Annotation((site_name, mod_site_state), mc.mod_type,
-                       'is_modification'),
-            Annotation(site_name, mc.residue, 'is_residue'),
-            Annotation(site_name, mc.position, 'is_position')]
+        site_anns = [Annotation((site_name, mod_site_state), mc.mod_type,
+                                'is_modification')]
+        if mc.residue:
+            site_anns.append(Annotation(site_name, mc.residue, 'is_residue'))
+        if mc.position:
+            site_anns.append(Annotation(site_name, mc.position, 'is_position'))
         self.site_annotations += site_anns
 
     def add_site_states(self, site, states):
@@ -407,7 +408,6 @@ def grounded_monomer_patterns(model, agent):
     # FIXME
     if not agent.mods:
         yield monomer()
-
     for mod in agent.mods:
         # Find all site/state combinations that have the appropriate
         # modification type

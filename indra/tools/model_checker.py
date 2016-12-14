@@ -138,7 +138,12 @@ class ModelChecker(object):
                          Deubiquitination, Defarnesylation)
         target_polarity = -1 if type(stmt) in demodify_list else 1
         # Add modification to substrate agent
-        modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
+        # TODO TODO TODO: Should be updated to get a valid mod condition name
+        mod_condition_name = stmt.__class__.__name__.lower()
+        if mod_condition_name.startswith('de'):
+            mod_condition_name = mod_condition_name[2:]
+        # TODO TODO TODO
+        modified_sub = _add_modification_to_agent(stmt.sub, mod_condition_name,
                                                   stmt.residue, stmt.position)
         obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
         obj_mps = list(pa.grounded_monomer_patterns(self.model, modified_sub))
