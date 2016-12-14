@@ -663,7 +663,7 @@ class PysbAssembler(object):
         # the global policies of the PySB assembler
         if policies is not None:
             global_policies = self.policies
-            if isinstance(policies, str):
+            if isinstance(policies, basestring):
                 local_policies = {'other': policies}
             else:
                 local_policies = {'other': 'default'}
