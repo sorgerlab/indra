@@ -478,7 +478,6 @@ def test_none_phosphorylation_stmt():
 
 @with_model
 def test_phosphorylation_annotations():
-    # Override the shutoff of self export in psyb_assembler
     # Create the statement
     a = Agent('MEK1', db_refs={'HGNC': '6840'})
     b = Agent('ERK2', db_refs={'HGNC': '6871'})
@@ -545,12 +544,29 @@ def test_multitype_path():
         ]
     mc = ModelChecker(pa.model, stmts_to_check)
     results = mc.check_model()
-    im = mc.get_im()
-    im.draw('test_multitype_path.pdf', prog='dot')
     assert len(results) == len(stmts_to_check)
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
     assert results[1][1] == True
+
+def test_grounded_modified_enzyme():
+    """Check if the model checker can use semantic annotations to match mods
+    on the enzyme, not just the substrate, of a phosphorylation statement."""
+    mek_s202 = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '202')],
+                     db_refs={'HGNC': '6840'})
+    mek_phos = Agent('MEK1', mods=[ModCondition('phosphorylation', None, None)],
+                     db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    stmt_to_model = Phosphorylation(mek_s202, erk, None, None)
+    stmt_to_check = Phosphorylation(mek_phos, erk, None, None)
+    pa = PysbAssembler()
+    pa.add_statements([stmt_to_model])
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [stmt_to_check])
+    results = mc.check_model()
+    assert len(results) == 1
+    assert results[0][0] == stmt_to_check
+    assert results[0][1] == True
 
 """
 def test_activation_subtype():
@@ -709,12 +725,12 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    pass
+    test_grounded_modified_enzyme()
     #test_activation_subtype()
     #test_check_transphosphorylation()
     #test_check_autophosphorylation()
     #test_multitype_path()
-    test_phosphorylation_annotations()
+    #test_phosphorylation_annotations()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
     #test_distinguish_path_polarity1()
