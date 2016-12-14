@@ -782,14 +782,37 @@ def test_phospho_mod_grounding():
     assert {'S218': ('p', WILD)} in sc
     assert {'S222': ('p', WILD)} in sc
 
+def _check_mod_assembly(mod_class):
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    st1 = mod_class(subj, obj)
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+    pa = PysbAssembler(policies='two_step')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==3)
+    assert(len(model.monomers)==2)
+
+def test_modification_assembly():
+    for mod_class in Modification.__subclasses__():
+        if not mod_class.__name__.startswith('De'):
+            _check_mod_assembly(mod_class)
+
 # TODO Do the same for mutation condition
 # TODO Localization condition
 # TODO Bound condition
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
-    test_get_mp_with_grounding()
-    test_get_mp_with_grounding_2()
-    test_phospho_assemble_grounding()
-    test_phospho_mod_grounding()
-
+    test_modification_assembly()

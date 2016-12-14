@@ -28,8 +28,7 @@ SelfExporter.do_export = False
 # assembled using the PySB assembler. If a type of statement appears
 # in this list then we require that there is at least one default
 # policy implemented to assemble that type of statement.
-statement_whitelist = [ist.Phosphorylation, ist.Dephosphorylation,
-                       ist.SelfModification, ist.Complex,
+statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.Activation, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation,
                        ist.Degradation, ist.Synthesis]
@@ -138,11 +137,13 @@ class _BaseAgent(object):
 
     def create_mod_site(self, mc):
         """Create modification site for the BaseAgent from a ModCondition."""
-        site_name = get_mod_site_name('phosphorylation',
+        site_name = get_mod_site_name(mc.mod_type,
                                       mc.residue, mc.position)
-        self.create_site(site_name, ('u', 'p'))
+        (unmod_site_state, mod_site_state) = states[mc.mod_type]
+        self.create_site(site_name, (unmod_site_state, mod_site_state))
         site_anns = [
-            Annotation((site_name, 'p'), 'phosphorylation', 'is_modification'),
+            Annotation((site_name, mod_site_state), mc.mod_type,
+                       'is_modification'),
             Annotation(site_name, mc.residue, 'is_residue'),
             Annotation(site_name, mc.position, 'is_position')]
         self.site_annotations += site_anns
@@ -179,6 +180,10 @@ abbrevs = {
     'sumoylation': 'sumo',
     'glycosylation': 'glycosyl',
     'methylation': 'methyl',
+    'ribosylation': 'ribosyl',
+    'geranylgeranylation': 'geranylgeranyl',
+    'palmitoylation': 'palmitoyl',
+    'myristoylation': 'myristoyl',
     'modification': 'mod',
 }
 
@@ -189,7 +194,7 @@ active_site_names = {
     'catalytic': 'cat_site',
     'transcription': 'trans_act',
     # For general molecular activity
-    'activity': 'act'
+    'activity': 'act',
 }
 
 states = {
@@ -201,7 +206,36 @@ states = {
     'sumoylation': ['n', 'y'],
     'glycosylation': ['n', 'y'],
     'methylation': ['n', 'y'],
+    'geranylgeranylation': ['n', 'y'],
+    'palmitoylation': ['n', 'y'],
+    'myristoylation': ['n', 'y'],
+    'ribosylation': ['n', 'y'],
     'modification': ['n', 'y'],
+}
+
+mod_acttype_map = {
+    ist.Phosphorylation: 'kinase',
+    ist.Dephosphorylation: 'phosphatase',
+    ist.Hydroxylation: 'catalytic',
+    ist.Dehydroxylation: 'catalytic',
+    ist.Sumoylation: 'catalytic',
+    ist.Desumoylation: 'catalytic',
+    ist.Acetylation: 'catalytic',
+    ist.Deacetylation: 'catalytic',
+    ist.Glycosylation: 'catalytic',
+    ist.Deglycosylation: 'catalytic',
+    ist.Ribosylation: 'catalytic',
+    ist.Deribosylation: 'catalytic',
+    ist.Ubiquitination: 'catalytic',
+    ist.Deubiquitination: 'catalytic',
+    ist.Farnesylation: 'catalytic',
+    ist.Defarnesylation: 'catalytic',
+    ist.Palmitoylation: 'catalytic',
+    ist.Depalmitoylation: 'catalytic',
+    ist.Myristoylation: 'catalytic',
+    ist.Demyristoylation: 'catalytic',
+    ist.Geranylgeranylation: 'catalytic',
+    ist.Degeranylgeranylation: 'catalytic',
 }
 
 # The following dict specifies the default modification/binding site names for
@@ -997,45 +1031,198 @@ def complex_assemble_multi_way(stmt, model, agent_set):
 
 complex_assemble_default = complex_assemble_one_step
 
-# PHOSPHORYLATION ###################################################
+# MODIFICATION ###################################################
 
-def phosphorylation_monomers_interactions_only(stmt, agent_set):
+def modification_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
-    enz.create_site(active_site_names['kinase'])
+    act_type = mod_acttype_map[stmt.__class__]
+    active_site = active_site_names[act_type]
+    enz.create_site(active_site)
     sub = agent_set.get_create_base_agent(stmt.sub)
     # See NOTE in monomers_one_step, below
-    sub.create_mod_site(ist.ModCondition('phosphorylation',
+    mod_condition_name = stmt.__class__.__name__.lower()
+    sub.create_mod_site(ist.ModCondition(mod_condition_name,
                                          stmt.residue, stmt.position))
 
 
-def phosphorylation_monomers_one_step(stmt, agent_set):
+def modification_monomers_one_step(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    # NOTE: This assumes that a Phosphorylation statement will only ever
+    # NOTE: This assumes that a Modification statement will only ever
     # involve a single phosphorylation site on the substrate (typically
     # if there is more than one site, they will be parsed into separate
     # Phosphorylation statements, i.e., phosphorylation is assumed to be
     # distributive. If this is not the case, this assumption will need to
     # be revisited.
-    sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                     stmt.residue, stmt.position))
+    mod_condition_name = stmt.__class__.__name__.lower()
+    sub.create_mod_site(ist.ModCondition(mod_condition_name,
+                                         stmt.residue, stmt.position))
 
 
-def phosphorylation_monomers_two_step(stmt, agent_set):
+def modification_monomers_two_step(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                     stmt.residue, stmt.position))
+    mod_condition_name = stmt.__class__.__name__.lower()
+    sub.create_mod_site(ist.ModCondition(mod_condition_name,
+                                         stmt.residue, stmt.position))
 
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(sub.name))
     sub.create_site(get_binding_site_name(enz.name))
+
+
+def modification_assemble_interactions_only(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
+    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
+
+    enz = model.monomers[stmt.enz.name]
+    sub = model.monomers[stmt.sub.name]
+
+    # See NOTE in monomers_one_step
+    mod_condition_name = stmt.__class__.__name__.lower()
+    mod_site = get_mod_site_name(mod_condition_name,
+                                  stmt.residue, stmt.position)
+
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+
+    rule_name = '%s_%s_%s_%s' % (rule_enz_str, mod_condition_name,
+                                 rule_sub_str, mod_site)
+    act_type = mod_acttype_map[stmt.__class__]
+    active_site = active_site_names[act_type]
+    # Create a rule specifying that the substrate binds to the kinase at
+    # its active site
+    lhs = enz(**{active_site: None}) + sub(**{mod_site: None})
+    rhs = enz(**{active_site: 1}) + sub(**{mod_site: 1})
+    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
+    add_rule_to_model(model, r_fwd)
+    #r_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
+    #add_rule_to_model(model, r_rev)
+
+
+def modification_assemble_one_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
+    mod_condition_name = stmt.__class__.__name__.lower()
+    param_name = 'kf_%s_%s_%s' % (stmt.enz.name[0].lower(),
+                                  stmt.sub.name[0].lower(), mod_condition_name)
+    kf_mod = get_create_parameter(model, param_name, 1e-6)
+
+    # See NOTE in monomers_one_step
+    mod_site = get_mod_site_name(mod_condition_name,
+                                  stmt.residue, stmt.position)
+
+    enz_pattern = get_monomer_pattern(model, stmt.enz)
+    unmod_site_state = states[mod_condition_name][0]
+    mod_site_state = states[mod_condition_name][1]
+    sub_unmod = get_monomer_pattern(model, stmt.sub,
+        extra_fields={mod_site: unmod_site_state})
+    sub_mod = get_monomer_pattern(model, stmt.sub,
+        extra_fields={mod_site: mod_site_state})
+
+    enz_act_mods = get_active_forms(stmt.enz, agent_set)
+
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+    for i, am in enumerate(enz_act_mods):
+        rule_name = '%s_%s_%s_%s_%d' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        r = Rule(rule_name,
+                enz_pattern(am) + sub_unmod >>
+                enz_pattern(am) + sub_mod,
+                kf_mod)
+        add_rule_to_model(model, r)
+
+def modification_assemble_two_step(stmt, model, agent_set):
+    mod_condition_name = stmt.__class__.__name__.lower()
+    if stmt.enz is None:
+        return
+    sub_bs = get_binding_site_name(stmt.sub.name)
+    enz_bound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: 1})
+    enz_unbound = get_monomer_pattern(model, stmt.enz,
+        extra_fields={sub_bs: None})
+    sub_pattern = get_monomer_pattern(model, stmt.sub)
+
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_bind')
+    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
+                  stmt.sub.name[0].lower() + '_' + mod_condition_name)
+    kf_mod = get_create_parameter(model, param_name, 1e-3)
+
+    mod_site = get_mod_site_name(mod_condition_name,
+                                  stmt.residue, stmt.position)
+
+    enz_act_mods = get_active_forms(stmt.enz, agent_set)
+    enz_bs = get_binding_site_name(stmt.enz.name)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+    unmod_site_state = states[mod_condition_name][0]
+    mod_site_state = states[mod_condition_name][1]
+
+    for i, am in enumerate(enz_act_mods):
+        rule_name = '%s_%s_bind_%s_%s_%d' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        r = Rule(rule_name,
+            enz_unbound(am) + \
+            sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
+            enz_bound(am) % \
+            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
+            kf_bind)
+        add_rule_to_model(model, r)
+
+        rule_name = '%s_%s_%s_%s_%d' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        r = Rule(rule_name,
+            enz_bound(am) % \
+                sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
+            enz_unbound(am) + \
+                sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
+            kf_mod)
+        add_rule_to_model(model, r)
+
+    enz_uncond = get_uncond_agent(stmt.enz)
+    enz_rule_str = get_agent_rule_str(enz_uncond)
+    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
+    sub_uncond = get_uncond_agent(stmt.sub)
+    sub_rule_str = get_agent_rule_str(sub_uncond)
+    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
+
+    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+             sub_mon_uncond(**{enz_bs: 1}) >>
+             enz_mon_uncond(**{sub_bs: None}) + \
+             sub_mon_uncond(**{enz_bs: None}), kr_bind)
+    add_rule_to_model(model, r)
+
+modification_monomers_default = modification_monomers_one_step
+modification_assemble_default = modification_assemble_one_step
+
+# Map specific modification monomer/assembly functions to the generic
+# Modification assembly function
+mod_class_names = [modclass.__name__.lower()
+                   for modclass in ist.Modification.__subclasses__()]
+policies = ['interactions_only', 'one_step', 'two_step', 'default']
+for mc, func_type, pol in itertools.product(mod_class_names,
+                                            ('monomers', 'assemble'),
+                                            policies):
+    code = '{mc}_{func_type}_{pol} = modification_{func_type}_{pol}'.format(
+                    mc=mc, func_type=func_type, pol=pol)
+    exec(code)
+
+# PHOSPHORYLATION ###################################################
 
 def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     if stmt.enz is None:
@@ -1054,129 +1241,6 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     enz.create_site('ATP')
 
 
-phosphorylation_monomers_default = phosphorylation_monomers_one_step
-
-
-def phosphorylation_assemble_interactions_only(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
-
-    enz = model.monomers[stmt.enz.name]
-    sub = model.monomers[stmt.sub.name]
-
-    # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-
-    rule_name = '%s_phospho_%s_%s' % (rule_enz_str, rule_sub_str, phos_site)
-    active_site = active_site_names['kinase']
-    # Create a rule specifying that the substrate binds to the kinase at
-    # its active site
-    lhs = enz(**{active_site: None}) + sub(**{phos_site: None})
-    rhs = enz(**{active_site: 1}) + sub(**{phos_site: 1})
-    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
-    r_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
-    add_rule_to_model(model, r_fwd)
-    add_rule_to_model(model, r_rev)
-
-
-def phosphorylation_assemble_one_step(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-                    stmt.sub.name[0].lower() + '_phos'
-    kf_phospho = get_create_parameter(model, param_name, 1e-6)
-
-    # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-    sub_unphos = get_monomer_pattern(model, stmt.sub,
-        extra_fields={phos_site: 'u'})
-    sub_phos = get_monomer_pattern(model, stmt.sub,
-        extra_fields={phos_site: 'p'})
-
-    enz_act_mods = get_active_forms(stmt.enz, agent_set)
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, am in enumerate(enz_act_mods):
-        rule_name = '%s_phospho_%s_%s_%d' % \
-            (rule_enz_str, rule_sub_str, phos_site, i + 1)
-        r = Rule(rule_name,
-                enz_pattern(am) + sub_unphos >>
-                enz_pattern(am) + sub_phos,
-                kf_phospho)
-        add_rule_to_model(model, r)
-
-
-def phosphorylation_assemble_two_step(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    sub_bs = get_binding_site_name(stmt.sub.name)
-    enz_bound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: None})
-    sub_pattern = get_monomer_pattern(model, stmt.sub)
-
-    param_name = ('kf_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = ('kc_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_phos')
-    kf_phospho = get_create_parameter(model, param_name, 1e-3)
-
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-
-    enz_act_mods = get_active_forms(stmt.enz, agent_set)
-    enz_bs = get_binding_site_name(stmt.enz.name)
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, am in enumerate(enz_act_mods):
-        rule_name = '%s_phospho_bind_%s_%s_%d' % \
-            (rule_enz_str, rule_sub_str, phos_site, i + 1)
-        r = Rule(rule_name,
-            enz_unbound(am) + \
-            sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
-            enz_bound(am) % \
-            sub_pattern(**{phos_site: 'u', enz_bs: 1}),
-            kf_bind)
-        add_rule_to_model(model, r)
-
-        rule_name = '%s_phospho_%s_%s_%d' % \
-            (rule_enz_str, rule_sub_str, phos_site, i + 1)
-        r = Rule(rule_name,
-            enz_bound(am) % \
-                sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
-            enz_unbound(am) + \
-                sub_pattern(**{phos_site: 'p', enz_bs: None}),
-            kf_phospho)
-        add_rule_to_model(model, r)
-
-    enz_uncond = get_uncond_agent(stmt.enz)
-    enz_rule_str = get_agent_rule_str(enz_uncond)
-    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
-    sub_uncond = get_uncond_agent(stmt.sub)
-    sub_rule_str = get_agent_rule_str(sub_uncond)
-    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
-
-    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
-    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
-             sub_mon_uncond(**{enz_bs: 1}) >>
-             enz_mon_uncond(**{sub_bs: None}) + \
-             sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    add_rule_to_model(model, r)
 
 def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     if stmt.enz is None:
@@ -1283,7 +1347,6 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
     add_rule_to_model(model, r)
 
-phosphorylation_assemble_default = phosphorylation_assemble_one_step
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
