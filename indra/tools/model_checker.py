@@ -1,17 +1,16 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 import logging
-import numpy as np
 import networkx
 import itertools
 from copy import deepcopy
 from collections import deque
-from itertools import product
 from pysb import kappa
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
+
 logger = logging.getLogger('model_checker')
 
 class ModelChecker(object):
@@ -25,7 +24,28 @@ class ModelChecker(object):
             self.statements = []
         self._im = None
 
+    def add_statements(self, stmts):
+        """Add to the list of statements to check against the model."""
+        self.statements += stmts
+
     def get_im(self, force_update=True):
+        """Get the influence map for the model, generating it if necessary.
+
+        Parameters
+        ----------
+        force_update : bool
+            Whether to generate the influence map when the function is called.
+            If False, returns the previously generated influence map if
+            available. Defaults to True.
+
+        Returns
+        -------
+        pygraphviz AGraph object containing the influence map.
+            The influence map can be rendered as a pdf using the dot layout
+            program as follows::
+
+                influence_map.draw('influence_map.pdf', prog='dot')
+        """
         if self._im and not force_update:
             return self._im
         if not self.model:
@@ -36,6 +56,14 @@ class ModelChecker(object):
             return self._im
 
     def check_model(self):
+        """Check all the statements added to the ModelChecker.
+
+        Returns
+        -------
+        list of (Statement, bool)
+            Each tuple contains the Statement checked against the model and
+            a boolean value indicating whether the model can satisfies it.
+        """
         results = []
         for stmt in self.statements:
             result = self.check_statement(stmt)
@@ -43,14 +71,27 @@ class ModelChecker(object):
         return results
 
     def check_statement(self, stmt):
+        """Check a single Statement against the model.
+
+        Parameters
+        ----------
+        indra.statements.Statement
+            The Statement to check.
+
+        Returns
+        -------
+        boolean
+            Whether the model satisfies the statement.
+        """
         if isinstance(stmt, Modification):
-            return self.check_modification(stmt)
+            return self._check_modification(stmt)
         elif isinstance(stmt, Activation):
-            return self.check_activation(stmt)
+            return self._check_activation(stmt)
         else:
             return False
 
-    def check_activation(self, stmt):
+    def _check_activation(self, stmt):
+        """Check an Activation statement."""
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
         # pattern from the Activation statement, which will nearly always have
@@ -76,18 +117,8 @@ class ModelChecker(object):
         obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
         return self._find_im_paths(subj_mp, obj_obs, target_polarity)
 
-    # Need to be able to take an arbitrary set of agent modification/mut etc.
-    # conditions and generate an appropriate set of monomer patterns and/or
-    # observables. This has to apply to both input rules/agents as well as
-    # targets. Imagine the case of
-    # Phosphorylation(MAP2K1(mods:[phosphorylation, None, None]), MAPK1)
-    # Here, we need to match any rule where MEK (in any phosphorylated state)
-    # phosphoryaltes ERK on any site.
-    # If this can be done, then resolving activations becomes simply a matter of
-    # looking up which states are active, just like looking up phosphorylations.
-    # So we'll start by looking through the modification conditions of an agent.
-
-    def check_modification(self, stmt):
+    def _check_modification(self, stmt):
+        """Check a Modification statement."""
         # Identify the observable we're looking for in the model, which
         # may not exist!
         # The observable is the modified form of the substrate
@@ -109,15 +140,6 @@ class ModelChecker(object):
         # Add modification to substrate agent
         modified_sub = _add_modification_to_agent(stmt.sub, 'phosphorylation',
                                                   stmt.residue, stmt.position)
-        # Now look up the modified agent in the model
-        #obj_mp = pa.get_monomer_pattern(self.model, modified_sub)
-        #site_pattern = pa.get_site_pattern(modified_sub)
-        #monomer = self.model.monomers[modified_sub.name]
-        #try:
-        #    obj_mp = monomer(**site_pattern)
-        #except Exception as e:
-        #    logger.info("Invalid site: %s" % e)
-        #    return False
         obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
         obj_mps = list(pa.grounded_monomer_patterns(self.model, modified_sub))
         if not obj_mps:
@@ -131,6 +153,27 @@ class ModelChecker(object):
         return False
 
     def _find_im_paths(self, subj_mp, obj_obs, target_polarity):
+        """Check for a source/target path in the influence map.
+
+        Parameters
+        ----------
+        subj_mp : pysb.MonomerPattern
+            MonomerPattern corresponding to the subject of the Statement
+            being checked.
+        obj_obs : pysb.Observable
+            Observable corresponding to the object/target of the Statement
+            being checked.
+        target_polarity : 1 or -1
+            Whether the influence in the Statement is positive (1) or negative
+            (-1).
+
+        Returns
+        -------
+        boolean
+            Whether there is a path from a rule matching the subject
+            MonomerPattern to the object Observable with the appropriate
+            polarity.
+        """
         # Reset the observables list
         self.model.observables = ComponentSet([])
         self.model.add_component(obj_obs)
@@ -140,7 +183,7 @@ class ModelChecker(object):
         if subj_mp is None:
             input_rule_set = None
         else:
-            input_rules = match_lhs(subj_mp, self.model.rules)
+            input_rules = _match_lhs(subj_mp, self.model.rules)
             input_rule_set = set([r.name for r in input_rules])
                                   #if r.name.startswith(stmt.enz.name)])
             logger.info('Found %s input rules matching %s' %
@@ -161,101 +204,38 @@ class ModelChecker(object):
             return False
 
 
-def _add_modification_to_agent(agent, mod_type, residue, position):
-    new_mod = ModCondition(mod_type, residue, position)
-    # Check if this modification already exists
-    for old_mod in agent.mods:
-        if old_mod.equals(new_mod):
-            return agent
-    new_agent = deepcopy(agent)
-    new_agent.mods.append(new_mod)
-    return new_agent
-
-
-def match_lhs(cp, rules):
-    rule_matches = []
-    for rule in rules:
-        reactant_pattern = rule.rule_expression.reactant_pattern
-        for rule_cp in reactant_pattern.complex_patterns:
-            if cp_embeds_into(rule_cp, cp):
-                rule_matches.append(rule)
-                break
-    return rule_matches
-
-
-def match_rhs(cp, rules):
-    rule_matches = []
-    for rule in rules:
-        product_pattern = rule.rule_expression.product_pattern
-        for rule_cp in product_pattern.complex_patterns:
-            if cp_embeds_into(rule_cp, cp):
-                rule_matches.append(rule)
-                break
-    return rule_matches
-
-"""
-def find_production_rules(cp, rules):
-    # Find rules where the CP matches the left hand side
-    lhs_rule_set = set(match_lhs(cp, rules))
-    # Now find rules where the CP matches the right hand side
-    rhs_rule_set = set(match_rhs(cp, rules))
-    # Production rules are rules where there is a match on the right hand
-    # side but not on the left hand side
-    prod_rules = list(rhs_rule_set.difference(lhs_rule_set))
-    return prod_rules
-
-def find_consumption_rules(cp, rules):
-    # Find rules where the CP matches the left hand side
-    lhs_rule_set = set(match_lhs(cp, rules))
-    # Now find rules where the CP matches the right hand side
-    rhs_rule_set = set(match_rhs(cp, rules))
-    # Consumption rules are rules where there is a match on the left hand
-    # side but not on the right hand side
-    cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
-    return cons_rules
-"""
-
-
-def cp_embeds_into(cp1, cp2):
-    # Check that any state in cp2 is matched in cp2
-    # If the thing we're matching to is just a monomer pattern, that makes
-    # things easier--we just need to find the corresponding monomer pattern
-    # in cp1
-    cp1 = as_complex_pattern(cp1)
-    cp2 = as_complex_pattern(cp2)
-    if len(cp2.monomer_patterns) == 1:
-        mp2 = cp2.monomer_patterns[0]
-        # Iterate over the monomer patterns in cp1 and see if there is one
-        # that has the same name
-        for mp1 in cp1.monomer_patterns:
-            if mp_embeds_into(mp1, mp2):
-                return True
-    return False
-
-
-def mp_embeds_into(mp1, mp2):
-    sc_matches = []
-    if mp1.monomer.name != mp2.monomer.name:
-        return False
-    # Check that all conditions in mp2 are met in mp1
-    for site_name, site_state in mp2.site_conditions.items():
-        if site_name not in mp1.site_conditions or \
-           site_state != mp1.site_conditions[site_name]:
-            return False
-    return True
-
-
-def _get_signed_predecessors(im, node, polarity):
-    signed_pred_list = []
-    predecessors = im.predecessors_iter
-    for pred in predecessors(node):
-        pred_edge = im.get_edge(pred, node)
-        yield (pred, _get_edge_sign(pred_edge) * polarity)
-
-
 def _find_sources(im, target, sources, polarity):
-    # First, generate a list of visited nodes
-    # Copied/adapted from networkx
+    """Get the subset of source nodes with paths to the target.
+
+    Given a target, a list of sources, and a path polarity, perform a
+    breadth-first search upstream from the target to determine whether any of
+    the queried sources have paths to the target with the appropriate polarity.
+    For efficiency, does not return the full path, but identifies the upstream
+    sources and the length of the path.
+
+    Parameters
+    ----------
+    im : pygraphviz.AGraph
+        Graph containing the influence map.
+    target : string
+        The node (rule name) in the influence map to start looking upstream for
+        marching sources.
+    sources : list of strings
+        The nodes (rules) corresponding to the subject or upstream influence
+        being checked.
+    polarity : int
+        Required polarity of the path between source and target.
+
+    Returns
+    -------
+    generator of (source, polarity, path_length)
+        Yields tuples of source node (string), polarity (int) and path length
+        (int). If there are no paths to any of the given source nodes, the
+        generator is empty.
+    """
+    # First, create a list of visited nodes
+    # Adapted from
+    # networkx.algorithms.traversal.breadth_first_search.bfs_edges
     visited = set([(target, 1)])
     # Generate list of predecessor nodes with a sign updated according to the
     # sign of the target node
@@ -268,24 +248,20 @@ def _find_sources(im, target, sources, polarity):
         try:
             # Get the next child in the list
             (child, sign) = next(children)
-            # The sign of the child should be updated according to the sign of
-            # the parent!
-            # Could do this in the expansion step itself, or here;
-            # If done during the expansion step, 
-            # Check this child against the visited list. If we haven't visited
-            # it, then we return the parent/child pair
+            # Is this child one of the source nodes we're looking for? If so,
+            # yield it along with path length
             if (sources is None or child in sources) and sign == polarity:
                 logger.info("Found path to %s from %s with desired sign %s "
                             "with length %d" %
                             (target, child, polarity, path_length))
                 yield (child, sign, path_length)
+            # Check this child against the visited list. If we haven't visited
+            # it already (accounting for the path to the node), then add it
+            # to the queue.
             if (child, sign) not in visited:
-                # TODO: Update this to include the path length, and perhaps to
-                # check for sources matching the list
                 visited.add((child, sign))
                 queue.append((child, _get_signed_predecessors(im, child, sign),
                               path_length + 1))
-                # Add in the new parent child pair after expanding out
         # Once we've finished iterating over the children of the current node,
         # pop the node off and go to the next one in the queue
         except StopIteration:
@@ -293,6 +269,141 @@ def _find_sources(im, target, sources, polarity):
             path_length += 1
     # There was no path; this will produce an empty generator
     return
+
+
+def _get_signed_predecessors(im, node, polarity):
+    """Get upstream nodes in the influence map
+
+    Return the upstream nodes along with the overall polarity of the path
+    to that node by account for the polarity of the path to the given node
+    and the polarity of the edge between the given node and its immediate
+    predecessors.
+
+    Parameters
+    ----------
+    im : pygraphviz.AGraph
+        Graph containing the influence map.
+    node : string
+        The node (rule name) in the influence map to get predecessors (upstream
+        nodes) for.
+    polarity : int
+        Polarity of the overall path to the given node.
+
+
+    Returns
+    -------
+    generator of tuples, (node, polarity)
+        Each tuple returned contains two elements, a node (string) and the
+        polarity of the overall path (int) to that node.
+    """
+    signed_pred_list = []
+    predecessors = im.predecessors_iter
+    for pred in predecessors(node):
+        pred_edge = im.get_edge(pred, node)
+        yield (pred, _get_edge_sign(pred_edge) * polarity)
+
+
+def _get_edge_sign(edge):
+    """Get the polarity of the influence by examining the edge color."""
+    if edge.attr.get('color') is None:
+        raise Exception('No color attribute for edge.')
+    elif edge.attr['color'] == 'green':
+        return 1
+    elif edge.attr['color'] == 'red':
+        return -1
+    else:
+        raise Exception('Unexpected edge color: %s' % edge.attr['color'])
+
+
+def _add_modification_to_agent(agent, mod_type, residue, position):
+    """Add a modification condition to an Agent."""
+    new_mod = ModCondition(mod_type, residue, position)
+    # Check if this modification already exists
+    for old_mod in agent.mods:
+        if old_mod.equals(new_mod):
+            return agent
+    new_agent = deepcopy(agent)
+    new_agent.mods.append(new_mod)
+    return new_agent
+
+
+def _match_lhs(cp, rules):
+    """Get rules with a left-hand side matching the given ComplexPattern."""
+    rule_matches = []
+    for rule in rules:
+        reactant_pattern = rule.rule_expression.reactant_pattern
+        for rule_cp in reactant_pattern.complex_patterns:
+            if _cp_embeds_into(rule_cp, cp):
+                rule_matches.append(rule)
+                break
+    return rule_matches
+
+
+def _cp_embeds_into(cp1, cp2):
+    """Check that any state in ComplexPattern2 is matched in ComplexPattern1.
+    """
+    # Check that any state in cp2 is matched in cp2
+    # If the thing we're matching to is just a monomer pattern, that makes
+    # things easier--we just need to find the corresponding monomer pattern
+    # in cp1
+    cp1 = as_complex_pattern(cp1)
+    cp2 = as_complex_pattern(cp2)
+    if len(cp2.monomer_patterns) == 1:
+        mp2 = cp2.monomer_patterns[0]
+        # Iterate over the monomer patterns in cp1 and see if there is one
+        # that has the same name
+        for mp1 in cp1.monomer_patterns:
+            if _mp_embeds_into(mp1, mp2):
+                return True
+    return False
+
+
+def _mp_embeds_into(mp1, mp2):
+    """Check that conditions in MonomerPattern2 are met in MonomerPattern1."""
+    sc_matches = []
+    if mp1.monomer.name != mp2.monomer.name:
+        return False
+    # Check that all conditions in mp2 are met in mp1
+    for site_name, site_state in mp2.site_conditions.items():
+        if site_name not in mp1.site_conditions or \
+           site_state != mp1.site_conditions[site_name]:
+            return False
+    return True
+
+
+"""
+# NOTE: This code is currently "deprecated" because it has been replaced by the
+# use of Observables for the Statement objects.
+
+def match_rhs(cp, rules):
+    rule_matches = []
+    for rule in rules:
+        product_pattern = rule.rule_expression.product_pattern
+        for rule_cp in product_pattern.complex_patterns:
+            if _cp_embeds_into(rule_cp, cp):
+                rule_matches.append(rule)
+                break
+    return rule_matches
+
+def find_production_rules(cp, rules):
+    # Find rules where the CP matches the left hand side
+    lhs_rule_set = set(_match_lhs(cp, rules))
+    # Now find rules where the CP matches the right hand side
+    rhs_rule_set = set(match_rhs(cp, rules))
+    # Production rules are rules where there is a match on the right hand
+    # side but not on the left hand side
+    prod_rules = list(rhs_rule_set.difference(lhs_rule_set))
+    return prod_rules
+
+def find_consumption_rules(cp, rules):
+    # Find rules where the CP matches the left hand side
+    lhs_rule_set = set(_match_lhs(cp, rules))
+    # Now find rules where the CP matches the right hand side
+    rhs_rule_set = set(match_rhs(cp, rules))
+    # Consumption rules are rules where there is a match on the left hand
+    # side but not on the right hand side
+    cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
+    return cons_rules
 
 def positive_path(im, path):
     # This doesn't address the effect of the rules themselves on the
@@ -307,16 +418,6 @@ def positive_path(im, path):
     path_polarity = np.prod(edge_polarities)
     assert path_polarity == 1 or path_polarity == -1
     return True if path_polarity == 1 else False
-
-
-def _get_edge_sign(edge):
-    if edge.attr.get('color') is None:
-        raise Exception('No color attribute for edge.')
-    elif edge.attr['color'] == 'green':
-        return 1
-    elif edge.attr['color'] == 'red':
-        return -1
-    else:
-        raise Exception('Unexpected edge color: %s' % edge.attr['color'])
+"""
 
 
