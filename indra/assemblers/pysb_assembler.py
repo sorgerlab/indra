@@ -137,6 +137,7 @@ class _BaseAgent(object):
             self.add_site_states(site, states)
 
     def create_mod_site(self, mc):
+        """Create modification site for the BaseAgent from a ModCondition."""
         site_name = get_mod_site_name('phosphorylation',
                                       mc.residue, mc.position)
         self.create_site(site_name, ('u', 'p'))
@@ -332,6 +333,8 @@ def get_uncond_agent(agent):
     return agent_uncond
 
 def grounded_monomer_patterns(model, agent):
+    """Get monomer patterns for the agent accounting for grounding information.
+    """
     # Iterate over all model annotations
     monomer = None
     for ann in model.annotations:
@@ -549,6 +552,7 @@ def get_annotation(component, db_name, db_ref):
     return Annotation(subj, obj, pred)
 
 def parse_identifiers_url(url):
+    """Parse an identifiers.org URL into (namespace, ID) tuple."""
     url_pattern = 'http://identifiers.org/([A-Za-z]+)/([A-Za-z0-9:]+)'
     match = re.match(url_pattern, url)
     if match is not None:
@@ -1003,7 +1007,7 @@ def phosphorylation_monomers_interactions_only(stmt, agent_set):
     sub = agent_set.get_create_base_agent(stmt.sub)
     # See NOTE in monomers_one_step, below
     sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                     stmt.residue, stmt.position))
+                                         stmt.residue, stmt.position))
 
 
 def phosphorylation_monomers_one_step(stmt, agent_set):
@@ -1039,7 +1043,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                     stmt.residue, stmt.position))
+                                         stmt.residue, stmt.position))
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(sub.name))
     sub.create_site(get_binding_site_name(enz.name))
@@ -1479,10 +1483,6 @@ def dephosphorylation_monomers_interactions_only(stmt, agent_set):
     phos = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
     phos.create_site(active_site_names['phosphatase'])
-    #dephos_site = get_mod_site_name('phosphorylation',
-    #                              stmt.residue, stmt.position)
-    #sub = agent_set.get_create_base_agent(stmt.sub)
-    #sub.create_site(dephos_site, ('u', 'p'))
     sub.create_mod_site(ist.ModCondition('phosphorylation',
                                      stmt.residue, stmt.position))
 
@@ -1492,10 +1492,6 @@ def dephosphorylation_monomers_one_step(stmt, agent_set):
         return
     phos = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    #dephos_site = get_mod_site_name('phosphorylation',
-    #                              stmt.residue, stmt.position)
-    #sub = agent_set.get_create_base_agent(stmt.sub)
-    #sub.create_site(dephos_site, ('u', 'p'))
     sub.create_mod_site(ist.ModCondition('phosphorylation',
                                      stmt.residue, stmt.position))
 
