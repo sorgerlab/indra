@@ -929,9 +929,11 @@ class Deglycosylation(Modification):
     """Deglycosylation modification."""
     pass
 
+
 class Ribosylation(Modification):
     """Ribosylation modification."""
     pass
+
 
 class Deribosylation(Modification):
     """Deribosylation modification."""
@@ -952,9 +954,41 @@ class Farnesylation(Modification):
     """Farnesylation modification."""
     pass
 
+
 class Defarnesylation(Modification):
     """Defarnesylation modification."""
     pass
+
+
+class Geranylgeranylation(Modification):
+    """Geranylgeranylation modification."""
+    pass
+
+
+class Degeranylgeranylation(Modification):
+    """Degeranylgeranylation modification."""
+    pass
+
+
+class Palmitoylation(Modification):
+    """Palmitoylation modification."""
+    pass
+
+
+class Depalmitoylation(Modification):
+    """Depalmitoylation modification."""
+    pass
+
+
+class Myristoylation(Modification):
+    """Myristoylation modification."""
+    pass
+
+
+class Demyristoylation(Modification):
+    """Demyristoylation modification."""
+    pass
+
 
 @python_2_unicode_compatible
 class Activation(Statement):
