@@ -786,13 +786,14 @@ def _check_mod_assembly(mod_class):
     subj = Agent('KRAS')
     obj = Agent('BRAF')
     st1 = mod_class(subj, obj)
-    pa = PysbAssembler(policies='one_step')
+
+    pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1])
     model = pa.make_model()
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1])
     model = pa.make_model()
     assert(len(model.rules)==1)
@@ -806,8 +807,8 @@ def _check_mod_assembly(mod_class):
 
 def test_modification_assembly():
     for mod_class in Modification.__subclasses__():
-        if not mod_class.__name__.startswith('De'):
-            _check_mod_assembly(mod_class)
+        _check_mod_assembly(mod_class)
+
 
 # TODO Do the same for mutation condition
 # TODO Localization condition
