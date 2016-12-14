@@ -568,6 +568,20 @@ def test_grounded_modified_enzyme():
     assert results[0][0] == stmt_to_check
     assert results[0][1] == True
 
+def test_check_ubiquitination():
+    xiap = Agent('XIAP', db_refs={'HGNC': '592'})
+    casp3 = Agent('CASP3', db_refs={'HGNC': '1504'})
+    stmt = Ubiquitination(xiap, casp3)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert isinstance(checks[0], tuple)
+    assert checks[0][0] == stmt
+    assert checks[0][1] == True
+
 """
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
@@ -616,21 +630,6 @@ def test_check_transphosphorylation():
     assert results[1][1] == True
 """
 
-"""
-def test_ubiquitination():
-    xiap = Agent('XIAP')
-    casp3 = Agent('CASP3')
-    stmt = Ubiquitination(xiap, casp3)
-    pysba = PysbAssembler()
-    pysba.add_statements([stmt])
-    pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt])
-    checks = mc.check_model()
-    assert len(checks) == 1
-    assert isinstance(checks[0], tuple)
-    assert checks[0][0] == stmt
-    assert checks[0][1] == True
-"""
 
 
 # TODO Add tests for autophosphorylation
@@ -725,7 +724,8 @@ def test_ubiquitination():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_grounded_modified_enzyme()
+    test_check_ubiquitination()
+    #test_grounded_modified_enzyme()
     #test_activation_subtype()
     #test_check_transphosphorylation()
     #test_check_autophosphorylation()
@@ -742,4 +742,3 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
-    #test_check_ubiquitination()
