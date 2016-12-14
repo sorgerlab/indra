@@ -31,7 +31,21 @@ class SifAssembler(object):
 
     def make_model(self, use_name_as_key=False, include_mods=False,
                    include_complexes=False):
-        """Assemble the graph from the assembler's list of INDRA Statements."""
+        """Assemble the graph from the assembler's list of INDRA Statements.
+
+        Parameters
+        ----------
+        use_name_as_key : boolean
+            If True, uses the name of the agent as the key to the nodes in
+            the network. If False (default) uses the matches_key() of the
+            agent.
+        include_mods : boolean
+            If True, adds Modification statements into the graph as directed
+            edges. Default is False.
+        include_complexes : boolean
+            If True, creates two edges (in both directions) between all pairs
+            of nodes in Complex statements. Default is False.
+        """
         def add_node_edge(s, t, polarity):
             if s is not None:
                 s = self._add_node(s, use_name_as_key=use_name_as_key)
