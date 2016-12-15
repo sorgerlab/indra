@@ -1226,7 +1226,7 @@ def _get_db_refs(term):
                     pass
                 if ref_ns == 'UP':
                     if not up_client.is_human(ref_id):
-                        priority = 3
+                        priority = 4
             entry['priority'] = priority
         if len(entries) > 1:
             top_entry = entries[0]
@@ -1236,6 +1236,7 @@ def _get_db_refs(term):
         else:
             top_entry = entries[0]
         top_per_score_group.append(top_entry)
+    print(top_per_score_group)
     # Get the top priority for each score group
     priorities = [entry['priority'] for entry in top_per_score_group]
 
@@ -1249,7 +1250,7 @@ def _get_db_refs(term):
                      top_per_score_group[1]['score']
         priority_diff = top_per_score_group[0]['priority'] - \
                         top_per_score_group[1]['priority']
-        if score_diff < 0.2 and priority_diff > 2:
+        if score_diff < 0.2 and priority_diff >= 2:
             top_grounding = top_per_score_group[1]
 
     for k, v in top_grounding['refs'].items():
