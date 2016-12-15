@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
-from indra.assemblers.pysb_assembler import get_agent_rule_str, _n
+from indra.assemblers import pysb_assembler as pa
 from indra.statements import *
-from pysb import bng
+from pysb import bng, WILD, Monomer, Annotation
+from pysb.testing import with_model
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -378,29 +379,29 @@ def test_activity_activity3():
     assert(len(model.monomers)==2)
 
 def test_rule_name_str_1():
-    s = get_agent_rule_str(Agent('BRAF'))
+    s = pa.get_agent_rule_str(Agent('BRAF'))
     assert(s == 'BRAF')
 
 def test_rule_name_str_2():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), True)])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'GRB2_EGFR')
 
 def test_rule_name_str_3():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), False)])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'GRB2_nEGFR')
 
 def test_rule_name_str_4():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine')])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'BRAF_phosphoS')
 
 def test_rule_name_str_5():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine', '123')])
-    s = get_agent_rule_str(a)
+    s = pa.get_agent_rule_str(a)
     assert(s == 'BRAF_phosphoS123')
 
 def test_neg_act_mod():
@@ -414,7 +415,7 @@ def test_neg_act_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'u'})
+    assert(braf.site_conditions == {'S123': ('u', WILD)})
 
 def test_pos_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', True)
@@ -426,7 +427,7 @@ def test_pos_agent_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'p'})
+    assert(braf.site_conditions == {'S123': ('p', WILD)})
 
 def test_neg_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
@@ -438,7 +439,7 @@ def test_neg_agent_mod():
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
     assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': 'u'})
+    assert(braf.site_conditions == {'S123': ('u', WILD)})
 
 def test_mut():
     mut = MutCondition('600', 'V', 'E')
@@ -534,13 +535,13 @@ def test_save_rst():
     pa.save_rst('/dev/null')
 
 def test_name_standardize():
-    n = _n('.*/- ^&#@$')
+    n = pa._n('.*/- ^&#@$')
     assert(isinstance(n, str))
     assert(n == '__________')
-    n = _n('14-3-3')
+    n = pa._n('14-3-3')
     assert(isinstance(n, str))
     assert(n == 'p14_3_3')
-    n = _n('\U0001F4A9bar')
+    n = pa._n('\U0001F4A9bar')
     assert(isinstance(n, str))
     assert(n == 'bar')
 
@@ -673,3 +674,146 @@ def test_translocation_loc_special_char():
     assert(f2.site_conditions == {'loc': 'cell_surface'})
     assert(r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1')
 
+def test_parse_identifiers_url():
+    url1 = 'http://identifiers.org/foo/bar'
+    url2 = 'http://identifiers.org/hgnc/12345'
+    url3 = 'http://identifiers.org/hgnc/HGNC:12345'
+    url4 = 'http://identifiers.org/uniprot/12345'
+    url5 = 'http://identifiers.org/chebi/12345'
+    url6 = 'http://identifiers.org/interpro/12345'
+    url7 = 'http://identifiers.org/pfam/12345'
+    (ns, id) = pa.parse_identifiers_url(url1)
+    assert ns is None and id is None
+    (ns, id) = pa.parse_identifiers_url(url2)
+    assert ns is None and id is None
+    (ns, id) = pa.parse_identifiers_url(url3)
+    assert ns == 'HGNC' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url4)
+    assert ns == 'UP' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url5)
+    assert ns == 'CHEBI' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url6)
+    assert ns == 'IP' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url7)
+    assert ns == 'XFAM' and id == '12345'
+
+@with_model
+def test_get_mp_with_grounding():
+    foo = Agent('Foo', db_refs={'HGNC': 'foo'})
+    a = Agent('A', db_refs={'HGNC': '6840'})
+    b = Agent('B', db_refs={'HGNC': '6871'})
+    Monomer('A_monomer')
+    Monomer('B_monomer')
+    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    mps = list(pa.grounded_monomer_patterns(model, foo))
+    assert len(mps) == 0
+    mps = list(pa.grounded_monomer_patterns(model, a))
+    assert len(mps) == 1
+    assert mps[0].monomer == A_monomer
+    mps = list(pa.grounded_monomer_patterns(model, b))
+    assert len(mps) == 1
+    assert mps[0].monomer == B_monomer
+
+@with_model
+def test_get_mp_with_grounding_2():
+    a1 = Agent('A', mods=[ModCondition('phosphorylation', None, None)],
+                db_refs={'HGNC': '6840'})
+    a2 = Agent('A', mods=[ModCondition('phosphorylation', 'Y', '187')],
+                db_refs={'HGNC': '6840'})
+    Monomer('A_monomer', ['phospho', 'T185', 'Y187'],
+            {'phospho': 'y', 'T185':['u', 'p'], 'Y187':['u','p']})
+    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+    A_monomer.site_annotations = [
+        Annotation(('phospho', 'y'), 'phosphorylation', 'is_modification'),
+        Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
+        Annotation('T185', 'T', 'is_residue'),
+        Annotation('T185', '185', 'is_position'),
+        Annotation('Y187', 'Y', 'is_residue'),
+        Annotation('Y187', '187', 'is_position')
+    ]
+    mps_1 = list(pa.grounded_monomer_patterns(model, a1))
+    assert len(mps_1) == 3
+    mps_2 = list(pa.grounded_monomer_patterns(model, a2))
+    assert len(mps_2) == 1
+    mp = mps_2[0]
+    assert mp.monomer == A_monomer
+    assert mp.site_conditions == {'Y187': ('p', WILD)}
+    # TODO Add test for unmodified agent!
+    # TODO Add test involving multiple (possibly degenerate) modifications!
+    # TODO Add test for generic double phosphorylation
+
+def test_phospho_assemble_grounding():
+    a = Agent('MEK1', db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    b_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
+                    db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(a, b, 'T', '185')
+    # One step
+    def check_policy(policy):
+        pysb_asmb = pa.PysbAssembler(policies=policy)
+        pysb_asmb.add_statements([st1])
+        model = pysb_asmb.make_model()
+        mps = list(pa.grounded_monomer_patterns(model, b_phos))
+        assert len(mps) == 1
+        assert mps[0].monomer.name == 'ERK2'
+        assert mps[0].site_conditions == {'T185': ('p', WILD)}
+    for policy in ('one_step', 'interactions_only', 'two_step',
+                   'atp_dependent'):
+        check_policy(policy)
+
+def test_phospho_mod_grounding():
+    a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
+                            ModCondition('phosphorylation', 'S', '222')],
+              db_refs={'HGNC': '6840'})
+    b = Agent('ERK2', db_refs={'HGNC': '6871'})
+    a_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
+                    db_refs={'HGNC': '6840'})
+    st1 = Phosphorylation(a, b, 'T', '185')
+    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb.add_statements([st1])
+    model = pysb_asmb.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, a_phos))
+    assert len(mps) == 2
+    assert mps[0].monomer.name == 'MEK1'
+    assert mps[1].monomer.name == 'MEK1'
+    sc = [mp.site_conditions for mp in mps]
+    assert {'S218': ('p', WILD)} in sc
+    assert {'S222': ('p', WILD)} in sc
+
+def _check_mod_assembly(mod_class):
+    subj = Agent('KRAS')
+    obj = Agent('BRAF')
+    st1 = mod_class(subj, obj)
+
+    pa = PysbAssembler(policies='interactions_only')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==1)
+    assert(len(model.monomers)==2)
+
+    pa = PysbAssembler(policies='two_step')
+    pa.add_statements([st1])
+    model = pa.make_model()
+    assert(len(model.rules)==3)
+    assert(len(model.monomers)==2)
+
+def test_modification_assembly():
+    for mod_class in Modification.__subclasses__():
+        _check_mod_assembly(mod_class)
+
+
+# TODO Do the same for mutation condition
+# TODO Localization condition
+# TODO Bound condition
+# TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
+
+if __name__ == '__main__':
+    test_modification_assembly()
