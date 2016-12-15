@@ -1217,6 +1217,9 @@ def _get_db_refs(term):
         for entry in entries:
             priority = 100
             for ref_ns, ref_id in entry['refs'].items():
+                # Skip etc UP entries
+                if ref_ns == 'UP' and ref_id == 'etc':
+                    continue
                 try:
                     priority = min(priority, ns_priority[ref_ns])
                 except KeyError:
@@ -1228,14 +1231,27 @@ def _get_db_refs(term):
         if len(entries) > 1:
             top_entry = entries[0]
             for entry in entries:
-                if entry['priority'] > top_entry['priority']:
+                if entry['priority'] < top_entry['priority']:
                     top_entry = entry
         else:
             top_entry = entries[0]
         top_per_score_group.append(top_entry)
+    # Get the top priority for each score group
+    priorities = [entry['priority'] for entry in top_per_score_group]
 
     # By default, we coose the top priority entry from the highest score group
     top_grounding = top_per_score_group[0]
+    # Sometimes the top grounding has much lower priority and not much higher
+    # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
+    # In this case we take the second entry.
+    if len(top_per_score_group) > 1:
+        score_diff = top_per_score_group[0]['score'] - \
+                     top_per_score_group[1]['score']
+        priority_diff = top_per_score_group[0]['priority'] - \
+                        top_per_score_group[1]['priority']
+        if score_diff < 0.2 and priority_diff > 2:
+            top_grounding = top_per_score_group[1]
+
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
 
