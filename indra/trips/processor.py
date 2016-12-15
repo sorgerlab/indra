@@ -1236,7 +1236,6 @@ def _get_db_refs(term):
         else:
             top_entry = entries[0]
         top_per_score_group.append(top_entry)
-    print(top_per_score_group)
     # Get the top priority for each score group
     priorities = [entry['priority'] for entry in top_per_score_group]
 
