@@ -31,16 +31,16 @@ def assemble_model(model_name, reread=False):
     model.add_component(obs)
     model.parameters['kf_aa_act_1'].value = 5e-06
     model.parameters['kf_pt_act_1'].value = 1e-05
-    model.parameters['CDKN2A_0'].value = 0
+    model.parameters['ARF_0'].value = 0
     model.parameters['PROTEASE_0'].value = 0
     protease = model.monomers['PROTEASE']
-    model.add_component(Parameter('CDKN2A_act_0', 100))
+    model.add_component(Parameter('ARF_act_0', 100))
     model.add_component(Parameter('PROTEASE_act_0', 100))
     model.initial(protease(act='active'),
                   model.parameters['PROTEASE_act_0'])
-    cdkn2a = model.monomers['CDKN2A']
+    cdkn2a = model.monomers['ARF']
     model.initial(cdkn2a(act='active'),
-                  model.parameters['CDKN2A_act_0'])
+                  model.parameters['ARF_act_0'])
 
     if model_name == 'p53_ATM':
         model.add_component(Parameter('ATMa_0', 1))
@@ -77,5 +77,5 @@ def run_model(model):
 if __name__ == '__main__':
     model_names = ['p53_ATR', 'p53_ATM']
     for model_name in model_names:
-        model = assemble_model(model_name, reread=False)
+        model = assemble_model(model_name, reread=True)
         ts, solver = run_model(model)

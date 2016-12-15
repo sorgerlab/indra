@@ -1,8 +1,8 @@
 ATR activates itself.
-Active ATR activates p53.
-Active p53 activates Wip1.
-Active p53 activates MDM2.
-Active Wip1 inactivates p53.
-Active MDM2 inactivates p53.
+ATR activates p53.
+p53 activates Wip1.
+p53 activates MDM2.
+Wip1 inactivates p53.
+MDM2 inactivates p53.
 Protease inactivates Wip1.
 P14ARF inactivates Mdm2.
