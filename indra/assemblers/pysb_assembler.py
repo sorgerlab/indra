@@ -445,6 +445,15 @@ def grounded_monomer_patterns(model, agent):
             pattern = {site_name: (mod_sites[site_name], WILD)}
             yield monomer(**pattern)
 
+def rules_with_annotation(model, monomer_name, predicate):
+    rules = []
+    for ann in model.annotations:
+        if not ann.predicate == predicate:
+            continue
+        if ann.object == monomer_name:
+            rules.append(model.rules[ann.subject])
+    return rules
+
 def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
     try:

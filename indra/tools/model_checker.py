@@ -192,10 +192,19 @@ class ModelChecker(object):
             input_rule_set = None
         else:
             input_rules = _match_lhs(subj_mp, self.model.rules)
-            input_rule_set = set([r.name for r in input_rules])
-                                  #if r.name.startswith(stmt.enz.name)])
             logger.info('Found %s input rules matching %s' %
                         (len(input_rules), str(subj_mp)))
+            # Filter to include only rules where the subj_mp is actually the
+            # subject (i.e., don't pick up upstream rules where the subject
+            # is itself a substrate/object)
+            # FIXME: Note that this will eliminate rules where the subject
+            # being checked is included on the left hand side as 
+            # a bound condition rather than as an enzyme.
+            subj_rules = pa.rules_with_annotation(self.model,
+                                                  subj_mp.monomer.name,
+                                                  'rule_has_subject')
+            input_rule_set = set([r.name for r in input_rules]).intersection(
+                                 set([r.name for r in subj_rules]))
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
             if not input_rules:
