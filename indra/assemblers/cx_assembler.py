@@ -132,10 +132,9 @@ class CxAssembler(object):
             full_cx[k] = v
         full_cx = [{k: v} for k, v in full_cx.items()]
         if pretty:
-            indent = 2
+            json_str = json.dumps(full_cx, indent=2)
         else:
-            indent = 0
-        json_str = json.dumps(full_cx, indent=indent)
+            json_str = json.dumps(full_cx)
         return json_str
 
     def save_model(self, file_name='model.cx'):
@@ -227,6 +226,7 @@ class CxAssembler(object):
             logger.warning('To use NDEx upload in the CX Assembler,'
                             'install the `ndex` package.')
             return
+        import ipdb; ipdb.set_trace()
         nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=ndex_cred.get('user'),
                             password=ndex_cred.get('password'))

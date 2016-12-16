@@ -154,7 +154,7 @@ def _increment_ndex_ver(ver_str):
     return new_ver
 
 def upload_to_ndex(stmts, ndex_cred):
-    nd = ndex.client.Ndex('http://public.ndexbio.org',
+    nd = ndex.client.Ndex('http://preview.ndexbio.org',
                             username=ndex_cred.get('user'),
                             password=ndex_cred.get('password'))
     network_id = ndex_cred.get('network')
@@ -397,6 +397,7 @@ if __name__ == '__main__':
     if use_ndex:
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
+        import ipdb; ipdb.set_trace()
         upload_to_ndex(new_likely, ndex_cred)
 
     # Print and tweet the status message
