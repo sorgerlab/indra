@@ -315,10 +315,11 @@ class TripsProcessor(object):
                 continue
 
             # Make sure the degradation is affecting a molecule type
-            affected_type = affected.find('type')
-            if affected_type is None or \
-               affected_type.text not in molecule_types:
-                continue
+            # Temporarily removed for CwC compatibility with no type tag
+            #affected_type = affected.find('type')
+            #if affected_type is None or \
+            #   affected_type.text not in molecule_types:
+            #    continue
 
             affected_id = affected.attrib.get('id')
             if affected_id is None:
@@ -363,10 +364,11 @@ class TripsProcessor(object):
                 continue
 
             # Make sure the synthesis is affecting a molecule type
-            affected_type = affected.find('type')
-            if affected_type is None or \
-               affected_type.text not in molecule_types:
-                continue
+            # Temporarily removed for CwC compatibility with no type tag
+            # affected_type = affected.find('type')
+            # if affected_type is None or \
+            #   affected_type.text not in molecule_types:
+            #    continue
 
             affected_id = affected.attrib.get('id')
             if affected_id is None:
