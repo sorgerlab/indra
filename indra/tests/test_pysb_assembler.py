@@ -810,10 +810,43 @@ def test_modification_assembly():
         _check_mod_assembly(mod_class)
 
 
+def test_rule_annotation():
+    a = Agent('A', db_refs={'HGNC': '1234'})
+    b = Agent('B', db_refs={'HGNC': '5678'})
+
+    def check_rule_annotation(stmt, policy):
+        pa = PysbAssembler(policies=policy)
+        pa.add_statements([stmt])
+        model = pa.make_model()
+        subj = [ann.object for ann in model.annotations
+                if ann.predicate == 'rule_has_subject']
+        obj = [ann.object for ann in model.annotations
+                if ann.predicate == 'rule_has_object']
+        assert len(subj) == 1
+        assert subj[0] == 'A'
+        assert len(obj) == 1
+        assert obj[0] == 'B'
+
+    for mod_class in Modification.__subclasses__():
+        stmt = mod_class(a, b)
+        check_rule_annotation(stmt, 'one_step')
+        check_rule_annotation(stmt, 'two_step')
+
+    # Check ATP dependent phosphorylation
+    stmt = Phosphorylation(a, b)
+    check_rule_annotation(stmt, 'atp_dependent')
+    stmt = Activation(a, 'activity', b, 'activity', True)
+    check_rule_annotation(stmt, 'one_step')
+    #Skip Autophosphorylation and Transphosphorylation for now
+    #RasGef
+    #RasGap
+    #Synthesis
+    #Degradation
+
 # TODO Do the same for mutation condition
 # TODO Localization condition
 # TODO Bound condition
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
-    test_modification_assembly()
+    test_rule_annotation()

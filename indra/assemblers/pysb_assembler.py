@@ -1141,6 +1141,11 @@ def modification_assemble_one_step(stmt, model, agent_set):
                 kf_mod)
         add_rule_to_model(model, r)
 
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
+
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
     if stmt.enz is None:
@@ -1192,6 +1197,10 @@ def modification_assemble_two_step(stmt, model, agent_set):
                 sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
             kf_mod)
         add_rule_to_model(model, r)
+        # Add rule annotations to model
+        anns = [Annotation(rule_name, enz_bound.monomer.name, 'rule_has_subject'),
+                Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
     enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
@@ -1326,8 +1335,13 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
                 sub_pattern(**{phos_site: 'p', enz_bs: None}),
             kf_phospho)
         add_rule_to_model(model, r)
+        # Add rule annotations to model
+        anns = [Annotation(rule_name, enz_sub_atp_bound.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
-    # Enzyme dissodiating from substrate
+    # Enzyme dissociating from substrate
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
     r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
              sub_mon_uncond(**{enz_bs: 1}) >>
@@ -1425,6 +1439,9 @@ def demodification_assemble_one_step(stmt, model, agent_set):
              enz_pattern + sub_mod >> enz_pattern + sub_unmod,
              kf_demod)
     add_rule_to_model(model, r)
+    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 
 def demodification_assemble_two_step(stmt, model, agent_set):
@@ -1480,6 +1497,9 @@ def demodification_assemble_two_step(stmt, model, agent_set):
                 sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
             kf_demod)
         add_rule_to_model(model, r)
+        anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
+                Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
     enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
@@ -1560,6 +1580,9 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set):
                                           phos_site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
     add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, pattern_unphos.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, pattern_phos.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
 
@@ -1616,6 +1639,9 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     r = Rule(rule_name, enz_pattern % sub_unphos >> \
                     enz_pattern % sub_phos, kf)
     add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, sub_unphos.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
@@ -1703,6 +1729,9 @@ def activation_assemble_one_step(stmt, model, agent_set):
             kf_one_step_activate)
 
     add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 activation_assemble_default = activation_assemble_one_step
 
