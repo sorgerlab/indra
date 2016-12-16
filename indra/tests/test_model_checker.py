@@ -582,7 +582,7 @@ def test_check_ubiquitination():
     assert checks[0][0] == stmt
     assert checks[0][1] == True
 
-def test_check_rule_subject():
+def test_check_rule_subject1():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
     erk = Agent('ERK2', db_refs={'HGNC': '6871'})
     stmt = Phosphorylation(mek, erk)
@@ -597,8 +597,26 @@ def test_check_rule_subject():
     assert checks[0][0] == stmt_to_check
     assert checks[0][1] == False
 
-
 """
+def test_check_rule_subject2():
+    braf = Agent('BRAF', db_refs={'HGNC': '1'})
+    raf1 = Agent('RAF1', db_refs={'HGNC': '2'})
+    braf_raf1 = Agent('BRAF', bound_conditions=[BoundCondition(raf1)],
+                      db_refs={'HGNC': '1'})
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    stmt = Phosphorylation(braf_raf1, mek)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    # Check against stmt: should indicate that RAF1 is causally linked to MEK
+    # phosphorylation
+    stmt_to_check = Phosphorylation(raf1, mek)
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
@@ -740,7 +758,7 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_check_rule_subject()
+    test_check_rule_subject2()
     #test_check_ubiquitination()
     #test_grounded_modified_enzyme()
     #test_activation_subtype()
