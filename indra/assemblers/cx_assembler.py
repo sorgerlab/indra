@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import io
 import re
 import json
 import logging
@@ -128,6 +129,7 @@ class CxAssembler(object):
                                 'name': 'nodes'},
                                {'idCounter': self._id_counter,
                                 'name': 'edges'}]
+        full_cx['status'] = [{'error': '', 'success': True}]
         for k, v in self.cx.items():
             full_cx[k] = v
         full_cx = [{k: v} for k, v in full_cx.items()]
@@ -226,14 +228,14 @@ class CxAssembler(object):
             logger.warning('To use NDEx upload in the CX Assembler,'
                             'install the `ndex` package.')
             return
-        import ipdb; ipdb.set_trace()
         nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=ndex_cred.get('user'),
                             password=ndex_cred.get('password'))
         cx_str = self.print_cx(pretty=False)
         try:
             logger.info('Uploading network to NDEx.')
-            network_id = nd.save_cx_stream_as_new_network(cx_str)
+            cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+            network_id = nd.save_cx_stream_as_new_network(cx_stream)
         except Exception as e:
             logger.error('Could not upload network to NDEx.')
             logger.error(e)

@@ -154,7 +154,7 @@ def _increment_ndex_ver(ver_str):
     return new_ver
 
 def upload_to_ndex(stmts, ndex_cred):
-    nd = ndex.client.Ndex('http://preview.ndexbio.org',
+    nd = ndex.client.Ndex('http://public.ndexbio.org',
                             username=ndex_cred.get('user'),
                             password=ndex_cred.get('password'))
     network_id = ndex_cred.get('network')
