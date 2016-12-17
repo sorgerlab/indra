@@ -329,6 +329,10 @@ class TripsProcessor(object):
 
             affected_agent = self._get_agent_by_id(affected_id,
                                                    event.attrib['id'])
+            if affected_agent is None:
+                logger.debug(
+                    'Skipping degradation event with missing affected agent')
+                continue
 
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
@@ -378,6 +382,10 @@ class TripsProcessor(object):
 
             affected_agent = self._get_agent_by_id(affected_id,
                                                    event.attrib['id'])
+            if affected_agent is None:
+                logger.debug(
+                    'Skipping synthesis event with missing affected agent')
+                continue
 
             agent = event.find(".//*[@role=':AGENT']")
             if agent is None:
