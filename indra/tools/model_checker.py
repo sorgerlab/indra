@@ -107,8 +107,7 @@ class ModelChecker(object):
         obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
         try:
             obj_site_pattern = pa.get_site_pattern(stmt.obj)
-            obj_site_pattern.update({pa.active_site_names[stmt.obj_activity]:
-                                     'active'})
+            obj_site_pattern.update({stmt.obj_activity: 'active'})
             obj_monomer = self.model.monomers[stmt.obj.name]
             obj_mp = obj_monomer(**obj_site_pattern)
         except Exception as e:
@@ -203,11 +202,15 @@ class ModelChecker(object):
             subj_rules = pa.rules_with_annotation(self.model,
                                                   subj_mp.monomer.name,
                                                   'rule_has_subject')
+            logger.info('%d rules with %s as subject' %
+                        (len(subj_rules), subj_mp.monomer.name))
             input_rule_set = set([r.name for r in input_rules]).intersection(
                                  set([r.name for r in subj_rules]))
+            logger.info('Final input rule set contains %d rules' %
+                        len(input_rule_set))
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
-            if not input_rules:
+            if not input_rule_set:
                 return False
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?

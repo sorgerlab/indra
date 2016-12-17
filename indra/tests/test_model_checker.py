@@ -597,6 +597,34 @@ def test_check_rule_subject1():
     assert checks[0][0] == stmt_to_check
     assert checks[0][1] == False
 
+def test_rasgef_activation():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    act_stmt = Activation(sos, 'activity', ras, 'gtpbound', True)
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGef is satisfied by the Activation
+    # This currently doesn't work because RasGef statements aren't checked
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgef_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgef_stmt
+    assert checks[0][1] == True
+    """
+
 """
 def test_check_rule_subject2():
     braf = Agent('BRAF', db_refs={'HGNC': '1'})
@@ -753,12 +781,13 @@ def test_check_transphosphorylation():
 #
 # Save all the paths that a particular rule is on--then if you're wondering
 # why it's in the model, you look at all of the statements for which that
-# rule provides a path.
+# rule provides a path  .
 #
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_check_rule_subject2()
+    test_rasgef_activation()
+    #test_check_rule_subject2()
     #test_check_ubiquitination()
     #test_grounded_modified_enzyme()
     #test_activation_subtype()
@@ -777,3 +806,4 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
+

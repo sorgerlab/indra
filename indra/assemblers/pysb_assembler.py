@@ -242,7 +242,7 @@ mod_acttype_map = {
 # The following dict specifies the default modification/binding site names for
 # modifications resulting from a particular type of activity. For example, a
 # protein with Kinase activity makes a modification of type "phospho" on its
-# substrate, and a RasGTPase (with GtpBound activity) binds to a site of type
+# substrate, and a RasGTPase (with gtpbound activity) binds to a site of type
 # "RBD" (Ras binding domain). This comes in handy for specifying
 # Activation rules, where the modification site mediating the activation
 # is not specified.
@@ -1672,10 +1672,8 @@ def activation_monomers_one_step(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj_activity is not None:
-        subj.create_site(active_site_names[stmt.subj_activity],
-                         ('inactive', 'active'))
-    obj.create_site(active_site_names[stmt.obj_activity],
-                    ('inactive', 'active'))
+        subj.create_site(stmt.subj_activity, ('inactive', 'active'))
+    obj.create_site(stmt.obj_activity, ('inactive', 'active'))
 
 activation_monomers_default = activation_monomers_one_step
 
@@ -1708,14 +1706,14 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
 def activation_assemble_one_step(stmt, model, agent_set):
     if stmt.subj_activity is not None:
         subj_pattern = get_monomer_pattern(model, stmt.subj,
-            extra_fields={active_site_names[stmt.subj_activity]: 'active'})
+            extra_fields={stmt.subj_activity: 'active'})
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
-        extra_fields={active_site_names[stmt.obj_activity]: 'inactive'})
+        extra_fields={stmt.obj_activity: 'inactive'})
     obj_active = get_monomer_pattern(model, stmt.obj,
-        extra_fields={active_site_names[stmt.obj_activity]: 'active'})
+        extra_fields={stmt.obj_activity: 'active'})
 
     param_name = 'kf_' + stmt.subj.name[0].lower() + \
                         stmt.obj.name[0].lower() + '_act'
@@ -1738,7 +1736,8 @@ def activation_assemble_one_step(stmt, model, agent_set):
             kf_one_step_activate)
 
     add_rule_to_model(model, r)
-    anns = [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject'),
+    anns = [Annotation(rule_name, subj_pattern.monomer.name,
+                       'rule_has_subject'),
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
     model.annotations += anns
 
@@ -1757,7 +1756,7 @@ def rasgef_monomers_one_step(stmt, agent_set):
     gef = agent_set.get_create_base_agent(stmt.gef)
     gef.create_site(stmt.gef_activity, ('inactive', 'active'))
     ras = agent_set.get_create_base_agent(stmt.ras)
-    ras.create_site('GtpBound', ('inactive', 'active'))
+    ras.create_site('gtpbound', ('inactive', 'active'))
 
 rasgef_monomers_default = rasgef_monomers_one_step
 
@@ -1782,9 +1781,9 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
     gef_pattern = get_monomer_pattern(model, stmt.gef,
         extra_fields={stmt.gef_activity: 'active'})
     ras_inactive = get_monomer_pattern(model, stmt.ras,
-        extra_fields={'GtpBound': 'inactive'})
+        extra_fields={'gtpbound': 'inactive'})
     ras_active = get_monomer_pattern(model, stmt.ras,
-        extra_fields={'GtpBound': 'active'})
+        extra_fields={'gtpbound': 'active'})
 
     param_name = 'kf_' + stmt.gef.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gef'
@@ -1798,6 +1797,10 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
              gef_pattern + ras_active,
              kf_gef)
     add_rule_to_model(model, r)
+    anns = [Annotation(r.name, gef_pattern.monomer.name,
+                       'rule_has_subject'),
+            Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 rasgef_assemble_default = rasgef_assemble_one_step
 
@@ -1814,7 +1817,7 @@ def rasgap_monomers_one_step(stmt, agent_set):
     gap = agent_set.get_create_base_agent(stmt.gap)
     gap.create_site(stmt.gap_activity, ('inactive', 'active'))
     ras = agent_set.get_create_base_agent(stmt.ras)
-    ras.create_site('GtpBound', ('inactive', 'active'))
+    ras.create_site('gtpbound', ('inactive', 'active'))
 
 rasgap_monomers_default = rasgap_monomers_one_step
 
@@ -1839,9 +1842,9 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
     gap_pattern = get_monomer_pattern(model, stmt.gap,
         extra_fields={stmt.gap_activity: 'active'})
     ras_inactive = get_monomer_pattern(model, stmt.ras,
-        extra_fields={'GtpBound': 'inactive'})
+        extra_fields={'gtpbound': 'inactive'})
     ras_active = get_monomer_pattern(model, stmt.ras,
-        extra_fields={'GtpBound': 'active'})
+        extra_fields={'gtpbound': 'active'})
 
     param_name = 'kf_' + stmt.gap.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gap'
@@ -1855,6 +1858,10 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
              gap_pattern + ras_inactive,
              kf_gap)
     add_rule_to_model(model, r)
+    anns = [Annotation(r.name, gap_pattern.monomer.name,
+                       'rule_has_subject'),
+            Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 rasgap_assemble_default = rasgap_assemble_one_step
 
