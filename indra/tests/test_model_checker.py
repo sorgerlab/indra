@@ -625,6 +625,42 @@ def test_rasgef_activation():
     assert checks[0][1] == True
     """
 
+def test_rasgef_rasgtp():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    act_stmt = Activation(sos, 'activity', raf, 'kinase', True)
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgef_rasgtp_phos():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Phosphorylation(sos, mek)
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
 """
 def test_check_rule_subject2():
     braf = Agent('BRAF', db_refs={'HGNC': '1'})
@@ -696,6 +732,12 @@ def test_check_transphosphorylation():
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
+
+# FIXME: Issue: Increasing kinase activity doesn't make it capable of executing
+# phosphorylation statements
+# FIXME Issue increase activity (generic) doesn't make something capable of
+# executing phospho (or other statements)
+
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
@@ -786,7 +828,9 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_rasgef_activation()
+    test_rasgef_rasgtp()
+    test_rasgef_rasgtp_phos()
+    #test_rasgef_activation()
     #test_check_rule_subject2()
     #test_check_ubiquitination()
     #test_grounded_modified_enzyme()
