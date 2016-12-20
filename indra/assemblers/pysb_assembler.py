@@ -1826,10 +1826,16 @@ def rasgap_monomers_interactions_only(stmt, agent_set):
 
 
 def rasgap_monomers_one_step(stmt, agent_set):
+    # Gap
     gap = agent_set.get_create_base_agent(stmt.gap)
     gap.create_site(stmt.gap_activity, ('inactive', 'active'))
+    gap.add_activity_form({stmt.gap_activity: 'active'}, True)
+    gap.add_activity_form({stmt.gap_activity: 'inactive'}, False)
+    # Ras
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('gtpbound', ('inactive', 'active'))
+    ras.add_activity_form({'gtpbound': 'active'}, True)
+    ras.add_activity_form({'gtpbound': 'inactive'}, False)
 
 rasgap_monomers_default = rasgap_monomers_one_step
 

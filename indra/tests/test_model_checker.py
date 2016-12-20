@@ -651,7 +651,7 @@ def test_rasgef_rasgtp_phos():
     rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
     phos = Phosphorylation(raf, mek)
     stmt_to_check = Phosphorylation(sos, mek)
-    # Check that the activation is satisfied by the RasGef
+    # Assemble and check
     pysba = PysbAssembler()
     pysba.add_statements([rasgef_stmt, rasgtp_stmt, phos])
     pysba.make_model(policies='one_step')
@@ -660,6 +660,72 @@ def test_rasgef_rasgtp_phos():
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
     assert checks[0][1] == True
+
+def test_rasgap_activation():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    act_stmt = Activation(nf1, 'activity', ras, 'gtpbound', False)
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGap is satisfied by the Activation
+    # This currently doesn't work because RasGap statements aren't checked by
+    # the ModelChecker
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgap_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgap_stmt
+    assert checks[0][1] == True
+    """
+
+def test_rasgap_rasgtp():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    act_stmt = Activation(nf1, 'activity', raf, 'kinase', False)
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgap_rasgtp_phos():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Dephosphorylation(nf1, mek)
+    # Assemble and check
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
 
 """
 def test_check_rule_subject_bound_condition():
@@ -828,8 +894,9 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_rasgef_rasgtp()
-    test_rasgef_rasgtp_phos()
+    test_rasgap_activation()
+    test_rasgap_rasgtp()
+    test_rasgap_rasgtp_phos()
     #test_rasgef_activation()
     #test_check_rule_subject2()
     #test_check_ubiquitination()
