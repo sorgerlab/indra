@@ -1673,7 +1673,13 @@ def activation_monomers_one_step(stmt, agent_set):
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj_activity is not None:
         subj.create_site(stmt.subj_activity, ('inactive', 'active'))
+        # Add the new active state flag to the list of active forms
+        subj.add_activity_form({stmt.subj_activity: 'active'}, True)
+        subj.add_activity_form({stmt.subj_activity: 'inactive'}, False)
     obj.create_site(stmt.obj_activity, ('inactive', 'active'))
+    # Add the new active state flag to the list of active forms
+    obj.add_activity_form({stmt.obj_activity: 'active'}, True)
+    obj.add_activity_form({stmt.obj_activity: 'inactive'}, False)
 
 activation_monomers_default = activation_monomers_one_step
 
@@ -1753,10 +1759,16 @@ def rasgef_monomers_interactions_only(stmt, agent_set):
 
 
 def rasgef_monomers_one_step(stmt, agent_set):
+    # Gef
     gef = agent_set.get_create_base_agent(stmt.gef)
     gef.create_site(stmt.gef_activity, ('inactive', 'active'))
+    gef.add_activity_form({stmt.gef_activity: 'active'}, True)
+    gef.add_activity_form({stmt.gef_activity: 'inactive'}, False)
+    # Ras
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('gtpbound', ('inactive', 'active'))
+    ras.add_activity_form({'gtpbound': 'active'}, True)
+    ras.add_activity_form({'gtpbound': 'inactive'}, False)
 
 rasgef_monomers_default = rasgef_monomers_one_step
 

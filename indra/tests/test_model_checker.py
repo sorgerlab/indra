@@ -662,7 +662,7 @@ def test_rasgef_rasgtp_phos():
     assert checks[0][1] == True
 
 """
-def test_check_rule_subject2():
+def test_check_rule_subject_bound_condition():
     braf = Agent('BRAF', db_refs={'HGNC': '1'})
     raf1 = Agent('RAF1', db_refs={'HGNC': '2'})
     braf_raf1 = Agent('BRAF', bound_conditions=[BoundCondition(raf1)],

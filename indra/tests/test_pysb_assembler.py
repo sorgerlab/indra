@@ -843,10 +843,22 @@ def test_rule_annotation():
     #Synthesis
     #Degradation
 
+def test_activeform_site():
+    a = Agent('A', db_refs={'HGNC': '1234'})
+    b = Agent('B', db_refs={'HGNC': '5678'})
+    b_phos = Agent('B', mods=[ModCondition('phosphorylation', 'Y', '200')],
+                   db_refs={'HGNC': '5678'})
+    st1 = Phosphorylation(a, b, 'S', '100')
+    st2 = ActiveForm(b_phos, 'kinase', True)
+    pa = PysbAssembler(policies='one_step')
+    pa.add_statements([st1, st2])
+    model = pa.make_model()
+
 # TODO Do the same for mutation condition
 # TODO Localization condition
 # TODO Bound condition
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
 if __name__ == '__main__':
-    test_rule_annotation()
+    test_activeform_site()
+
