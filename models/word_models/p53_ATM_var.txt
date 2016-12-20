@@ -1,0 +1,10 @@
+ATM phosphorylates itself and phosphorylated ATM is activated.
+Phosphorylated ATM activates p53.
+p53 is transcribed and p53 transcribes MDM2.
+MDM2 is degraded.
+p53 activates Wip1.
+Wip1 inactivates p53.
+Wip1 inactivates ATM.
+MDM2 ubiquitinates p53 and ubiquitinated p53 is degraded.
+Protease inactivates Wip1.
+P14ARF inactivates Mdm2.

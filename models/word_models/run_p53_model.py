@@ -29,7 +29,8 @@ def assemble_model(model_name, reread=False):
     p53 = model.monomers['TP53']
     obs = Observable('P53_active', p53(act='active'))
     model.add_component(obs)
-    model.parameters['kf_aa_act_1'].value = 5e-06
+    if not model_name.endswith('var'):
+        model.parameters['kf_aa_act_1'].value = 5e-06
     model.parameters['kf_pt_act_1'].value = 1e-05
     model.parameters['ARF_0'].value = 0
     model.parameters['PROTEASE_0'].value = 0
@@ -75,7 +76,7 @@ def run_model(model):
     return ts, solver
 
 if __name__ == '__main__':
-    model_names = ['p53_ATR', 'p53_ATM']
+    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
     for model_name in model_names:
-        model = assemble_model(model_name, reread=True)
+        model = assemble_model(model_name, reread=False)
         ts, solver = run_model(model)
