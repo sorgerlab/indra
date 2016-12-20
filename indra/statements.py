@@ -238,7 +238,7 @@ class ActivityCondition(object):
         if self.activity_type == other.activity_type:
             return True
         if activity_hierarchy.isa('INDRA', self.activity_type,
-                                  'INDRA', other.activity_type)):
+                                  'INDRA', other.activity_type):
             return True
 
     def equals(selfs, other):
@@ -486,7 +486,8 @@ class Agent(object):
             if other.activity is not None:
                 return False
         elif other.activity is not None:
-            if not self.activity.refinement_of(other.activity):
+            if not self.activity.refinement_of(other.activity,
+                                               hierarchies['activity']):
                 return False
 
         # Everything checks out
@@ -1063,19 +1064,18 @@ class Activation(Statement):
 
     >>> mek = Agent('MAP2K1')
     >>> erk = Agent('MAPK1')
-    >>> act = Activation(mek, 'kinase', erk, 'kinase', True)
+    >>> act = Activation(mek, erk, True, 'kinase')
     """
-    def __init__(self, subj, subj_activity, obj, obj_activity, is_activation,
-                 evidence=None):
+    def __init__(self, subj, obj, is_activation,
+                 obj_activity='activity', evidence=None):
         super(Activation, self).__init__(evidence)
         self.subj = subj
-        self.subj_activity = subj_activity
         self.obj = obj
         self.obj_activity = obj_activity
         self.is_activation = is_activation
 
     def matches_key(self):
-        key = (type(self), self.subj.matches_key(), str(self.subj_activity),
+        key = (type(self), self.subj.matches_key(),
                 self.obj.matches_key(), str(self.obj_activity),
                 str(self.is_activation))
         return str(key)
@@ -1097,13 +1097,10 @@ class Activation(Statement):
             self.obj.refinement_of(other.obj, hierarchies):
             if self.is_activation != other.is_activation:
                 return False
-            subj_act_match = (self.subj_activity == other.subj_activity) or \
-                hierarchies['activity'].isa('INDRA', self.subj_activity,
-                                            'INDRA', other.subj_activity)
             obj_act_match = (self.obj_activity == other.obj_activity) or \
                 hierarchies['activity'].isa('INDRA', self.obj_activity,
                                             'INDRA', other.obj_activity)
-            if subj_act_match and obj_act_match:
+            if obj_act_match:
                 return True
             else:
                 return False
@@ -1111,15 +1108,14 @@ class Activation(Statement):
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s)" %
-             (type(self).__name__, self.subj, self.subj_activity,
+        s = ("%s(%s, %s, %s, %s)" %
+             (type(self).__name__, self.subj,
               self.obj, self.obj_activity, self.is_activation))
         return s
 
     def equals(self, other):
         matches = super(Activation, self).equals(other)
         matches = matches and\
-                  (self.subj_activity == other.subj_activity) and\
                   (self.obj_activity == other.obj_activity) and\
                   (self.is_activation == other.is_activation)
         return matches
@@ -1286,8 +1282,6 @@ class RasGef(Statement):
     ----------
     gef : :py:class:`Agent`
         The guanosine exchange factor.
-    gef_activity : string
-        The biochemical activity of the GEF responsible for exchange.
     ras : :py:class:`Agent`
         The Ras superfamily protein.
 
@@ -1297,16 +1291,15 @@ class RasGef(Statement):
 
     >>> sos = Agent('SOS1')
     >>> kras = Agent('KRAS')
-    >>> rasgef = RasGef(sos, 'gef', kras)
+    >>> rasgef = RasGef(sos, kras)
     """
-    def __init__(self, gef, gef_activity, ras, evidence=None):
+    def __init__(self, gef, ras, evidence=None):
         super(RasGef, self).__init__(evidence)
         self.gef = gef
-        self.gef_activity = gef_activity
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gef.matches_key(), str(self.gef_activity),
+        key = (type(self), self.gef.matches_key(),
                 self.ras.matches_key())
         return str(key)
 
@@ -1320,8 +1313,8 @@ class RasGef(Statement):
         self.ras = agent_list[1]
 
     def __str__(self):
-        s = ("RasGef(%s, %s, %s)" %
-                (self.gef.name, self.gef_activity, self.ras.name))
+        s = ("RasGef(%s, %s)" %
+                (self.gef.name, self.ras.name))
         return s
 
     def refinement_of(self, other, hierarchies):
@@ -1330,15 +1323,13 @@ class RasGef(Statement):
             return False
         # Check the GEF
         if self.gef.refinement_of(other.gef, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies) and \
-           self.gef_activity == other.gef_activity:
+           self.ras.refinement_of(other.ras, hierarchies):
             return True
         else:
             return False
 
     def equals(self, other):
         matches = super(RasGef, self).equals(other)
-        matches = matches and (self.gef_activity == other.gef_activity)
         return matches
 
 
@@ -1353,8 +1344,6 @@ class RasGap(Statement):
     ----------
     gap : :py:class:`Agent`
         The GTPase activating protein.
-    gap_activity : string
-        The biochemical activity of the GAP responsible for hydrolysis.
     ras : :py:class:`Agent`
         The Ras superfamily protein.
 
@@ -1364,16 +1353,15 @@ class RasGap(Statement):
 
     >>> rasa1 = Agent('RASA1')
     >>> kras = Agent('KRAS')
-    >>> rasgap = RasGap(rasa1, 'gap', kras)
+    >>> rasgap = RasGap(rasa1, kras)
     """
-    def __init__(self, gap, gap_activity, ras, evidence=None):
+    def __init__(self, gap, ras, evidence=None):
         super(RasGap, self).__init__(evidence)
         self.gap = gap
-        self.gap_activity = gap_activity
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gap.matches_key(), str(self.gap_activity),
+        key = (type(self), self.gap.matches_key(),
                 self.ras.matches_key())
         return str(key)
 
@@ -1392,20 +1380,18 @@ class RasGap(Statement):
             return False
         # Check the GAP
         if self.gap.refinement_of(other.gap, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies) and \
-           self.gap_activity == other.gap_activity:
+           self.ras.refinement_of(other.ras, hierarchies):
             return True
         else:
             return False
 
     def __str__(self):
-        s = ("RasGap(%s, %s, %s)" %
-                (self.gap.name, self.gap_activity, self.ras.name))
+        s = ("RasGap(%s, %s)" %
+                (self.gap.name, self.ras.name))
         return s
 
     def equals(self, other):
         matches = super(RasGap, self).equals(other)
-        matches = matches and (self.gap_activity == other.gap_activity)
         return matches
 
 
@@ -1704,5 +1690,3 @@ class InvalidLocationError(ValueError):
     """Invalid cellular component name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
-
-
