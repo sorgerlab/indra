@@ -528,26 +528,44 @@ def test_multitype_path():
                  db_refs={'HGNC':'11187'}, )
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
-    stmts = [
+
+    def check_stmts(stmts):
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pa.make_model(policies='one_step')
+        stmts_to_check = [
+                Activation(egfr, 'activity', kras, 'gtpbound', True),
+                Activation(egfr, 'activity', braf, 'kinase', True)
+            ]
+        mc = ModelChecker(pa.model, stmts_to_check)
+        results = mc.check_model()
+        assert len(results) == len(stmts_to_check)
+        assert isinstance(results[0], tuple)
+        assert results[0][1] == True
+        assert results[1][1] == True
+    # Check with the ActiveForm
+    stmts1 = [
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
         ActiveForm(sos1_grb2, 'activity', True),
         Activation(sos1_grb2, 'activity', kras, 'gtpbound', True),
         Activation(kras, 'gtpbound', braf, 'kinase', True)
       ]
-    pa = PysbAssembler()
-    pa.add_statements(stmts)
-    pa.make_model(policies='one_step')
-    stmts_to_check = [
-            Activation(egfr, 'activity', kras, 'gtpbound', True),
-            Activation(egfr, 'activity', braf, 'kinase', True)
-        ]
-    mc = ModelChecker(pa.model, stmts_to_check)
-    results = mc.check_model()
-    assert len(results) == len(stmts_to_check)
-    assert isinstance(results[0], tuple)
-    assert results[0][1] == True
-    assert results[1][1] == True
+    check_stmts(stmts1)
+    # Check without the ActiveForm
+    # FIXME: This test fails--file as an issue. The problem is that the pysb
+    # assembler automatically adds the "active" flag to the rule, even if there
+    # is sufficient context on the agent to indicate activity.
+    # This is also problematic for Activation and RasGap stmts.
+    """
+    stmts2 = [
+        Complex([egfr, grb2]),
+        Complex([sos1, grb2_egfr]),
+        RasGef(sos1_grb2, 'activity', kras),
+        Activation(kras, 'gtpbound', braf, 'kinase', True)
+      ]
+    check_stmts(stmts2)
+    """
 
 def test_grounded_modified_enzyme():
     """Check if the model checker can use semantic annotations to match mods
@@ -582,7 +600,171 @@ def test_check_ubiquitination():
     assert checks[0][0] == stmt
     assert checks[0][1] == True
 
+def test_check_rule_subject1():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    stmt = Phosphorylation(mek, erk)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    # Check against stmt: should not validate ERK phosphorylates ERK
+    stmt_to_check = Phosphorylation(erk, erk)
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == False
+
+def test_rasgef_activation():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    act_stmt = Activation(sos, 'activity', ras, 'gtpbound', True)
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGef is satisfied by the Activation
+    # This currently doesn't work because RasGef statements aren't checked
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgef_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgef_stmt
+    assert checks[0][1] == True
+    """
+
+def test_rasgef_rasgtp():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    act_stmt = Activation(sos, 'activity', raf, 'kinase', True)
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgef_rasgtp_phos():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Phosphorylation(sos, mek)
+    # Assemble and check
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
+def test_rasgap_activation():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    act_stmt = Activation(nf1, 'activity', ras, 'gtpbound', False)
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGap is satisfied by the Activation
+    # This currently doesn't work because RasGap statements aren't checked by
+    # the ModelChecker
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgap_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgap_stmt
+    assert checks[0][1] == True
+    """
+
+def test_rasgap_rasgtp():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    act_stmt = Activation(nf1, 'activity', raf, 'kinase', False)
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgap_rasgtp_phos():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgap_stmt = RasGap(nf1, 'activity', ras)
+    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Dephosphorylation(nf1, mek)
+    # Assemble and check
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
+
 """
+def test_check_rule_subject_bound_condition():
+    braf = Agent('BRAF', db_refs={'HGNC': '1'})
+    raf1 = Agent('RAF1', db_refs={'HGNC': '2'})
+    braf_raf1 = Agent('BRAF', bound_conditions=[BoundCondition(raf1)],
+                      db_refs={'HGNC': '1'})
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    stmt = Phosphorylation(braf_raf1, mek)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    # Check against stmt: should indicate that RAF1 is causally linked to MEK
+    # phosphorylation
+    stmt_to_check = Phosphorylation(raf1, mek)
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
@@ -634,6 +816,12 @@ def test_check_transphosphorylation():
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
+
+# FIXME: Issue: Increasing kinase activity doesn't make it capable of executing
+# phosphorylation statements
+# FIXME Issue increase activity (generic) doesn't make something capable of
+# executing phospho (or other statements)
+
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
@@ -719,12 +907,18 @@ def test_check_transphosphorylation():
 #
 # Save all the paths that a particular rule is on--then if you're wondering
 # why it's in the model, you look at all of the statements for which that
-# rule provides a path.
+# rule provides a path  .
 #
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_check_ubiquitination()
+    test_multitype_path()
+    #test_rasgap_activation()
+    #test_rasgap_rasgtp()
+    #test_rasgap_rasgtp_phos()
+    #test_rasgef_activation()
+    #test_check_rule_subject2()
+    #test_check_ubiquitination()
     #test_grounded_modified_enzyme()
     #test_activation_subtype()
     #test_check_transphosphorylation()
@@ -742,3 +936,4 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
+
