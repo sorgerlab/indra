@@ -528,26 +528,44 @@ def test_multitype_path():
                  db_refs={'HGNC':'11187'}, )
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
-    stmts = [
+
+    def check_stmts(stmts):
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pa.make_model(policies='one_step')
+        stmts_to_check = [
+                Activation(egfr, 'activity', kras, 'gtpbound', True),
+                Activation(egfr, 'activity', braf, 'kinase', True)
+            ]
+        mc = ModelChecker(pa.model, stmts_to_check)
+        results = mc.check_model()
+        assert len(results) == len(stmts_to_check)
+        assert isinstance(results[0], tuple)
+        assert results[0][1] == True
+        assert results[1][1] == True
+    # Check with the ActiveForm
+    stmts1 = [
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
         ActiveForm(sos1_grb2, 'activity', True),
         Activation(sos1_grb2, 'activity', kras, 'gtpbound', True),
         Activation(kras, 'gtpbound', braf, 'kinase', True)
       ]
-    pa = PysbAssembler()
-    pa.add_statements(stmts)
-    pa.make_model(policies='one_step')
-    stmts_to_check = [
-            Activation(egfr, 'activity', kras, 'gtpbound', True),
-            Activation(egfr, 'activity', braf, 'kinase', True)
-        ]
-    mc = ModelChecker(pa.model, stmts_to_check)
-    results = mc.check_model()
-    assert len(results) == len(stmts_to_check)
-    assert isinstance(results[0], tuple)
-    assert results[0][1] == True
-    assert results[1][1] == True
+    check_stmts(stmts1)
+    # Check without the ActiveForm
+    # FIXME: This test fails--file as an issue. The problem is that the pysb
+    # assembler automatically adds the "active" flag to the rule, even if there
+    # is sufficient context on the agent to indicate activity.
+    # This is also problematic for Activation and RasGap stmts.
+    """
+    stmts2 = [
+        Complex([egfr, grb2]),
+        Complex([sos1, grb2_egfr]),
+        RasGef(sos1_grb2, 'activity', kras),
+        Activation(kras, 'gtpbound', braf, 'kinase', True)
+      ]
+    check_stmts(stmts2)
+    """
 
 def test_grounded_modified_enzyme():
     """Check if the model checker can use semantic annotations to match mods
@@ -894,9 +912,10 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_rasgap_activation()
-    test_rasgap_rasgtp()
-    test_rasgap_rasgtp_phos()
+    test_multitype_path()
+    #test_rasgap_activation()
+    #test_rasgap_rasgtp()
+    #test_rasgap_rasgtp_phos()
     #test_rasgef_activation()
     #test_check_rule_subject2()
     #test_check_ubiquitination()
