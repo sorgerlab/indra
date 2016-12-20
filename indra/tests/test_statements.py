@@ -295,17 +295,13 @@ def test_matches_activation():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, 'kinase1',
-                     nras1, 'gtpbound1', True,
+    st1 = Activation(src, nras1, True, 'gtpbound1',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, 'kinase1',
-                     nras1, 'gtpbound1', True,
+    st2 = Activation(src, nras1, True, 'gtpbound1',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, 'kinase2',
-                     nras2, 'gtpbound2', True,
+    st3 = Activation(src, nras2, True, 'gtpbound2',
                      evidence=Evidence(text='bar'))
-    st4 = Activation(src, 'kinase2',
-                     nras2, 'gtpbound2', False,
+    st4 = Activation(src, nras2, False, 'gtpbound2',
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -357,11 +353,11 @@ def test_matches_rasgef():
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, 'gtpbound1', nras1,
+    st1 = RasGef(sos1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos1, 'gtpbound1', nras1,
+    st2 = RasGef(sos1, nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGef(sos2, 'gtpbound2', nras2,
+    st3 = RasGef(sos2, nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -372,11 +368,11 @@ def test_matches_rasgap():
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, 'gtpbound1', nras1,
+    st1 = RasGap(rasa1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa1, 'gtpbound1', nras1,
+    st2 = RasGap(rasa1, nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGap(rasa2, 'gtpbound2', nras2,
+    st3 = RasGap(rasa2, nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -444,14 +440,11 @@ def test_entities_match_activation():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, 'Kinase1',
-                     nras1, 'gtpbound1', True,
+    st1 = Activation(src, nras1, True, 'gtpbound1',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, 'Kinase2',
-                     nras2, 'gtpbound2', True,
+    st2 = Activation(src, nras2, True, 'gtpbound2',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, 'Kinase2',
-                     nras3, 'gtpbound2', True,
+    st3 = Activation(src, nras3, True, 'gtpbound2',
                      evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
     assert(not st1.entities_match(st3))
@@ -499,11 +492,11 @@ def test_entities_match_rasgef():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, 'gtpbound1', nras1,
+    st1 = RasGef(sos1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos2, 'gtpbound2', nras2,
+    st2 = RasGef(sos2, nras2,
                  evidence=Evidence(text='bar'))
-    st3 = RasGef(sos1, 'gtpbound2', nras2,
+    st3 = RasGef(sos1, nras2,
                  evidence=Evidence(text='bar'))
     assert(not st1.entities_match(st2))
     assert(not st2.entities_match(st3))
@@ -516,9 +509,9 @@ def test_entities_match_rasgap():
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, 'gtpbound1', nras1,
+    st1 = RasGap(rasa1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa2, 'gtpbound2', nras2,
+    st2 = RasGap(rasa2, nras2,
                  evidence=Evidence(text='bar'))
     assert(not st1.entities_match(st2))
 
@@ -774,16 +767,11 @@ def test_activation_modification_refinement():
     mek = Agent('MEK', db_refs={'BE': 'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 
-    st1 = Activation(raf, 'kinase',
-                     mek, 'kinase', True)
-    st2 = Activation(braf, 'kinase',
-                     mek, 'kinase', True)
-    st3 = Activation(raf, 'kinase',
-                     mek1, 'kinase', True)
-    st4 = Activation(braf, 'kinase',
-                     mek1, 'kinase', True)
-    st5 = Activation(braf, 'kinase',
-                     mek1, 'kinase', False)
+    st1 = Activation(raf, mek, True, 'kinase')
+    st2 = Activation(braf, mek, True, 'kinase')
+    st3 = Activation(raf, mek1, True, 'kinase')
+    st4 = Activation(braf, mek1, True, 'kinase')
+    st5 = Activation(braf, mek1, False, 'kinase')
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
@@ -811,15 +799,20 @@ def test_activation_modification_refinement():
     assert not st4.refinement_of(st5, hierarchies)
 
 def test_activation_activity_hierarchy_refinement():
-    raf = Agent('RAF', db_refs={'BE': 'RAF'})
+    raf_k = Agent('RAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'BE': 'RAF'})
+    raf_c = Agent('RAF', activity=ActivityCondition('catalytic', True),
+                  db_refs={'BE': 'RAF'})
+    raf_a = Agent('RAF', activity=ActivityCondition('activity', True),
+                  db_refs={'BE': 'RAF'})
     mek = Agent('MEK', db_refs={'BE': 'MEK'})
 
-    st1 = Activation(raf, 'kinase', mek, 'kinase', True)
-    st2 = Activation(raf, 'kinase', mek, 'kinase', False)
-    st3 = Activation(raf, 'catalytic', mek, 'kinase', True)
-    st4 = Activation(raf, 'kinase', mek, 'catalytic', True)
-    st5 = Activation(raf, 'catalytic', mek, 'activity', True)
-    st6 = Activation(raf, 'activity', mek, 'activity', True)
+    st1 = Activation(raf_k, mek, True, 'kinase')
+    st2 = Activation(raf_k, mek, False, 'kinase')
+    st3 = Activation(raf_c, mek, True, 'kinase')
+    st4 = Activation(raf_k, mek, True, 'catalytic')
+    st5 = Activation(raf_c, mek, True, 'activity')
+    st6 = Activation(raf_a, mek, True, 'activity')
 
     assert(not st1.refinement_of(st2, hierarchies))
     assert(not st2.refinement_of(st1, hierarchies))
@@ -942,76 +935,100 @@ def test_activatingsub_family_refinement():
 def test_rasgef_family_refinement():
     sos = Agent('SOS', db_refs={'BE':'SOS'})
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
+    sos1_a = Agent('SOS1', activity=ActivityCondition('activity', True),
+                   db_refs={'HGNC': '11187'})
+    sos1_c = Agent('SOS1', activity=ActivityCondition('catalytic', True),
+                   db_refs={'HGNC': '11187'})
     ras = Agent('RAS', db_refs={'BE':'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     # Statements
-    st1 = RasGef(sos, 'activity', ras)
-    st2 = RasGef(sos1, 'activity', ras)
-    st3 = RasGef(sos, 'activity', kras)
-    st4 = RasGef(sos1, 'activity', kras)
-    st5 = RasGef(sos1, 'different_activity', kras)
+    st1 = RasGef(sos, ras)
+    st2 = RasGef(sos1, ras)
+    st3 = RasGef(sos, kras)
+    st4 = RasGef(sos1, kras)
+    st5 = RasGef(sos1_a, kras)
+    st6 = RasGef(sos1_c, kras)
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
     assert st4.refinement_of(st1, hierarchies)
-    assert not st5.refinement_of(st1, hierarchies)
+    assert st5.refinement_of(st1, hierarchies)
+    assert st6.refinement_of(st1, hierarchies)
     # st2
     assert not st1.refinement_of(st2, hierarchies)
     assert not st3.refinement_of(st2, hierarchies)
     assert st4.refinement_of(st2, hierarchies)
-    assert not st5.refinement_of(st2, hierarchies)
+    assert st5.refinement_of(st2, hierarchies)
+    assert st6.refinement_of(st2, hierarchies)
     # st3
     assert not st1.refinement_of(st3, hierarchies)
     assert not st2.refinement_of(st3, hierarchies)
     assert st4.refinement_of(st3, hierarchies)
-    assert not st5.refinement_of(st3, hierarchies)
+    assert st5.refinement_of(st3, hierarchies)
+    assert st6.refinement_of(st3, hierarchies)
     # st4
     assert not st1.refinement_of(st4, hierarchies)
     assert not st2.refinement_of(st4, hierarchies)
     assert not st3.refinement_of(st4, hierarchies)
-    assert not st5.refinement_of(st4, hierarchies)
+    assert st5.refinement_of(st4, hierarchies)
+    assert st6.refinement_of(st4, hierarchies)
     # st5
     assert not st1.refinement_of(st5, hierarchies)
     assert not st2.refinement_of(st5, hierarchies)
     assert not st3.refinement_of(st5, hierarchies)
     assert not st4.refinement_of(st5, hierarchies)
+    assert st6.refinement_of(st5, hierarchies)
+    # st6
+    assert not st5.refinement_of(st6, hierarchies)
 
 def test_rasgap_family_refinement():
     rasa = Agent('RASA', db_refs={'BE':'RASA'})
     rasa1 = Agent('RASA1', db_refs={'HGNC':'9871'})
     ras = Agent('RAS', db_refs={'BE':'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    rasa1_a = Agent('RASA1', activity=ActivityCondition('activity', True),
+                    db_refs={'HGNC': '9871'})
+    rasa1_c = Agent('RASA1', activity=ActivityCondition('catalytic', True),
+                    db_refs={'HGNC': '9871'})
     # Statements
-    st1 = RasGap(rasa, 'activity', ras)
-    st2 = RasGap(rasa1, 'activity', ras)
-    st3 = RasGap(rasa, 'activity', kras)
-    st4 = RasGap(rasa1, 'activity', kras)
-    st5 = RasGap(rasa1, 'different_activity', kras)
+    st1 = RasGap(rasa, ras)
+    st2 = RasGap(rasa1, ras)
+    st3 = RasGap(rasa, kras)
+    st4 = RasGap(rasa1, kras)
+    st5 = RasGap(rasa1_a, kras)
+    st6 = RasGap(rasa1_c, kras)
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
     assert st4.refinement_of(st1, hierarchies)
-    assert not st5.refinement_of(st1, hierarchies)
+    assert st5.refinement_of(st1, hierarchies)
+    assert st6.refinement_of(st1, hierarchies)
     # st2
     assert not st1.refinement_of(st2, hierarchies)
     assert not st3.refinement_of(st2, hierarchies)
     assert st4.refinement_of(st2, hierarchies)
-    assert not st5.refinement_of(st2, hierarchies)
+    assert st5.refinement_of(st2, hierarchies)
+    assert st6.refinement_of(st2, hierarchies)
     # st3
     assert not st1.refinement_of(st3, hierarchies)
     assert not st2.refinement_of(st3, hierarchies)
     assert st4.refinement_of(st3, hierarchies)
-    assert not st5.refinement_of(st3, hierarchies)
+    assert st5.refinement_of(st3, hierarchies)
+    assert st6.refinement_of(st3, hierarchies)
     # st4
     assert not st1.refinement_of(st4, hierarchies)
     assert not st2.refinement_of(st4, hierarchies)
     assert not st3.refinement_of(st4, hierarchies)
-    assert not st5.refinement_of(st4, hierarchies)
+    assert st5.refinement_of(st4, hierarchies)
+    assert st6.refinement_of(st4, hierarchies)
     # st5
     assert not st1.refinement_of(st5, hierarchies)
     assert not st2.refinement_of(st5, hierarchies)
     assert not st3.refinement_of(st5, hierarchies)
     assert not st4.refinement_of(st5, hierarchies)
+    assert st6.refinement_of(st5, hierarchies)
+    # st6
+    assert not st5.refinement_of(st6, hierarchies)
 
 def test_complex_family_refinement():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
@@ -1147,22 +1164,22 @@ def test_eq_stmt():
            Complex([Agent('a'), Agent('b')], evidence=[ev1])))
     assert(not Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
            Complex([Agent('a'), Agent('b')], evidence=[ev2])))
-    assert(Activation(Agent('a'), 'activity',
-                      Agent('b'), 'activity', True, evidence=[ev1]).equals(
-           Activation(Agent('a'), 'activity',
-                      Agent('b'), 'activity', True, evidence=[ev1])))
-    assert(not Activation(Agent('a'), 'activity',
-                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
-           Activation(Agent('a'), 'activity',
-                      Agent('c'), 'activity', True, evidence=[ev1])))
-    assert(not Activation(Agent('a'), 'activity',
-                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
-           Activation(Agent('a'), 'activity',
-                      Agent('b'), 'kinase', True, evidence=[ev1])))
-    assert(not Activation(Agent('a'), 'activity',
-                          Agent('b'), 'activity', True, evidence=[ev1]).equals(
-           Activation(Agent('a'), 'activity',
-                      Agent('b'), 'activity', True, evidence=[ev2])))
+    assert(Activation(Agent('a'),
+                      Agent('b'), True, evidence=[ev1]).equals(
+           Activation(Agent('a'),
+                      Agent('b'), True, evidence=[ev1])))
+    assert(not Activation(Agent('a'),
+                          Agent('b'), True, evidence=[ev1]).equals(
+           Activation(Agent('a'),
+                      Agent('c'), True, evidence=[ev1])))
+    assert(not Activation(Agent('a'),
+                          Agent('b'), True, evidence=[ev1]).equals(
+           Activation(Agent('a'),
+                      Agent('b'), True, 'kinase', evidence=[ev1])))
+    assert(not Activation(Agent('a'),
+                          Agent('b'), True, evidence=[ev1]).equals(
+           Activation(Agent('a'),
+                      Agent('b'), True, evidence=[ev2])))
 
 def test_serialize():
     ev1 = Evidence(text='1\U0001F4A9')
@@ -1199,10 +1216,12 @@ def test_location_refinement():
     assert(a3.refinement_of(a4, hierarchies))
 
 def test_activity_refinement():
-    a1 = Agent('a', active='kinase')
-    a2 = Agent('a', active='activity')
-    a3 = Agent('a', active='catalytic')
+    a1 = Agent('a', activity=ActivityCondition('kinase', True))
+    a2 = Agent('a', activity=ActivityCondition('activity', True))
+    a3 = Agent('a', activity=ActivityCondition('catalytic', True))
     a4 = Agent('a')
+    a5 = Agent('a', activity=ActivityCondition('catalytic', False))
+    a6 = Agent('a', activity=ActivityCondition('kinase', False))
 
     assert(a1.refinement_of(a2, hierarchies))
     assert(not a2.refinement_of(a3, hierarchies))
@@ -1212,6 +1231,11 @@ def test_activity_refinement():
     assert(not a3.refinement_of(a1, hierarchies))
     assert(a1.refinement_of(a4, hierarchies))
     assert(a2.refinement_of(a4, hierarchies))
+    assert(a5.refinement_of(a4, hierarchies))
+    assert(not a5.refinement_of(a3, hierarchies))
+    assert(not a5.refinement_of(a1, hierarchies))
+    assert(a6.refinement_of(a5, hierarchies))
+    assert(not a5.refinement_of(a6, hierarchies))
 
 def test_translocation_refinement():
     st1 = Translocation(Agent('a'), 'plasma membrane', 'cytoplasm')
@@ -1335,7 +1359,7 @@ def test_unicode_str_methods():
     print(st1)
     print(repr(st1))
 
-    st = Activation(ag, 'activity', ag, 'activity', is_activation=True,
+    st = Activation(ag, ag, True, 'activity',
                     evidence=ev)
     print(st)
     print(repr(st))
@@ -1348,11 +1372,11 @@ def test_unicode_str_methods():
     print(st)
     print(repr(st))
 
-    st = RasGef(ag, 'gef', ag, evidence=ev)
+    st = RasGef(ag, ag, evidence=ev)
     print(st)
     print(repr(st))
 
-    st = RasGap(ag, 'gap', ag, evidence=ev)
+    st = RasGap(ag, ag, evidence=ev)
     print(st)
     print(repr(st))
 
