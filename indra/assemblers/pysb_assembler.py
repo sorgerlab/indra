@@ -1174,7 +1174,7 @@ def modification_assemble_two_step(stmt, model, agent_set):
     kr_bind = get_create_parameter(model, param_name, 1e-3)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1e-3)
+    kf_mod = get_create_parameter(model, param_name, 1)
 
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
@@ -1207,8 +1207,10 @@ def modification_assemble_two_step(stmt, model, agent_set):
             kf_mod)
         add_rule_to_model(model, r)
         # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_bound.monomer.name, 'rule_has_subject'),
-                Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
+        anns = [Annotation(rule_name, enz_bound.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, sub_pattern.monomer.name,
+                           'rule_has_object')]
         model.annotations += anns
 
     enz_uncond = get_uncond_agent(stmt.enz)
@@ -1315,7 +1317,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     kr_bind = get_create_parameter(model, param_name, 1e-3)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_phos')
-    kf_phospho = get_create_parameter(model, param_name, 1e-3)
+    kf_phospho = get_create_parameter(model, param_name, 1)
 
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)

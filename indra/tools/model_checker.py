@@ -51,6 +51,7 @@ class ModelChecker(object):
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
         else:
+            logger.info("Generating influence map")
             self._im = kappa.influence_map(self.model)
             self._im.is_multigraph = lambda: False
             return self._im
