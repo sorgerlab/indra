@@ -322,6 +322,16 @@ class Agent(object):
         else:
             self.db_refs = db_refs
 
+    def __setstate__(self, state):
+        if 'active' in state:
+            logger.warning('Pickle file is out of date!')
+        if state.get('active') is not None:
+            state['activity'] = ActivityCondition(state['active'], True)
+        else:
+            state['activity'] = None
+        state.pop('active', None)
+        self.__dict__.update(state)
+
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
@@ -1073,6 +1083,12 @@ class Activation(Statement):
         self.obj = obj
         self.obj_activity = obj_activity
         self.is_activation = is_activation
+
+    def __setstate__(self, state):
+        if 'subj_activity' in state:
+            logger.warning('Pickle file is out of date!')
+        state.pop('subj_activity', None)
+        self.__dict__.update(state)
 
     def matches_key(self):
         key = (type(self), self.subj.matches_key(),
