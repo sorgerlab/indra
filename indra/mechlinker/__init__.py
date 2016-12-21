@@ -67,7 +67,7 @@ class MechLinker(object):
                     gap_base = self.get_base(stmt.gap)
                     gap_base.add_activity('gap')
                     gap_base.add_active_state(stmt.gap_activity, stmt.gap.mods)
-            elif isinstance(stmt, Activation):
+            elif isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
                     obj_base =\
                         self.get_base(stmt.obj)
@@ -91,7 +91,7 @@ class MechLinker(object):
                                                 agent.activity.activity_type)
                     if act_red is not None:
                         agent.activity.activity_type = act_red
-            if isinstance(stmt, Activation):
+            if isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
                     obj_base =\
                         self.get_base(stmt.obj)
@@ -108,7 +108,7 @@ class MechLinker(object):
 
     def replace_activations(self):
         linked_stmts = []
-        for act_stmt in get_statement_type(self.statements, Activation):
+        for act_stmt in get_statement_type(self.statements, RegulateActivity):
             # Infer ActiveForm from ActAct + Phosphorylation
             if act_stmt.subj.activity is not None and \
                 act_stmt.subj.activity.activity_type == 'kinase' and \
@@ -158,7 +158,7 @@ class MechLinker(object):
                 linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
-        for act_stmt in get_statement_type(self.statements, Activation):
+        for act_stmt in get_statement_type(self.statements, RegulateActivity):
             for af_stmt in get_statement_type(self.statements, ActiveForm):
                 if not af_stmt.agent.name == act_stmt.obj.name:
                     continue
