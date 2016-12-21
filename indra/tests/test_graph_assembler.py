@@ -36,8 +36,7 @@ def test_dephosphorylation_noenz():
     assert(len(ga.graph.edges()) == 0)
 
 def test_activation():
-    st = [Activation(Agent('MAP2K1'), 'activity',
-                     Agent('MAPK1'), 'activity', True)]
+    st = [Activation(Agent('MAP2K1'), Agent('MAPK1'), True)]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
@@ -45,8 +44,7 @@ def test_activation():
     assert(len(ga.graph.edges()) == 1)
 
 def test_inactivation():
-    st = [Activation(Agent('DUSP4'), 'activity',
-                     Agent('MAPK1'), 'activity', False)]
+    st = [Activation(Agent('DUSP4'), Agent('MAPK1'), False)]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()

@@ -176,7 +176,7 @@ def test_pysb_assembler_act1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = Activation(subj, 'activity', obj, 'activity', True)
+    stmt = Activation(subj, obj, True)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -207,7 +207,7 @@ def test_pysb_assembler_dephos2():
 def test_pysb_assembler_rasgef1():
     gef = Agent('SOS1')
     ras = Agent('HRAS')
-    stmt = RasGef(gef, 'catalytic', ras)
+    stmt = RasGef(gef, ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -217,7 +217,7 @@ def test_pysb_assembler_rasgef1():
 def test_pysb_assembler_rasgap1():
     gap = Agent('NF1')
     ras = Agent('HRAS')
-    stmt = RasGap(gap, 'catalytic', ras)
+    stmt = RasGap(gap, ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -341,7 +341,7 @@ def test_unspecified_statement_policies():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = Activation(subj, 'activity', obj, 'activity', True)
+    stmt = Activation(subj, obj, True)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -351,7 +351,7 @@ def test_activity_activity():
 def test_activity_activity2():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = Activation(subj, 'activity', obj, 'activity', True)
+    stmt = Activation(subj, obj, True)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -361,7 +361,7 @@ def test_activity_activity2():
 def test_activity_activity2():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = Activation(subj, None, obj, 'activity', False)
+    stmt = Activation(subj, obj, False)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -371,7 +371,7 @@ def test_activity_activity2():
 def test_activity_activity3():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = Activation(subj, None, obj, 'activity', False)
+    stmt = Activation(subj, obj, False)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -605,7 +605,7 @@ def test_synthesis_one_step():
 def test_synthesis_monomer_pattern():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Activation(subj, 'activity', obj, 'activity', True)
+    st1 = Activation(subj, obj, True)
     st2 = Synthesis(subj, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])

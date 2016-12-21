@@ -4,7 +4,7 @@ from indra.statements import *
 from indra.mechlinker import MechLinker
 
 def test_act_phos_to_af():
-    act_st = Activation(Agent('A'), 'activity', Agent('B'), 'activity', True)
+    act_st = Activation(Agent('A'), Agent('B'), True)
     phos_st = Phosphorylation(Agent('A'), Agent('B'))
     ml = MechLinker([act_st, phos_st])
     linked_stmts = ml.link_statements()

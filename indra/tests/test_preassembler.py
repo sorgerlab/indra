@@ -400,8 +400,8 @@ def test_activation_refinement():
                                      'PUBCHEM': '702',
                                      'TEXT': 'alcohol'})
     obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
-    st1 = Activation(subj, 'activity', obj, 'activity', False)
-    st2 = Activation(subj, 'activity', obj, 'activity', True)
+    st1 = Activation(subj, obj, False)
+    st2 = Activation(subj, obj, True)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 2)
