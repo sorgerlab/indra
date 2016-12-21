@@ -518,7 +518,7 @@ def test_annotation():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.annotations) == 2)
+    assert(len(pa.model.annotations) == 4)
 
 def test_print_model():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
@@ -628,9 +628,9 @@ def test_synthesis_interactions_only():
     assert(len(model.monomers)==2)
 
 def test_missing_catalytic_default_site():
-    c8 = Agent('CASP8')
+    c8 = Agent('CASP8', activity=ActivityCondition('catalytic', True))
     c3 = Agent('CASP3')
-    stmt = Activation(c8, 'catalytic', c3, 'catalytic', True)
+    stmt = Activation(c8, c3, True, 'catalytic')
     # Interactions only
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
@@ -645,9 +645,9 @@ def test_missing_catalytic_default_site():
     model = pa.make_model()
 
 def test_missing_transcription_default_site():
-    p53 = Agent('TP53')
+    p53 = Agent('TP53', activity=ActivityCondition('transcription', True))
     bax = Agent('BAX')
-    stmt = Activation(p53, 'transcription', bax, 'activity', True)
+    stmt = Activation(p53, bax, True)
     # Interactions only
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
@@ -835,7 +835,7 @@ def test_rule_annotation():
     # Check ATP dependent phosphorylation
     stmt = Phosphorylation(a, b)
     check_rule_annotation(stmt, 'atp_dependent')
-    stmt = Activation(a, 'activity', b, 'activity', True)
+    stmt = Activation(a, b, True)
     check_rule_annotation(stmt, 'one_step')
     #Skip Autophosphorylation and Transphosphorylation for now
     #RasGef

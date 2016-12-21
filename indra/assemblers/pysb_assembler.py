@@ -87,6 +87,11 @@ class _BaseAgentSet(object):
         if agent.location is not None:
             base_agent.create_site('loc', [agent.location])
 
+        # Handle activity
+        if agent.activity is not None:
+            site_name = active_site_names[agent.activity.activity_type]
+            base_agent.create_site(site_name, ['inactive', 'active'])
+
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.items():
             base_agent.db_refs[db_name] = db_ref
@@ -261,6 +266,7 @@ def get_binding_site_name(name):
     binding_site = _n(name).lower()
     return binding_site
 
+
 def get_mod_site_name(mod_type, residue, position):
     """Return site names for a modification."""
     names = []
@@ -272,6 +278,7 @@ def get_mod_site_name(mod_type, residue, position):
     name = ('%s%s' % (mod_str, mod_pos))
     return name
 
+
 def get_active_forms(agent, agent_set):
     '''Returns all the patterns (dicts of site states) of an Agent
     that are known to be active.'''
@@ -279,6 +286,7 @@ def get_active_forms(agent, agent_set):
     if not act_forms:
         act_forms = [{}]
     return act_forms
+
 
 def get_inactive_forms(agent, agent_set):
     '''Returns all the patterns (dicts of site states) of an Agent
@@ -320,6 +328,7 @@ def get_agent_rule_str(agent):
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
+
 def add_rule_to_model(model, rule):
     """Add a Rule to a PySB model and handle duplicate component errors."""
     try:
@@ -357,6 +366,7 @@ def get_create_parameter(model, name, value, unique=True):
     model.add_component(parameter)
     return parameter
 
+
 def get_uncond_agent(agent):
     """Construct the unconditional state of an Agent.
 
@@ -366,6 +376,7 @@ def get_uncond_agent(agent):
     """
     agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
+
 
 def grounded_monomer_patterns(model, agent):
     """Get monomer patterns for the agent accounting for grounding information.
@@ -454,6 +465,7 @@ def rules_with_annotation(model, monomer_name, predicate):
             rules.append(model.rules[ann.subject])
     return rules
 
+
 def get_monomer_pattern(model, agent, extra_fields=None):
     """Construct a PySB MonomerPattern from an Agent."""
     try:
@@ -470,12 +482,14 @@ def get_monomer_pattern(model, agent, extra_fields=None):
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
     try:
+        print(monomer)
         monomer_pattern = monomer(**pattern)
     except Exception as e:
         logger.info("Invalid site pattern %s for monomer %s" %
                       (pattern, monomer))
         return None
     return monomer_pattern
+
 
 def get_site_pattern(agent):
     """Construct a dictionary of Monomer site states from an Agent.
@@ -518,6 +532,15 @@ def get_site_pattern(agent):
     # Handle location
     if agent.location is not None:
         pattern['loc'] = agent.location
+
+    # Handle activity
+    if agent.activity is not None:
+        active_site_name = active_site_names[agent.activity.activity_type]
+        if agent.activity.is_active:
+            active_site_state = 'active'
+        else:
+            active_site_state = 'inactive'
+        pattern[active_site_name] = active_site_state
 
     return pattern
 
@@ -1656,32 +1679,33 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
 
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
-# ACTIVITYACTIVITY ######################################################
+# ACTIVATION ######################################################
+
 
 def activation_monomers_interactions_only(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
-    if stmt.subj_activity is not None:
-        subj.create_site(active_site_names[stmt.subj_activity])
-        obj.create_site(active_site_names[stmt.obj_activity])
-        obj.create_site(default_mod_site_names[stmt.subj_activity])
+    if stmt.subj.activity is not None:
+        subj_activity = stmt.subj.activity.activity_type
     else:
-        subj.create_site(active_site_names[stmt.obj_activity])
-        obj.create_site(active_site_names[stmt.obj_activity])
-        obj.create_site(default_mod_site_names[stmt.obj_activity])
+        subj_activity = 'activity'
+    subj.create_site(active_site_names[subj_activity])
+    obj.create_site(active_site_names[stmt.obj_activity])
+    obj.create_site(default_mod_site_names[stmt.obj_activity])
+
 
 def activation_monomers_one_step(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
-    if stmt.subj_activity is not None:
-        subj.create_site(stmt.subj_activity, ('inactive', 'active'))
-        # Add the new active state flag to the list of active forms
-        subj.add_activity_form({stmt.subj_activity: 'active'}, True)
-        subj.add_activity_form({stmt.subj_activity: 'inactive'}, False)
+    # if stmt.subj_activity is not None:
+    #    # Add the new active state flag to the list of active forms
+    #    subj.add_activity_form({stmt.subj_activity: 'active'}, True)
+    #    subj.add_activity_form({stmt.subj_activity: 'inactive'}, False)
     obj.create_site(stmt.obj_activity, ('inactive', 'active'))
     # Add the new active state flag to the list of active forms
     obj.add_activity_form({stmt.obj_activity: 'active'}, True)
     obj.add_activity_form({stmt.obj_activity: 'inactive'}, False)
+
 
 activation_monomers_default = activation_monomers_one_step
 
@@ -1690,17 +1714,20 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
-    if stmt.subj_activity is not None:
-        subj_active_site = active_site_names[stmt.subj_activity]
-        obj_mod_site = default_mod_site_names[stmt.subj_activity]
+
+    if stmt.subj.activity:
+        subj_activity = stmt.subj.activity.activity_type
     else:
-        subj_active_site = active_site_names[stmt.obj_activity]
-        obj_mod_site = default_mod_site_names[stmt.obj_activity]
+        subj_activity = 'activity'
+
+    subj_active_site = active_site_names[subj_activity]
+    obj_mod_site = default_mod_site_names[stmt.obj_activity]
 
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
-    rule_name = '%s_%s_activates_%s_%s' %\
-             (rule_subj_str, stmt.subj_activity, rule_obj_str,
+    polarity_str = 'activates' if stmt.is_activation else 'deactivates'
+    rule_name = '%s_%s_%s_%s' %\
+             (rule_subj_str, polarity_str, rule_obj_str,
               stmt.obj_activity)
     r = Rule(rule_name,
              subj(**{subj_active_site: None}) +
@@ -1712,11 +1739,7 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
 
 
 def activation_assemble_one_step(stmt, model, agent_set):
-    if stmt.subj_activity is not None:
-        subj_pattern = get_monomer_pattern(model, stmt.subj,
-            extra_fields={stmt.subj_activity: 'active'})
-    else:
-        subj_pattern = get_monomer_pattern(model, stmt.subj)
+    subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'inactive'})
@@ -1724,14 +1747,15 @@ def activation_assemble_one_step(stmt, model, agent_set):
         extra_fields={stmt.obj_activity: 'active'})
 
     param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                        stmt.obj.name[0].lower() + '_act'
+        stmt.obj.name[0].lower() + '_act'
     kf_one_step_activate = \
-                   get_create_parameter(model, param_name, 1e-6)
+        get_create_parameter(model, param_name, 1e-6)
 
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
-    rule_name = '%s_%s_activates_%s_%s' % \
-        (rule_subj_str, stmt.subj_activity, rule_obj_str,
+    polarity_str = 'activates' if stmt.is_activation else 'deactivates'
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_subj_str, polarity_str, rule_obj_str,
          stmt.obj_activity)
 
     if stmt.is_activation:
@@ -1763,9 +1787,6 @@ def rasgef_monomers_interactions_only(stmt, agent_set):
 def rasgef_monomers_one_step(stmt, agent_set):
     # Gef
     gef = agent_set.get_create_base_agent(stmt.gef)
-    gef.create_site(stmt.gef_activity, ('inactive', 'active'))
-    gef.add_activity_form({stmt.gef_activity: 'active'}, True)
-    gef.add_activity_form({stmt.gef_activity: 'inactive'}, False)
     # Ras
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('gtpbound', ('inactive', 'active'))
@@ -1792,8 +1813,7 @@ def rasgef_assemble_interactions_only(stmt, model, agent_set):
 
 
 def rasgef_assemble_one_step(stmt, model, agent_set):
-    gef_pattern = get_monomer_pattern(model, stmt.gef,
-        extra_fields={stmt.gef_activity: 'active'})
+    gef_pattern = get_monomer_pattern(model, stmt.gef)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
     ras_active = get_monomer_pattern(model, stmt.ras,
@@ -1830,9 +1850,6 @@ def rasgap_monomers_interactions_only(stmt, agent_set):
 def rasgap_monomers_one_step(stmt, agent_set):
     # Gap
     gap = agent_set.get_create_base_agent(stmt.gap)
-    gap.create_site(stmt.gap_activity, ('inactive', 'active'))
-    gap.add_activity_form({stmt.gap_activity: 'active'}, True)
-    gap.add_activity_form({stmt.gap_activity: 'inactive'}, False)
     # Ras
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('gtpbound', ('inactive', 'active'))
@@ -1859,8 +1876,7 @@ def rasgap_assemble_interactions_only(stmt, model, agent_set):
 
 
 def rasgap_assemble_one_step(stmt, model, agent_set):
-    gap_pattern = get_monomer_pattern(model, stmt.gap,
-        extra_fields={stmt.gap_activity: 'active'})
+    gap_pattern = get_monomer_pattern(model, stmt.gap)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
     ras_active = get_monomer_pattern(model, stmt.ras,
