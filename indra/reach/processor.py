@@ -192,11 +192,9 @@ class ReachProcessor(object):
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)
             if r['subtype'] == 'positive-activation':
-                is_activation = True
+                st = Activation(controller_agent, controlled_agent, ev)
             else:
-                is_activation = False
-            st = Activation(controller_agent, controlled_agent,
-                            is_activation, ev)
+                st = Inhibition(controller_agent, controlled_agent, ev)
             self.statements.append(st)
 
     def get_translocation(self):

@@ -470,26 +470,29 @@ class BelProcessor(object):
             # Distinguish the case when the activator is a RasGTPase
             # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'gtpbound':
+                if not is_activation:
+                    logger.warning('RasGtpActivation only handles positive '
+                                   'activation.')
+                    continue
                 self.statements.append(
-                     RasGtpActivation(subj, obj, is_activation, obj_activity,
-                                      evidence))
+                     RasGtpActivation(subj, obj, obj_activity, evidence))
             # If the object is a Ras-like GTPase, and the subject *increases*
             # its GtpBound activity, then the subject is a RasGEF
-            elif obj_activity == 'gtpbound' and \
-                 rel == 'increases':
+            elif obj_activity == 'gtpbound' and rel == 'DirectlyIncreases':
                 self.statements.append(
                         RasGef(subj, obj, evidence))
             # If the object is a Ras-like GTPase, and the subject *decreases*
             # its GtpBound activity, then the subject is a RasGAP
-            elif obj_activity == 'gtpbound' and \
-                 rel == 'decreases':
+            elif obj_activity == 'gtpbound' and rel == 'DirectlyDecreases':
                 self.statements.append(
                         RasGap(subj, obj, evidence))
             # Otherwise, create a generic Activity->Activity statement
             else:
-                self.statements.append(
-                     Activation(subj, obj, is_activation, obj_activity,
-                                evidence))
+                if rel == 'DirectlyDecreases':
+                    st = Inhibition(subj, obj, obj_activity, evidence)
+                else:
+                    st = Activation(subj, obj, obj_activity, evidence)
+                self.statements.append(st)
 
             """
             #print "--------------------------------"

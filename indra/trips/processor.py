@@ -163,7 +163,10 @@ class TripsProcessor(object):
 
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
-                st = Activation(a1, a2, is_activation, evidence=[ev])
+                if is_activation:
+                    st = Activation(a1, a2, evidence=[ev])
+                else:
+                    st = Inhibition(a1, a2, evidence=[ev])
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
 
@@ -221,8 +224,10 @@ class TripsProcessor(object):
                     is_activation = True
                 for a1, a2 in _agent_list_product((factor_agent,
                                                    outcome_agent)):
-                    st = Activation(a1, a2, is_activation,
-                                    evidence=[ev])
+                    if is_activation:
+                        st = Activation(a1, a2, evidence=[ev])
+                    else:
+                        st = Inhibition(a1, a2, evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
@@ -277,9 +282,7 @@ class TripsProcessor(object):
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
                                                    affected_agent)):
-                    st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
-                                    evidence=[ev])
+                    st = Activation(a1, a2, evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
             elif affected_event_type.text == 'ONT::ACTIVITY':
@@ -292,8 +295,7 @@ class TripsProcessor(object):
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
                                                    affected_agent)):
-                    st = Activation(a1, a2, is_activation=True,
-                                    evidence=[ev])
+                    st = Activation(a1, a2, evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 

@@ -461,7 +461,7 @@ def test_34():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Activation))
+    assert(isinstance(st, Inhibition))
     assert(st.obj is not None)
     assert(st.subj is not None)
     assert(not st.is_activation)
