@@ -180,7 +180,7 @@ def test_site_map_rasgap():
 
 def test_site_map_activation():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = Activation(mapk1_invalid, mapk3_invalid, True, 'kinase')
+    st1 = Activation(mapk1_invalid, mapk3_invalid, 'kinase')
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
