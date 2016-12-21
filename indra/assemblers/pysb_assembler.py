@@ -925,6 +925,15 @@ def complex_assemble_one_step(stmt, model, agent_set):
                             kf_bind)
         add_rule_to_model(model, r)
 
+        anns = [Annotation(rule_name, agent1_pattern.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, agent1_pattern.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, agent2_pattern.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, agent2_pattern.monomer.name,
+                           'rule_has_object')]
+
         # In reverse reaction, assume that dissocition is unconditional
 
         agent1_uncond = get_uncond_agent(agent1)
@@ -941,6 +950,15 @@ def complex_assemble_one_step(stmt, model, agent_set):
                             kr_bind)
         add_rule_to_model(model, r)
 
+        anns += [Annotation(rule_name, monomer1_uncond.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, monomer1_uncond.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, monomer2_uncond.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, monomer2_uncond.monomer.name,
+                           'rule_has_object')]
+        model.annotations += anns
 
 def complex_assemble_multi_way(stmt, model, agent_set):
     # Get the rate parameter

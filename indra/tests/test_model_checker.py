@@ -386,6 +386,10 @@ def test_distinguish_path_polarity1():
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
     Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation('A_activate_B', 'A', 'rule_has_subject')
+    Annotation('A_activate_B', 'B', 'rule_has_object')
+    Annotation('B_dephos_C', 'B', 'rule_has_subject')
+    Annotation('B_dephos_C', 'C', 'rule_has_object')
     C.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -420,6 +424,10 @@ def test_distinguish_path_polarity2():
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
     Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation('A_inhibit_B', 'A', 'rule_has_subject')
+    Annotation('A_inhibit_B', 'B', 'rule_has_object')
+    Annotation('B_dephos_C', 'B', 'rule_has_subject')
+    Annotation('B_dephos_C', 'C', 'rule_has_object')
     C.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -510,6 +518,8 @@ def test_phosphorylation_annotations():
     # Add agent grounding
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation('A_phos_B', 'A_monomer', 'rule_has_subject')
+    Annotation('A_phos_B', 'B_monomer', 'rule_has_object')
     # Add annotations to the sites/states of the Monomer itself
     B_annot = [
         Annotation('Thr185', 'T', 'is_residue'),
@@ -555,6 +565,8 @@ def test_multitype_path():
             ]
         mc = ModelChecker(pa.model, stmts_to_check)
         results = mc.check_model()
+        im = mc.get_im()
+        im.draw('test_multitype.pdf', prog='dot')
         assert len(results) == len(stmts_to_check)
         assert isinstance(results[0], tuple)
         assert results[0][1] == True
