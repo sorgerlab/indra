@@ -210,7 +210,7 @@ def test_12():
     assert(isinstance(st, Phosphorylation))
     assert(st.enz is not None)
     assert(st.sub is not None)
-    assert(st.enz.active == 'activity')
+    assert(st.enz.activity.activity_type == 'activity')
     assert(not st.enz.bound_conditions[0].is_bound)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
