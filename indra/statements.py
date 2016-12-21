@@ -524,8 +524,8 @@ class Agent(object):
             mod_str += ', '.join(['%s' % m for m in self.mods])
             attr_strs.append(mod_str)
         if self.activity:
-            attr_strs.append('%s: %s' % self.activity.activity_type,
-                                        self.activity.is_active)
+            attr_strs.append('%s: %s' % (self.activity.activity_type,
+                                         self.activity.is_active))
         if self.mutations:
             mut_str = 'muts: '
             mut_str += ', '.join(['%s' % m for m in self.mutations])
