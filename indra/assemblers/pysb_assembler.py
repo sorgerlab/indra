@@ -89,7 +89,7 @@ class _BaseAgentSet(object):
 
         # Handle activity
         if agent.activity is not None:
-            site_name = active_site_names[agent.activity.activity_type]
+            site_name = agent.activity.activity_type
             base_agent.create_site(site_name, ['inactive', 'active'])
 
         # There might be overwrites here
@@ -193,16 +193,6 @@ abbrevs = {
     'modification': 'mod',
 }
 
-active_site_names = {
-    'kinase': 'kin_site',
-    'phosphatase': 'phos_site',
-    'gtpbound': 'switch',
-    'catalytic': 'cat_site',
-    'transcription': 'trans_act',
-    # For general molecular activity
-    'activity': 'act',
-}
-
 states = {
     'phosphorylation': ['u', 'p'],
     'ubiquitination': ['n', 'y'],
@@ -243,23 +233,6 @@ mod_acttype_map = {
     ist.Geranylgeranylation: 'catalytic',
     ist.Degeranylgeranylation: 'catalytic',
 }
-
-# The following dict specifies the default modification/binding site names for
-# modifications resulting from a particular type of activity. For example, a
-# protein with Kinase activity makes a modification of type "phospho" on its
-# substrate, and a RasGTPase (with gtpbound activity) binds to a site of type
-# "RBD" (Ras binding domain). This comes in handy for specifying
-# Activation rules, where the modification site mediating the activation
-# is not specified.
-default_mod_site_names = {
-    'kinase': 'phospho',
-    'gtpbound': 'rbd',
-    'phosphatase': 'phospho',
-    'activity': 'act',
-    'catalytic': 'act',
-    'transcription': 'tf_site',
-}
-
 
 def get_binding_site_name(name):
     """Return a binding site name from a given agent name."""
@@ -535,7 +508,7 @@ def get_site_pattern(agent):
 
     # Handle activity
     if agent.activity is not None:
-        active_site_name = active_site_names[agent.activity.activity_type]
+        active_site_name = agent.activity.activity_type
         if agent.activity.is_active:
             active_site_state = 'active'
         else:
@@ -1070,7 +1043,7 @@ def modification_monomers_interactions_only(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     act_type = mod_acttype_map[stmt.__class__]
-    active_site = active_site_names[act_type]
+    active_site = act_type
     enz.create_site(active_site)
     sub = agent_set.get_create_base_agent(stmt.sub)
     # See NOTE in monomers_one_step, below
@@ -1128,8 +1101,7 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
 
     rule_name = '%s_%s_%s_%s' % (rule_enz_str, mod_condition_name,
                                  rule_sub_str, mod_site)
-    act_type = mod_acttype_map[stmt.__class__]
-    active_site = active_site_names[act_type]
+    active_site = mod_acttype_map[stmt.__class__]
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
     lhs = enz(**{active_site: None}) + sub(**{mod_site: None})
@@ -1391,8 +1363,7 @@ def demodification_monomers_interactions_only(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    act_type = mod_acttype_map[stmt.__class__]
-    active_site = active_site_names[act_type]
+    active_site = mod_acttype_map[stmt.__class__]
     enz.create_site(active_site)
     mod_condition_name = stmt.__class__.__name__.lower()[2:]
     sub.create_mod_site(ist.ModCondition(mod_condition_name,
@@ -1428,8 +1399,7 @@ def demodification_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     enz = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
-    act_type = mod_acttype_map[stmt.__class__]
-    active_site = active_site_names[act_type]
+    active_site = mod_acttype_map[stmt.__class__]
     # See NOTE in Phosphorylation.monomers_one_step
     demod_condition_name = stmt.__class__.__name__.lower()
     mod_condition_name = demod_condition_name[2:]
@@ -1689,9 +1659,9 @@ def activation_monomers_interactions_only(stmt, agent_set):
         subj_activity = stmt.subj.activity.activity_type
     else:
         subj_activity = 'activity'
-    subj.create_site(active_site_names[subj_activity])
-    obj.create_site(active_site_names[stmt.obj_activity])
-    obj.create_site(default_mod_site_names[stmt.obj_activity])
+    subj.create_site(subj_activity)
+    obj.create_site(stmt.obj_activity)
+    obj.create_site(stmt.obj_activity)
 
 
 def activation_monomers_one_step(stmt, agent_set):
@@ -1720,8 +1690,8 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
     else:
         subj_activity = 'activity'
 
-    subj_active_site = active_site_names[subj_activity]
-    obj_mod_site = default_mod_site_names[stmt.obj_activity]
+    subj_active_site = subj_activity
+    obj_mod_site = stmt.obj_activity
 
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
