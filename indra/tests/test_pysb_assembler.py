@@ -176,7 +176,7 @@ def test_pysb_assembler_act1():
     egfr = Agent('EGFR')
     subj = Agent('GRB2', bound_conditions=[BoundCondition(egfr, True)])
     obj = Agent('SOS1')
-    stmt = Activation(subj, obj, True)
+    stmt = Activation(subj, obj)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -341,7 +341,7 @@ def test_unspecified_statement_policies():
 def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = Activation(subj, obj, True)
+    stmt = Activation(subj, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -351,7 +351,7 @@ def test_activity_activity():
 def test_activity_activity2():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    stmt = Activation(subj, obj, True)
+    stmt = Activation(subj, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -361,7 +361,7 @@ def test_activity_activity2():
 def test_activity_activity2():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = Activation(subj, obj, False)
+    stmt = Inhibition(subj, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -371,7 +371,7 @@ def test_activity_activity2():
 def test_activity_activity3():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
-    stmt = Activation(subj, obj, False)
+    stmt = Inhibition(subj, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -605,7 +605,7 @@ def test_synthesis_one_step():
 def test_synthesis_monomer_pattern():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = Activation(subj, obj, True)
+    st1 = Activation(subj, obj)
     st2 = Synthesis(subj, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
@@ -630,7 +630,7 @@ def test_synthesis_interactions_only():
 def test_missing_catalytic_default_site():
     c8 = Agent('CASP8', activity=ActivityCondition('catalytic', True))
     c3 = Agent('CASP3')
-    stmt = Activation(c8, c3, True, 'catalytic')
+    stmt = Activation(c8, c3, 'catalytic')
     # Interactions only
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
@@ -647,7 +647,7 @@ def test_missing_catalytic_default_site():
 def test_missing_transcription_default_site():
     p53 = Agent('TP53', activity=ActivityCondition('transcription', True))
     bax = Agent('BAX')
-    stmt = Activation(p53, bax, True)
+    stmt = Activation(p53, bax)
     # Interactions only
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
@@ -835,7 +835,7 @@ def test_rule_annotation():
     # Check ATP dependent phosphorylation
     stmt = Phosphorylation(a, b)
     check_rule_annotation(stmt, 'atp_dependent')
-    stmt = Activation(a, b, True)
+    stmt = Activation(a, b)
     check_rule_annotation(stmt, 'one_step')
     #Skip Autophosphorylation and Transphosphorylation for now
     #RasGef

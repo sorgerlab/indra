@@ -29,7 +29,7 @@ SelfExporter.do_export = False
 # in this list then we require that there is at least one default
 # policy implemented to assemble that type of statement.
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
-                       ist.Activation, ist.ActiveForm,
+                       ist.RegulateActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation,
                        ist.Degradation, ist.Synthesis]
 
@@ -1669,8 +1669,7 @@ transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
 # ACTIVATION ######################################################
 
-
-def activation_monomers_interactions_only(stmt, agent_set):
+def regulateactivity_monomers_interactions_only(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj.activity is not None:
@@ -1682,7 +1681,7 @@ def activation_monomers_interactions_only(stmt, agent_set):
     obj.create_site(stmt.obj_activity)
 
 
-def activation_monomers_one_step(stmt, agent_set):
+def regulateactivity_monomers_one_step(stmt, agent_set):
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
     # if stmt.subj_activity is not None:
@@ -1695,10 +1694,7 @@ def activation_monomers_one_step(stmt, agent_set):
     obj.add_activity_form({stmt.obj_activity: 'inactive'}, False)
 
 
-activation_monomers_default = activation_monomers_one_step
-
-
-def activation_assemble_interactions_only(stmt, model, agent_set):
+def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
@@ -1726,7 +1722,7 @@ def activation_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def activation_assemble_one_step(stmt, model, agent_set):
+def regulateactivity_assemble_one_step(stmt, model, agent_set):
     subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
@@ -1761,7 +1757,26 @@ def activation_assemble_one_step(stmt, model, agent_set):
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
     model.annotations += anns
 
-activation_assemble_default = activation_assemble_one_step
+regulateactivity_monomers_default = regulateactivity_monomers_one_step
+regulateactivity_assemble_default = regulateactivity_assemble_one_step
+
+activation_monomers_interactions_only = \
+                    regulateactivity_monomers_interactions_only
+activation_assemble_interactions_only = \
+                    regulateactivity_assemble_interactions_only
+activation_monomers_one_step = regulateactivity_monomers_one_step
+activation_assemble_one_step = regulateactivity_assemble_one_step
+activation_monomers_default = regulateactivity_monomers_one_step
+activation_assemble_default = regulateactivity_assemble_one_step
+
+inhibition_monomers_interactions_only = \
+                    regulateactivity_monomers_interactions_only
+inhibition_assemble_interactions_only = \
+                    regulateactivity_assemble_interactions_only
+inhibition_monomers_one_step = regulateactivity_monomers_one_step
+inhibition_assemble_one_step = regulateactivity_assemble_one_step
+inhibition_monomers_default = regulateactivity_monomers_one_step
+inhibition_assemble_default = regulateactivity_assemble_one_step
 
 # RASGEF #####################################################
 
