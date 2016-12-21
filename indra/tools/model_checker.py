@@ -86,21 +86,22 @@ class ModelChecker(object):
         """
         if isinstance(stmt, Modification):
             return self._check_modification(stmt)
-        elif isinstance(stmt, Activation):
-            return self._check_activation(stmt)
+        elif isinstance(stmt, RegulateActivity):
+            return self._check_regulate_activity(stmt)
         else:
             return False
 
-    def _check_activation(self, stmt):
-        """Check an Activation statement."""
+    def _check_regulate_activity(self, stmt):
+        """Check a RegulateActivity statement."""
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
-        # pattern from the Activation statement, which will nearly always have
-        # no state conditions on it. In future, this statement should also match
-        # rules in which 1) the agent is in its active form, or 2) the agent is
-        # tagged as the enzyme in a rule of the appropriate activity (e.g., a
-        # phosphorylation rule) FIXME
+        # pattern from the Activation/Inhibition statement, which will nearly
+        # always have no state conditions on it. In future, this statement foo
+        # should also match rules in which 1) the agent is in its active form,
+        # or 2) the agent is tagged as the enzyme in a rule of the appropriate
+        # activity (e.g., a phosphorylation rule) FIXME
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
+
         target_polarity = 1 if stmt.is_activation else -1
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the
