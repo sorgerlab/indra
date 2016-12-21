@@ -122,7 +122,7 @@ class SBGNAssembler(object):
             map.append(glyph)
         for s in self.statements:
             if isinstance(s, ist.Modification) or \
-                isinstance(s, ist.Activation) or \
+                isinstance(s, ist.RegulateActivity) or \
                 isinstance(s, ist.ActiveForm):
                 class_name = 'process'
             elif isinstance(s, ist.Complex):
@@ -164,7 +164,7 @@ class SBGNAssembler(object):
                           id=make_id(),
                           )
                     )
-            if isinstance(s, ist.Activation):
+            if isinstance(s, ist.RegulateActivity):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.subj.matches_key()],
@@ -239,7 +239,7 @@ def statement_product(stmt):
         for member in stmt.members[1:]:
             bc = ist.BoundCondition(member, True)
             product.bound_conditions.append(bc)
-    elif isinstance(stmt, ist.Activation):
+    elif isinstance(stmt, ist.RegulateActivity):
         product = copy.deepcopy(stmt.obj)
         if stmt.is_activation:
             mc = ist.ModCondition(stmt.obj_activity)
@@ -268,7 +268,7 @@ def statement_consumed(stmt):
         consumed = [consumed1]
     elif isinstance(stmt, ist.Complex):
         consumed = stmt.members
-    elif isinstance(stmt, ist.Activation):
+    elif isinstance(stmt, ist.RegulateActivity):
         consumed1 = copy.deepcopy(stmt.obj)
         if not stmt.is_activation:
             mc = ist.ModCondition(stmt.obj_activity)
