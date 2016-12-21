@@ -149,12 +149,10 @@ class TripsProcessor(object):
                 continue
 
             is_activation = True
-            activator_act = 'activity'
             if _is_type(event, 'ONT::ACTIVATE'):
                 self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
             elif _is_type(event, 'ONT::INHIBIT'):
                 is_activation = False
-                activator_act = None
                 self._add_extracted('ONT::INHIBIT', event.attrib['id'])
             elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
@@ -165,8 +163,7 @@ class TripsProcessor(object):
 
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
-                st = Activation(a1, activator_act, a2, 'activity',
-                                is_activation=is_activation, evidence=[ev])
+                st = Activation(a1, a2, is_activation, evidence=[ev])
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
 
@@ -224,8 +221,7 @@ class TripsProcessor(object):
                     is_activation = True
                 for a1, a2 in _agent_list_product((factor_agent,
                                                    outcome_agent)):
-                    st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation,
+                    st = Activation(a1, a2, is_activation,
                                     evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
@@ -296,8 +292,7 @@ class TripsProcessor(object):
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
                                                    affected_agent)):
-                    st = Activation(a1, 'activity',
-                                    a2, 'activity', is_activation=True,
+                    st = Activation(a1, a2, is_activation=True,
                                     evidence=[ev])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
@@ -849,9 +844,11 @@ class TripsProcessor(object):
             agent.location = loc
         # Get activity
         activity = term.find('features/active')
-        if activity is not None and activity.text.lower() == 'true':
-                agent.active = 'activity'
-
+        if activity is not None:
+            if activity.text.lower() == 'true':
+                agent.activity = ActivityCondition('activity', True)
+            if activity.text.lower() == 'false':
+                agent.activity = ActivityCondition('activity', False)
         return agent
 
     def _add_condition(self, agent, precond_event, agent_term):

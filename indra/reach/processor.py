@@ -195,8 +195,8 @@ class ReachProcessor(object):
                 is_activation = True
             else:
                 is_activation = False
-            st = Activation(controller_agent, 'activity',
-                            controlled_agent, 'activity', is_activation, ev)
+            st = Activation(controller_agent, controlled_agent,
+                            is_activation, ev)
             self.statements.append(st)
 
     def get_translocation(self):
