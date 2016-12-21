@@ -104,6 +104,8 @@ def test_one_step_phosphorylation():
     # Add annotations
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('A_phos_B', 'A', 'rule_has_subject')
+    Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
         Annotation('T185', 'T', 'is_residue'),
@@ -138,6 +140,8 @@ def test_two_step_phosphorylation():
     # Add annotations
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('A_phos_B', 'A', 'rule_has_subject')
+    Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
         Annotation('T185', 'T', 'is_residue'),
@@ -286,6 +290,16 @@ def test_consumption_rule():
          Parameter('k5', 1))
     Annotation(Pervanadate, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(MAPK1, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP', 'DUSP', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP', 'DUSP', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP_rev', 'Pervanadate', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP_rev', 'Pervanadate', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP_rev', 'DUSP', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP_rev', 'DUSP', 'rule_has_object')
+    Annotation('DUSP_dephos_MAPK1_at_T185', 'DUSP', 'rule_has_subject')
+    Annotation('DUSP_dephos_MAPK1_at_T185', 'MAPK1', 'rule_has_object')
     MAPK1.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -620,7 +634,7 @@ def test_check_rule_subject1():
 def test_rasgef_activation():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
-    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgef_stmt = RasGef(sos, ras)
     act_stmt = Activation(sos, ras, True, 'gtpbound')
     # Check that the activation is satisfied by the RasGef
     pysba = PysbAssembler()
@@ -650,7 +664,7 @@ def test_rasgef_rasgtp():
     ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                 db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
-    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgef_stmt = RasGef(sos, ras)
     rasgtp_stmt = RasGtpActivation(ras, raf, True, 'kinase')
     act_stmt = Activation(sos, raf, True, 'kinase')
     # Check that the activation is satisfied by the RasGef
@@ -669,7 +683,7 @@ def test_rasgef_rasgtp_phos():
                 db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
-    rasgef_stmt = RasGef(sos, 'activity', ras)
+    rasgef_stmt = RasGef(sos, ras)
     rasgtp_stmt = RasGtpActivation(ras, raf, True, 'kinase')
     phos = Phosphorylation(raf, mek)
     stmt_to_check = Phosphorylation(sos, mek)
@@ -719,7 +733,7 @@ def test_rasgap_rasgtp():
                  db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
     rasgap_stmt = RasGap(nf1, ras)
-    rasgtp_stmt = RasGtpActivation(ras_g, raf, True, kinase)
+    rasgtp_stmt = RasGtpActivation(ras_g, raf, True, 'kinase')
     act_stmt = Activation(nf1, raf, False, 'kinase')
     # Check that the activation is satisfied by the RasGap
     pysba = PysbAssembler()
@@ -920,7 +934,8 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_multitype_path()
+    test_one_step_phosphorylation()
+    #test_multitype_path()
     #test_rasgap_activation()
     #test_rasgap_rasgtp()
     #test_rasgap_rasgtp_phos()

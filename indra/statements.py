@@ -278,8 +278,8 @@ class Agent(object):
         Other agents bound to the agent in this context.
     mutations : list of :py:class:`MutCondition`
         Amino acid mutations of the agent.
-    activities : list of :py:class:`ActCondition`
-        Activities of the agent.
+    activity : :py:class:`ActivityCondition`
+        Activity of the agent.
     location : str
         Cellular location of the agent. Must be a valid name (e.g. "nucleus")
         or identifier (e.g. "GO:0005634")for a GO cellular compartment.
