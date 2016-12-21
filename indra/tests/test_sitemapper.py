@@ -111,7 +111,6 @@ def test_site_map_modification():
     assert unicode_strs((mapk1_invalid, mapk3_invalid, map2k1_invalid, st1,
                          st2, res, valid_stmts, mapped_stmts))
 
-
 def test_site_map_activity_modification():
     mc = [ModCondition('phosphorylation', 'T', '183'),
           ModCondition('phosphorylation', 'Y', '185')]
@@ -163,28 +162,25 @@ def test_site_map_selfmodification():
 
 def test_site_map_complex():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGef(mapk1_invalid, 'activity', mapk3_invalid)
+    st1 = RasGef(mapk1_invalid, mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
 def test_site_map_rasgef():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGef(mapk1_invalid, 'activity', mapk3_invalid)
+    st1 = RasGef(mapk1_invalid, mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
-
 
 def test_site_map_rasgap():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGap(mapk1_invalid, 'activity', mapk3_invalid)
+    st1 = RasGap(mapk1_invalid, mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
-
 def test_site_map_activation():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = Activation(mapk1_invalid, 'kinase',
-                     mapk3_invalid, 'kinase', True)
+    st1 = Activation(mapk1_invalid, mapk3_invalid, True, 'kinase')
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
@@ -209,7 +205,6 @@ def get_invalid_mapks():
                           db_refs={'UP': 'P27361'})
     assert unicode_strs((mapk1_invalid, mapk3_invalid))
     return (mapk1_invalid, mapk3_invalid)
-
 
 def check_validated_mapks(res, st1):
     """Validate that the invalid MAPKs have been fixed appropriately."""

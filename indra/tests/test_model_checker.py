@@ -151,8 +151,6 @@ def test_two_step_phosphorylation():
     #    f.write(render_reactions.run(model))
     #with open('species_2step.dot', 'w') as f:
     #    f.write(species_graph.run(model))
-    #im = kappa.influence_map(model)
-    #im.draw('im_2step.pdf', prog='dot')
     #generate_equations(model)
     # Now check the model
     mc = ModelChecker(model, [st])
@@ -323,8 +321,6 @@ def test_dephosphorylation():
         pysba.make_model(policies=policy)
         mc = ModelChecker(pysba.model, [stmt])
         checks = mc.check_model()
-        #im = mc.get_im()
-        #im.draw('test_dephosphorylation.pdf', prog='dot')
         assert len(checks) == 1
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
@@ -399,8 +395,6 @@ def test_distinguish_path_polarity1():
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
-    im = mc.get_im()
-    im.draw('dist_pp_im1.pdf', prog='dot')
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == False
@@ -437,8 +431,6 @@ def test_distinguish_path_polarity2():
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
-    im = mc.get_im()
-    im.draw('dist_pp_im2.pdf', prog='dot')
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
@@ -565,8 +557,6 @@ def test_multitype_path():
             ]
         mc = ModelChecker(pa.model, stmts_to_check)
         results = mc.check_model()
-        im = mc.get_im()
-        im.draw('test_multitype.pdf', prog='dot')
         assert len(results) == len(stmts_to_check)
         assert isinstance(results[0], tuple)
         assert results[0][1] == True
