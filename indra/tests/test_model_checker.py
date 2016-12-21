@@ -429,8 +429,8 @@ def test_check_activation():
     a = Agent('A')
     b = Agent('B')
     c = Agent('C')
-    st1 = Activation(a, 'activity', b, 'activity', True)
-    st2 = Activation(b, 'activity', c, 'kinase', False)
+    st1 = Activation(a, b, True)
+    st2 = Activation(b, c, False, 'kinase')
     stmts = [st1, st2]
     # Create the model
     pa = PysbAssembler()
@@ -527,6 +527,8 @@ def test_multitype_path():
     sos1_grb2 = Agent('SOS1', bound_conditions=[BoundCondition(grb2)],
                  db_refs={'HGNC':'11187'}, )
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    kras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                   db_refs={'HGNC': '6407'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
 
     def check_stmts(stmts):
@@ -534,8 +536,8 @@ def test_multitype_path():
         pa.add_statements(stmts)
         pa.make_model(policies='one_step')
         stmts_to_check = [
-                Activation(egfr, 'activity', kras, 'gtpbound', True),
-                Activation(egfr, 'activity', braf, 'kinase', True)
+                Activation(egfr, kras, True, 'gtpbound'),
+                Activation(egfr, braf, True, 'kinase')
             ]
         mc = ModelChecker(pa.model, stmts_to_check)
         results = mc.check_model()
@@ -548,8 +550,8 @@ def test_multitype_path():
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
         ActiveForm(sos1_grb2, 'activity', True),
-        Activation(sos1_grb2, 'activity', kras, 'gtpbound', True),
-        Activation(kras, 'gtpbound', braf, 'kinase', True)
+        Activation(sos1_grb2, kras, True, 'gtpbound'),
+        Activation(kras_g, braf, True, 'kinase')
       ]
     check_stmts(stmts1)
     # Check without the ActiveForm
@@ -562,7 +564,7 @@ def test_multitype_path():
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
         RasGef(sos1_grb2, 'activity', kras),
-        Activation(kras, 'gtpbound', braf, 'kinase', True)
+        Activation(kras_g, braf, True, 'kinase')
       ]
     check_stmts(stmts2)
     """
@@ -619,7 +621,7 @@ def test_rasgef_activation():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
     rasgef_stmt = RasGef(sos, 'activity', ras)
-    act_stmt = Activation(sos, 'activity', ras, 'gtpbound', True)
+    act_stmt = Activation(sos, ras, True, 'gtpbound')
     # Check that the activation is satisfied by the RasGef
     pysba = PysbAssembler()
     pysba.add_statements([rasgef_stmt])
@@ -645,11 +647,12 @@ def test_rasgef_activation():
 
 def test_rasgef_rasgtp():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
-    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
     rasgef_stmt = RasGef(sos, 'activity', ras)
-    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
-    act_stmt = Activation(sos, 'activity', raf, 'kinase', True)
+    rasgtp_stmt = RasGtpActivation(ras, raf, True, 'kinase')
+    act_stmt = Activation(sos, raf, True, 'kinase')
     # Check that the activation is satisfied by the RasGef
     pysba = PysbAssembler()
     pysba.add_statements([rasgef_stmt, rasgtp_stmt])
@@ -662,11 +665,12 @@ def test_rasgef_rasgtp():
 
 def test_rasgef_rasgtp_phos():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
-    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
     rasgef_stmt = RasGef(sos, 'activity', ras)
-    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    rasgtp_stmt = RasGtpActivation(ras, raf, True, 'kinase')
     phos = Phosphorylation(raf, mek)
     stmt_to_check = Phosphorylation(sos, mek)
     # Assemble and check
@@ -682,8 +686,8 @@ def test_rasgef_rasgtp_phos():
 def test_rasgap_activation():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
-    rasgap_stmt = RasGap(nf1, 'activity', ras)
-    act_stmt = Activation(nf1, 'activity', ras, 'gtpbound', False)
+    rasgap_stmt = RasGap(nf1, ras)
+    act_stmt = Activation(nf1, ras, False, 'gtpbound')
     # Check that the activation is satisfied by the RasGap
     pysba = PysbAssembler()
     pysba.add_statements([rasgap_stmt])
@@ -711,10 +715,12 @@ def test_rasgap_activation():
 def test_rasgap_rasgtp():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                 db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
-    rasgap_stmt = RasGap(nf1, 'activity', ras)
-    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
-    act_stmt = Activation(nf1, 'activity', raf, 'kinase', False)
+    rasgap_stmt = RasGap(nf1, ras)
+    rasgtp_stmt = RasGtpActivation(ras_g, raf, True, kinase)
+    act_stmt = Activation(nf1, raf, False, 'kinase')
     # Check that the activation is satisfied by the RasGap
     pysba = PysbAssembler()
     pysba.add_statements([rasgap_stmt, rasgtp_stmt])
@@ -728,10 +734,12 @@ def test_rasgap_rasgtp():
 def test_rasgap_rasgtp_phos():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                  db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
-    rasgap_stmt = RasGap(nf1, 'activity', ras)
-    rasgtp_stmt = RasGtpActivation(ras, 'gtpbound', raf, 'kinase', True)
+    rasgap_stmt = RasGap(nf1, ras)
+    rasgtp_stmt = RasGtpActivation(ras_g, raf, True, 'kinase')
     phos = Phosphorylation(raf, mek)
     stmt_to_check = Dephosphorylation(nf1, mek)
     # Assemble and check
