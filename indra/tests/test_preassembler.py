@@ -7,7 +7,7 @@ from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
-                             Translocation, Activation
+                             Translocation, Activation, Inhibition
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -400,8 +400,8 @@ def test_activation_refinement():
                                      'PUBCHEM': '702',
                                      'TEXT': 'alcohol'})
     obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
-    st1 = Activation(subj, obj, False)
-    st2 = Activation(subj, obj, True)
+    st1 = Inhibition(subj, obj)
+    st2 = Activation(subj, obj)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 2)

@@ -244,10 +244,6 @@ class Preassembler(object):
                             # to statify into groups
                             if stmt_type == Complex:
                                 key = (len(stmt.members), component)
-                            # For Activation, we can separate positive/negative
-                            # activation into separate groups
-                            elif stmt_type == Activation:
-                                key = (i, component, stmt.is_activation)
                             # For all other statements, we separate groups by
                             # the argument position of the Agent
                             else:
@@ -279,11 +275,6 @@ class Preassembler(object):
                         # considered
                         if stmt_type == Complex:
                             key = (len(stmt.members), a.entity_matches_key())
-                        # For Activation, we can separate positive/negative
-                        # activation into separate groups
-                        elif stmt_type == Activation:
-                            key = (i, a.entity_matches_key(),
-                                   stmt.is_activation)
                         # For all other statements, we separate groups by
                         # the argument position of the Agent
                         else:
