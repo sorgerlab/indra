@@ -278,7 +278,7 @@ def test_refinement_agent_mod_generic():
 
 # Check matches implementations for all statement types ---------------------
 def test_matches_selfmod():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only."""
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
     st1 = Autophosphorylation(nras1, 'tyrosine', '32',
@@ -291,17 +291,17 @@ def test_matches_selfmod():
     assert unicode_strs((st1, st2, st3))
 
 def test_matches_activation():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, nras1, True, 'gtpbound1',
+    st1 = Activation(src, nras1, 'gtpbound1',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, nras1, True, 'gtpbound1',
+    st2 = Activation(src, nras1, 'gtpbound1',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, nras2, True, 'gtpbound2',
+    st3 = Activation(src, nras2, 'gtpbound2',
                      evidence=Evidence(text='bar'))
-    st4 = Activation(src, nras2, False, 'gtpbound2',
+    st4 = Inhibition(src, nras2, 'gtpbound2',
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -309,7 +309,7 @@ def test_matches_activation():
     assert unicode_strs((st1, st2, st3))
 
 def test_matches_activitymod():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only."""
     mc = ModCondition('phosphorylation', 'Y', '32')
     mc2 = ModCondition('phosphorylation')
     nras1 = Agent('NRAS', mods=[mc], db_refs = {'HGNC': '7989'})
@@ -325,7 +325,7 @@ def test_matches_activitymod():
     assert unicode_strs((st1, st2, st3))
 
 def test_matches_activatingsub():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only."""
     mut1 = MutCondition('12', 'G', 'D')
     mut2 = MutCondition('61', 'Q', 'L')
     nras1 = Agent('NRAS', mutations=[mut1], db_refs = {'HGNC': '7989'})
@@ -348,7 +348,7 @@ def test_matches_activatingsub():
     assert unicode_strs((st1, st2, st3, st4, st5))
 
 def test_matches_rasgef():
-    """Test matching of entities only, entities match only on name."""
+    """Test matching of entities only."""
     sos1 = Agent('SOS1', db_refs = {'HGNC': 'sos1'})
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
@@ -440,11 +440,11 @@ def test_entities_match_activation():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, nras1, True, 'gtpbound1',
+    st1 = Activation(src, nras1, 'gtpbound1',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, nras2, True, 'gtpbound2',
+    st2 = Activation(src, nras2, 'gtpbound2',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, nras3, True, 'gtpbound2',
+    st3 = Activation(src, nras3, 'gtpbound2',
                      evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
     assert(not st1.entities_match(st3))
@@ -767,11 +767,11 @@ def test_activation_modification_refinement():
     mek = Agent('MEK', db_refs={'BE': 'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 
-    st1 = Activation(raf, mek, True, 'kinase')
-    st2 = Activation(braf, mek, True, 'kinase')
-    st3 = Activation(raf, mek1, True, 'kinase')
-    st4 = Activation(braf, mek1, True, 'kinase')
-    st5 = Activation(braf, mek1, False, 'kinase')
+    st1 = Activation(raf, mek, 'kinase')
+    st2 = Activation(braf, mek, 'kinase')
+    st3 = Activation(raf, mek1, 'kinase')
+    st4 = Activation(braf, mek1, 'kinase')
+    st5 = Inhibition(braf, mek1, 'kinase')
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
@@ -807,12 +807,12 @@ def test_activation_activity_hierarchy_refinement():
                   db_refs={'BE': 'RAF'})
     mek = Agent('MEK', db_refs={'BE': 'MEK'})
 
-    st1 = Activation(raf_k, mek, True, 'kinase')
-    st2 = Activation(raf_k, mek, False, 'kinase')
-    st3 = Activation(raf_c, mek, True, 'kinase')
-    st4 = Activation(raf_k, mek, True, 'catalytic')
-    st5 = Activation(raf_c, mek, True, 'activity')
-    st6 = Activation(raf_a, mek, True, 'activity')
+    st1 = Activation(raf_k, mek, 'kinase')
+    st2 = Inhibition(raf_k, mek, 'kinase')
+    st3 = Activation(raf_c, mek, 'kinase')
+    st4 = Activation(raf_k, mek, 'catalytic')
+    st5 = Activation(raf_c, mek, 'activity')
+    st6 = Activation(raf_a, mek, 'activity')
 
     assert(not st1.refinement_of(st2, hierarchies))
     assert(not st2.refinement_of(st1, hierarchies))
@@ -1164,22 +1164,14 @@ def test_eq_stmt():
            Complex([Agent('a'), Agent('b')], evidence=[ev1])))
     assert(not Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
            Complex([Agent('a'), Agent('b')], evidence=[ev2])))
-    assert(Activation(Agent('a'),
-                      Agent('b'), True, evidence=[ev1]).equals(
-           Activation(Agent('a'),
-                      Agent('b'), True, evidence=[ev1])))
-    assert(not Activation(Agent('a'),
-                          Agent('b'), True, evidence=[ev1]).equals(
-           Activation(Agent('a'),
-                      Agent('c'), True, evidence=[ev1])))
-    assert(not Activation(Agent('a'),
-                          Agent('b'), True, evidence=[ev1]).equals(
-           Activation(Agent('a'),
-                      Agent('b'), True, 'kinase', evidence=[ev1])))
-    assert(not Activation(Agent('a'),
-                          Agent('b'), True, evidence=[ev1]).equals(
-           Activation(Agent('a'),
-                      Agent('b'), True, evidence=[ev2])))
+    assert(Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), evidence=[ev1])))
+    assert(not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('c'), evidence=[ev1])))
+    assert(not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), 'kinase', evidence=[ev1])))
+    assert(not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), evidence=[ev2])))
 
 def test_serialize():
     ev1 = Evidence(text='1\U0001F4A9')
@@ -1359,8 +1351,11 @@ def test_unicode_str_methods():
     print(st1)
     print(repr(st1))
 
-    st = Activation(ag, ag, True, 'activity',
-                    evidence=ev)
+    st = Activation(ag, ag, 'activity', evidence=ev)
+    print(st)
+    print(repr(st))
+
+    st = Inhibition(ag, ag, 'activity', evidence=ev)
     print(st)
     print(repr(st))
 

@@ -51,6 +51,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
+import abc
 import sys
 import logging
 import textwrap
@@ -1040,49 +1041,21 @@ class Demyristoylation(Modification):
     """Demyristoylation modification."""
     pass
 
+
 @python_2_unicode_compatible
-class Activation(Statement):
-    """Indicates that the activity of a protein affects the activity of another.
+class RegulateActivity(Statement):
+    """Regulation of activity.
 
-    This statement is intended to be used for physical interactions where the
-    mechanism of activation is not explicitly specified, which is often the
-    case for descriptions of mechanisms extracted from the literature. Both
-    activating and inactivating interactions can be represented.
-
-    Parameters
-    ----------
-    subj : :py:class:`Agent`
-        The agent responsible for the change in activity, i.e., the "upstream"
-        node.
-    obj : :py:class:`Agent`
-        The agent whose activity is influenced by the subject, i.e., the
-        "downstream" node.
-    is_activation : bool
-        Indicates the type of interaction: True for activation and
-        False for inactivation/inhibition
-    obj_activity : Optional[string]
-        The activity of the obj Agent that is affected, e.g., its "kinase"
-        activity.
-    evidence : list of :py:class:`Evidence`
-        Evidence objects in support of the modification.
-
-    Examples
-    --------
-
-    The kinase activity of MEK (MAP2K1) activates the kinase activity of ERK
-    (MAPK1):
-
-    >>> mek = Agent('MAP2K1')
-    >>> erk = Agent('MAPK1')
-    >>> act = Activation(mek, erk, True, 'kinase')
+    This class implements shared functionality of Activation and Inhibition
+    statements and it should not be instantiated directly.
     """
-    def __init__(self, subj, obj, is_activation,
-                 obj_activity='activity', evidence=None):
-        super(Activation, self).__init__(evidence)
-        self.subj = subj
-        self.obj = obj
-        self.obj_activity = obj_activity
-        self.is_activation = is_activation
+
+    # The constructor here is an abstractmethod so that this class cannot
+    # be directly instantiated.
+    __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod
+    def __init__(self):
+        pass
 
     def __setstate__(self, state):
         if 'subj_activity' in state:
@@ -1101,7 +1074,7 @@ class Activation(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
-            raise ValueError("Activation has two agents.")
+            raise ValueError("%s has two agents." % self.__class__.__name__)
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
@@ -1109,10 +1082,10 @@ class Activation(Statement):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
+        if self.is_activation != other.is_activation:
+            return False
         if self.subj.refinement_of(other.subj, hierarchies) and \
             self.obj.refinement_of(other.obj, hierarchies):
-            if self.is_activation != other.is_activation:
-                return False
             obj_act_match = (self.obj_activity == other.obj_activity) or \
                 hierarchies['activity'].isa('INDRA', self.obj_activity,
                                             'INDRA', other.obj_activity)
@@ -1124,17 +1097,89 @@ class Activation(Statement):
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s)" %
+        obj_act_str = ', %s' % self.obj_activity if \
+            self.obj_activity != 'activity' else ''
+        s = ("%s(%s, %s%s)" %
              (type(self).__name__, self.subj,
-              self.obj, self.obj_activity, self.is_activation))
+              self.obj, obj_act_str))
         return s
 
+    def __repr__(self):
+        return self.__str__()
+
     def equals(self, other):
-        matches = super(Activation, self).equals(other)
+        matches = super(RegulateActivity, self).equals(other)
         matches = matches and\
                   (self.obj_activity == other.obj_activity) and\
                   (self.is_activation == other.is_activation)
         return matches
+
+
+class Inhibition(RegulateActivity):
+    """Indicates that a protein inhibits or deactivates another protein.
+
+    This statement is intended to be used for physical interactions where the
+    mechanism of inhibition is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : Optional[string]
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
+    def __init__(self, subj, obj, obj_activity='activity', evidence=None):
+        super(RegulateActivity, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
+        self.obj_activity = obj_activity
+        self.is_activation = False
+
+class Activation(RegulateActivity):
+    """Indicates that a protein activates another protein.
+
+    This statement is intended to be used for physical interactions where the
+    mechanism of activation is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : Optional[string]
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+
+    Examples
+    --------
+
+    MEK (MAP2K1) activates the kinase activity of ERK (MAPK1):
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> act = Activation(mek, erk, 'kinase')
+    """
+    def __init__(self, subj, obj, obj_activity='activity', evidence=None):
+        super(RegulateActivity, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
+        self.obj_activity = obj_activity
+        self.is_activation = True
+
 
 
 class RasGtpActivation(Activation):
