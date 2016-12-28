@@ -53,6 +53,7 @@ from future.utils import python_2_unicode_compatible
 import os
 import abc
 import sys
+import rdflib
 import logging
 import textwrap
 import jsonpickle
@@ -230,6 +231,8 @@ class ModCondition(object):
 
 class ActivityCondition(object):
     def __init__(self, activity_type, is_active):
+        if activity_type not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity_type)
         self.activity_type = activity_type
         self.is_active = is_active
 
@@ -1140,6 +1143,8 @@ class Inhibition(RegulateActivity):
         super(RegulateActivity, self).__init__(evidence)
         self.subj = subj
         self.obj = obj
+        if obj_activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % obj_activity)
         self.obj_activity = obj_activity
         self.is_activation = False
 
@@ -1177,9 +1182,10 @@ class Activation(RegulateActivity):
         super(RegulateActivity, self).__init__(evidence)
         self.subj = subj
         self.obj = obj
+        if obj_activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % obj_activity)
         self.obj_activity = obj_activity
         self.is_activation = True
-
 
 
 class RasGtpActivation(Activation):
@@ -1212,6 +1218,8 @@ class ActiveForm(Statement):
             logger.warning('Agent in ActiveForm should not have ' +
                            'ActivityConditions.')
             agent.activity = None
+        if activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity)
         self.activity = activity
         self.is_active = is_active
 
@@ -1286,6 +1294,8 @@ class HasActivity(Statement):
                            'ActivityConditions.')
             agent.activity = None
         self.agent = agent
+        if activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity)
         self.activity = activity
         self.has_activity = has_activity
 
@@ -1699,6 +1709,24 @@ def get_valid_location(location):
         else:
             return loc
     return location
+
+
+def _read_activity_types():
+    """Read types of valid activities from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    ac_file = this_dir + '/resources/activity_hierarchy.rdf'
+    g = rdflib.Graph()
+    with open(ac_file, 'r'):
+        g.parse(ac_file, format='nt')
+    act_types = set()
+    for s, p, o in g:
+        subj = s.rpartition('/')[-1]
+        obj = o.rpartition('/')[-1]
+        act_types.add(subj)
+        act_types.add(obj)
+    return sorted(list(act_types))
+
+activity_types = _read_activity_types()
 
 
 def _read_cellular_components():

@@ -295,13 +295,13 @@ def test_matches_activation():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, nras1, 'gtpbound1',
+    st1 = Activation(src, nras1, 'gtpbound',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, nras1, 'gtpbound1',
+    st2 = Activation(src, nras1, 'gtpbound',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, nras2, 'gtpbound2',
+    st3 = Activation(src, nras2, 'phosphatase',
                      evidence=Evidence(text='bar'))
-    st4 = Inhibition(src, nras2, 'gtpbound2',
+    st4 = Inhibition(src, nras2, 'phosphatase',
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -314,11 +314,11 @@ def test_matches_activitymod():
     mc2 = ModCondition('phosphorylation')
     nras1 = Agent('NRAS', mods=[mc], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mods=[mc2], db_refs = {'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'gtpbound1', True,
+    st1 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras1, 'gtpbound1', True,
+    st2 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras2, 'gtpbound2', True,
+    st3 = ActiveForm(nras2, 'phosphatase', True,
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -331,15 +331,15 @@ def test_matches_activatingsub():
     nras1 = Agent('NRAS', mutations=[mut1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mut2], db_refs = {'HGNC': 'dummy'})
 
-    st1 = ActiveForm(nras1, 'gtpbound1', True,
+    st1 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras1, 'gtpbound1', True,
+    st2 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras2, 'gtpbound2', True,
+    st3 = ActiveForm(nras2, 'phosphatase', True,
                      evidence=Evidence(text='bar'))
-    st4 = ActiveForm(nras2, 'gtpbound2', False,
+    st4 = ActiveForm(nras2, 'phosphatase', False,
                      evidence=Evidence(text='bar'))
-    st5 = ActiveForm(nras2, 'gtpbound3', True,
+    st5 = ActiveForm(nras2, 'kinase', True,
                      evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -440,11 +440,11 @@ def test_entities_match_activation():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = Activation(src, nras1, 'gtpbound1',
+    st1 = Activation(src, nras1, 'gtpbound',
                      evidence=Evidence(text='foo'))
-    st2 = Activation(src, nras2, 'gtpbound2',
+    st2 = Activation(src, nras2, 'phosphatase',
                      evidence=Evidence(text='bar'))
-    st3 = Activation(src, nras3, 'gtpbound2',
+    st3 = Activation(src, nras3, 'phosphatase',
                      evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
     assert(not st1.entities_match(st3))
@@ -457,11 +457,11 @@ def test_entities_match_activitymod():
     nras1 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': '7989'})
     nras2 = Agent('NRAS', mods=[mc2], db_refs={'HGNC': '7989'})
     nras3 = Agent('NRAS', mods=[mc1], db_refs={'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'gtpbound1', True,
+    st1 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras2, 'gtpbound2', False,
+    st2 = ActiveForm(nras2, 'phosphatase', False,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras3, 'gtpbound1', False,
+    st3 = ActiveForm(nras3, 'gtpbound', False,
                      evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
     assert(not st1.entities_match(st3))
@@ -474,11 +474,11 @@ def test_entities_match_activatingsub():
     nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': 'dummy'})
-    st1 = ActiveForm(nras1, 'gtpbound1', True,
+    st1 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='foo'))
-    st2 = ActiveForm(nras2, 'gtpbound2', False,
+    st2 = ActiveForm(nras2, 'phosphatase', False,
                      evidence=Evidence(text='bar'))
-    st3 = ActiveForm(nras3, 'gtpbound1', False,
+    st3 = ActiveForm(nras3, 'gtpbound', False,
                      evidence=Evidence(text='baz'))
     assert(st1.entities_match(st2))
     assert(not st1.entities_match(st3))
