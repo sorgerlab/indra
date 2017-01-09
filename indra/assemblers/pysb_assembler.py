@@ -125,6 +125,7 @@ class _BaseAgent(object):
         # being active (where the agent is currently assumed to have only
         # one type of activity)
         self.active_forms = []
+        self.activity_types = []
         self.inactive_forms = []
         self.db_refs = {}
 
@@ -174,6 +175,17 @@ class _BaseAgent(object):
             self.active_forms.append(activity_pattern)
         else:
             self.inactive_forms.append(activity_pattern)
+
+    def add_activity_type(self, activity_type):
+        """Adds an activity type to an Agent.
+
+        Parameters
+        ----------
+        activity_type : str
+            The type of activity to add such as 'activity', 'kinase',
+            'gtpbound'
+        """
+        self.activity_types.append(activity_type)
 
 # Site/state information ###############################################
 
@@ -253,7 +265,7 @@ def get_mod_site_name(mod_type, residue, position):
 
 
 def get_active_forms(agent, agent_set):
-    '''Returns all the patterns (dicts of site states) of an Agent
+    '''Returns all the forms (dicts of site states) of an Agent
     that are known to be active.'''
     act_forms = agent_set[_n(agent.name)].active_forms
     if not act_forms:
@@ -261,13 +273,38 @@ def get_active_forms(agent, agent_set):
     return act_forms
 
 
-def get_inactive_forms(agent, agent_set):
+def get_active_patterns(agent, agent_set):
     '''Returns all the patterns (dicts of site states) of an Agent
+    that are known to be active.'''
+    act_forms = get_active_forms(agent, agent_set)
+    act_types = get_activity_types(agent, agent_set)
+    # If there are no active forms then see if there are known activity types.
+    # If there are known activity types then those get instantiated
+    # otherwise no activity pattern is used.
+    if act_forms == [{}]:
+        if act_types:
+            act_patterns = [{at: 'active'} for at in act_types]
+        else:
+            act_patterns = [{}]
+    else:
+        act_patterns = act_forms
+    return act_patterns
+
+
+def get_inactive_forms(agent, agent_set):
+    '''Returns all the forms (dicts of site states) of an Agent
     that are known to be inactive.'''
     inact_forms = agent_set[_n(agent.name)].inactive_forms
     if not inact_forms:
         inact_forms = [{}]
     return inact_forms
+
+
+def get_activity_types(agent, agent_set):
+    '''Returns all the activity types an Agent has.'''
+    act_types = agent_set[_n(agent.name)].activity_types
+    return act_types
+
 
 # PySB model elements ##################################################
 
@@ -1141,7 +1178,9 @@ def modification_assemble_one_step(stmt, model, agent_set):
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
 
+
     enz_pattern = get_monomer_pattern(model, stmt.enz)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
     sub_unmod = get_monomer_pattern(model, stmt.sub,
@@ -1149,16 +1188,14 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={mod_site: mod_site_state})
 
-    enz_act_mods = get_active_forms(stmt.enz, agent_set)
-
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, am in enumerate(enz_act_mods):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_%s_%s_%s_%d' % \
             (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
         r = Rule(rule_name,
-                enz_pattern(am) + sub_unmod >>
-                enz_pattern(am) + sub_mod,
+                enz_pattern(af) + sub_unmod >>
+                enz_pattern(af) + sub_mod,
                 kf_mod)
         add_rule_to_model(model, r)
 
@@ -1191,20 +1228,20 @@ def modification_assemble_two_step(stmt, model, agent_set):
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
 
-    enz_act_mods = get_active_forms(stmt.enz, agent_set)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     enz_bs = get_binding_site_name(stmt.enz.name)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    for i, am in enumerate(enz_act_mods):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_%s_bind_%s_%s_%d' % \
             (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
         r = Rule(rule_name,
-            enz_unbound(am) + \
+            enz_unbound(af) + \
             sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
-            enz_bound(am) % \
+            enz_bound(af) % \
             sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
             kf_bind)
         add_rule_to_model(model, r)
@@ -1212,9 +1249,9 @@ def modification_assemble_two_step(stmt, model, agent_set):
         rule_name = '%s_%s_%s_%s_%d' % \
             (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
         r = Rule(rule_name,
-            enz_bound(am) % \
+            enz_bound(af) % \
                 sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
-            enz_unbound(am) + \
+            enz_unbound(af) + \
                 sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
             kf_mod)
         add_rule_to_model(model, r)
@@ -1287,7 +1324,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     enz_sub_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: None})
     # Enzyme active forms
-    enz_act_forms = get_active_forms(stmt.enz, agent_set)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     enz_bs = get_binding_site_name(stmt.enz.name)
     # Unconditional enzyme
     enz_uncond = get_uncond_agent(stmt.enz)
@@ -1304,12 +1341,12 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
     param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
     kr_bind_atp = get_create_parameter(model, param_name, 1e-6)
-    for i, am in enumerate(enz_act_forms):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_phospho_bind_atp_%d' % \
             (enz_rule_str, i + 1)
         r = Rule(rule_name,
-            enz_atp_unbound(am) + atp(b=None) >>
-            enz_atp_bound(am) %  atp(b=1), kf_bind_atp)
+            enz_atp_unbound(af) + atp(b=None) >>
+            enz_atp_bound(af) %  atp(b=1), kf_bind_atp)
         add_rule_to_model(model, r)
 
     # Enzyme releasing ATP
@@ -1336,25 +1373,25 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, am in enumerate(enz_act_forms):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_phospho_bind_%s_%s_%d' % \
             (rule_enz_str, rule_sub_str, phos_site, i + 1)
         r = Rule(rule_name,
-            enz_sub_unbound(am) + \
+            enz_sub_unbound(af) + \
             sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
-            enz_sub_bound(am) % \
+            enz_sub_bound(af) % \
             sub_pattern(**{phos_site: 'u', enz_bs: 1}),
             kf_bind)
         add_rule_to_model(model, r)
 
     # Enzyme phosphorylating substrate
-    for i, am in enumerate(enz_act_forms):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_phospho_%s_%s_%d' % \
             (rule_enz_str, rule_sub_str, phos_site, i + 1)
         r = Rule(rule_name,
-            enz_sub_atp_bound(am) % atp(b=2) % \
+            enz_sub_atp_bound(af) % atp(b=2) % \
                 sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
-            enz_sub_atp_unbound(am) + atp(b=None) + \
+            enz_sub_atp_unbound(af) + atp(b=None) + \
                 sub_pattern(**{phos_site: 'p', enz_bs: None}),
             kf_phospho)
         add_rule_to_model(model, r)
@@ -1689,8 +1726,7 @@ def regulateactivity_monomers_one_step(stmt, agent_set):
     #    subj.add_activity_form({stmt.subj_activity: 'inactive'}, False)
     obj.create_site(stmt.obj_activity, ('inactive', 'active'))
     # Add the new active state flag to the list of active forms
-    obj.add_activity_form({stmt.obj_activity: 'active'}, True)
-    obj.add_activity_form({stmt.obj_activity: 'inactive'}, False)
+    obj.add_activity_type(stmt.obj_activity)
 
 
 def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
@@ -1722,13 +1758,9 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
 
 
 def regulateactivity_assemble_one_step(stmt, model, agent_set):
-    subj_act_forms = get_active_forms(stmt.subj, agent_set)
-    if subj_act_forms == [{}]:
-        defined_active_form = False
-    elif subj_act_forms == [{'activity': 'active'}]:
-        defined_active_form = False
-    else:
-        defined_active_form = True
+    subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
+    # This is the pattern coming directly from the subject Agent state
+    # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
@@ -1741,7 +1773,7 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     kf_one_step_activate = \
         get_create_parameter(model, param_name, 1e-6)
 
-    for i, af, in enumerate(subj_act_forms):
+    for i, af, in enumerate(subj_act_patterns):
         rule_obj_str = get_agent_rule_str(stmt.obj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         polarity_str = 'activates' if stmt.is_activation else 'deactivates'
