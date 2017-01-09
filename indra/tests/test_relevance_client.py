@@ -5,6 +5,10 @@ from indra.util import unicode_strs
 
 small_corpus_uuid = '55c84fa4-01b4-11e5-ac0f-000c29cb28fb'
 
+def test_get_heat_kernel():
+    kernel_id = relevance_client.get_heat_kernel(small_corpus_uuid)
+    assert kernel_id is not None
+
 def test_get_relevant_nodes():
     nodes = relevance_client.get_relevant_nodes(small_corpus_uuid,
                                                 ['MAPK1', 'MAPK3'])
