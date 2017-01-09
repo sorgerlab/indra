@@ -455,7 +455,6 @@ def get_monomer_pattern(model, agent, extra_fields=None):
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
     try:
-        print(monomer)
         monomer_pattern = monomer(**pattern)
     except Exception as e:
         logger.info("Invalid site pattern %s for monomer %s" %
@@ -1723,6 +1722,13 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
 
 
 def regulateactivity_assemble_one_step(stmt, model, agent_set):
+    subj_act_forms = get_active_forms(stmt.subj, agent_set)
+    if subj_act_forms == [{}]:
+        defined_active_form = False
+    elif subj_act_forms == [{'activity': 'active'}]:
+        defined_active_form = False
+    else:
+        defined_active_form = True
     subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
@@ -1735,21 +1741,22 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     kf_one_step_activate = \
         get_create_parameter(model, param_name, 1e-6)
 
-    rule_obj_str = get_agent_rule_str(stmt.obj)
-    rule_subj_str = get_agent_rule_str(stmt.subj)
-    polarity_str = 'activates' if stmt.is_activation else 'deactivates'
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_subj_str, polarity_str, rule_obj_str,
-         stmt.obj_activity)
+    for i, af, in enumerate(subj_act_forms):
+        rule_obj_str = get_agent_rule_str(stmt.obj)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
+        polarity_str = 'activates' if stmt.is_activation else 'deactivates'
+        rule_name = '%s_%s_%s_%s_%d' % \
+            (rule_subj_str, polarity_str, rule_obj_str,
+             stmt.obj_activity, i)
 
-    if stmt.is_activation:
-        r = Rule(rule_name,
-            subj_pattern + obj_inactive >> subj_pattern + obj_active,
-            kf_one_step_activate)
-    else:
-        r = Rule(rule_name,
-            subj_pattern + obj_active >> subj_pattern + obj_inactive,
-            kf_one_step_activate)
+        if stmt.is_activation:
+            r = Rule(rule_name,
+                subj_pattern(af) + obj_inactive >> subj_pattern(af) + obj_active,
+                kf_one_step_activate)
+        else:
+            r = Rule(rule_name,
+                subj_pattern(af) + obj_active >> subj_pattern(af) + obj_inactive,
+                kf_one_step_activate)
 
     add_rule_to_model(model, r)
     anns = [Annotation(rule_name, subj_pattern.monomer.name,
