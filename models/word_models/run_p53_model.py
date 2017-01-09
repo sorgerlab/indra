@@ -27,33 +27,23 @@ def assemble_model(model_name, reread=False):
     model = pa.make_model()
 
     p53 = model.monomers['TP53']
-    obs = Observable('P53_active', p53(act='active'))
+    obs = Observable('P53_active', p53(activity='active'))
     model.add_component(obs)
     if not model_name.endswith('var'):
         model.parameters['kf_aa_act_1'].value = 5e-06
     model.parameters['kf_pt_act_1'].value = 1e-05
-    model.parameters['ARF_0'].value = 0
-    model.parameters['PROTEASE_0'].value = 0
-    protease = model.monomers['PROTEASE']
-    model.add_component(Parameter('ARF_act_0', 100))
-    model.add_component(Parameter('PROTEASE_act_0', 100))
-    model.initial(protease(act='active'),
-                  model.parameters['PROTEASE_act_0'])
-    cdkn2a = model.monomers['ARF']
-    model.initial(cdkn2a(act='active'),
-                  model.parameters['ARF_act_0'])
 
     if model_name == 'p53_ATM':
         model.add_component(Parameter('ATMa_0', 1))
         atm = model.monomers['ATM']
-        model.initial(atm(act='active'),
+        model.initial(atm(activity='active'),
                       model.parameters['ATMa_0'])
         model.parameters['kf_pa_act_1'].value = 1e-04
 
     if model_name == 'p53_ATR':
         model.add_component(Parameter('ATRa_0', 1))
         atr = model.monomers['ATR']
-        model.initial(atr(act='active'),
+        model.initial(atr(activity='active'),
                       model.parameters['ATRa_0'])
 
     pa.model = model
@@ -77,6 +67,7 @@ def run_model(model):
 
 if __name__ == '__main__':
     model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
+    #model_names = ['p53_ATM_var']
     for model_name in model_names:
         model = assemble_model(model_name, reread=False)
         ts, solver = run_model(model)
