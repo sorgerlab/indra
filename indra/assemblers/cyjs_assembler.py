@@ -8,7 +8,8 @@ import collections
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap as colormap
 from matplotlib.colors import rgb2hex, hex2color
-from indra.statements import Activation, Complex, Modification, \
+from indra.statements import Activation, Inhibition, RegulateActivity, \
+                             Complex, Modification, \
                              SelfModification, Agent
 from indra.databases import hgnc_client
 from indra.databases import context_client
@@ -81,7 +82,9 @@ class CyJSAssembler(object):
             The json serialized Cytoscape JS model.
         """
         for stmt in self.statements:
-            if isinstance(stmt, Activation):
+            if isinstance(stmt, RegulateActivity):
+                self._add_regulate_activity(stmt)
+            elif isinstance(stmt, Inhibition):
                 self._add_activation(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
@@ -293,7 +296,7 @@ class CyJSAssembler(object):
         with open(fname, 'wt') as fh:
             fh.write(s)
 
-    def _add_activation(self, stmt):
+    def _add_regulate_activity(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         edge_id = self._get_new_id()
         source_id = self._add_node(stmt.subj)
@@ -658,10 +661,10 @@ def _get_stmt_type(stmt):
         edge_polarity = 'none'
     elif isinstance(stmt, Activation):
         edge_type = 'Activation'
-        if stmt.is_activation:
-            edge_polarity = 'positive'
-        else:
-            edge_polarity = 'negative'
+        edge_polarity = 'positive'
+    elif isinstance(stmt, Inhibition):
+        edge_type = 'Inhibition'
+        edge_polarity = 'negative'
     elif isinstance(stmt, RasGef):
         edge_type = 'RasGef'
         edge_polarity = 'positive'

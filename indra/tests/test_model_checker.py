@@ -104,6 +104,8 @@ def test_one_step_phosphorylation():
     # Add annotations
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('A_phos_B', 'A', 'rule_has_subject')
+    Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
         Annotation('T185', 'T', 'is_residue'),
@@ -138,6 +140,8 @@ def test_two_step_phosphorylation():
     # Add annotations
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('A_phos_B', 'A', 'rule_has_subject')
+    Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
         Annotation('T185', 'T', 'is_residue'),
@@ -147,8 +151,6 @@ def test_two_step_phosphorylation():
     #    f.write(render_reactions.run(model))
     #with open('species_2step.dot', 'w') as f:
     #    f.write(species_graph.run(model))
-    #im = kappa.influence_map(model)
-    #im.draw('im_2step.pdf', prog='dot')
     #generate_equations(model)
     # Now check the model
     mc = ModelChecker(model, [st])
@@ -286,6 +288,16 @@ def test_consumption_rule():
          Parameter('k5', 1))
     Annotation(Pervanadate, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(MAPK1, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP', 'DUSP', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP', 'DUSP', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP_rev', 'Pervanadate', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP_rev', 'Pervanadate', 'rule_has_object')
+    Annotation('Pvd_binds_DUSP_rev', 'DUSP', 'rule_has_subject')
+    Annotation('Pvd_binds_DUSP_rev', 'DUSP', 'rule_has_object')
+    Annotation('DUSP_dephos_MAPK1_at_T185', 'DUSP', 'rule_has_subject')
+    Annotation('DUSP_dephos_MAPK1_at_T185', 'MAPK1', 'rule_has_object')
     MAPK1.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -309,8 +321,6 @@ def test_dephosphorylation():
         pysba.make_model(policies=policy)
         mc = ModelChecker(pysba.model, [stmt])
         checks = mc.check_model()
-        #im = mc.get_im()
-        #im.draw('test_dephosphorylation.pdf', prog='dot')
         assert len(checks) == 1
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
@@ -372,6 +382,10 @@ def test_distinguish_path_polarity1():
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
     Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation('A_activate_B', 'A', 'rule_has_subject')
+    Annotation('A_activate_B', 'B', 'rule_has_object')
+    Annotation('B_dephos_C', 'B', 'rule_has_subject')
+    Annotation('B_dephos_C', 'C', 'rule_has_object')
     C.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -381,8 +395,6 @@ def test_distinguish_path_polarity1():
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
-    im = mc.get_im()
-    im.draw('dist_pp_im1.pdf', prog='dot')
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == False
@@ -406,6 +418,10 @@ def test_distinguish_path_polarity2():
     Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
     Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
     Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation('A_inhibit_B', 'A', 'rule_has_subject')
+    Annotation('A_inhibit_B', 'B', 'rule_has_object')
+    Annotation('B_dephos_C', 'B', 'rule_has_subject')
+    Annotation('B_dephos_C', 'C', 'rule_has_object')
     C.site_annotations = [
             Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
             Annotation('T185', 'T', 'is_residue'),
@@ -415,8 +431,6 @@ def test_distinguish_path_polarity2():
     stmts = _path_polarity_stmt_list()
     mc = ModelChecker(model, stmts)
     results = mc.check_model()
-    im = mc.get_im()
-    im.draw('dist_pp_im2.pdf', prog='dot')
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
@@ -429,8 +443,8 @@ def test_check_activation():
     a = Agent('A')
     b = Agent('B')
     c = Agent('C')
-    st1 = Activation(a, 'activity', b, 'activity', True)
-    st2 = Activation(b, 'activity', c, 'kinase', False)
+    st1 = Activation(a, b)
+    st2 = Inhibition(b, c, 'kinase')
     stmts = [st1, st2]
     # Create the model
     pa = PysbAssembler()
@@ -496,6 +510,8 @@ def test_phosphorylation_annotations():
     # Add agent grounding
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation('A_phos_B', 'A_monomer', 'rule_has_subject')
+    Annotation('A_phos_B', 'B_monomer', 'rule_has_object')
     # Add annotations to the sites/states of the Monomer itself
     B_annot = [
         Annotation('Thr185', 'T', 'is_residue'),
@@ -527,27 +543,45 @@ def test_multitype_path():
     sos1_grb2 = Agent('SOS1', bound_conditions=[BoundCondition(grb2)],
                  db_refs={'HGNC':'11187'}, )
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    kras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                   db_refs={'HGNC': '6407'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
-    stmts = [
+
+    def check_stmts(stmts):
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pa.make_model(policies='one_step')
+        stmts_to_check = [
+                Activation(egfr, kras, 'gtpbound'),
+                Activation(egfr, braf, 'kinase')
+            ]
+        mc = ModelChecker(pa.model, stmts_to_check)
+        results = mc.check_model()
+        assert len(results) == len(stmts_to_check)
+        assert isinstance(results[0], tuple)
+        assert results[0][1] == True
+        assert results[1][1] == True
+    # Check with the ActiveForm
+    stmts1 = [
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
         ActiveForm(sos1_grb2, 'activity', True),
-        Activation(sos1_grb2, 'activity', kras, 'gtpbound', True),
-        Activation(kras, 'gtpbound', braf, 'kinase', True)
+        Activation(sos1_grb2, kras, 'gtpbound'),
+        Activation(kras_g, braf, 'kinase')
       ]
-    pa = PysbAssembler()
-    pa.add_statements(stmts)
-    pa.make_model(policies='one_step')
-    stmts_to_check = [
-            Activation(egfr, 'activity', kras, 'gtpbound', True),
-            Activation(egfr, 'activity', braf, 'kinase', True)
-        ]
-    mc = ModelChecker(pa.model, stmts_to_check)
-    results = mc.check_model()
-    assert len(results) == len(stmts_to_check)
-    assert isinstance(results[0], tuple)
-    assert results[0][1] == True
-    assert results[1][1] == True
+    check_stmts(stmts1)
+    # Check without the ActiveForm
+    # FIXME: This test fails--file as an issue. The problem is that the pysb
+    # assembler automatically adds the "active" flag to the rule, even if there
+    # is sufficient context on the agent to indicate activity.
+    # This is also problematic for Activation and RasGap stmts.
+    stmts2 = [
+        Complex([egfr, grb2]),
+        Complex([sos1, grb2_egfr]),
+        RasGef(sos1_grb2, kras),
+        Activation(kras_g, braf, 'kinase')
+      ]
+    check_stmts(stmts2)
 
 def test_grounded_modified_enzyme():
     """Check if the model checker can use semantic annotations to match mods
@@ -582,15 +616,185 @@ def test_check_ubiquitination():
     assert checks[0][0] == stmt
     assert checks[0][1] == True
 
+def test_check_rule_subject1():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    stmt = Phosphorylation(mek, erk)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    # Check against stmt: should not validate ERK phosphorylates ERK
+    stmt_to_check = Phosphorylation(erk, erk)
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == False
+
+def test_rasgef_activation():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgef_stmt = RasGef(sos, ras)
+    act_stmt = Activation(sos, ras, 'gtpbound')
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGef is satisfied by the Activation
+    # This currently doesn't work because RasGef statements aren't checked
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgef_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgef_stmt
+    assert checks[0][1] == True
+    """
+
+def test_rasgef_rasgtp():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgef_stmt = RasGef(sos, ras)
+    rasgtp_stmt = RasGtpActivation(ras, raf, 'kinase')
+    act_stmt = Activation(sos, raf, 'kinase')
+    # Check that the activation is satisfied by the RasGef
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgef_rasgtp_phos():
+    sos = Agent('SOS1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                db_refs={'HGNC':'2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgef_stmt = RasGef(sos, ras)
+    rasgtp_stmt = RasGtpActivation(ras, raf, 'kinase')
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Phosphorylation(sos, mek)
+    # Assemble and check
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgef_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
+def test_rasgap_activation():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    rasgap_stmt = RasGap(nf1, ras)
+    act_stmt = Inhibition(nf1, ras, 'gtpbound')
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+    # TODO TODO TODO
+    """
+    # Check that the RasGap is satisfied by the Activation
+    # This currently doesn't work because RasGap statements aren't checked by
+    # the ModelChecker
+    pysba = PysbAssembler()
+    pysba.add_statements([act_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [rasgap_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == rasgap_stmt
+    assert checks[0][1] == True
+    """
+
+def test_rasgap_rasgtp():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                 db_refs={'HGNC': '2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    rasgap_stmt = RasGap(nf1, ras)
+    rasgtp_stmt = RasGtpActivation(ras_g, raf, 'kinase')
+    act_stmt = Inhibition(nf1, raf, 'kinase')
+    # Check that the activation is satisfied by the RasGap
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [act_stmt])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == act_stmt
+    assert checks[0][1] == True
+
+def test_rasgap_rasgtp_phos():
+    nf1 = Agent('NF1', db_refs={'HGNC':'1'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                  db_refs={'HGNC': '2'})
+    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    mek = Agent('MEK', db_refs={'HGNC': '4'})
+    rasgap_stmt = RasGap(nf1, ras)
+    rasgtp_stmt = RasGtpActivation(ras_g, raf, 'kinase')
+    phos = Phosphorylation(raf, mek)
+    stmt_to_check = Dephosphorylation(nf1, mek)
+    # Assemble and check
+    pysba = PysbAssembler()
+    pysba.add_statements([rasgap_stmt, rasgtp_stmt, phos])
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
+
 """
+def test_check_rule_subject_bound_condition():
+    braf = Agent('BRAF', db_refs={'HGNC': '1'})
+    raf1 = Agent('RAF1', db_refs={'HGNC': '2'})
+    braf_raf1 = Agent('BRAF', bound_conditions=[BoundCondition(raf1)],
+                      db_refs={'HGNC': '1'})
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    stmt = Phosphorylation(braf_raf1, mek)
+    pysba = PysbAssembler()
+    pysba.add_statements([stmt])
+    pysba.make_model(policies='one_step')
+    # Check against stmt: should indicate that RAF1 is causally linked to MEK
+    # phosphorylation
+    stmt_to_check = Phosphorylation(raf1, mek)
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1] == True
+
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
-    stmts =[Activation(sos1, 'activity', kras, 'gtpbound', True)]
+    stmts =[Activation(sos1, kras, 'gtpbound')]
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model(policies='one_step')
-    stmts_to_check = [Activation(sos1, 'activity', kras, 'activity', True)]
+    stmts_to_check = [Activation(sos1, kras, 'activity')]
     mc = ModelChecker(pa.model, stmts_to_check)
     results = mc.check_model()
     assert len(results) == len(stmts_to_check)
@@ -634,6 +838,12 @@ def test_check_transphosphorylation():
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
+
+# FIXME: Issue: Increasing kinase activity doesn't make it capable of executing
+# phosphorylation statements
+# FIXME Issue increase activity (generic) doesn't make something capable of
+# executing phospho (or other statements)
+
 
 # Goal: Be able to check generic phosphorylations against specific rules
 # and vice versa.
@@ -719,12 +929,19 @@ def test_check_transphosphorylation():
 #
 # Save all the paths that a particular rule is on--then if you're wondering
 # why it's in the model, you look at all of the statements for which that
-# rule provides a path.
+# rule provides a path  .
 #
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_check_ubiquitination()
+    test_one_step_phosphorylation()
+    #test_multitype_path()
+    #test_rasgap_activation()
+    #test_rasgap_rasgtp()
+    #test_rasgap_rasgtp_phos()
+    #test_rasgef_activation()
+    #test_check_rule_subject2()
+    #test_check_ubiquitination()
     #test_grounded_modified_enzyme()
     #test_activation_subtype()
     #test_check_transphosphorylation()
@@ -742,3 +959,4 @@ if __name__ == '__main__':
     #test_path_polarity()
     #test_consumption_rule()
     #test_dephosphorylation()
+

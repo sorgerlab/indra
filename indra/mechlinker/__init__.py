@@ -30,6 +30,11 @@ class MechLinker(object):
 
     def get_activities(self):
         for stmt in self.statements:
+            agents = stmt.agent_list()
+            for agent in agents:
+                if agent is not None and agent.activity is not None:
+                    agent_base = self.get_base(agent)
+                    agent_base.add_activity(agent.activity.activity_type)
             if isinstance(stmt, Phosphorylation) or\
                 isinstance(stmt, Transphosphorylation) or\
                 isinstance(stmt, Autophosphorylation):
@@ -55,26 +60,18 @@ class MechLinker(object):
             elif isinstance(stmt, RasGef):
                 if stmt.gef is not None:
                     gef_base = self.get_base(stmt.gef)
-                    gef_base.add_activity(stmt.gef_activity)
+                    gef_base.add_activity('gef')
                     gef_base.add_active_state(stmt.gef_activity, stmt.gef.mods)
             elif isinstance(stmt, RasGap):
                 if stmt.gap is not None:
                     gap_base = self.get_base(stmt.gap)
-                    gap_base.add_activity(stmt.gap_activity)
+                    gap_base.add_activity('gap')
                     gap_base.add_active_state(stmt.gap_activity, stmt.gap.mods)
-            elif isinstance(stmt, Activation):
-                if stmt.subj is not None:
-                    subj_base =\
-                        self.get_base(stmt.subj)
-                    subj_base.add_activity(stmt.subj_activity)
-                    subj_base.add_active_state(stmt.subj_activity,
-                                               stmt.subj.mods)
+            elif isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
                     obj_base =\
                         self.get_base(stmt.obj)
                     obj_base.add_activity(stmt.obj_activity)
-                    obj_base.add_active_state(stmt.obj_activity,
-                                              stmt.obj.mods)
             elif isinstance(stmt, ActiveForm):
                 agent_base = self.get_base(stmt.agent)
                 agent_base.add_activity(stmt.activity)
@@ -86,28 +83,15 @@ class MechLinker(object):
 
     def reduce_activities(self):
         for stmt in self.statements:
-            if isinstance(stmt, RasGef):
-                if stmt.gef is not None:
-                    gef_base = self.get_base(stmt.gef)
-                    act_red = \
-                        gef_base.get_activity_reduction(stmt.gef_activity)
+            agents = stmt.agent_list()
+            for agent in agents:
+                if agent is not None and agent.activity is not None:
+                    agent_base = self.get_base(agent)
+                    act_red = agent_base.get_activity_reduction(
+                                                agent.activity.activity_type)
                     if act_red is not None:
-                        stmt.gef_activity = act_red
-            elif isinstance(stmt, RasGap):
-                if stmt.gap is not None:
-                    gap_base = self.get_base(stmt.gap)
-                    act_red = \
-                        gap_base.get_activity_reduction(stmt.gap_activity)
-                    if act_red is not None:
-                        stmt.gap_activity = act_red
-            elif isinstance(stmt, Activation):
-                if stmt.subj is not None:
-                    subj_base =\
-                        self.get_base(stmt.subj)
-                    act_red = \
-                        subj_base.get_activity_reduction(stmt.subj_activity)
-                    if act_red is not None:
-                        stmt.subj_activity = act_red
+                        agent.activity.activity_type = act_red
+            if isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
                     obj_base =\
                         self.get_base(stmt.obj)
@@ -124,16 +108,18 @@ class MechLinker(object):
 
     def replace_activations(self):
         linked_stmts = []
-        for act_stmt in get_statement_type(self.statements, Activation):
+        for act_stmt in get_statement_type(self.statements, RegulateActivity):
             # Infer ActiveForm from ActAct + Phosphorylation
-            if act_stmt.subj_activity == 'kinase':
+            if act_stmt.subj.activity is not None and \
+                act_stmt.subj.activity.activity_type == 'kinase' and \
+                act_stmt.subj.activity.is_active:
                 matching = []
                 ev = act_stmt.evidence
                 for phos_stmt in get_statement_type(self.statements,
                                                     Phosphorylation):
                     if phos_stmt.enz is not None:
-                        if phos_stmt.enz.matches(act_stmt.subj) and \
-                            phos_stmt.sub.matches(act_stmt.obj):
+                        if phos_stmt.enz.entity_matches(act_stmt.subj) and \
+                            phos_stmt.sub.entity_matches(act_stmt.obj):
                             matching.append(phos_stmt)
                             ev.extend(phos_stmt.evidence)
                 if not matching:
@@ -148,14 +134,16 @@ class MechLinker(object):
                 linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
             # Infer ActiveForm from ActAct + Dephosphorylation
-            if act_stmt.subj_activity == 'phosphatase':
+            if act_stmt.subj.activity is not None and \
+                act_stmt.subj.activity.activity_type == 'phosphatase' and \
+                act_stmt.subj.activity.is_active:
                 matching = []
                 ev = act_stmt.evidence
                 for phos_stmt in get_statement_type(self.statements,
                                                     Dephosphorylation):
                     if phos_stmt.enz is not None:
-                        if phos_stmt.enz.matches(act_stmt.subj) and \
-                            phos_stmt.sub.matches(act_stmt.obj):
+                        if phos_stmt.enz.entity_matches(act_stmt.subj) and \
+                            phos_stmt.sub.entity_matches(act_stmt.obj):
                             matching.append(phos_stmt)
                             ev.extend(phos_stmt.evidence)
                 if not matching:
@@ -170,7 +158,7 @@ class MechLinker(object):
                 linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
-        for act_stmt in get_statement_type(self.statements, Activation):
+        for act_stmt in get_statement_type(self.statements, RegulateActivity):
             for af_stmt in get_statement_type(self.statements, ActiveForm):
                 if not af_stmt.agent.name == act_stmt.obj.name:
                     continue

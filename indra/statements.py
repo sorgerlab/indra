@@ -51,7 +51,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
+import abc
 import sys
+import rdflib
 import logging
 import textwrap
 import jsonpickle
@@ -227,6 +229,44 @@ class ModCondition(object):
     def __hash__(self):
         return hash(self.matches_key())
 
+class ActivityCondition(object):
+    def __init__(self, activity_type, is_active):
+        if activity_type not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity_type)
+        self.activity_type = activity_type
+        self.is_active = is_active
+
+    def refinement_of(self, other, activity_hierarchy):
+        if self.is_active != other.is_active:
+            return False
+        if self.activity_type == other.activity_type:
+            return True
+        if activity_hierarchy.isa('INDRA', self.activity_type,
+                                  'INDRA', other.activity_type):
+            return True
+
+    def equals(selfs, other):
+        type_match = (self.activity_type == other.activity_type)
+        is_act_match = (self.is_active == other.is_active)
+        return (type_match and is_act_match)
+
+    def matches(self, other):
+        return (self.matches_key() == other.matches_key())
+
+    def matches_key(self):
+        key = (str(self.activity_type), str(self.is_active))
+        return str(key)
+
+    def __str__(self):
+        s = '%s' % self.activity_type
+        if not self.is_active:
+            s += ', False'
+        s = '(' + s + ')'
+        return s
+
+    def __repr__(self):
+        return str(self)
+
 @python_2_unicode_compatible
 class Agent(object):
     """A molecular entity, e.g., a protein.
@@ -242,13 +282,15 @@ class Agent(object):
         Other agents bound to the agent in this context.
     mutations : list of :py:class:`MutCondition`
         Amino acid mutations of the agent.
+    activity : :py:class:`ActivityCondition`
+        Activity of the agent.
     location : str
         Cellular location of the agent. Must be a valid name (e.g. "nucleus")
         or identifier (e.g. "GO:0005634")for a GO cellular compartment.
     db_refs : dict
         Dictionary of database identifiers associated with this agent.
     """
-    def __init__(self, name, mods=None, active=None,
+    def __init__(self, name, mods=None, activity=None,
                  bound_conditions=None, mutations=None,
                  location=None, db_refs=None):
         self.name = name
@@ -276,13 +318,23 @@ class Agent(object):
         else:
             self.mutations = mutations
 
-        self.active = active
+        self.activity = activity
         self.location = get_valid_location(location)
 
         if db_refs is None:
             self.db_refs = {}
         else:
             self.db_refs = db_refs
+
+    def __setstate__(self, state):
+        if 'active' in state:
+            logger.warning('Pickle file is out of date!')
+        if state.get('active') is not None:
+            state['activity'] = ActivityCondition(state['active'], True)
+        else:
+            state['activity'] = None
+        state.pop('active', None)
+        self.__dict__.update(state)
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -291,10 +343,11 @@ class Agent(object):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
+        act_key = (self.activity.matches_key() if self.activity else None)
         key = (self.entity_matches_key(),
                sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
-               self.active, self.location,
+               act_key, self.location,
                len(self.bound_conditions),
                tuple((bc.agent.matches_key(), bc.is_bound)
                      for bc in sorted(self.bound_conditions,
@@ -309,6 +362,7 @@ class Agent(object):
                                                self.db_refs.get('UP'),
                                                self.db_refs.get('HGNC'))
         return str((self.name, db_refs_key))
+
     # Function to get the namespace to look in
     def get_grounding(self):
         be = self.db_refs.get('BE')
@@ -442,12 +496,12 @@ class Agent(object):
                 return False
 
         # ACTIVITY
-        if self.active is None:
-            if other.active is not None:
+        if self.activity is None:
+            if other.activity is not None:
                 return False
-        elif other.active is not None:
-            if not hierarchies['activity'].isa('INDRA', self.active,
-                                               'INDRA', other.active):
+        elif other.activity is not None:
+            if not self.activity.refinement_of(other.activity,
+                                               hierarchies['activity']):
                 return False
 
         # Everything checks out
@@ -455,7 +509,7 @@ class Agent(object):
 
     def equals(self, other):
         matches = (self.name == other.name) and\
-                  (self.active == other.active) and\
+                  (self.activity == other.activity) and\
                   (self.location == other.location) and\
                   (self.db_refs == other.db_refs)
         if len(self.mods) == len(other.mods):
@@ -483,8 +537,9 @@ class Agent(object):
             mod_str = 'mods: '
             mod_str += ', '.join(['%s' % m for m in self.mods])
             attr_strs.append(mod_str)
-        if self.active:
-            attr_strs.append('active: %s' % self.active)
+        if self.activity:
+            attr_strs.append('%s: %s' % (self.activity.activity_type,
+                                         self.activity.is_active))
         if self.mutations:
             mut_str = 'muts: '
             mut_str += ', '.join(['%s' % m for m in self.mutations])
@@ -991,55 +1046,28 @@ class Demyristoylation(Modification):
 
 
 @python_2_unicode_compatible
-class Activation(Statement):
-    """Indicates that the activity of a protein affects the activity of another.
+class RegulateActivity(Statement):
+    """Regulation of activity.
 
-    This statement is intended to be used for physical interactions where the
-    mechanism of activation is not explicitly specified, which is often the
-    case for descriptions of mechanisms extracted from the literature. Both
-    activating and inactivating interactions can be represented.
-
-    Parameters
-    ----------
-    subj : :py:class:`Agent`
-        The agent responsible for the change in activity, i.e., the "upstream"
-        node.
-    subj_activity : string
-        The type of biochemical activity responsible for the effect, e.g.,
-        the subject's "kinase" activity.
-    obj : :py:class:`Agent`
-        The agent whose activity is influenced by the subject, i.e., the
-        "downstream" node.
-    obj_activity : string
-        The activity of the obj Agent that is affected, e.g., its "kinase"
-        activity.
-    is_activation : bool
-        Indicates the type of interaction: True for activation and
-        False for inactivation/inhibition
-    evidence : list of :py:class:`Evidence`
-        Evidence objects in support of the modification.
-
-    Examples
-    --------
-
-    The kinase activity of MEK (MAP2K1) activates the kinase activity of ERK
-    (MAPK1):
-
-    >>> mek = Agent('MAP2K1')
-    >>> erk = Agent('MAPK1')
-    >>> act = Activation(mek, 'kinase', erk, 'kinase', True)
+    This class implements shared functionality of Activation and Inhibition
+    statements and it should not be instantiated directly.
     """
-    def __init__(self, subj, subj_activity, obj, obj_activity, is_activation,
-                 evidence=None):
-        super(Activation, self).__init__(evidence)
-        self.subj = subj
-        self.subj_activity = subj_activity
-        self.obj = obj
-        self.obj_activity = obj_activity
-        self.is_activation = is_activation
+
+    # The constructor here is an abstractmethod so that this class cannot
+    # be directly instantiated.
+    __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod
+    def __init__(self):
+        pass
+
+    def __setstate__(self, state):
+        if 'subj_activity' in state:
+            logger.warning('Pickle file is out of date!')
+        state.pop('subj_activity', None)
+        self.__dict__.update(state)
 
     def matches_key(self):
-        key = (type(self), self.subj.matches_key(), str(self.subj_activity),
+        key = (type(self), self.subj.matches_key(),
                 self.obj.matches_key(), str(self.obj_activity),
                 str(self.is_activation))
         return str(key)
@@ -1049,7 +1077,7 @@ class Activation(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
-            raise ValueError("Activation has two agents.")
+            raise ValueError("%s has two agents." % self.__class__.__name__)
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
@@ -1057,17 +1085,14 @@ class Activation(Statement):
         # Make sure the statement types match
         if type(self) != type(other):
             return False
+        if self.is_activation != other.is_activation:
+            return False
         if self.subj.refinement_of(other.subj, hierarchies) and \
             self.obj.refinement_of(other.obj, hierarchies):
-            if self.is_activation != other.is_activation:
-                return False
-            subj_act_match = (self.subj_activity == other.subj_activity) or \
-                hierarchies['activity'].isa('INDRA', self.subj_activity,
-                                            'INDRA', other.subj_activity)
             obj_act_match = (self.obj_activity == other.obj_activity) or \
                 hierarchies['activity'].isa('INDRA', self.obj_activity,
                                             'INDRA', other.obj_activity)
-            if subj_act_match and obj_act_match:
+            if obj_act_match:
                 return True
             else:
                 return False
@@ -1075,18 +1100,92 @@ class Activation(Statement):
             return False
 
     def __str__(self):
-        s = ("%s(%s, %s, %s, %s, %s)" %
-             (type(self).__name__, self.subj, self.subj_activity,
-              self.obj, self.obj_activity, self.is_activation))
+        obj_act_str = ', %s' % self.obj_activity if \
+            self.obj_activity != 'activity' else ''
+        s = ("%s(%s, %s%s)" %
+             (type(self).__name__, self.subj,
+              self.obj, obj_act_str))
         return s
 
+    def __repr__(self):
+        return self.__str__()
+
     def equals(self, other):
-        matches = super(Activation, self).equals(other)
+        matches = super(RegulateActivity, self).equals(other)
         matches = matches and\
-                  (self.subj_activity == other.subj_activity) and\
                   (self.obj_activity == other.obj_activity) and\
                   (self.is_activation == other.is_activation)
         return matches
+
+
+class Inhibition(RegulateActivity):
+    """Indicates that a protein inhibits or deactivates another protein.
+
+    This statement is intended to be used for physical interactions where the
+    mechanism of inhibition is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : Optional[string]
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
+    def __init__(self, subj, obj, obj_activity='activity', evidence=None):
+        super(RegulateActivity, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
+        if obj_activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % obj_activity)
+        self.obj_activity = obj_activity
+        self.is_activation = False
+
+class Activation(RegulateActivity):
+    """Indicates that a protein activates another protein.
+
+    This statement is intended to be used for physical interactions where the
+    mechanism of activation is not explicitly specified, which is often the
+    case for descriptions of mechanisms extracted from the literature.
+
+    Parameters
+    ----------
+    subj : :py:class:`Agent`
+        The agent responsible for the change in activity, i.e., the "upstream"
+        node.
+    obj : :py:class:`Agent`
+        The agent whose activity is influenced by the subject, i.e., the
+        "downstream" node.
+    obj_activity : Optional[string]
+        The activity of the obj Agent that is affected, e.g., its "kinase"
+        activity.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+
+    Examples
+    --------
+
+    MEK (MAP2K1) activates the kinase activity of ERK (MAPK1):
+
+    >>> mek = Agent('MAP2K1')
+    >>> erk = Agent('MAPK1')
+    >>> act = Activation(mek, erk, 'kinase')
+    """
+    def __init__(self, subj, obj, obj_activity='activity', evidence=None):
+        super(RegulateActivity, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
+        if obj_activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % obj_activity)
+        self.obj_activity = obj_activity
+        self.is_activation = True
 
 
 class RasGtpActivation(Activation):
@@ -1115,6 +1214,12 @@ class ActiveForm(Statement):
     def __init__(self, agent, activity, is_active, evidence=None):
         super(ActiveForm, self).__init__(evidence)
         self.agent = agent
+        if agent.activity is not None:
+            logger.warning('Agent in ActiveForm should not have ' +
+                           'ActivityConditions.')
+            agent.activity = None
+        if activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity)
         self.activity = activity
         self.is_active = is_active
 
@@ -1184,7 +1289,13 @@ class HasActivity(Statement):
     """
     def __init__(self, agent, activity, has_activity, evidence=None):
         super(HasActivity, self).__init__(evidence)
+        if agent.activity is not None:
+            logger.warning('Agent in HasActivity should not have ' +
+                           'ActivityConditions.')
+            agent.activity = None
         self.agent = agent
+        if activity not in activity_types:
+            logger.warning('Invalid activity type: %s' % activity)
         self.activity = activity
         self.has_activity = has_activity
 
@@ -1242,8 +1353,6 @@ class RasGef(Statement):
     ----------
     gef : :py:class:`Agent`
         The guanosine exchange factor.
-    gef_activity : string
-        The biochemical activity of the GEF responsible for exchange.
     ras : :py:class:`Agent`
         The Ras superfamily protein.
 
@@ -1253,16 +1362,15 @@ class RasGef(Statement):
 
     >>> sos = Agent('SOS1')
     >>> kras = Agent('KRAS')
-    >>> rasgef = RasGef(sos, 'gef', kras)
+    >>> rasgef = RasGef(sos, kras)
     """
-    def __init__(self, gef, gef_activity, ras, evidence=None):
+    def __init__(self, gef, ras, evidence=None):
         super(RasGef, self).__init__(evidence)
         self.gef = gef
-        self.gef_activity = gef_activity
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gef.matches_key(), str(self.gef_activity),
+        key = (type(self), self.gef.matches_key(),
                 self.ras.matches_key())
         return str(key)
 
@@ -1276,8 +1384,8 @@ class RasGef(Statement):
         self.ras = agent_list[1]
 
     def __str__(self):
-        s = ("RasGef(%s, %s, %s)" %
-                (self.gef.name, self.gef_activity, self.ras.name))
+        s = ("RasGef(%s, %s)" %
+                (self.gef.name, self.ras.name))
         return s
 
     def refinement_of(self, other, hierarchies):
@@ -1286,15 +1394,13 @@ class RasGef(Statement):
             return False
         # Check the GEF
         if self.gef.refinement_of(other.gef, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies) and \
-           self.gef_activity == other.gef_activity:
+           self.ras.refinement_of(other.ras, hierarchies):
             return True
         else:
             return False
 
     def equals(self, other):
         matches = super(RasGef, self).equals(other)
-        matches = matches and (self.gef_activity == other.gef_activity)
         return matches
 
 
@@ -1309,8 +1415,6 @@ class RasGap(Statement):
     ----------
     gap : :py:class:`Agent`
         The GTPase activating protein.
-    gap_activity : string
-        The biochemical activity of the GAP responsible for hydrolysis.
     ras : :py:class:`Agent`
         The Ras superfamily protein.
 
@@ -1320,16 +1424,15 @@ class RasGap(Statement):
 
     >>> rasa1 = Agent('RASA1')
     >>> kras = Agent('KRAS')
-    >>> rasgap = RasGap(rasa1, 'gap', kras)
+    >>> rasgap = RasGap(rasa1, kras)
     """
-    def __init__(self, gap, gap_activity, ras, evidence=None):
+    def __init__(self, gap, ras, evidence=None):
         super(RasGap, self).__init__(evidence)
         self.gap = gap
-        self.gap_activity = gap_activity
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gap.matches_key(), str(self.gap_activity),
+        key = (type(self), self.gap.matches_key(),
                 self.ras.matches_key())
         return str(key)
 
@@ -1348,20 +1451,18 @@ class RasGap(Statement):
             return False
         # Check the GAP
         if self.gap.refinement_of(other.gap, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies) and \
-           self.gap_activity == other.gap_activity:
+           self.ras.refinement_of(other.ras, hierarchies):
             return True
         else:
             return False
 
     def __str__(self):
-        s = ("RasGap(%s, %s, %s)" %
-                (self.gap.name, self.gap_activity, self.ras.name))
+        s = ("RasGap(%s, %s)" %
+                (self.gap.name, self.ras.name))
         return s
 
     def equals(self, other):
         matches = super(RasGap, self).equals(other)
-        matches = matches and (self.gap_activity == other.gap_activity)
         return matches
 
 
@@ -1610,6 +1711,24 @@ def get_valid_location(location):
     return location
 
 
+def _read_activity_types():
+    """Read types of valid activities from a resource file."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    ac_file = this_dir + '/resources/activity_hierarchy.rdf'
+    g = rdflib.Graph()
+    with open(ac_file, 'r'):
+        g.parse(ac_file, format='nt')
+    act_types = set()
+    for s, p, o in g:
+        subj = s.rpartition('/')[-1]
+        obj = o.rpartition('/')[-1]
+        act_types.add(subj)
+        act_types.add(obj)
+    return sorted(list(act_types))
+
+activity_types = _read_activity_types()
+
+
 def _read_cellular_components():
     """Read cellular components from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1660,5 +1779,3 @@ class InvalidLocationError(ValueError):
     """Invalid cellular component name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
-
-

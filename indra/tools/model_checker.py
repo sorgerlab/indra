@@ -51,6 +51,7 @@ class ModelChecker(object):
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
         else:
+            logger.info("Generating influence map")
             self._im = kappa.influence_map(self.model)
             self._im.is_multigraph = lambda: False
             return self._im
@@ -85,21 +86,22 @@ class ModelChecker(object):
         """
         if isinstance(stmt, Modification):
             return self._check_modification(stmt)
-        elif isinstance(stmt, Activation):
-            return self._check_activation(stmt)
+        elif isinstance(stmt, RegulateActivity):
+            return self._check_regulate_activity(stmt)
         else:
             return False
 
-    def _check_activation(self, stmt):
-        """Check an Activation statement."""
+    def _check_regulate_activity(self, stmt):
+        """Check a RegulateActivity statement."""
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
-        # pattern from the Activation statement, which will nearly always have
-        # no state conditions on it. In future, this statement should also match
-        # rules in which 1) the agent is in its active form, or 2) the agent is
-        # tagged as the enzyme in a rule of the appropriate activity (e.g., a
-        # phosphorylation rule) FIXME
+        # pattern from the Activation/Inhibition statement, which will nearly
+        # always have no state conditions on it. In future, this statement foo
+        # should also match rules in which 1) the agent is in its active form,
+        # or 2) the agent is tagged as the enzyme in a rule of the appropriate
+        # activity (e.g., a phosphorylation rule) FIXME
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
+
         target_polarity = 1 if stmt.is_activation else -1
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the
@@ -107,8 +109,7 @@ class ModelChecker(object):
         obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
         try:
             obj_site_pattern = pa.get_site_pattern(stmt.obj)
-            obj_site_pattern.update({pa.active_site_names[stmt.obj_activity]:
-                                     'active'})
+            obj_site_pattern.update({stmt.obj_activity: 'active'})
             obj_monomer = self.model.monomers[stmt.obj.name]
             obj_mp = obj_monomer(**obj_site_pattern)
         except Exception as e:
@@ -192,13 +193,26 @@ class ModelChecker(object):
             input_rule_set = None
         else:
             input_rules = _match_lhs(subj_mp, self.model.rules)
-            input_rule_set = set([r.name for r in input_rules])
-                                  #if r.name.startswith(stmt.enz.name)])
             logger.info('Found %s input rules matching %s' %
                         (len(input_rules), str(subj_mp)))
+            # Filter to include only rules where the subj_mp is actually the
+            # subject (i.e., don't pick up upstream rules where the subject
+            # is itself a substrate/object)
+            # FIXME: Note that this will eliminate rules where the subject
+            # being checked is included on the left hand side as 
+            # a bound condition rather than as an enzyme.
+            subj_rules = pa.rules_with_annotation(self.model,
+                                                  subj_mp.monomer.name,
+                                                  'rule_has_subject')
+            logger.info('%d rules with %s as subject' %
+                        (len(subj_rules), subj_mp.monomer.name))
+            input_rule_set = set([r.name for r in input_rules]).intersection(
+                                 set([r.name for r in subj_rules]))
+            logger.info('Final input rule set contains %d rules' %
+                        len(input_rule_set))
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
-            if not input_rules:
+            if not input_rule_set:
                 return False
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?

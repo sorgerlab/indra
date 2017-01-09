@@ -52,7 +52,7 @@ class SifAssembler(object):
                 t = self._add_node(t, use_name_as_key=use_name_as_key)
                 self._add_edge(s, t, {'polarity': polarity})
         for st in self.stmts:
-            if isinstance(st, Activation):
+            if isinstance(st, RegulateActivity):
                 polarity = 'positive' if st.is_activation else 'negative'
                 add_node_edge(st.subj, st.obj, polarity)
             elif include_mods and isinstance(st, Modification):

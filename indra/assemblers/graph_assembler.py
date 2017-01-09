@@ -117,7 +117,7 @@ class GraphAssembler():
                     continue
                 self._add_node(stmt.enz)
                 self._add_node(stmt.sub)
-            elif isinstance(stmt, Activation):
+            elif isinstance(stmt, RegulateActivity):
                 self._add_node(stmt.subj)
                 self._add_node(stmt.obj)
             elif isinstance(stmt, Complex):
@@ -133,9 +133,9 @@ class GraphAssembler():
                 if stmt.enz is None:
                     continue
                 self._add_dephosphorylation(stmt.enz, stmt.sub)
-            elif isinstance(stmt, Activation):
-                self._add_activation(stmt.subj, stmt.obj,
-                                     stmt.is_activation)
+            elif isinstance(stmt, RegulateActivity):
+                self._add_regulate_activity(stmt.subj, stmt.obj,
+                                            stmt.is_activation)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt.members)
 
@@ -234,16 +234,19 @@ class GraphAssembler():
                   'dir': 'forward'}
         self._add_edge(source, target, **params)
 
-    def _add_activation(self, subj, obj, rel):
-        """Assemble an Activation statment."""
+    def _add_regulate_activity(self, subj, obj, rel):
+        """Assemble a RegulateActivity statment."""
         source = _get_node_key(subj)
         target = _get_node_key(obj)
-        edge_key = (source, target, 'activation', rel)
+        # Change edge properties depending on whether this is an
+        # Activation or an Inhibition
+        edge_name = 'activation' if rel else 'inhibition'
+        color = '#000000' if rel else '#ff0000'
+        arrowhead = 'vee' if rel else 'tee'
+        edge_key = (source, target, edge_name, rel)
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        color = '#000000' if rel else '#ff0000'
-        arrowhead = 'vee' if rel else 'tee'
         params = {'color': color,
                   'arrowhead': arrowhead,
                   'dir': 'fowrard'}

@@ -7,7 +7,7 @@ from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
-                             Translocation, Activation
+                             Translocation, Activation, Inhibition
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -258,15 +258,15 @@ def test_activating_substitution_refinement():
     nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
     ras = Agent('RAS', mutations=[mc1], db_refs={'BE': 'RAS'})
-    st1 = ActiveForm(ras, 'gtpbound1', True,
+    st1 = ActiveForm(ras, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
-    st2 = ActiveForm(nras1, 'gtpbound1', True,
+    st2 = ActiveForm(nras1, 'gtpbound', True,
                      evidence=Evidence(text='foo'))
-    st3 = ActiveForm(nras2, 'gtpbound1', True,
+    st3 = ActiveForm(nras2, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
-    st4 = ActiveForm(nras1, 'gtpbound2', True,
+    st4 = ActiveForm(nras1, 'phosphatase', True,
                      evidence=Evidence(text='bar'))
-    st5 = ActiveForm(nras1, 'gtpbound1', False,
+    st5 = ActiveForm(nras1, 'gtpbound', False,
                      evidence=Evidence(text='bar'))
     assert(st2.refinement_of(st1, hierarchies))
     assert(not st3.refinement_of(st1, hierarchies))
@@ -400,8 +400,8 @@ def test_activation_refinement():
                                      'PUBCHEM': '702',
                                      'TEXT': 'alcohol'})
     obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
-    st1 = Activation(subj, 'activity', obj, 'activity', False)
-    st2 = Activation(subj, 'activity', obj, 'activity', True)
+    st1 = Inhibition(subj, obj)
+    st2 = Activation(subj, obj)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 2)

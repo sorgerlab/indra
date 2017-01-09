@@ -48,8 +48,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
                 stmt_strs.append(_assemble_complex(stmt))
-            elif isinstance(stmt, ist.Activation):
-                stmt_strs.append(_assemble_activation(stmt))
+            elif isinstance(stmt, ist.RegulateActivity):
+                stmt_strs.append(_assemble_regulate_activity(stmt))
             elif isinstance(stmt, ist.ActiveForm):
                 stmt_strs.append(_assemble_activeform(stmt))
             elif isinstance(stmt, ist.Translocation):
@@ -215,14 +215,14 @@ def _assemble_autophosphorylation(stmt):
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
 
-def _assemble_activation(stmt):
-    """Assemble Activation statements into text."""
+def _assemble_regulate_activity(stmt):
+    """Assemble RegulateActivity statements into text."""
     subj_str = _assemble_agent_str(stmt.subj)
     obj_str = _assemble_agent_str(stmt.obj)
     if stmt.is_activation:
         rel_str = ' activates '
     else:
-        rel_str = ' inactivates '
+        rel_str = ' inhibits '
     stmt_str = subj_str + rel_str + obj_str
     return _make_sentence(stmt_str)
 
