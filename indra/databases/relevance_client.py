@@ -11,7 +11,7 @@ except:
 
 logger = logging.getLogger('relevance')
 
-ndex_relevance = 'http://general.bigmech.ndexbio.org:8080'
+ndex_relevance = 'http://general.bigmech.ndexbio.org:5602'
 
 def get_heat_kernel(network_id):
     """Return the identifier of a heat kernel calculated for a given network.
