@@ -1191,8 +1191,10 @@ def modification_assemble_one_step(stmt, model, agent_set):
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_%s_%s_%s_%d' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_%s_%s_%s%s' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
+             counter_str)
         r = Rule(rule_name,
                 enz_pattern(af) + sub_unmod >>
                 enz_pattern(af) + sub_mod,
@@ -1236,8 +1238,10 @@ def modification_assemble_two_step(stmt, model, agent_set):
     mod_site_state = states[mod_condition_name][1]
 
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_%s_bind_%s_%s_%d' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_%s_bind_%s_%s%s' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
+             counter_str)
         r = Rule(rule_name,
             enz_unbound(af) + \
             sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
@@ -1246,8 +1250,9 @@ def modification_assemble_two_step(stmt, model, agent_set):
             kf_bind)
         add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s_%d' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site, i + 1)
+        rule_name = '%s_%s_%s_%s%s' % \
+            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
+             counter_str)
         r = Rule(rule_name,
             enz_bound(af) % \
                 sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
@@ -1342,16 +1347,16 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
     kr_bind_atp = get_create_parameter(model, param_name, 1e-6)
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_phospho_bind_atp_%d' % \
-            (enz_rule_str, i + 1)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_phospho_bind_atp%s' % \
+            (enz_rule_str, counter_str)
         r = Rule(rule_name,
             enz_atp_unbound(af) + atp(b=None) >>
             enz_atp_bound(af) %  atp(b=1), kf_bind_atp)
         add_rule_to_model(model, r)
 
     # Enzyme releasing ATP
-    rule_name = '%s_phospho_dissoc_atp_%d' % \
-        (enz_rule_str, i + 1)
+    rule_name = '%s_phospho_dissoc_atp' % (enz_rule_str)
     r = Rule(rule_name,
         enz_mon_uncond({atp_bs: 1}) % atp(b=1) >>
         enz_mon_uncond({atp_bs: None}) + atp(b=None), kr_bind_atp)
@@ -1374,8 +1379,9 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_phospho_bind_%s_%s_%d' % \
-            (rule_enz_str, rule_sub_str, phos_site, i + 1)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_phospho_bind_%s_%s%s' % \
+            (rule_enz_str, rule_sub_str, phos_site, counter_str)
         r = Rule(rule_name,
             enz_sub_unbound(af) + \
             sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
@@ -1386,8 +1392,9 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
 
     # Enzyme phosphorylating substrate
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_phospho_%s_%s_%d' % \
-            (rule_enz_str, rule_sub_str, phos_site, i + 1)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_phospho_%s_%s%s' % \
+            (rule_enz_str, rule_sub_str, phos_site, counter_str)
         r = Rule(rule_name,
             enz_sub_atp_bound(af) % atp(b=2) % \
                 sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
@@ -1494,9 +1501,10 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_%s_%s_%s_%d' % \
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_%s_%s_%s%s' % \
                     (rule_enz_str, demod_condition_name, rule_sub_str,
-                     demod_site, i)
+                     demod_site, counter_str)
         r = Rule(rule_name,
                  enz_pattern(af) + sub_mod >> enz_pattern(af) + sub_unmod,
                  kf_demod)
@@ -1538,8 +1546,10 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     for i, af in enumerate(enz_act_patterns):
-        rule_name = '%s_%s_bind_%s_%s_%d' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site, i)
+        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
+        rule_name = '%s_%s_bind_%s_%s%s' % \
+            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
+             counter_str)
         r = Rule(rule_name,
                  enz_unbound(af) + \
                  sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
@@ -1548,8 +1558,9 @@ def demodification_assemble_two_step(stmt, model, agent_set):
                  kf_bind)
         add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s_%d' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site, i)
+        rule_name = '%s_%s_%s_%s%s' % \
+            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
+             counter_str)
         r = Rule(rule_name,
             enz_bound(af) % \
                 sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
@@ -1776,12 +1787,13 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
         get_create_parameter(model, param_name, 1e-6)
 
     for i, af, in enumerate(subj_act_patterns):
+        counter_str = '_%s' % (i + 1) if len(subj_act_patterns) > 1 else ''
         rule_obj_str = get_agent_rule_str(stmt.obj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         polarity_str = 'activates' if stmt.is_activation else 'deactivates'
-        rule_name = '%s_%s_%s_%s_%d' % \
+        rule_name = '%s_%s_%s_%s%s' % \
             (rule_subj_str, polarity_str, rule_obj_str,
-             stmt.obj_activity, i)
+             stmt.obj_activity, counter_str)
 
         if stmt.is_activation:
             r = Rule(rule_name,
