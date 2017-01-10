@@ -42,12 +42,20 @@ def process_ndex_neighborhood(gene_names, network_id=None,
         network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
     params = {'searchString': ' '.join(gene_names)}
-    # The ndex_client returns the rdf as a unicode string
-    rdf = ndex_client.send_request(url, params, is_json=False)
-    if rdf is None:
-        logger.info('No response for NDEx neighborhood query.')
+    # The ndex_client returns the rdf as the content of a json dict
+    res_json = ndex_client.send_request(url, params, is_json=True)
+    if not res_json:
+        logger.error('No response for NDEx neighborhood query.')
         return None
-    assert isinstance(rdf, str)
+    if res_json.get('error'):
+        error_msg = res_json.get('message')
+        logger.error('BEL/RDF response contains error: %s' % error_msg)
+        return None
+    rdf = res_json.get('content')
+    if not rdf:
+        logger.error('BEL/RDF response is empty.')
+        return None
+
     with open(rdf_out, 'wb') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf)
