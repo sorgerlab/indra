@@ -1481,6 +1481,7 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     enz_pattern = get_monomer_pattern(model, stmt.enz)
 
     unmod_site_state = states[mod_condition_name][0]
@@ -1492,10 +1493,13 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    r = Rule('%s_%s_%s_%s' %
-             (rule_enz_str, demod_condition_name, rule_sub_str, demod_site),
-             enz_pattern + sub_mod >> enz_pattern + sub_unmod,
-             kf_demod)
+    for i, af in enumerate(enz_act_patterns):
+        rule_name = '%s_%s_%s_%s_%d' % \
+                    (rule_enz_str, demod_condition_name, rule_sub_str,
+                     demod_site, i)
+        r = Rule(rule_name,
+                 enz_pattern(af) + sub_mod >> enz_pattern(af) + sub_unmod,
+                 kf_demod)
     add_rule_to_model(model, r)
     anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
@@ -1530,28 +1534,26 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    enz_act_mods = get_active_forms(stmt.enz, agent_set)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, am in enumerate(enz_act_mods):
+    for i, af in enumerate(enz_act_patterns):
         rule_name = '%s_%s_bind_%s_%s_%d' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             i + 1)
+            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site, i)
         r = Rule(rule_name,
-                 enz_unbound(am) + \
+                 enz_unbound(af) + \
                  sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
-                 enz_bound(am) % \
+                 enz_bound(af) % \
                  sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
                  kf_bind)
         add_rule_to_model(model, r)
 
         rule_name = '%s_%s_%s_%s_%d' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             i + 1)
+            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site, i)
         r = Rule(rule_name,
-            enz_bound(am) % \
+            enz_bound(af) % \
                 sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
-            enz_unbound(am) + \
+            enz_unbound(af) + \
                 sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
             kf_demod)
         add_rule_to_model(model, r)
