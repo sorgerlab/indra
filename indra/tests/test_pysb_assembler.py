@@ -859,6 +859,65 @@ def test_activeform_site():
 # TODO Bound condition
 # TODO Unphosphorylated/unmodified forms (try ubiquitinated/acetylated lysine)
 
-if __name__ == '__main__':
-    test_activeform_site()
+def test_activation_subj1():
+    """No subject activity is defined."""
+    st = Activation(Agent('a'), Agent('b'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(pa.model.monomers['a'].sites == [])
+    left = pa.model.rules[0].reactant_pattern
+    subj_left = left.complex_patterns[0].monomer_patterns[0]
+    right = pa.model.rules[0].product_pattern
+    subj_right = right.complex_patterns[0].monomer_patterns[0]
+    assert(subj_left.site_conditions == {})
+    assert(subj_right.site_conditions == {})
+
+def test_activation_subj2():
+    """Subject activity is defined explicitly."""
+    st = Activation(Agent('a'), Agent('b'))
+    st2 = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                     'activity', True)
+    pa = PysbAssembler()
+    pa.add_statements([st, st2])
+    pa.make_model()
+    assert(pa.model.monomers['a'].sites == ['phospho'])
+    left = pa.model.rules[0].reactant_pattern
+    subj_left = left.complex_patterns[0].monomer_patterns[0]
+    right = pa.model.rules[0].product_pattern
+    subj_right = right.complex_patterns[0].monomer_patterns[0]
+    assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
+    assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
+
+def test_activation_subj3():
+    """Subject activity is defined implicitly by another statement."""
+    st = Activation(Agent('a'), Agent('b'))
+    st2 = Activation(Agent('c'), Agent('a'))
+    pa = PysbAssembler()
+    pa.add_statements([st, st2])
+    pa.make_model()
+    assert(pa.model.monomers['a'].sites == ['activity'])
+    left = pa.model.rules[0].reactant_pattern
+    subj_left = left.complex_patterns[0].monomer_patterns[0]
+    right = pa.model.rules[0].product_pattern
+    subj_right = right.complex_patterns[0].monomer_patterns[0]
+    assert(subj_left.site_conditions == {u'activity': (u'active')})
+    assert(subj_right.site_conditions == {u'activity': (u'active')})
+
+def test_activation_subj4():
+    """Subject activity is defined both explicitly and implicitly."""
+    st = Activation(Agent('a'), Agent('b'))
+    st2 = Activation(Agent('c'), Agent('a'))
+    st3 = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                     'activity', True)
+    pa = PysbAssembler()
+    pa.add_statements([st, st2, st3])
+    pa.make_model()
+    assert(pa.model.monomers['a'].sites == ['activity', 'phospho'])
+    left = pa.model.rules[0].reactant_pattern
+    subj_left = left.complex_patterns[0].monomer_patterns[0]
+    right = pa.model.rules[0].product_pattern
+    subj_right = right.complex_patterns[0].monomer_patterns[0]
+    assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
+    assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
 
