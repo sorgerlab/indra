@@ -7,6 +7,7 @@ import cPickle as pickle
 import logging
 from indra.statements import *
 from indra.belief import BeliefEngine
+from indra.databases import uniprot_client
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.grounding_mapper import GroundingMapper
@@ -152,6 +153,29 @@ def filter_genes_only(stmts_in, **kwargs):
                     genes_only = False
                     break
         if genes_only:
+            stmts_out.append(st)
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_human_only(stmts_in, **kwargs):
+    load_pkl = kwargs.get('load_pkl')
+    dump_pkl = kwargs.get('dump_pkl')
+    logger.info('Filtering %d statements for human genes only...' % 
+                len(stmts_in))
+    if load_pkl:
+        stmts_out = load_statements(load_pkl)
+        return stmts_out
+    stmts_out = []
+    for st in stmts_in:
+        human_genes = True
+        for agent in st.agent_list():
+            if agent is not None:
+                upid = agent.db_refs.get('UP')
+                if upid and not uniprot_client.is_human(upid):
+                    human_genes = False
+                    break
+        if human_genes:
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
