@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 import sys
 import time
-import pickle
+import cPickle as pickle
 import logging
 from indra.statements import *
 from indra.belief import BeliefEngine
@@ -62,6 +62,19 @@ def map_sequence(stmts_in, **kwargs):
     logger.info('Statements with valid sites: %d' % len(stmts_out))
     return stmts_out
 
+def run_preassembly(stmts_in, **kwargs):
+    dump_pkl = kwargs.get('dump_pkl')
+    be = BeliefEngine()
+    pa = Preassembler(hierarchies, stmts_in)
+
+    options = {'preassembler': pa, 'beliefengine': be}
+    unique_stmts = run_preassembly_duplicate(stmts_in, **options)
+
+    options = {'dump_pkl': dump_pkl, 'preassembler': pa, 'beliefengine': be}
+    stmts_out = run_preassembly_related(unique_stmts, **options)
+
+    return stmts_out
+
 def run_preassembly_duplicate(stmts_in, **kwargs):
     logger.info('Combining duplicates...')
     load_pkl = kwargs.get('load_pkl')
@@ -96,6 +109,52 @@ def run_preassembly_related(stmts_in, **kwargs):
 
 def filter_by_type(stmts_in, stmt_type):
     stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    return stmts_out
+
+def filter_grounded_only(stmts_in, **kwargs):
+    load_pkl = kwargs.get('load_pkl')
+    dump_pkl = kwargs.get('dump_pkl')
+    logger.info('Filtering %d statements for grounded agents...' % 
+                len(stmts_in))
+    if load_pkl:
+        stmts_out = load_statements(load_pkl)
+        return stmts_out
+    stmts_out = []
+    for st in stmts_in:
+        grounded = True
+        for agent in st.agent_list():
+            if agent is not None:
+                if (len(agent.db_refs) == 1) and agent.db_refs.get('TEXT'):
+                    grounded = False
+                    break
+        if grounded:
+            stmts_out.append(st)
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_genes_only(stmts_in, **kwargs):
+    load_pkl = kwargs.get('load_pkl')
+    dump_pkl = kwargs.get('dump_pkl')
+    logger.info('Filtering %d statements for ones containing genes only...' % 
+                len(stmts_in))
+    if load_pkl:
+        stmts_out = load_statements(load_pkl)
+        return stmts_out
+    stmts_out = []
+    for st in stmts_in:
+        genes_only = True
+        for agent in st.agent_list():
+            if agent is not None:
+                if not(agent.db_refs.get('HGNC') or \
+                        agent.db_refs.get('UP') or \
+                        agent.db_refs.get('BE')):
+                    genes_only = False
+                    break
+        if genes_only:
+            stmts_out.append(st)
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
 def dump_stmt_strings(stmts):
