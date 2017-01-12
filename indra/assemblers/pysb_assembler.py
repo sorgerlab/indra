@@ -706,9 +706,7 @@ class PysbAssembler(object):
             A list of :py:class:`indra.statements.Statement`
             to be added to the statement list of the assembler.
         """
-        for stmt in stmts:
-            if not self._statement_exists(stmt):
-                self.statements.append(stmt)
+        self.statements += stmts
 
     def make_model(self, policies=None, initial_conditions=True):
         """Assemble the PySB model from the collected INDRA Statements.
@@ -865,13 +863,6 @@ class PysbAssembler(object):
                 model_str = pysb.export.export(self.model, 'pysb_flat')
                 model_str = '\t' + model_str.replace('\n', '\n\t')
                 fh.write(model_str)
-
-    def _statement_exists(self, stmt):
-        """Return True if the given Statement is in the assembler."""
-        for s in self.statements:
-            if stmt.matches(s):
-                return True
-        return False
 
     def _dispatch(self, stmt, stage, *args):
         """Construct and call an assembly function.
