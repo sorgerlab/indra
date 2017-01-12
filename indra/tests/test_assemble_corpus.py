@@ -51,6 +51,14 @@ def test_filter_human_only():
     st_out = ac.filter_human_only([st8, st9])
     assert len(st_out) == 0
 
+def test_filter_gene_list_one():
+    st_out = ac.filter_gene_list([st1, st2], ['a'], 'one')
+    assert(len(st_out) == 2)
+    st_out = ac.filter_gene_list([st1, st2], ['a'], 'all')
+    assert(len(st_out) == 0)
+    st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'all')
+    assert(len(st_out) == 1)
+
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
     assert(len(st_out) == 2)

@@ -158,6 +158,53 @@ def filter_genes_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
+    """Return statements that contain genes given in a list.
+
+    gene_list : list[str]
+        A list of gene symbols to filter for.
+    policy : str
+        The policy to apply when filtering for the list of genes.
+        'one': keep statements that contain at least one of the
+               list of genes and possibly others not in the list
+        'all': keep statements that only contain genes given in the list
+    """
+    load_pkl = kwargs.get('load_pkl')
+    dump_pkl = kwargs.get('dump_pkl')
+    if policy not in ('one', 'all'):
+        logger.error('Policy %s is invalid, not applying filter.' % policy)
+    genes_str = ', '.join(gene_list)
+    logger.info('Filtering %d statements for ones containing: %s...' %
+                (len(stmts_in), genes_str))
+    if load_pkl:
+        stmts_out = load_statements(load_pkl)
+        return stmts_out
+    stmts_out = []
+    if policy == 'one':
+        for st in stmts_in:
+            found_gene = False
+            for agent in st.agent_list():
+                if agent is not None:
+                    if agent.name in gene_list:
+                        found_gene = True
+                        break
+            if found_gene:
+                stmts_out.append(st)
+    elif policy == 'all':
+        for st in stmts_in:
+            found_genes = True
+            for agent in st.agent_list():
+                if agent is not None:
+                    if agent.name not in gene_list:
+                        found_genes = False
+                        break
+            if found_genes:
+                stmts_out.append(st)
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
 def filter_human_only(stmts_in, **kwargs):
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
