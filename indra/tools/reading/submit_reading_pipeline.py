@@ -38,10 +38,11 @@ if __name__ == '__main__':
     # running num_nodes jobs, each with num_cores assigned to each. The papers
     # are divided up into chunks such that all the papers will be processed in
     # a single round.
-    if num_pmids // num_nodes == num_pmids / num_nodes:
-        node_chunk_size = int(num_pmids / num_nodes)
-    else:
-        node_chunk_size = int((num_pmids // num_nodes) + 1)
+    #if num_pmids // num_nodes == num_pmids / num_nodes:
+    #    node_chunk_size = int(num_pmids / num_nodes)
+    #else:
+    #    node_chunk_size = int((num_pmids // num_nodes) + 1)
+    node_chunk_size = 2000
     node_start_pts = range(0, num_pmids, node_chunk_size)
 
     for node_start_ix in node_start_pts:

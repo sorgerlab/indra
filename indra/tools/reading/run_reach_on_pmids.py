@@ -331,6 +331,8 @@ if __name__ == '__main__':
     if p.returncode:
         raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
 
+    # Upload!
+    upload_reach_json(output_dir, text_sources)
 
     if cleanup:
         shutil.rmtree(base_dir)
