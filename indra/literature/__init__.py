@@ -103,7 +103,11 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
         if publisher == 'Elsevier BV':
             logger.info('Elsevier: %s' % pmid)
             #article = elsevier_client.get_article(doi, output='txt')
-            article_xml = elsevier_client.download_article(doi)
+            try:
+                article_xml = elsevier_client.download_article(doi)
+            except Exception as e:
+                logger.error("Error downloading Elsevier article: %s" % e)
+                article_xml = None
             if article_xml is not None:
                 return (article_xml, 'elsevier_xml')
 
