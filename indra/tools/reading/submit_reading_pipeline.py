@@ -43,10 +43,11 @@ if __name__ == '__main__':
     else:
         node_chunk_size = int((num_pmids // num_nodes) + 1)
     # Limit jobs to a maximum chunk size to ensure regular checkpointing
+    """
     MAX_NODE_CHUNK_SIZE = 2000
     if node_chunk_size > MAX_NODE_CHUNK_SIZE:
         node_chunk_size = MAX_NODE_CHUNK_SIZE
-
+    """
     node_start_pts = range(0, num_pmids, node_chunk_size)
 
     for node_start_ix in node_start_pts:
