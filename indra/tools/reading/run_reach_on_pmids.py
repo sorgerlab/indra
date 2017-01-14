@@ -43,12 +43,14 @@ def upload_reach_json(output_dir, text_sources):
     # Now iterate over the collected prefixes, combine the JSON, and send to S3
     num_uploaded = 0
     num_failures = 0
+    failures = []
     # The prefixes should be PMIDs
     for json_ix, json_prefix in enumerate(json_prefixes):
         prefix_with_path = os.path.join(output_dir, json_prefix)
         full_json = join_parts(prefix_with_path)
         if full_json is None:
             num_failures += 1
+            failures.append(json_prefix)
         else:
             # Look up the paper source type
             source_text = text_sources.get(json_prefix)
@@ -57,9 +59,12 @@ def upload_reach_json(output_dir, text_sources):
             s3_client.put_reach_output(full_json, json_prefix, reach_version,
                                        source_text)
             num_uploaded += 1
-
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
-                (num_uploaded, num_failures))
+        (num_uploaded, num_failures))
+    failures_file = os.path.join(output_dir, 'failures.txt')
+    with open(failures_file, 'wt') as f:
+        for fail in failures:
+            f.write('%s\n' % fail)
 
 
 if __name__ == '__main__':
@@ -160,6 +165,7 @@ if __name__ == '__main__':
     num_elsevier_xml_fail = 0
     # Keep a map of the content type we've downloaded for each PMID
     text_sources = {}
+    content_not_found = []
     for pmid in pmids_to_read:
         full_pmid = s3_client.check_pmid(pmid)
         # Look for the full text
@@ -185,6 +191,7 @@ if __name__ == '__main__':
         # Write the contents to a file
         if content_type is None or content is None:
             num_not_found += 1
+            content_not_found.append(pmid)
             logger.info('No content found on S3 for %s, skipping' % pmid)
             continue
         elif content_type == 'pmc_oa_xml':
@@ -330,6 +337,12 @@ if __name__ == '__main__':
     (p_out, p_err) = p.communicate()
     if p.returncode:
         raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
+
+    # Save the list of PMIDs with no content found on S3/literature client
+    content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
+    with open(content_not_found_file, 'wt') as f:
+        for c in content_not_found:
+            f.write('%s\n' % c)
 
     # Upload!
     upload_reach_json(output_dir, text_sources)
