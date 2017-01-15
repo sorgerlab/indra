@@ -3,7 +3,12 @@ from builtins import dict, str
 import os
 import sys
 import time
-import cPickle as pickle
+try:
+    # Python 2
+    import cPickle as pickle
+except ImportError:
+    # Python 3
+    import pickle
 import logging
 from indra.statements import *
 from indra.belief import BeliefEngine
