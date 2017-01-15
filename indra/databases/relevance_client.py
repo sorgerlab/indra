@@ -11,7 +11,7 @@ except:
 
 logger = logging.getLogger('relevance')
 
-ndex_relevance = 'http://general.bigmech.ndexbio.org:8080'
+ndex_relevance = 'http://general.bigmech.ndexbio.org:5602'
 
 def get_heat_kernel(network_id):
     """Return the identifier of a heat kernel calculated for a given network.
@@ -29,12 +29,12 @@ def get_heat_kernel(network_id):
     url = ndex_relevance + '/%s/generate_ndex_heat_kernel' % network_id
     res = ndex_client.send_request(url, {}, is_json=True, use_get=True)
     if res is None:
-        logger.error('Could not get heat kernel for network.')
+        logger.error('Could not get heat kernel for network %s.' % network_id)
         return None
 
     kernel_id = res.get('kernel_id')
     if kernel_id is None:
-        logger.error('Could not get heat kernel for network.')
+        logger.error('Could not get heat kernel for network %s.' % network_id)
         return None
     return kernel_id
 
@@ -60,6 +60,8 @@ def get_relevant_nodes(network_id, query_nodes):
     """
     url = ndex_relevance + '/rank_entities'
     kernel_id = get_heat_kernel(network_id)
+    if kernel_id is None:
+        return None
     if isinstance(query_nodes, basestring):
         query_nodes = [query_nodes]
     params = {'identifier_set': query_nodes,

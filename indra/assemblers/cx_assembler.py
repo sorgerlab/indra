@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import io
 import re
 import json
 import logging
@@ -130,12 +131,12 @@ class CxAssembler(object):
                                 'name': 'edges'}]
         for k, v in self.cx.items():
             full_cx[k] = v
+        full_cx['status'] = [{'error': '', 'success': True}]
         full_cx = [{k: v} for k, v in full_cx.items()]
         if pretty:
-            indent = 2
+            json_str = json.dumps(full_cx, indent=2)
         else:
-            indent = 0
-        json_str = json.dumps(full_cx, indent=indent)
+            json_str = json.dumps(full_cx)
         return json_str
 
     def save_model(self, file_name='model.cx'):
@@ -228,12 +229,13 @@ class CxAssembler(object):
                             'install the `ndex` package.')
             return
         nd = ndex.client.Ndex('http://public.ndexbio.org',
-                            username=ndex_cred.get('user'),
-                            password=ndex_cred.get('password'))
+                              username=ndex_cred.get('user'),
+                              password=ndex_cred.get('password'))
         cx_str = self.print_cx(pretty=False)
         try:
             logger.info('Uploading network to NDEx.')
-            network_id = nd.save_cx_stream_as_new_network(cx_str)
+            cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+            network_id = nd.save_cx_stream_as_new_network(cx_stream)
         except Exception as e:
             logger.error('Could not upload network to NDEx.')
             logger.error(e)
