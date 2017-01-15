@@ -842,6 +842,41 @@ class PysbAssembler(object):
             with open(file_name, 'wt') as fh:
                 fh.write(model_str)
 
+    def export_model(self, format, file_name=None):
+        """Save the assembled model in a modeling formalism other than PySB.
+
+        For more details on exporting PySB models, see
+        http://pysb.readthedocs.io/en/latest/modules/export/index.html
+
+        Parameters
+        ----------
+        format : str
+            The format to export into, for instance "kappa", "bngl",
+            "sbml", "matlab", "mathematica", "potterswheel". See
+            http://pysb.readthedocs.io/en/latest/modules/export/index.html
+            for a list of supported formats.
+
+        file_name : Optional[str]
+            An optional file name to save the exported model into.
+
+        Returns
+        -------
+        exp_str : str
+            The exported model string
+
+        """
+        try:
+            exp_str = pysb.export.export(self.model, format)
+        except KeyError:
+            logging.error('Unknown export format: %s' % format)
+            return None
+
+        if file_name:
+            with open(file_name, 'wb') as fh:
+                fh.write(exp_str.encode('utf-8'))
+        return exp_str
+
+
     def save_rst(self, file_name='pysb_model.rst', module_name='pysb_module'):
         """Save the assembled model as an RST file for literate modeling.
 

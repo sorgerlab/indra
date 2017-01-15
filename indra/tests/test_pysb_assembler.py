@@ -534,6 +534,18 @@ def test_save_rst():
     pa.make_model()
     pa.save_rst('/dev/null')
 
+def test_export_model():
+    st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    exp_str = pa.export_model('kappa')
+    assert(exp_str)
+    exp_str = pa.export_model('bngl')
+    assert(exp_str)
+    exp_str = pa.export_model('sbml', file_name='/dev/null')
+    assert(exp_str)
+
 def test_name_standardize():
     n = pa._n('.*/- ^&#@$')
     assert(isinstance(n, str))
