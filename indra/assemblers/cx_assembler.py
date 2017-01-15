@@ -129,9 +129,9 @@ class CxAssembler(object):
                                 'name': 'nodes'},
                                {'idCounter': self._id_counter,
                                 'name': 'edges'}]
-        full_cx['status'] = [{'error': '', 'success': True}]
         for k, v in self.cx.items():
             full_cx[k] = v
+        full_cx['status'] = [{'error': '', 'success': True}]
         full_cx = [{k: v} for k, v in full_cx.items()]
         if pretty:
             json_str = json.dumps(full_cx, indent=2)
@@ -229,8 +229,8 @@ class CxAssembler(object):
                             'install the `ndex` package.')
             return
         nd = ndex.client.Ndex('http://public.ndexbio.org',
-                            username=ndex_cred.get('user'),
-                            password=ndex_cred.get('password'))
+                              username=ndex_cred.get('user'),
+                              password=ndex_cred.get('password'))
         cx_str = self.print_cx(pretty=False)
         try:
             logger.info('Uploading network to NDEx.')

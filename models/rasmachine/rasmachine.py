@@ -155,8 +155,8 @@ def _increment_ndex_ver(ver_str):
 
 def upload_to_ndex(stmts, ndex_cred):
     nd = ndex.client.Ndex('http://public.ndexbio.org',
-                            username=ndex_cred.get('user'),
-                            password=ndex_cred.get('password'))
+                          username=ndex_cred.get('user'),
+                          password=ndex_cred.get('password'))
     network_id = ndex_cred.get('network')
 
     ca = CxAssembler()
@@ -166,6 +166,7 @@ def upload_to_ndex(stmts, ndex_cred):
     cx_str = ca.print_cx()
 
     try:
+        logging.info('Getting network summary...')
         summary = nd.get_network_summary(network_id)
     except Exception as e:
         logger.error('Could not get NDEx network summary.')
@@ -173,7 +174,9 @@ def upload_to_ndex(stmts, ndex_cred):
         return
 
     try:
-        nd.update_cx_network(cx_str, network_id)
+        logging.info('Updating network...')
+        cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+        nd.update_cx_network(cx_stream, network_id)
     except Exception as e:
         logger.error('Could not update NDEx network.')
         logger.error(e)
@@ -397,7 +400,6 @@ if __name__ == '__main__':
     if use_ndex:
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
-        import ipdb; ipdb.set_trace()
         upload_to_ndex(new_likely, ndex_cred)
 
     # Print and tweet the status message
