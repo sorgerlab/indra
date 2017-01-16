@@ -25,7 +25,7 @@ def main():
 
     isa = rn.term('isa')
 
-    g.add((en.term('transcriptional'), isa, en.term('activity')))
+    g.add((en.term('transcription'), isa, en.term('activity')))
     g.add((en.term('catalytic'), isa, en.term('activity')))
     g.add((en.term('gtpbound'), isa, en.term('activity')))
     g.add((en.term('kinase'), isa, en.term('catalytic')))
