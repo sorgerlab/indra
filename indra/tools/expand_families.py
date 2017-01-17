@@ -14,12 +14,19 @@ class UnknownNamespaceException(Exception):
     pass
 
 def _agent_from_ns_id(ag_ns, ag_id):
+    ag_name = ag_id
+    db_refs = {'TEXT': ag_name}
     if ag_ns == 'HGNC':
-        ag_name = ag_id
-        ag_id = hgnc_client.get_hgnc_id(ag_id)
+        hgnc_id = hgnc_client.get_hgnc_id(ag_id)
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
+            up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if up_id is not None:
+                db_refs['UP'] = up_id
     else:
-        ag_name = ag_id
-    return Agent(ag_name, db_refs={ag_ns: ag_id})
+        if ag_id is not None:
+            db_refs[ag_ns] = ag_id
+    return Agent(ag_name, db_refs=db_refs)
 
 def _agent_from_uri(uri):
     ag_ns, ag_id = _ns_id_from_uri(uri)
