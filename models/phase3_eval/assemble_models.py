@@ -24,6 +24,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
+    pa.set_context('SKMEL28_SKIN')
     pa.save_model(out_file)
     return model
 
@@ -74,6 +75,7 @@ def assemble_sif(stmts, data, out_file):
 def assemble_cx(stmts, out_file):
     """Return a CX assembler."""
     stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.strip_agent_context(stmts)
     ca = CxAssembler()
     ca.add_statements(stmts)
     model = ca.make_model()
@@ -140,8 +142,6 @@ if __name__ == '__main__':
         reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
         stmts = prior_stmts + reading_stmts
 
-        stmts = ac.strip_agent_context(stmts)
-
         stmts = ac.map_grounding(stmts, dump_pkl=pjoin(outf, 'gmapped.pkl'))
         print(len(stmts))
         stmts = ac.filter_grounded_only(stmts)
@@ -160,17 +160,15 @@ if __name__ == '__main__':
         print(len(stmts))
 
     ### PySB assembly
-    '''
     pysb_model = assemble_pysb(stmts, data_genes,
                                pjoin(outf, 'korkut_model_pysb.py'))
     ke = KappaExporter(pysb_model)
     with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
         fh.write(ke.export().encode('utf-8'))
-    '''
     ### SIF assembly
+    '''
     sif_str = assemble_sif(stmts, data, pjoin(outf, 'korkut_model.sif'))
 
-    '''
     ### CX assembly
     cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
     '''
