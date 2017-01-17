@@ -89,7 +89,7 @@ class SiteMapper(object):
         goes into the list of valid statements. If there is a problem with the
         statement, the offending modifications are looked up in the site map
         (:py:attr:`site_map`), and an instance of :py:class:`MappedStatement`
-        is to the list of mapped statements.
+        is added to the list of mapped statements.
 
         Parameters
         ----------

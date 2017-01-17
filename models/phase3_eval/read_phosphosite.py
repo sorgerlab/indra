@@ -1,3 +1,5 @@
+from __future__ import print_function, absolute_import, unicode_literals
+from builtins import dict, str
 import pandas
 from copy import deepcopy
 from indra.databases import hgnc_client, uniprot_client
@@ -43,7 +45,7 @@ def read_phosphosite(fname):
         kin_upid = row['KIN_ID']
         if not pandas.isnull(kin_upid):
             if not uniprot_client.is_human(kin_upid):
-                print '%s non human' % kin_upid
+                print('%s non human' % kin_upid)
                 continue
             kin_hgnc_symbol = uniprot_client.get_gene_name(kin_upid)
             kin_hgnc = hgnc_client.get_hgnc_id(kin_hgnc_symbol)

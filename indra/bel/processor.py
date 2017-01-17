@@ -39,6 +39,10 @@ def term_from_uri(uri):
     """Removes prepended URI information from terms."""
     if uri is None:
         return None
+    # This insures that if we get a Literal with an integer value (as we
+    # do for modification positions), it will get converted to a string,
+    # not an integer.
+    uri = str(uri.toPython())
     # This is to handle URIs like
     # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
     # or
