@@ -141,6 +141,16 @@ def get_drug_targets(fname='drug_grounding.csv'):
                         for ui in tupid.split(',')]
     return targets
 
+def get_single_drug_treatments(data):
+    drugs_col = \
+        data['protein']['Sample Description (drug abbre. | dose or time-point)']
+    drug_tx = []
+    for cond in drugs_col:
+        terms = cond.split(',')
+        if len(terms) == 1:
+            drug_tx.append(cond)
+    return drug_tx
+
 def get_midas_data(data, out_file='korkut_midas.csv'):
     drug_abbrevs = get_drugs(data)
     phospho_abs = get_phos_antibodies(data)
