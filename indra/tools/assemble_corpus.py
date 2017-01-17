@@ -14,6 +14,7 @@ from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.databases import uniprot_client
 from indra.preassembler import Preassembler
+from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
@@ -142,6 +143,7 @@ def filter_grounded_only(stmts_in, **kwargs):
 def filter_genes_only(stmts_in, **kwargs):
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
+    specific_only = kwargs.get('specific_only')
     logger.info('Filtering %d statements for ones containing genes only...' % 
                 len(stmts_in))
     if load_pkl:
@@ -152,15 +154,26 @@ def filter_genes_only(stmts_in, **kwargs):
         genes_only = True
         for agent in st.agent_list():
             if agent is not None:
-                if not(agent.db_refs.get('HGNC') or \
+                if not specific_only:
+                    if not(agent.db_refs.get('HGNC') or \
                         agent.db_refs.get('UP') or \
                         agent.db_refs.get('BE')):
-                    genes_only = False
-                    break
+                        genes_only = False
+                        break
+                else:
+                    if not(agent.db_refs.get('HGNC') or \
+                        agent.db_refs.get('UP')):
+                        genes_only = False
+                        break
         if genes_only:
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def expand_families(stmts_in, **kwargs):
+    expander = Expander(hierarchies)
+    stmts_out = expander.expand_families(stmts_in)
     return stmts_out
 
 def filter_gene_list(stmts_in, gene_list, policy, **kwargs):

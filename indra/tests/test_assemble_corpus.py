@@ -8,6 +8,7 @@ c = Agent('c', db_refs={'BE': 'XXX', 'TEXT': 'c'})
 d = Agent('d', db_refs={'TEXT': 'd'})
 e = Agent('e', db_refs={'CHEBI': 'CHEBI:1234', 'TEXT': 'e'})
 f = Agent('b', db_refs={'UP': 'P28028', 'TEXT': 'b'})
+g = Agent('g', db_refs={'BE': 'ERK'})
 st1 = Phosphorylation(a, b)
 st2 = Phosphorylation(a, d)
 st3 = Phosphorylation(c, d)
@@ -17,6 +18,7 @@ st6 = Phosphorylation(None, d)
 st7 = Phosphorylation(None, e)
 st8 = Phosphorylation(b, f)
 st9 = Phosphorylation(None, f)
+st10 = Phosphorylation(None, g)
 
 def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
@@ -61,4 +63,8 @@ def test_filter_gene_list_one():
 
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
+    assert(len(st_out) == 2)
+
+def test_expand_families():
+    st_out = ac.expand_families([st10])
     assert(len(st_out) == 2)
