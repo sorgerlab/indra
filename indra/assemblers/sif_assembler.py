@@ -71,6 +71,23 @@ class SifAssembler(object):
                 for node1, node2 in itertools.permutations(st.members, 2):
                     add_node_edge(node1, node2, 'unknown')
 
+    def print_model(self):
+        """Return a SIF string of the assembled model."""
+        sif_str = ''
+        for edge in self.graph.edges_iter(data=True):
+            n1 = edge[0]
+            n2 = edge[1]
+            data = edge[2]
+            polarity = data.get('polarity')
+            if polarity == 'negative':
+                rel = '-1'
+            elif polarity == 'positive':
+                rel = '1'
+            else:
+                continue
+            sif_str += '%s %s %s\n' % (n1, rel, n2)
+        return sif_str
+
     def print_boolean_net(self, out_file=None):
         """Return a Boolean network from the assembled graph.
 
