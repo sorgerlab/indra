@@ -1,6 +1,6 @@
 import pickle
 from indra.tools import assemble_corpus as ac
-from indra.statements import Phosphorylation, Agent
+from indra.statements import Activation, Phosphorylation, Agent, Evidence
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -22,6 +22,10 @@ st8 = Phosphorylation(b, f)
 st9 = Phosphorylation(None, f)
 st10 = Phosphorylation(None, g)
 st11 = Phosphorylation(None, h)
+st12 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': True})])
+st13 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': False})])
+st14 = Activation(a, b, 'activity')
+st15 = Activation(a, b, 'kinase')
 st1.belief = 0.9
 st2.belief = 0.8
 st3.belief = 0.7
@@ -84,6 +88,17 @@ def test_strip_agent_context():
     assert(not st_out[0].sub.activity)
     assert(not st_out[0].sub.location)
 
+def test_filter_direct():
+    st_out = ac.filter_direct([st12])
+    assert(len(st_out) == 1)
+    st_out = ac.filter_direct([st13])
+    assert(len(st_out) == 0)
+
 def test_filter_belief():
     st_out = ac.filter_belief([st1, st2, st3], 0.75)
     assert(len(st_out) == 2)
+
+def test_reduce_activities():
+    st_out = ac.reduce_activities([st14, st15])
+    assert(st_out[0].obj_activity == 'kinase')
+    assert(st_out[1].obj_activity == 'kinase')

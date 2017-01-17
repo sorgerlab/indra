@@ -14,6 +14,7 @@ from copy import deepcopy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.databases import uniprot_client
+from indra.mechlinker import MechLinker
 from indra.preassembler import Preassembler
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -241,6 +242,12 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def reduce_activities(stmts_in, **kwargs):
+    stmts_out = [deepcopy(st) for st in stmts_in]
+    ml = MechLinker(stmts_out)
+    ml.get_activities()
+    ml.reduce_activities()
+    return ml.statements
 
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are not grounded to human genes."""
@@ -264,6 +271,32 @@ def filter_human_only(stmts_in, **kwargs):
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_direct(stmts_in, **kwargs):
+    def get_is_direct(stmt):
+        '''Returns true if there is evidence that the statement is a direct
+        interaction. If any of the evidences associated with the statement
+        indicates a direct interatcion then we assume the interaction
+        is direct. If there is no evidence for the interaction being indirect
+        then we default to direct.'''
+        any_indirect = False
+        for ev in stmt.evidence:
+            if ev.epistemics.get('direct') is True:
+                return True
+            elif ev.epistemics.get('direct') is False:
+                # This guarantees that we have seen at least
+                # some evidence that the statement is indirect
+                any_indirect = True
+        if any_indirect:
+            return False
+        return True
+    logger.info('Filtering %d statements to direct ones' % len(stmts_in))
+    stmts_out = []
+    for st in stmts_in:
+        if get_is_direct(st):
+            print('a')
+            stmts_out.append(st)
     return stmts_out
 
 def strip_agent_context(stmts_in, **kwargs):
