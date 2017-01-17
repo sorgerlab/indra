@@ -21,6 +21,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
+    stmts = ac.reduce_activities(stmts)
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
@@ -31,11 +32,11 @@ def assemble_pysb(stmts, data_genes, out_file):
 def assemble_sif(stmts, data, out_file):
     """Return an assembled SIF."""
     # Filter for high-belief statements
-    stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.filter_belief(stmts, 0.99)
     # Filter for Activation / Inhibition
     stmts_act = ac.filter_by_type(stmts, Activation)
     stmts_inact = ac.filter_by_type(stmts, Inhibition)
-    stmts_act_inact = stmts_act + stmts_inact
+    stmts = stmts_act + stmts_inact
     # Get the drugs inhibiting their targets as INDRA
     # statements
     def get_drug_statements():
@@ -49,7 +50,7 @@ def assemble_sif(stmts, data, out_file):
                 drug_stmts.append(drug_stmt)
         return drug_stmts
     drug_stmts = get_drug_statements()
-    stmts = stmts_act_inact + drug_stmts
+    stmts = stmts + drug_stmts
     # Because of a bug in CNO, node names containing AND
     # need to be replaced
     def rename_and_nodes(st):
@@ -62,6 +63,21 @@ def assemble_sif(stmts, data, out_file):
     # Rewrite statements to replace genes with their corresponding
     # antibodies when possible
     stmts = rewrite_ab_stmts(stmts, data)
+    def filter_ab_edges(st):
+        st_out = []
+        for s in st:
+            all_ab = True
+            for a in s.agent_list():
+                if a is not None:
+                    if a.name.find('_p') == -1 and \
+                        a.name.find('Drugs') == -1:
+                        all_ab = False
+                        break
+            if all_ab:
+                st_out.append(s)
+        return st_out
+    stmts = filter_ab_edges(stmts)
+    print(len(stmts))
     # Make the SIF model
     sa = SifAssembler(stmts)
     sa.make_model(use_name_as_key=True)
@@ -160,15 +176,16 @@ if __name__ == '__main__':
         print(len(stmts))
 
     ### PySB assembly
+    '''
     pysb_model = assemble_pysb(stmts, data_genes,
                                pjoin(outf, 'korkut_model_pysb.py'))
     ke = KappaExporter(pysb_model)
     with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
         fh.write(ke.export().encode('utf-8'))
-    ### SIF assembly
     '''
+    ### SIF assembly
     sif_str = assemble_sif(stmts, data, pjoin(outf, 'korkut_model.sif'))
-
+    '''
     ### CX assembly
     cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
     '''
