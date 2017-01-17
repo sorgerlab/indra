@@ -311,7 +311,10 @@ class CxAssembler(object):
                           'v': agent_type}
         self.cx['nodeAttributes'].append(node_attribute)
         for db_name, db_ids in agent.db_refs.items():
-            if isinstance(db_ids, int):
+            if not db_ids:
+                logger.warning('Missing db_id for %s' % agent)
+                continue
+            elif isinstance(db_ids, int):
                 db_id = str(db_ids)
             elif isinstance(db_ids, basestring):
                 db_id = db_ids
