@@ -9,6 +9,8 @@ d = Agent('d', db_refs={'TEXT': 'd'})
 e = Agent('e', db_refs={'CHEBI': 'CHEBI:1234', 'TEXT': 'e'})
 f = Agent('b', db_refs={'UP': 'P28028', 'TEXT': 'b'})
 g = Agent('g', db_refs={'BE': 'ERK'})
+h = Agent('g', mods=['x', 'y'], mutations=['x', 'y'], activity='x',
+               location='nucleus', bound_conditions=['x', 'y', 'z'])
 st1 = Phosphorylation(a, b)
 st2 = Phosphorylation(a, d)
 st3 = Phosphorylation(c, d)
@@ -19,6 +21,7 @@ st7 = Phosphorylation(None, e)
 st8 = Phosphorylation(b, f)
 st9 = Phosphorylation(None, f)
 st10 = Phosphorylation(None, g)
+st11 = Phosphorylation(None, h)
 
 def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
@@ -68,3 +71,12 @@ def test_run_preassembly():
 def test_expand_families():
     st_out = ac.expand_families([st10])
     assert(len(st_out) == 2)
+
+def test_strip_agent_context():
+    st_out = ac.strip_agent_context([st11])
+    assert(len(st_out) == 1)
+    assert(not st_out[0].sub.mods)
+    assert(not st_out[0].sub.mutations)
+    assert(not st_out[0].sub.bound_conditions)
+    assert(not st_out[0].sub.activity)
+    assert(not st_out[0].sub.location)

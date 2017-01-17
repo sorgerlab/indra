@@ -10,6 +10,7 @@ except ImportError:
     # Python 3
     import pickle
 import logging
+from copy import deepcopy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.databases import uniprot_client
@@ -246,10 +247,25 @@ def filter_human_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def strip_agent_context(stmts_in, **kwargs):
+    stmts_out = []
+    for st in stmts_in:
+        new_st = deepcopy(st)
+        for agent in new_st.agent_list():
+            if agent is None:
+                continue
+            agent.mods = []
+            agent.mutations = []
+            agent.activity = None
+            agent.location = None
+            agent.bound_conditions = []
+        stmts_out.append(new_st)
+    return stmts_out
+
 def dump_stmt_strings(stmts):
-    with open('%s.txt' % len(stmts), 'wt') as fh:
+    with open('%s.txt' % len(stmts), 'wb') as fh:
         for st in stmts:
-            fh.write('%s\n' % st)
+            fh.write(('%s\n' % st).encode('utf-8'))
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
