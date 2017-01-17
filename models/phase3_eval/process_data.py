@@ -131,6 +131,16 @@ def get_drugs(data):
     drug_abbrevs = sorted(list(drug_abbrevs))
     return drug_abbrevs
 
+def get_drug_targets(fname='drug_grounding.csv'):
+    df = pandas.read_csv(fname, index_col=None, header=None)
+    abbrevs = df[1]
+    target_upids = df[6]
+    targets = {}
+    for abb, tupid in zip(abbrevs, target_upids):
+        targets[abb] = [uniprot_client.get_gene_name(ui)
+                        for ui in tupid.split(',')]
+    return targets
+
 def get_midas_data(data, out_file='korkut_midas.csv'):
     drug_abbrevs = get_drugs(data)
     phospho_abs = get_phos_antibodies(data)
