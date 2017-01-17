@@ -4,7 +4,7 @@ import itertools
 from indra.util import unicode_strs
 from indra.tools import expand_families as ef
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.statements import Agent, Phosphorylation, Complex
+from indra.statements import Agent, Phosphorylation, Complex, Activation
 
 def test_get_children():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
@@ -103,3 +103,37 @@ def test_expanded_complexes_from_hierarchy():
     for alpha, beta, gamma in itertools.product(ampk_alphas, ampk_betas,
                                                 ampk_gammas):
         assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names
+
+def test_db_ref_keys():
+    # test that expanded families get TEXT, UP, HGNC keys in their db_refs
+    # Get the Expander
+    exp = ef.Expander(hierarchies)
+    # Declare some agents
+    grb2 = Agent('GRB2',
+                 db_refs={'TEXT': 'Grb2', 'UP': 'P62993', 'HGNC': '4566'})
+    shc = Agent('SHC', db_refs={'BE':'SHC'})
+    # Test case where one agent is a family and the other is a gene
+    st = Activation(grb2, shc)
+    expanded_stmts = exp.expand_families([st])
+    for st in expanded_stmts:
+        for agent in st.agent_list():
+            if agent is not None:
+                assert set(list(agent.db_refs)) == \
+                set(['TEXT','UP','HGNC'])
+    # Test for case involving None for one of the agents
+    st = Phosphorylation(None, shc)
+    expanded_stmts = exp.expand_families([st])
+    for st in expanded_stmts:
+        for agent in st.agent_list():
+            if agent is not None:
+                assert set(list(agent.db_refs)) == \
+                set(['TEXT','UP','HGNC'])
+    # Statement with two families: 4x4 SHC
+    st = Activation(shc, shc)
+    expanded_stmts = exp.expand_families([st])
+    for st in expanded_stmts:
+        for agent in st.agent_list():
+            if agent is not None:
+                assert set(list(agent.db_refs)) == \
+                set(['TEXT','UP','HGNC'])
+
