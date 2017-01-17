@@ -25,11 +25,13 @@ logger = logging.getLogger('assemble_corpus')
 indra_logger = logging.getLogger('indra').setLevel(logging.DEBUG)
 
 def dump_statements(stmts, fname):
+    """Dump a list of statements into a pickle file."""
     logger.info('Dumping into %s' % fname)
     with open(fname, 'wb') as fh:
         pickle.dump(stmts, fh, protocol=2)
 
 def load_statements(fname):
+    """Load a list of statements from a pickle file."""
     logger.info('Loading %s' % fname)
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
@@ -41,6 +43,7 @@ def load_statements(fname):
     return stmts
 
 def map_grounding(stmts_in, **kwargs):
+    """Map grounding using the GroundingMapper."""
     logger.info('Mapping grounding...')
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
@@ -57,6 +60,7 @@ def map_grounding(stmts_in, **kwargs):
     return stmts_out
 
 def map_sequence(stmts_in, **kwargs):
+    """Map sequences using the SiteMapper."""
     logger.info('Mapping sites...')
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
@@ -71,6 +75,7 @@ def map_sequence(stmts_in, **kwargs):
     return stmts_out
 
 def run_preassembly(stmts_in, **kwargs):
+    """Run preassembly."""
     dump_pkl = kwargs.get('dump_pkl')
     be = BeliefEngine()
     pa = Preassembler(hierarchies, stmts_in)
@@ -84,6 +89,7 @@ def run_preassembly(stmts_in, **kwargs):
     return stmts_out
 
 def run_preassembly_duplicate(stmts_in, **kwargs):
+    """Run deduplication stage of preassembly."""
     logger.info('Combining duplicates...')
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
@@ -100,6 +106,7 @@ def run_preassembly_duplicate(stmts_in, **kwargs):
     return stmts_out
 
 def run_preassembly_related(stmts_in, **kwargs):
+    """Run related stage of preassembly."""
     logger.info('Combining related...')
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
@@ -116,10 +123,12 @@ def run_preassembly_related(stmts_in, **kwargs):
     return stmts_out
 
 def filter_by_type(stmts_in, stmt_type):
+    """Filter to a given statement type."""
     stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
     return stmts_out
 
 def filter_grounded_only(stmts_in, **kwargs):
+    """Filter to statements that have grounded agents."""
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
     logger.info('Filtering %d statements for grounded agents...' % 
@@ -142,6 +151,7 @@ def filter_grounded_only(stmts_in, **kwargs):
     return stmts_out
 
 def filter_genes_only(stmts_in, **kwargs):
+    """Filter to statements containing genes only."""
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
     specific_only = kwargs.get('specific_only')
@@ -172,7 +182,13 @@ def filter_genes_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_belief(stmts_in, belief_cutoff, **kwargs):
+    """Filter to statements with belief about a cutoff."""
+    stmts_out = [s for s in stmts_in if s.belief >= belief_cutoff]
+    return stmts_out
+
 def expand_families(stmts_in, **kwargs):
+    """Expand Bioentities Agents to individual genes."""
     expander = Expander(hierarchies)
     stmts_out = expander.expand_families(stmts_in)
     return stmts_out
@@ -225,6 +241,7 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
 
 
 def filter_human_only(stmts_in, **kwargs):
+    """Filter out statements that are not grounded to human genes."""
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
     logger.info('Filtering %d statements for human genes only...' % 
@@ -248,6 +265,7 @@ def filter_human_only(stmts_in, **kwargs):
     return stmts_out
 
 def strip_agent_context(stmts_in, **kwargs):
+    """Strip any context on agents within each statement."""
     stmts_out = []
     for st in stmts_in:
         new_st = deepcopy(st)
@@ -263,6 +281,7 @@ def strip_agent_context(stmts_in, **kwargs):
     return stmts_out
 
 def dump_stmt_strings(stmts):
+    """Save printed statements in a file."""
     with open('%s.txt' % len(stmts), 'wb') as fh:
         for st in stmts:
             fh.write(('%s\n' % st).encode('utf-8'))

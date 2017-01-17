@@ -22,6 +22,9 @@ st8 = Phosphorylation(b, f)
 st9 = Phosphorylation(None, f)
 st10 = Phosphorylation(None, g)
 st11 = Phosphorylation(None, h)
+st1.belief = 0.9
+st2.belief = 0.8
+st3.belief = 0.7
 
 def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
@@ -80,3 +83,7 @@ def test_strip_agent_context():
     assert(not st_out[0].sub.bound_conditions)
     assert(not st_out[0].sub.activity)
     assert(not st_out[0].sub.location)
+
+def test_filter_belief():
+    st_out = ac.filter_belief([st1, st2, st3], 0.75)
+    assert(len(st_out) == 2)
