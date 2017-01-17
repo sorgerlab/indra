@@ -29,15 +29,45 @@ def assemble_pysb(stmts, data_genes, out_file):
 
 def assemble_sif(stmts, data, out_file):
     """Return an assembled SIF."""
+    # Filter for high-belief statements
+    stmts = ac.filter_belief(stmts, 0.95)
+    # Filter for Activation / Inhibition
     stmts_act = ac.filter_by_type(stmts, Activation)
     stmts_inact = ac.filter_by_type(stmts, Inhibition)
     stmts_act_inact = stmts_act + stmts_inact
-    stmts = rewrite_ab_stmts(stmts_act_inact, data)
+    # Get the drugs inhibiting their targets as INDRA
+    # statements
+    def get_drug_statements():
+        drug_targets = process_data.get_drug_targets()
+        drug_stmts = []
+        for dn, tns in drug_targets.items():
+            da = Agent(dn + ':Drugs')
+            for tn in tns:
+                ta = Agent(tn)
+                drug_stmt = Inhibition(da, ta)
+                drug_stmts.append(drug_stmt)
+        return drug_stmts
+    drug_stmts = get_drug_statements()
+    stmts = stmts_act_inact + drug_stmts
+    # Because of a bug in CNO, node names containing AND
+    # need to be replaced
+    def rename_and_nodes(st):
+        for s in st:
+            for a in s.agent_list():
+                if a is not None:
+                    if a.name.find('AND') != -1:
+                        a.name = a.name.replace('AND', 'A_ND')
+    rename_and_nodes(stmts)
+    # Rewrite statements to replace genes with their corresponding
+    # antibodies when possible
+    stmts = rewrite_ab_stmts(stmts, data)
+    # Make the SIF model
     sa = SifAssembler(stmts)
     sa.make_model(use_name_as_key=True)
     sif_str = sa.print_model()
     with open(out_file, 'wb') as fh:
         fh.write(sif_str.encode('utf-8'))
+    # Make the MIDAS data file used for training the model
     midas_data = process_data.get_midas_data(data)
     return sif_str
 
@@ -130,14 +160,17 @@ if __name__ == '__main__':
         print(len(stmts))
 
     ### PySB assembly
+    '''
     pysb_model = assemble_pysb(stmts, data_genes,
                                pjoin(outf, 'korkut_model_pysb.py'))
     ke = KappaExporter(pysb_model)
     with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
         fh.write(ke.export().encode('utf-8'))
-
+    '''
     ### SIF assembly
     sif_str = assemble_sif(stmts, data, pjoin(outf, 'korkut_model.sif'))
 
+    '''
     ### CX assembly
     cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
+    '''
