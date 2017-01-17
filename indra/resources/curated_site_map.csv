@@ -1,0 +1,84 @@
+Gene,OrigRes,OrigPos,CorrectRes,CorrectPos,Comment
+ARHGEF2,S,885,S,886,off by one
+BRAF,T,151,S,151,wrong residue
+BRAF,S,578,S,579,wrong residue
+BRAF,S,753,T,753,wrong residue
+GAB1,Y,527,Y,627,off by 100
+KSR1,T,260,,,mouse sequence
+KSR1,S,320,,,mouse sequence
+KSR1,S,404,S,406,off by two
+KSR1,S,443,,,mouse sequence
+MAP2K1,S,217,S,218,off by one
+MAP2K1,S,221,S,222,off by one
+MAPK1,T,182,T,185,off by three
+MAPK1,T,183,T,185,off by two; mouse sequence
+MAPK1,Y,184,Y,187,off by three
+MAPK1,Y,185,Y,187,off by two: mouse sequence
+MAPK3,T,201,T,202,off by one
+MAPK3,Y,203,Y,204,off by one
+MAPK7,T,218,T,219,off by one
+MAPK7,Y,220,Y,221,off by one
+PAK1,S,198,S,199,off by one
+PAK1,S,203,S,204,off by one
+RAF1,S,269,T,269,wrong residue
+RASSF1,S,203,S,207,off by four
+RPS6KA3,T,573,T,577,numbering from RPS6KA1
+RPS6KA6,S,221,S,232,numbering from RPS6KA1
+RPS6KA6,S,363,S,372,numbering from RPS6KA1
+RPS6KA6,S,380,S,389,numbering from RPS6KA1
+RPS6KA6,T,573,T,581,numbering from RPS6KA1
+RPS6KB1,T,389,,,numbering from isoform alpha 2
+SDC2,Y,180,Y,179,off by one
+SHC1,Y,194,Y,349,numbering from isoform p46
+SHC1,Y,195,Y,350,numbering from isoform p46
+SHC1,Y,272,Y,427,numbering from isoform p46
+SHC3,Y,218,Y,341,numbering from isoform p52
+SHC3,Y,219,Y,342,numbering from isoform p52
+SHC3,Y,256,Y,379,numbering from isoform p52
+SHC3,Y,257,Y,380,numbering from isoform p52
+SHC3,Y,283,Y,406,numbering from isoform p52
+SHC3,Y,301,Y,424,numbering from isoform p52
+AR,S,213,S,215,off by 2
+AR,S,515,S,516,off by 1
+AR,S,790,S,792,off by 2
+AR,S,650,S,651,off by 1
+AR,S,578,S,579,off by 1
+AR,Y,534,Y,535,off by 1
+AR,S,210,S,215,numbering from deprecated sequence GenBank A39248
+AR,S,791,S,792,off by 1
+BAD,S,112,S,75,numbering from mouse sequence
+BAD,S,136,S,99,numbering from mouse sequence
+BLK,Y,388,Y,389,off by 1
+BRAF,S,445,S,446,off by 1
+CAV1,Y,13,Y,14,off by 1
+CTNNB1,S,41,T,41,wrong residue
+EGFR,Y,992,Y,1016,numbering after 24-residue signaling peptide removed
+EGFR,Y,1045,Y,1069,numbering after 24-residue signaling peptide removed
+EGFR,Y,1173,Y,1197,numbering after 24-residue signaling peptide removed
+EGFR,T,654,T,678,numbering after 24-residue signaling peptide removed
+EGFR,Y,845,Y,869,numbering after 24-residue signaling peptide removed
+EGFR,Y,1086,Y,1110,numbering after 24-residue signaling peptide removed
+EIF4EBP1,S,11,S,12,off by 1 (methionine removed)
+FOXO4,S,142,S,197,numbering from isoform zeta
+FOXO4,S,207,S,262,numbering from isoform zeta
+HCK,Y,410,Y,411,off by 1 (methionine removed)
+INSR,Y,1322,Y,1361,off by 39 (cleavage?)
+INSR,Y,1316,Y,1355,off by 39 (cleavage?)
+INSR,Y,1151,Y,1190,off by 39 (cleavage?)
+INSR,Y,1150,Y,1189,off by 39 (cleavage?)
+INSR,Y,960,Y,999,off by 39 (cleavage?)
+INSR,Y,1146,Y,1185,off by 39 (cleavage?)
+IRS1,Y,1158,,,error! sites from insulin receptor
+IRS1,Y,1162,,,error! sites from insulin receptor
+LCK,Y,393,Y,394,off by 1 (methionine removed)
+LYN,Y,507,Y,508,off by 1 (methionine removed)
+LYN,Y,396,Y,397,off by 1 (methionine removed)
+MAP2K2,S,218,S,222,numbering from MAP2K1
+PRKAA1,S,487,S,496,immunogen using misnumbered SGpSVS sequence
+SHC1,S,29,S,139,numbering from isoform p52
+SHC1,Y,239,Y,349,numbering from isoform p52
+SHC1,Y,317,Y,427,numbering from isoform p52
+SHC1,Y,240,Y,350,numbering from isoform p52
+SRC,Y,416,Y,419,off by 3
+SRC,Y,418,Y,418,off by 1
+SRC,Y,215,Y,216,off by 1
