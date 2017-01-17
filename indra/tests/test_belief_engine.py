@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.statements import *
 from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package
+from indra.belief import _get_belief_package, _get_ranked_stmts
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -60,19 +60,50 @@ def test_prior_prob_assertion():
     be.set_prior_probs([st])
     assert(st.belief == 1)
 
-'''
+
+def test_ranked_stmts():
+    st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
+    st2 = Phosphorylation(None, Agent('a'), evidence=[ev2])
+    st2.supports = [st1]
+    st1.supported_by = [st2]
+    ranked_stmts = _get_ranked_stmts([st1, st2])
+    assert(len(ranked_stmts) == 2)
+    assert(len(ranked_stmts[0]) == 1)
+    assert(len(ranked_stmts[1]) == 1)
+
+
 def test_hierarchy_probs1():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('a'), evidence=[ev2])
     st2.supports = [st1]
+    st1.supported_by = [st2]
     st1.belief = 0.5
     st2.belief = 0.8
     be.set_hierarchy_probs([st1, st2])
     print(st1.belief, st2.belief)
     assert(st1.belief == 0.5)
-    assert(st2.belief == 0.94)
-'''
+    assert(st2.belief == 0.9)
+
+
+def test_hierarchy_probs2():
+    be = BeliefEngine()
+    st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
+    st2 = Phosphorylation(None, Agent('a'), evidence=[ev2])
+    st3 = Phosphorylation(None, Agent('a'), evidence=[ev3])
+    st2.supports = [st1]
+    st3.supports = [st1, st2]
+    st1.supported_by = [st2, st3]
+    st2.supported_by = [st3]
+    st1.belief = 0.5
+    st2.belief = 0.8
+    st3.belief = 0.2
+    be.set_hierarchy_probs([st1, st2, st3])
+    print(st1.belief, st2.belief, st3.belief)
+    assert(st1.belief == 0.5)
+    assert(st2.belief == 0.9)
+    assert(st3.belief == 0.92)
+
 
 def test_get_belief_package1():
     st1 = Phosphorylation(None, Agent('a'))

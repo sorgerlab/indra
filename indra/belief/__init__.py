@@ -77,22 +77,13 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        def get_rolling_prob(stmt):
-            # Start with probability of this statement being incorrect and
-            # Iterate over supported statements and get the joint probability
-            # of all of them being jointly incorrect
-            neg_probs_rolling = (1-stmt.belief)
-            for st in stmt.supports:
-                neg_probs_rolling *= (1-self.get_rolling_prob(st))
-            # The probability of not being incorrect is 1 minus the joint
-            # probability of this statement being incorrect and all the ones
-            # that support it.
-            prob = (1-neg_probs_rolling)
-            return prob
-        ranked_stmts = get_ranked_stmts(statements)
-        for st in ranked_stmts[0]:
-            prob = self.get_rolling_prob(st)
-            st.belief = prob
+        ranked_stmts = _get_ranked_stmts(statements)
+        for sts in ranked_stmts:
+            for st in sts:
+                bps = _get_belief_package(st)
+                beliefs = [bp[0] for bp in bps]
+                belief = 1 - numpy.prod([(1-b) for b in beliefs])
+                st.belief = belief
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
@@ -131,17 +122,19 @@ def _get_belief_package(stmt):
     return belief_packages
 
 
-def get_ranked_stmts(statements):
+def _get_ranked_stmts(statements):
     def get_next_level(stmts):
         above_stmts = []
         for st in stmts:
             all_leaf = True
-            for st_supp in st.supported_by:
-                if st_supp not in stmts:
-                    all_leaf = False
-                    break
-            if all_leaf:
-                above_stmts.append(st)
+            for st_supp in st.supports:
+                for st_supp_by in st_supp.supported_by:
+                    if st_supp_by not in stmts:
+                        all_leaf = False
+                        break
+                if all_leaf:
+                    if st_supp not in above_stmts:
+                        above_stmts.append(st_supp)
         return above_stmts
 
     ranked_stmts = [[st for st in statements if not st.supported_by]]
