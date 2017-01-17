@@ -184,6 +184,8 @@ def filter_genes_only(stmts_in, **kwargs):
 
 def filter_belief(stmts_in, belief_cutoff, **kwargs):
     """Filter to statements with belief about a cutoff."""
+    logger.info('Filtering %d statements to above %f belief' %
+                (len(stmts_in), belief_cutoff))
     stmts_out = [s for s in stmts_in if s.belief >= belief_cutoff]
     return stmts_out
 

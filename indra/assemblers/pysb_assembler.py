@@ -803,7 +803,8 @@ class PysbAssembler(object):
         for m in self.model.monomers:
             init = res.get(m.name)
             if init is not None:
-                set_base_initial_condition(self.model, m, init[cell_type])
+                init_round = round(init[cell_type])
+                set_base_initial_condition(self.model, m, init_round)
                 monomers_found.append(m.name)
             else:
                 set_base_initial_condition(self.model, m, 100.0)
@@ -969,7 +970,7 @@ def complex_assemble_one_step(stmt, model, agent_set):
         param_name = agent1.name[0].lower() + \
                      agent2.name[0].lower() + '_bind'
         kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-6)
+        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-3)
 
         # Make a rule name
         rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
