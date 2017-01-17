@@ -99,9 +99,17 @@ def get_all_gene_names(data, out_file='prior_genes.txt'):
         # Add both the gene names and the gene names derived from UniProt IDs
         all_genes = all_genes.union(set(names)).union(set(names_from_ids))
     # Finally remove the invalid gene names
-    all_genes = all_genes.difference(invalid_genes)
+    all_genes = list(all_genes.difference(invalid_genes))
+    # Add the unannotated genes
     unannotated_ab_genes = get_unannotated_antibody_genes(data)
-    all_genes = sorted(list(all_genes.union(set(unannotated_ab_genes))))
+    all_genes += unannotated_ab_genes
+    # Add drug target genes
+    drug_targets = get_drug_targets()
+    for targets in drug_targets.values():
+        all_genes += targets
+    # Add other genes of importance
+    all_genes += ['PTEN']
+    all_genes = sorted(list(set(all_genes)))
     with open(out_file, 'wb') as fh:
         for gene in all_genes:
             fh.write(('%s\n' % gene).encode('utf-8'))

@@ -176,7 +176,6 @@ if __name__ == '__main__':
         print(len(stmts))
 
     ### PySB assembly
-    '''
     pysb_model = assemble_pysb(stmts, data_genes,
                                pjoin(outf, 'korkut_model_pysb.py'))
     ke = KappaExporter(pysb_model)
@@ -185,7 +184,6 @@ if __name__ == '__main__':
     '''
     ### SIF assembly
     sif_str = assemble_sif(stmts, data, pjoin(outf, 'korkut_model.sif'))
-    '''
     ### CX assembly
     cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
     '''
