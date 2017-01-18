@@ -53,7 +53,7 @@ class GroundingMapper(object):
                     up_id = map_db_refs.get('UP')
                     hgnc_sym = map_db_refs.get('HGNC')
                     if up_id and not hgnc_sym:
-                        gene_name = uniprot_client.get_gene_name(up_id)
+                        gene_name = uniprot_client.get_gene_name(up_id, False)
                         if gene_name:
                             hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                             if hgnc_id:
