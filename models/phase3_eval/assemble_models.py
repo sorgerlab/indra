@@ -63,20 +63,29 @@ def assemble_sif(stmts, data, out_file):
     # Rewrite statements to replace genes with their corresponding
     # antibodies when possible
     stmts = rewrite_ab_stmts(stmts, data)
-    def filter_ab_edges(st):
+    def filter_ab_edges(st, policy='all'):
         st_out = []
         for s in st:
-            all_ab = True
-            for a in s.agent_list():
-                if a is not None:
-                    if a.name.find('_p') == -1 and \
-                        a.name.find('Drugs') == -1:
-                        all_ab = False
+            if policy == 'all':
+                all_ab = True
+                for a in s.agent_list():
+                    if a is not None:
+                        if a.name.find('_p') == -1 and \
+                            a.name.find('Drugs') == -1:
+                            all_ab = False
+                            break
+                if all_ab:
+                    st_out.append(s)
+            elif policy == 'one':
+                any_ab = False
+                for a in s.agent_list():
+                    if a is not None and a.name.find('_p') != -1:
+                        any_ab = True
                         break
-            if all_ab:
-                st_out.append(s)
+                if any_ab:
+                    st_out.append(s)
         return st_out
-    stmts = filter_ab_edges(stmts)
+    stmts = filter_ab_edges(stmts, 'one')
     print(len(stmts))
     # Make the SIF model
     sa = SifAssembler(stmts)
@@ -175,14 +184,21 @@ if __name__ == '__main__':
         stmts = ac.run_preassembly(stmts, dump_pkl=pjoin(outf, 'top_level.pkl'))
         print(len(stmts))
 
+    assemble_models = []
+    assemble_models.append('sif')
+    #assemble_models.append('pysb')
+    #assemble_models.append('cx')
+
     ### PySB assembly
-    pysb_model = assemble_pysb(stmts, data_genes,
-                               pjoin(outf, 'korkut_model_pysb.py'))
-    ke = KappaExporter(pysb_model)
-    with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
-        fh.write(ke.export().encode('utf-8'))
+    if 'pysb' in assemble_models:
+        pysb_model = assemble_pysb(stmts, data_genes,
+                                   pjoin(outf, 'korkut_model_pysb.py'))
+        ke = KappaExporter(pysb_model)
+        with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
+            fh.write(ke.export().encode('utf-8'))
     ### SIF assembly
-    sif_str = assemble_sif(stmts, data, pjoin(outf, 'PKN-korkut.sif'))
+    if 'sif' in assemble_models:
+        sif_str = assemble_sif(stmts, data, pjoin(outf, 'PKN-korkut_one_ab.sif'))
     ### CX assembly
-    cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
-    '''
+    if 'cx' in assemble_models:
+        cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
