@@ -69,7 +69,14 @@ def map_sequence(stmts_in, **kwargs):
         stmts_out = load_statements(load_pkl)
     else:
         sm = SiteMapper(default_site_map)
-        stmts_out, _ = sm.map_sites(stmts_in)
+        # Map sites
+        valid, mapped = sm.map_sites(stmts)
+        correctly_mapped_stmts = []
+        for ms in mapped:
+            if all([True if mm[1] is not None else False
+                    for mm in ms.mapped_mods]):
+                correctly_mapped_stmts.append(ms.mapped_stmt)
+        stmts_out = valid + correctly_mapped_stmts
         if dump_pkl:
             dump_statements(stmts_out, dump_pkl)
     logger.info('Statements with valid sites: %d' % len(stmts_out))
