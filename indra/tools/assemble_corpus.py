@@ -299,6 +299,18 @@ def filter_direct(stmts_in, **kwargs):
             stmts_out.append(st)
     return stmts_out
 
+def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
+    stmts_out = []
+    for st in stmts_in:
+        sources = set([ev.source_api for ev in st.evidence])
+        if policy == 'one':
+            if sources.intersection(source_apis):
+                stmts_out.append(st)
+        if policy == 'all':
+            if sources.intersection(source_apis) == set(source_apis):
+                stmts_out.append(st)
+    return stmts_out
+
 def strip_agent_context(stmts_in, **kwargs):
     """Strip any context on agents within each statement."""
     stmts_out = []

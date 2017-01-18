@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import numpy
 import logging
 import itertools
 import networkx as nx
@@ -88,7 +89,7 @@ class SifAssembler(object):
         if max_val > 0:
             for s, t, attr in self.graph.edges(data=True):
                 self.graph[s][t]['weight'] = \
-                    1.0 - (1.0*attr[attribute] / max_val)
+                    1.0 / attr[attribute]
 
     def print_model(self):
         """Return a SIF string of the assembled model."""
