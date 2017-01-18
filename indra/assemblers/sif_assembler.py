@@ -81,6 +81,15 @@ class SifAssembler(object):
             t = self._add_node(t)
             self._add_edge(s, t, attributes)
 
+    def set_edge_weights(self, attribute):
+        max_val = 0
+        for s, t, attr in self.graph.edges(data=True):
+            max_val = max(attr[attribute], max_val)
+        if max_val > 0:
+            for s, t, attr in self.graph.edges(data=True):
+                self.graph[s][t]['weight'] = \
+                    1.0 - (1.0*attr[attribute] / max_val)
+
     def print_model(self):
         """Return a SIF string of the assembled model."""
         sif_str = ''
