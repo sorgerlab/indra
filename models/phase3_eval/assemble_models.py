@@ -13,7 +13,7 @@ from read_phosphosite import read_phosphosite
 
 def build_prior(genes, out_file):
     gn = GeneNetwork(genes, 'korkut')
-    stmts = gn.get_statements(filter=True)
+    stmts = gn.get_statements(filter=False)
     ac.dump_statements(stmts, out_file)
     return stmts
 
@@ -21,6 +21,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
+    print(len(stmts))
     stmts = ac.reduce_activities(stmts)
     pa = PysbAssembler()
     pa.add_statements(stmts)
@@ -157,18 +158,18 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = False
+    reassemble = True
     #phos_stmts, antibody_map = read_phosphosite('annotated_kinases_v3.csv')
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'top_level.pkl'))
     else:
         #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
+        prior_stmts = ac.map_grounding(prior_stmts, dump_pkl=pjoin(outf, 'gmapped_prior.pkl'))
         reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        reading_stmts = ac.map_grounding(reading_stmts, dump_pkl=pjoin(outf, 'gmapped_reading.pkl'))
         stmts = prior_stmts + reading_stmts
 
-        stmts = ac.map_grounding(stmts, dump_pkl=pjoin(outf, 'gmapped.pkl'))
-        print(len(stmts))
         stmts = ac.filter_grounded_only(stmts)
         print(len(stmts))
         stmts = ac.filter_genes_only(stmts, specific_only=False)
@@ -177,15 +178,15 @@ if __name__ == '__main__':
         print(len(stmts))
         stmts = ac.expand_families(stmts)
         print(len(stmts))
-        stmts = ac.map_sequence(stmts, dump_pkl=pjoin(outf, 'smapped.pkl'))
-        print(len(stmts))
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
+        print(len(stmts))
+        stmts = ac.map_sequence(stmts, dump_pkl=pjoin(outf, 'smapped.pkl'))
         print(len(stmts))
         stmts = ac.run_preassembly(stmts, dump_pkl=pjoin(outf, 'top_level.pkl'))
         print(len(stmts))
 
     assemble_models = []
-    assemble_models.append('sif')
+    #assemble_models.append('sif')
     #assemble_models.append('pysb')
     #assemble_models.append('cx')
 
