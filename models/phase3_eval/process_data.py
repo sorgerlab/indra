@@ -73,6 +73,12 @@ def get_agent_from_upid(up_id):
     a = Agent(gene_name, db_refs={'HGNC': hgnc_id, 'UP': up_id})
     return a
 
+def get_ras227_genes():
+    ras227_file = '../../data/ras_pathway_proteins.csv'
+    df = pandas.read_csv(ras227_file, sep='\t', index_col=None, header=None)
+    gene_names = [x.decode('utf-8') for x in df[0]]
+    return gene_names
+
 def get_all_gene_names(data, out_file='prior_genes.txt'):
     """Return all gene names corresponding to all ABs."""
     filt = pandas.notnull(data['antibody']['Protein Data ID'])
@@ -108,9 +114,10 @@ def get_all_gene_names(data, out_file='prior_genes.txt'):
     drug_targets = get_drug_targets()
     for targets in drug_targets.values():
         all_genes += targets
-    # Add other genes of importance
-    all_genes += ['PTEN']
+    # Add other important genes, for now, the RAS pathway
+    all_genes += get_ras227_genes()
     all_genes = sorted(list(set(all_genes)))
+    print('%d genes in total' % len(all_genes))
     with open(out_file, 'wb') as fh:
         for gene in all_genes:
             fh.write(('%s\n' % gene).encode('utf-8'))
