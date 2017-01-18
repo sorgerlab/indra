@@ -12,6 +12,7 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client
+from indra.preassembler.hierarchy_manager import entity_hierarchy as enth
 
 # Python 2
 try:
@@ -65,8 +66,8 @@ class _BaseAgentSet(object):
         # Handle bound conditions
         for bc in agent.bound_conditions:
             bound_base_agent = self.get_create_base_agent(bc.agent)
-            bound_base_agent.create_site(get_binding_site_name(_n(agent.name)))
-            base_agent.create_site(get_binding_site_name(_n(bc.agent.name)))
+            bound_base_agent.create_site(get_binding_site_name(agent))
+            base_agent.create_site(get_binding_site_name(bc.agent))
 
         # Handle modification conditions
         for mc in agent.mods:
@@ -246,9 +247,11 @@ mod_acttype_map = {
     ist.Degeranylgeranylation: 'catalytic',
 }
 
-def get_binding_site_name(name):
-    """Return a binding site name from a given agent name."""
-    binding_site = _n(name).lower()
+
+def get_binding_site_name(agent):
+    """Return a binding site name from a given agent."""
+    #component = enth.components.get(agent.name)
+    binding_site = _n(agent.name).lower()
     return binding_site
 
 
@@ -511,9 +514,9 @@ def get_site_pattern(agent):
         # Here we make the assumption that the binding site
         # is simply named after the binding partner
         if bc.is_bound:
-            pattern[get_binding_site_name(_n(bc.agent.name))] = ANY
+            pattern[get_binding_site_name(bc.agent)] = ANY
         else:
-            pattern[get_binding_site_name(_n(bc.agent.name))] = None
+            pattern[get_binding_site_name(bc.agent)] = None
 
     # Handle modifications
     for mod in agent.mods:
@@ -957,7 +960,7 @@ def complex_monomers_one_step(stmt, agent_set):
             # The protein doesn't bind to itstmt!
             if i == j:
                 continue
-            gene_mono.create_site(get_binding_site_name(bp.name))
+            gene_mono.create_site(get_binding_site_name(bp))
 
 complex_monomers_default = complex_monomers_one_step
 
@@ -979,8 +982,8 @@ def complex_assemble_one_step(stmt, model, agent_set):
         # Construct full patterns of each agent with conditions
         agent1_pattern = get_monomer_pattern(model, agent1)
         agent2_pattern = get_monomer_pattern(model, agent2)
-        agent1_bs = get_binding_site_name(agent2.name)
-        agent2_bs = get_binding_site_name(agent1.name)
+        agent1_bs = get_binding_site_name(agent2)
+        agent2_bs = get_binding_site_name(agent1)
         r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) + \
                             agent2_pattern(**{agent2_bs: None}) >>
                             agent1_pattern(**{agent1_bs: 1}) % \
@@ -1051,7 +1054,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
         left_site_dict = {}
         right_site_dict = {}
         for j, bp in enumerate(stmt.members):
-            bp_bs = get_binding_site_name(bp.name)
+            bp_bs = get_binding_site_name(bp)
             # The protein doesn't bind to itstmt!
             if i == j:
                 continue
@@ -1084,8 +1087,8 @@ def complex_assemble_multi_way(stmt, model, agent_set):
         # Add the pattern for the member being bound
         for bc in member.bound_conditions:
             bound_name = _n(bc.agent.name)
-            bound_bs = get_binding_site_name(bound_name)
-            gene_bs = get_binding_site_name(gene_name)
+            bound_bs = get_binding_site_name(bc.agent)
+            gene_bs = get_binding_site_name(member)
             if bc.is_bound:
                 bound = model.monomers[bound_name]
                 left_site_dict[bound_bs] = \
@@ -1159,8 +1162,8 @@ def modification_monomers_two_step(stmt, agent_set):
                                          stmt.residue, stmt.position))
 
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub.name))
-    sub.create_site(get_binding_site_name(enz.name))
+    enz.create_site(get_binding_site_name(sub))
+    sub.create_site(get_binding_site_name(enz))
 
 
 def modification_assemble_interactions_only(stmt, model, agent_set):
@@ -1237,7 +1240,7 @@ def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
     if stmt.enz is None:
         return
-    sub_bs = get_binding_site_name(stmt.sub.name)
+    sub_bs = get_binding_site_name(stmt.sub)
     enz_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
     enz_unbound = get_monomer_pattern(model, stmt.enz,
@@ -1258,7 +1261,7 @@ def modification_assemble_two_step(stmt, model, agent_set):
                                   stmt.residue, stmt.position)
 
     enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
-    enz_bs = get_binding_site_name(stmt.enz.name)
+    enz_bs = get_binding_site_name(stmt.enz)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     unmod_site_state = states[mod_condition_name][0]
@@ -1322,8 +1325,8 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition('phosphorylation',
                                          stmt.residue, stmt.position))
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub.name))
-    sub.create_site(get_binding_site_name(enz.name))
+    enz.create_site(get_binding_site_name(sub))
+    sub.create_site(get_binding_site_name(enz))
 
     # Make ATP base agent and create binding sites
     atp = agent_set.get_create_base_agent(ist.Agent('ATP'))
@@ -1344,7 +1347,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     enz_atp_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={atp_bs: None})
     # Substrate-bound enzyme
-    sub_bs = get_binding_site_name(stmt.sub.name)
+    sub_bs = get_binding_site_name(stmt.sub)
     enz_sub_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
     # Substrte and ATP-bound enzyme
@@ -1357,7 +1360,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
         extra_fields={sub_bs: None})
     # Enzyme active forms
     enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
-    enz_bs = get_binding_site_name(stmt.enz.name)
+    enz_bs = get_binding_site_name(stmt.enz)
     # Unconditional enzyme
     enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
@@ -1477,8 +1480,8 @@ def demodification_monomers_two_step(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition(mod_condition_name,
                                          stmt.residue, stmt.position))
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub.name))
-    sub.create_site(get_binding_site_name(enz.name))
+    enz.create_site(get_binding_site_name(sub))
+    sub.create_site(get_binding_site_name(enz))
 
 
 def demodification_assemble_interactions_only(stmt, model, agent_set):
@@ -1546,8 +1549,8 @@ def demodification_assemble_two_step(stmt, model, agent_set):
         return
     demod_condition_name = stmt.__class__.__name__.lower()
     mod_condition_name = demod_condition_name[2:]
-    sub_bs = get_binding_site_name(stmt.sub.name)
-    enz_bs = get_binding_site_name(stmt.enz.name)
+    sub_bs = get_binding_site_name(stmt.sub)
+    enz_bs = get_binding_site_name(stmt.enz)
     enz_bound = get_monomer_pattern(model, stmt.enz,
                                     extra_fields={sub_bs: 1})
     enz_unbound = get_monomer_pattern(model, stmt.enz,
@@ -2052,8 +2055,8 @@ def degradation_monomers_interactions_only(stmt, agent_set):
         return
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
-    subj.create_site(get_binding_site_name(obj.name))
-    obj.create_site(get_binding_site_name(subj.name))
+    subj.create_site(get_binding_site_name(obj))
+    obj.create_site(get_binding_site_name(subj))
 
 def degradation_monomers_one_step(stmt, agent_set):
     obj = agent_set.get_create_base_agent(stmt.obj)
@@ -2073,8 +2076,8 @@ def degradation_assemble_interactions_only(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
 
-    subj_site_name = get_binding_site_name(obj_base_agent.name)
-    obj_site_name = get_binding_site_name(subj_base_agent.name)
+    subj_site_name = get_binding_site_name(obj_base_agent)
+    obj_site_name = get_binding_site_name(subj_base_agent)
 
     r = Rule(rule_name,
             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
@@ -2130,8 +2133,8 @@ def synthesis_assemble_interactions_only(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
 
-    subj_site_name = get_binding_site_name(obj_base_agent.name)
-    obj_site_name = get_binding_site_name(subj_base_agent.name)
+    subj_site_name = get_binding_site_name(obj_base_agent)
+    obj_site_name = get_binding_site_name(subj_base_agent)
 
     r = Rule(rule_name,
             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
