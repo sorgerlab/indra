@@ -79,7 +79,7 @@ class SifAssembler(object):
         if s is not None:
             s = self._add_node(s)
             t = self._add_node(t)
-            self._add_edge(s, t)
+            self._add_edge(s, t, attributes)
 
     def print_model(self):
         """Return a SIF string of the assembled model."""
