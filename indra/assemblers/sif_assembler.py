@@ -28,6 +28,7 @@ class SifAssembler(object):
         else:
             self.stmts = stmts
         self.graph = nx.DiGraph()
+        self._use_name_as_key = False
 
     def make_model(self, use_name_as_key=False, include_mods=False,
                    include_complexes=False):
@@ -46,30 +47,39 @@ class SifAssembler(object):
             If True, creates two edges (in both directions) between all pairs
             of nodes in Complex statements. Default is False.
         """
-        def add_node_edge(s, t, polarity):
-            if s is not None:
-                s = self._add_node(s, use_name_as_key=use_name_as_key)
-                t = self._add_node(t, use_name_as_key=use_name_as_key)
-                self._add_edge(s, t, {'polarity': polarity})
+        self.graph = nx.DiGraph()
+        self._use_name_as_key = use_name_as_key
         for st in self.stmts:
+            support_all = len(st.evidence)
+            support_pmid = len(set([ev.pmid for ev in st.evidence
+                                    if ev.pmid is not None]))
+            attr = {'polarity': 'unknown', 'support_all': support_all,
+                    'support_pmid': support_pmid}
             if isinstance(st, RegulateActivity):
-                polarity = 'positive' if st.is_activation else 'negative'
-                add_node_edge(st.subj, st.obj, polarity)
+                attr['polarity'] = ('positive' if st.is_activation
+                                    else 'negative')
+                self._add_node_edge(st.subj, st.obj, attr)
             elif include_mods and isinstance(st, Modification):
-                add_node_edge(st.agent_list()[0], st.agent_list()[1], 'unknown')
+                self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_mods and \
                  (isinstance(st, RasGap) or isinstance(st, Degradation)):
-                add_node_edge(st.agent_list()[0], st.agent_list()[1],
-                              'negative')
+                attr['polarity'] = 'negative'
+                self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_mods and \
                  (isinstance(st, RasGef) or isinstance(st, Synthesis)):
-                add_node_edge(st.agent_list()[0], st.agent_list()[1],
-                              'positive')
+                attr['polarity'] = 'positive'
+                self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_complexes and isinstance(st, Complex):
                 # Create s->t edges between all possible pairs of complex
                 # members
                 for node1, node2 in itertools.permutations(st.members, 2):
-                    add_node_edge(node1, node2, 'unknown')
+                    self._add_node_edge(node1, node2, attr)
+
+    def _add_node_edge(self, s, t, attributes):
+        if s is not None:
+            s = self._add_node(s)
+            t = self._add_node(t)
+            self._add_edge(s, t)
 
     def print_model(self):
         """Return a SIF string of the assembled model."""
@@ -149,8 +159,8 @@ class SifAssembler(object):
                 fh.write(full_str)
         return full_str
 
-    def _add_node(self, agent, use_name_as_key=False):
-        if use_name_as_key:
+    def _add_node(self, agent):
+        if self._use_name_as_key:
             node_key = agent.name
         else:
             node_key = agent.matches_key()
