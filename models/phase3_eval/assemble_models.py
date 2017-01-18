@@ -181,9 +181,8 @@ if __name__ == '__main__':
     ke = KappaExporter(pysb_model)
     with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
         fh.write(ke.export().encode('utf-8'))
-    '''
     ### SIF assembly
-    sif_str = assemble_sif(stmts, data, pjoin(outf, 'korkut_model.sif'))
+    sif_str = assemble_sif(stmts, data, pjoin(outf, 'PKN-korkut.sif'))
     ### CX assembly
     cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
     '''
