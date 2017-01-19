@@ -123,7 +123,7 @@ class GeneNetwork(object):
             return bp_statements
         # Check for cached file before querying Pathway Commons Web API
         if self.basename is not None and os.path.isfile(biopax_ras_owl_path):
-            logger.info("Loading Biopax from OWL file", biopax_ras_owl_path)
+            logger.info("Loading Biopax from OWL file %s" % biopax_ras_owl_path)
             bp = ba.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
         else:
@@ -214,8 +214,13 @@ class GeneNetwork(object):
         # Map sites
         logger.info("Mapping sites")
         (valid, mapped) = sm.map_sites(pa1.unique_stmts)
-        # Combine valid and mapped statements into single list
-        mapped_stmts = valid + [m.mapped_stmt for m in mapped]
+        # Combine valid and successfully mapped statements into single list
+        correctly_mapped_stmts = []
+        for ms in mapped:
+            if all([True if mm[1] is not None else False
+                         for mm in ms.mapped_mods]):
+                correctly_mapped_stmts.append(ms.mapped_stmt)
+        mapped_stmts = valid + correctly_mapped_stmts 
         # Second round of preassembly: de-duplicate and combine related
         pa2 = Preassembler(hierarchies, mapped_stmts)
         logger.info("Combining duplicates again")
