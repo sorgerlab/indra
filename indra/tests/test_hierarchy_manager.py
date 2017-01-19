@@ -92,3 +92,16 @@ def test_get_children():
     none_children = ent_hierarchy.get_children('')
     assert isinstance(none_children, list)
     assert len(none_children) == 0
+
+def test_get_parents():
+    prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
+    ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
+    p1 = ent_hierarchy.get_parents(prkaa1, 'all')
+    assert(len(p1) == 14)
+    assert(ampk in p1)
+    p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
+    assert(len(p2) == 13)
+    assert (ampk not in p2)
+    p3 = ent_hierarchy.get_parents(prkaa1, 'top')
+    assert(len(p3) == 1)
+    assert (ampk in p3)

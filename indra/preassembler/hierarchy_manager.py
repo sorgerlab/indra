@@ -208,24 +208,47 @@ class HierarchyManager(object):
         else:
             return self.query_rdf(id1, 'rn:partof+', id2)
 
-    def get_parents(self, uri):
-        """Return all (not just immediate) parents of a given entry.
+    def get_parents(self, uri, type='all'):
+        """Return parents of a given entry.
 
         Parameters
         ----------
         uri : str
             The URI of the entry whose parents are to be returned. See the
             get_uri method to construct this URI from a name space and id.
+        type : str
+            'all': return all parents irrespective of level;
+            'immediate': return only the immediate parents;
+            'top': return only the highest level parents
         """
         immediate_parents = set(self.isa_closure.get(uri, [])).union(
                                 set(self.partof_closure.get(uri, [])))
+        if type == 'immediate':
+            return immediate_parents
         all_parents = set()
         for parent in immediate_parents:
-            grandparents = self.get_parents(parent)
+            grandparents = self.get_parents(parent, type='all')
             all_parents = all_parents.union(grandparents)
-        return all_parents.union(immediate_parents)
+        all_parents = all_parents.union(immediate_parents)
+        if type == 'all':
+            return all_parents
+        else:
+            top_parents = set()
+            for parent in all_parents:
+                if not self.get_parents(parent, type='immediate'):
+                    top_parents.add(parent)
+            return top_parents
+        return
 
     def get_children(self, uri):
+        """Return all (not just immediate) children of a given entry.
+
+        Parameters
+        ----------
+        uri : str
+            The URI of the entry whose children are to be returned. See the
+            get_uri method to construct this URI from a name space and id.
+        """
         children = self._children.get(uri, [])
         return children
 
