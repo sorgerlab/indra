@@ -13,6 +13,7 @@ import pysb.export
 from indra import statements as ist
 from indra.databases import context_client
 from indra.preassembler.hierarchy_manager import entity_hierarchy as enth
+from indra.tools.expand_families import _agent_from_uri
 
 # Python 2
 try:
@@ -250,7 +251,19 @@ mod_acttype_map = {
 
 def get_binding_site_name(agent):
     """Return a binding site name from a given agent."""
-    #component = enth.components.get(agent.name)
+    # Try to construct a binding site name based on parent
+    grounding = agent.get_grounding()
+    if grounding != (None, None):
+        uri = enth.get_uri(grounding[0], grounding[1])
+        # Get highest level parents in hierarchy
+        parents = enth.get_parents(uri, 'top')
+        if parents:
+            # Choose the first parent if there are more than one
+            parent_uri = sorted(list(parents))[0]
+            parent_agent = _agent_from_uri(parent_uri)
+            binding_site = _n(parent_agent.name).lower()
+            return binding_site
+    # Fall back to Agent's own name if one from parent can't be constructed
     binding_site = _n(agent.name).lower()
     return binding_site
 
@@ -1162,8 +1175,8 @@ def modification_monomers_two_step(stmt, agent_set):
                                          stmt.residue, stmt.position))
 
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub))
-    sub.create_site(get_binding_site_name(enz))
+    enz.create_site(get_binding_site_name(stmt.sub))
+    sub.create_site(get_binding_site_name(stmt.enz))
 
 
 def modification_assemble_interactions_only(stmt, model, agent_set):
@@ -1325,8 +1338,8 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition('phosphorylation',
                                          stmt.residue, stmt.position))
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub))
-    sub.create_site(get_binding_site_name(enz))
+    enz.create_site(get_binding_site_name(stmt.sub))
+    sub.create_site(get_binding_site_name(stmt.enz))
 
     # Make ATP base agent and create binding sites
     atp = agent_set.get_create_base_agent(ist.Agent('ATP'))
@@ -1480,8 +1493,8 @@ def demodification_monomers_two_step(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition(mod_condition_name,
                                          stmt.residue, stmt.position))
     # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(sub))
-    sub.create_site(get_binding_site_name(enz))
+    enz.create_site(get_binding_site_name(stmt.sub))
+    sub.create_site(get_binding_site_name(stmt.enz))
 
 
 def demodification_assemble_interactions_only(stmt, model, agent_set):
@@ -2055,8 +2068,8 @@ def degradation_monomers_interactions_only(stmt, agent_set):
         return
     subj = agent_set.get_create_base_agent(stmt.subj)
     obj = agent_set.get_create_base_agent(stmt.obj)
-    subj.create_site(get_binding_site_name(obj))
-    obj.create_site(get_binding_site_name(subj))
+    subj.create_site(get_binding_site_name(stmt.obj))
+    obj.create_site(get_binding_site_name(stmt.subj))
 
 def degradation_monomers_one_step(stmt, agent_set):
     obj = agent_set.get_create_base_agent(stmt.obj)
@@ -2076,13 +2089,13 @@ def degradation_assemble_interactions_only(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
 
-    subj_site_name = get_binding_site_name(obj_base_agent)
-    obj_site_name = get_binding_site_name(subj_base_agent)
+    subj_site_name = get_binding_site_name(stmt.obj)
+    obj_site_name = get_binding_site_name(stmt.subj)
 
     r = Rule(rule_name,
-            subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
-            subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
-            kf_bind)
+             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
+             subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
+             kf_bind)
     add_rule_to_model(model, r)
 
 def degradation_assemble_one_step(stmt, model, agent_set):
@@ -2133,8 +2146,8 @@ def synthesis_assemble_interactions_only(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
 
-    subj_site_name = get_binding_site_name(obj_base_agent)
-    obj_site_name = get_binding_site_name(subj_base_agent)
+    subj_site_name = get_binding_site_name(stmt.obj)
+    obj_site_name = get_binding_site_name(stmt.subj)
 
     r = Rule(rule_name,
             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
