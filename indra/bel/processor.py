@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import re
+import rdflib
 import logging
 import collections
 from requests.utils import unquote
@@ -42,7 +43,8 @@ def term_from_uri(uri):
     # This insures that if we get a Literal with an integer value (as we
     # do for modification positions), it will get converted to a string,
     # not an integer.
-    uri = str(uri.toPython())
+    if isinstance(uri, rdflib.Literal):
+        uri = str(uri.toPython())
     # This is to handle URIs like
     # http://www.openbel.org/bel/namespace//MAPK%20Erk1/3%20Family
     # or
