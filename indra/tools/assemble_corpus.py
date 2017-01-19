@@ -132,7 +132,9 @@ def run_preassembly_related(stmts_in, **kwargs):
 
 def filter_by_type(stmts_in, stmt_type):
     """Filter to a given statement type."""
+    logger.info('Filtering %d statements...' % len(stmts_in))
     stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def filter_grounded_only(stmts_in, **kwargs):
@@ -156,6 +158,7 @@ def filter_grounded_only(stmts_in, **kwargs):
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def filter_genes_only(stmts_in, **kwargs):
@@ -188,6 +191,7 @@ def filter_genes_only(stmts_in, **kwargs):
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def filter_belief(stmts_in, belief_cutoff, **kwargs):
@@ -195,12 +199,15 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     logger.info('Filtering %d statements to above %f belief' %
                 (len(stmts_in), belief_cutoff))
     stmts_out = [s for s in stmts_in if s.belief >= belief_cutoff]
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes."""
+    logger.info('Expanding families on %d statements...' % len(stmts_in))
     expander = Expander(hierarchies)
     stmts_out = expander.expand_families(stmts_in)
+    logger.info('%d statements after expanding families...' % len(stmts_out))
     return stmts_out
 
 def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
@@ -247,6 +254,7 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
                 stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def reduce_activities(stmts_in, **kwargs):
@@ -260,7 +268,7 @@ def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are not grounded to human genes."""
     load_pkl = kwargs.get('load_pkl')
     dump_pkl = kwargs.get('dump_pkl')
-    logger.info('Filtering %d statements for human genes only...' % 
+    logger.info('Filtering %d statements for human genes only...' %
                 len(stmts_in))
     if load_pkl:
         stmts_out = load_statements(load_pkl)
@@ -278,6 +286,7 @@ def filter_human_only(stmts_in, **kwargs):
             stmts_out.append(st)
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def filter_direct(stmts_in, **kwargs):
@@ -298,12 +307,13 @@ def filter_direct(stmts_in, **kwargs):
         if any_indirect:
             return False
         return True
-    logger.info('Filtering %d statements to direct ones' % len(stmts_in))
+    logger.info('Filtering %d statements to direct ones...' % len(stmts_in))
     stmts_out = []
     for st in stmts_in:
         if get_is_direct(st):
             print('a')
             stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
