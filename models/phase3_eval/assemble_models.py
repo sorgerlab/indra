@@ -5,7 +5,8 @@ from os.path import join as pjoin
 from pysb.export.kappa import KappaExporter
 from indra.tools import assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
-from indra.statements import Agent, Activation, Inhibition
+from indra.assemblers import IndexCardAssembler
+from indra.statements import *
 from indra.assemblers import PysbAssembler, SifAssembler, CxAssembler
 
 import process_data
@@ -17,11 +18,26 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
+def assemble_index_cards(stmts):
+    counter = 1
+    for st in stmts:
+        if isinstance(st, Modification) and st.enz is None:
+            continue
+        pmids = [ev.pmid for ev in st.evidence if ev.pmid is not None]
+        if pmids:
+            pmids = ','.join(['PMID%s' % pm for pm in list(set(pmids))])
+        else:
+            pmids = 'N/A'
+        ica = IndexCardAssembler([st], pmc_override=pmids)
+        ica.make_model()
+        if ica.cards:
+            ica.save_model('output/index_cards/index_card_%d.json' % counter)
+            counter += 1
+
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
-    print(len(stmts))
     stmts = ac.reduce_activities(stmts)
     pa = PysbAssembler()
     pa.add_statements(stmts)
@@ -154,12 +170,10 @@ def rewrite_ab_stmts(stmts_in, data):
     return stmts_out
 
 if __name__ == '__main__':
-    #outf = '/home/beni/data/darpa/phase3_eval/'
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = True
-    #phos_stmts, antibody_map = read_phosphosite('annotated_kinases_v3.csv')
+    reassemble = False
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'top_level.pkl'))
     else:
@@ -171,24 +185,17 @@ if __name__ == '__main__':
         stmts = prior_stmts + reading_stmts
 
         stmts = ac.filter_grounded_only(stmts)
-        print(len(stmts))
         stmts = ac.filter_genes_only(stmts, specific_only=False)
-        print(len(stmts))
         stmts = ac.filter_human_only(stmts)
-        print(len(stmts))
         stmts = ac.expand_families(stmts)
-        print(len(stmts))
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
-        print(len(stmts))
         stmts = ac.map_sequence(stmts, dump_pkl=pjoin(outf, 'smapped.pkl'))
-        print(len(stmts))
         stmts = ac.run_preassembly(stmts, dump_pkl=pjoin(outf, 'top_level.pkl'))
-        print(len(stmts))
 
     assemble_models = []
-    #assemble_models.append('sif')
-    #assemble_models.append('pysb')
-    #assemble_models.append('cx')
+    assemble_models.append('sif')
+    assemble_models.append('pysb')
+    assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
