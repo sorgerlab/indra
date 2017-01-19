@@ -3,6 +3,7 @@ from builtins import dict, str
 import logging
 import networkx
 import itertools
+import numpy as np
 from copy import deepcopy
 from collections import deque
 from pysb import kappa
@@ -58,6 +59,10 @@ class ModelChecker(object):
 
     def check_model(self):
         """Check all the statements added to the ModelChecker.
+
+        More efficient than check_statement when checking multiple statements
+        because all relevant observables are added before building the
+        influence map, preventing it from being repeatedly generated.
 
         Returns
         -------
@@ -220,11 +225,65 @@ class ModelChecker(object):
         for path in _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
+        #for path in _find_sources_with_paths(self.get_im(), obj_obs.name,
+        #                                     input_rule_set, target_polarity):
+        #    num_paths += 1
         if num_paths > 0:
             return True
         else:
             return False
 
+def _find_sources_with_paths(im, target, sources, polarity):
+    """Get the subset of source nodes with paths to the target.
+
+    Given a target, a list of sources, and a path polarity, perform a
+    breadth-first search upstream from the target to find paths to any of the
+    upstream sources.
+
+    Parameters
+    ----------
+    im : pygraphviz.AGraph
+        Graph containing the influence map.
+    target : string
+        The node (rule name) in the influence map to start looking upstream for
+        marching sources.
+    sources : list of strings
+        The nodes (rules) corresponding to the subject or upstream influence
+        being checked.
+    polarity : int
+        Required polarity of the path between source and target.
+
+    Returns
+    -------
+    generator of path
+        Yields paths as lists of nodes (rule names).  If there are no paths
+        to any of the given source nodes, the generator is empty.
+    """
+    # First, create a list of visited nodes
+    # Adapted from
+    # http://stackoverflow.com/questions/8922060/
+    #                       how-to-trace-the-path-in-a-breadth-first-search
+    queue = deque([[target]])
+    while queue:
+        # Get the first path in the queue
+        path = queue.popleft()
+        node = path[-1]
+        # If there's only one node in the path, it's the observable we're
+        # starting from, so the path is positive
+        if len(path) == 1:
+            sign = 1
+        # Because the path runs from target back to source, we have to reverse
+        # the path to calculate the overall polarity
+        else:
+            sign = _path_polarity(im, reversed(path))
+        if (sources is None or node in sources) and sign == polarity:
+            logger.info('Found path: %s' % path)
+            yield path
+        for predecessor, sign in _get_signed_predecessors(im, node, 1):
+            new_path = list(path)
+            new_path.append(predecessor)
+            queue.append(new_path)
+    return
 
 def _find_sources(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -253,7 +312,7 @@ def _find_sources(im, target, sources, polarity):
     generator of (source, polarity, path_length)
         Yields tuples of source node (string), polarity (int) and path length
         (int). If there are no paths to any of the given source nodes, the
-        generator is empty.
+        generator isignempty.
     """
     # First, create a list of visited nodes
     # Adapted from
@@ -426,20 +485,19 @@ def find_consumption_rules(cp, rules):
     # side but not on the right hand side
     cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
     return cons_rules
-
-def positive_path(im, path):
+"""
+def _path_polarity(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
     edge_polarities = []
-    for rule_ix in range(len(path) - 1):
-        from_rule = path[rule_ix]
-        to_rule = path[rule_ix + 1]
+    path_list = list(path)
+    edges = zip(path_list[0:-1], path_list[1:])
+    for from_rule, to_rule in edges:
         edge = im.get_edge(from_rule, to_rule)
         edge_polarities.append(_get_edge_sign(edge))
     # Compute and return the overall path polarity
     path_polarity = np.prod(edge_polarities)
     assert path_polarity == 1 or path_polarity == -1
-    return True if path_polarity == 1 else False
-"""
-
+    #return True if path_polarity == 1 else False
+    return path_polarity
 
