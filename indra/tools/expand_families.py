@@ -6,91 +6,13 @@ import rdflib.namespace
 from copy import deepcopy
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
-from indra.preassembler.make_entity_hierarchy import ns_map
+from indra.preassembler.make_entity_hierarchy import  ns_map
 
 logger = logging.getLogger('expand_families')
-
-class UnknownNamespaceException(Exception):
-    pass
-
-def _agent_from_ns_id(ag_ns, ag_id):
-    ag_name = ag_id
-    db_refs = {'TEXT': ag_name}
-    if ag_ns == 'HGNC':
-        hgnc_id = hgnc_client.get_hgnc_id(ag_id)
-        if hgnc_id is not None:
-            db_refs['HGNC'] = hgnc_id
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if up_id is not None:
-                db_refs['UP'] = up_id
-    else:
-        if ag_id is not None:
-            db_refs[ag_ns] = ag_id
-    return Agent(ag_name, db_refs=db_refs)
-
-def _agent_from_uri(uri):
-    ag_ns, ag_id = _ns_id_from_uri(uri)
-    agent = _agent_from_ns_id(ag_ns, ag_id)
-    return agent
-
-def _ns_id_from_uri(uri):
-    (ag_ns, ag_id) = rdflib.namespace.split_uri(uri)
-    ag_ns_name = ns_map.get(ag_ns)
-    if ag_ns_name is None:
-        raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
-    return (ag_ns_name, ag_id)
 
 class Expander(object):
     def __init__(self, hierarchies):
         self.entities = hierarchies['entity']
-        # Build reverse lookup dict from the entity hierarchy
-        self._children = {}
-        logger.info('Generating reverse lookup table for families')
-        all_children = set(self.entities.isa_closure.keys()).union(
-                       self.entities.partof_closure.keys())
-        for child in all_children:
-            parents = self._get_parents(child)
-            for parent in parents:
-                children_list = self._children.get(parent, [])
-                children_list.append(child)
-                self._children[parent] = children_list
-
-    def _get_parents(self, child):
-        immediate_parents = set(self.entities.isa_closure.get(child, [])).union(
-                      set(self.entities.partof_closure.get(child, [])))
-        all_parents = set([])
-        for parent in immediate_parents:
-            grandparents = self._get_parents(parent)
-            all_parents = all_parents.union(grandparents)
-        return all_parents.union(immediate_parents)
-
-
-    def get_children(self, agent, ns_filter='HGNC'):
-        if agent is None:
-            return []
-        # Get the grounding for the agent
-        (ns, id) = agent.get_grounding()
-        # If there is no grounding for this agent, then return no children
-        # (empty list)
-        if ns is None or id is None:
-            return []
-        # Get URI for agent
-        ag_uri = self.entities.get_uri(ns, id)
-        # Look up the children for this family
-        children_uris = self._children.get(ag_uri)
-        if children_uris is None:
-            return []
-        # Parse children URI list into namespaces and ID
-        children_parsed = []
-        for child_uri in children_uris:
-            child_ns, child_id = _ns_id_from_uri(child_uri)
-            # If ns_filter is None, add in all children
-            if ns_filter is None:
-                children_parsed.append((child_ns, child_id))
-            # Otherwise, only add children with a matching namespace
-            elif child_ns == ns_filter:
-                children_parsed.append((child_ns, child_id))
-        return children_parsed
 
     def expand_families(self, stmts):
         """Generate statements by expanding members of families and complexes.
@@ -141,6 +63,33 @@ class Expander(object):
                 new_stmts.append(new_stmt)
         return new_stmts
 
+    def get_children(self, agent, ns_filter='HGNC'):
+        if agent is None:
+            return []
+        # Get the grounding for the agent
+        (ns, id) = agent.get_grounding()
+        # If there is no grounding for this agent, then return no children
+        # (empty list)
+        if ns is None or id is None:
+            return []
+        # Get URI for agent
+        ag_uri = self.entities.get_uri(ns, id)
+        # Look up the children for this family
+        children_uris = self.entities.get_children(ag_uri)
+        if not children_uris:
+            return []
+        # Parse children URI list into namespaces and ID
+        children_parsed = []
+        for child_uri in children_uris:
+            child_ns, child_id = _ns_id_from_uri(child_uri)
+            # If ns_filter is None, add in all children
+            if ns_filter is None:
+                children_parsed.append((child_ns, child_id))
+            # Otherwise, only add children with a matching namespace
+            elif child_ns == ns_filter:
+                children_parsed.append((child_ns, child_id))
+        return children_parsed
+
     def complexes_from_hierarchy(self):
         # Iterate over the partof_closure to determine all of the complexes
         # and all of their members
@@ -165,3 +114,37 @@ class Expander(object):
         complex_stmts = self.complexes_from_hierarchy()
         expanded_complexes = self.expand_families(complex_stmts)
         return expanded_complexes
+
+
+def _agent_from_ns_id(ag_ns, ag_id):
+    ag_name = ag_id
+    db_refs = {'TEXT': ag_name}
+    if ag_ns == 'HGNC':
+        hgnc_id = hgnc_client.get_hgnc_id(ag_id)
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
+            up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if up_id is not None:
+                db_refs['UP'] = up_id
+    else:
+        if ag_id is not None:
+            db_refs[ag_ns] = ag_id
+    return Agent(ag_name, db_refs=db_refs)
+
+
+def _agent_from_uri(uri):
+    ag_ns, ag_id = _ns_id_from_uri(uri)
+    agent = _agent_from_ns_id(ag_ns, ag_id)
+    return agent
+
+
+class UnknownNamespaceException(Exception):
+    pass
+
+
+def _ns_id_from_uri(uri):
+    (ag_ns, ag_id) = rdflib.namespace.split_uri(uri)
+    ag_ns_name = ns_map.get(ag_ns)
+    if ag_ns_name is None:
+        raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
+    return (ag_ns_name, ag_id)
