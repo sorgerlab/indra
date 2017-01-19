@@ -89,7 +89,7 @@ class SiteMapper(object):
         goes into the list of valid statements. If there is a problem with the
         statement, the offending modifications are looked up in the site map
         (:py:attr:`site_map`), and an instance of :py:class:`MappedStatement`
-        is to the list of mapped statements.
+        is added to the list of mapped statements.
 
         Parameters
         ----------
@@ -332,7 +332,7 @@ def _get_uniprot_id(agent):
 def load_site_map(path):
     """Load the modification site map from a file.
 
-    The site map file should be a tab-separated file with six columns::
+    The site map file should be a comma-separated file with six columns::
 
         Gene: HGNC gene name
         OrigRes: Original (incorrect) residue
@@ -358,7 +358,7 @@ def load_site_map(path):
         error, wrong residue name, etc.).
     """
     site_map = {}
-    maprows = read_unicode_csv(path, delimiter='\t')
+    maprows = read_unicode_csv(path)
     # Skip the header line
     next(maprows)
     for row in maprows:
@@ -375,11 +375,11 @@ def load_site_map(path):
 
 
 default_site_map_path = os.path.join(os.path.dirname(__file__),
-                             '../resources/curated_site_map.tsv')
+                             '../resources/curated_site_map.csv')
 
 default_site_map = load_site_map(default_site_map_path)
 
 default_mapper = SiteMapper(default_site_map)
 """A default instance of :py:class:`SiteMapper` that contains the site
-information found in resources/curated_site_map.tsv'."""
+information found in resources/curated_site_map.csv'."""
 

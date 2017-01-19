@@ -307,7 +307,11 @@ def get_pmc_id(stmt):
     return str(pmc_id)
 
 def get_evidence_text(stmt):
-    ev_txts = [ev.text for ev in stmt.evidence]
+    ev_txts = [ev.text for ev in stmt.evidence if ev.text]
+    if not ev_txts:
+        sources = list(set([ev.source_api for ev in stmt.evidence]))
+        ev_txts = ['Evidence text not available in source database: %s' % \
+            ', '.join(sources)]
     return ev_txts
 
 def get_is_direct(stmt):
