@@ -6,55 +6,6 @@ from indra.tools import expand_families as ef
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import Agent, Phosphorylation, Complex, Activation
 
-def test_get_children():
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
-    braf = Agent('BRAF', db_refs={'HGNC':'1097'})
-    # Look up RAF
-    exp = ef.Expander(hierarchies)
-    rafs = exp.get_children(raf)
-    # Should get three family members
-    assert isinstance(rafs, list)
-    assert len(rafs) == 3
-    assert unicode_strs(rafs)
-    # The lookup of a gene-level entity should not return any additional
-    # entities
-    brafs = exp.get_children(braf)
-    assert isinstance(brafs, list)
-    assert len(brafs) == 0
-    assert unicode_strs(brafs)
-    # The lookup for a top-level family (e.g., MAPK, which has as children
-    # both the intermediate family ERK as well as all MAPK1-15 members)
-    # should not return the intermediate families when a filter is applied.
-    mapk = Agent('MAPK', db_refs={'BE':'MAPK'})
-    mapks = exp.get_children(mapk, ns_filter=None)
-    assert len(mapks) == 12
-    assert ('HGNC', 'MAPK1') in mapks
-    assert ('HGNC', 'MAPK9') in mapks
-    assert ('BE', 'ERK') in mapks
-    assert ('BE', 'JNK') in mapks
-    assert unicode_strs(mapks)
-    # Now do the same expansion with a namespace filter
-    mapks = exp.get_children(mapk, ns_filter='HGNC')
-    assert unicode_strs(mapks)
-    assert len(mapks) == 9
-    assert ('HGNC', 'MAPK3') in mapks
-    assert ('HGNC', 'MAPK10') in mapks
-    assert ('BE', 'ERK') not in mapks
-    # Make sure we can also do this in a case involving both family and complex
-    # relationships
-    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
-    ampks = exp.get_children(ampk, ns_filter=None)
-    assert len(ampks) == 22
-    ampks = exp.get_children(ampk, ns_filter='HGNC')
-    assert len(ampks) == 7
-    # Test that the default filter is HGNC
-    ampks = exp.get_children(ampk)
-    assert len(ampks) == 7
-    ag_none = None
-    none_children = exp.get_children(ag_none)
-    assert isinstance(none_children, list)
-    assert len(none_children) == 0
-
 def test_expand_families():
     # Get the Expander
     exp = ef.Expander(hierarchies)
@@ -137,3 +88,51 @@ def test_db_ref_keys():
                 assert set(list(agent.db_refs)) == \
                 set(['TEXT','UP','HGNC'])
 
+def test_get_children():
+    exp = ef.Expander(hierarchies)
+    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    # Look up RAF
+    rafs = exp.get_children(raf)
+    # Should get three family members
+    assert isinstance(rafs, list)
+    assert len(rafs) == 3
+    assert unicode_strs(rafs)
+    # The lookup of a gene-level entity should not return any additional
+    # entities
+    brafs = exp.get_children(braf)
+    assert isinstance(brafs, list)
+    assert len(brafs) == 0
+    assert unicode_strs(brafs)
+    # The lookup for a top-level family (e.g., MAPK, which has as children
+    # both the intermediate family ERK as well as all MAPK1-15 members)
+    # should not return the intermediate families when a filter is applied.
+    mapk = Agent('MAPK', db_refs={'BE':'MAPK'})
+    mapks = exp.get_children(mapk, ns_filter=None)
+    assert len(mapks) == 12
+    assert ('HGNC', 'MAPK1') in mapks
+    assert ('HGNC', 'MAPK9') in mapks
+    assert ('BE', 'ERK') in mapks
+    assert ('BE', 'JNK') in mapks
+    assert unicode_strs(mapks)
+    # Now do the same expansion with a namespace filter
+    mapks = exp.get_children(mapk, ns_filter='HGNC')
+    assert unicode_strs(mapks)
+    assert len(mapks) == 9
+    assert ('HGNC', 'MAPK3') in mapks
+    assert ('HGNC', 'MAPK10') in mapks
+    assert ('BE', 'ERK') not in mapks
+    # Make sure we can also do this in a case involving both family and complex
+    # relationships
+    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    ampks = exp.get_children(ampk, ns_filter=None)
+    assert len(ampks) == 22
+    ampks = exp.get_children(ampk, ns_filter='HGNC')
+    assert len(ampks) == 7
+    # Test that the default filter is HGNC
+    ampks = exp.get_children(ampk)
+    assert len(ampks) == 7
+    ag_none = None
+    none_children = exp.get_children(ag_none)
+    assert isinstance(none_children, list)
+    assert len(none_children) == 0

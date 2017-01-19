@@ -2,10 +2,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import rdflib
+import logging
 try:
     from functools import lru_cache
 except ImportError:
     from functools32 import lru_cache
+
+logger = logging.getLogger('hierarchy_manager')
 
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
@@ -27,13 +30,26 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file):
+    def __init__(self, rdf_file, build_closure=True):
         """Initialize with the path to an RDF file"""
         self.graph = rdflib.Graph()
         self.graph.parse(rdf_file, format='nt')
         self.isa_closure = {}
         self.partof_closure = {}
         self.components = {}
+        if build_closure:
+            self.build_transitive_closures()
+        # Build reverse lookup dict from the entity hierarchy
+        self._children = {}
+        logger.info('Generating reverse lookup table for families')
+        all_children = set(self.isa_closure.keys()).union(
+                            self.partof_closure.keys())
+        for child in all_children:
+            parents = self.get_parents(child)
+            for parent in parents:
+                children_list = self._children.get(parent, [])
+                children_list.append(child)
+                self._children[parent] = children_list
 
     def build_transitive_closures(self):
         """Build the transitive closures of the hierarchy.
@@ -192,6 +208,50 @@ class HierarchyManager(object):
         else:
             return self.query_rdf(id1, 'rn:partof+', id2)
 
+    def get_parents(self, uri, type='all'):
+        """Return parents of a given entry.
+
+        Parameters
+        ----------
+        uri : str
+            The URI of the entry whose parents are to be returned. See the
+            get_uri method to construct this URI from a name space and id.
+        type : str
+            'all': return all parents irrespective of level;
+            'immediate': return only the immediate parents;
+            'top': return only the highest level parents
+        """
+        immediate_parents = set(self.isa_closure.get(uri, [])).union(
+                                set(self.partof_closure.get(uri, [])))
+        if type == 'immediate':
+            return immediate_parents
+        all_parents = set()
+        for parent in immediate_parents:
+            grandparents = self.get_parents(parent, type='all')
+            all_parents = all_parents.union(grandparents)
+        all_parents = all_parents.union(immediate_parents)
+        if type == 'all':
+            return all_parents
+        else:
+            top_parents = set()
+            for parent in all_parents:
+                if not self.get_parents(parent, type='immediate'):
+                    top_parents.add(parent)
+            return top_parents
+        return
+
+    def get_children(self, uri):
+        """Return all (not just immediate) children of a given entry.
+
+        Parameters
+        ----------
+        uri : str
+            The URI of the entry whose children are to be returned. See the
+            get_uri method to construct this URI from a name space and id.
+        """
+        children = self._children.get(uri, [])
+        return children
+
     @lru_cache(maxsize=100000)
     def query_rdf(self, id1, rel, id2):
         term1 = self.find_entity(id1)
@@ -231,19 +291,16 @@ ccomp_file_path = os.path.join(os.path.dirname(__file__),
                     '../resources/cellular_component_hierarchy.rdf')
 """Default entity hierarchy loaded from the RDF file at
 `resources/entity_hierarchy.rdf`."""
-entity_hierarchy = HierarchyManager(entity_file_path)
-entity_hierarchy.build_transitive_closures()
+entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True)
 """Default modification hierarchy loaded from the RDF file at
 `resources/modification_hierarchy.rdf`."""
-modification_hierarchy = HierarchyManager(mod_file_path)
-modification_hierarchy.build_transitive_closures()
+modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True)
 """Default activity hierarchy loaded from the RDF file at
 `resources/activity_hierarchy.rdf`."""
-activity_hierarchy = HierarchyManager(act_file_path)
-activity_hierarchy.build_transitive_closures()
+activity_hierarchy = HierarchyManager(act_file_path, build_closure=True)
 """Default cellular_component hierarchy loaded from the RDF file at
 `resources/cellular_component_hierarchy.rdf`."""
-ccomp_hierarchy = HierarchyManager(ccomp_file_path)
+ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False)
 
 hierarchies = {'entity': entity_hierarchy,
                'modification': modification_hierarchy,

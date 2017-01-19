@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.statements import get_valid_location, InvalidLocationError
+from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
 
 ent_hierarchy = hierarchies['entity']
@@ -64,3 +64,44 @@ def test_partof_comp_none_none():
 def test_partof_comp_none_not():
     assert not comp_hierarchy.partof('INDRA', None, 'INDRA', 'cytoplasm')
 
+def test_get_children():
+    raf = 'http://sorger.med.harvard.edu/indra/entities/RAF'
+    braf = 'http://identifiers.org/hgnc.symbol/BRAF'
+    mapk = 'http://sorger.med.harvard.edu/indra/entities/MAPK'
+    ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
+    # Look up RAF
+    rafs = ent_hierarchy.get_children(raf)
+    # Should get three family members
+    assert isinstance(rafs, list)
+    assert len(rafs) == 3
+    assert unicode_strs(rafs)
+    # The lookup of a gene-level entity should not return any additional
+    # entities
+    brafs = ent_hierarchy.get_children(braf)
+    assert isinstance(brafs, list)
+    assert len(brafs) == 0
+    assert unicode_strs(brafs)
+    mapks = ent_hierarchy.get_children(mapk)
+    assert len(mapks) == 12
+    assert unicode_strs(mapks)
+    # Make sure we can also do this in a case involving both family and complex
+    # relationships
+    ampks = ent_hierarchy.get_children(ampk)
+    assert len(ampks) == 22
+    ag_none = ''
+    none_children = ent_hierarchy.get_children('')
+    assert isinstance(none_children, list)
+    assert len(none_children) == 0
+
+def test_get_parents():
+    prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
+    ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
+    p1 = ent_hierarchy.get_parents(prkaa1, 'all')
+    assert(len(p1) == 14)
+    assert(ampk in p1)
+    p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
+    assert(len(p2) == 13)
+    assert (ampk not in p2)
+    p3 = ent_hierarchy.get_parents(prkaa1, 'top')
+    assert(len(p3) == 1)
+    assert (ampk in p3)
