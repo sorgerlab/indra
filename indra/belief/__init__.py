@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import numpy
+import networkx
 import indra.preassembler.sitemapper as sm
 
 
@@ -77,13 +78,28 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        ranked_stmts = _get_ranked_stmts(statements)
-        for sts in ranked_stmts:
-            for st in sts:
-                bps = _get_belief_package(st)
-                beliefs = [bp[0] for bp in bps]
-                belief = 1 - numpy.prod([(1-b) for b in beliefs])
-                st.belief = belief
+        def build_hierarchy_graph(stmts):
+            g = networkx.DiGraph()
+            for st1 in stmts:
+                g.add_node(st1.matches_key(), {'stmt': st1})
+                for st2 in st1.supported_by:
+                    g.add_node(st2.matches_key(), {'stmt': st2})
+                    g.add_edge(st2.matches_key(), st1.matches_key())
+            return g
+        def get_ranked_stmts(g):
+            node_ranks = networkx.topological_sort(g, reverse=True)
+            stmts = [g.node[n]['stmt'] for n in node_ranks]
+            return stmts
+        g = build_hierarchy_graph(statements)
+        ranked_stmts = get_ranked_stmts(g)
+        new_beliefs = []
+        for st in ranked_stmts:
+            bps = _get_belief_package(st)
+            beliefs = [bp[0] for bp in bps]
+            belief = 1 - numpy.prod([(1-b) for b in beliefs])
+            new_beliefs.append(belief)
+        for st, bel in zip(ranked_stmts, new_beliefs):
+            st.belief = bel
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
@@ -104,13 +120,13 @@ class BeliefEngine(object):
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
 
-def _get_belief_package(stmt):
+def _get_belief_package(stmt, n=1):
     def belief_stmts(belief_pkgs):
         return [pkg[1] for pkg in belief_pkgs]
 
     belief_packages = []
     for st in stmt.supports:
-        parent_packages = _get_belief_package(st)
+        parent_packages = _get_belief_package(st, n+1)
         belief_st = belief_stmts(belief_packages)
         for package in parent_packages:
             if not package[1] in belief_st:
@@ -118,29 +134,5 @@ def _get_belief_package(stmt):
 
     belief_package = (stmt.belief, stmt.matches_key())
     belief_packages.append(belief_package)
-    print(stmt, belief_packages)
     return belief_packages
 
-
-def _get_ranked_stmts(statements):
-    def get_next_level(stmts):
-        above_stmts = []
-        for st in stmts:
-            all_leaf = True
-            for st_supp in st.supports:
-                for st_supp_by in st_supp.supported_by:
-                    if st_supp_by not in stmts:
-                        all_leaf = False
-                        break
-                if all_leaf:
-                    if st_supp not in above_stmts:
-                        above_stmts.append(st_supp)
-        return above_stmts
-
-    ranked_stmts = [[st for st in statements if not st.supported_by]]
-    while True:
-        next_stmts = get_next_level(ranked_stmts[-1])
-        if not next_stmts:
-            break
-        ranked_stmts.append(next_stmts)
-    return ranked_stmts
