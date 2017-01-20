@@ -28,6 +28,8 @@ st12 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': True})])
 st13 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': False})])
 st14 = Activation(a, b, 'activity')
 st15 = Activation(a, b, 'kinase')
+st14.supports = [st15]
+st15.supported_by = [st14]
 st1.belief = 0.9
 st2.belief = 0.8
 st3.belief = 0.7
@@ -78,6 +80,10 @@ def test_filter_gene_list_one():
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
     assert(len(st_out) == 2)
+
+def test_run_preassembly_all_stmts():
+    st_out = ac.run_preassembly([st1, st3, st5, st6], return_toplevel=False)
+    assert(len(st_out) == 4)
 
 def test_expand_families():
     st_out = ac.expand_families([st10])
@@ -154,4 +160,8 @@ def test_map_sequence():
 
 def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
+    assert(len(st_out) == 1)
+
+def test_filter_top_level():
+    st_out = ac.filter_top_level([st14, st15])
     assert(len(st_out) == 1)
