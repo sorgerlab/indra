@@ -84,7 +84,7 @@ def map_grounding(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
-    logger.info('Mapping grounding on % statements...' % len(stmts_in))
+    logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename')
     if do_rename is None:
         do_rename = True
@@ -110,11 +110,9 @@ def map_sequence(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
-    logger.info('Mapping sites on % statements...' % len(stmts_in))
-    dump_pkl = kwargs.get('save')
+    logger.info('Mapping sites on %d statements...' % len(stmts_in))
     sm = SiteMapper(default_site_map)
-    # Map sites
-    valid, mapped = sm.map_sites(stmts)
+    valid, mapped = sm.map_sites(stmts_in)
     correctly_mapped_stmts = []
     for ms in mapped:
         if all([True if mm[1] is not None else False
@@ -122,6 +120,7 @@ def map_sequence(stmts_in, **kwargs):
             correctly_mapped_stmts.append(ms.mapped_stmt)
     stmts_out = valid + correctly_mapped_stmts
     logger.info('%d statements with valid sites' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
@@ -173,7 +172,8 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of unique statements.
     """
-    logger.info('Combining duplicates...')
+    logger.info('Combining duplicates on %d statements...' %
+                len(preassembler.stmts))
     dump_pkl = kwargs.get('save')
     stmts_out = preassembler.combine_duplicates()
     beliefengine.set_prior_probs(stmts_out)
@@ -200,7 +200,8 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of preassembled top-level statements.
     """
-    logger.info('Combining related...')
+    logger.info('Combining related on %d statements...' %
+                len(preassembler.unique_stmts))
     stmts_out = preassembler.combine_related()
     beliefengine.set_hierarchy_probs(stmts_out)
     logger.info('%d top-level statements' % len(stmts_out))
@@ -469,7 +470,6 @@ def filter_direct(stmts_in, **kwargs):
     stmts_out = []
     for st in stmts_in:
         if get_is_direct(st):
-            print('a')
             stmts_out.append(st)
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
