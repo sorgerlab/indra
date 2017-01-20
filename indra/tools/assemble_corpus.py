@@ -132,6 +132,10 @@ def run_preassembly(stmts_in, **kwargs):
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to preassemble.
+    return_toplevel : Optional[bool]
+        If True, only the top-level statements are returned. If False,
+        all statements are returned irrespective of level of specificity.
+        Default: True
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -150,7 +154,8 @@ def run_preassembly(stmts_in, **kwargs):
     options = {'save': dump_pkl_unique}
     run_preassembly_duplicate(pa, be, **options)
 
-    options = {'save': dump_pkl}
+    return_toplevel = kwargs.get('return_toplevel', True)
+    options = {'save': dump_pkl, 'return_toplevel': return_toplevel}
     stmts_out = run_preassembly_related(pa, be, **options)
 
     return stmts_out
@@ -192,6 +197,10 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         internally.
     beliefengine : indra.belief.BeliefEngine
         A BeliefEngine instance
+    return_toplevel : Optional[bool]
+        If True, only the top-level statements are returned. If False,
+        all statements are returned irrespective of level of specificity.
+        Default: True
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -202,9 +211,17 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     """
     logger.info('Combining related on %d statements...' %
                 len(preassembler.unique_stmts))
-    stmts_out = preassembler.combine_related()
+    return_toplevel = kwargs.get('return_toplevel', True)
+    stmts_out = preassembler.combine_related(return_toplevel=False)
     beliefengine.set_hierarchy_probs(stmts_out)
-    logger.info('%d top-level statements' % len(stmts_out))
+    stmts_top = filter_top_level(stmts_out)
+    if return_toplevel:
+        stmts_out = stmts_top
+        logger.info('%d top-level statements' % len(stmts_out))
+    else:
+        logger.info('%d statements out of which %d are top-level' %
+                    (len(stmts_out), len(stmts_top)))
+
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
@@ -514,6 +531,32 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
+def filter_top_level(stmts_in, **kwargs):
+    """Filter to statements that are at the top-level of the hierarchy.
+
+    Here top-level statements correspond to most specific ones.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements for top-level' % len(stmts_in))
+    stmts_out = [st for st in stmts_in if not st.supports]
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes.

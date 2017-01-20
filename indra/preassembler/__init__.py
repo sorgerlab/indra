@@ -129,7 +129,7 @@ class Preassembler(object):
             unique_stmts.append(first_stmt)
         return unique_stmts
 
-    def combine_related(self):
+    def combine_related(self, return_toplevel=True):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -179,13 +179,22 @@ class Preassembler(object):
             *isa* RAF_family, but MEK_family is not a MEK1. In the future this
             restriction could be revisited.
 
+        Parameters
+        ----------
+        return_toplevel : bool
+            If True only the top level statements are returned.
+            If False, all statements are returned. Default: True
+
         Returns
         -------
         list of :py:class:`indra.statement.Statement`
             The returned list contains Statements representing the more
             concrete/refined versions of the Statements involving particular
             entities. The attribute :py:attr:`related_stmts` is also set to
-            this list.
+            this list. However, if return_toplevel is False then all
+            statements are returned, irrespective of level of specificity.
+            In this case the relationships between statements can
+            be accessed via the supports/supported_by attributes.
 
         Examples
         --------
@@ -295,7 +304,10 @@ class Preassembler(object):
             related_stmts += toplevel_stmts
 
         self.related_stmts = related_stmts
-        return self.related_stmts
+        if return_toplevel:
+            return self.related_stmts
+        else:
+            return unique_stmts
 
     def _set_supports(self, stmt1, stmt2):
         if (stmt2 not in stmt1.supported_by) and \
