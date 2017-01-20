@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.preassembler import make_activity_hierarchy as make_act
 from indra.preassembler import make_entity_hierarchy as make_ent
 from indra.preassembler import make_modification_hierarchy as make_mod

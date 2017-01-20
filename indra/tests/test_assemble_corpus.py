@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pickle
 from indra.tools import assemble_corpus as ac
 from indra.statements import Activation, Phosphorylation, Agent, Evidence
