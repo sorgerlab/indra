@@ -290,6 +290,17 @@ class ReachProcessor(object):
                     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                     if hgnc_id:
                         db_refs['HGNC'] = hgnc_id
+            elif ns == 'hgnc':
+                hgnc_id = xr['id']
+                db_refs['HGNC'] = hgnc_id
+                # Look up the standard gene symbol and set as name
+                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+                if hgnc_name:
+                    agent_name = hgnc_name
+                # Look up the corresponding uniprot id
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    db_refs['UP'] = up_id
             elif ns == 'pfam':
                 be_id = bioentities_map.get(('PF', xr['id']))
                 if be_id:
