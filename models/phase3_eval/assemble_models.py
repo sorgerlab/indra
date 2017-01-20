@@ -39,6 +39,7 @@ def assemble_index_cards(stmts):
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
     stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.filter_top_level(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
     stmts = ac.reduce_activities(stmts)
     pa = PysbAssembler()
@@ -52,6 +53,7 @@ def assemble_sif(stmts, data, out_file):
     """Return an assembled SIF."""
     # Filter for high-belief statements
     stmts = ac.filter_belief(stmts, 0.99)
+    stmts = ac.filter_top_level(stmts)
     # Filter for Activation / Inhibition
     stmts_act = ac.filter_by_type(stmts, Activation)
     stmts_inact = ac.filter_by_type(stmts, Inhibition)
@@ -119,6 +121,7 @@ def assemble_sif(stmts, data, out_file):
 def assemble_cx(stmts, out_file):
     """Return a CX assembler."""
     stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.filter_top_level(stmts)
     stmts = ac.strip_agent_context(stmts)
     ca = CxAssembler()
     ca.add_statements(stmts)
@@ -194,7 +197,8 @@ if __name__ == '__main__':
         stmts = ac.expand_families(stmts)
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
         stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
-        stmts = ac.run_preassembly(stmts, save=pjoin(outf, 'top_level.pkl'))
+        stmts = ac.run_preassembly(stmts, return_toplevel=False,
+                                   save=pjoin(outf, 'preassembled.pkl'))
 
     assemble_models = []
     assemble_models.append('sif')
