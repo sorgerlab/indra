@@ -4,6 +4,7 @@ import re
 import logging
 import objectpath
 from indra.statements import *
+from indra.util import read_unicode_csv
 from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
 
@@ -289,8 +290,16 @@ class ReachProcessor(object):
                     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                     if hgnc_id:
                         db_refs['HGNC'] = hgnc_id
+            elif ns == 'pfam':
+                be_id = bioentities_map.get(('PF', xr['id']))
+                if be_id:
+                    db_refs['BE'] = be_id
+                db_refs['PF'] = xr['id']
             elif ns == 'interpro':
-                db_refs['IP'] = xr['id']
+                be_id = bioentities_map.get(('IP', xr['id']))
+                if be_id:
+                    db_refs['BE'] = be_id
+                db_refs['PF'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
             elif ns == 'go':
@@ -299,6 +308,8 @@ class ReachProcessor(object):
                 db_refs['HMDB'] = xr['id']
             elif ns == 'be':
                 db_refs['BE'] = xr['id']
+            else:
+                logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
 
         mod_terms = entity_term.get('modifications')
@@ -535,3 +546,17 @@ stmt_mod_map = {
     'ribosylation': Ribosylation,
     'deribosylation': Deribosylation
 }
+
+def _read_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
+    bioentities_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        bioentities_map[(source_ns, source_id)] = be_id
+    return bioentities_map
+
+bioentities_map = _read_bioentities_map()
