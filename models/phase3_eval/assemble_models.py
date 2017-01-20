@@ -179,9 +179,11 @@ if __name__ == '__main__':
     else:
         #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
-        prior_stmts = ac.map_grounding(prior_stmts, dump_pkl=pjoin(outf, 'gmapped_prior.pkl'))
+        prior_stmts = ac.map_grounding(prior_stmts,
+                                       save=pjoin(outf, 'gmapped_prior.pkl'))
         reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
-        reading_stmts = ac.map_grounding(reading_stmts, dump_pkl=pjoin(outf, 'gmapped_reading.pkl'))
+        reading_stmts = ac.map_grounding(reading_stmts,
+                                    save=pjoin(outf, 'gmapped_reading.pkl'))
         stmts = prior_stmts + reading_stmts
 
         stmts = ac.filter_grounded_only(stmts)
@@ -189,8 +191,8 @@ if __name__ == '__main__':
         stmts = ac.filter_human_only(stmts)
         stmts = ac.expand_families(stmts)
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
-        stmts = ac.map_sequence(stmts, dump_pkl=pjoin(outf, 'smapped.pkl'))
-        stmts = ac.run_preassembly(stmts, dump_pkl=pjoin(outf, 'top_level.pkl'))
+        stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
+        stmts = ac.run_preassembly(stmts, save=pjoin(outf, 'top_level.pkl'))
 
     assemble_models = []
     assemble_models.append('sif')

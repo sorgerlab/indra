@@ -56,6 +56,8 @@ def test_filter_genes_only():
     assert len(st_out) == 0
     st_out = ac.filter_genes_only([st4])
     assert len(st_out) == 0
+    st_out = ac.filter_genes_only([st3], specific_only=True)
+    assert len(st_out) == 0
 
 def test_filter_human_only():
     st_out = ac.filter_human_only([st1, st5])
@@ -118,3 +120,36 @@ def test_filter_source():
     assert (len(st_out) == 2)
     st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'], 'all')
     assert (len(st_out) == 1)
+
+def test_map_grounding():
+    a = Agent('MEK', db_refs={'TEXT': 'MEK'})
+    b = Agent('X', db_refs={'TEXT': 'ERK'})
+    st = Activation(a, b)
+    st_out = ac.map_grounding([st], do_rename=False)
+    assert(len(st_out) == 1)
+    assert(st_out[0].subj.db_refs.get('BE'))
+    assert(st_out[0].obj.db_refs.get('BE'))
+    assert(st_out[0].obj.name == 'X')
+    st_out = ac.map_grounding([st], do_rename=True)
+    assert(len(st_out) == 1)
+    assert(st_out[0].subj.db_refs.get('BE'))
+    assert(st_out[0].obj.db_refs.get('BE'))
+    assert(st_out[0].obj.name == 'ERK')
+
+def test_map_sequence():
+    a = Agent('MAPK1', db_refs={'UP': 'P28482', 'HGNC': '6871'})
+    st1 = Phosphorylation(None, a, 'T', '182')
+    st2 = Phosphorylation(None, a, 'T', '185')
+    st3 = Phosphorylation(None, a, 'Y', '999')
+    st_out = ac.map_sequence([st1])
+    assert(len(st_out) == 1)
+    assert(st_out[0].position == '185')
+    st_out = ac.map_sequence([st2])
+    assert(len(st_out) == 1)
+    assert(st_out[0].position == '185')
+    st_out = ac.map_sequence([st3])
+    assert(len(st_out) == 0)
+
+def test_filter_by_type():
+    st_out = ac.filter_by_type([st1, st14], Phosphorylation)
+    assert(len(st_out) == 1)
