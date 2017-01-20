@@ -419,3 +419,20 @@ def test_homodimer_refinement():
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
 
+def test_return_toplevel():
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    st1 = Phosphorylation(src, nras, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nras)
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    stmts = pa.combine_related(return_toplevel=True)
+    assert(len(stmts) == 1)
+    assert(len(stmts[0].supported_by) == 1)
+    assert(len(stmts[0].supported_by[0].supports) == 1)
+    stmts = pa.combine_related(return_toplevel=False)
+    assert(len(stmts) == 2)
+    ix = 1 if stmts[0].residue else 0
+    assert(len(stmts[1-ix].supported_by) == 1)
+    assert(len(stmts[1-ix].supported_by[0].supports) == 1)
+    assert(len(stmts[ix].supports) == 1)
+    assert(len(stmts[ix].supports[0].supported_by) == 1)

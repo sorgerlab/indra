@@ -179,13 +179,22 @@ class Preassembler(object):
             *isa* RAF_family, but MEK_family is not a MEK1. In the future this
             restriction could be revisited.
 
+        Parameters
+        ----------
+        return_toplevel : bool
+            If True only the top level statements are returned.
+            If False, all statements are returned. Default: True
+
         Returns
         -------
         list of :py:class:`indra.statement.Statement`
             The returned list contains Statements representing the more
             concrete/refined versions of the Statements involving particular
             entities. The attribute :py:attr:`related_stmts` is also set to
-            this list.
+            this list. However, if return_toplevel is False then all
+            statements are returned, irrespective of level of specificity.
+            In this case the relationships between statements can
+            be accessed via the supports/supported_by attributes.
 
         Examples
         --------
