@@ -302,6 +302,8 @@ class ReachProcessor(object):
                 db_refs['PF'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
+            elif ns == 'pubchem':
+                db_refs['PUBCHEM'] = 'PUBCHEM:%s' % xr['id']
             elif ns == 'go':
                 db_refs['GO'] = xr['id']
             elif ns == 'hmdb':

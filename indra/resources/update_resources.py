@@ -4,7 +4,10 @@ import os
 import gzip
 import pandas
 import rdflib
-import urllib
+try:
+    from urllib import urlretrieve
+except ImportError:
+    from urllib.request import urlretrieve
 import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
@@ -101,7 +104,7 @@ def update_uniprot_sec_ac():
         'docs/sec_ac.txt'
     logger.info('Downloading %s' % url)
     fname = os.path.join(path, 'uniprot_sec_ac.txt')
-    urllib.urlretrieve(url, fname)
+    urlretrieve(url, fname)
 
 def update_uniprot_subcell_loc():
     # TODO: This file could be stored as a tsv instead after some processing
@@ -116,7 +119,7 @@ def update_chebi_entries():
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/reference.tsv.gz'
     fname = os.path.join(path, 'reference.tsv.gz')
-    urllib.urlretrieve(url, fname)
+    urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
         df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
@@ -274,6 +277,22 @@ def update_ncit_map():
                                         'Target Code'],
               header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
 
+def update_chebi_names():
+    logger.info('--Updating ChEBI names----')
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
+        'Flat_file_tab_delimited/names_3star.tsv.gz'
+    fname = os.path.join(path, 'names_3star.tsv.gz')
+    urlretrieve(url, fname)
+    with gzip.open(fname, 'rb') as fh:
+        logger.info('Loading %s' % fname)
+        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+    fname = os.path.join(path, 'chebi_names.tsv')
+    df = df[df['TYPE'] == 'NAME']
+    df.sort_values(by='COMPOUND_ID', inplace=True)
+    logger.info('Saving into %s' % fname)
+    df.to_csv(fname, sep=b'\t', header=True, index=False,
+              columns=['COMPOUND_ID', 'NAME'])
+
 if __name__ == '__main__':
     update_hgnc_entries()
     update_kinases()
@@ -281,6 +300,7 @@ if __name__ == '__main__':
     update_uniprot_sec_ac()
     update_uniprot_subcell_loc()
     update_chebi_entries()
+    update_chebi_names()
     update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
