@@ -18,8 +18,29 @@ def test_parse_site_text():
         assert(site == '185')
         assert unicode_strs((residue, site))
 
+def test_parse_site_text_number():
+    t = '135'
+    residue, site = ReachProcessor._parse_site_text(t)
+    assert(residue is None)
+    assert(site == '135')
+    assert(unicode_strs(site))
+
+def test_parse_site_text_number_first():
+    t = '293T'
+    residue, site = ReachProcessor._parse_site_text(t)
+    assert(residue == 'T')
+    assert(site == '293')
+    assert(unicode_strs((residue, site)))
+
+def test_parse_site_text_other_aa():
+    t = 'A431'
+    residue, site = ReachProcessor._parse_site_text(t)
+    assert(residue == 'A')
+    assert(site == '431')
+    assert(unicode_strs((residue, site)))
+
 def test_parse_site_residue_only():
-    text = ['serine residue', 'serine', 'a serine site']
+    text = ['serine residue', 'serine', 'a serine site', 's', 'ser']
     assert unicode_strs(text)
     for t in text:
         residue, site = ReachProcessor._parse_site_text(t)

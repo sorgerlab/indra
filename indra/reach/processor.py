@@ -321,6 +321,9 @@ class ReachProcessor(object):
                 db_refs['HMDB'] = xr['id']
             elif ns == 'be':
                 db_refs['BE'] = xr['id']
+            # These name spaces are ignored
+            elif ns in ['uaz']:
+                pass
             else:
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
@@ -493,32 +496,45 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_site_text(s):
-        m = re.match(r'([TYS])[-]?([0-9]+)', s)
+        for p in (_site_pattern1, _site_pattern2, _site_pattern3):
+            m = re.match(p, s.upper())
+            if m is not None:
+                residue = get_valid_residue(m.groups()[0])
+                site = m.groups()[1]
+                return residue, site
+        m = re.match(_site_pattern4, s.upper())
         if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
+            site = m.groups()[0]
+            residue = m.groups()[1]
             return residue, site
-
-        m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())
+        for p in (_site_pattern5, _site_pattern6, _site_pattern7):
+            m = re.match(p, s.upper())
+            if m is not None:
+                residue = get_valid_residue(m.groups()[0])
+                site = None
+                return residue, site
+        m = re.match(_site_pattern8, s.upper())
         if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
-            return residue, site
-
-        m = re.match(r'(THREONINE|TYROSINE|SERINE)[^0-9]*([0-9]+)', s.upper())
-        if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
-            return residue, site
-
-        m = re.match(r'.*(THREONINE|TYROSINE|SERINE).*', s.upper())
-        if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = None
+            site = m.groups()[0]
+            residue = None
             return residue, site
         logger.warning('Could not parse site text %s' % s)
         return None, None
 
+_site_pattern1 = '([' + ''.join(list(amino_acids.keys())) + '])[-]?([0-9]+)$'
+_site_pattern2 = '(' + '|'.join([v['short_name'].upper() for
+                                 v in amino_acids.values()]) + \
+                        ')[- ]?([0-9]+)$'
+_site_pattern3 = '(' + '|'.join([v['indra_name'].upper() for
+                                 v in amino_acids.values()]) + \
+                        ')[^0-9]*([0-9]+)$'
+_site_pattern4 = '([0-9]+)([' + ''.join(list(amino_acids.keys())) + '])$'
+_site_pattern5 = '^([' + ''.join(list(amino_acids.keys())) + '])$'
+_site_pattern6 = '^(' + '|'.join([v['short_name'].upper() for
+                                 v in amino_acids.values()]) + ')$'
+_site_pattern7 = '.*(' + '|'.join([v['indra_name'].upper() for
+                                 v in amino_acids.values()]) + ').*'
+_site_pattern8 = '([0-9]+)$'
 
 # Subtypes that exist but we don't handle: methylation, hydrolysis
 agent_mod_map = {
