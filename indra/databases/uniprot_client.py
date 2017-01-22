@@ -55,6 +55,11 @@ def query_protein(protein_id):
     except HTTPError:
         logger.warning('Could not find protein with id %s' % protein_id)
         return None
+    except rdflib.exceptions.ParserError as e:
+        logger.error('Could not parse RDF at %s' % url)
+        logger.error(e)
+        return None
+
     # Check if the entry has been replaced by a new entry
     query = rdf_prefixes + """
         SELECT ?res2

@@ -4,6 +4,7 @@ import re
 import logging
 import objectpath
 from indra.statements import *
+from indra.util import read_unicode_csv
 from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
 
@@ -130,6 +131,10 @@ class ReachProcessor(object):
                 logger.warning('Unhandled modification type: %s' %
                                modification_type)
             else:
+                # Handle this special case here because only
+                # enzyme argument is needed
+                if modification_type == 'autophosphorylation':
+                    args = [theme_agent, residue, pos, ev]
                 self.statements.append(ModStmt(*args))
 
     def get_complexes(self):
@@ -289,16 +294,44 @@ class ReachProcessor(object):
                     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                     if hgnc_id:
                         db_refs['HGNC'] = hgnc_id
+            elif ns == 'hgnc':
+                hgnc_id = xr['id']
+                db_refs['HGNC'] = hgnc_id
+                # Look up the standard gene symbol and set as name
+                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+                if hgnc_name:
+                    agent_name = hgnc_name
+                # Look up the corresponding uniprot id
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    db_refs['UP'] = up_id
+            elif ns == 'pfam':
+                be_id = bioentities_map.get(('PF', xr['id']))
+                if be_id:
+                    db_refs['BE'] = be_id
+                db_refs['PF'] = xr['id']
             elif ns == 'interpro':
-                db_refs['IP'] = xr['id']
+                be_id = bioentities_map.get(('IP', xr['id']))
+                if be_id:
+                    db_refs['BE'] = be_id
+                db_refs['PF'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
+            elif ns == 'pubchem':
+                db_refs['PUBCHEM'] = 'PUBCHEM:%s' % xr['id']
             elif ns == 'go':
                 db_refs['GO'] = xr['id']
+            elif ns == 'mesh':
+                db_refs['MESH'] = xr['id']
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id']
             elif ns == 'be':
                 db_refs['BE'] = xr['id']
+            # These name spaces are ignored
+            elif ns in ['uaz']:
+                pass
+            else:
+                logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
 
         mod_terms = entity_term.get('modifications')
@@ -469,32 +502,45 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_site_text(s):
-        m = re.match(r'([TYS])[-]?([0-9]+)', s)
+        for p in (_site_pattern1, _site_pattern2, _site_pattern3):
+            m = re.match(p, s.upper())
+            if m is not None:
+                residue = get_valid_residue(m.groups()[0])
+                site = m.groups()[1]
+                return residue, site
+        m = re.match(_site_pattern4, s.upper())
         if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
+            site = m.groups()[0]
+            residue = m.groups()[1]
             return residue, site
-
-        m = re.match(r'(THR|TYR|SER)[- ]?([0-9]+)', s.upper())
+        for p in (_site_pattern5, _site_pattern6, _site_pattern7):
+            m = re.match(p, s.upper())
+            if m is not None:
+                residue = get_valid_residue(m.groups()[0])
+                site = None
+                return residue, site
+        m = re.match(_site_pattern8, s.upper())
         if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
-            return residue, site
-
-        m = re.match(r'(THREONINE|TYROSINE|SERINE)[^0-9]*([0-9]+)', s.upper())
-        if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = m.groups()[1]
-            return residue, site
-
-        m = re.match(r'.*(THREONINE|TYROSINE|SERINE).*', s.upper())
-        if m is not None:
-            residue = get_valid_residue(m.groups()[0])
-            site = None
+            site = m.groups()[0]
+            residue = None
             return residue, site
         logger.warning('Could not parse site text %s' % s)
         return None, None
 
+_site_pattern1 = '([' + ''.join(list(amino_acids.keys())) + '])[-]?([0-9]+)$'
+_site_pattern2 = '(' + '|'.join([v['short_name'].upper() for
+                                 v in amino_acids.values()]) + \
+                        ')[- ]?([0-9]+)$'
+_site_pattern3 = '(' + '|'.join([v['indra_name'].upper() for
+                                 v in amino_acids.values()]) + \
+                        ')[^0-9]*([0-9]+)$'
+_site_pattern4 = '([0-9]+)([' + ''.join(list(amino_acids.keys())) + '])$'
+_site_pattern5 = '^([' + ''.join(list(amino_acids.keys())) + '])$'
+_site_pattern6 = '^(' + '|'.join([v['short_name'].upper() for
+                                 v in amino_acids.values()]) + ')$'
+_site_pattern7 = '.*(' + '|'.join([v['indra_name'].upper() for
+                                 v in amino_acids.values()]) + ').*'
+_site_pattern8 = '([0-9]+)$'
 
 # Subtypes that exist but we don't handle: methylation, hydrolysis
 agent_mod_map = {
@@ -514,12 +560,14 @@ agent_mod_map = {
     'farnesylation': ('farnesylation', True),
     'defarnesylation': ('farnesylation', False),
     'ribosylation': ('ribosylation', True),
-    'deribosylation': ('ribosylation', False)
+    'deribosylation': ('ribosylation', False),
+    'unknown': ('modification', True),
 }
 
 stmt_mod_map = {
     'phosphorylation': Phosphorylation,
     'dephosphorylation': Dephosphorylation,
+    'autophosphorylation': Autophosphorylation,
     'ubiquitination': Ubiquitination,
     'deubiquitination': Deubiquitination,
     'acetylation': Acetylation,
@@ -533,5 +581,19 @@ stmt_mod_map = {
     'farnesylation': Farnesylation,
     'defarnesylation': Defarnesylation,
     'ribosylation': Ribosylation,
-    'deribosylation': Deribosylation
+    'deribosylation': Deribosylation,
 }
+
+def _read_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
+    bioentities_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        bioentities_map[(source_ns, source_id)] = be_id
+    return bioentities_map
+
+bioentities_map = _read_bioentities_map()
