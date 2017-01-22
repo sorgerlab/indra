@@ -131,6 +131,10 @@ class ReachProcessor(object):
                 logger.warning('Unhandled modification type: %s' %
                                modification_type)
             else:
+                # Handle this special case here because only
+                # enzyme argument is needed
+                if modification_type == 'autophosphorylation':
+                    args = [theme_agent, residue, pos, ev]
                 self.statements.append(ModStmt(*args))
 
     def get_complexes(self):
@@ -317,6 +321,8 @@ class ReachProcessor(object):
                 db_refs['PUBCHEM'] = 'PUBCHEM:%s' % xr['id']
             elif ns == 'go':
                 db_refs['GO'] = xr['id']
+            elif ns == 'mesh':
+                db_refs['MESH'] = xr['id']
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id']
             elif ns == 'be':
@@ -554,12 +560,14 @@ agent_mod_map = {
     'farnesylation': ('farnesylation', True),
     'defarnesylation': ('farnesylation', False),
     'ribosylation': ('ribosylation', True),
-    'deribosylation': ('ribosylation', False)
+    'deribosylation': ('ribosylation', False),
+    'unknown': ('modification', True),
 }
 
 stmt_mod_map = {
     'phosphorylation': Phosphorylation,
     'dephosphorylation': Dephosphorylation,
+    'autophosphorylation': Autophosphorylation,
     'ubiquitination': Ubiquitination,
     'deubiquitination': Deubiquitination,
     'acetylation': Acetylation,
@@ -573,7 +581,7 @@ stmt_mod_map = {
     'farnesylation': Farnesylation,
     'defarnesylation': Defarnesylation,
     'ribosylation': Ribosylation,
-    'deribosylation': Deribosylation
+    'deribosylation': Deribosylation,
 }
 
 def _read_bioentities_map():
