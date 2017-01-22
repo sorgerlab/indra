@@ -178,12 +178,13 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = False
+    reassemble = True
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'top_level.pkl'))
+        #stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
     else:
-        #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
-        prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
+        prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
+        #prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
         reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))

@@ -9,19 +9,26 @@ from indra.databases import hgnc_client
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition
 
-data_file = 'handshake/Korkut et al. Data 12122016.xlsx'
+#data_file = 'handshake/Korkut et al. Data 12122016.xlsx'
+data_file = 'handshake/Korkut et al. Data 01172017.xlsx'
 
 def read_data(fname):
     """Returns the data as a dictionary."""
+    if fname.endswith('2017.xlsx'):
+        skiprows1 = []
+        skiprows2 = []
+    else:
+        skiprows1 = [0]
+        skiprows2 = range(5)
     data = {}
     data['protein'] = pandas.read_excel(data_file, sheetname='Protein Data',
-                                        skiprows=[0], index_col=None)
+                                        skiprows=skiprows1, index_col=None)
     data['phenotype'] = pandas.read_excel(data_file,
                                           sheetname='Phenotype Data',
-                                          skiprows=[0], index_col=None)
+                                          skiprows=skiprows1, index_col=None)
     data['antibody'] = pandas.read_excel(data_file,
                                           sheetname='Antibody Data',
-                                          skiprows=range(5), index_col=None)
+                                          skiprows=skiprows2, index_col=None)
     return data
 
 def get_annotated_antibodies(data):
