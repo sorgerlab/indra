@@ -348,12 +348,12 @@ class BiopaxProcessor(object):
                   for cit in citations]
             for subj, obj in itertools.product(_listify(controller),
                                                _listify(controlled)):
+                subj_act = ActivityCondition('transcription', True)
+                subj.activity = subj_act
                 if control_type == 'ACTIVATION':
-                    st = IncreaseAmount(subj, 'transcription', obj,
-                                        evidence=ev)
+                    st = IncreaseAmount(subj, obj, evidence=ev)
                 elif control_type == 'INHIBITION':
-                    st = DecreaseAmount(subj, 'transcription', obj,
-                                        evidence=ev)
+                    st = DecreaseAmount(subj, obj, evidence=ev)
                 else:
                     logger.warning('Unhandled control type %s' % control_type)
                     continue

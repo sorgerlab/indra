@@ -346,13 +346,13 @@ class TripsProcessor(object):
             location = self._get_event_location(event)
             for subj, obj in \
                     _agent_list_product((agent_agent, affected_agent)):
-                st = Degradation(subj, obj, evidence=ev)
+                st = DecreaseAmount(subj, obj, evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
 
     def get_syntheses(self):
-        """Extract Synthesis INDRA Statements."""
+        """Extract IncreaseAmount INDRA Statements."""
         syn_events = self.tree.findall("EVENT/[type='ONT::PRODUCE']")
         syn_events += self.tree.findall("EVENT/[type='ONT::TRANSCRIBE']")
         for event in syn_events:
@@ -394,12 +394,16 @@ class TripsProcessor(object):
                 else:
                     agent_agent = self._get_agent_by_id(agent_id,
                                                         event.attrib['id'])
+                    if _get_type(event) == 'ONT::TRANSCRIBE':
+                        if agent_agent is not None:
+                            agent_agent.activity = \
+                                    ActivityCondition('transcription', True)
 
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
             for subj, obj in \
                     _agent_list_product((agent_agent, affected_agent)):
-                st = Synthesis(subj, obj, evidence=ev)
+                st = IncreaseAmount(subj, obj, evidence=ev)
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])

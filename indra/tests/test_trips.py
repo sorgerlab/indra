@@ -163,7 +163,7 @@ def test_synthesis():
     tp = trips.process_text('NFKB transcribes IKB.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
-    assert(isinstance(st, ist.Synthesis))
+    assert(isinstance(st, ist.IncreaseAmount))
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert unicode_strs((tp, st))
@@ -175,7 +175,7 @@ def test_degradation():
     tp = trips.process_text('MDM2 degrades TP53.')
     assert(len(tp.statements) == 1)
     st = tp.statements[0]
-    assert(isinstance(st, ist.Degradation))
+    assert(isinstance(st, ist.DecreaseAmount))
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert unicode_strs((tp, st))

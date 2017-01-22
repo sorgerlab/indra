@@ -1255,14 +1255,16 @@ def test_translocation_refinement():
 def test_decrease_amt_refinement():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
-    st1 = DecreaseAmount(raf, 'activity', mek)
-    st2 = DecreaseAmount(braf, 'activity', mek)
-    st3 = DecreaseAmount(raf, 'activity', mek1)
-    st4 = DecreaseAmount(braf, 'kinase', mek1)
+    st1 = DecreaseAmount(raf, mek)
+    st2 = DecreaseAmount(braf, mek)
+    st3 = DecreaseAmount(raf, mek1)
+    st4 = DecreaseAmount(brafk, mek1)
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1
@@ -1282,27 +1284,19 @@ def test_decrease_amt_refinement():
     assert not st2.refinement_of(st4, hierarchies)
     assert not st3.refinement_of(st4, hierarchies)
 
-@raises(ValueError)
-def test_inc_amt_none_subj():
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
-    st = IncreaseAmount(None, 'activity', mek)
-
-@raises(ValueError)
-def test_inc_amt_none_subj_activity():
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
-    st = IncreaseAmount(mek, None, mek)
-
 def test_increase_amt_refinement():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
-    st1 = IncreaseAmount(raf, 'activity', mek)
-    st2 = IncreaseAmount(braf, 'activity', mek)
-    st3 = IncreaseAmount(raf, 'activity', mek1)
-    st4 = IncreaseAmount(braf, 'kinase', mek1)
+    st1 = IncreaseAmount(raf, mek)
+    st2 = IncreaseAmount(braf, mek)
+    st3 = IncreaseAmount(raf, mek1)
+    st4 = IncreaseAmount(brafk, mek1)
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1

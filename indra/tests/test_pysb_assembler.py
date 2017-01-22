@@ -584,8 +584,8 @@ def test_non_python_name_bind():
 def test_decreaseamount_one_step():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = DecreaseAmount(subj, 'activity', obj)
-    st2 = DecreaseAmount(None, None, obj)
+    st1 = DecreaseAmount(subj, obj)
+    st2 = DecreaseAmount(None, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
@@ -595,8 +595,8 @@ def test_decreaseamount_one_step():
 def test_decreaseamount_interactions_only():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = DecreaseAmount(subj, 'activity', obj)
-    st2 = DecreaseAmount(None, None, obj)
+    st1 = DecreaseAmount(subj, obj)
+    st2 = DecreaseAmount(None, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
@@ -606,33 +606,19 @@ def test_decreaseamount_interactions_only():
 def test_increaseamount_one_step():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = IncreaseAmount(subj, 'activity', obj)
-    st2 = IncreaseAmount(None, None, obj)
+    st1 = IncreaseAmount(subj, obj)
+    st2 = IncreaseAmount(None, obj)
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
-
-def test_increaseamount_monomer_pattern():
-    subj = Agent('KRAS')
-    obj = Agent('BRAF')
-    st1 = Activation(subj, obj)
-    st2 = Synthesis(subj, obj)
-    pa = PysbAssembler(policies='one_step')
-    pa.add_statements([st1, st2])
-    model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
-    # This ensures that the synthesized BRAF monomer
-    # is in its fully specified "base" state
-    bng.generate_equations(model)
 
 def test_increaseamount_interactions_only():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
-    st1 = IncreaseAmount(subj, 'activity', obj)
-    st2 = IncreaseAmount(None, None, obj)
+    st1 = IncreaseAmount(subj, obj)
+    st2 = IncreaseAmount(None, obj)
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
@@ -852,8 +838,6 @@ def test_rule_annotation():
     #Skip Autophosphorylation and Transphosphorylation for now
     #RasGef
     #RasGap
-    #Synthesis
-    #Degradation
 
 def test_activeform_site():
     a = Agent('A', db_refs={'HGNC': '1234'})

@@ -333,7 +333,7 @@ def test_24():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Degradation))
+    assert(isinstance(st, DecreaseAmount))
     assert(st.subj is None)
     assert(st.obj is not None)
     assert(len(st.obj.mods) == 1)
@@ -347,7 +347,7 @@ def test_25():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Synthesis))
+    assert(isinstance(st, IncreaseAmount))
     assert(st.subj is None)
     assert(st.obj is not None)
     assert_evidence(st)
@@ -359,7 +359,7 @@ def test_26():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Synthesis))
+    assert(isinstance(st, IncreaseAmount))
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
@@ -371,7 +371,7 @@ def test_27():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Synthesis))
+    assert(isinstance(st, IncreaseAmount))
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
@@ -383,7 +383,7 @@ def test_28():
     tp = process_sentence_xml(sentence)
     assert_onestmt(tp)
     st = tp.statements[0]
-    assert(isinstance(st, Degradation))
+    assert(isinstance(st, DecreaseAmount))
     assert(st.subj is not None)
     assert(st.obj is not None)
     assert_evidence(st)
