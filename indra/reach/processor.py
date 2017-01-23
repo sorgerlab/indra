@@ -150,7 +150,6 @@ class ReachProcessor(object):
             all_res += list(res)
 
         for r in all_res:
-            print(r)
             subtype = r.get('subtype')
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
