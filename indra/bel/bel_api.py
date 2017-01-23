@@ -12,7 +12,7 @@ logger = logging.getLogger('bel')
 ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
 
 def process_ndex_neighborhood(gene_names, network_id=None,
-                              rdf_out='bel_output.rdf'):
+                              rdf_out='bel_output.rdf', print_output=True):
     """Return a BelProcessor for an NDEx network neighborhood.
 
     Parameters
@@ -58,11 +58,11 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
     with open(rdf_out, 'wb') as fh:
         fh.write(rdf.encode('utf-8'))
-    bp = process_belrdf(rdf)
+    bp = process_belrdf(rdf, print_output=print_output)
     return bp
 
 
-def process_belrdf(rdf_str):
+def process_belrdf(rdf_str, print_output=True):
     """Return a BelProcessor for a BEL/RDF string.
 
     Parameters
@@ -93,13 +93,13 @@ def process_belrdf(rdf_str):
     bp.get_complexes()
     bp.get_activating_subs()
     bp.get_modifications()
-    bp.get_dephosphorylations()
     bp.get_activating_mods()
     bp.get_composite_activating_mods()
+    bp.get_transcription()
     bp.get_activation()
 
     # Print some output about the process
-    bp.print_statement_coverage()
-    logger.info("\n--- Converted INDRA Statements -------------")
-    bp.print_statements()
+    if print_output:
+        bp.print_statement_coverage()
+        bp.print_statements()
     return bp

@@ -5,14 +5,14 @@ from indra import bel
 from indra.util import unicode_strs
 from rdflib.term import URIRef
 from indra.bel.processor import BelProcessor
+from indra.statements import RegulateAmount
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
 entity_prefix = 'http://www.openbel.org/bel/'
 
 path_this = os.path.dirname(os.path.abspath(__file__))
-test_rdf = os.path.join(path_this, 'bel_rdfs', 'NFKB1_neighborhood.rdf')
-with open(test_rdf, 'rb') as fh:
-    rdf_str = fh.read()
+test_rdf_nfkb = os.path.join(path_this, 'bel_rdfs', 'NFKB1_neighborhood.rdf')
+test_rdf_myc = os.path.join(path_this, 'bel_rdfs', 'MYC_neighborhood.rdf')
 
 def assert_pmids(stmts):
     for stmt in stmts:
@@ -26,7 +26,9 @@ def test_bel_ndex_query():
     unicode_strs(bp.statements)
 
 def test_process_belrdf():
-    bp = bel.process_belrdf(rdf_str)
+    with open(test_rdf_nfkb, 'rb') as fh:
+        rdf_str_nfkb = fh.read()
+    bp = bel.process_belrdf(rdf_str_nfkb)
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
 
@@ -50,4 +52,23 @@ def test_get_agent_hgnc_up_from_egid():
     assert ag.db_refs.get('HGNC') == '6871'
     assert ag.db_refs.get('UP') == 'P28482'
     assert unicode_strs((concept, entity, ag))
+
+#rdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+#                        '..', '..', 'data')
+
+def test_get_transcription():
+    #with open(os.path.join(rdf_path, 'myc_neighborhood.rdf')) as f:
+    #    myc_str = f.read()
+    #    myc_bp = bel.process_belrdf(myc_str)
+    with open(test_rdf_myc, 'rb') as fh:
+        rdf_str_myc = fh.read()
+    bp = bel.process_belrdf(rdf_str_myc)
+    transcription_stmts = []
+    for stmt in bp.statements + bp.indirect_stmts:
+        if isinstance(stmt, RegulateAmount):
+            transcription_stmts.append(stmt)
+    assert len(transcription_stmts) == 8
+
+if __name__ == '__main__':
+    test_get_transcription()
 

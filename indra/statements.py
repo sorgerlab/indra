@@ -1601,10 +1601,10 @@ class Translocation(Statement):
         return str(key)
 
 @python_2_unicode_compatible
-class DirectedInteraction(Statement):
+class RegulateAmount(Statement):
     """Superclass handling operations on directed, two-element interactions."""
     def __init__(self, subj, obj, evidence=None):
-        super(DirectedInteraction, self).__init__(evidence)
+        super(RegulateAmount, self).__init__(evidence)
         self.subj = subj
         if obj is None:
             raise ValueError('Object of %s cannot be None.' %
@@ -1644,23 +1644,21 @@ class DirectedInteraction(Statement):
         else:
             subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
         obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
-        if subj_refinement and obj_refinement:
-            return True
-        else:
-            return False
+        return (subj_refinement and obj_refinement)
 
     def equals(self, other):
-        matches = super(Statement, self).equals(other)
+        matches = super(RegulateAmount, self).equals(other)
         return matches
 
     def __str__(self):
-        s = ("%s(%s, %s)" %
-                  (type(self).__name__, self.subj, self.obj))
+        s = ("%s(%s, %s)" % (type(self).__name__, self.subj, self.obj))
         return s
 
-
-class Degradation(DirectedInteraction):
+class DecreaseAmount(RegulateAmount):
     """Degradation of a protein, possibly mediated by another protein.
+
+    Note that this statement can also be used to represent inhibitors of
+    synthesis (e.g., cycloheximide).
 
     Parameters
     ----------
@@ -1674,7 +1672,7 @@ class Degradation(DirectedInteraction):
     pass
 
 
-class Synthesis(DirectedInteraction):
+class IncreaseAmount(RegulateAmount):
     """Synthesis of a protein, possibly mediated by another protein.
 
     Parameters
@@ -1686,7 +1684,7 @@ class Synthesis(DirectedInteraction):
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
-
+    pass
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""

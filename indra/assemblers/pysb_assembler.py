@@ -33,7 +33,7 @@ SelfExporter.do_export = False
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.RegulateActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation,
-                       ist.Degradation, ist.Synthesis]
+                       ist.IncreaseAmount, ist.DecreaseAmount]
 
 def _n(name):
     """Return valid PySB name."""
@@ -2063,7 +2063,7 @@ def translocation_assemble_default(stmt, model, agent_set):
 
 # DEGRADATION ###############################################
 
-def degradation_monomers_interactions_only(stmt, agent_set):
+def decreaseamount_monomers_interactions_only(stmt, agent_set):
     if stmt.subj is None:
         return
     subj = agent_set.get_create_base_agent(stmt.subj)
@@ -2071,12 +2071,12 @@ def degradation_monomers_interactions_only(stmt, agent_set):
     subj.create_site(get_binding_site_name(stmt.obj))
     obj.create_site(get_binding_site_name(stmt.subj))
 
-def degradation_monomers_one_step(stmt, agent_set):
+def decreaseamount_monomers_one_step(stmt, agent_set):
     obj = agent_set.get_create_base_agent(stmt.obj)
     if stmt.subj is not None:
         subj = agent_set.get_create_base_agent(stmt.subj)
 
-def degradation_assemble_interactions_only(stmt, model, agent_set):
+def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
     # No interaction when subj is None
     if stmt.subj is None:
         return
@@ -2098,7 +2098,7 @@ def degradation_assemble_interactions_only(stmt, model, agent_set):
              kf_bind)
     add_rule_to_model(model, r)
 
-def degradation_assemble_one_step(stmt, model, agent_set):
+def decreaseamount_assemble_one_step(stmt, model, agent_set):
     obj_pattern = get_monomer_pattern(model, stmt.obj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
 
@@ -2114,7 +2114,7 @@ def degradation_assemble_one_step(stmt, model, agent_set):
         # See U. Alon paper on proteome dynamics at 10.1126/science.1199784 
         param_name = 'kf_' + stmt.subj.name[0].lower() + \
                             stmt.obj.name[0].lower() + '_deg'
-        # Scale the average apparent degradation rate by the default
+        # Scale the average apparent decreaseamount rate by the default
         # protein initial condition
         kf_one_step_degrade = get_create_parameter(model, param_name, 2e-7)
         rule_subj_str = get_agent_rule_str(stmt.subj)
@@ -2124,16 +2124,17 @@ def degradation_assemble_one_step(stmt, model, agent_set):
             kf_one_step_degrade)
     add_rule_to_model(model, r)
 
-degradation_assemble_default = degradation_assemble_one_step
-degradation_monomers_default = degradation_monomers_one_step
+decreaseamount_assemble_default = decreaseamount_assemble_one_step
+decreaseamount_monomers_default = decreaseamount_monomers_one_step
 
 # SYNTHESIS ###############################################
 
-synthesis_monomers_interactions_only = degradation_monomers_interactions_only
+increaseamount_monomers_interactions_only = \
+                            decreaseamount_monomers_interactions_only
 
-synthesis_monomers_one_step = degradation_monomers_one_step
+increaseamount_monomers_one_step = decreaseamount_monomers_one_step
 
-def synthesis_assemble_interactions_only(stmt, model, agent_set):
+def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     # No interaction when subj is None
     if stmt.subj is None:
         return
@@ -2155,7 +2156,7 @@ def synthesis_assemble_interactions_only(stmt, model, agent_set):
             kf_bind)
     add_rule_to_model(model, r)
 
-def synthesis_assemble_one_step(stmt, model, agent_set):
+def increaseamount_assemble_one_step(stmt, model, agent_set):
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
     obj_pattern = get_monomer_pattern(model, stmt.obj)
@@ -2181,7 +2182,7 @@ def synthesis_assemble_one_step(stmt, model, agent_set):
         subj_pattern = get_monomer_pattern(model, stmt.subj)
         param_name = 'kf_' + stmt.subj.name[0].lower() + \
                             stmt.obj.name[0].lower() + '_synth'
-        # Scale the average apparent synthesis rate by the default
+        # Scale the average apparent increaseamount rate by the default
         # protein initial condition
         kf_one_step_synth = get_create_parameter(model, param_name, 2e-1)
         rule_subj_str = get_agent_rule_str(stmt.subj)
@@ -2190,7 +2191,7 @@ def synthesis_assemble_one_step(stmt, model, agent_set):
                  kf_one_step_synth)
     add_rule_to_model(model, r)
 
-synthesis_monomers_default = synthesis_monomers_one_step
-synthesis_assemble_default = synthesis_assemble_one_step
+increaseamount_monomers_default = increaseamount_monomers_one_step
+increaseamount_assemble_default = increaseamount_assemble_one_step
 
 

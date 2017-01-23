@@ -1252,66 +1252,69 @@ def test_translocation_refinement():
     assert(st8.refinement_of(st9, hierarchies))
     assert(st7.refinement_of(st9, hierarchies))
 
-def test_degradation_refinement():
+def test_decrease_amt_refinement():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
-    st1 = Degradation(raf, mek)
-    st2 = Degradation(braf, mek)
-    st3 = Degradation(raf, mek1)
-    st4 = Degradation(None, mek1)
+    st1 = DecreaseAmount(raf, mek)
+    st2 = DecreaseAmount(braf, mek)
+    st3 = DecreaseAmount(raf, mek1)
+    st4 = DecreaseAmount(brafk, mek1)
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
-    assert not st4.refinement_of(st1, hierarchies)
+    assert st4.refinement_of(st1, hierarchies)
     # st2
     assert not st1.refinement_of(st2, hierarchies)
     assert not st3.refinement_of(st2, hierarchies)
-    assert not st4.refinement_of(st2, hierarchies)
+    assert st4.refinement_of(st2, hierarchies)
     # st3
     assert not st1.refinement_of(st3, hierarchies)
     assert not st2.refinement_of(st3, hierarchies)
-    assert not st4.refinement_of(st3, hierarchies)
+    assert st4.refinement_of(st3, hierarchies)
     # st4
     assert not st1.refinement_of(st4, hierarchies)
     assert not st2.refinement_of(st4, hierarchies)
-    assert st3.refinement_of(st4, hierarchies)
+    assert not st3.refinement_of(st4, hierarchies)
 
-
-def test_synthesis_refinement():
+def test_increase_amt_refinement():
     raf = Agent('RAF', db_refs={'BE':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
+    brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
     mek = Agent('MEK', db_refs={'BE':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
-    st1 = Synthesis(raf, mek)
-    st2 = Synthesis(braf, mek)
-    st3 = Synthesis(raf, mek1)
-    st4 = Synthesis(None, mek1)
+    st1 = IncreaseAmount(raf, mek)
+    st2 = IncreaseAmount(braf, mek)
+    st3 = IncreaseAmount(raf, mek1)
+    st4 = IncreaseAmount(brafk, mek1)
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
-    assert not st4.refinement_of(st1, hierarchies)
+    assert st4.refinement_of(st1, hierarchies)
     # st2
     assert not st1.refinement_of(st2, hierarchies)
     assert not st3.refinement_of(st2, hierarchies)
-    assert not st4.refinement_of(st2, hierarchies)
+    assert st4.refinement_of(st2, hierarchies)
     # st3
     assert not st1.refinement_of(st3, hierarchies)
     assert not st2.refinement_of(st3, hierarchies)
-    assert not st4.refinement_of(st3, hierarchies)
+    assert st4.refinement_of(st3, hierarchies)
     # st4
     assert not st1.refinement_of(st4, hierarchies)
     assert not st2.refinement_of(st4, hierarchies)
-    assert st3.refinement_of(st4, hierarchies)
+    assert not st3.refinement_of(st4, hierarchies)
 
 def test_complex_refinement_order():
     st1 = Complex([Agent('MED23'), Agent('ELK1')])

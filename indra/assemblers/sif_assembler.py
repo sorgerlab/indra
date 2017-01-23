@@ -63,11 +63,11 @@ class SifAssembler(object):
             elif include_mods and isinstance(st, Modification):
                 self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_mods and \
-                 (isinstance(st, RasGap) or isinstance(st, Degradation)):
+                 (isinstance(st, RasGap) or isinstance(st, DecreaseAmount)):
                 attr['polarity'] = 'negative'
                 self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_mods and \
-                 (isinstance(st, RasGef) or isinstance(st, Synthesis)):
+                 (isinstance(st, RasGef) or isinstance(st, IncreaseAmount)):
                 attr['polarity'] = 'positive'
                 self._add_node_edge(st.agent_list()[0], st.agent_list()[1], attr)
             elif include_complexes and isinstance(st, Complex):

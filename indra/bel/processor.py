@@ -24,12 +24,10 @@ def namespace_from_uri(uri):
     http://www.openbel.org/bel/p_RGD_Raf1 -> RGD
     http://www.openbel.org/bel/p_PFH_MEK1/2_Family -> PFH
     """
-    patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
+    patterns = ['http://www.openbel.org/bel/[pragm]_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_[pr]_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/[a-z]+_complex_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/g_([A-Za-z]+)_.*']
+                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*']
     for pr in patterns:
         match = re.match(pr, uri)
         if match is not None:
@@ -85,39 +83,49 @@ class BelProcessor(object):
     g : rdflib.Graph
         An RDF graph object containing the BEL model.
     statements : list[indra.statement.Statements]
-        A list of extracted INDRA Statements. This list should be used for
-        assembly in INDRA.
-    all_stmts : list[str]
-        A list of all BEL statements, as strings, in the BEL model.
-    converted_stmts : list[str]
-        A list of all BEL statements, as strings, that were converted into
-        INDRA Statements.
+        A list of extracted INDRA Statements representing direct mechanisms.
+        This list should be used for assembly in INDRA.
+    indirect_stmts : list[indra.statement.Statements]
+        A list of extracted INDRA Statements representing indirect mechanisms.
+        This list should be used for assembly or model checking in INDRA.
+    converted_direct_stmts : list[str]
+        A list of all direct BEL statements, as strings, that were converted
+        into INDRA Statements.
+    converted_indirect_stmts : list[str]
+        A list of all indirect BEL statements, as strings, that were converted
+        into INDRA Statements.
     degenerate_stmts : list[str]
         A list of degenerate BEL statements, as strings, in the BEL model.
-    indirect_stmts : list[str]
-        A list of all BEL statements that represent indirect interactions, 
+    all_direct_stmts : list[str]
+        A list of all BEL statements representing direct interactions,
+        as strings, in the BEL model.
+    all_indirect_stmts : list[str]
+        A list of all BEL statements that represent indirect interactions,
         as strings, in the BEL model.
     """
     def __init__(self, g):
         self.g = g
         self.statements = []
-        self.all_stmts = []
-        self.converted_stmts = []
-        self.degenerate_stmts = []
         self.indirect_stmts = []
+        self.converted_direct_stmts = []
+        self.converted_indirect_stmts = []
+        self.degenerate_stmts = []
+        self.all_direct_stmts = []
+        self.all_indirect_stmts = []
 
     def get_modifications(self):
         """Extract INDRA Modification Statements from BEL."""
-        q_phospho = prefixes + """
-            SELECT ?enzName ?actType ?substrateName ?mod ?pos
-                   ?stmt ?enzyme ?substrate
+
+        # Get statements where the subject is an activity
+        q_phospho1 = prefixes + """
+            SELECT ?enzName ?substrateName ?mod ?pos
+                   ?stmt ?enzyme ?substrate ?rel
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases .
+                ?stmt belvoc:hasRelationship ?rel .
                 ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?object .
                 ?subject a belvoc:AbundanceActivity .
-                ?subject belvoc:hasActivityType ?actType .
                 ?subject belvoc:hasChild ?enzyme .
                 ?enzyme a belvoc:ProteinAbundance .
                 ?enzyme belvoc:hasConcept ?enzName .
@@ -128,67 +136,17 @@ class BelProcessor(object):
                 OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
             }
         """
-
-        # Now make the PySB for the phosphorylation
-        res_phospho = self.g.query(q_phospho)
-
-        for stmt in res_phospho:
-            evidence = self.get_evidence(stmt[5])
-            # Parse out the elements of the query
-            enz = self.get_agent(stmt[0], stmt[6])
-            act_type = term_from_uri(stmt[1])
-            sub = self.get_agent(stmt[2], stmt[7])
-            mod = term_from_uri(stmt[3])
-            residue = self._get_residue(mod)
-            mod_pos = term_from_uri(stmt[4])
-            stmt_str = strip_statement(stmt[5])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-
-            if act_type == 'Kinase' and mod.startswith('Phosphorylation'):
-                self.statements.append(
-                        Phosphorylation(enz, sub, residue, mod_pos,
-                                        evidence))
-            elif act_type == 'Catalytic':
-                if mod == 'Hydroxylation':
-                    self.statements.append(
-                            Hydroxylation(enz, sub, residue, mod_pos,
-                                          evidence))
-                elif mod == 'Sumoylation':
-                    self.statements.append(
-                            Sumoylation(enz, sub, residue, mod_pos,
-                                        evidence))
-                elif mod == 'Acetylation':
-                    self.statements.append(
-                            Acetylation(enz, sub, residue, mod_pos,
-                                        evidence))
-                elif mod == 'Ubiquitination':
-                    self.statements.append(
-                            Ubiquitination(enz, sub, residue, mod_pos,
-                                           evidence))
-                else:
-                    logger.warning("Unknown modification type!")
-                    logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
-                                   (act_type, mod, mod_pos))
-            else:
-                logger.warning("Unknown modification type!")
-                logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
-                               (act_type, mod, mod_pos))
-
-    def get_dephosphorylations(self):
-        """Extract INDRA Dephosphorylation Statements from BEL."""
-        q_phospho = prefixes + """
-            SELECT ?phosName ?substrateName ?mod ?pos ?stmt
-                   ?phosphatase ?substrate
+        # Get statements where the subject is a protein abundance
+        q_phospho2 = prefixes + """
+            SELECT ?enzName ?substrateName ?mod ?pos
+                   ?stmt ?enzyme ?substrate ?rel
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases .
-                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?enzyme .
                 ?stmt belvoc:hasObject ?object .
-                ?subject belvoc:hasActivityType belvoc:Phosphatase .
-                ?subject belvoc:hasChild ?phosphatase .
-                ?phosphatase a belvoc:ProteinAbundance .
-                ?phosphatase belvoc:hasConcept ?phosName .
+                ?enzyme a belvoc:ProteinAbundance .
+                ?enzyme belvoc:hasConcept ?enzName .
                 ?object a belvoc:ModifiedProteinAbundance .
                 ?object belvoc:hasModificationType ?mod .
                 ?object belvoc:hasChild ?substrate .
@@ -196,23 +154,79 @@ class BelProcessor(object):
                 OPTIONAL { ?object belvoc:hasModificationPosition ?pos . }
             }
         """
+        for q_phospho in (q_phospho1, q_phospho2):
+            # Run the query
+            res_phospho = self.g.query(q_phospho)
 
-        # Now make the PySB for the phosphorylation
-        res_phospho = self.g.query(q_phospho)
+            for stmt in res_phospho:
+                # Parse out the elements of the query
+                evidence = self.get_evidence(stmt[4])
+                enz = self.get_agent(stmt[0], stmt[5])
+                #act_type = name_from_uri(stmt[1])
+                sub = self.get_agent(stmt[1], stmt[6])
+                mod = term_from_uri(stmt[2])
+                residue = self._get_residue(mod)
+                mod_pos = term_from_uri(stmt[3])
+                stmt_str = strip_statement(stmt[4])
+                # Get the relationship (increases/decreases, etc.)
+                rel = term_from_uri(stmt[7])
+                if rel == 'DirectlyIncreases' or rel == 'DirectlyDecreases':
+                    is_direct = True
+                else:
+                    is_direct = False
 
-        for stmt in res_phospho:
-            evidence = self.get_evidence(stmt[4])
-            # Parse out the elements of the query
-            phos = self.get_agent(stmt[0], stmt[5])
-            sub = self.get_agent(stmt[1], stmt[6])
-            mod = term_from_uri(stmt[2])
-            residue = self._get_residue(mod)
-            mod_pos = term_from_uri(stmt[3])
-            stmt_str = strip_statement(stmt[4])
-            # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
-            self.statements.append(
-                    Dephosphorylation(phos, sub, residue, mod_pos, evidence))
+                # Build the INDRA statement
+                stmt = None
+
+                if mod.startswith('Phosphorylation'):
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Phosphorylation(enz, sub, residue, mod_pos,
+                                               evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Dephosphorylation(enz, sub, residue, mod_pos,
+                                                 evidence)
+                elif mod == 'Hydroxylation':
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Hydroxylation(enz, sub, residue, mod_pos,
+                                             evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Dehydroxylation(enz, sub, residue, mod_pos,
+                                             evidence)
+                elif mod == 'Sumoylation':
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Sumoylation(enz, sub, residue, mod_pos,
+                                           evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Desumoylation(enz, sub, residue, mod_pos,
+                                             evidence)
+                elif mod == 'Acetylation':
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Acetylation(enz, sub, residue, mod_pos,
+                                           evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Deacetylation(enz, sub, residue, mod_pos,
+                                             evidence)
+                elif mod == 'Ubiquitination':
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Ubiquitination(enz, sub, residue, mod_pos,
+                                              evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Deubiquitination(enz, sub, residue, mod_pos,
+                                                evidence)
+
+                else:
+                    logger.warning("Unknown modification type!")
+                    logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
+                                   (act_type, mod, mod_pos))
+                # If we've matched a pattern, mark this as a converted statement
+                if stmt is not None:
+                    if is_direct:
+                        self.statements.append(stmt)
+                        self.converted_direct_stmts.append(stmt_str)
+                    else:
+                        self.converted_indirect_stmts.append(stmt_str)
+                        self.indirect_stmts.append(stmt)
+        return
 
     def get_composite_activating_mods(self):
         """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
@@ -270,7 +284,7 @@ class BelProcessor(object):
                 is_active = True
             stmt_str = strip_statement(stmt[7])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
+            self.converted_direct_stmts.append(stmt_str)
             st = ActiveForm(species, act_type, is_active, evidence)
             self.statements.append(st)
 
@@ -315,7 +329,7 @@ class BelProcessor(object):
                 is_active = True
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
+            self.converted_direct_stmts.append(stmt_str)
             st = ActiveForm(species, act_type, is_active, evidence)
             self.statements.append(st)
 
@@ -428,7 +442,7 @@ class BelProcessor(object):
 
             stmt_str = strip_statement(stmt[4])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
+            self.converted_direct_stmts.append(stmt_str)
             st = ActiveForm(enz, act_type, is_active, evidence)
             self.statements.append(st)
 
@@ -471,7 +485,7 @@ class BelProcessor(object):
             obj_activity = term_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
-            self.converted_stmts.append(stmt_str)
+            self.converted_direct_stmts.append(stmt_str)
 
             # Distinguish the case when the activator is a RasGTPase
             # (since this may involve unique and stereotyped mechanisms)
@@ -520,10 +534,97 @@ class BelProcessor(object):
                     print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
         """
 
+    def get_transcription(self):
+        """Get statements of the form tscript(X) inc/dec r(Y)."""
+        q_tscript1 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?target .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType belvoc:Transcription .
+                ?subject belvoc:hasChild ?tf .
+                ?tf a belvoc:ProteinAbundance .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+            }
+        """
+        q_tscript2 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasObject ?target .
+                ?tf a belvoc:ProteinAbundance .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+            }
+        """
+        q_tscript3 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel ?mod ?pos
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasObject ?target .
+                ?subject a belvoc:ModifiedProteinAbundance .
+                ?subject belvoc:hasChild ?tf .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+                OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
+
+            }
+        """
+        for q_tscript in (q_tscript1, q_tscript2, q_tscript3):
+            res_tscript = self.g.query(q_tscript)
+            for stmt in res_tscript:
+                # Get modifications on the subject, if any
+                if q_tscript == q_tscript1:
+                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf.activity = ActivityCondition('transcription', True)
+                elif q_tscript == q_tscript3:
+                    mod = term_from_uri(stmt[6])
+                    mod_pos = term_from_uri(stmt[7])
+                    mc = self._get_mod_condition(mod, mod_pos)
+                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf.mods = mods=[mc]
+                else:
+                    tf = self.get_agent(stmt[0], stmt[3])
+                # Parse out the elements of the query
+                evidence = self.get_evidence(stmt[2])
+                target = self.get_agent(stmt[1], stmt[4])
+                stmt_str = strip_statement(stmt[2])
+                # Get the relationship (increases/decreases, etc.)
+                rel = term_from_uri(stmt[5])
+                if rel == 'DirectlyIncreases' or rel == 'DirectlyDecreases':
+                    is_direct = True
+                else:
+                    is_direct = False
+                # Build the INDRA statement
+                stmt = None
+                if rel == 'DirectlyIncreases' or rel == 'Increases':
+                    stmt = IncreaseAmount(tf, target, evidence)
+                elif rel == 'DirectlyDecreases' or rel == 'Decreases':
+                    stmt = DecreaseAmount(tf, target, evidence)
+                # If we've matched a pattern, mark this as a converted statement
+                if stmt is not None:
+                    if is_direct:
+                        self.statements.append(stmt)
+                        self.converted_direct_stmts.append(stmt_str)
+                    else:
+                        self.indirect_stmts.append(stmt)
+                        self.converted_indirect_stmts.append(stmt_str)
+
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
-        Stores the results of the query in self.all_stmts.
+        Stores the results of the query in self.all_direct_stmts.
         """
         logger.info("Getting all direct statements...\n")
         q_stmts = prefixes + """
@@ -548,6 +649,8 @@ class BelProcessor(object):
                   UNION
                   { ?obj a belvoc:ProteinAbundance . }
                   UNION
+                  { ?obj a belvoc:RNAAbundance . }
+                  UNION
                   { ?obj a belvoc:ModifiedProteinAbundance . }
                 }
 
@@ -571,12 +674,12 @@ class BelProcessor(object):
         """
 
         res_stmts = self.g.query(q_stmts)
-        self.all_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
+        self.all_direct_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
-    def get_indirect_statements(self):
+    def get_all_indirect_statements(self):
         """Get all indirect increases/decreases BEL statements.
 
-        Stores the results of the query in self.indirect_stmts.
+        Stores the results of the query in self.all_indirect_stmts.
         """
         q_stmts = prefixes + """
             SELECT ?stmt
@@ -591,7 +694,7 @@ class BelProcessor(object):
         """
 
         res_stmts = self.g.query(q_stmts)
-        self.indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
+        self.all_indirect_stmts = [strip_statement(stmt[0]) for stmt in res_stmts]
 
     def get_degenerate_statements(self):
         """Get all degenerate BEL statements.
@@ -653,33 +756,52 @@ class BelProcessor(object):
 
         Also prints how many are considered 'degenerate' and not converted."""
 
-        if not self.all_stmts:
+        if not self.all_direct_stmts:
             self.get_all_direct_statements()
         if not self.degenerate_stmts:
             self.get_degenerate_statements()
-        if not self.indirect_stmts:
-            self.get_indirect_statements()
+        if not self.all_indirect_stmts:
+            self.get_all_indirect_statements()
 
         logger.info('')
         logger.info("Total indirect statements: %d" %
-                     len(self.indirect_stmts))
-        logger.info("Total direct statements: %d" % len(self.all_stmts))
-        logger.info("Converted statements: %d" % len(self.converted_stmts))
-        logger.info("Degenerate statements: %d" % len(self.degenerate_stmts))
-        logger.info(">> Total unhandled statements: %d" %
-                     (len(self.all_stmts) - len(self.converted_stmts) -
-                     len(self.degenerate_stmts)))
+                     len(self.all_indirect_stmts))
+        logger.info("Converted indirect statements: %d" %
+                     len(self.converted_indirect_stmts))
+        logger.info(">> Unhandled indirect statements: %d" %
+                     (len(self.all_indirect_stmts) -
+                      len(self.converted_indirect_stmts)))
+        logger.info('')
+        logger.info("Total direct statements: %d" % len(self.all_direct_stmts))
+        logger.info("Converted direct statements: %d" %
+                    len(self.converted_direct_stmts))
+        logger.info("Degenerate direct statements: %d" %
+                    len(self.degenerate_stmts))
+        logger.info(">> Unhandled direct statements: %d" %
+                     (len(self.all_direct_stmts) -
+                      len(self.converted_direct_stmts) -
+                      len(self.degenerate_stmts)))
 
         logger.info('')
-        logger.info("--- Unhandled statements ---------")
-        for stmt in self.all_stmts:
-            if not (stmt in self.converted_stmts or
+        logger.info("--- Unhandled direct statements ---------")
+        for stmt in self.all_direct_stmts:
+            if not (stmt in self.converted_direct_stmts or
+                    stmt in self.degenerate_stmts):
+                logger.info(stmt)
+        logger.info('')
+        logger.info("--- Unhandled indirect statements ---------")
+        for stmt in self.all_indirect_stmts:
+            if not (stmt in self.converted_indirect_stmts or
                     stmt in self.degenerate_stmts):
                 logger.info(stmt)
 
     def print_statements(self):
         """Print all extracted INDRA Statements."""
+        logger.info('--- Direct INDRA statements ----------')
         for i, stmt in enumerate(self.statements):
+            logger.info("%s: %s" % (i, stmt))
+        logger.info('--- Indirect INDRA statements ----------')
+        for i, stmt in enumerate(self.indirect_stmts):
             logger.info("%s: %s" % (i, stmt))
 
     @staticmethod
