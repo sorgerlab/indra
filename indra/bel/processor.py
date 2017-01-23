@@ -24,12 +24,10 @@ def namespace_from_uri(uri):
     http://www.openbel.org/bel/p_RGD_Raf1 -> RGD
     http://www.openbel.org/bel/p_PFH_MEK1/2_Family -> PFH
     """
-    patterns = ['http://www.openbel.org/bel/p_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/[a-z]+_p_([A-Za-z]+)_.*',
+    patterns = ['http://www.openbel.org/bel/[pragm]_([A-Za-z]+)_.*',
+                'http://www.openbel.org/bel/[a-z]+_[pr]_([A-Za-z]+)_.*',
                 'http://www.openbel.org/bel/[a-z]+_complex_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/a_([A-Za-z]+)_.*',
-                'http://www.openbel.org/bel/g_([A-Za-z]+)_.*']
+                'http://www.openbel.org/bel/complex_([A-Za-z]+)_.*']
     for pr in patterns:
         match = re.match(pr, uri)
         if match is not None:
@@ -536,6 +534,93 @@ class BelProcessor(object):
                     print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
         """
 
+    def get_transcription(self):
+        """Get statements of the form tscript(X) inc/dec r(Y)."""
+        q_tscript1 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?target .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType belvoc:Transcription .
+                ?subject belvoc:hasChild ?tf .
+                ?tf a belvoc:ProteinAbundance .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+            }
+        """
+        q_tscript2 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasObject ?target .
+                ?tf a belvoc:ProteinAbundance .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+            }
+        """
+        q_tscript3 = prefixes + """
+            SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel ?mod ?pos
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasObject ?target .
+                ?subject a belvoc:ModifiedProteinAbundance .
+                ?subject belvoc:hasChild ?tf .
+                ?tf belvoc:hasConcept ?tfName .
+                ?target a belvoc:RNAAbundance .
+                ?target belvoc:hasConcept ?targetName .
+                OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
+
+            }
+        """
+        for q_tscript in (q_tscript1, q_tscript2, q_tscript3):
+            res_tscript = self.g.query(q_tscript)
+            for stmt in res_tscript:
+                # Get modifications on the subject, if any
+                if q_tscript == q_tscript1:
+                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf.activity = ActivityCondition('transcription', True)
+                elif q_tscript == q_tscript3:
+                    mod = term_from_uri(stmt[6])
+                    mod_pos = term_from_uri(stmt[7])
+                    mc = self._get_mod_condition(mod, mod_pos)
+                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf.mods = mods=[mc]
+                else:
+                    tf = self.get_agent(stmt[0], stmt[3])
+                # Parse out the elements of the query
+                evidence = self.get_evidence(stmt[2])
+                target = self.get_agent(stmt[1], stmt[4])
+                stmt_str = strip_statement(stmt[2])
+                # Get the relationship (increases/decreases, etc.)
+                rel = term_from_uri(stmt[5])
+                if rel == 'DirectlyIncreases' or rel == 'DirectlyDecreases':
+                    is_direct = True
+                else:
+                    is_direct = False
+                # Build the INDRA statement
+                stmt = None
+                if rel == 'DirectlyIncreases' or rel == 'Increases':
+                    stmt = IncreaseAmount(tf, target, evidence)
+                elif rel == 'DirectlyDecreases' or rel == 'Decreases':
+                    stmt = DecreaseAmount(tf, target, evidence)
+                # If we've matched a pattern, mark this as a converted statement
+                if stmt is not None:
+                    if is_direct:
+                        self.statements.append(stmt)
+                        self.converted_direct_stmts.append(stmt_str)
+                    else:
+                        self.indirect_stmts.append(stmt)
+                        self.converted_indirect_stmts.append(stmt_str)
+
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
@@ -563,6 +648,8 @@ class BelProcessor(object):
                   { ?obj a belvoc:ComplexAbundance . }
                   UNION
                   { ?obj a belvoc:ProteinAbundance . }
+                  UNION
+                  { ?obj a belvoc:RNAAbundance . }
                   UNION
                   { ?obj a belvoc:ModifiedProteinAbundance . }
                 }
