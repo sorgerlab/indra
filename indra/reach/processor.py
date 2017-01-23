@@ -99,43 +99,43 @@ class ReachProcessor(object):
                     theme = a['arg']
                 elif self._get_arg_type(a) == 'site':
                     site = a['text']
-            qstr = "$.events.frames[(@.type is 'regulation') and " + \
-                   "(@.arguments[0].arg is '%s')]" % frame_id
-            reg_res = self.tree.execute(qstr)
-            controller = None
-            for reg in reg_res:
-                for a in reg['arguments']:
-                    if self._get_arg_type(a) == 'controller':
-                        controller = a.get('arg')
-
-            if controller is not None:
-                controller_agent = self._get_agent_from_entity(controller)
-            else:
-                controller_agent = None
-
             theme_agent = self._get_agent_from_entity(theme)
             if site is not None:
                 residue, pos = self._parse_site_text(site)
             else:
                 residue = None
                 pos = None
-            sentence = r['verbose-text']
-            ev = Evidence(source_api='reach', text=sentence,
-                          annotations=context, pmid=self.citation,
-                          epistemics=epistemics)
-            args = [controller_agent, theme_agent, residue, pos, ev]
+            qstr = "$.events.frames[(@.type is 'regulation') and " + \
+                   "(@.arguments[0].arg is '%s')]" % frame_id
+            reg_res = self.tree.execute(qstr)
+            reg_res = list(reg_res)
+            for reg in reg_res:
+                controller_agent = None
+                for a in reg['arguments']:
+                    if self._get_arg_type(a) == 'controller':
+                        controller = a.get('arg')
+                        if controller is not None:
+                            controller_agent = \
+                                self._get_agent_from_entity(controller)
+                            break
 
-            # Here ModStmt is a sub-class of Modification
-            ModStmt = stmt_mod_map.get(modification_type)
-            if ModStmt is None:
-                logger.warning('Unhandled modification type: %s' %
-                               modification_type)
-            else:
-                # Handle this special case here because only
-                # enzyme argument is needed
-                if modification_type == 'autophosphorylation':
-                    args = [theme_agent, residue, pos, ev]
-                self.statements.append(ModStmt(*args))
+                sentence = reg['verbose-text']
+                ev = Evidence(source_api='reach', text=sentence,
+                              annotations=context, pmid=self.citation,
+                              epistemics=epistemics)
+                args = [controller_agent, theme_agent, residue, pos, ev]
+
+                # Here ModStmt is a sub-class of Modification
+                ModStmt = stmt_mod_map.get(modification_type)
+                if ModStmt is None:
+                    logger.warning('Unhandled modification type: %s' %
+                                   modification_type)
+                else:
+                    # Handle this special case here because only
+                    # enzyme argument is needed
+                    if modification_type == 'autophosphorylation':
+                        args = [theme_agent, residue, pos, ev]
+                    self.statements.append(ModStmt(*args))
 
     def get_complexes(self):
         """Extract INDRA Complex Statements."""
