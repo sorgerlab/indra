@@ -137,6 +137,61 @@ class ReachProcessor(object):
                         args = [theme_agent, residue, pos, ev]
                     self.statements.append(ModStmt(*args))
 
+    def get_regulate_amounts(self):
+        """Extract RegulateAmount INDRA Statements."""
+        qstr = "$.events.frames[(@.type is 'transcription')]"
+        res = self.tree.execute(qstr)
+        all_res = []
+        if res is not None:
+            all_res += list(res)
+        qstr = "$.events.frames[(@.type is 'amount')]"
+        res = self.tree.execute(qstr)
+        if res is not None:
+            all_res += list(res)
+
+        for r in all_res:
+            print(r)
+            subtype = r.get('subtype')
+            epistemics = self._get_epistemics(r)
+            if epistemics.get('negative'):
+                continue
+            context = self._get_context(r)
+            frame_id = r['frame_id']
+            args = r['arguments']
+            theme = None
+            for a in args:
+                if self._get_arg_type(a) == 'theme':
+                    theme = a['arg']
+                    break
+            if theme is None:
+                continue
+            theme_agent = self._get_agent_from_entity(theme)
+            qstr = "$.events.frames[(@.type is 'regulation') and " + \
+                   "(@.arguments[0].arg is '%s')]" % frame_id
+            reg_res = self.tree.execute(qstr)
+            for reg in reg_res:
+                controller_agent = None
+                for a in reg['arguments']:
+                    if self._get_arg_type(a) == 'controller':
+                        controller = a.get('arg')
+                        if controller is not None:
+                            controller_agent = \
+                                    self._get_agent_from_entity(controller)
+                            break
+                sentence = reg['verbose-text']
+
+                ev = Evidence(source_api='reach', text=sentence,
+                              annotations=context, pmid=self.citation,
+                              epistemics=epistemics)
+                args = [controller_agent, theme_agent, ev]
+                subtype = reg.get('subtype')
+                if subtype == 'positive-regulation':
+                    st = IncreaseAmount(*args)
+                else:
+                    st = DecreaseAmount(*args)
+                self.statements.append(st)
+
+
     def get_complexes(self):
         """Extract INDRA Complex Statements."""
         qstr = "$.events.frames[@.type is 'complex-assembly']"
