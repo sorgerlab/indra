@@ -65,6 +65,21 @@ def test_phosphorylate():
         assert (s.sub.name == 'MAPK1')
         assert unicode_strs(rp.statements)
 
+def test_multiple_enzymes():
+    for offline in offline_modes:
+        rp = reach.process_text('MEK1 and MEK2 phosphorylate ERK1.',
+                                offline=offline)
+        assert(len(rp.statements) == 2)
+        s = rp.statements[0]
+        if s.enz.name == 'MAP2K1':
+            assert(rp.statements[1].enz.name == 'MAP2K2')
+        else:
+            assert(rp.statements[1].enz.name == 'MAP2K1')
+        assert (s.sub.name == 'MAPK3')
+        s = rp.statements[1]
+        assert (s.sub.name == 'MAPK3')
+        assert unicode_strs(rp.statements)
+
 def test_activate():
     for offline in offline_modes:
         rp = reach.process_text('HRAS activates BRAF.', offline=offline)
@@ -146,3 +161,4 @@ def assert_pmid(stmt):
         assert(ev.pmid is not None)
         assert(not ev.pmid.startswith('api'))
         assert(not ev.pmid.startswith('PMID'))
+
