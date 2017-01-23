@@ -166,7 +166,7 @@ def upload_to_ndex(stmts, ndex_cred):
     cx_str = ca.print_cx()
 
     try:
-        logging.info('Getting network summary...')
+        logger.info('Getting network summary...')
         summary = nd.get_network_summary(network_id)
     except Exception as e:
         logger.error('Could not get NDEx network summary.')
@@ -174,8 +174,10 @@ def upload_to_ndex(stmts, ndex_cred):
         return
 
     try:
-        logging.info('Updating network...')
+        logger.info('Updating network...')
         cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+        with open('cx_upload.cx', 'wb') as fh:
+            fh.write(cx_str.encode('utf-8'))
         nd.update_cx_network(cx_stream, network_id)
     except Exception as e:
         logger.error('Could not update NDEx network.')
@@ -186,14 +188,18 @@ def upload_to_ndex(stmts, ndex_cred):
     profile = {'name': summary.get('name'),
                'description': summary.get('description'),
                'version': new_ver,
-               'visibility': 'PUBLIC'
                }
-    try:
-        nd.update_network_profile(network_id, profile)
-    except Exception as e:
-        logger.error('Could not update NDEx network profile.')
-        logger.error(e)
-        return
+    logger.info('Updating NDEx network (%s) profile to %s' %
+                (network_id, profile))
+    profile_retries = 5
+    for i in range(profile_retries):
+        try:
+            time.sleep(5)
+            nd.update_network_profile(network_id, profile)
+            break
+        except Exception as e:
+            logger.error('Could not update NDEx network profile.')
+            logger.error(e)
 
 class InvalidConfigurationError(Exception):
     pass
@@ -311,7 +317,7 @@ if __name__ == '__main__':
     pmids = {}
     search_terms = config.get('search_terms')
     if not search_terms:
-        logging.info('No search terms argument (search_terms) specified.')
+        logger.info('No search terms argument (search_terms) specified.')
     else:
         logger.info('Using search terms: %s' % ', '.join(search_terms))
         pmids = get_searchterm_pmids(search_terms, num_days=5)
