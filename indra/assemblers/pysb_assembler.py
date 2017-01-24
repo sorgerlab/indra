@@ -174,9 +174,11 @@ class _BaseAgent(object):
             Is True if the given pattern corresponds to an active state.
         """
         if is_active:
-            self.active_forms.append(activity_pattern)
+            if activity_pattern not in self.active_forms:
+                self.active_forms.append(activity_pattern)
         else:
-            self.inactive_forms.append(activity_pattern)
+            if activity_pattern not in self.inactive_forms:
+                self.inactive_forms.append(activity_pattern)
 
     def add_activity_type(self, activity_type):
         """Adds an activity type to an Agent.
@@ -187,7 +189,8 @@ class _BaseAgent(object):
             The type of activity to add such as 'activity', 'kinase',
             'gtpbound'
         """
-        self.activity_types.append(activity_type)
+        if activity_type not in self.activity_types:
+            self.activity_types.append(activity_type)
 
 # Site/state information ###############################################
 
@@ -1244,10 +1247,10 @@ def modification_assemble_one_step(stmt, model, agent_set):
                 kf_mod)
         add_rule_to_model(model, r)
 
-    # Add rule annotations to model
-    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+        # Add rule annotations to model
+        anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
+                Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
@@ -1551,10 +1554,10 @@ def demodification_assemble_one_step(stmt, model, agent_set):
         r = Rule(rule_name,
                  enz_pattern(af) + sub_mod >> enz_pattern(af) + sub_unmod,
                  kf_demod)
-    add_rule_to_model(model, r)
-    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+        add_rule_to_model(model, r)
+        anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
+                Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
 
 def demodification_assemble_two_step(stmt, model, agent_set):
@@ -1829,7 +1832,7 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     kf_one_step_activate = \
         get_create_parameter(model, param_name, 1e-6)
 
-    for i, af, in enumerate(subj_act_patterns):
+    for i, af in enumerate(subj_act_patterns):
         counter_str = '_%s' % (i + 1) if len(subj_act_patterns) > 1 else ''
         rule_obj_str = get_agent_rule_str(stmt.obj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
@@ -1847,11 +1850,11 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
                 subj_pattern(af) + obj_active >> subj_pattern(af) + obj_inactive,
                 kf_one_step_activate)
 
-    add_rule_to_model(model, r)
-    anns = [Annotation(rule_name, subj_pattern.monomer.name,
-                       'rule_has_subject'),
-            Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+        add_rule_to_model(model, r)
+        anns = [Annotation(rule_name, subj_pattern.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
+        model.annotations += anns
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
