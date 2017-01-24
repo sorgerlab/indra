@@ -55,6 +55,8 @@ def assemble_model(model_name, reread=False):
         atr = model.monomers['ATR']
         model.initial(atr(activity='active'),
                       model.parameters['ATRa_0'])
+        obs = Observable(b'atr_active', atr(activity='active'))
+        model.add_component(obs)
 
     if model_name == 'p53_ATM_var':
         #model.add_component(Parameter('ATMa_0', 1))
@@ -85,7 +87,10 @@ def run_model(model):
     plt.figure(figsize=(2,2), dpi=300)
     set_fig_params()
     plt.plot(ts, solver.yobs['p53_active'], 'r')
-    plt.plot(ts, solver.yobs['atm_active'], 'b')
+    if model.name == 'p53_ATR':
+        plt.plot(ts, solver.yobs['atr_active'], 'b')
+    else:
+        plt.plot(ts, solver.yobs['atm_active'], 'b')
     plt.xticks([])
     plt.xlabel('Time (a.u.)', fontsize=12)
     plt.ylabel('Active p53', fontsize=12)
@@ -95,8 +100,8 @@ def run_model(model):
 
 if __name__ == '__main__':
     reread = False
-    #model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
-    model_names = ['p53_ATM']
+    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
+    #model_names = ['p53_ATM']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
