@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,13 +24,18 @@ def assemble_model(model_name, reread=False):
         with open(fname, 'rb') as fh:
             tp = trips.process_text(fh.read(), xml_fname)
 
+    print('Assembling statements:')
+    for i, st in enumerate(tp.statements):
+        print('%d: %s' % (i, st))
+    print('----------------------')
+
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
     model = pa.make_model()
     model.name = model_name
 
     p53 = model.monomers['TP53']
-    obs = Observable('p53_active', p53(activity='active'))
+    obs = Observable(b'p53_active', p53(activity='active'))
     model.add_component(obs)
     if not model_name.endswith('var'):
         model.parameters['kf_aa_act_1'].value = 5e-06
@@ -40,7 +47,7 @@ def assemble_model(model_name, reread=False):
         model.initial(atm(activity='active'),
                       model.parameters['ATMa_0'])
         model.parameters['kf_pa_act_1'].value = 1e-04
-        obs = Observable('atm_active', atm(activity='active'))
+        obs = Observable(b'atm_active', atm(activity='active'))
         model.add_component(obs)
 
     if model_name == 'p53_ATR':
@@ -63,7 +70,7 @@ def assemble_model(model_name, reread=False):
         model.parameters['kf_m_deg_1'].value = 8e-01
         model.parameters['kf_tm_synth_1'].value = 0.2
         model.parameters['kf_a_autophos_1'].value = 5e-06
-        obs = Observable('atm_active', atm(phospho='p'))
+        obs = Observable(b'atm_active', atm(phospho='p'))
         model.add_component(obs)
 
     pa.model = model
