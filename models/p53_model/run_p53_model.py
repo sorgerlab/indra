@@ -25,9 +25,10 @@ def assemble_model(model_name, reread=False):
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
     model = pa.make_model()
+    model.name = model_name
 
     p53 = model.monomers['TP53']
-    obs = Observable('P53_active', p53(activity='active'))
+    obs = Observable('p53_active', p53(activity='active'))
     model.add_component(obs)
     if not model_name.endswith('var'):
         model.parameters['kf_aa_act_1'].value = 5e-06
@@ -39,12 +40,31 @@ def assemble_model(model_name, reread=False):
         model.initial(atm(activity='active'),
                       model.parameters['ATMa_0'])
         model.parameters['kf_pa_act_1'].value = 1e-04
+        obs = Observable('atm_active', atm(activity='active'))
+        model.add_component(obs)
 
     if model_name == 'p53_ATR':
         model.add_component(Parameter('ATRa_0', 1))
         atr = model.monomers['ATR']
         model.initial(atr(activity='active'),
                       model.parameters['ATRa_0'])
+
+    if model_name == 'p53_ATM_var':
+        #model.add_component(Parameter('ATMa_0', 1))
+        #atm = model.monomers['ATM']
+        #model.initial(atm(activity='active'),
+        #              model.parameters['ATMa_0'])
+        model.add_component(Parameter('ATMa_0', 1))
+        atm = model.monomers['ATM']
+        model.initial(atm(phospho='p'),
+                      model.parameters['ATMa_0'])
+        model.parameters['kf_pa_dephosphorylation_1'].value = 1e-04
+        model.parameters['MDM2_0'].value = 0
+        model.parameters['kf_m_deg_1'].value = 8e-01
+        model.parameters['kf_tm_synth_1'].value = 0.2
+        model.parameters['kf_a_autophos_1'].value = 5e-06
+        obs = Observable('atm_active', atm(phospho='p'))
+        model.add_component(obs)
 
     pa.model = model
     pa.save_model('%s.py' % model_name)
@@ -57,17 +77,19 @@ def run_model(model):
     solver.run()
     plt.figure(figsize=(2,2), dpi=300)
     set_fig_params()
-    plt.plot(ts, solver.yobs['P53_active'], 'r')
+    plt.plot(ts, solver.yobs['p53_active'], 'r')
+    plt.plot(ts, solver.yobs['atm_active'], 'b')
     plt.xticks([])
-    plt.xlabel('Time (a.u.)', fontsize=15)
-    plt.ylabel('Active p53')
+    plt.xlabel('Time (a.u.)', fontsize=12)
+    plt.ylabel('Active p53', fontsize=12)
     plt.yticks([])
-    plt.savefig(model_name + '.pdf')
+    plt.savefig(model.name + '.pdf')
     return ts, solver
 
 if __name__ == '__main__':
-    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
-    #model_names = ['p53_ATM_var']
+    reread = False
+    #model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
+    model_names = ['p53_ATM']
     for model_name in model_names:
-        model = assemble_model(model_name, reread=False)
+        model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
