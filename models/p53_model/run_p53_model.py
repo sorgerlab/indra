@@ -71,7 +71,7 @@ def assemble_model(model_name, reread=False):
         model.parameters['MDM2_0'].value = 0
         model.parameters['kf_m_deg_1'].value = 8e-01
         model.parameters['kf_tm_synth_1'].value = 0.2
-        model.parameters['kf_a_autophos_1'].value = 5e-06
+        model.parameters['kf_aa_phosphorylation_1'].value = 5e-06
         obs = Observable(b'atm_active', atm(phospho='p'))
         model.add_component(obs)
 
@@ -87,10 +87,10 @@ def run_model(model):
     plt.figure(figsize=(2,2), dpi=300)
     set_fig_params()
     plt.plot(ts, solver.yobs['p53_active'], 'r')
-    if model.name == 'p53_ATR':
-        plt.plot(ts, solver.yobs['atr_active'], 'b')
-    else:
-        plt.plot(ts, solver.yobs['atm_active'], 'b')
+    #if model.name == 'p53_ATR':
+    #    plt.plot(ts, solver.yobs['atr_active'], 'b')
+    #else:
+    #    plt.plot(ts, solver.yobs['atm_active'], 'b')
     plt.xticks([])
     plt.xlabel('Time (a.u.)', fontsize=12)
     plt.ylabel('Active p53', fontsize=12)
@@ -100,8 +100,8 @@ def run_model(model):
 
 if __name__ == '__main__':
     reread = False
-    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
-    #model_names = ['p53_ATM']
+    #model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
+    model_names = ['p53_ATM_var']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
