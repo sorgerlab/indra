@@ -128,7 +128,12 @@ class CxAssembler(object):
         full_cx['metaData'] = [{'idCounter': self._id_counter,
                                 'name': 'nodes'},
                                {'idCounter': self._id_counter,
-                                'name': 'edges'}]
+                                'name': 'edges'},
+                               {'idCounter': self._id_counter,
+                                'name': 'supports'},
+                               {'idCounter': self._id_counter,
+                                'name': 'citations'}
+                               ]
         for k, v in self.cx.items():
             full_cx[k] = v
         full_cx['status'] = [{'error': '', 'success': True}]
