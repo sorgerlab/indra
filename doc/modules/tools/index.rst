@@ -1,7 +1,7 @@
 Tools (:py:mod:`indra.tools`)
 =============================
 
-Run all assembly components in a pipeline (:py:mod:`indra.preassembler.assemble_corpus`)
+Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 ----------------------------------------------------------------------------------------
 
 .. automodule:: indra.tools.assemble_corpus
