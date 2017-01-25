@@ -1259,27 +1259,27 @@ def modification_assemble_two_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
     sub_bs = get_binding_site_name(stmt.sub)
-    enz_bound = get_monomer_pattern(model, stmt.enz,
+    enz = deepcopy(stmt.enz)
+    enz.activity = None
+    enz_bound = get_monomer_pattern(model, enz,
         extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, stmt.enz,
+    enz_unbound = get_monomer_pattern(model, enz,
         extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
-    param_name = ('kf_' + stmt.enz.name[0].lower() +
+    param_name = ('kf_' + enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + stmt.enz.name[0].lower() +
+    param_name = ('kr_' + enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = ('kc_' + stmt.enz.name[0].lower() +
+    param_name = ('kc_' + enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mod_condition_name)
     kf_mod = get_create_parameter(model, param_name, 1)
 
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
 
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
     enz_act_patterns = get_active_patterns(enz, agent_set)
     enz_bs = get_binding_site_name(enz)
     rule_enz_str = get_agent_rule_str(enz)
@@ -1317,7 +1317,7 @@ def modification_assemble_two_step(stmt, model, agent_set):
                            'rule_has_object')]
         model.annotations += anns
 
-    enz_uncond = get_uncond_agent(stmt.enz)
+    enz_uncond = get_uncond_agent(enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     sub_uncond = get_uncond_agent(stmt.sub)
