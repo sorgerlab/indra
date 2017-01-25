@@ -394,11 +394,12 @@ class TripsProcessor(object):
                 else:
                     agent_agent = self._get_agent_by_id(agent_id,
                                                         event.attrib['id'])
+                    '''
                     if _get_type(event) == 'ONT::TRANSCRIBE':
                         if agent_agent is not None:
                             agent_agent.activity = \
                                     ActivityCondition('transcription', True)
-
+                    '''
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
             for subj, obj in \
