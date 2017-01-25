@@ -1,0 +1,8 @@
+ATR activates itself.
+ATR activates p53.
+p53 activates Wip1.
+p53 activates MDM2.
+Wip1 inactivates p53.
+MDM2 inactivates p53.
+HIPK2 inactivates Wip1.
+P14ARF inactivates Mdm2.
