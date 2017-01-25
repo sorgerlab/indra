@@ -2194,13 +2194,13 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
         rule_name = '%s_synthesized' % rule_obj_str
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
     else:
-        subj_pattern = get_monomer_pattern(model, subj)
-        param_name = 'kf_' + subj.name[0].lower() + \
+        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        param_name = 'kf_' + stmt.subj.name[0].lower() + \
                             stmt.obj.name[0].lower() + '_synth'
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
         kf_one_step_synth = get_create_parameter(model, param_name, 2e-1)
-        rule_subj_str = get_agent_rule_str(subj)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name, subj_pattern >> obj_pattern + subj_pattern,
                  kf_one_step_synth)
