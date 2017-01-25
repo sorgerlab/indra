@@ -1217,7 +1217,7 @@ def modification_assemble_one_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
     mod_condition_name = stmt.__class__.__name__.lower()
-    param_name = 'kf_%s_%s_%s' % (stmt.enz.name[0].lower(),
+    param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
                                   stmt.sub.name[0].lower(), mod_condition_name)
     kf_mod = get_create_parameter(model, param_name, 1e-6)
 
