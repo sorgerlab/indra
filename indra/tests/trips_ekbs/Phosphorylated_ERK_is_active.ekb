@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT02512_IO-2255165" id="paragraph2511">Phosphorylated ERK is active.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2648" pid="paragraph2511">Phosphorylated ERK is active.</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="BE:ERK|NCIT:C26166|NCIT:C52872|NCIT:C16376|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="28" id="V2255173" lisp="(ONT::TERM ONT::V2255173 ONT::GENE-PROTEIN :INEVENT ONT::V2255168 :ACTIVE ONT::TRUE :NAME W::ERK :DRUM ((:DRUM (TERM :ID BE::ERK :NAME &quot;ERK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.31429 :MATCHES ((MATCH :SCORE 0.31429 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph2511" rule="-INEVENT2B,-ACTIVE3,-SIMPLE-REF" start="0" uttnum="2648">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK</name>
+		<features>
+			<active>TRUE</active>
+			<inevent>
+				<event id="V2255168"/>
+			</inevent>
+		</features>
+		<drum-terms>
+			<drum-term dbid="BE:ERK" match-score="1.0" matched-name="ERK" name="ERK">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52164" match-score="0.82857" matched-name="ERK" name="EPHB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.82857" matched-name="ERK" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.82857" matched-name="ERK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.82857" matched-name="ERK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26166" match-score="0.82857" matched-name="ERK" name="ephrin receptor-ephB2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.65714" matched-name="ERK" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="HGNC:3393" match-score="0.31429" matched-name="ERK" name="EPH receptor B2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P29323"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>Phosphorylated ERK is active</text>
+	</TERM>
+	<EVENT end="28" id="V2255168" lisp="(ONT::EVENT ONT::V2255168 ONT::PHOSPHORYLATION :AFFECTED ONT::V2255173 :FORCE ONT::TRUE)" paragraph="paragraph2511" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED" start="0" uttnum="2648">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="28" id="V2255168" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>Phosphorylated ERK is active</text>
+		</predicate>
+		<arg2 end="28" id="V2255173" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Phosphorylated ERK is active</text>
+		</arg2>
+		<text>Phosphorylated ERK is active</text>
+	</EVENT>
+</ekb>
