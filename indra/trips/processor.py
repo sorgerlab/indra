@@ -467,7 +467,13 @@ class TripsProcessor(object):
                 logger.warning('Unhandled term activity feature %s' % act.text)
             agent = self._get_agent_by_id(term.attrib['id'], None)
             agent.activity = None
-            st = ActiveForm(agent, 'activity', is_active)
+            text_term = term.find('text')
+            if text_term is not None:
+                ev_text = text_term.text
+            else:
+                ev_text = None
+            ev = Evidence(source_api='trips', text=ev_text, pmid=self.doc_id)
+            st = ActiveForm(agent, 'activity', is_active, evidence=[ev])
             self.statements.append(st)
 
     def get_complexes(self):
