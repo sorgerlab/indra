@@ -3,8 +3,10 @@ from builtins import dict, str
 import sys
 import time
 import logging
+import functools
 import itertools
 import collections
+import multiprocessing as mp
 from copy import copy, deepcopy
 import numpy as np
 from matplotlib import pyplot as plt
@@ -14,7 +16,6 @@ except ImportError:
     pass
 from indra.statements import *
 from indra.databases import uniprot_client
-
 logger = logging.getLogger('preassembler')
 
 from matplotlib import pyplot as plt
@@ -246,10 +247,10 @@ class Preassembler(object):
         for stmt in unique_stmts:
             stmts_by_type[type(stmt)].append(stmt)
 
-        group_sizes = []
-        largest_group = None
-        largest_group_size = 0
-        num_stmts = len(unique_stmts)
+        # Get a multiprocessing context
+        ctx = mp.get_context('spawn')
+        pool = ctx.Pool(3)
+
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
@@ -290,10 +291,45 @@ class Preassembler(object):
                         # This is the component ID corresponding to the agent
                         # in the entity hierarchy
                         component = eh.components.get(uri)
-                        # If no component ID, use the entity_matches_key()
-                        if component is None:
-                            entities.append(a.entity_matches_key())
-                        # Component ID, so this is in a family
+                        if component is not None:
+                            any_component = True
+                            # For Complexes we cannot optimize by argument
+                            # position because all permutations need to be
+                            # considered but we can use the number of members
+                            # to statify into groups
+                            if stmt_type == Complex:
+                                key = (len(stmt.members), component)
+                            # For all other statements, we separate groups by
+                            # the argument position of the Agent
+                            else:
+                                key = (i, component)
+                            # Don't add the same Statement (same object) twice
+                            if stmt not in stmt_by_group[key]:
+                                stmt_by_group[key].append(stmt)
+                # If the Statement has no Agent belonging to any component
+                # then we put it in a special group
+                if not any_component:
+                    no_comp_stmts.append(stmt)
+
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
+            pool.map(self._set_supports_stmt_pairs, stmt_by_group.values())
+
+            #==========================================================
+            # Next we deal with the Statements that have no associated
+            # entity hierarchy component IDs.
+            # We take all the Agent entity_matches_key()-s and group
+            # Statements based on this key
+            stmt_by_group = collections.defaultdict(lambda: [])
+            for stmt in no_comp_stmts:
+                for i, a in enumerate(stmt.agent_list()):
+                    if a is not None:
+                        # For Complexes we cannot optimize by argument
+                        # position because all permutations need to be
+                        # considered
+                        if stmt_type == Complex:
+                            key = (len(stmt.members), a.entity_matches_key())
+                        # For all other statements, we separate groups by
+                        # the argument position of the Agent
                         else:
                             # We turn the component ID into a string so that
                             # we can sort it alphabetically along with
@@ -378,14 +414,11 @@ class Preassembler(object):
             # Now, set supports/supported_by relationships!
             # Keep track of the largest group size for debugging purposes.
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
-            for key, stmts in stmt_by_group.items():
-                if len(stmts) > largest_group_size:
-                    largest_group_size = len(stmts)
-                    largest_group = (key, stmts[0:10])
-                group_sizes.append(len(stmts))
-                for stmt1, stmt2 in itertools.combinations(stmts, 2):
-                    self._set_supports(stmt1, stmt2)
-            # Collect top level statements
+            # This is the preassembly within each Statement group
+            supports_func = functools.partial(self._set_supports_stmt_pairs,
+                                              check_entities_match=True)
+            pool.map(supports_func, stmt_by_group.values())
+
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
@@ -416,6 +449,15 @@ class Preassembler(object):
             stmt2.supported_by.append(stmt1)
             stmt1.supports.append(stmt2)
 
+    def _set_supports_stmt_pairs(self, stmts, check_entities_match=False):
+        if check_entities_match:
+            for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                if not stmt1.entities_match(stmt2):
+                    continue
+                self._set_supports(stmt1, stmt2)
+        else:
+            for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                self._set_supports(stmt1, stmt2)
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.
