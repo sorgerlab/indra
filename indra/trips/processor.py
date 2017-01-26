@@ -82,6 +82,7 @@ class TripsProcessor(object):
 
         self.statements = []
         self._static_events = self._find_static_events()
+        self._isolated_terms = self._find_isolated_terms()
         self.all_events = {}
         self.get_all_events()
         self.extracted_events = {k: [] for k in self.all_events.keys()}
@@ -451,6 +452,29 @@ class TripsProcessor(object):
             _stmt_location_to_agents(st, location)
             self.statements.append(st)
             self._add_extracted('ONT::ACTIVATE', event.attrib['id'])
+
+    def get_active_forms_state(self):
+        """Extract ActiveForm INDRA Statements."""
+        for term in self._isolated_terms:
+            act = term.find('features/active')
+            if act is None:
+                continue
+            if act.text == 'TRUE':
+                is_active = True
+            elif act.text == 'FALSE':
+                is_active = False
+            else:
+                logger.warning('Unhandled term activity feature %s' % act.text)
+            agent = self._get_agent_by_id(term.attrib['id'], None)
+            agent.activity = None
+            text_term = term.find('text')
+            if text_term is not None:
+                ev_text = text_term.text
+            else:
+                ev_text = None
+            ev = Evidence(source_api='trips', text=ev_text, pmid=self.doc_id)
+            st = ActiveForm(agent, 'activity', is_active, evidence=[ev])
+            self.statements.append(st)
 
     def get_complexes(self):
         """Extract Complex INDRA Statements."""
@@ -1129,8 +1153,25 @@ class TripsProcessor(object):
                     static_events.append(event_id + '.1')
                 if self.tree.find("EVENT[@id='%s.2']" % event_id) is not None:
                     static_events.append(event_id + '.2')
-
         return static_events
+
+    def _find_isolated_terms(self):
+        all_events = self.tree.findall('EVENT')
+        active_event_args = set()
+        for event in all_events:
+            if event.attrib.get('id') in self._static_events:
+                continue
+            args = event.findall('arg') + \
+                   [event.find('arg1'), event.find('arg2'), event.find('arg3')]
+            arg_ids = [a.attrib.get('id') for a in args if a is not None]
+            active_event_args = active_event_args.union(set(arg_ids))
+        all_terms = self.tree.findall('TERM')
+        isolated_terms = []
+        for term in all_terms:
+            term_id = term.attrib.get('id')
+            if term_id and term_id not in active_event_args:
+                isolated_terms.append(term)
+        return isolated_terms
 
     def _add_extracted(self, event_type, event_id):
         self.extracted_events[event_type].append(event_id)

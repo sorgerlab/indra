@@ -547,3 +547,13 @@ def test_42():
     raf1 = st.subj
     assert(raf1.name == 'RAF1')
     assert(raf1.db_refs.get('HGNC') == '9829')
+
+def test_43():
+    sentence = 'Phosphorylated ERK is active.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    erk = st.agent
+    assert(erk.name == 'ERK')
+    assert(erk.db_refs.get('BE') == 'ERK')
+    assert(len(erk.mods) == 1)

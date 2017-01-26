@@ -54,6 +54,7 @@ def process_xml(xml_string):
     tp.get_complexes()
     tp.get_modifications()
     tp.get_active_forms()
+    tp.get_active_forms_state()
     tp.get_activations()
     tp.get_translocation()
     tp.get_degradations()
