@@ -155,7 +155,7 @@ def get_family_members(family_name, human_only=True):
         gene_names.append(gene_name)
     return gene_names
 
-def get_mnemonic(protein_id, web_fallback=True):
+def get_mnemonic(protein_id, web_fallback=False):
     """Return the UniProt mnemonic for the given UniProt ID.
 
     Parameters
