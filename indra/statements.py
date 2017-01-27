@@ -8,9 +8,12 @@ the next level in the hierarchy are the following classes:
 - :py:class:`Complex`
 - :py:class:`Modification`
 - :py:class:`SelfModification`
+- :py:class:`RegulateActivity`
+- :py:class:`RegulateAmount`
+- :py:class:`ActiveForm`
+- :py:class:`Translocation`
 - :py:class:`RasGef`
 - :py:class:`RasGap`
-- :py:class:`Activation`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
@@ -19,27 +22,58 @@ modifications that further inherit from
 - :py:class:`Phosphorylation`
 - :py:class:`Dephosphorylation`
 - :py:class:`Ubiquitination`
+- :py:class:`Debiquitination`
 - :py:class:`Sumoylation`
+- :py:class:`Desumoylation`
 - :py:class:`Hydroxylation`
+- :py:class:`Dehydroxylation`
 - :py:class:`Acetylation`
+- :py:class:`Deacetylation`
+- :py:class:`Glycosylation`
+- :py:class:`Deglycosylation`
+- :py:class:`Farnesylation`
+- :py:class:`Defarnesylation`
+- :py:class:`Geranylgeranylation`
+- :py:class:`Degeranylgeranylation`
+- :py:class:`Palmitoylation`
+- :py:class:`Depalmitoylation`
+- :py:class:`Myristoylation`
+- :py:class:`Demyristoylation`
+- :py:class:`Ribosylation`
+- :py:class:`Deribosylation`
 
 There are additional subtypes of :py:class:`SelfModification`:
 
 - :py:class:`Autophosphorylation`
 - :py:class:`Transphosphorylation`
 
-Statements involve one or more biological *Agents*, typically proteins,
-represented by the class :py:class:`Agent`. Agents can have a specific
-post-translational modification state (indicated by one or more instances of
-:py:class:`ModCondition`), other bound Agents (:py:class:`BoundCondition`), or
-mutations (:py:class:`MutCondition`). The *active* form of an agent (in terms
-of its post-translational modifications or bound state) is indicated by an
-instance of the class :py:class:`ActiveForm`.
-
 Interactions between proteins are often described simply in terms of their
 effect on a protein's "activity", e.g., "Active MEK activates ERK", or "DUSP6
-inactives ERK".  These types of relationships are indicated by the statement
-:py:class:`Activation`.
+inactives ERK".  These types of relationships are indicated by the
+:py:class:`RegulateActivity` abstract base class which has subtypes
+
+- :py:class:`Activation`
+- :py:class:`Inhibition`
+
+while the :py:class:`RegulateAmount` abstract base class has subtypes
+
+- :py:class:`IncreaseAmount`
+- :py:class:`DecreaseAmount`
+
+Statements involve one or more biological *Agents*, typically proteins,
+represented by the class :py:class:`Agent`. Agents can have several types
+of context specified on them including
+
+- a specific post-translational modification state (indicated by one or
+  more instances of :py:class:`ModCondition`),
+- other bound Agents (:py:class:`BoundCondition`),
+- mutations (:py:class:`MutCondition`),
+- an activity state (:py:class:`ActivityCondition`), and
+- cellular location
+
+The *active* form of an agent (in terms
+of its post-translational modifications or bound state) is indicated by an
+instance of the class :py:class:`ActiveForm`.
 
 The evidence for a given Statement, which could include relevant citations,
 database identifiers, and passages of text from the scientific literature, is

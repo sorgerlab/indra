@@ -44,7 +44,7 @@ def process_pmc(pmc_id, offline=False):
         The ID of a PubmedCentral article. The string may start with PMC but
         passing just the ID also works.
         Examples: 3717945, PMC3717945
-        http://www.ncbi.nlm.nih.gov/pmc/
+        https://www.ncbi.nlm.nih.gov/pmc/
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
@@ -79,7 +79,7 @@ def process_pubmed_abstract(pubmed_id, offline=False):
         The ID of a Pubmed article. The string may start with PMID but
         passing just the ID also works.
         Examples: 27168024, PMID27168024
-        http://www.ncbi.nlm.nih.gov/pubmed/
+        https://www.ncbi.nlm.nih.gov/pubmed/
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
