@@ -138,6 +138,7 @@ if __name__ == '__main__':
     # Otherwise, check if we've read the PMIDs already
     else:
         for pmid in pmids_in_range:
+            pmid = s3_client.check_pmid(pmid)
             (read_reach_version, read_source_text) = \
                                     s3_client.get_reach_metadata(pmid)
             # Found it, same version
@@ -200,15 +201,15 @@ if __name__ == '__main__':
         elif content_type == 'pmc_oa_xml':
             num_pmc_oa_xml += 1
             text_sources[full_pmid] = 'pmc_oa_xml'
-            content_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
         elif content_type == 'pmc_auth_xml':
             num_pmc_auth_xml += 1
             text_sources[full_pmid] = 'pmc_auth_xml'
-            content_path = os.path.join(input_dir, 'PMID%s.nxml' % pmid)
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
         elif content_type == 'pmc_oa_txt':
             num_txt += 1
             text_sources[full_pmid] = 'pmc_oa_txt'
-            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
         elif content_type == 'elsevier_xml':
             content = elsevier_client.extract_text(content)
             if content is None:
@@ -217,15 +218,15 @@ if __name__ == '__main__':
                 continue
             num_elsevier_xml += 1
             text_sources[full_pmid] = 'elsevier_xml'
-            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
         elif content_type == 'txt':
             num_txt += 1
             text_sources[full_pmid] = 'txt'
-            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
         elif content_type == 'abstract':
             num_abstract += 1
             text_sources[full_pmid] = 'abstract'
-            content_path = os.path.join(input_dir, 'PMID%s.txt' % pmid)
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
         else:
             num_not_found += 1
             logger.info('Unhandled content type %s for %s, skipping' %
