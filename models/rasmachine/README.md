@@ -14,8 +14,44 @@ This script generates the following folders and files
     model_name/jsons/abstract
     model_name/jsons/full
 
-You should the edit model_name/config.yaml to set up the search terms
+You should the edit model\_name/config.yaml to set up the search terms
 and optionally the credentials to use Twitter, Gmail or NDEx bindings.
+
+Setting up search terms
+=======================
+
+The config.yml file is a standard YAML configuration file. A template
+is available in default-config.yaml which can be used by uncommenting
+and editing relevant blocks and then copied to model\_name/config.yaml.
+
+Two important fields in config.yml are `search_terms` and `search_genes`
+both of which are YAML lists. The entries of `search_terms` are used
+_directly_ as queries in PubMed search (for more information on PubMed
+search strings, read https://www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.Searching\_PubMed).
+
+Example:
+```
+search_terms:
+- breast cancer
+- proteasome
+- apoptosis
+```
+
+The entries of `search_genes` is a special list in which _only_ standard
+HGNC gene symbols are allowed. Entries in this list are used to search
+PubMed specifically for articles that are tagged with the gene's unique
+identifier rather than its string name. This mode of searching for articles
+on specific genes is much more reliable than searching for them using
+string names.
+
+
+Example:
+```
+search_genes:
+- AKT1
+- MAPK3
+- EGFR
+```
 
 Extending a model
 =================
@@ -43,3 +79,4 @@ INDRA uses the REACH output to construct Statements corresponding to
 mechanisms. It then adds them to an incremental model through a process of
 assembly involving duplication and overlap resolution and the application of
 filters.
+
