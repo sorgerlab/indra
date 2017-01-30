@@ -261,7 +261,7 @@ if __name__ == '__main__':
     outDir = {output_dir}
 
     # the output format for mentions: text, fries, indexcard, or assembly-csv (default is 'fries')
-    outputType = "fries"
+    outputTypes = ["fries"]
 
     # whether or not assembly should be run
     withAssembly = false
