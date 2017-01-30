@@ -45,37 +45,32 @@ def check_pmids(stmts):
                     logger.warning('Invalid PMID: %s' % ev.pmid)
 
 def process_paper(model_name, pmid):
-    abstract_path = os.path.join(model_path, model_name,
-                                 'jsons', 'abstract', 'PMID%s.json' % pmid)
-    fulltext_path = os.path.join(model_path, model_name,
-                                 'jsons', 'full', 'PMID%s.json' % pmid)
+    json_path = os.path.join(model_path, model_name,
+                             'jsons', 'PMID%s.json' % pmid)
 
     if pmid.startswith('api') or pmid.startswith('PMID'):
         logger.warning('Invalid PMID: %s' % pmid)
-    # If the paper has been parsed, use the parse output file
-    if os.path.exists(abstract_path):
-        rp = reach.process_json_file(abstract_path, citation=pmid)
-        txt_format = 'abstract'
-    elif os.path.exists(fulltext_path):
-        rp = reach.process_json_file(fulltext_path, citation=pmid)
-        txt_format = 'txt'
-    # If the paper has not been parsed, download the text and parse
+    # If the paper has been read, use the json output file
+    if os.path.exists(json_path):
+        rp = reach.process_json_file(json_path, citation=pmid)
+        txt_format = 'existing_json'
+    # If the paper has not been read, download the text and read
     else:
         txt, txt_format = get_full_text(pmid, 'pmid')
         if txt_format == 'pmc_oa_xml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', fulltext_path)
+                shutil.move('reach_output.json', json_path)
         elif txt_format == 'elsevier_xml':
             # Extract the raw text from the Elsevier XML
             txt = elsevier_client.extract_text(txt)
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', fulltext_path)
+                shutil.move('reach_output.json', json_path)
         elif txt_format == 'abstract':
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', abstract_path)
+                shutil.move('reach_output.json', json_path)
         else:
             rp = None
     if rp is not None:
@@ -114,6 +109,7 @@ def make_status_message(stats):
 def extend_model(model_name, model, pmids):
     npapers = 0
     nabstracts = 0
+    nexisting = 0
     id_used = []
     for search_term, pmid_list in pmids.items():
         for pmid in pmid_list:
@@ -128,8 +124,10 @@ def extend_model(model_name, model, pmids):
                 if rp is not None:
                     if txt_format == 'abstract':
                         nabstracts += 1
-                    else:
+                    elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
                         npapers += 1
+                    else:
+                        nexisting += 1
                     if not rp.statements:
                         logger.info('No statement from PMID%s (%s)' % \
                                     (pmid, txt_format))
@@ -142,7 +140,7 @@ def extend_model(model_name, model, pmids):
     # Having added new statements, we preassemble the model
     # to merge duplicated and find related statements
     model.preassemble(filters=global_filters)
-    return npapers, nabstracts
+    return npapers, nabstracts, nexisting
 
 def _increment_ndex_ver(ver_str):
     if not ver_str:
@@ -363,7 +361,7 @@ if __name__ == '__main__':
     logger.info('----------------')
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
-    stats['new_papers'], stats['new_abstracts'] = \
+    stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
                             extend_model(model_name, model, pmids)
 
     # New statistics
