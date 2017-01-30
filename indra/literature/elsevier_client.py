@@ -107,6 +107,7 @@ def download_article(doi):
     if not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
                      (doi, res.status_code))
+        logger.error('Elsevier response: %s' % res.text)
         return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
     return res.content.decode('utf-8')
@@ -142,6 +143,8 @@ def get_article(doi, output='txt'):
 def extract_text(xml_string):
     if xml_string is None:
         return None
+    #with open('/Users/johnbachman/Desktop/elsevier.xml', 'wb') as f:
+    #    f.write(xml_string.encode('utf-8'))
     assert isinstance(xml_string, str)
     # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
@@ -150,16 +153,66 @@ def extract_text(xml_string):
     if full_text is None:
         logger.info('Could not find full text element article:originalText')
         return None
-    # Look for main body
-    main_body = full_text.find('xocs:doc/xocs:serial-item/ja:article/ja:body',
-                               elsevier_ns)
-    if main_body is None:
-        logger.info("Could not find main body element "
+    article_body = _get_article_body(full_text)
+    if article_body:
+        return article_body
+    raw_text = _get_raw_text(full_text)
+    if raw_text:
+        return raw_text
+    #pdf = _get_pdf_attachment(full_text)
+    #if pdf:
+    #    return pdf
+    return None
+
+
+def _get_pdf_attachment(full_text_elem):
+    attachments = full_text_elem.findall('xocs:doc/xocs:meta/'
+                                         'xocs:attachment-metadata-doc/'
+                                         'xocs:attachments', elsevier_ns)
+    for att_elem in attachments:
+        web_pdf = att_elem.find('xocs:web-pdf', elsevier_ns)
+        if web_pdf is None:
+            continue
+        # Check for a MAIN pdf
+        pdf_purpose = web_pdf.find('xocs:web-pdf-purpose', elsevier_ns)
+        if not pdf_purpose.text == 'MAIN':
+            continue
+        else:
+            return 'pdf'
+        #locations = web_pdf.findall('xocs:ucs-locator', elsevier_ns)
+        #for loc in locations:
+        #    logger.info("PDF location: %s" % loc.text)
+    #logger.info('Could not find PDF attachment.')
+    return None
+
+
+def _get_article_body(full_text_elem):
+    # Look for ja:article
+    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
+                                    'ja:article/ja:body', elsevier_ns)
+    if main_body is not None:
+        logger.info("Found main body element "
                     "xocs:doc/xocs:serial-item/ja:article/ja:body")
-        return None
+        return _get_sections(main_body)
+    logger.info("Could not find main body element "
+                "xocs:doc/xocs:serial-item/ja:article/ja:body")
+    # If no luck with ja:article, try ja:converted_article
+    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
+                                    'ja:converted-article/ja:body', elsevier_ns)
+    if main_body is not None:
+        logger.info("Found main body element "
+                    "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
+        return _get_sections(main_body)
+    logger.info("Could not find main body element "
+                "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
+    # If we haven't returned by this point, then return None
+    return None
+
+
+def _get_sections(main_body_elem):
     # Get content sections
-    sections = main_body.findall('common:sections/common:section',
-                                 elsevier_ns)
+    sections = main_body_elem.findall('common:sections/common:section',
+                                      elsevier_ns)
     if len(sections) == 0:
         logger.info("Found no sections in main body")
         return None
@@ -181,6 +234,17 @@ def extract_text(xml_string):
                                  else '' for c in p.getchildren()])
             full_txt += '\n'
     return full_txt
+
+
+def _get_raw_text(full_text_elem):
+    # Look for raw_text
+    raw_text = full_text_elem.find('xocs:doc/xocs:rawtext', elsevier_ns)
+    if raw_text is None:
+        logger.info("Could not find rawtext element xocs:doc/xocs:rawtext")
+        return None
+    else:
+        logger.info("Found rawtext element xocs:doc/xocs:rawtext")
+        return raw_text.text
 
 
 @lru_cache(maxsize=100)

@@ -76,7 +76,14 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
     # If there's nothing (even an abstract on S3), or if there's an abstract
     # and we're forcing fulltext lookup, do the lookup
     elif ft_content_type_s3 is None or \
-            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup):
+            (ft_content_type_s3 == 'abstract' and force_fulltext_lookup) or \
+            (ft_content_type_s3 == 'elsevier_xml' and
+                    not elsevier_client.extract_text(ft_content_s3)):
+        # FIXME FIXME FIXME
+        if ft_content_type_s3 == 'elsevier_xml':
+            logger.info('elsevier_xml for %s missing full text element, '
+                        'getting again.' % pmid)
+        # FIXME FIXME FIXME
         # Try to retrieve from literature client
         logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
@@ -96,6 +103,7 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         elif ft_content_type == 'abstract' and ft_content_type_s3 is None:
             logger.info("PMID%s: found abstract, uploading to S3" % pmid)
             put_abstract(pmid, ft_content)
+            return (ft_content, ft_content_type)
         # We got a full text (or something other than None or abstract...)
         else:
             logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
@@ -107,7 +115,8 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         # In future, could check for abstract even if full text is found, and
         # upload it just to have it
         return (ft_content_s3, ft_content_type_s3)
-
+    # We should always return before we get here
+    assert False
 
 def get_gz_object(key):
     try:
@@ -199,8 +208,9 @@ def get_reach_metadata(pmid):
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key' % reach_key)
+            logger.info('No REACH output found on S3 for key %s' % reach_key)
             reach_version = None
+            source_text = None
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
@@ -225,7 +235,7 @@ def get_reach_json_str(pmid):
         reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key' % reach_key)
+            logger.info('No REACH output found on S3 for key %s' % reach_key)
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
