@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import stat
 import sys
 import tempfile
 import shutil
@@ -121,6 +122,8 @@ if __name__ == '__main__':
     # Create the temp directories for input and output
     base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' %
                                 (start_index, end_index), dir=tmp_dir)
+    # Make the temp directory writeable by REACH
+    os.chmod(base_dir, stat.S_IRWXO | stat.S_IRWXU | stat.S_IRWXG)
     input_dir = os.path.join(base_dir, 'input')
     output_dir = os.path.join(base_dir, 'output')
     os.makedirs(input_dir)
@@ -297,9 +300,15 @@ if __name__ == '__main__':
       logfile = {base_dir}/reach.log
     }}
 
-    # this log file gets overwritten every time ReachCLI is executed
-    # so you should copy it if you want to keep it around
-    logFile = {base_dir}/log.txt
+    # restart configuration
+    restart {{
+      # restart allows batch jobs to skip over input files already successfully
+      # processed
+      useRestart = false
+      # restart log is one filename per line list of input files already
+      # successfully processed
+      logfile = {base_dir}/restart.log
+    }}
 
     # grounding configuration
     grounding: {{
