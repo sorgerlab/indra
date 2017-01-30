@@ -107,8 +107,7 @@ class SparserProcessor(object):
                 continue
             # Get evidence
             ev = self._get_evidence(sentence)
-            st = Activation(subj, 'activity', obj, 'activity', True,
-                            evidence=[ev])
+            st = Activation(subj, obj, evidence=[ev])
             self.statements.append(st)
 
     def _get_agent_from_ref(self, ref):
@@ -130,7 +129,7 @@ class SparserProcessor(object):
         db_refs = {}
         text_tag = ref.find("var/[@name='raw-text']")
         if text_tag is not None:
-            db_refs['TExT'] = text_tag.text
+            db_refs['TEXT'] = text_tag.text
 
         if uid is not None and uid.startswith('UP:'):
             up_mnemonic = uid[3:]
