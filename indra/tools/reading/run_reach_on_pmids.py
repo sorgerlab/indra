@@ -73,7 +73,7 @@ if __name__ == '__main__':
     verbose = True
     path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    reach_version = '1.3.3-5af7782c76'
+    reach_version = '1.3.3-38d2c4330'
     force_read = False
     force_fulltext = False
 
