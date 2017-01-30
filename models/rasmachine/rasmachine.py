@@ -37,6 +37,13 @@ def get_searchterm_pmids(search_terms, num_days=1):
         pmids[s] = ids
     return pmids
 
+def get_searchgenes_pmids(search_genes, num_days=1):
+    pmids = {}
+    for s in search_genes:
+        ids = pubmed_client.get_ids_for_gene(s, reldate=num_days)
+        pmids[s] = ids
+    return pmids
+
 def check_pmids(stmts):
     for stmt in stmts:
         for ev in stmt.evidence:
@@ -216,6 +223,10 @@ def get_config(config_fname):
 
     return config
 
+def _extend_dict(d1, d2):
+    for k, v in d2.items():
+        d1[k] = v
+    return d1
 
 if __name__ == '__main__':
     logger.info('-------------------------')
@@ -313,14 +324,27 @@ if __name__ == '__main__':
             logger.error(e)
 
     pmids = {}
+    # Get PMIDs from general search_terms
     search_terms = config.get('search_terms')
     if not search_terms:
         logger.info('No search terms argument (search_terms) specified.')
     else:
         logger.info('Using search terms: %s' % ', '.join(search_terms))
-        pmids = get_searchterm_pmids(search_terms, num_days=5)
+        pmids_term = get_searchterm_pmids(search_terms, num_days=5)
         num_pmids = sum([len(pm) for _, pm in pmids.items()])
-        logger.info('Collected %d PMIDs from PubMed.' % num_pmids)
+        logger.info('Collected %d PMIDs from PubMed search_terms.' % num_pmids)
+        pmids = _extend_dict(pmids, pmids_term)
+
+    # Get PMIDs from search_genes
+    search_genes = config.get('search_genes')
+    if not search_genes:
+        logger.info('No search genes argument (search_genes) specified.')
+    else:
+        logger.info('Using search genes: %s' % ', '.join(search_genes))
+        pmids_gene = get_searchgenes_pmids(search_genes, num_days=5)
+        num_pmids = sum([len(pm) for _, pm in pmids.items()])
+        logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
+        pmids = _extend_dict(pmids, pmids_gene)
 
     # Put the email_pmids into the pmids dictionary
     pmids['Gmail'] = email_pmids
