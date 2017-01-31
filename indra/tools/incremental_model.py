@@ -122,13 +122,13 @@ class IncrementalModel(object):
         stmts = ac.map_grounding(stmts)
 
         if filters and ('grounding' in filters):
-            stmts = ac.filter_grounded_only(stmts, filters)
+            stmts = ac.filter_grounded_only(stmts)
 
         # Fix sites
         stmts = ac.map_sequence(stmts)
 
         if filters and 'human_only' in filters:
-            stmts = ac.filter_human_only(stmts, filters)
+            stmts = ac.filter_human_only(stmts)
 
         # Run preassembly
         stmts = ac.run_preassembly(stmts, return_toplevel=False)

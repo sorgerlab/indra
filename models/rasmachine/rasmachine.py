@@ -386,10 +386,10 @@ if __name__ == '__main__':
     # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
     stats['orig_assembled'] = len(model.assembled_stmts)
-    db_stmts = filter_evidence_source(model.assembled_stmts,
-                                      ['biopax', 'bel'], policy='one')
-    no_db_stmts = filter_evidence_source(model.assembled_stmts,
-                                         ['biopax', 'bel'], policy='none')
+    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                         ['biopax', 'bel'], policy='one')
+    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                            ['biopax', 'bel'], policy='none')
     no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
     orig_stmts = db_stmts + no_db_stmts
     stats['orig_final'] = len(orig_stmts)
@@ -407,10 +407,10 @@ if __name__ == '__main__':
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
     stats['new_assembled'] = len(model.assembled_stmts)
-    db_stmts = filter_evidence_source(model.assembled_stmts,
-                                      ['biopax', 'bel'], policy='one')
-    no_db_stmts = filter_evidence_source(model.assembled_stmts,
-                                         ['biopax', 'bel'], policy='none')
+    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                         ['biopax', 'bel'], policy='one')
+    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                            ['biopax', 'bel'], policy='none')
     no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
     new_stmts = db_stmts + no_db_stmts
     stats['new_final'] = len(new_stmts)
