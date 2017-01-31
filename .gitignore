@@ -102,3 +102,7 @@ indra/benchmarks/assembly_eval/batch4/trips
 *.java
 *.xbel
 *.tsv
+*.ai
+*.png
+*.eps
+*.gz

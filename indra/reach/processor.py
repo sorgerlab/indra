@@ -379,6 +379,9 @@ class ReachProcessor(object):
                 db_refs['MESH'] = xr['id']
             elif ns == 'hmdb':
                 db_refs['HMDB'] = xr['id']
+            elif ns == 'simple_chemical':
+                if xr['id'].startswith('HMDB'):
+                    db_refs['HMDB'] = xr['id']
             elif ns == 'be':
                 db_refs['BE'] = xr['id']
             # These name spaces are ignored

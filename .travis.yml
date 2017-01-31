@@ -63,7 +63,7 @@ script:
   - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-gordo-1.3.3-SNAPSHOT.jar
   - cd $TRAVIS_BUILD_DIR
   - nosetests indra
-     --with-doctest --with-doctest-ignore-unicode
+     -v --with-doctest --with-doctest-ignore-unicode
      --with-coverage --cover-inclusive --cover-package=indra
   - cd indra/benchmarks/assembly_eval/batch4
   - python run_combined.py

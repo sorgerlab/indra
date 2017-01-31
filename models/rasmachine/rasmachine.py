@@ -14,6 +14,8 @@ import gmail_client
 import twitter_client
 import ndex.client
 from indra import reach
+import indra.tools.assemble_corpus as ac
+from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler, PysbAssembler
 from indra.tools.incremental_model import IncrementalModel
@@ -22,6 +24,12 @@ model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one', 'human_only']
 
 logger = logging.getLogger('rasmachine')
+
+def build_prior(genes, out_file):
+    gn = GeneNetwork(genes)
+    stmts = gn.get_statements(filter=False)
+    ac.dump_statements(stmts, out_file)
+    return stmts
 
 def get_email_pmids(gmail_cred, num_days=10):
     M = gmail_client.gmail_login(gmail_cred.get('user'),
@@ -33,7 +41,22 @@ def get_email_pmids(gmail_cred, num_days=10):
 def get_searchterm_pmids(search_terms, num_days=1):
     pmids = {}
     for s in search_terms:
+        # Special cases
+        if s.upper() == 'MET':
+            s = 'c-MET'
+        elif s.upper() == 'JUN':
+            s = 'c-JUN'
         ids = pubmed_client.get_ids(s, reldate=num_days)
+        pmids[s] = ids
+    return pmids
+
+def get_searchgenes_pmids(search_genes, num_days=1):
+    pmids = {}
+    for s in search_genes:
+        try:
+            ids = pubmed_client.get_ids_for_gene(s, reldate=num_days)
+        except ValueError as e:
+            logger.error('Gene symbol %s is invalid')
         pmids[s] = ids
     return pmids
 
@@ -45,37 +68,32 @@ def check_pmids(stmts):
                     logger.warning('Invalid PMID: %s' % ev.pmid)
 
 def process_paper(model_name, pmid):
-    abstract_path = os.path.join(model_path, model_name,
-                                 'jsons', 'abstract', 'PMID%s.json' % pmid)
-    fulltext_path = os.path.join(model_path, model_name,
-                                 'jsons', 'full', 'PMID%s.json' % pmid)
+    json_path = os.path.join(model_path, model_name,
+                             'jsons', 'PMID%s.json' % pmid)
 
     if pmid.startswith('api') or pmid.startswith('PMID'):
         logger.warning('Invalid PMID: %s' % pmid)
-    # If the paper has been parsed, use the parse output file
-    if os.path.exists(abstract_path):
-        rp = reach.process_json_file(abstract_path, citation=pmid)
-        txt_format = 'abstract'
-    elif os.path.exists(fulltext_path):
-        rp = reach.process_json_file(fulltext_path, citation=pmid)
-        txt_format = 'txt'
-    # If the paper has not been parsed, download the text and parse
+    # If the paper has been read, use the json output file
+    if os.path.exists(json_path):
+        rp = reach.process_json_file(json_path, citation=pmid)
+        txt_format = 'existing_json'
+    # If the paper has not been read, download the text and read
     else:
         txt, txt_format = get_full_text(pmid, 'pmid')
         if txt_format == 'pmc_oa_xml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', fulltext_path)
+                shutil.move('reach_output.json', json_path)
         elif txt_format == 'elsevier_xml':
             # Extract the raw text from the Elsevier XML
             txt = elsevier_client.extract_text(txt)
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', fulltext_path)
+                shutil.move('reach_output.json', json_path)
         elif txt_format == 'abstract':
             rp = reach.process_text(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
-                shutil.move('reach_output.json', abstract_path)
+                shutil.move('reach_output.json', json_path)
         else:
             rp = None
     if rp is not None:
@@ -83,7 +101,7 @@ def process_paper(model_name, pmid):
     return rp, txt_format
 
 def make_status_message(stats):
-    ndiff = (stats['new_top'] - stats['orig_top'])
+    ndiff = (stats['new_final'] - stats['orig_final'])
     msg_str = None
     if (((stats['new_papers'] > 0) or
         (stats['new_abstracts'] > 0)) and
@@ -114,6 +132,7 @@ def make_status_message(stats):
 def extend_model(model_name, model, pmids):
     npapers = 0
     nabstracts = 0
+    nexisting = 0
     id_used = []
     for search_term, pmid_list in pmids.items():
         for pmid in pmid_list:
@@ -128,8 +147,10 @@ def extend_model(model_name, model, pmids):
                 if rp is not None:
                     if txt_format == 'abstract':
                         nabstracts += 1
-                    else:
+                    elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
                         npapers += 1
+                    else:
+                        nexisting += 1
                     if not rp.statements:
                         logger.info('No statement from PMID%s (%s)' % \
                                     (pmid, txt_format))
@@ -139,10 +160,7 @@ def extend_model(model_name, model, pmids):
                     model.add_statements(pmid, rp.statements)
                 else:
                     logger.info('Reach processing failed for PMID%s' % pmid)
-    # Having added new statements, we preassemble the model
-    # to merge duplicated and find related statements
-    model.preassemble(filters=global_filters)
-    return npapers, nabstracts
+    return npapers, nabstracts, nexisting
 
 def _increment_ndex_ver(ver_str):
     if not ver_str:
@@ -218,6 +236,10 @@ def get_config(config_fname):
 
     return config
 
+def _extend_dict(d1, d2):
+    for k, v in d2.items():
+        d1[k] = v
+    return d1
 
 if __name__ == '__main__':
     logger.info('-------------------------')
@@ -303,35 +325,58 @@ if __name__ == '__main__':
     else:
         logger.info('Not using NDEx due to missing information.')
 
-    email_pmids = []
+    pmids = {}
     # Get email PMIDs
     if use_gmail:
         logger.info('Getting PMIDs from emails.')
         try:
             email_pmids = get_email_pmids(gmail_cred, num_days=10)
+            # Put the email_pmids into the pmids dictionary
+            pmids['Gmail'] = email_pmids
             logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
         except Exception as e:
             logger.error('Could not get PMIDs from Gmail, continuing.')
             logger.error(e)
 
-    pmids = {}
+    # Get PMIDs for general search_terms
     search_terms = config.get('search_terms')
     if not search_terms:
         logger.info('No search terms argument (search_terms) specified.')
     else:
+        search_genes = config.get('search_genes')
+        if search_genes:
+            search_terms += search_genes
         logger.info('Using search terms: %s' % ', '.join(search_terms))
-        pmids = get_searchterm_pmids(search_terms, num_days=5)
-        num_pmids = sum([len(pm) for _, pm in pmids.items()])
-        logger.info('Collected %d PMIDs from PubMed.' % num_pmids)
+        pmids_term = get_searchterm_pmids(search_terms, num_days=5)
+        num_pmids = sum([len(pm) for pm in pmids_term.values()])
+        logger.info('Collected %d PMIDs from PubMed search_terms.' % num_pmids)
+        pmids = _extend_dict(pmids, pmids_term)
 
-    # Put the email_pmids into the pmids dictionary
-    pmids['Gmail'] = email_pmids
+
+    search_genes = config.get('search_genes')
+
+    '''
+    # Get PMIDs for search_genes
+    # Temporarily removed because Entrez-based article searches
+    # are lagging behind and cannot be time-limited
+    if not search_genes:
+        logger.info('No search genes argument (search_genes) specified.')
+    else:
+        logger.info('Using search genes: %s' % ', '.join(search_genes))
+        pmids_gene = get_searchgenes_pmids(search_genes, num_days=5)
+        num_pmids = sum([len(pm) for pm in pmids_gene.values()])
+        logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
+        pmids = _extend_dict(pmids, pmids_gene)
+    '''
+
 
     # Load the model
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
     model = IncrementalModel(inc_model_file)
+    # Include search genes as prior genes
+    model.prior_genes = search_genes
     stats = {}
     logger.info(time.strftime('%c'))
     logger.info('Preassembling original model.')
@@ -340,52 +385,36 @@ if __name__ == '__main__':
 
     # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
-    stats['orig_unique'] = len(model.unique_stmts)
-    stats['orig_top'] = len(model.toplevel_stmts)
-    # Filter the top level statements with a probability cutoff
-    orig_likely = []
-    for s in model.toplevel_stmts:
-        if s.evidence[0].source_api in ['bel', 'biopax']:
-            orig_likely.append(s)
-        elif s.belief > belief_threshold:
-            orig_likely.append(s)
-    stats['orig_likely'] = len(orig_likely)
-
-    # Make a PySB model from filtered statements
-    #pysb_assmb = PysbAssembler()
-    #pysb_assmb.add_statements(orig_likely)
-    #pysb_assmb.make_model()
-    # Stats for Pysb assembled model
-    #stats['orig_monomers'] = len(pysb_assmb.model.monomers)
-    #stats['orig_rules'] = len(pysb_assmb.model.rules)
+    stats['orig_assembled'] = len(model.assembled_stmts)
+    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                         ['biopax', 'bel'], policy='one')
+    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                            ['biopax', 'bel'], policy='none')
+    no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
+    orig_stmts = db_stmts + no_db_stmts
+    stats['orig_final'] = len(orig_stmts)
+    logger.info('%d final statements' % len(orig_stmts))
 
     # Extend the model with PMIDs
     logger.info('----------------')
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
-    stats['new_papers'], stats['new_abstracts'] = \
+    stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
                             extend_model(model_name, model, pmids)
+    # Having added new statements, we preassemble the model
+    model.preassemble(filters=global_filters)
 
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
-    stats['new_unique'] = len(model.unique_stmts)
-    stats['new_top'] = len(model.toplevel_stmts)
-    new_likely = []
-    for s in model.toplevel_stmts:
-        if s.evidence[0].source_api in ['bel', 'biopax']:
-            new_likely.append(s)
-        elif s.belief > belief_threshold:
-            new_likely.append(s)
-    stats['new_likely'] = len(new_likely)
-    logger.info('%d likely statements' % len(new_likely))
-
-    # Make a PySB model from filtered statements
-    #pysb_assmb = PysbAssembler()
-    #pysb_assmb.add_statements(new_likely)
-    #pysb_assmb.make_model()
-    # Stats for Pysb assembled model
-    #stats['new_monomers'] = len(pysb_assmb.model.monomers)
-    #stats['new_rules'] = len(pysb_assmb.model.rules)
+    stats['new_assembled'] = len(model.assembled_stmts)
+    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                         ['biopax', 'bel'], policy='one')
+    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
+                                            ['biopax', 'bel'], policy='none')
+    no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
+    new_stmts = db_stmts + no_db_stmts
+    stats['new_final'] = len(new_stmts)
+    logger.info('%d final statements' % len(new_stmts))
 
     check_pmids(model.get_statements())
 
@@ -402,11 +431,11 @@ if __name__ == '__main__':
                                       'model-%s.pkl' % date_str)
     model.save(inc_model_bkp_file)
 
-    # Upload the new, highly likely statements to NDEx
+    # Upload the new, final statements to NDEx
     if use_ndex:
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
-        upload_to_ndex(new_likely, ndex_cred)
+        upload_to_ndex(new_stmts, ndex_cred)
 
     # Print and tweet the status message
     logger.info('--- Final statistics ---')

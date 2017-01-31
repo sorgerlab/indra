@@ -507,6 +507,8 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
         If 'one', a statement that hase evidence from any of the sources is
         kept. If 'all', only those statements are kept which have evidence
         from all the input sources specified in source_apis.
+        If 'none', only those statements are kept that don't have evidence
+        from any of the sources specified in source_apis.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -525,6 +527,9 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
                 stmts_out.append(st)
         if policy == 'all':
             if sources.intersection(source_apis) == set(source_apis):
+                stmts_out.append(st)
+        if policy == 'none':
+            if not sources.intersection(source_apis):
                 stmts_out.append(st)
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
