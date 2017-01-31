@@ -573,6 +573,7 @@ class BelProcessor(object):
                 ?stmt belvoc:hasSubject ?tf .
                 ?stmt belvoc:hasObject ?target .
                 ?subject a belvoc:ModifiedProteinAbundance .
+                ?subject belvoc:hasModificationType ?mod .
                 ?subject belvoc:hasChild ?tf .
                 ?tf belvoc:hasConcept ?tfName .
                 ?target a belvoc:RNAAbundance .
@@ -592,6 +593,8 @@ class BelProcessor(object):
                     mod = term_from_uri(stmt[6])
                     mod_pos = term_from_uri(stmt[7])
                     mc = self._get_mod_condition(mod, mod_pos)
+                    if mc is None:
+                        continue
                     tf = self.get_agent(stmt[0], stmt[3])
                     tf.mods = mods=[mc]
                 else:
@@ -939,6 +942,8 @@ class BelProcessor(object):
 
     @staticmethod
     def _get_mod_condition(mod, mod_pos):
+        if not mod:
+            return None
         if mod.startswith('Phosphorylation'):
             mc = ModCondition('phosphorylation')
         else:
