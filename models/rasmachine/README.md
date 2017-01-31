@@ -37,11 +37,14 @@ search_terms:
 ```
 
 The entries of `search_genes` is a special list in which _only_ standard
-HGNC gene symbols are allowed. Entries in this list are used to search
-PubMed specifically for articles that are tagged with the gene's unique
-identifier rather than its string name. This mode of searching for articles
-on specific genes is much more reliable than searching for them using
-string names.
+HGNC gene symbols are allowed. Entries in this list are also used
+to search PubMed but also serve as a list of `prior` genes that are known
+to be relevant for the model.
+#Entries in this can be used to search
+#PubMed specifically for articles that are tagged with the gene's unique
+#identifier rather than its string name. This mode of searching for articles
+#on specific genes is much more reliable than searching for them using
+#string names.
 
 
 Example:
