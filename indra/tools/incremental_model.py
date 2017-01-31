@@ -4,8 +4,9 @@ import pickle
 import logging
 from indra.statements import Agent
 from indra.belief import BeliefEngine
+import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler
-from indra.databases import uniprot_client
+from indra.databases import uniprot_client, hgnc_client
 from indra.preassembler import Preassembler
 from indra.preassembler import grounding_mapper as gm
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -29,11 +30,8 @@ class IncrementalModel(object):
     stmts : dict[str, list[indra.statements.Statement]]
         A dictionary of INDRA Statements keyed by PMIDs that stores the current
         state of the IncrementalModel.
-    unique_stmts : list[indra.statements.Statement]
-        A list of INDRA Statements after de-duplication.
-    toplevel_stmts : list[indra.statements.Statement]
-        A list of the top level (most specific) INDRA Statements after
-        preassembly.
+    assembled_stmts : list[indra.statements.Statement]
+        A list of INDRA Statements after assembly.
     """
     def __init__(self, model_fname=None):
         if model_fname is None:
@@ -46,6 +44,7 @@ class IncrementalModel(object):
                 logger.warning('Could not load %s, starting new model.' %
                                model_fname)
                 self.stmts = {}
+        self.prior_genes = []
         self.relevant_stmts = []
         self.unique_stmts = []
         self.toplevel_stmts = []
@@ -62,39 +61,8 @@ class IncrementalModel(object):
         with open(model_fname, 'wb') as fh:
             pickle.dump(self.stmts, fh, protocol=2)
 
-    def _relevance_filter(self, stmts_in, filters=None):
-        if filters is None:
-            filters = []
-        stmts_out = stmts_in
-        if 'grounding' in filters:
-            stmts_out = _grounding_filter(stmts_out)
-        if 'human_only' in filters:
-            stmts_out = _human_only_filter(stmts_out)
-        if 'model_all' in filters:
-            stmts_out = _ref_agents_all_filter(stmts_out,
-                                               self.get_model_agents())
-        if 'model_one' in filters:
-            stmts_out = _ref_agents_one_filter(stmts_out,
-                                               self.get_model_agents())
-        if 'prior_all' in filters:
-            stmts_out = _ref_agents_all_filter(stmts_out,
-                                               self.get_prior_agents())
-        if 'prior_one' in filters:
-            stmts_out = _ref_agents_one_filter(stmts_out,
-                                               self.get_prior_agents())
-        return stmts_out
-
-    def add_statements(self, pmid, stmts, filters=None):
+    def add_statements(self, pmid, stmts):
         """Add INDRA Statements to the incremental model indexed by PMID.
-
-        Currently the following filter options are implemented:
-        - grounding: require that all Agents in statements are grounded
-        - model_one: require that at least one Agent is in the incremental model
-        - model_all: require that all Agents are in the incremental model
-        - prior_one: require that at least one Agent is in the prior model
-        - prior_all: require that all Agents are in the prior model
-        Note that model_one -> prior_all are increasingly more restrictive
-        options.
 
         Parameters
         ----------
@@ -102,20 +70,29 @@ class IncrementalModel(object):
             The PMID of the paper from which statements were extracted.
         stmts : list[indra.statements.Statement]
             A list of INDRA Statements to be added to the model.
-        filters : Optional[list[str]]
-            A list of filter options to apply when adding the statements.
-            See description above for more details. Default: None
         """
         if pmid not in self.stmts:
-            self.stmts[pmid] = []
-        if not stmts:
-            return
-        if not filters:
+            self.stmts[pmid] = stmts
+        else:
             self.stmts[pmid] += stmts
-            return
 
-        relevant_stmts = self._relevance_filter(stmts, filters)
-        self.stmts[pmid] += relevant_stmts
+    def _relevance_filter(self, stmts, filters=None):
+        if filters is None:
+            return stmts
+        logger.info('Running relevance filter on %d statements' % len(stmts))
+        prior_agents = get_gene_agents(self.prior_genes)
+        if 'model_all' in filters:
+            agents = self.get_model_agents() + prior_agents
+            stmts = _ref_agents_all_filter(stmts, agents)
+        elif 'model_one' in filters:
+            agents = self.get_model_agents() + prior_agents
+            stmts = _ref_agents_one_filter(stmts, agents)
+        elif 'prior_all' in filters:
+            stmts = _ref_agents_all_filter(stmts, prior_agents)
+        elif 'prior_one' in filters:
+            stmts = _ref_agents_one_filter(stmts, prior_agents)
+        logger.info('%d statements after relevance filter' % len(stmts))
+        return stmts
 
     def preassemble(self, filters=None):
         """Preassemble the Statements collected in the model.
@@ -140,59 +117,27 @@ class IncrementalModel(object):
             See description above for more details. Default: None
         """
         stmts = self.get_statements()
-        logger.info('%d raw Statements in total' % len(stmts))
 
         # Fix grounding
-        logger.info('Running grounding map')
-        twg = gm.agent_texts_with_grounding(stmts)
-        prot_map = gm.protein_map_from_twg(twg)
-        gm.default_grounding_map.update(prot_map)
-        gmap = gm.GroundingMapper(gm.default_grounding_map)
-        stmts = gmap.map_agents(stmts, do_rename=True)
+        stmts = ac.map_grounding(stmts)
 
-        logger.info('%d Statements after grounding map' % len(stmts))
+        if filters and ('grounding' in filters):
+            stmts = ac.filter_grounded_only(stmts, filters)
 
         # Fix sites
-        sm = SiteMapper(default_site_map)
-        stmts, _ = sm.map_sites(stmts)
+        stmts = ac.map_sequence(stmts)
 
-        logger.info('%d Statements with valid sequence' % len(stmts))
+        if filters and 'human_only' in filters:
+            stmts = ac.filter_human_only(stmts, filters)
 
-        if filters:
-            if 'grounding' in filters:
-                # Filter out ungrounded statements
-                logger.info('Running grounding filter')
-                stmts = self._relevance_filter(stmts, ['grounding'])
-                logger.info('%s Statements after filter' % len(stmts))
-            if 'human_only' in filters:
-                # Filter out non-human proteins
-                logger.info('Running non-human protein filter')
-                stmts = self._relevance_filter(stmts, ['human_only'])
-                logger.info('%s Statements after filter' % len(stmts))
-            for rel_key in ('prior_one', 'model_one',
-                            'prior_all', 'model_all'):
-                if rel_key in filters:
-                    logger.info('Running %s relevance filter' % rel_key)
-                    stmts = self._relevance_filter(stmts, [rel_key])
-                    logger.info('%s Statements after filter' % len(stmts))
+        # Run preassembly
+        stmts = ac.run_preassembly(stmts, return_toplevel=False)
 
-        # Combine duplicates
-        logger.info('Preassembling %d Statements' % len(stmts))
-        pa = Preassembler(hierarchies, stmts)
-        self.unique_stmts = pa.combine_duplicates()
-        logger.info('%d unique Statements' % len(self.unique_stmts))
+        # Run relevance filter
+        stmts = self._relevance_filter(stmts, filters)
 
-        # Run BeliefEngine on unique statements
-        be = BeliefEngine()
-        be.set_prior_probs(self.unique_stmts)
-
-        # Build statement hierarchy
-        self.unique_stmts = pa.combine_related(return_toplevel=False)
-        self.toplevel_stmts = [st for st in self.unique_stmts
-                               if not st.supports]
-        logger.info('%d top-level Statements' % len(self.toplevel_stmts))
-        # Run BeliefEngine on hierarchy
-        be.set_hierarchy_probs(self.unique_stmts)
+        # Save Statements
+        self.assembled_stmts = stmts
 
     def load_prior(self, prior_fname):
         """Load a set of prior statements from a pickle file.
@@ -205,8 +150,7 @@ class IncrementalModel(object):
         prior_fname : str
             The name of the pickle file containing the prior Statements.
         """
-        with open(prior_fname, 'rb') as fh:
-            self.stmts['prior'] = pickle.load(fh)
+        self.stmts['prior'] = ac.load_statements(prior_fname)
 
     def get_model_agents(self):
         """Return a list of all Agents from all Statements.
@@ -216,25 +160,9 @@ class IncrementalModel(object):
         agents : list[indra.statements.Agent]
            A list of Agents that are in the model.
         """
-        model_stmts = self.get_statements_noprior()
+        model_stmts = self.get_statements()
         agents = []
         for stmt in model_stmts:
-            for a in stmt.agent_list():
-                if a is not None:
-                    agents.append(a)
-        return agents
-
-    def get_prior_agents(self):
-        """Return a list of all Agents from the prior Statements.
-
-        Returns
-        -------
-        agents : list[indra.statements.Agent]
-           A list of Agents that are in the prior.
-        """
-        prior_stmts = self.get_statements_prior()
-        agents = []
-        for stmt in prior_stmts:
             for a in stmt.agent_list():
                 if a is not None:
                     agents.append(a)
@@ -291,6 +219,20 @@ def _get_agent_comp(agent):
     comp_id = eh.components.get(uri)
     return comp_id
 
+def get_gene_agents(gene_names):
+    agents = []
+    for gn in gene_names:
+        hgnc_id = hgnc_client.get_hgnc_id(gn)
+        if not hgnc_id:
+            logger.warning('Invalid HGNC gene symbol: %s' % gn)
+            continue
+        db_refs = {'HGNC': hgnc_id}
+        up_id = hgnc_client.get_uniprot_id(hgnc_id)
+        if up_id:
+            db_refs['UP'] = up_id
+        agent = Agent(gn, db_refs=db_refs)
+        agents.append(agent)
+    return agents
 
 def _ref_agents_all_filter(stmts_in, ref_agents):
     # If there is no reference, keep everything by default
@@ -363,40 +305,6 @@ def _ref_agents_one_filter(stmts_in, ref_agents):
         if found:
             stmts_out.append(st)
     return stmts_out
-
-
-def _grounding_filter(stmts_in):
-    stmts_out = []
-    for st in stmts_in:
-        # Check that all agents are grounded
-        grounded = True
-        for ag in st.agent_list():
-            if ag is None:
-                continue
-            if not ag.db_refs or list(ag.db_refs.keys()) == ['TEXT']:
-                grounded = False
-                break
-        if grounded:
-            stmts_out.append(st)
-    return stmts_out
-
-
-def _human_only_filter(stmts_in):
-    stmts_out = []
-    for st in stmts_in:
-        agents = [a for a in st.agent_list() if a is not None]
-        non_human = False
-        for a in agents:
-            hgnc_id = a.db_refs.get('HGNC')
-            up_id = a.db_refs.get('UP')
-            if not hgnc_id:
-                if up_id and not uniprot_client.is_human(up_id):
-                    non_human = True
-                    break
-        if not non_human:
-            stmts_out.append(st)
-    return stmts_out
-
 
 def _agent_related(a1, a2):
     if a1.matches(a2) or a1.isa(a2, hierarchies) or a2.isa(a1, hierarchies):
