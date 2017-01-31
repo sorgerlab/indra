@@ -15,6 +15,9 @@ from indra.databases import uniprot_client
 
 logger = logging.getLogger('preassembler')
 
+from matplotlib import pyplot as plt
+import numpy as np
+
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
 
@@ -225,6 +228,9 @@ class Preassembler(object):
         for stmt in unique_stmts:
             stmts_by_type[type(stmt)].append(stmt)
 
+        group_sizes = []
+        num_stmts = len(unique_stmts)
+
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
@@ -249,7 +255,30 @@ class Preassembler(object):
                             if component is not None:
                                 entity_key = component
                             else:
-                                entity_key = a.entity_matches_key()
+                                key = (i, component)
+                            # Don't add the same Statement (same object) twice
+                            if stmt not in stmt_by_group[key]:
+                                stmt_by_group[key].append(stmt)
+                # If the Statement has no Agent belonging to any component
+                # then we put it in a special group
+                if not any_component:
+                    no_comp_stmts.append(stmt)
+
+            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
+            for key, stmts in stmt_by_group.items():
+                group_sizes.append(len(stmts) / float(num_stmts))
+                for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                    self._set_supports(stmt1, stmt2)
+
+            #==========================================================
+            # Next we deal with the Statements that have no associated
+            # entity hierarchy component IDs.
+            # We take all the Agent entity_matches_key()-s and group
+            # Statements based on this key
+            stmt_by_group = collections.defaultdict(lambda: [])
+            for stmt in no_comp_stmts:
+                for i, a in enumerate(stmt.agent_list()):
+                    if a is not None:
                         # For Complexes we cannot optimize by argument
                         # position because all permutations need to be
                         # considered but we can use the number of members
@@ -270,12 +299,25 @@ class Preassembler(object):
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
+                group_sizes.append(len(stmts) / float(num_stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
 
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
+
+        filt_gs = [g for g in group_sizes if np.log10(g) >= -4.0]
+        plt.ion()
+        #plt.figure()
+        #plt.hist(group_sizes, bins=20)
+        #plt.title('Group sizes (pct)')
+        #plt.savefig('gs.pdf')
+        plt.figure()
+        plt.hist(np.log10(filt_gs), bins=20)
+        plt.title('log10(group sizes (pct))')
+        plt.savefig('gs_log10.pdf')
+        import ipdb; ipdb.set_trace()
 
         self.related_stmts = related_stmts
         if return_toplevel:

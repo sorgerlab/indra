@@ -156,8 +156,11 @@ def run_preassembly(stmts_in, **kwargs):
 
     return_toplevel = kwargs.get('return_toplevel', True)
     options = {'save': dump_pkl, 'return_toplevel': return_toplevel}
+    start = time.time()
     stmts_out = run_preassembly_related(pa, be, **options)
-
+    end = time.time()
+    elapsed = end - start
+    print("Elapsed: %s" % elapsed)
     return stmts_out
 
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
