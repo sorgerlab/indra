@@ -40,7 +40,10 @@ def get_searchterm_pmids(search_terms, num_days=1):
 def get_searchgenes_pmids(search_genes, num_days=1):
     pmids = {}
     for s in search_genes:
-        ids = pubmed_client.get_ids_for_gene(s, reldate=num_days)
+        try:
+            ids = pubmed_client.get_ids_for_gene(s, reldate=num_days)
+        except ValueError as e:
+            logger.error('Gene symbol %s is invalid')
         pmids[s] = ids
     return pmids
 

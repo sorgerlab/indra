@@ -21,8 +21,7 @@ Setting up search terms
 =======================
 
 The config.yml file is a standard YAML configuration file. A template
-is available in default-config.yaml which can be used by uncommenting
-and editing relevant blocks and then copied to model\_name/config.yaml.
+is available in  model\_name/config.yaml after having created the machine.
 
 Two important fields in config.yml are `search_terms` and `search_genes`
 both of which are YAML lists. The entries of `search_terms` are used
