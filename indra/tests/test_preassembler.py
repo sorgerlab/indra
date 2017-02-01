@@ -462,5 +462,3 @@ def test_return_toplevel():
     assert(len(stmts[ix].supports) == 1)
     assert(len(stmts[ix].supports[0].supported_by) == 1)
 
-if __name__ == '__main__':
-    test_modification_refinement_noenz2()

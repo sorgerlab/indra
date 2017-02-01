@@ -235,70 +235,44 @@ class Preassembler(object):
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             for stmt in stmts_this_type:
-                any_component = False
+                #import ipdb; ipdb.set_trace()
                 for i, a in enumerate(stmt.agent_list()):
                     if a is not None:
                         a_ns, a_id = a.get_grounding()
                         if a_ns is None or a_id is None:
-                            continue
-                        uri = eh.get_uri(a_ns, a_id)
-                        # This is the component ID corresponding to the agent
-                        # in the entity hierarchy
-                        component = eh.components.get(uri)
-                        if component is not None:
-                            any_component = True
-                            # For Complexes we cannot optimize by argument
-                            # position because all permutations need to be
-                            # considered but we can use the number of members
-                            # to statify into groups
-                            if stmt_type == Complex:
-                                key = (len(stmt.members), component)
-                            # For all other statements, we separate groups by
-                            # the argument position of the Agent
+                            entity_key = a.entity_matches_key()
+                        else:
+                            uri = eh.get_uri(a_ns, a_id)
+                            # This is the component ID corresponding to the agent
+                            # in the entity hierarchy
+                            component = eh.components.get(uri)
+                            if component is not None:
+                                entity_key = component
                             else:
-                                key = (i, component)
-                            # Don't add the same Statement (same object) twice
-                            if stmt not in stmt_by_group[key]:
-                                stmt_by_group[key].append(stmt)
-                # If the Statement has no Agent belonging to any component
-                # then we put it in a special group
-                if not any_component:
-                    no_comp_stmts.append(stmt)
-
-            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
-            for key, stmts in stmt_by_group.items():
-                for stmt1, stmt2 in itertools.combinations(stmts, 2):
-                    self._set_supports(stmt1, stmt2)
-
-            #==========================================================
-            # Next we deal with the Statements that have no associated
-            # entity hierarchy component IDs.
-            # We take all the Agent entity_matches_key()-s and group
-            # Statements based on this key
-            stmt_by_group = collections.defaultdict(lambda: [])
-            for stmt in no_comp_stmts:
-                for i, a in enumerate(stmt.agent_list()):
-                    if a is not None:
+                                entity_key = a.entity_matches_key()
                         # For Complexes we cannot optimize by argument
                         # position because all permutations need to be
-                        # considered
+                        # considered but we can use the number of members
+                        # to statify into groups
                         if stmt_type == Complex:
-                            key = (len(stmt.members), a.entity_matches_key())
+                            key = (len(stmt.members), entity_key)
                         # For all other statements, we separate groups by
                         # the argument position of the Agent
                         else:
-                            key = (i, a.entity_matches_key())
+                            key = (i, entity_key)
                         # Don't add the same Statement (same object) twice
                         if stmt not in stmt_by_group[key]:
                             stmt_by_group[key].append(stmt)
+                # If the Statement has no Agent belonging to any component
+                # then we put it in a special group
+                #if not any_component:
+                #    no_comp_stmts.append(stmt)
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
-            # This is the preassembly within each Statement group
             for key, stmts in stmt_by_group.items():
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
-                    if not stmt1.entities_match(stmt2):
-                        continue
                     self._set_supports(stmt1, stmt2)
+
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
