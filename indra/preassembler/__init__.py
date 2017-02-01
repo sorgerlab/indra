@@ -237,38 +237,145 @@ class Preassembler(object):
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
+            no_comp_stmts = []
+            stmt_by_first = collections.defaultdict(lambda: [])
+            stmt_by_second = collections.defaultdict(lambda: [])
+            none_first = collections.defaultdict(lambda: [])
+            none_second = collections.defaultdict(lambda: [])
             stmt_by_group = collections.defaultdict(lambda: [])
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             for stmt in stmts_this_type:
+                any_component = False
+                entities = []
                 for i, a in enumerate(stmt.agent_list()):
-                    if a is not None:
+                    # Entity is None
+                    if a is None:
+                        entities.append(a)
+                        continue
+                    # Entity is not None, but could be ungrounded or not
+                    # in a family
+                    else:
                         a_ns, a_id = a.get_grounding()
+                        # No grounding available--in this case, use the
+                        # entity_matches_key
                         if a_ns is None or a_id is None:
-                            entity_key = a.entity_matches_key()
+                            entities.append(a.entity_matches_key())
+                            continue
+                        # We have grounding, now check for a component ID
+                        uri = eh.get_uri(a_ns, a_id)
+                        # This is the component ID corresponding to the agent
+                        # in the entity hierarchy
+                        component = eh.components.get(uri)
+                        # If no component ID, use the entity_matches_key()
+                        if component is None:
+                            entities.append(a.entity_matches_key())
+                        # Component ID, so this is in a family
                         else:
-                            uri = eh.get_uri(a_ns, a_id)
-                            # This is the component ID corresponding to the
-                            # agent in the entity hierarchy
-                            component = eh.components.get(uri)
-                            if component is not None:
-                                entity_key = component
+                            any_component = True
+                            # For Complexes we cannot optimize by argument
+                            # position because all permutations need to be
+                            # considered but we can use the number of members
+                            # to statify into groups
+                            if stmt_type == Complex:
+                                key = (len(stmt.members), component)
+                            # For all other statements, we separate groups by
+                            # the argument position of the Agent
                             else:
-                                key = (i, component)
+                                entities.append(component)
                             # Don't add the same Statement (same object) twice
-                            if stmt not in stmt_by_group[key]:
-                                stmt_by_group[key].append(stmt)
+                            #if stmt not in stmt_by_group[key]:
+                            #    stmt_by_group[key].append(stmt)
+                # At this point we have an entity list
+                # If we're dealing with Complexes, sort the entities and use
+                # as dict key
+                if stmt_type == Complex:
+                    # There shouldn't be any statements of the type
+                    # e.g., Complex([Foo, None, Bar])
+                    assert None not in entities
+                    entities.sort()
+                    key = tuple(entities)
+                    if stmt not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt)
+                # Now look at all other statement types
+                # All other statements will have one or two entities
+                elif len(entities) == 1:
+                    # If only one entity, we only need the one key
+                    # It should not be None!
+                    assert None not in entities
+                    key = tuple(entities)
+                    if stmt not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt)
+                else:
+                    # Make sure we only have two entities, and they are not both None
+                    key = tuple(entities)
+                    assert len(key) == 2
+                    assert key != (None, None)
+                    # First agent is None; add in the statements, indexed by 2nd
+                    if key[0] is None and stmt not in none_first[key[1]]:
+                        none_first[key[1]].append(stmt)
+                    # Second agent is None; add in the statements, indexed by 1st
+                    elif key[1] is None and stmt not in none_second[key[0]]:
+                        none_second[key[0]].append(stmt)
+                    # Neither entity is None!
+                    elif None not in key:
+                        if stmt not in stmt_by_group[key]:
+                            stmt_by_group[key].append(stmt)
+                        if key not in stmt_by_first[key[0]]:
+                            stmt_by_first[key[0]].append(key)
+                        if key not in stmt_by_second[key[1]]:
+                            stmt_by_second[key[1]].append(key)
+
+                # FIXME FIXME FIXME
                 # If the Statement has no Agent belonging to any component
                 # then we put it in a special group
-                if not any_component:
-                    no_comp_stmts.append(stmt)
-
+                #if not any_component:
+                #    no_comp_stmts.append(stmt)
+                # FIXME FIXME FIXME
+            # When we've gotten here, we should have stmt_by_group entries, and
+            # we may or may not have stmt_by_first/second dicts filled out
+            # (depending on the statement type).
+            if none_first:
+                # Get the keys associated with stmts having a None first argument
+                for second_arg, stmts in none_first.items():
+                    # Look for any statements with this second arg
+                    second_arg_keys = stmt_by_second[second_arg]
+                    # If there are no more specific statements matching this
+                    # set of statements with a None first arg, then the statements
+                    # with the None first arg deserve to be in their own group.
+                    if not second_arg_keys:
+                        stmt_by_group[(None, second_arg)] = stmts
+                    # On the other hand, if there are statements with a matching
+                    # second arg component, we need to add the None first statements
+                    # to all groups with the matching second arg
+                    for second_arg_key in second_arg_keys:
+                        stmt_by_group[second_arg_key] += stmts
+            # Now do the corresponding steps for the statements with None as the
+            # second argument:
+            if none_second:
+                for first_arg, stmts in none_second.items():
+                    # Look for any statements with this first arg
+                    first_arg_keys = stmt_by_first[first_arg]
+                    # If there are no more specific statements matching this
+                    # set of statements with a None second arg, then the statements
+                    # with the None second arg deserve to be in their own group.
+                    if not first_arg_keys:
+                        stmt_by_group[(first_arg, None)] = stmts
+                    # On the other hand, if there are statements with a matching
+                    # first arg component, we need to add the None second statements
+                    # to all groups with the matching first arg
+                    for first_arg_key in first_arg_keys:
+                        stmt_by_group[first_arg_key] += stmts
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
                 group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
+            toplevel_stmts = [st for st in stmts_this_type if not st.supports]
+            logger.debug('%d top level' % len(toplevel_stmts))
+            related_stmts += toplevel_stmts
 
+            """
             #==========================================================
             # Next we deal with the Statements that have no associated
             # entity hierarchy component IDs.
@@ -301,6 +408,7 @@ class Preassembler(object):
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
+            """
 
         total_comps = 0
         for g in group_sizes:
