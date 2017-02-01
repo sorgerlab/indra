@@ -265,7 +265,7 @@ class Preassembler(object):
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
-                group_sizes.append(len(stmts) / float(num_stmts))
+                group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
 
@@ -294,7 +294,7 @@ class Preassembler(object):
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
-                group_sizes.append(len(stmts) / float(num_stmts))
+                group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
 
@@ -302,14 +302,20 @@ class Preassembler(object):
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
-        filt_gs = [g for g in group_sizes if np.log10(g) >= -4.0]
+        total_comps = 0
+        for g in group_sizes:
+            total_comps += g ** 2
+        print("Total comparisons: %s" % total_comps)
+        filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
+        filt_gs = [g for g in filt_gs if g >= -4.0]
+
         plt.ion()
         #plt.figure()
         #plt.hist(group_sizes, bins=20)
         #plt.title('Group sizes (pct)')
         #plt.savefig('gs.pdf')
         plt.figure()
-        plt.hist(np.log10(filt_gs), bins=20)
+        plt.hist(filt_gs, bins=20)
         plt.title('log10(group sizes (pct))')
         plt.savefig('gs_log10.pdf')
 
