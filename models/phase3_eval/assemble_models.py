@@ -11,13 +11,20 @@ from indra.assemblers import IndexCardAssembler
 from indra.statements import *
 from indra.assemblers import PysbAssembler, SifAssembler, CxAssembler
 
-import process_data
+import process_data, process_r3, process_sparser, process_trips
 from read_phosphosite import read_phosphosite
 
 def build_prior(genes, out_file):
     gn = GeneNetwork(genes, 'korkut')
     stmts = gn.get_statements(filter=False)
     ac.dump_statements(stmts, out_file)
+    return stmts
+
+def read_sources():
+    trips_stmts = process_trips.read_stmts(process_trips.base_folder)
+    sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
+    r3_stmts = process_r3.read_stmts(process_r3.active_forms_file)
+    stmts = trips_stmts + sparser_stmts + r3_stmts
     return stmts
 
 def assemble_index_cards(stmts):
@@ -183,8 +190,8 @@ if __name__ == '__main__':
         stmts = ac.load_statements(pjoin(outf, 'top_level.pkl'))
         #stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
     else:
-        prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
-        #prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
+        #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
+        prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
         reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
@@ -202,9 +209,9 @@ if __name__ == '__main__':
                                    save=pjoin(outf, 'preassembled.pkl'))
 
     assemble_models = []
-    assemble_models.append('sif')
-    assemble_models.append('pysb')
-    assemble_models.append('cx')
+    #assemble_models.append('sif')
+    #assemble_models.append('pysb')
+    #assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
