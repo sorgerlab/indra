@@ -413,6 +413,11 @@ class TripsProcessor(object):
     def get_active_forms(self):
         """Extract ActiveForm INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
+        def _agent_is_basic(agent):
+            if not agent.mods and not agent.mutations \
+                    and not agent.bound_conditions and not agent.location:
+                return True
+            return False
         for event in act_events:
             if event.attrib['id'] in self._static_events:
                 continue
@@ -437,6 +442,8 @@ class TripsProcessor(object):
             # If it is a list of agents, skip them for now
             if not isinstance(affected_agent, Agent):
                 continue
+            if _agent_is_basic(affected_agent):
+                continue
             # The affected agent has to be protein-like type
             affected_type = affected.find('type')
             if affected_type is None or \
@@ -455,6 +462,11 @@ class TripsProcessor(object):
 
     def get_active_forms_state(self):
         """Extract ActiveForm INDRA Statements."""
+        def _agent_is_basic(agent):
+            if not agent.mods and not agent.mutations \
+                    and not agent.bound_conditions and not agent.location:
+                return True
+            return False
         for term in self._isolated_terms:
             act = term.find('features/active')
             if act is None:
@@ -466,6 +478,13 @@ class TripsProcessor(object):
             else:
                 logger.warning('Unhandled term activity feature %s' % act.text)
             agent = self._get_agent_by_id(term.attrib['id'], None)
+            # Skip aggregates for now
+            if not isinstance(agent, Agent):
+                continue
+            # Skip if the Agent doesn't have any state
+            if _agent_is_basic(agent):
+                continue
+            # Remove the activity flag since it's irrelevant here
             agent.activity = None
             text_term = term.find('text')
             if text_term is not None:
@@ -577,7 +596,8 @@ class TripsProcessor(object):
             # Trans and Auto are unique to Phosphorylation
             if _is_type(event, 'ONT::PHOSPHORYLATION'):
                 # Transphosphorylation
-                if 'ONT::ACROSS' in [mt.text for mt in mod_types]:
+                if enzyme_agent is not None and \
+                        'ONT::ACROSS' in [mt.text for mt in mod_types]:
                     agent_bound = Agent(affected_agent.name)
                     enzyme_agent.bound_conditions = \
                         [BoundCondition(agent_bound, True)]
