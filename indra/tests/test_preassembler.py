@@ -7,7 +7,8 @@ from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
-                             Translocation, Activation, Inhibition
+                             Translocation, Activation, Inhibition, \
+                             Deacetylation
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -140,9 +141,28 @@ def test_modification_refinement_noenz():
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
     assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
+    assert (stmts[0].supported_by[0].supports[0].equals(st1))
+
+def test_modification_refinement_noenz2():
+    """A more specific modification statement should be supported by a more
+    generic modification statement."""
+    sirt1 = Agent('SIRT1', db_refs={'HGNC':'14929', 'UP':'Q96EB6',
+                                    'TEXT':'SIRT1'})
+    becn1 = Agent('BECN1', db_refs={'HGNC': '1034', 'UP': 'Q14457',
+                                    'TEXT': 'Beclin 1'})
+    s1 = Deacetylation(sirt1, becn1)
+    s2 = Deacetylation(None, becn1)
+    pa = Preassembler(hierarchies, stmts=[s1, s2])
+    stmts = pa.combine_related()
+    # The top-level list should contain only one statement, the more specific
+    # modification, supported by the less-specific modification.
+    assert (len(stmts) == 1)
     assert (stmts[0].equals(st1))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
+    assert (stmts[0].supported_by[0].supports[0].equals(st1))
 
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -436,3 +456,6 @@ def test_return_toplevel():
     assert(len(stmts[1-ix].supported_by[0].supports) == 1)
     assert(len(stmts[ix].supports) == 1)
     assert(len(stmts[ix].supports[0].supported_by) == 1)
+
+if __name__ == '__main__':
+    test_modification_refinement_noenz2()
