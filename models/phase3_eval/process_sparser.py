@@ -12,10 +12,10 @@ def get_file_names(base_dir):
     return fnames
 
 def get_file_stmts(fname):
-    with open(fname, 'rt') as fh:
-        xml_str = fh.read()
-        xml_str = xml_str.replace('hmsid', 'pmid')
-        sp = sparser.process_xml(xml_str)
+    with open(fname, 'rb') as fh:
+        xml_bytes = fh.read()
+        xml_bytes = xml_bytes.replace(b'hmsid', b'pmid')
+        sp = sparser.process_xml(xml_bytes)
         if sp is None:
             return []
         return sp.statements
