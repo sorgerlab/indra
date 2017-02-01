@@ -147,14 +147,19 @@ def test_modification_refinement_noenz():
 
 def test_modification_refinement_noenz2():
     """A more specific modification statement should be supported by a more
-    generic modification statement."""
+    generic modification statement.
+
+    Similar to test_modification_refinement_noenz for statements where one
+    argument is associated with a component in the hierarchy (SIRT1 in this
+    case) but the other is not (BECN1).
+    """
     sirt1 = Agent('SIRT1', db_refs={'HGNC':'14929', 'UP':'Q96EB6',
                                     'TEXT':'SIRT1'})
     becn1 = Agent('BECN1', db_refs={'HGNC': '1034', 'UP': 'Q14457',
                                     'TEXT': 'Beclin 1'})
-    s1 = Deacetylation(sirt1, becn1)
-    s2 = Deacetylation(None, becn1)
-    pa = Preassembler(hierarchies, stmts=[s1, s2])
+    st1 = Deacetylation(sirt1, becn1)
+    st2 = Deacetylation(None, becn1)
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
