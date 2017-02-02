@@ -231,6 +231,8 @@ class Preassembler(object):
             stmts_by_type[type(stmt)].append(stmt)
 
         group_sizes = []
+        largest_group = None
+        largest_group_size = 0
         num_stmts = len(unique_stmts)
         related_stmts = []
         # Each Statement type can be preassembled independently
@@ -248,7 +250,7 @@ class Preassembler(object):
                 entities = []
                 for i, a in enumerate(stmt.agent_list()):
                     # Entity is None
-                    if a is None:
+                    if a is None and stmt_type != Complex:
                         entities.append(a)
                         continue
                     # Entity is not None, but could be ungrounded or not
@@ -270,19 +272,10 @@ class Preassembler(object):
                             entities.append(a.entity_matches_key())
                         # Component ID, so this is in a family
                         else:
-                            # For Complexes we cannot optimize by argument
-                            # position because all permutations need to be
-                            # considered but we can use the number of members
-                            # to statify into groups
-                            if stmt_type == Complex:
-                                key = (len(stmt.members), component)
-                            # For all other statements, we separate groups by
-                            # the argument position of the Agent
-                            else:
-                                entities.append(component)
-                            # Don't add the same Statement (same object) twice
-                            #if stmt not in stmt_by_group[key]:
-                            #    stmt_by_group[key].append(stmt)
+                            # We turn the component ID into a string so that
+                            # we can sort it along with entity_matches_keys
+                            # for Complexes
+                            entities.append(str(component))
                 # At this point we have an entity list
                 # If we're dealing with Complexes, sort the entities and use
                 # as dict key
@@ -290,6 +283,7 @@ class Preassembler(object):
                     # There shouldn't be any statements of the type
                     # e.g., Complex([Foo, None, Bar])
                     assert None not in entities
+                    assert len(entities) > 0
                     entities.sort()
                     key = tuple(entities)
                     if stmt not in stmt_by_group[key]:
@@ -365,6 +359,9 @@ class Preassembler(object):
                         stmt_by_group[first_arg_key] += stmts
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
+                if len(stmts) > largest_group_size:
+                    largest_group_size = len(stmts)
+                    largest_group = (key, stmts[0:10])
                 group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
@@ -377,16 +374,11 @@ class Preassembler(object):
             total_comps += g ** 2
         print("Total comparisons: %s" % total_comps)
         print("Max group size: %s" % np.max(group_sizes))
-        print("(%s pct of all comparisons)" % (((np.max(group_sizes) ** 2) /
-                                                float(total_comps))))
+        print("Largest group: %s" % str(largest_group))
+        print("(%.1f %% of all comparisons)" %
+              (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
         filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
         filt_gs = [g for g in filt_gs if g >= -4.0]
-        # Plot some stats
-        plt.ion()
-        plt.figure()
-        plt.hist(filt_gs, bins=20)
-        plt.title('log10(group sizes (pct))')
-        plt.savefig('gs_log10.pdf')
 
         self.related_stmts = related_stmts
         if return_toplevel:
