@@ -1339,6 +1339,12 @@ def test_homodimer_bound_to():
     assert not st1.matches(st3)
     assert not st3.matches(st2)
 
+def test_mod_condition_is_mod():
+    mc1 = ModCondition('ubiquitination', 'K', '99', True)
+    mc2 = ModCondition('ubiquitination', 'K', '99', False)
+    assert not mc1.refinement_of(mc2, hierarchies)
+
+
 def test_unicode_str_methods():
     ag = Agent('MAPK1\U0001F4A9')
     print(ag)

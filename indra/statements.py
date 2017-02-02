@@ -189,6 +189,8 @@ class ModCondition(object):
         self.is_modified = is_modified
 
     def refinement_of(self, other, mod_hierarchy):
+        if self.is_modified != other.is_modified:
+            return False
         type_match = (self.mod_type == other.mod_type or \
             mod_hierarchy.isa('INDRA', self.mod_type, 'INDRA', other.mod_type))
         residue_match = (self.residue == other.residue or \

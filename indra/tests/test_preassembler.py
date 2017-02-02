@@ -284,6 +284,17 @@ def test_complex_refinement():
     assert(len(pa.unique_stmts) == 2)
     assert(len(pa.related_stmts) == 2)
 
+def test_complex_agent_refinement():
+    ras = Agent('RAS')
+    raf1 = Agent('RAF', mods=[ModCondition('ubiquitination', None, None, True)])
+    raf2 = Agent('RAF', mods=[ModCondition('ubiquitination', None, None, False)])
+    st1 = Complex([ras, raf1])
+    st2 = Complex([ras, raf2])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_related()
+    assert(len(pa.unique_stmts) == 2)
+    assert(len(pa.related_stmts) == 2)
+
 def test_mod_sites_refinement():
     """A statement with more specific modification context should be supported
     by a less-specific statement."""
