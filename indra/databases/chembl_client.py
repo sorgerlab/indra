@@ -3,11 +3,13 @@ from builtins import dict, str
 import json
 import logging
 import requests
+from sympy.physics import units
 from indra.databases import chebi_client
+from indra.statements import Inhibition, Agent, Evidence
 
 logger = logging.getLogger('chembl')
 
-def process_query(drug, target):
+def get_inhibition(drug, target):
     chebi_id = drug.db_refs.get('CHEBI')
     mesh_id = drug.db_refs.get('MESH')
     if chebi_id:
@@ -25,8 +27,16 @@ def process_query(drug, target):
     target_chembl_id = get_target_chemblid(target_upid)
 
     logger.info('Drug: %s, Target: %s' % (drug_chembl_id, target_chembl_id))
-    json_dict = send_query(drug_chembl_id, target_chembl_id)
-    return process_json(json_dict)
+    res = send_query(drug_chembl_id, target_chembl_id)
+    print(json.dumps(res, indent=1))
+    evidence = []
+    for assay in res['activities']:
+        ev = get_evidence(assay)
+        if not ev:
+            continue
+        evidence.append(ev)
+    st = Inhibition(drug, target, evidence=evidence)
+    return st
 
 def send_query(drug_chemblid, target_chemblid):
     url = 'https://www.ebi.ac.uk/chembl/api/data/activity.json'
@@ -37,14 +47,46 @@ def send_query(drug_chemblid, target_chemblid):
     js = r.json()
     return js
 
-def process_json(json_dict):
-    assays = []
-    for assay in json_dict['activities']:
-        p = Activity(assay)
-        p.pmid(assay)
-        assays.append(p)
-    return assays
+def get_evidence(assay):
+    kin = get_kinetics(assay)
+    source_id = assay.get('assay_chembl_id')
+    if not kin:
+        return None
+    annotations = {'kinetics': kin}
+    chembl_doc_id = str(assay.get('document_chembl_id'))
+    pmid = get_pmid(chembl_doc_id)
+    ev = Evidence(source_api='chembl', pmid=pmid, source_id=source_id,
+                  annotations=annotations)
+    return ev
 
+def get_kinetics(assay):
+    try:
+        val = float(assay.get('standard_value'))
+    except TypeError:
+        logger.warning('Invalid assay value: %s' % assay.get('standard_value'))
+        return None
+    unit = assay.get('standard_units')
+    if unit == 'nM':
+        unit_sym = 1e-9 * units.mol / units.liter
+    elif unit == 'uM':
+        unit_sym = 1e-6 * units.mol / units.liter
+    else:
+        logger.warning('Unhandled unit: %s' % unit)
+        return None
+    param_type = assay.get('standard_type')
+    if param_type not in ['IC50']:
+        logger.warning('Unhandled parameter type: %s' % param_type)
+        return None
+    kin = {param_type: val * unit_sym}
+    return kin
+
+def get_pmid(doc_id):
+    url_pmid = 'https://www.ebi.ac.uk/chembl/api/data/document.json'
+    params = {'document_chembl_id': doc_id}
+    res = requests.get(url_pmid, params=params)
+    js = res.json()
+    pmid = str(js['documents'][0]['pubmed_id'])
+    return pmid
 
 def get_target_chemblid(target_upid):
     url = 'https://www.ebi.ac.uk/chembl/api/data/target.json'
@@ -88,21 +130,3 @@ def get_chembl_id(nlm_mesh):
     return chembl_id
 
 
-class Activity(object):
-    def __init__(self, assay):
-        self.description = assay['assay_description']
-        self.metric = assay['standard_type'] + ': ' + \
-                      str(assay['standard_value']) + \
-                      str(assay['standard_units'])
-
-    def pmid(self, assay):
-        chembl_doc_id = str(assay['document_chembl_id'])
-        url_pmid = 'https://www.ebi.ac.uk/chembl/api/data/document.json'
-        params = {'document_chembl_id': chembl_doc_id}
-        r = requests.get(url_pmid, params=params)
-        r.raise_for_status()
-        js = r.json()
-        self.pmid = 'PMID' + str(js['documents'][0]['pubmed_id'])
-
-    def __repr__(self):
-        return '<%s reported in %s>' % (self.metric, self.pmid)
