@@ -216,10 +216,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     logger.info('Combining related on %d statements...' %
                 len(preassembler.unique_stmts))
     return_toplevel = kwargs.get('return_toplevel', True)
-    start = time.time()
     stmts_out = preassembler.combine_related(return_toplevel=False)
-    end = time.time()
-    print("Elapsed: %s" % (end - start))
     beliefengine.set_hierarchy_probs(stmts_out)
     stmts_top = filter_top_level(stmts_out)
     if return_toplevel:
