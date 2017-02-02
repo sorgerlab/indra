@@ -251,6 +251,28 @@ def test_bound_condition_norefinement():
     # specific. Therefore these statements should not be combined.
     assert(len(stmts) == 2)
 
+def test_bound_condition_deep_refinement():
+    """A statement with more specific bound context should be supported by a
+    less specific statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    gtp1 = Agent('GTP', db_refs = {'CHEBI': '15996'})
+    gtp2 = Agent('GTP', mods=[ModCondition('phosphorylation')],
+                 db_refs = {'CHEBI': '15996'})
+    nrasgtp1 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+        bound_conditions=[BoundCondition(gtp1, True)])
+    nrasgtp2 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+        bound_conditions=[BoundCondition(gtp2, True)])
+    st1 = Phosphorylation(src, nrasgtp1, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nrasgtp2, 'tyrosine', '32')
+    # The top-level list should contain only one statement, the more specific
+    # modification, supported by the less-specific modification.
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    stmts = pa.combine_related()
+    assert(len(stmts) == 1)
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
+
 def test_complex_refinement():
     ras = Agent('RAS')
     raf = Agent('RAF')
@@ -461,4 +483,3 @@ def test_return_toplevel():
     assert(len(stmts[1-ix].supported_by[0].supports) == 1)
     assert(len(stmts[ix].supports) == 1)
     assert(len(stmts[ix].supports[0].supported_by) == 1)
-

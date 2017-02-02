@@ -416,10 +416,6 @@ class Agent(object):
         # bound conditions in the other agent, and add additional context.
         # TODO: For now, we do not check the bound conditions of the bound
         # conditions.
-        # TODO: For now, we only look at exact agent matches, not at family
-        # relationships among the bound conditions (this is to avoid the
-        # confusion of relationships that might go in different directions
-        # between the two statements).
         # FIXME: This matching procedure will get confused if the same
         # entity is included more than once in one of the sets--this will
         # be picked up as a match
@@ -429,9 +425,8 @@ class Agent(object):
             # Iterate over the bound conditions in self to find a match
             bc_found = False
             for bc_self in self.bound_conditions:
-                if (bc_self.agent.entity_matches(bc_other.agent) or
-                    bc_self.agent.isa(bc_other.agent, hierarchies)) and \
-                    bc_self.is_bound == bc_other.is_bound:
+                if (bc_self.is_bound == bc_other.is_bound) and \
+                    bc_self.agent.refinement_of(bc_other.agent, hierarchies):
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
