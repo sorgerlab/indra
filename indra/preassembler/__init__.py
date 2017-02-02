@@ -1,13 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import os
 import sys
 import time
 import logging
-import functools
 import itertools
 import collections
-import multiprocessing as mp
 from copy import copy, deepcopy
 import numpy as np
 from matplotlib import pyplot as plt
@@ -17,8 +14,11 @@ except ImportError:
     pass
 from indra.statements import *
 from indra.databases import uniprot_client
+
 logger = logging.getLogger('preassembler')
 
+from matplotlib import pyplot as plt
+import numpy as np
 
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
@@ -139,7 +139,7 @@ class Preassembler(object):
             unique_stmts.append(first_stmt)
         return unique_stmts
 
-    def combine_related(self, return_toplevel=True):
+    def combine_related(self, return_toplevel=True, size_cutoff=100):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -246,12 +246,13 @@ class Preassembler(object):
         for stmt_ix, stmt in enumerate(unique_stmts):
             stmts_by_type[type(stmt)].append((stmt_ix, stmt))
 
-        SIZE_CUTOFF = 200
-        #SIZE_CUTOFF = len(unique_stmts) + 1
-        comp_large_groups = []
-        comp_small_groups = []
-        no_comp_large_groups = []
-        no_comp_small_groups = []
+        group_sizes = []
+        largest_group = None
+        largest_group_size = 0
+        num_stmts = len(unique_stmts)
+        related_stmts = []
+        large_groups = []
+        small_groups = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
@@ -271,7 +272,7 @@ class Preassembler(object):
             # components that their agents are part of
             for stmt_tuple in stmts_this_type:
                 stmt_ix, stmt = stmt_tuple
-                any_component = False
+                entities = []
                 for i, a in enumerate(stmt.agent_list()):
                     # Entity is None: add the None to the entities list
                     if a is None and stmt_type != Complex:
@@ -291,121 +292,145 @@ class Preassembler(object):
                         # This is the component ID corresponding to the agent
                         # in the entity hierarchy
                         component = eh.components.get(uri)
-                        if component is not None:
-                            any_component = True
-                            # For Complexes we cannot optimize by argument
-                            # position because all permutations need to be
-                            # considered but we can use the number of members
-                            # to statify into groups
-                            if stmt_type == Complex:
-                                key = (len(stmt.members), component)
-                            # For all other statements, we separate groups by
-                            # the argument position of the Agent
-                            else:
-                                key = (i, component)
-                            # Don't add the same Statement (same object) twice
-                            if stmt_tuple not in stmt_by_group[key]:
-                                stmt_by_group[key].append(stmt_tuple)
-                # If the Statement has no Agent belonging to any component
-                # then we put it in a special group
-                if not any_component:
-                    no_comp_stmts.append(stmt_tuple)
-            # Dividing statements by group size
-            for g in stmt_by_group.values():
-                if len(g) >= SIZE_CUTOFF:
-                    comp_large_groups.append(g)
-                else:
-                    comp_small_groups.append(g)
-
-            #==========================================================
-            # Next we deal with the Statements that have no associated
-            # entity hierarchy component IDs.
-            # We take all the Agent entity_matches_key()-s and group
-            # Statements based on this key
-            stmt_by_group = collections.defaultdict(lambda: [])
-            for stmt_tuple in no_comp_stmts:
-                stmt_ix, stmt = stmt_tuple
-                for i, a in enumerate(stmt.agent_list()):
-                    if a is not None:
-                        # For Complexes we cannot optimize by argument
-                        # position because all permutations need to be
-                        # considered
-                        if stmt_type == Complex:
-                            key = (len(stmt.members), a.entity_matches_key())
-                        # For all other statements, we separate groups by
-                        # the argument position of the Agent
+                        # If no component ID, use the entity_matches_key()
+                        if component is None:
+                            entities.append(a.entity_matches_key())
+                        # Component ID, so this is in a family
                         else:
-                            key = (i, a.entity_matches_key())
-                        # Don't add the same Statement (same object) twice
+                            # We turn the component ID into a string so that
+                            # we can sort it along with entity_matches_keys
+                            # for Complexes
+                            entities.append(str(component))
+                # At this point we have an entity list
+                # If we're dealing with Complexes, sort the entities and use
+                # as dict key
+                if stmt_type == Complex:
+                    # There shouldn't be any statements of the type
+                    # e.g., Complex([Foo, None, Bar])
+                    assert None not in entities
+                    assert len(entities) > 0
+                    entities.sort()
+                    key = tuple(entities)
+                    if stmt_tuple not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt_tuple)
+                # Now look at all other statement types
+                # All other statements will have one or two entities
+                elif len(entities) == 1:
+                    # If only one entity, we only need the one key
+                    # It should not be None!
+                    assert None not in entities
+                    key = tuple(entities)
+                    if stmt_tuple not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt_tuple)
+                else:
+                    # Make sure we only have two entities, and they are not both
+                    # None
+                    key = tuple(entities)
+                    assert len(key) == 2
+                    assert key != (None, None)
+                    # First agent is None; add in the statements, indexed by
+                    # 2nd
+                    if key[0] is None and stmt_tuple not in none_first[key[1]]:
+                        none_first[key[1]].append(stmt_tuple)
+                    # Second agent is None; add in the statements, indexed by
+                    # 1st
+                    elif key[1] is None and \
+                         stmt_tuple not in none_second[key[0]]:
+                        none_second[key[0]].append(stmt_tuple)
+                    # Neither entity is None!
+                    elif None not in key:
                         if stmt_tuple not in stmt_by_group[key]:
                             stmt_by_group[key].append(stmt_tuple)
+                        if key not in stmt_by_first[key[0]]:
+                            stmt_by_first[key[0]].append(key)
+                        if key not in stmt_by_second[key[1]]:
+                            stmt_by_second[key[1]].append(key)
 
-            # Dividing statements by group size
-            logger.debug("Dividing no component groups into large and small")
+            # When we've gotten here, we should have stmt_by_group entries, and
+            # we may or may not have stmt_by_first/second dicts filled out
+            # (depending on the statement type).
+            if none_first:
+                # Get the keys associated with stmts having a None first
+                # argument
+                for second_arg, stmts in none_first.items():
+                    # Look for any statements with this second arg
+                    second_arg_keys = stmt_by_second[second_arg]
+                    # If there are no more specific statements matching this
+                    # set of statements with a None first arg, then the
+                    # statements with the None first arg deserve to be in
+                    # their own group.
+                    if not second_arg_keys:
+                        stmt_by_group[(None, second_arg)] = stmts
+                    # On the other hand, if there are statements with a matching
+                    # second arg component, we need to add the None first
+                    # statements to all groups with the matching second arg
+                    for second_arg_key in second_arg_keys:
+                        stmt_by_group[second_arg_key] += stmts
+            # Now do the corresponding steps for the statements with None as the
+            # second argument:
+            if none_second:
+                for first_arg, stmts in none_second.items():
+                    # Look for any statements with this first arg
+                    first_arg_keys = stmt_by_first[first_arg]
+                    # If there are no more specific statements matching this
+                    # set of statements with a None second arg, then the
+                    # statements with the None second arg deserve to be in
+                    # their own group.
+                    if not first_arg_keys:
+                        stmt_by_group[(first_arg, None)] = stmts
+                    # On the other hand, if there are statements with a matching
+                    # first arg component, we need to add the None second
+                    # statements to all groups with the matching first arg
+                    for first_arg_key in first_arg_keys:
+                        stmt_by_group[first_arg_key] += stmts
+
+            # Divide statements by group size
             for g in stmt_by_group.values():
-                if len(g) >= SIZE_CUTOFF:
-                    no_comp_large_groups.append(g)
+                if len(g) >= size_cutoff:
+                    large_groups.append(g)
                 else:
-                    no_comp_small_groups.append(g)
+                    small_groups.append(g)
 
         # Now run preassembly!
         logger.debug("Group sizes:")
-        logger.debug("  %d large comp, %d large NO comp" %
-                     (len(comp_large_groups), len(no_comp_large_groups)))
-        logger.debug("  %d small comp, %d small NO comp" %
-                     (len(comp_small_groups), len(no_comp_small_groups)))
+        logger.debug("  %d large comp, %d small comp" %
+                     (len(large_groups), len(small_groups)))
+
         # Check if we are running any groups remotely
-        if comp_large_groups or no_comp_large_groups:
+        if large_groups:
             # Get a multiprocessing context
             ctx = mp.get_context('spawn')
             pool = ctx.Pool(4)
-            comp_supports_func = functools.partial(_set_supports_stmt_pairs,
+            supports_func = functools.partial(_set_supports_stmt_pairs,
                                               hierarchies=self.hierarchies,
                                               check_entities_match=False)
-            no_comp_supports_func = functools.partial(_set_supports_stmt_pairs,
-                                              hierarchies=self.hierarchies,
-                                              check_entities_match=True)
             # Run the large groups remotely
-            logger.debug("Running comp large groups remotely")
-            res_comp = pool.map_async(comp_supports_func, comp_large_groups)
-            logger.debug("Running no comp large groups remotely")
-            res_no_comp = pool.map_async(no_comp_supports_func,
-                                         no_comp_large_groups)
+            logger.debug("Running large groups remotely")
+            res = pool.map_async(supports_func, large_groups)
             workers_ready = False
         else:
             workers_ready = True
             logger.debug("No large groups, so no multiprocessing.")
 
         # Run the small groups locally
-        logger.debug("Running comp small groups locally")
+        logger.debug("Running small groups locally")
         stmt_ix_map = []
-        for stmt_tuples in comp_small_groups:
+        for stmt_tuples in small_groups:
             stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
                                             hierarchies=self.hierarchies))
-        logger.debug("Running no comp small groups locally")
-        for stmt_tuples in no_comp_small_groups:
-            stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
-                                                 hierarchies=self.hierarchies))
         logger.debug("Done running small groups")
 
         while not workers_ready:
             logger.debug("Checking processes")
-            if res_comp.ready():
-                logger.debug("Comp large groups are ready")
-            if res_no_comp.ready():
-                logger.debug("No comp large groups are ready")
-            if res_comp.ready() and res_no_comp.ready():
+            if res.ready():
                 workers_ready = True
-                logger.debug('Comp comparisons successful? %s' %
-                             res_comp.successful())
-                logger.debug('No Comp comparisons successful? %s' %
-                             res_no_comp.successful())
-                if not (res_comp.successful() and res_no_comp.successful()):
+                logger.debug('Large group comparisons successful? %s' %
+                             res.successful())
+                if not res.successful():
                     raise Exception(
                             "Sorry, there was a problem with preassembly.")
                 else:
-                    stmt_ix_map += res_comp.get()
-                    stmt_ix_map += res_no_comp.get()
+                    stmt_ix_map += res.get()
                 pool.close()
                 pool.join()
             time.sleep(1)
@@ -427,27 +452,51 @@ class Preassembler(object):
         else:
             return unique_stmts
 
-"""
-def _set_supports(stmt1, stmt2, hierarchies=None):
-    if (stmt2 not in stmt1.supported_by) and \
-        stmt1.refinement_of(stmt2, hierarchies):
-        stmt1.supported_by.append(stmt2)
-        stmt2.supports.append(stmt1)
-    elif (stmt1 not in stmt2.supported_by) and \
-        stmt2.refinement_of(stmt1, hierarchies):
-        stmt2.supported_by.append(stmt1)
-        stmt1.supports.append(stmt2)
-"""
 
-# OK, how about this:
-# A function that takes stmts, along with indices of those stmts
-# (or perhaps tuples of stmts along with index into the original array
-# in the parent
-# and then returns pairs of tuples of indices (not stmts)
-# such that each tuple indicates that one stmt supports another.
-# This list of tuples could then be combined by converting the master list
-# of tuples to a set, and then this set would be iterated over,
-# setting supports relationships along the way.
+
+        """
+        # SERIAL version ---------
+        logger.debug('Preassembling %d components' % (len(stmt_by_group)))
+        for key, stmts in stmt_by_group.items():
+            if len(stmts) > largest_group_size:
+                largest_group_size = len(stmts)
+                largest_group = (key, stmts[0:10])
+            group_sizes.append(len(stmts))
+            for stmt1, stmt2 in itertools.combinations(stmts, 2):
+                self._set_supports(stmt1, stmt2)
+        toplevel_stmts = [st for st in stmts_this_type if not st.supports]
+        logger.debug('%d top level' % len(toplevel_stmts))
+        related_stmts += toplevel_stmts
+
+        total_comps = 0
+        for g in group_sizes:
+            total_comps += g ** 2
+        print("Total comparisons: %s" % total_comps)
+        print("Max group size: %s" % np.max(group_sizes))
+        print("Largest group: %s" % str(largest_group))
+        print("(%.1f %% of all comparisons)" %
+              (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
+        filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
+        filt_gs = [g for g in filt_gs if g >= -4.0]
+
+        self.related_stmts = related_stmts
+        if return_toplevel:
+            return self.related_stmts
+        else:
+            return unique_stmts
+        """
+
+"""
+    def _set_supports(self, stmt1, stmt2):
+        if (stmt2 not in stmt1.supported_by) and \
+            stmt1.refinement_of(stmt2, self.hierarchies):
+            stmt1.supported_by.append(stmt2)
+            stmt2.supports.append(stmt1)
+        elif (stmt1 not in stmt2.supported_by) and \
+            stmt2.refinement_of(stmt1, self.hierarchies):
+            stmt2.supported_by.append(stmt1)
+            stmt1.supports.append(stmt2)
+"""
 
 def _set_supports_stmt_pairs(stmt_tuples, hierarchies=None,
                              check_entities_match=False):
@@ -462,14 +511,7 @@ def _set_supports_stmt_pairs(stmt_tuples, hierarchies=None,
         elif stmt2.refinement_of(stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
     return ix_map
-        #_set_supports(stmt_tuple1, stmt2, hierarchies)
-    #if check_entities_match:
 
-    #else:
-    #    for stmt1, stmt2 in itertools.combinations(stmts, 2):
-    #        _set_supports(stmt1, stmt2, hierarchies)
-    #print('%s: returning %d stmts' % (os.getpid(), len(stmts)))
-    #return stmts
 
 def render_stmt_graph(statements, agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.
