@@ -1,24 +1,41 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
+import logging
 import requests
 from indra.databases import chebi_client
 
+logger = logging.getLogger('chembl')
 
 def process_query(drug, target):
-    chebi_id = drug.db_refs['CHEBI']
-    mesh_id = drug.db_refs['MESH']
+    chebi_id = drug.db_refs.get('CHEBI')
+    mesh_id = drug.db_refs.get('MESH')
     if chebi_id:
         drug_chembl_id = chebi_client.get_chembl_id(chebi_id)
     elif mesh_id:
         drug_chembl_id = get_chembl_id(mesh_id)
+    else:
+        logger.error('Drug missing ChEBI or MESH grounding.')
+        return None
 
-    target_uid = target.db_refs['UP']
-    target_chembl_id = get_target_chemblid(target_uid)
+    target_upid = target.db_refs.get('UP')
+    if not target_upid:
+        logger.error('Target missing UniProt grounding.')
+        return None
+    target_chembl_id = get_target_chemblid(target_upid)
 
+    logger.info('Drug: %s, Target: %s' % (drug_chembl_id, target_chembl_id))
     json_dict = send_query(drug_chembl_id, target_chembl_id)
     return process_json(json_dict)
 
+def send_query(drug_chemblid, target_chemblid):
+    url = 'https://www.ebi.ac.uk/chembl/api/data/activity.json'
+    params = {'molecule_chembl_id': drug_chemblid,
+              'target_chembl_id': target_chemblid}
+    r = requests.get(url, params=params)
+    r.raise_for_status()
+    js = r.json()
+    return js
 
 def process_json(json_dict):
     assays = []
@@ -29,13 +46,13 @@ def process_json(json_dict):
     return assays
 
 
-def get_target_chemblid(target_uid):
-    url = 'https://www.ebi.ac.uk/chembl/api/data/target.json?' + \
-          'target_components__accession=%s' % target_uid
-    r = requests.get(url)
+def get_target_chemblid(target_upid):
+    url = 'https://www.ebi.ac.uk/chembl/api/data/target.json'
+    params = {'target_components__accession': target_upid}
+    r = requests.get(url, params=params)
     r.raise_for_status()
     js = r.json()
-    target_chemblid = js['targets'][1]['target_chembl_id']
+    target_chemblid = js['targets'][0]['target_chembl_id']
     return target_chemblid
 
 
@@ -69,16 +86,6 @@ def get_chembl_id(nlm_mesh):
     chembl_id = [syn for syn in synonyms if 'CHEMBL' in syn
                  and 'SCHEMBL' not in syn][0]
     return chembl_id
-
-
-def send_query(drug_chemblid, target_chemblid):
-    url = 'https://www.ebi.ac.uk/chembl/api/data/activity.json'
-    params = {'molecule_chembl_id': drug_chemblid,
-              'target_chembl_id': target_chemblid}
-    r = requests.get(url, params=params)
-    r.raise_for_status()
-    js = r.json()
-    return js
 
 
 class Activity(object):
