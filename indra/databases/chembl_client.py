@@ -28,7 +28,6 @@ def get_inhibition(drug, target):
 
     logger.info('Drug: %s, Target: %s' % (drug_chembl_id, target_chembl_id))
     res = send_query(drug_chembl_id, target_chembl_id)
-    print(json.dumps(res, indent=1))
     evidence = []
     for assay in res['activities']:
         ev = get_evidence(assay)
@@ -74,7 +73,7 @@ def get_kinetics(assay):
         logger.warning('Unhandled unit: %s' % unit)
         return None
     param_type = assay.get('standard_type')
-    if param_type not in ['IC50']:
+    if param_type not in ['IC50', 'Kd']:
         logger.warning('Unhandled parameter type: %s' % param_type)
         return None
     kin = {param_type: val * unit_sym}
@@ -128,5 +127,3 @@ def get_chembl_id(nlm_mesh):
     chembl_id = [syn for syn in synonyms if 'CHEMBL' in syn
                  and 'SCHEMBL' not in syn][0]
     return chembl_id
-
-
