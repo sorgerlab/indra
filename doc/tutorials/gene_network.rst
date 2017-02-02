@@ -25,10 +25,9 @@ BEL API.
 
     from indra.tools.gene_network import GeneNetwork
 
-    filter = False
     gn = GeneNetwork(['TMEM173'])
-    biopax_stmts = gn.get_biopax_stmts(filter)
-    bel_stmts = gn.get_bel_stmts(filter)
+    biopax_stmts = gn.get_biopax_stmts()
+    bel_stmts = gn.get_bel_stmts()
 
 at this point `biopax_stmts` and `bel_stmts` are two lists of INDRA Statements.
 
@@ -58,9 +57,9 @@ the abstract corresponding to the PMIDs we have just collected.
 
     from indra import literature
 
-    paper_content = {}
+    paper_contents = {}
     for pmid in pmids:
-        content, content_type = literature.get_full_text()
+        content, content_type = literature.get_full_text(pmid, 'pmid')
         paper_contents[pmid] = (content, content_type)
 
 We now have a dictionary called `paper_contents` which stores the content and
@@ -77,17 +76,20 @@ content type, different calls need to be made via INDRA's REACH API.
     from indra import literature
     from indra import reach
 
+    read_offline = True
+
     literature_stmts = []
     for pmid, (content, content_type) in paper_contents.items():
         rp = None
+        print('Reading %s' % pmid)
         if content_type == 'abstract':
-            rp = reach.process_text(content)
+            rp = reach.process_text(content, citation=pmid, offline=read_offline)
         elif content_type == 'pmc_oa_xml':
-            rp = reach.process_nxml_str(content)
+            rp = reach.process_nxml_str(content, offline=read_offline)
         elif content_type == 'elsevier_xml':
-            txt = literature.elsevier_client.extract_text(res)
+            txt = literature.elsevier_client.extract_text(content)
             if txt:
-                rp = reach.process_text(txt)
+                rp = reach.process_text(txt, citation=pmid, offline=read_offline)
         if rp is not None:
             literature_stmts += rp.statements
 
