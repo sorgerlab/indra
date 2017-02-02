@@ -7,7 +7,8 @@ from indra import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
-                             Translocation, Activation, Inhibition
+                             Translocation, Activation, Inhibition, \
+                             Deacetylation
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -140,9 +141,33 @@ def test_modification_refinement_noenz():
     # modification, supported by the less-specific modification.
     assert(len(stmts) == 1)
     assert (stmts[0].equals(st1))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st2))
+    assert (stmts[0].supported_by[0].supports[0].equals(st1))
+
+def test_modification_refinement_noenz2():
+    """A more specific modification statement should be supported by a more
+    generic modification statement.
+
+    Similar to test_modification_refinement_noenz for statements where one
+    argument is associated with a component in the hierarchy (SIRT1 in this
+    case) but the other is not (BECN1).
+    """
+    sirt1 = Agent('SIRT1', db_refs={'HGNC':'14929', 'UP':'Q96EB6',
+                                    'TEXT':'SIRT1'})
+    becn1 = Agent('BECN1', db_refs={'HGNC': '1034', 'UP': 'Q14457',
+                                    'TEXT': 'Beclin 1'})
+    st1 = Deacetylation(sirt1, becn1)
+    st2 = Deacetylation(None, becn1)
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    stmts = pa.combine_related()
+    # The top-level list should contain only one statement, the more specific
+    # modification, supported by the less-specific modification.
+    assert (len(stmts) == 1)
     assert (stmts[0].equals(st1))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
+    assert (stmts[0].supported_by[0].supports[0].equals(st1))
 
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -226,12 +251,45 @@ def test_bound_condition_norefinement():
     # specific. Therefore these statements should not be combined.
     assert(len(stmts) == 2)
 
+def test_bound_condition_deep_refinement():
+    """A statement with more specific bound context should be supported by a
+    less specific statement."""
+    src = Agent('SRC', db_refs = {'HGNC': '11283'})
+    gtp1 = Agent('GTP', db_refs = {'CHEBI': '15996'})
+    gtp2 = Agent('GTP', mods=[ModCondition('phosphorylation')],
+                 db_refs = {'CHEBI': '15996'})
+    nrasgtp1 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+        bound_conditions=[BoundCondition(gtp1, True)])
+    nrasgtp2 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+        bound_conditions=[BoundCondition(gtp2, True)])
+    st1 = Phosphorylation(src, nrasgtp1, 'tyrosine', '32')
+    st2 = Phosphorylation(src, nrasgtp2, 'tyrosine', '32')
+    # The top-level list should contain only one statement, the more specific
+    # modification, supported by the less-specific modification.
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    stmts = pa.combine_related()
+    assert(len(stmts) == 1)
+    assert (stmts[0].equals(st2))
+    assert (len(stmts[0].supported_by) == 1)
+    assert (stmts[0].supported_by[0].equals(st1))
+
 def test_complex_refinement():
     ras = Agent('RAS')
     raf = Agent('RAF')
     mek = Agent('MEK')
     st1 = Complex([ras, raf])
     st2 = Complex([mek, ras, raf])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa.combine_related()
+    assert(len(pa.unique_stmts) == 2)
+    assert(len(pa.related_stmts) == 2)
+
+def test_complex_agent_refinement():
+    ras = Agent('RAS')
+    raf1 = Agent('RAF', mods=[ModCondition('ubiquitination', None, None, True)])
+    raf2 = Agent('RAF', mods=[ModCondition('ubiquitination', None, None, False)])
+    st1 = Complex([ras, raf1])
+    st2 = Complex([ras, raf2])
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
     assert(len(pa.unique_stmts) == 2)
