@@ -6,6 +6,8 @@ import logging
 import itertools
 import collections
 from copy import copy, deepcopy
+import numpy as np
+from matplotlib import pyplot as plt
 try:
     import pygraphviz as pgv
 except ImportError:
@@ -243,8 +245,8 @@ class Preassembler(object):
                             entity_key = a.entity_matches_key()
                         else:
                             uri = eh.get_uri(a_ns, a_id)
-                            # This is the component ID corresponding to the agent
-                            # in the entity hierarchy
+                            # This is the component ID corresponding to the
+                            # agent in the entity hierarchy
                             component = eh.components.get(uri)
                             if component is not None:
                                 entity_key = component
@@ -263,10 +265,6 @@ class Preassembler(object):
                         # Don't add the same Statement (same object) twice
                         if stmt not in stmt_by_group[key]:
                             stmt_by_group[key].append(stmt)
-                # If the Statement has no Agent belonging to any component
-                # then we put it in a special group
-                #if not any_component:
-                #    no_comp_stmts.append(stmt)
 
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
@@ -281,8 +279,10 @@ class Preassembler(object):
         total_comps = 0
         for g in group_sizes:
             total_comps += g ** 2
-        print("Max group size: %s" % np.max(group_sizes))
         print("Total comparisons: %s" % total_comps)
+        print("Max group size: %s" % np.max(group_sizes))
+        print("(%s pct of all comparisons)" % (((np.max(group_sizes) ** 2) /
+                                                float(total_comps))))
         filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
         filt_gs = [g for g in filt_gs if g >= -4.0]
         # Plot some stats
