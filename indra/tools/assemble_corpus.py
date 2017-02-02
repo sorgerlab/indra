@@ -275,7 +275,8 @@ def filter_grounded_only(stmts_in, **kwargs):
         grounded = True
         for agent in st.agent_list():
             if agent is not None:
-                if (len(agent.db_refs) == 1) and agent.db_refs.get('TEXT'):
+                if (not agent.db_refs) or \
+                   ((len(agent.db_refs) == 1) and agent.db_refs.get('TEXT')):
                     grounded = False
                     break
         if grounded:

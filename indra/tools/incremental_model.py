@@ -45,9 +45,7 @@ class IncrementalModel(object):
                                model_fname)
                 self.stmts = {}
         self.prior_genes = []
-        self.relevant_stmts = []
-        self.unique_stmts = []
-        self.toplevel_stmts = []
+        self.assembled_stmts = []
 
     def save(self, model_fname='model.pkl'):
         """Save the state of the IncrementalModel in a pickle file.
@@ -81,13 +79,7 @@ class IncrementalModel(object):
             return stmts
         logger.info('Running relevance filter on %d statements' % len(stmts))
         prior_agents = get_gene_agents(self.prior_genes)
-        if 'model_all' in filters:
-            agents = self.get_model_agents() + prior_agents
-            stmts = _ref_agents_all_filter(stmts, agents)
-        elif 'model_one' in filters:
-            agents = self.get_model_agents() + prior_agents
-            stmts = _ref_agents_one_filter(stmts, agents)
-        elif 'prior_all' in filters:
+        if 'prior_all' in filters:
             stmts = _ref_agents_all_filter(stmts, prior_agents)
         elif 'prior_one' in filters:
             stmts = _ref_agents_one_filter(stmts, prior_agents)
@@ -103,12 +95,9 @@ class IncrementalModel(object):
 
         Currently the following filter options are implemented:
         - grounding: require that all Agents in statements are grounded
-        - model_one: require that at least one Agent is in the incremental model
-        - model_all: require that all Agents are in the incremental model
+        - human_only: require that all proteins are human proteins
         - prior_one: require that at least one Agent is in the prior model
         - prior_all: require that all Agents are in the prior model
-        Note that model_one -> prior_all are increasingly more restrictive
-        options.
 
         Parameters
         ----------
