@@ -237,7 +237,6 @@ class Preassembler(object):
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
-            no_comp_stmts = []
             stmt_by_first = collections.defaultdict(lambda: [])
             stmt_by_second = collections.defaultdict(lambda: [])
             none_first = collections.defaultdict(lambda: [])
@@ -246,7 +245,6 @@ class Preassembler(object):
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             for stmt in stmts_this_type:
-                any_component = False
                 entities = []
                 for i, a in enumerate(stmt.agent_list()):
                     # Entity is None
@@ -272,7 +270,6 @@ class Preassembler(object):
                             entities.append(a.entity_matches_key())
                         # Component ID, so this is in a family
                         else:
-                            any_component = True
                             # For Complexes we cannot optimize by argument
                             # position because all permutations need to be
                             # considered but we can use the number of members
@@ -307,14 +304,17 @@ class Preassembler(object):
                     if stmt not in stmt_by_group[key]:
                         stmt_by_group[key].append(stmt)
                 else:
-                    # Make sure we only have two entities, and they are not both None
+                    # Make sure we only have two entities, and they are not both
+                    # None
                     key = tuple(entities)
                     assert len(key) == 2
                     assert key != (None, None)
-                    # First agent is None; add in the statements, indexed by 2nd
+                    # First agent is None; add in the statements, indexed by
+                    # 2nd
                     if key[0] is None and stmt not in none_first[key[1]]:
                         none_first[key[1]].append(stmt)
-                    # Second agent is None; add in the statements, indexed by 1st
+                    # Second agent is None; add in the statements, indexed by
+                    # 1st
                     elif key[1] is None and stmt not in none_second[key[0]]:
                         none_second[key[0]].append(stmt)
                     # Neither entity is None!
@@ -326,28 +326,24 @@ class Preassembler(object):
                         if key not in stmt_by_second[key[1]]:
                             stmt_by_second[key[1]].append(key)
 
-                # FIXME FIXME FIXME
-                # If the Statement has no Agent belonging to any component
-                # then we put it in a special group
-                #if not any_component:
-                #    no_comp_stmts.append(stmt)
-                # FIXME FIXME FIXME
             # When we've gotten here, we should have stmt_by_group entries, and
             # we may or may not have stmt_by_first/second dicts filled out
             # (depending on the statement type).
             if none_first:
-                # Get the keys associated with stmts having a None first argument
+                # Get the keys associated with stmts having a None first
+                # argument
                 for second_arg, stmts in none_first.items():
                     # Look for any statements with this second arg
                     second_arg_keys = stmt_by_second[second_arg]
                     # If there are no more specific statements matching this
-                    # set of statements with a None first arg, then the statements
-                    # with the None first arg deserve to be in their own group.
+                    # set of statements with a None first arg, then the
+                    # statements with the None first arg deserve to be in
+                    # their own group.
                     if not second_arg_keys:
                         stmt_by_group[(None, second_arg)] = stmts
                     # On the other hand, if there are statements with a matching
-                    # second arg component, we need to add the None first statements
-                    # to all groups with the matching second arg
+                    # second arg component, we need to add the None first
+                    # statements to all groups with the matching second arg
                     for second_arg_key in second_arg_keys:
                         stmt_by_group[second_arg_key] += stmts
             # Now do the corresponding steps for the statements with None as the
@@ -357,13 +353,14 @@ class Preassembler(object):
                     # Look for any statements with this first arg
                     first_arg_keys = stmt_by_first[first_arg]
                     # If there are no more specific statements matching this
-                    # set of statements with a None second arg, then the statements
-                    # with the None second arg deserve to be in their own group.
+                    # set of statements with a None second arg, then the
+                    # statements with the None second arg deserve to be in
+                    # their own group.
                     if not first_arg_keys:
                         stmt_by_group[(first_arg, None)] = stmts
                     # On the other hand, if there are statements with a matching
-                    # first arg component, we need to add the None second statements
-                    # to all groups with the matching first arg
+                    # first arg component, we need to add the None second
+                    # statements to all groups with the matching first arg
                     for first_arg_key in first_arg_keys:
                         stmt_by_group[first_arg_key] += stmts
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
@@ -375,53 +372,17 @@ class Preassembler(object):
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
-            """
-            #==========================================================
-            # Next we deal with the Statements that have no associated
-            # entity hierarchy component IDs.
-            # We take all the Agent entity_matches_key()-s and group
-            # Statements based on this key
-            stmt_by_group = collections.defaultdict(lambda: [])
-            for stmt in no_comp_stmts:
-                for i, a in enumerate(stmt.agent_list()):
-                    if a is not None:
-                        # For Complexes we cannot optimize by argument
-                        # position because all permutations need to be
-                        # considered but we can use the number of members
-                        # to statify into groups
-                        if stmt_type == Complex:
-                            key = (len(stmt.members), entity_key)
-                        # For all other statements, we separate groups by
-                        # the argument position of the Agent
-                        else:
-                            key = (i, entity_key)
-                        # Don't add the same Statement (same object) twice
-                        if stmt not in stmt_by_group[key]:
-                            stmt_by_group[key].append(stmt)
-
-            logger.debug('Preassembling %d components' % (len(stmt_by_group)))
-            for key, stmts in stmt_by_group.items():
-                group_sizes.append(len(stmts))
-                for stmt1, stmt2 in itertools.combinations(stmts, 2):
-                    self._set_supports(stmt1, stmt2)
-
-            toplevel_stmts = [st for st in stmts_this_type if not st.supports]
-            logger.debug('%d top level' % len(toplevel_stmts))
-            related_stmts += toplevel_stmts
-            """
-
         total_comps = 0
         for g in group_sizes:
             total_comps += g ** 2
         print("Total comparisons: %s" % total_comps)
+        print("Max group size: %s" % np.max(group_sizes))
+        print("(%s pct of all comparisons)" % (((np.max(group_sizes) ** 2) /
+                                                float(total_comps))))
         filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
         filt_gs = [g for g in filt_gs if g >= -4.0]
-
+        # Plot some stats
         plt.ion()
-        #plt.figure()
-        #plt.hist(group_sizes, bins=20)
-        #plt.title('Group sizes (pct)')
-        #plt.savefig('gs.pdf')
         plt.figure()
         plt.hist(filt_gs, bins=20)
         plt.title('log10(group sizes (pct))')
