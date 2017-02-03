@@ -10,14 +10,16 @@ BEL	ACTN Family	ACTN
 BEL	Adaptor Protein III Complex	Adaptor_protein_III
 BEL	ADCY Family	ADCY
 BEL	ADH Family	ADH
-BEL	ADRA2 Family	ADRA2
 BEL	ADRA Family	ADRA
+BEL	ADRA2 Family	ADRA2
 BEL	ADRB Family	ADRB
 BEL	ADRBK Family	ADRBK
 BEL	AKT Family	AKT
 BEL	ALDH Family	ALDH
 BEL	ALDO Family	ALDO
+BEL	AMP Activated Protein Kinase Complex	AMPK
 BEL	Annexin II Heterotetramer Complex	Annexin_II_heterotetramer
+BEL	AP-1 Complex	AP1
 BEL	APOA Family	APOA
 BEL	Arp2/3 Protein Complex	Arp2_3_protein
 BEL	ARRB Family	ARRB
@@ -33,9 +35,9 @@ BEL	C1 Complex	C1
 BEL	C1q Complex	C1q
 BEL	Calcineurin Complex	PPP3
 BEL	CALM Family	CALM
+BEL	CAMK Family	CAMK
 BEL	CAMK2 Complex	CAMK2_complex
 BEL	CAMK2 Family	CAMK2_family
-BEL	CAMK Family	CAMK
 BEL	CAPN Family	CAPN
 BEL	Carboxylesterase Family	Carboxylesterase
 BEL	CASP Family	Caspase
@@ -46,8 +48,8 @@ BEL	CCND Family	Cyclin_D
 BEL	CCNE Family	Cyclin_E
 BEL	CCT Complex	CCT_complex
 BEL	CD16 Family	CD16
-BEL	CD32 Family	CD32
 BEL	CD3 Complex	CD3
+BEL	CD32 Family	CD32
 BEL	CD64 Family	CD64
 BEL	CDC25 Family	CDC25
 BEL	CDH Family	Cadherin
@@ -74,8 +76,8 @@ BEL	CRSP Complex	CRSP
 BEL	CSNK1 Family	CSNK1
 BEL	CSNK2 Family	CSNK2
 BEL	CTNNA Family	CTNNA
-BEL	CUL Family	CUL
 BEL	Cu-Zn SOD Family	SOD
+BEL	CUL Family	CUL
 BEL	CXCL ELR-Negative Family	CXCL_ELR_negative
 BEL	CXCL ELR-Positive Family	CXCL_ELR_positive
 BEL	Cyclophilin Family	Cyclophilin
@@ -93,8 +95,8 @@ BEL	Dystrophin Associated Glycoprotein Complex	DGC
 BEL	E1A Binding Protein Complex	E1A_binding_protein
 BEL	E2F Family	E2F
 BEL	EDN Family	EDN
-BEL	EGFR/ERBB Family	ERBB
 BEL	EGFR Ligand Family	EGFR_ligand
+BEL	EGFR/ERBB Family	ERBB
 BEL	EGR Family	EGR
 BEL	EIF2B Complex	EIF2B
 BEL	EIF4A Family	EIF4A
@@ -140,6 +142,7 @@ BEL	HDL Complex	HDL
 BEL	Hedgehog Family	Hedgehog
 BEL	Hemoglobin Complex	Hemoglobin
 BEL	HES Family	HES
+BEL	Histone Family	Histone
 BEL	Histone H1 Family	Histone_H1
 BEL	Histone H2A Family	Histone_H2A
 BEL	Histone H2B Family	Histone_H2B
@@ -183,9 +186,9 @@ BEL	MYL Family	MYL
 BEL	MYL Regulatory Family	MYL_regulatory
 BEL	MYL Slow Family	MYL_slow
 BEL	MYST Family	MYST
+BEL	Na/K Exchanging ATPase Complex	Na_K_ATPase
 BEL	NADH Dehydrogenase Complex	NADH_dehydrogenase
 BEL	NADPH Oxidase Complex	NADPH_oxidase
-BEL	Na/K Exchanging ATPase Complex	Na_K_ATPase
 BEL	NCOR Family	NCOR
 BEL	NDRG Family	NDRG
 BEL	NFAT Family	NFAT
@@ -200,14 +203,15 @@ BEL	NTRK Family	NTRK
 BEL	p160/SRC Family	NCOA
 BEL	P2RX Family	P2RX
 BEL	P2RY Family	P2RY
+BEL	p85/p110 PI3Kinase Complex	PI3K
 BEL	PAK Family	PAK
 BEL	PARV Family	PARV
 BEL	PBX Family	PBX
+BEL	PDE Family	PDE
 BEL	PDE1 Family	PDE1
 BEL	PDE3 Family	PDE3
 BEL	PDE4 Family	PDE4
 BEL	PDE6 Family	PDE6
-BEL	PDE Family	PDE
 BEL	PDGF Family	PDGF
 BEL	PDGFR Family	PDGFR
 BEL	PDK Family	PDK
@@ -218,8 +222,8 @@ BEL	PIK3R Class IA Family	PIK3R_I
 BEL	PKI Family	PKI
 BEL	PLA2 Family	PLA2
 BEL	PLA2G2 Family	PLA2G2
-BEL	PLCB Family	PLCB
 BEL	PLC Family	PLC
+BEL	PLCB Family	PLCB
 BEL	PLCG Family	PLCG
 BEL	PLD Family	PLD
 BEL	PPAP2 Family	PPAP2
@@ -229,15 +233,15 @@ BEL	PPP1R Family	PPP1R
 BEL	PPP2C Family	PPP2C
 BEL	PPP2R Subunit A Family	PPP2R_A
 BEL	PPP2R Subunit B Family	PPP2R_B
-BEL	PPP3C Family	PPP3C
 BEL	PPP3 Family	PPP3
+BEL	PPP3C Family	PPP3C
 BEL	PPP3R Family	PPP3R
 BEL	PRC1 Maintenance Complex	PRC1_complex
 BEL	PRC2 Initiation Complex	PRC2_complex
 BEL	PRDX Family	PRDX
+BEL	PRKA Family	AMPK
 BEL	PRKAA Family	AMPK_alpha
 BEL	PRKAB Family	AMPK_beta
-BEL	PRKA Family	AMPK
 BEL	PRKAG Family	AMPK_gamma
 BEL	PRKAR Family	PRKAR
 BEL	PRKC Family	PRKC
@@ -276,8 +280,8 @@ BEL	SNAI Family	SNAI
 BEL	SOS Family	SOS
 BEL	SRC Family	SRC
 BEL	SREBF Family	SREBF
-BEL	STAT5 Family	STAT5
 BEL	STAT Family	STAT
+BEL	STAT5 Family	STAT5
 BEL	Sulfonylurea Receptor Family	Sulfonylurea_receptor
 BEL	SWI/SNF Complex	SWI_SNF
 BEL	TAP Family	TAP
@@ -308,6 +312,7 @@ GO	GO:0031941	F_actin
 IP	IPR015615	TGFB
 MESH	C072194	PDGF_BB
 NCIT	C104194	Cyclin_D
+NCIT	C105947	MAP2K
 NCIT	C107559	CK2
 NCIT	C116019	AMPK_alpha
 NCIT	C118892	FOXO
@@ -336,6 +341,7 @@ NCIT	C17297	FGFR
 NCIT	C17298	GAP
 NCIT	C17322	PDGFR
 NCIT	C17349	Cyclin
+NCIT	C17343	Troponin_I
 NCIT	C17380	NFkappaB
 NCIT	C17438	FOS_family
 NCIT	C17450	AP1
@@ -360,9 +366,9 @@ NCIT	C20591	SWI_SNF
 NCIT	C2275	hCG
 NCIT	C25184	LDH
 NCIT	C26360	ERK
+NCIT	C38041	Troponin_T
 NCIT	C38897	CD3
 NCIT	C41625	AKT
-NCIT	C51209	KSR
 NCIT	C52887	FOS_family
 NCIT	C736	Pertussis_toxin
 NCIT	C94701	AMPK
@@ -390,17 +396,15 @@ NXP	FA:04243	TNF
 NXP	FA:04276	Ubiquitin
 NXP	FA:04686	Wnt
 NXP	FA:04773	RAP1
+PF	PF00012	HSPA
 PF	PF00022	Actin
-PF	PF00028	Cadherin
 PF	PF00028	Cadherin
 PF	PF00066	Notch
 PF	PF00071	RAS
 PF	PF00110	Wnt
 PF	PF00143	Interferon
 PF	PF00167	FGF
-PF	PF00167	FGF
 PF	PF00178	ETS
-PF	PF00183	HSP90
 PF	PF00183	HSP90
 PF	PF00219	IGFBP
 PF	PF00229	TNF
@@ -409,13 +413,17 @@ PF	PF00277	SAA
 PF	PF00320	GATA
 PF	PF00340	IL1
 PF	PF00616	RasGAP
+PF	PF00656	Caspase
 PF	PF00870	p53_family
+PF	PF01534	FZD
 PF	PF01756	ACOX
 PF	PF02046	COX6A
 PF	PF02174	IRS
 PF	PF02238	COX7A
 PF	PF02285	COX8
 PF	PF02297	COX6B
+PF	PF02377	DVL
+PF	PF02460	Patched
 PF	PF02545	MAF
 PF	PF02608	BMP
 PF	PF02827	PKI
@@ -428,4 +436,3 @@ PF	PF08562	CRISP
 PF	PF08841	DDR
 PF	PF11413	HIF1
 PF	PF15975	FLOT
-NCIT	C105947	MAP2K
