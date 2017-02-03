@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 import itertools
+import functools
 import collections
 from copy import copy, deepcopy
 import numpy as np
@@ -15,10 +16,12 @@ except ImportError:
 from indra.statements import *
 from indra.databases import uniprot_client
 
-logger = logging.getLogger('preassembler')
-
+import multiprocessing as mp
 from matplotlib import pyplot as plt
 import numpy as np
+
+logger = logging.getLogger('preassembler')
+
 
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
