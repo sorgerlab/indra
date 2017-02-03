@@ -160,7 +160,7 @@ def run_preassembly(stmts_in, **kwargs):
     stmts_out = run_preassembly_related(pa, be, **options)
     end = time.time()
     elapsed = end - start
-    print("Elapsed: %s" % elapsed)
+    logger.debug("Time elapsed, run_preassembly_related: %s" % elapsed)
     return stmts_out
 
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
