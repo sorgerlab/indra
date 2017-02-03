@@ -6,6 +6,8 @@ import logging
 import itertools
 import collections
 from copy import copy, deepcopy
+import numpy as np
+from matplotlib import pyplot as plt
 try:
     import pygraphviz as pgv
 except ImportError:
@@ -14,6 +16,9 @@ from indra.statements import *
 from indra.databases import uniprot_client
 
 logger = logging.getLogger('preassembler')
+
+from matplotlib import pyplot as plt
+import numpy as np
 
 class Preassembler(object):
     """De-duplicates statements and arranges them in a specificity hierarchy.
@@ -157,14 +162,25 @@ class Preassembler(object):
            entity hierarchy and therefore all Statements of the same type
            referencing these entities will be grouped. This grouping assures
            that relations are only possible within Statement groups and
-           not among groups.
-        3. The statements within each group are then compared; if one
+           not among groups. For two Statements to be in the same group at
+           this step, the Statements must be the same type and the Agents at
+           each position in the Agent lists must either be in the same
+           hierarchy component, or if they are not in the hierarchy, must have
+           identical entity_matches_keys. Statements with None in one of the
+           Agent list positions are collected separately at this stage.
+        3. Statements with None at either the first or second position are
+           iterated over. For a statement with a None as the first Agent,
+           the second Agent is examined; then the Statement with None is
+           added to all Statement groups with a corresponding component or
+           entity_matches_key in the second position. The same procedure is
+           performed for Statements with None at the second Agent position.
+        4. The statements within each group are then compared; if one
            statement represents a refinement of the other (as defined by the
            `refinement_of()` method implemented for the Statement), then the
            more refined statement is added to the `supports` field of the more
            general statement, and the more general statement is added to the
            `supported_by` field of the more refined statement.
-        4. A new flat list of statements is created that contains only those
+        5. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
            from the `supported_by` fields of other statements). This list
@@ -225,57 +241,159 @@ class Preassembler(object):
         for stmt in unique_stmts:
             stmts_by_type[type(stmt)].append(stmt)
 
+        group_sizes = []
+        largest_group = None
+        largest_group_size = 0
+        num_stmts = len(unique_stmts)
         related_stmts = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
-            no_comp_stmts = []
+            # Dict of stmt group key tuples, indexed by their first Agent
+            stmt_by_first = collections.defaultdict(lambda: [])
+            # Dict of stmt group key tuples, indexed by their second Agent
+            stmt_by_second = collections.defaultdict(lambda: [])
+            # Dict of statements with None first, with second Agent as keys
+            none_first = collections.defaultdict(lambda: [])
+            # Dict of statements with None second, with first Agent as keys
+            none_second = collections.defaultdict(lambda: [])
+            # The dict of all statement groups, with tuples of components
+            # or entity_matches_keys as keys
             stmt_by_group = collections.defaultdict(lambda: [])
-            # Here we group Statements according to the hierarchy graph
-            # components that their agents are part of
+            # Iterate over the Statements and build the entity key tuples
+            # (hierarchy graph components or entity_matches_keys)
+            # used to group them
             for stmt in stmts_this_type:
-                #import ipdb; ipdb.set_trace()
+                entities = []
                 for i, a in enumerate(stmt.agent_list()):
-                    if a is not None:
+                    # Entity is None: add the None to the entities list
+                    if a is None and stmt_type != Complex:
+                        entities.append(a)
+                        continue
+                    # Entity is not None, but could be ungrounded or not
+                    # in a family
+                    else:
                         a_ns, a_id = a.get_grounding()
+                        # No grounding available--in this case, use the
+                        # entity_matches_key
                         if a_ns is None or a_id is None:
-                            entity_key = a.entity_matches_key()
+                            entities.append(a.entity_matches_key())
+                            continue
+                        # We have grounding, now check for a component ID
+                        uri = eh.get_uri(a_ns, a_id)
+                        # This is the component ID corresponding to the agent
+                        # in the entity hierarchy
+                        component = eh.components.get(uri)
+                        # If no component ID, use the entity_matches_key()
+                        if component is None:
+                            entities.append(a.entity_matches_key())
+                        # Component ID, so this is in a family
                         else:
-                            uri = eh.get_uri(a_ns, a_id)
-                            # This is the component ID corresponding to the agent
-                            # in the entity hierarchy
-                            component = eh.components.get(uri)
-                            if component is not None:
-                                entity_key = component
-                            else:
-                                entity_key = a.entity_matches_key()
-                        # For Complexes we cannot optimize by argument
-                        # position because all permutations need to be
-                        # considered but we can use the number of members
-                        # to statify into groups
-                        if stmt_type == Complex:
-                            key = (len(stmt.members), entity_key)
-                        # For all other statements, we separate groups by
-                        # the argument position of the Agent
-                        else:
-                            key = (i, entity_key)
-                        # Don't add the same Statement (same object) twice
+                            # We turn the component ID into a string so that
+                            # we can sort it alphabetically along with
+                            # entity_matches_keys for Complexes
+                            entities.append(str(component))
+                # At this point we have an entity list for the Statement.
+                # If we're dealing with Complexes, sort the entities and use
+                # the sorted list as the stmt_by_group dict key
+                if stmt_type == Complex:
+                    # There shouldn't be any statements of the type
+                    # e.g., Complex([Foo, None, Bar])
+                    assert None not in entities
+                    assert len(entities) > 0
+                    entities.sort()
+                    key = tuple(entities)
+                    if stmt not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt)
+                # Now look at all other statement types
+                # All other statements will have one or two entities
+                elif len(entities) == 1:
+                    # If only one entity, we only need the one key.
+                    # It should not be None!
+                    assert None not in entities
+                    key = tuple(entities)
+                    if stmt not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt)
+                else:
+                    # Make sure we only have two entities, and they are not both
+                    # None
+                    key = tuple(entities)
+                    assert len(key) == 2
+                    assert key != (None, None)
+                    # First agent is None; add the statements to the
+                    # none_first dict, indexed by the 2nd entity
+                    if key[0] is None and stmt not in none_first[key[1]]:
+                        none_first[key[1]].append(stmt)
+                    # Second agent is None; add the the statements to the
+                    # none_second dict, indexed by the 1st entity
+                    elif key[1] is None and stmt not in none_second[key[0]]:
+                        none_second[key[0]].append(stmt)
+                    # Neither entity is None! Add the statement to the
+                    # stmt_by_group dict, and add the key to the corresponding
+                    # list of keys in the stmt_by_first and stmt_by_second
+                    # lists.
+                    elif None not in key:
                         if stmt not in stmt_by_group[key]:
                             stmt_by_group[key].append(stmt)
-                # If the Statement has no Agent belonging to any component
-                # then we put it in a special group
-                #if not any_component:
-                #    no_comp_stmts.append(stmt)
-
+                        if key not in stmt_by_first[key[0]]:
+                            stmt_by_first[key[0]].append(key)
+                        if key not in stmt_by_second[key[1]]:
+                            stmt_by_second[key[1]].append(key)
+            # When we've gotten here, we should have stmt_by_group entries, and
+            # we may or may not have stmt_by_first/second and none_first/second
+            # dicts filled out (we'll only have them for Statement types that
+            # are not Complex and that have two Agents as arguments.
+            if none_first:
+                # Get the keys associated with stmts having a None first
+                # argument
+                for second_arg, stmts in none_first.items():
+                    # Look for any statement group keys having this second arg
+                    second_arg_keys = stmt_by_second[second_arg]
+                    # If there are no more specific statements matching this
+                    # set of statements with a None first arg, then the
+                    # statements with the None first arg deserve to be in
+                    # their own group.
+                    if not second_arg_keys:
+                        stmt_by_group[(None, second_arg)] = stmts
+                    # On the other hand, if there are statements with a matching
+                    # second arg component, we need to add the None first
+                    # statements to all groups with the matching second arg
+                    for second_arg_key in second_arg_keys:
+                        stmt_by_group[second_arg_key] += stmts
+            # Now do the corresponding steps for the statements with None as the
+            # second argument:
+            if none_second:
+                for first_arg, stmts in none_second.items():
+                    first_arg_keys = stmt_by_first[first_arg]
+                    if not first_arg_keys:
+                        stmt_by_group[(first_arg, None)] = stmts
+                    for first_arg_key in first_arg_keys:
+                        stmt_by_group[first_arg_key] += stmts
+            # Now, set supports/supported_by relationships!
+            # Keep track of the largest group size for debugging purposes.
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
+                if len(stmts) > largest_group_size:
+                    largest_group_size = len(stmts)
+                    largest_group = (key, stmts[0:10])
+                group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
-
+            # Collect top level statements
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
+
+        # Log some stats for debugging purposes
+        total_comps = 0
+        for g in group_sizes:
+            total_comps += g ** 2
+        logger.debug("Total comparisons: %s" % total_comps)
+        if group_sizes:
+            logger.debug("Max group size: %s" % np.max(group_sizes))
+            logger.debug("(%.1f %% of all comparisons)" %
+                  (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
 
         self.related_stmts = related_stmts
         if return_toplevel:
