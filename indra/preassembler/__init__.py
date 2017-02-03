@@ -162,14 +162,25 @@ class Preassembler(object):
            entity hierarchy and therefore all Statements of the same type
            referencing these entities will be grouped. This grouping assures
            that relations are only possible within Statement groups and
-           not among groups.
-        3. The statements within each group are then compared; if one
+           not among groups. For two Statements to be in the same group at
+           this step, the Statements must be the same type and the Agents at
+           each position in the Agent lists must either be in the same
+           hierarchy component, or if they are not in the hierarchy, must have
+           identical entity_matches_keys. Statements with None in one of the
+           Agent list positions are collected separately at this stage.
+        3. Statements with None at either the first or second position are
+           iterated over. For a statement with a None as the first Agent,
+           the second Agent is examined; then the Statement with None is
+           added to all Statement groups with a corresponding component or
+           entity_matches_key in the second position. The same procedure is
+           performed for Statements with None at the second Agent position.
+        4. The statements within each group are then compared; if one
            statement represents a refinement of the other (as defined by the
            `refinement_of()` method implemented for the Statement), then the
            more refined statement is added to the `supports` field of the more
            general statement, and the more general statement is added to the
            `supported_by` field of the more refined statement.
-        4. A new flat list of statements is created that contains only those
+        5. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
            from the `supported_by` fields of other statements). This list
@@ -239,17 +250,24 @@ class Preassembler(object):
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
+            # Dict of stmt group key tuples, indexed by their first Agent
             stmt_by_first = collections.defaultdict(lambda: [])
+            # Dict of stmt group key tuples, indexed by their second Agent
             stmt_by_second = collections.defaultdict(lambda: [])
+            # Dict of statements with None first, with second Agent as keys
             none_first = collections.defaultdict(lambda: [])
+            # Dict of statements with None second, with first Agent as keys
             none_second = collections.defaultdict(lambda: [])
+            # The dict of all statement groups, with tuples of components
+            # or entity_matches_keys as keys
             stmt_by_group = collections.defaultdict(lambda: [])
-            # Here we group Statements according to the hierarchy graph
-            # components that their agents are part of
+            # Iterate over the Statements and build the entity key tuples
+            # (hierarchy graph components or entity_matches_keys)
+            # used to group them
             for stmt in stmts_this_type:
                 entities = []
                 for i, a in enumerate(stmt.agent_list()):
-                    # Entity is None
+                    # Entity is None: add the None to the entities list
                     if a is None and stmt_type != Complex:
                         entities.append(a)
                         continue
@@ -273,12 +291,12 @@ class Preassembler(object):
                         # Component ID, so this is in a family
                         else:
                             # We turn the component ID into a string so that
-                            # we can sort it along with entity_matches_keys
-                            # for Complexes
+                            # we can sort it alphabetically along with
+                            # entity_matches_keys for Complexes
                             entities.append(str(component))
-                # At this point we have an entity list
+                # At this point we have an entity list for the Statement.
                 # If we're dealing with Complexes, sort the entities and use
-                # as dict key
+                # the sorted list as the stmt_by_group dict key
                 if stmt_type == Complex:
                     # There shouldn't be any statements of the type
                     # e.g., Complex([Foo, None, Bar])
@@ -291,7 +309,7 @@ class Preassembler(object):
                 # Now look at all other statement types
                 # All other statements will have one or two entities
                 elif len(entities) == 1:
-                    # If only one entity, we only need the one key
+                    # If only one entity, we only need the one key.
                     # It should not be None!
                     assert None not in entities
                     key = tuple(entities)
@@ -303,15 +321,18 @@ class Preassembler(object):
                     key = tuple(entities)
                     assert len(key) == 2
                     assert key != (None, None)
-                    # First agent is None; add in the statements, indexed by
-                    # 2nd
+                    # First agent is None; add the statements to the
+                    # none_first dict, indexed by the 2nd entity
                     if key[0] is None and stmt not in none_first[key[1]]:
                         none_first[key[1]].append(stmt)
-                    # Second agent is None; add in the statements, indexed by
-                    # 1st
+                    # Second agent is None; add the the statements to the
+                    # none_second dict, indexed by the 1st entity
                     elif key[1] is None and stmt not in none_second[key[0]]:
                         none_second[key[0]].append(stmt)
-                    # Neither entity is None!
+                    # Neither entity is None! Add the statement to the
+                    # stmt_by_group dict, and add the key to the corresponding
+                    # list of keys in the stmt_by_first and stmt_by_second
+                    # lists.
                     elif None not in key:
                         if stmt not in stmt_by_group[key]:
                             stmt_by_group[key].append(stmt)
@@ -319,15 +340,15 @@ class Preassembler(object):
                             stmt_by_first[key[0]].append(key)
                         if key not in stmt_by_second[key[1]]:
                             stmt_by_second[key[1]].append(key)
-
             # When we've gotten here, we should have stmt_by_group entries, and
-            # we may or may not have stmt_by_first/second dicts filled out
-            # (depending on the statement type).
+            # we may or may not have stmt_by_first/second and none_first/second
+            # dicts filled out (we'll only have them for Statement types that
+            # are not Complex and that have two Agents as arguments.
             if none_first:
                 # Get the keys associated with stmts having a None first
                 # argument
                 for second_arg, stmts in none_first.items():
-                    # Look for any statements with this second arg
+                    # Look for any statement group keys having this second arg
                     second_arg_keys = stmt_by_second[second_arg]
                     # If there are no more specific statements matching this
                     # set of statements with a None first arg, then the
@@ -344,19 +365,13 @@ class Preassembler(object):
             # second argument:
             if none_second:
                 for first_arg, stmts in none_second.items():
-                    # Look for any statements with this first arg
                     first_arg_keys = stmt_by_first[first_arg]
-                    # If there are no more specific statements matching this
-                    # set of statements with a None second arg, then the
-                    # statements with the None second arg deserve to be in
-                    # their own group.
                     if not first_arg_keys:
                         stmt_by_group[(first_arg, None)] = stmts
-                    # On the other hand, if there are statements with a matching
-                    # first arg component, we need to add the None second
-                    # statements to all groups with the matching first arg
                     for first_arg_key in first_arg_keys:
                         stmt_by_group[first_arg_key] += stmts
+            # Now, set supports/supported_by relationships!
+            # Keep track of the largest group size for debugging purposes.
             logger.debug('Preassembling %d components' % (len(stmt_by_group)))
             for key, stmts in stmt_by_group.items():
                 if len(stmts) > largest_group_size:
@@ -365,20 +380,20 @@ class Preassembler(object):
                 group_sizes.append(len(stmts))
                 for stmt1, stmt2 in itertools.combinations(stmts, 2):
                     self._set_supports(stmt1, stmt2)
+            # Collect top level statements
             toplevel_stmts = [st for st in stmts_this_type if not st.supports]
             logger.debug('%d top level' % len(toplevel_stmts))
             related_stmts += toplevel_stmts
 
+        # Log some stats for debugging purposes
         total_comps = 0
         for g in group_sizes:
             total_comps += g ** 2
-        print("Total comparisons: %s" % total_comps)
-        print("Max group size: %s" % np.max(group_sizes))
-        print("Largest group: %s" % str(largest_group))
-        print("(%.1f %% of all comparisons)" %
+        logger.debug("Total comparisons: %s" % total_comps)
+        logger.debug("Max group size: %s" % np.max(group_sizes))
+        logger.debug("Largest group: %s" % str(largest_group))
+        logger.debug("(%.1f %% of all comparisons)" %
               (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
-        filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
-        filt_gs = [g for g in filt_gs if g >= -4.0]
 
         self.related_stmts = related_stmts
         if return_toplevel:
