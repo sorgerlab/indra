@@ -390,10 +390,11 @@ class Preassembler(object):
         for g in group_sizes:
             total_comps += g ** 2
         logger.debug("Total comparisons: %s" % total_comps)
-        logger.debug("Max group size: %s" % np.max(group_sizes))
-        logger.debug("Largest group: %s" % str(largest_group))
-        logger.debug("(%.1f %% of all comparisons)" %
-              (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
+        if group_sizes:
+            logger.debug("Max group size: %s" % np.max(group_sizes))
+            logger.debug("Largest group: %s" % str(largest_group))
+            logger.debug("(%.1f %% of all comparisons)" %
+                  (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
 
         self.related_stmts = related_stmts
         if return_toplevel:
