@@ -827,7 +827,7 @@ class PysbAssembler(object):
                 set_base_initial_condition(self.model, m, init_round)
                 monomers_found.append(m.name)
             else:
-                set_base_initial_condition(self.model, m, 100.0)
+                set_base_initial_condition(self.model, m, 1000.0)
                 monomers_notfound.append(m.name)
         logger.info('Monomers set to %s context' % cell_type)
         logger.info('--------------------------------')
