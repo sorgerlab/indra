@@ -793,7 +793,7 @@ class PysbAssembler(object):
         if self.model is None:
             return
         for m in self.model.monomers:
-            set_base_initial_condition(self.model, m, 100.0)
+            set_base_initial_condition(self.model, m, 1000.0)
 
     def set_context(self, cell_type):
         """Set protein expression data as initial conditions.
