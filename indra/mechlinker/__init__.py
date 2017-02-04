@@ -61,12 +61,20 @@ class MechLinker(object):
                 if stmt.gef is not None:
                     gef_base = self.get_base(stmt.gef)
                     gef_base.add_activity('gef')
-                    gef_base.add_active_state(stmt.gef_activity, stmt.gef.mods)
+                    if stmt.gef.activity is not None:
+                        act = stmt.gef.activity.activity_type
+                    else:
+                        act = 'activity'
+                    gef_base.add_active_state(act, stmt.gef.mods)
             elif isinstance(stmt, RasGap):
                 if stmt.gap is not None:
                     gap_base = self.get_base(stmt.gap)
                     gap_base.add_activity('gap')
-                    gap_base.add_active_state(stmt.gap_activity, stmt.gap.mods)
+                    if stmt.gap.activity is not None:
+                        act = stmt.gap.activity.activity_type
+                    else:
+                        act = 'activity'
+                    gap_base.add_active_state('act', stmt.gap.mods)
             elif isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
                     obj_base =\
