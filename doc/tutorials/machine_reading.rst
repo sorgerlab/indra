@@ -31,18 +31,13 @@ http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html)::
     sudo apt-get update
     sudo apt-get install sbt
 
-Clone REACH from https://github.com/clulab/reach. Under reach/project, create a
-file, assembly.sbt, containing the following line::
+Clone REACH from https://github.com/clulab/reach.
 
-    addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
+Add the following line to reach/build.sbt::
 
-Add the following lines to reach/build.sbt::
-
-    test in assembly := {}
     mainClass in assembly := Some("org.clulab.reach.ReachCLI")
 
-This prevents Scala from running all the tests during the SBT assembly step,
-and assigns ReachCLI as the main class.
+This assigns ReachCLI as the main class.
 
 Compile and assemble REACH. Note that the path to the .ivy2 directory must be
 given. Use the assembly task to assemble a fat JAR containing all of the

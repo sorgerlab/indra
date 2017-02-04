@@ -9,21 +9,23 @@ from indra.statements import *
 logger = logging.getLogger('sif_assembler')
 
 class SifAssembler(object):
+    """The SIF assembler assembles INDRA Statements into a networkx graph.
+
+    This graph can then be exported into SIF (simple ineraction format) or
+    a Boolean network.
+
+    Parameters
+    ----------
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be added to the assembler's list
+        of Statements.
+
+    Attributes
+    ----------
+    graph : networkx.DiGraph
+        A networkx graph that is assembled by this assembler.
+    """
     def __init__(self, stmts=None):
-        """The SIF assembler assembles INDRA Statements into a
-        networkx graph.
-
-        Parameters
-        ----------
-        stmts : Optional[list[indra.statements.Statement]]
-            A list of INDRA Statements to be added to the assembler's list
-            of Statements.
-
-        Attributes
-        ----------
-        graph : networkx.DiGraph
-            A networkx graph that is assembled by this assembler.
-        """
         if stmts is None:
             self.stmts = []
         else:

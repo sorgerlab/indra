@@ -373,10 +373,10 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
     gene_list : list[str]
         A list of gene symbols to filter for.
     policy : str
-        The policy to apply when filtering for the list of genes.
-        'one': keep statements that contain at least one of the
-               list of genes and possibly others not in the list
-        'all': keep statements that only contain genes given in the list
+        The policy to apply when filtering for the list of genes. "one": keep
+        statements that contain at least one of the list of genes and
+        possibly others not in the list "all": keep statements that only
+        contain genes given in the list
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 

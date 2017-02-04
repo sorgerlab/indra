@@ -16,7 +16,7 @@ License and funding
 -------------------
 
 INDRA is made available under the `MIT License
-<http://opensource.org/licenses/MIT>`_. Users are asked to acknowledge DARPA
+<https://opensource.org/licenses/MIT>`_. Users are asked to acknowledge DARPA
 grant W911NF-14-1-0397, “Programmatic modelling for reasoning across complex
 mechanisms,” Peter Sorger and Dexter Pratt PIs.
 

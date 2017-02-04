@@ -28,7 +28,7 @@ class CxAssembler(object):
     """This class assembles a CX network from a set of INDRA Statements.
 
     The CX format is an aspect oriented data mode for networks.
-    The format is defined at http://www.ndexbio.org/data-model/.
+    The format is defined at http://www.home.ndexbio.org/data-model/.
     The CX format is the standard for NDEx and is compatible with
     CytoScape via the CyNDEx plugin.
 
