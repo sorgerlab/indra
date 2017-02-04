@@ -83,9 +83,14 @@ class GeneNetwork(object):
         # Optionally filter out statements not involving only our gene set
         if filter:
             logger.info("Filtering statements to match gene list")
-            bel_statements = [s for s in bel_statements
-                              if all([(agent.name in self.gene_list)
-                                      for agent in s.agent_list()])]
+            if len(self.gene_list) > 1:
+                bel_statements = [s for s in bel_statements
+                                  if all([(agent.name in self.gene_list)
+                                          for agent in s.agent_list()])]
+            else:
+                bel_statements = [s for s in bel_statements
+                                  if any([(agent.name in self.gene_list)
+                                          for agent in s.agent_list()])]
         return bel_statements
 
     def get_biopax_stmts(self, filter=False, query='pathsbetween'):
@@ -159,9 +164,14 @@ class GeneNetwork(object):
         # Optionally filter out statements not involving only our gene set
         if filter:
             logger.info("Filtering statements to match gene list")
-            bp_statements = [s for s in bp.statements
-                              if all([(agent.name in self.gene_list)
-                                      for agent in s.agent_list()])]
+            if len(self.gene_list) > 1:
+                bp_statements = [s for s in bp.statements
+                                  if all([(agent.name in self.gene_list)
+                                          for agent in s.agent_list()])]
+            else:
+                bp_statements = [s for s in bp.statements
+                                  if any([(agent.name in self.gene_list)
+                                          for agent in s.agent_list()])]
             return bp_statements
         else:
             return bp.statements
