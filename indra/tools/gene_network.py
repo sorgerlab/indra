@@ -88,7 +88,7 @@ class GeneNetwork(object):
                                       for agent in s.agent_list()])]
         return bel_statements
 
-    def get_biopax_stmts(self, filter=False):
+    def get_biopax_stmts(self, filter=False, query='pathsbetween'):
         """Get relevant statements from Pathway Commons.
 
         Performs a "paths between" query for the genes in :py:attr:`gene_list`
@@ -104,6 +104,11 @@ class GeneNetwork(object):
         filter : bool
             If True, includes only those statements that exclusively mention
             genes in :py:attr:`gene_list`. Default is False.
+        query : str
+            Defined what type of query is executed. The two options are
+            'pathsbetween' which finds paths between the given list of genes
+            and only works if more than 1 gene is given, and 'neighborhood'
+            which searches the immediate neighborhood of each given gene.
 
         Returns
         -------
@@ -127,7 +132,16 @@ class GeneNetwork(object):
             bp = ba.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
         else:
-            bp = ba.process_pc_pathsbetween(self.gene_list)
+            if (len(self.gene_list) < 2) and (query == 'pathsbetween'):
+                logger.warning('Using neighborhood query for one gene.')
+                query = 'neighborhood'
+            if query == 'pathsbetween':
+                bp = ba.process_pc_pathsbetween(self.gene_list)
+            elif query == 'neighborhood':
+                bp = ba.process_pc_neighborhood(self.gene_list)
+            else:
+                logger.error('Invalid query type: %s' % query)
+                return []
             # Save the file if we're caching
             if self.basename is not None:
                 bp.save_model(biopax_ras_owl_path)
