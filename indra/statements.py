@@ -274,7 +274,6 @@ class ActivityCondition(object):
 
     >>> mek_active = Agent('MAP2K1',
     ...                    activity=ActivityCondition('kinase', True))
-    ERK (MAPK1) unphosphorylated at tyrosine 187:
 
     Transcriptionally inactive FOXO3:
 
