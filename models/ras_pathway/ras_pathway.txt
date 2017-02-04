@@ -28,8 +28,8 @@ CCND1 activates CDK4 and CDK6, which deactivate RB1.
 DUSP deactivates MAPK1 and MAPK3.
 SOS and RASGRF activate RHOA, RHOB and RHOC.
 RHOA, RHOB and RHOC activate ROCK1 and ROCK2.
-HRAS, NRAS and KRAS activate PIK3C and PIK3R.
-PIK3C and PIK3R activate PIP3.
+HRAS, NRAS and KRAS activate PI3K.
+PI3K activates PIP3.
 PTEN deactivates PIP3.
 PIP3 activates PDPK1, AKT and TIAM.
 PDPK1 activates AKT.
@@ -40,4 +40,4 @@ STK11 activates PRKAA, PRKAB and PRKAG.
 PRKAA, PRKAB and PRKAG deactivate mTORC2.
 mTORC2 deactivates EIF4EBP1.
 mTORC2 activates RPS6KA.
-TIAM activates RAC, which activates PAK.
+TIAM activates RAC and RAC activates PAK.
