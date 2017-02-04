@@ -101,11 +101,11 @@ class MutCondition(object):
 
     Parameters
     ----------
-    position : string
+    position : str
         Residue position of the mutation in the protein sequence.
-    residue_from : string
+    residue_from : str
         Wild-type (unmodified) amino acid residue at the given position.
-    residue_to : string
+    residue_to : str
         Amino acid at the position resulting from the mutation.
 
     Examples
@@ -148,17 +148,17 @@ class ModCondition(object):
 
     Parameters
     ----------
-    mod_type : string
+    mod_type : str
         The type of post-translational modification, e.g., 'phosphorylation'.
         Valid modification types currently include: 'phosphorylation',
         'ubiquitination', 'sumoylation', 'hydroxylation', and 'acetylation'.
         If an invalid modification type is passed an InvalidModTypeError is
         raised.
-    residue : string or None
+    residue : str or None
         String indicating the modified amino acid, e.g., 'Y' or 'tyrosine'.
         If None, indicates that the residue at the modification site is
         unknown or unspecified.
-    position : string or None
+    position : str or None
         String indicating the position of the modified amino acid, e.g., '202'.
         If None, indicates that the position is unknown or unspecified.
     is_modified : bool
@@ -232,6 +232,32 @@ class ModCondition(object):
         return hash(self.matches_key())
 
 class ActivityCondition(object):
+    """An active or inactive state of a protein.
+
+    Examples
+    --------
+    Kinase-active MAP2K1:
+
+    >>> mek_active = Agent('MAP2K1',
+    ...                    activity=ActivityCondition('kinase', True))
+    ERK (MAPK1) unphosphorylated at tyrosine 187:
+
+    Transcriptionally inactive FOXO3:
+
+    >>> foxo_inactive = Agent('FOXO3',
+    ...                     activity=ActivityCondition('transcription', False))
+
+
+    Parameters
+    ----------
+    activity_type : str
+        The type of activity, e.g. 'kinase'. The basic, unspecified molecular
+        activity is represented as 'activity'. Examples of other activity
+        types are 'kinase', 'phosphatase', 'catalytic', 'transcription',
+        etc.
+    is_active : bool
+        Specifies whether the given activity type is present or absent.
+    """
     def __init__(self, activity_type, is_active):
         if activity_type not in activity_types:
             logger.warning('Invalid activity type: %s' % activity_type)
@@ -275,7 +301,7 @@ class Agent(object):
 
     Parameters
     ----------
-    name : string
+    name : str
         The name of the agent, preferably a canonicalized name such as an
         HGNC gene name.
     mods : list of :py:class:`ModCondition`
@@ -562,22 +588,22 @@ class Evidence(object):
 
     Parameters
     ----------
-    source_api : string or None
+    source_api : str or None
         String identifying the INDRA API used to capture the statement,
         e.g., 'trips', 'biopax', 'bel'.
-    source_id : string or None
+    source_id : str or None
         For statements drawn from databases, ID of the database entity
         corresponding to the statement.
-    pmid : string or None
+    pmid : str or None
         String indicating the Pubmed ID of the source of the statement.
-    text : string
+    text : str
         Natural language text supporting the statement.
-    annotations : dictionary
+    annotations : dict
         Dictionary containing additional information on the
         context of the statement, e.g., species, cell line,
         tissue type, etc. The entries may vary depending on
         the source of the information.
-    epistemics : dictionary
+    epistemics : dict
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
     """
@@ -735,10 +761,10 @@ class Modification(Statement):
         The enzyme involved in the modification.
     sub : :py:class:`indra.statement.Agent`
         The substrate of the modification.
-    residue : string or None
+    residue : str or None
         The amino acid residue being modified, or None if it is unknown or
         unspecified.
-    position : string or None
+    position : str or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
     evidence : list of :py:class:`Evidence`
@@ -823,10 +849,10 @@ class SelfModification(Statement):
     ----------
     enz : :py:class`indra.statement.Agent`
         The enzyme involved in the modification, which is also the substrate.
-    residue : string or None
+    residue : str or None
         The amino acid residue being modified, or None if it is unknown or
         unspecified.
-    position : string or None
+    position : str or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
     evidence : list of :py:class:`Evidence`
@@ -1130,7 +1156,7 @@ class Inhibition(RegulateActivity):
     obj : :py:class:`Agent`
         The agent whose activity is influenced by the subject, i.e., the
         "downstream" node.
-    obj_activity : Optional[string]
+    obj_activity : Optional[str]
         The activity of the obj Agent that is affected, e.g., its "kinase"
         activity.
     evidence : list of :py:class:`Evidence`
@@ -1160,7 +1186,7 @@ class Activation(RegulateActivity):
     obj : :py:class:`Agent`
         The agent whose activity is influenced by the subject, i.e., the
         "downstream" node.
-    obj_activity : Optional[string]
+    obj_activity : Optional[str]
         The activity of the obj Agent that is affected, e.g., its "kinase"
         activity.
     evidence : list of :py:class:`Evidence`
@@ -1202,7 +1228,7 @@ class ActiveForm(Statement):
         The Agent in a particular active or inactive state. The sets
         of ModConditions, BoundConditions, and MutConditions on the given
         Agent instance indicate the relevant conditions.
-    activity : string
+    activity : str
         The type of activity influenced by the given set of conditions,
         e.g., "kinase".
     is_active : bool
@@ -1278,7 +1304,7 @@ class HasActivity(Statement):
     agent : :py:class:`Agent`
         The Agent that that statement is about. Note that the detailed state
         of the Agent is not relevant for this type of statement.
-    activity : string
+    activity : str
         The type of activity, e.g., "kinase".
     has_activity : bool
         Whether the given Agent has the given activity (True) or
