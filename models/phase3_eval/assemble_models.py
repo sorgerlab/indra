@@ -4,6 +4,7 @@ import pickle
 import itertools
 from copy import deepcopy
 from os.path import join as pjoin
+from pysb import Observable
 from pysb.export.kappa import KappaExporter
 from indra.tools import assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
@@ -45,6 +46,7 @@ def assemble_index_cards(stmts):
 
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
+    stmts = ac.filter_direct(stmts)
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
@@ -52,6 +54,32 @@ def assemble_pysb(stmts, data_genes, out_file):
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
+    # Add observables
+    o = Observable('MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
+    model.add_component(o)
+    o = Observable('MAPK3p', model.monomers['MAPK3'](T202='p', Y204='p'))
+    model.add_component(o)
+    o = Observable('GSK3Ap', model.monomers['GSK3A'](S21='p'))
+    model.add_component(o)
+    o = Observable('GSK3Bp', model.monomers['GSK3B'](S9='p'))
+    model.add_component(o)
+    o = Observable('RPS6p', model.monomers['RPS6'](S235='p'))
+    model.add_component(o)
+    o = Observable('EIF4EBP1p', model.monomers['EIF4EBP1'](S65='p'))
+    model.add_component(o)
+    o = Observable('JUNp', model.monomers['JUN'](S73='p'))
+    model.add_component(o)
+    o = Observable('FOXO3p', model.monomers['FOXO3'](S315='p'))
+    model.add_component(o)
+    o = Observable('AKT1p', model.monomers['AKT1'](S473='p'))
+    model.add_component(o)
+    o = Observable('AKT2p', model.monomers['AKT2'](S474='p'))
+    model.add_component(o)
+    o = Observable('AKT3p', model.monomers['AKT3'](S='p'))
+    model.add_component(o)
+    o = Observable('ELK1', model.monomers['ELK1'](S383='p'))
+    model.add_component(o)
+    # Set context
     pa.set_context('SKMEL28_SKIN')
     pa.save_model(out_file)
     return model
@@ -185,9 +213,9 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = True
+    reassemble = False
     if not reassemble:
-        stmts = ac.load_statements(pjoin(outf, 'top_level.pkl'))
+        stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
         #stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
     else:
         #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
@@ -209,16 +237,16 @@ if __name__ == '__main__':
                                    save=pjoin(outf, 'preassembled.pkl'))
 
     assemble_models = []
-    #assemble_models.append('sif')
-    #assemble_models.append('pysb')
-    #assemble_models.append('cx')
+    assemble_models.append('sif')
+    assemble_models.append('pysb')
+    assemble_models.append('pysb')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
         pysb_model = assemble_pysb(stmts, data_genes,
                                    pjoin(outf, 'korkut_model_pysb.py'))
         ke = KappaExporter(pysb_model)
-        with open(pjoin(outf, 'korkut_model.ka'), 'wb') as fh:
+        with open(pjoin(outf, 'korkut_model_v3.ka'), 'wb') as fh:
             fh.write(ke.export().encode('utf-8'))
     ### SIF assembly
     if 'sif' in assemble_models:
