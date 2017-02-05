@@ -3,3 +3,4 @@ mock
 ipython
 matplotlib
 future
+requests
