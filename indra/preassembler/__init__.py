@@ -142,7 +142,8 @@ class Preassembler(object):
             unique_stmts.append(first_stmt)
         return unique_stmts
 
-    def combine_related(self, return_toplevel=True, size_cutoff=100):
+    def combine_related(self, return_toplevel=True, poolsize=None,
+                        size_cutoff=100):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -239,6 +240,21 @@ class Preassembler(object):
         >>> combined_stmts[0].supported_by[0].supports
         [Phosphorylation(BRAF(), MAP2K1(), S)]
         """
+        # Check arguments relating to multiprocessing
+        if poolsize is None:
+            logger.info('combine_related: poolsize not set, '
+                        'not using multiprocessing.')
+            use_mp = False
+        elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
+            use_mp = True
+            logger.info('combine_related: Python >= 3.4 detected, '
+                        'using multiprocessing with poolsize %d' %
+                        poolsize)
+        else:
+            use_mp = False
+            logger.info('combine_related: Python < 3.4 detected, '
+                        'not using multiprocessing.')
+
         # If unique_stmts is not initialized, call combine_duplicates.
         if not self.unique_stmts:
             self.combine_duplicates()
@@ -254,8 +270,8 @@ class Preassembler(object):
         largest_group_size = 0
         num_stmts = len(unique_stmts)
         related_stmts = []
-        large_groups = []
-        small_groups = []
+        child_proc_groups = []
+        parent_proc_groups = []
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
@@ -388,19 +404,20 @@ class Preassembler(object):
                         stmt_by_group[first_arg_key] += stmts
 
             # Divide statements by group size
+            # If we're not using multiprocessing, then all groups are local
             for g in stmt_by_group.values():
-                if len(g) >= size_cutoff:
-                    large_groups.append(g)
+                if use_mp and len(g) >= size_cutoff:
+                    child_proc_groups.append(g)
                 else:
-                    small_groups.append(g)
+                    parent_proc_groups.append(g)
 
         # Now run preassembly!
-        logger.debug("Group sizes:")
-        logger.debug("  %d large comp, %d small comp" %
-                     (len(large_groups), len(small_groups)))
+        logger.debug("Group sizes: %d large, %d small" %
+                     (len(child_proc_groups), len(parent_proc_groups)))
 
-        # Check if we are running any groups remotely
-        if large_groups:
+        # Check if we are running any groups in child processes; note that if
+        # use_mp is False, child_proc_groups will be empty
+        if child_proc_groups:
             # Get a multiprocessing context
             ctx = mp.get_context('spawn')
             pool = ctx.Pool(4)
@@ -408,30 +425,31 @@ class Preassembler(object):
                                               hierarchies=self.hierarchies,
                                               check_entities_match=False)
             # Run the large groups remotely
-            logger.debug("Running large groups remotely")
-            res = pool.map_async(supports_func, large_groups)
+            logger.debug("Running %d groups in child processes" %
+                         len(child_proc_groups))
+            res = pool.map_async(supports_func, child_proc_groups)
             workers_ready = False
         else:
             workers_ready = True
-            logger.debug("No large groups, so no multiprocessing.")
 
         # Run the small groups locally
-        logger.debug("Running small groups locally")
+        logger.debug("Running %d groups in parent process" %
+                     len(parent_proc_groups))
         stmt_ix_map = []
-        for stmt_tuples in small_groups:
+        for stmt_tuples in parent_proc_groups:
             stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
                                             hierarchies=self.hierarchies))
-        logger.debug("Done running small groups")
+        logger.debug("Done running parent process groups")
 
         while not workers_ready:
-            logger.debug("Checking processes")
+            logger.debug("Checking child processes")
             if res.ready():
                 workers_ready = True
-                logger.debug('Large group comparisons successful? %s' %
+                logger.debug('Child process group comparisons successful? %s' %
                              res.successful())
                 if not res.successful():
-                    raise Exception(
-                            "Sorry, there was a problem with preassembly.")
+                    raise Exception("Sorry, there was a problem with "
+                                    "preassembly in the child processes.")
                 else:
                     stmt_ix_map += res.get()
                 pool.close()
@@ -455,51 +473,6 @@ class Preassembler(object):
         else:
             return unique_stmts
 
-
-
-        """
-        # SERIAL version ---------
-        logger.debug('Preassembling %d components' % (len(stmt_by_group)))
-        for key, stmts in stmt_by_group.items():
-            if len(stmts) > largest_group_size:
-                largest_group_size = len(stmts)
-                largest_group = (key, stmts[0:10])
-            group_sizes.append(len(stmts))
-            for stmt1, stmt2 in itertools.combinations(stmts, 2):
-                self._set_supports(stmt1, stmt2)
-        toplevel_stmts = [st for st in stmts_this_type if not st.supports]
-        logger.debug('%d top level' % len(toplevel_stmts))
-        related_stmts += toplevel_stmts
-
-        total_comps = 0
-        for g in group_sizes:
-            total_comps += g ** 2
-        print("Total comparisons: %s" % total_comps)
-        print("Max group size: %s" % np.max(group_sizes))
-        print("Largest group: %s" % str(largest_group))
-        print("(%.1f %% of all comparisons)" %
-              (100 * ((np.max(group_sizes) ** 2) / float(total_comps))))
-        filt_gs = [np.log10(g / float(num_stmts)) for g in group_sizes]
-        filt_gs = [g for g in filt_gs if g >= -4.0]
-
-        self.related_stmts = related_stmts
-        if return_toplevel:
-            return self.related_stmts
-        else:
-            return unique_stmts
-        """
-
-"""
-    def _set_supports(self, stmt1, stmt2):
-        if (stmt2 not in stmt1.supported_by) and \
-            stmt1.refinement_of(stmt2, self.hierarchies):
-            stmt1.supported_by.append(stmt2)
-            stmt2.supports.append(stmt1)
-        elif (stmt1 not in stmt2.supported_by) and \
-            stmt2.refinement_of(stmt1, self.hierarchies):
-            stmt2.supported_by.append(stmt1)
-            stmt1.supports.append(stmt2)
-"""
 
 def _set_supports_stmt_pairs(stmt_tuples, hierarchies=None,
                              check_entities_match=False):
