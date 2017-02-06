@@ -420,7 +420,7 @@ class Preassembler(object):
         if child_proc_groups:
             # Get a multiprocessing context
             ctx = mp.get_context('spawn')
-            pool = ctx.Pool(4)
+            pool = ctx.Pool(poolsize)
             supports_func = functools.partial(_set_supports_stmt_pairs,
                                               hierarchies=self.hierarchies,
                                               check_entities_match=False)

@@ -137,6 +137,10 @@ def run_preassembly(stmts_in, **kwargs):
         If True, only the top-level statements are returned. If False,
         all statements are returned irrespective of level of specificity.
         Default: True
+    poolsize : Optional[int]
+        FIXME FIXME FIXME
+    size_cutoff : Optional[int]
+        FIXME FIXME FIXME
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -147,21 +151,18 @@ def run_preassembly(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of preassembled top-level statements.
     """
-    dump_pkl = kwargs.get('save')
     dump_pkl_unique = kwargs.get('save_unique')
     be = BeliefEngine()
     pa = Preassembler(hierarchies, stmts_in)
+    run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
-    options = {'save': dump_pkl_unique}
-    run_preassembly_duplicate(pa, be, **options)
-
+    dump_pkl = kwargs.get('save')
     return_toplevel = kwargs.get('return_toplevel', True)
-    options = {'save': dump_pkl, 'return_toplevel': return_toplevel}
-    start = time.time()
+    poolsize = kwargs.get('poolsize', None)
+    size_cutoff = kwargs.get('size_cutoff', 100)
+    options = {'save': dump_pkl, 'return_toplevel': return_toplevel,
+               'poolsize': poolsize, 'size_cutoff': size_cutoff}
     stmts_out = run_preassembly_related(pa, be, **options)
-    end = time.time()
-    elapsed = end - start
-    logger.debug("Time elapsed, run_preassembly_related: %s" % elapsed)
     return stmts_out
 
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
@@ -205,6 +206,10 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         If True, only the top-level statements are returned. If False,
         all statements are returned irrespective of level of specificity.
         Default: True
+    poolsize : Optional[int]
+        FIXME FIXME FIXME
+    size_cutoff : Optional[int]
+        FIXME FIXME FIXME
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -216,7 +221,15 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     logger.info('Combining related on %d statements...' %
                 len(preassembler.unique_stmts))
     return_toplevel = kwargs.get('return_toplevel', True)
-    stmts_out = preassembler.combine_related(return_toplevel=False)
+    poolsize = kwargs.get('poolsize', None)
+    size_cutoff = kwargs.get('size_cutoff', 100)
+    start = time.time()
+    stmts_out = preassembler.combine_related(return_toplevel=False,
+                                             poolsize=poolsize,
+                                             size_cutoff=size_cutoff)
+    end = time.time()
+    elapsed = end - start
+    logger.debug("Time elapsed, run_preassembly_related: %s" % elapsed)
     beliefengine.set_hierarchy_probs(stmts_out)
     stmts_top = filter_top_level(stmts_out)
     if return_toplevel:
