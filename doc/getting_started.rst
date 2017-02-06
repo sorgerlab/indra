@@ -21,8 +21,8 @@ For convenience, the output assembler classes are imported directly under
 
     from indra.assemblers import PysbAssembler
 
-To get a detailed overview of INDRA's submodule structure, take a look at
-the module documentation.
+To get a detailed overview of INDRA's submodule structure, take a look at the
+`INDRA Module reference <modules/index.html>`_.
 
 Basic usage examples
 --------------------
@@ -38,7 +38,7 @@ an INDRA Statement.
 .. code:: python
 
     from indra import trips
-    sentence = 'MEK2 phosphorylates ERK1 at Thr-202 and Tyr-204'
+    sentence = 'MAP2K1 phosphorylates MAPK3 at Thr-202 and Tyr-204'
     trips_processor = trips.process_text(sentence)
 
 The `trips_processor` object has a `statements` attribute which contains a list
@@ -46,9 +46,9 @@ of INDRA Statements extracted from the sentence.
 
 Reading a PubMed Central article with REACH
 ```````````````````````````````````````````
-In this example, a full paper from [PubMed
-Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
-[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
+In this example, a full paper from `PubMed
+Central <http://www.ncbi.nlm.nih.gov/pmc/>`_ is processed. The paper's PMC ID is
+`PMC3717945 <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/>`_.
 
 .. code:: python
 
@@ -76,7 +76,7 @@ Getting paths between two proteins from PathwayCommons (BioPAX)
 In this example, we search for paths between the BRAF and MAPK3 proteins in
 the PathwayCommons databases using INDRA's BioPAX API. Note that this example
 will only work if all dependencies of the indra.biopax module are installed.
-See the Installation instructions for more details.
+See the `Installation instructions <installation.html>`_ for more details.
 
 .. code:: python
 
@@ -89,6 +89,19 @@ We passed the second argument `limit = 2`, which defines the upper limit on
 the length of the paths that are searched. By default the limit is 1.
 The `biopax_processor` object has a `statements` attribute which contains a list
 of INDRA Statements extracted from the queried paths.
+
+Constructing INDRA Statements manually
+``````````````````````````````````````
+It is possible to construct INDRA Statements manually or in scripts. The following
+is a basic example in which we instantiate a Phosphorylation Statement between
+BRAF and MAP2K1.
+
+.. code:: python
+
+    from indra.statements import Phosphorylation, Agent
+    braf = Agent('BRAF')
+    map2k1 = Agent('MAP2K1')
+    stmt = Phosphorylation(braf, map2k1)
 
 Assembling a PySB model
 ```````````````````````
@@ -106,4 +119,3 @@ instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
 Here the `model` variable is a PySB Model object representing a rule-based
 executable model, which can be further manipulated, simulated, saved and exported
 to other formats.
-
