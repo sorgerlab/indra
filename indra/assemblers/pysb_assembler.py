@@ -709,6 +709,7 @@ class PysbAssembler(object):
         self.statements = []
         self.agent_set = None
         self.model = None
+        self.default_initial_amount = 1000.0
         if policies is None:
             self.policies = {'other': 'default'}
         elif isinstance(policies, basestring):
@@ -788,12 +789,27 @@ class PysbAssembler(object):
 
         return self.model
 
-    def add_default_initial_conditions(self):
-        """Set default initial conditions in the PySB model."""
+    def add_default_initial_conditions(self, value=None):
+        """Set default initial conditions in the PySB model.
+
+        Parameters
+        ----------
+        value : Optional[float]
+            Optionally a value can be supplied which will be the initial
+            amount applied. Otherwise a built-in default is used.
+        """
+        if value is not None:
+            try:
+                value_num = float(value)
+            except ValueError:
+                logger.error('Invalid initial condition value.')
+                return
+        else:
+            value_num = self.default_initial_amount
         if self.model is None:
             return
         for m in self.model.monomers:
-            set_base_initial_condition(self.model, m, 1000.0)
+            set_base_initial_condition(self.model, m, value_num)
 
     def set_context(self, cell_type):
         """Set protein expression data as initial conditions.
@@ -827,7 +843,8 @@ class PysbAssembler(object):
                 set_base_initial_condition(self.model, m, init_round)
                 monomers_found.append(m.name)
             else:
-                set_base_initial_condition(self.model, m, 1000.0)
+                set_base_initial_condition(self.model, m,
+                                           self.default_initial_amount)
                 monomers_notfound.append(m.name)
         logger.info('Monomers set to %s context' % cell_type)
         logger.info('--------------------------------')
