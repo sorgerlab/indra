@@ -4,3 +4,4 @@ ipython
 matplotlib
 future
 requests
+pysb

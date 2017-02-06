@@ -29,17 +29,6 @@ evidence sentence for each Statement is propagated:
     for st in tp.statements:
         print('%s with evidence "%s"' % (st, st.evidence[0].text))
 
-Note also that all the proteins mentioned in the text are grounded to database
-identifiers:
-
-.. ipython:: python
-
-    for st in tp.statements:
-        for agent in st.agent_list():
-            print('%s:' % agent.name)
-            for k, v in agent.db_refs.items():
-                print('-- %s: %s' % (k, v))
-
 Assemble the INDRA Statements into a rule-based executable model
 ----------------------------------------------------------------
 
@@ -55,7 +44,7 @@ the enzyme-substrate complex produces and releases a product irreversibly.
 
 .. ipython:: python
 
-    from indra.assemblers import PysbAssembler
+    from indra.assemblers.pysb_assembler import PysbAssembler
 
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
@@ -68,7 +57,7 @@ At this point `pa.model` contains a PySB model object with 3 monomers,
     for monomer in pa.model.monomers:
         print(monomer)
 
-4 rules,
+6 rules,
 
 .. ipython:: python
 
@@ -81,7 +70,7 @@ are set to nominal but plausible values,
 .. ipython:: python
 
     for parameter in pa.model.parameters:
-        print(parameters)
+        print(parameter)
 
 The model also contains extensive annotations that tie the monomers to database
 identifiers and also annotate the semantics of each component of each rule.
@@ -102,15 +91,15 @@ proteins in the model.
 
 .. ipython:: python
 
-    pa.set_context('A375')
+    pa.set_context('A375_SKIN')
 
 At this point the PySB model has total protein amounts set consistent with the
 A375 cell line:
 
 .. ipython:: python
 
-    for ic in model.initial_conditions:
-        print('%s = %d' % (ic.pattern, ic.parameter.value))
+    for monomer_pattern, parameter in pa.model.initial_conditions:
+        print('%s = %d' % (monomer_pattern, parameter.value))
 
 Expoting the model into other common formats
 --------------------------------------------
@@ -120,12 +109,12 @@ Mathematic script with ODEs corresponding to the model.
 
 .. ipython:: python
 
-    sbml_model_string = pa.export_model('sbml')
-    bngl_model_string = pa.export_model('bngl')
+    pa.export_model('sbml')
+    pa.export_model('bngl')
 
 One can also pass a file name argument to the `export_model` function to save
 the exported model into a file:
 
 .. ipython:: python
 
-    pa.export_model('sbml', 'simple_model.sbml')
+    pa.export_model('sbml', 'example_model.sbml')
