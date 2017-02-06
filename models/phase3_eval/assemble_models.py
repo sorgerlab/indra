@@ -154,7 +154,7 @@ def assemble_sif(stmts, data, out_file):
                         prior_abs.add(a.name)
         return sorted(list(prior_abs))
     pkn_abs = get_ab_names(stmts)
-    print('Boolean PKN contains these antibodies: %s' % ', '.join(prior_abs))
+    print('Boolean PKN contains these antibodies: %s' % ', '.join(pkn_abs))
     # Make the SIF model
     sa = SifAssembler(stmts)
     sa.make_model(use_name_as_key=True)
