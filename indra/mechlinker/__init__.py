@@ -312,11 +312,14 @@ class BaseAgent(object):
         A dict of activity types and their associated Agent states
     activity_reductions : dict
         A dict of activity types and the type they are reduced to by inference.
+    states : list[indra.statements.ModCondition]
+        A list of ModConditions that the associated Agent can have
     """
     def __init__(self, name):
         self.name = name
         self.activities = []
         self.active_states = {}
+        self.states = []
         self.activity_graph = None
         self.activity_reductions = None
 
