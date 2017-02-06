@@ -142,7 +142,19 @@ def assemble_sif(stmts, data, out_file):
                     st_out.append(s)
         return st_out
     stmts = filter_ab_edges(stmts, 'one')
-    print(len(stmts))
+    # Get a list of the AB names that end up being covered in the prior network
+    # This is important because other ABs will need to be taken out of the
+    # MIDAS file to work.
+    def get_ab_names(st):
+        prior_abs = set()
+        for s in st:
+            for a in s.agent_list():
+                if a is not None:
+                    if a.name.find('_p') != -1:
+                        prior_abs.add(a.name)
+        return sorted(list(prior_abs))
+    pkn_abs = get_ab_names(stmts)
+    print('Boolean PKN contains these antibodies: %s' % ', '.join(prior_abs))
     # Make the SIF model
     sa = SifAssembler(stmts)
     sa.make_model(use_name_as_key=True)
@@ -150,7 +162,7 @@ def assemble_sif(stmts, data, out_file):
     with open(out_file, 'wb') as fh:
         fh.write(sif_str.encode('utf-8'))
     # Make the MIDAS data file used for training the model
-    midas_data = process_data.get_midas_data(data)
+    midas_data = process_data.get_midas_data(data, pkn_abs)
     return sif_str
 
 def assemble_cx(stmts, out_file):
@@ -239,7 +251,7 @@ if __name__ == '__main__':
     assemble_models = []
     assemble_models.append('sif')
     assemble_models.append('pysb')
-    assemble_models.append('pysb')
+    assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
