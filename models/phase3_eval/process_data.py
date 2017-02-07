@@ -176,9 +176,10 @@ def get_single_drug_treatments(data):
             drug_tx.append(cond)
     return drug_tx
 
-def get_midas_data(data, out_file='MD-korkut.csv'):
+def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
     drug_abbrevs = get_drugs(data)
     phospho_abs = get_phos_antibodies(data)
+    phospho_abs = set(phospho_abs).intersection(set(pkn_abs))
     drug_cols = ['TR:%s:Drugs' % dr for dr in drug_abbrevs]
     all_values = []
     for row in data['protein'].iterrows():
@@ -196,11 +197,11 @@ def get_midas_data(data, out_file='MD-korkut.csv'):
             values['TR:%s:Drugs' % da] = dose
         values_control = copy(values)
         # Get data conditions for row
-        values['DA:ALL'] = 1440
-        values_control['DA:ALL'] = 0
         for ab_name in phospho_abs:
             values['DV:%s' % ab_name] = row[ab_name]
             values_control['DV:%s' % ab_name] = 1
+            values['DA:%s' % ab_name] = 1440
+            values_control['DA:%s' % ab_name] = 0
         all_values.append(values)
         all_values.append(values_control)
     df = pandas.DataFrame.from_records(all_values)

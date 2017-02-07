@@ -2219,7 +2219,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
         kf_one_step_synth = get_create_parameter(model, param_name, 2e-1)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
-        r = Rule(rule_name, subj_pattern >> obj_pattern + subj_pattern,
+        r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
                  kf_one_step_synth)
     add_rule_to_model(model, r)
 
