@@ -18,9 +18,18 @@ Documentation is available at http://indra.readthedocs.io.
 Installing INDRA
 ----------------
 
+For detailed installation instructions,
+[see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
+
 INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5).
-You can install INDRA by cloning this repository and running setup.py from the
-terminal as
+
+The preferred way to install INDRA is by pointing pip to the source repository
+as
+
+    $ pip install git+https://github.com/sorgerlab/indra.git
+
+You can also install INDRA by cloning this repository and running setup.py
+from the terminal as
 
     $ git clone https://github.com/sorgerlab/indra.git
     $ cd indra
@@ -32,25 +41,12 @@ release as
 
     $ pip install indra
 
+However, releases will usually be behind the latest code available in this
+repository. 
+
 INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
 also PySB (for more information on PySB, see http://pysb.org).  These packages
 are installed by setup.py.
-
-For using BioPAX, an additional package called
-[pyjnius](https://github.com/kivy/pyjnius) is needed to allow using Java
-classes from Python.  This is used only in the BioPAX API and the rest of INDRA
-will work without pyjnius. Pyjnius needs JRE and JDK 1.8 to be installed.  On
-Mac, install both [Java for OS X](http://support.apple.com/kb/DL1572) and JDK
-and JRE from
-[Oracle](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
-Then set JAVA\_HOME to your JDK home directory, for instance
-
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Home
-
-Then first install cython (tested with version 0.23.5) followed by jnius-indra
-
-    $ pip install cython==0.23.5
-    $ pip install jnius-indra
 
 Using INDRA
 -----------
