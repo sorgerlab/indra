@@ -84,8 +84,9 @@ def get_agent_from_upid(up_id):
 
 def get_ras227_genes():
     ras227_file = '../../data/ras_pathway_proteins.csv'
-    df = pandas.read_csv(ras227_file, sep='\t', index_col=None, header=None)
-    gene_names = [x.decode('utf-8') for x in df[0]]
+    df = pandas.read_csv(ras227_file, sep='\t', index_col=None, header=None,
+                         encoding='utf-8')
+    gene_names = [x for x in df[0]]
     return gene_names
 
 def get_all_gene_names(data, out_file='prior_genes.txt'):
@@ -159,7 +160,7 @@ def get_drugs(data):
 def get_drug_targets(fname=None):
     if not fname:
         fname = drug_grounding_file
-    df = pandas.read_csv(fname, index_col=None, header=None)
+    df = pandas.read_csv(fname, index_col=None, header=None, encoding='utf-8')
     abbrevs = df[1]
     target_upids = df[6]
     targets = {}
