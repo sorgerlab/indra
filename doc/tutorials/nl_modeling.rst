@@ -101,11 +101,11 @@ A375 cell line:
     for monomer_pattern, parameter in pa.model.initial_conditions:
         print('%s = %d' % (monomer_pattern, parameter.value))
 
-Expoting the model into other common formats
---------------------------------------------
+Exporting the model into other common formats
+---------------------------------------------
 From the assembled PySB format it is possible to export the model into other
-common formats such as SBML, BNGL, Kappa. One can also generate a Matlab or
-Mathematic script with ODEs corresponding to the model.
+common formats such as SBML, BNGL and Kappa. One can also generate a Matlab or
+Mathematica script with ODEs corresponding to the model.
 
 .. ipython:: python
 
@@ -113,7 +113,7 @@ Mathematic script with ODEs corresponding to the model.
     pa.export_model('bngl')
 
 One can also pass a file name argument to the `export_model` function to save
-the exported model into a file:
+the exported model directly into a file:
 
 .. ipython:: python
 
