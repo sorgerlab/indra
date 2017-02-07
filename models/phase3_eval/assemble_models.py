@@ -93,6 +93,10 @@ def assemble_sif(stmts, data, out_file):
     stmts_act = ac.filter_by_type(stmts, Activation)
     stmts_inact = ac.filter_by_type(stmts, Inhibition)
     stmts = stmts_act + stmts_inact
+    # get Ras227 and filter statments
+    ras_genes = process_data.get_ras227_genes()
+    ras_genes = [x for x in ras_genes if x not in ['YAP1']]
+    stmts = ac.filter_gene_list(stmts, ras_genes, 'all')
     # Get the drugs inhibiting their targets as INDRA
     # statements
     def get_drug_statements():
@@ -141,7 +145,7 @@ def assemble_sif(stmts, data, out_file):
                 if any_ab:
                     st_out.append(s)
         return st_out
-    stmts = filter_ab_edges(stmts, 'one')
+    stmts = filter_ab_edges(stmts, 'all')
     # Get a list of the AB names that end up being covered in the prior network
     # This is important because other ABs will need to be taken out of the
     # MIDAS file to work.
@@ -231,6 +235,7 @@ if __name__ == '__main__':
         #stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
     else:
         #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
+        '''
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
@@ -245,13 +250,14 @@ if __name__ == '__main__':
         stmts = ac.expand_families(stmts)
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
         stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
+        '''
         stmts = ac.run_preassembly(stmts, return_toplevel=False,
                                    save=pjoin(outf, 'preassembled.pkl'))
 
     assemble_models = []
     assemble_models.append('sif')
-    assemble_models.append('pysb')
-    assemble_models.append('cx')
+    #assemble_models.append('pysb')
+    #assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
