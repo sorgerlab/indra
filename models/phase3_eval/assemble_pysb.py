@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join as pjoin
+import os.path
 from pysb import Observable
 from pysb.export.kappa import KappaExporter
 from indra.assemblers import PysbAssembler, IndexCardAssembler
@@ -46,12 +47,14 @@ def assemble_pysb(stmts, data_genes, out_file):
     pa.save_model(out_file)
 
     ke = KappaExporter(model)
-    with open(pjoin(outf, 'korkut_model_v3.ka'), 'wb') as fh:
+    with open('%s.ka' % base_file, 'wb') as fh:
+        base_file, _ = os.path.splitext(out_file)
         fh.write(ke.export().encode('utf-8'))
 
     return model
 
-def assemble_index_cards(stmts):
+
+def assemble_index_cards(stmts, out_folder):
     counter = 1
     for st in stmts:
         if isinstance(st, Modification) and st.enz is None:
@@ -64,5 +67,5 @@ def assemble_index_cards(stmts):
         ica = IndexCardAssembler([st], pmc_override=pmids)
         ica.make_model()
         if ica.cards:
-            ica.save_model('output/index_cards/index_card_%d.json' % counter)
+            ica.save_model(pjoin(out_folder, 'index_card_%d.json' % counter))
             counter += 1

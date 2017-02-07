@@ -56,7 +56,7 @@ def assemble_sif(stmts, data, out_file):
                 for a in s.agent_list():
                     if a is not None:
                         if a.name.find('_p') == -1 and \
-                            a.name.find('Drugs') == -1:
+                           a.name.find('Drugs') == -1:
                             all_ab = False
                             break
                 if all_ab:

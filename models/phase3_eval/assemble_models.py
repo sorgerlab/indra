@@ -58,8 +58,8 @@ if __name__ == '__main__':
                                    save=pjoin(outf, 'preassembled.pkl'))
 
     assemble_models = []
-    #assemble_models.append('sif')
-    #assemble_models.append('pysb')
+    assemble_models.append('sif')
+    assemble_models.append('pysb')
     assemble_models.append('cx')
 
     ### PySB assembly
