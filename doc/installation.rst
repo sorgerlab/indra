@@ -22,10 +22,30 @@ depends on (numpy, scipy, pandas, etc).
 Installing INDRA
 ----------------
 
-Installing from Github
-``````````````````````
-The preferred way to install INDRA is to clone this repository into a local
-folder and run setup.py from the terminal as
+Installing via Github
+`````````````````````
+The preferred way to install INDRA is to use pip and point it to either a
+remote or a local copy of the latest source code from the repository.
+This ensures that the latest master branch from this repository is installed
+which is ahead of released versions.
+
+To install directly from Github, do:
+
+.. code-block:: bash
+
+    pip install git+https://github.com/sorgerlab/indra.git
+
+Or first clone the repository to a local folder and use pip to install
+INDRA from there locally:
+
+.. code-block:: bash
+
+    git clone https://github.com/sorgerlab/indra.git
+    cd indra
+    pip install .
+
+Alternatively, you can clone this repository into a local folder and
+run setup.py from the terminal as
 
 .. code-block:: bash
 
@@ -33,14 +53,8 @@ folder and run setup.py from the terminal as
     cd indra
     python setup.py install
 
-Alternatively one can use pip to install INDRA directly from Github as
-
-.. code-block:: bash
-
-    pip install git+https://github.com/sorgerlab/indra.git
-
-This ensures that the latest master branch from this repository is installed
-which is ahead of released versions.
+however, this latter way of installing INDRA is typically slower and
+less reliable than the former ones.
 
 Cloning the source code from Github
 ```````````````````````````````````
@@ -62,8 +76,8 @@ to make sure that all its requirements are installed. To be able to
 `PYTHONPATH <https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH>`_
 environmental variable.
 
-Installing with pip
-```````````````````
+Installing releases with pip
+````````````````````````````
 Releases of INDRA are also available via
 `pip <https://pip.pypa.io/en/latest/installing/>`_. You can install the latest
 released version of INDRA as
