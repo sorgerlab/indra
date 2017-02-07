@@ -42,6 +42,26 @@ Alternatively one can use pip to install INDRA directly from Github as
 This ensures that the latest master branch from this repository is installed
 which is ahead of released versions.
 
+Cloning the source code from Github
+```````````````````````````````````
+You may want to simply clone the source code without installing INDRA
+as a system-wide package. In addition to cloning from Github, you need
+to run a special git command to update submodules in the INDRA folder
+to ensure that the Bioentities submodule is properly loaded.
+This can be done as follows:
+
+.. code-block:: bash
+
+    git clone https://github.com/sorgerlab/indra.git
+    cd indra
+    git submodule update --remote
+
+To be able to use INDRA this way, you need
+to make sure that all its requirements are installed. To be able to
+`import indra`, you also need the folder to be visible on your
+`PYTHONPATH <https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH>`_
+environmental variable.
+
 Installing with pip
 ```````````````````
 Releases of INDRA are also available via
