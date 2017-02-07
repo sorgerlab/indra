@@ -7,8 +7,6 @@ import itertools
 import functools
 import collections
 from copy import copy, deepcopy
-import numpy as np
-from matplotlib import pyplot as plt
 try:
     import pygraphviz as pgv
 except ImportError:
@@ -17,8 +15,6 @@ from indra.statements import *
 from indra.databases import uniprot_client
 
 import multiprocessing as mp
-from matplotlib import pyplot as plt
-import numpy as np
 
 logger = logging.getLogger('preassembler')
 

@@ -229,7 +229,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
                                              size_cutoff=size_cutoff)
     end = time.time()
     elapsed = end - start
-    logger.debug("Time elapsed, run_preassembly_related: %s" % elapsed)
+    logger.debug("Time elapsed, combine_related: %s" % elapsed)
     beliefengine.set_hierarchy_probs(stmts_out)
     stmts_top = filter_top_level(stmts_out)
     if return_toplevel:
