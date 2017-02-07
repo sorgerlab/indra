@@ -197,7 +197,6 @@ def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
             values['TR:%s:Drugs' % da] = dose
         values_control = copy(values)
         # Get data conditions for row
-        values_control['DA:ALL'] = 0
         for ab_name in phospho_abs:
             values['DV:%s' % ab_name] = row[ab_name]
             values_control['DV:%s' % ab_name] = 1
