@@ -21,8 +21,7 @@ For convenience, the output assembler classes are imported directly under
 
     from indra.assemblers import PysbAssembler
 
-To get a detailed overview of INDRA's submodule structure, take a look at the
-`INDRA Module reference <modules/index.html>`_.
+To get a detailed overview of INDRA's submodule structure, take a look at the :ref:`indra_modules_ref`.
 
 Basic usage examples
 --------------------

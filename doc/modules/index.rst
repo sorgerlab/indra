@@ -1,3 +1,5 @@
+.. _indra_modules_ref:
+
 INDRA modules reference
 =======================
 
