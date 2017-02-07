@@ -1100,6 +1100,13 @@ class Demyristoylation(Modification):
     """Demyristoylation modification."""
     pass
 
+class Methylation(Modification):
+    """Methylation modification."""
+    pass
+
+class Demethylation(Modification):
+    """Demethylation modification."""
+    pass
 
 @python_2_unicode_compatible
 class RegulateActivity(Statement):
