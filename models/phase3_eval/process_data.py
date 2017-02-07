@@ -9,8 +9,8 @@ from indra.databases import hgnc_client
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition
 
-#data_file = 'handshake/Korkut et al. Data 12122016.xlsx'
-data_file = 'handshake/Korkut et al. Data 01172017.xlsx'
+data_file = 'data/Korkut et al. Data 01172017.xlsx'
+drug_grounding_file = 'data/drug_grounding.csv'
 
 def read_data(fname):
     """Returns the data as a dictionary."""
@@ -156,7 +156,9 @@ def get_drugs(data):
     drug_abbrevs = sorted(list(drug_abbrevs))
     return drug_abbrevs
 
-def get_drug_targets(fname='drug_grounding.csv'):
+def get_drug_targets(fname=None):
+    if not fname:
+        fname = drug_grounding_file
     df = pandas.read_csv(fname, index_col=None, header=None)
     abbrevs = df[1]
     target_upids = df[6]

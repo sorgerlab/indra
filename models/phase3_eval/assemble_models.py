@@ -37,7 +37,6 @@ if __name__ == '__main__':
     reassemble = False
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
-        #stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
     else:
         #prior_stmts = build_prior(data_genes, pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
