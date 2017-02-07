@@ -47,11 +47,12 @@ class Preassembler(object):
     def __init__(self, hierarchies, stmts=None):
         self.hierarchies = hierarchies
         if stmts:
+            logger.debug("Deepcopying stmts in __init__")
             self.stmts = deepcopy(stmts)
         else:
             self.stmts = []
-        self.unique_stmts = []
-        self.related_stmts = []
+        self.unique_stmts = None
+        self.related_stmts = None
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -68,7 +69,8 @@ class Preassembler(object):
 
         A wrapper around the static method :py:meth:`combine_duplicate_stmts`.
         """
-        self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
+        if self.unique_stmts is None:
+            self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
         return self.unique_stmts
 
     @staticmethod
@@ -236,6 +238,13 @@ class Preassembler(object):
         >>> combined_stmts[0].supported_by[0].supports
         [Phosphorylation(BRAF(), MAP2K1(), S)]
         """
+        if self.related_stmts is not None:
+            if return_toplevel:
+                return self.related_stmts
+            else:
+                assert self.unique_stmts is not None
+                return self.unique_stmts
+
         # Check arguments relating to multiprocessing
         if poolsize is None:
             logger.info('combine_related: poolsize not set, '
@@ -251,10 +260,8 @@ class Preassembler(object):
             logger.info('combine_related: Python < 3.4 detected, '
                         'not using multiprocessing.')
 
-        # If unique_stmts is not initialized, call combine_duplicates.
-        if not self.unique_stmts:
-            self.combine_duplicates()
-        unique_stmts = deepcopy(self.unique_stmts)
+        # Call combine_duplicates, which lazily initializes self.unique_stmts
+        unique_stmts = self.combine_duplicates()
         eh = self.hierarchies['entity']
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(lambda: [])
