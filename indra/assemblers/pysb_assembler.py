@@ -2189,7 +2189,6 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 def increaseamount_assemble_one_step(stmt, model, agent_set):
-    print(stmt)
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
     obj_pattern = get_monomer_pattern(model, stmt.obj)
