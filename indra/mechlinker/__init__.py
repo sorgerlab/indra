@@ -10,6 +10,12 @@ logger = logging.getLogger('mechlinker')
 
 
 class MechLinker(object):
+    """Rewrite the activation pattern of Statements and derive new Statements.
+
+    The mechanism linker (MechLinker) traverses a corpus of Statements and
+    uses various inference steps to make the activity types and active
+    forms consistent among Statements.
+    """
     def __init__(self, stmts=None):
         if stmts is not None:
             self.statements = stmts
@@ -18,17 +24,41 @@ class MechLinker(object):
         self.base_agents = BaseAgentSet()
 
     def add_statements(self, stmts):
+        """Add statements to the MechLinker.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+        """
         self.statements.extend(stmts)
 
     def link_statements(self):
+        """Run all the steps of mechanism linking and return LinkedStatements.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatement object which contain a tuple with
+            a list of source Statements and a Statement that has been derived
+            or "linked" from the source Statements.
+        """
         self.get_activities()
         self.reduce_activities()
-        linked_stmts = self.replace_activations()
+        linked_stmts = self.link_activations()
         for ls in linked_stmts:
             self.statements.append(ls.inferred_stmt)
         return linked_stmts
 
     def get_activities(self):
+        """Aggregate all the known activities and active forms of Agents.
+
+        Iterate over self.statements and collect the implied activities
+        and active forms of Agents that appear in the Statements. These are
+        collected in BaseAgents, one for each type of Agent. For instance,
+        there is a single BaseAgent for a type of protein like MAPK1 while
+        MAPK1 may appear in a variety of states within Agents used in
+        Statements.
+        """
         for stmt in self.statements:
             agents = stmt.agent_list()
             for agent in agents:
@@ -86,10 +116,27 @@ class MechLinker(object):
                 agent_base.add_active_state(stmt.activity, stmt.agent.mods)
 
     def get_base(self, agent):
+        """Return the BaseAgent corresponding to an Agent.
+
+        Parameters
+        ----------
+        agent : indra.statements.Agent
+
+        Returns
+        -------
+        base_agent : indra.mechlinker.BaseAgent
+        """
         base_agent = self.base_agents.get_create_base_agent(agent)
         return base_agent
 
     def reduce_activities(self):
+        """Rewrite the activity types referenced in Statements for consistency.
+
+        Activity types are reduced to the most specific form whenever possible.
+        For instance, if 'kinase' is the only specific activity type known
+        for the BaseAgent of BRAF, its generic 'activity' forms are rewritten
+        to 'kinase'.
+        """
         for stmt in self.statements:
             agents = stmt.agent_list()
             for agent in agents:
@@ -114,7 +161,20 @@ class MechLinker(object):
                 if act_red is not None:
                     stmt.activity = act_red
 
-    def replace_activations(self):
+    def link_activations(self):
+        """Link Activation/Inhibition, Modification and ActiveForm Statements.
+
+        Finds equivalences between Activation/Inhibition, Modification and
+        ActiveForm Statements and derives LinkedStatements from a list of
+        source statements.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatement object which contain a tuple with
+            a list of source Statements and a Statement that has been derived
+            or "linked" from the source Statements.
+        """
         linked_stmts = []
         for act_stmt in get_statement_type(self.statements, RegulateActivity):
             # Infer ActiveForm from ActAct + Phosphorylation
@@ -199,13 +259,24 @@ class MechLinker(object):
 
 class BaseAgentSet(object):
     """Container for a set of BaseAgents.
-    Wraps a dict of BaseAgent instances.
+
+    This class wraps a dict of BaseAgent instance and can be used to get and
+    set BaseAgents.
     """
     def __init__(self):
         self.agents = {}
 
     def get_create_base_agent(self, agent):
-        """Return agent with given name, creating it if needed."""
+        """Return BaseAgent from an Agent, creating it if needed.
+
+        Parameters
+        ----------
+        agent : indra.statements.Agent
+
+        Returns
+        -------
+        base_agent : indra.mechlinker.BaseAgent
+        """
         try:
             base_agent = self.agents[agent.name]
         except KeyError:
@@ -229,12 +300,27 @@ class BaseAgentSet(object):
 
 @python_2_unicode_compatible
 class BaseAgent(object):
+    """Represents all activity types and active forms of an Agent.
+
+    Parameters
+    ----------
+    name : str
+        The name of the BaseAgent
+    activities : list[str]
+        A list of activity types that the Agent has
+    active_states : dict
+        A dict of activity types and their associated Agent states
+    activity_reductions : dict
+        A dict of activity types and the type they are reduced to by inference.
+    states : list[indra.statements.ModCondition]
+        A list of ModConditions that the associated Agent can have
+    """
     def __init__(self, name):
         self.name = name
         self.activities = []
         self.active_states = {}
-        self.activity_graph = None
         self.states = []
+        self.activity_graph = None
         self.activity_reductions = None
 
     def get_activity_reduction(self, activity):
@@ -293,6 +379,17 @@ class BaseAgent(object):
 
 @python_2_unicode_compatible
 class LinkedStatement(object):
+    """A tuple containing a list of source Statements and an inferred Statement.
+
+    The list of source Statements are the basis for the inferred Statement.
+
+    Parameters
+    ----------
+    source_stmts : list[indra.statements.Statement]
+        A list of source Statements
+    inferred_stmts : indra.statements.Statement
+        A Statement that was inferred from the source Statements.
+    """
     def __init__(self, source_stmts, inferred_stmt):
         self.source_stmts = source_stmts
         self.inferred_stmt = inferred_stmt

@@ -27,6 +27,8 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+   installation.rst
+   getting_started.rst
    modules/index
    tutorials/index
 
