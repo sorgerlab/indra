@@ -47,8 +47,8 @@ def assemble_pysb(stmts, data_genes, out_file):
     pa.save_model(out_file)
 
     ke = KappaExporter(model)
+    base_file, _ = os.path.splitext(out_file)
     with open('%s.ka' % base_file, 'wb') as fh:
-        base_file, _ = os.path.splitext(out_file)
         fh.write(ke.export().encode('utf-8'))
 
     return model
