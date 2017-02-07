@@ -28,21 +28,27 @@ as
 
     $ pip install git+https://github.com/sorgerlab/indra.git
 
+or by cloning the repository and then using pip to install the package as
+
+    $ git clone https://github.com/sorgerlab/indra.git
+    $ cd indra
+    $ pip install .
+
 You can also install INDRA by cloning this repository and running setup.py
-from the terminal as
+as
 
     $ git clone https://github.com/sorgerlab/indra.git
     $ cd indra
     $ python setup.py install
 
-Releases of INDRA are also available via
-[pip](https://pip.pypa.io/en/latest/installing/), you can install the latest
+Releases of INDRA are also available on
+[PyPI](https://pip.pypa.io/en/latest/installing/), you can install the latest
 release as
 
     $ pip install indra
 
 However, releases will usually be behind the latest code available in this
-repository. 
+repository.
 
 INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
 also PySB (for more information on PySB, see http://pysb.org).  These packages
