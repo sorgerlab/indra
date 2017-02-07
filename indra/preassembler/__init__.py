@@ -244,8 +244,8 @@ class Preassembler(object):
         elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
             use_mp = True
             logger.info('combine_related: Python >= 3.4 detected, '
-                        'using multiprocessing with poolsize %d' %
-                        poolsize)
+                        'using multiprocessing with poolsize %d, '
+                        'size_cutoff %d' % (poolsize, size_cutoff))
         else:
             use_mp = False
             logger.info('combine_related: Python < 3.4 detected, '
