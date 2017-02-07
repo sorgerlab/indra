@@ -8,7 +8,7 @@ def assemble_cx(stmts, out_file):
     """Return a CX assembler."""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
-    stmts = ac.strip_agent_context(stmts)
+
     ca = CxAssembler()
     ca.add_statements(stmts)
     model = ca.make_model()
