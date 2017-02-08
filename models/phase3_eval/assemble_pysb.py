@@ -4,7 +4,9 @@ from os.path import join as pjoin
 import os.path
 from pysb import Observable
 from pysb.export.kappa import KappaExporter
+from indra.util import read_unicode_csv
 from indra.assemblers import PysbAssembler, IndexCardAssembler
+from indra.statements import Phosphorylation, RegulateAmount
 import indra.tools.assemble_corpus as ac
 
 def assemble_pysb(stmts, data_genes, out_file):
@@ -69,3 +71,45 @@ def assemble_index_cards(stmts, out_folder):
         if ica.cards:
             ica.save_model(pjoin(out_folder, 'index_card_%d.json' % counter))
             counter += 1
+
+# These filters are currently in a very basic implementation stage
+# where they work well on the statements encountered in the scope of this
+# evaluation. They could be generalized and refactored to become
+# part of the core of INDRA.
+def filter_enzyme_kinase(stmts_in):
+    kinase_table = read_unicode_csv('../../indra/resources/kinases.tsv',
+                                    delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, Phosphorylation):
+            if st.enz is not None:
+                if st.enz.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_transcription_factor(stmts_in):
+    tf_table = \
+        read_unicode_csv('../../indra/resources/transcription_factors.csv')
+    gene_names = [lin[1] for lin in list(tf_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, RegulateAmount):
+            if st.subj is not None:
+                if st.subj.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_need_controller(stmts_in):
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, RegulateAmount):
+            if st.subj is not None:
+                stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
