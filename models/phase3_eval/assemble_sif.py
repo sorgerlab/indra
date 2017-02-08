@@ -3,7 +3,7 @@ from builtins import dict, str
 import itertools
 from copy import deepcopy
 from os.path import join as pjoin
-from indra.assemblers import SifAssembler
+from indra.assemblers import SifAssembler, CxAssembler
 import indra.tools.assemble_corpus as ac
 from indra.statements import *
 
@@ -36,15 +36,6 @@ def assemble_sif(stmts, data, out_file):
         return drug_stmts
     drug_stmts = get_drug_statements()
     stmts = stmts + drug_stmts
-    # Because of a bug in CNO, node names containing AND
-    # need to be replaced
-    def rename_and_nodes(st):
-        for s in st:
-            for a in s.agent_list():
-                if a is not None:
-                    if a.name.find('AND') != -1:
-                        a.name = a.name.replace('AND', 'A_ND')
-    rename_and_nodes(stmts)
     # Rewrite statements to replace genes with their corresponding
     # antibodies when possible
     stmts = rewrite_ab_stmts(stmts, data)
@@ -84,14 +75,51 @@ def assemble_sif(stmts, data, out_file):
         return sorted(list(prior_abs))
     pkn_abs = get_ab_names(stmts)
     print('Boolean PKN contains these antibodies: %s' % ', '.join(pkn_abs))
+    # Because of a bug in CNO,
+    # node names containing AND need to be replaced
+    # node names containing - need to be replaced
+    # node names starting in a digit need to be replaced
+    # must happen before SIF assembly, but not sooner as that will drop
+    # names from the MIDAS file
+    def rename_nodes(st):
+        for s in st:
+            for a in s.agent_list():
+                if a is not None:
+                    if a.name.find('AND') != -1:
+                        a.name = a.name.replace('AND', 'A_ND')
+                    if a.name.find('-') != -1:
+                        a.name = a.name.replace('-', '_')
+                    if a.name[0].isdigit():
+                        a.name = 'abc_' + a.name
+    rename_nodes(stmts)
     # Make the SIF model
     sa = SifAssembler(stmts)
     sa.make_model(use_name_as_key=True)
     sif_str = sa.print_model()
+    # assemble and dump a cx of the sif
+    ca = CxAssembler()
+    ca.add_statements(stmts)
+    model = ca.make_model()
+    ca.save_model('sif.cx')
     with open(out_file, 'wb') as fh:
         fh.write(sif_str.encode('utf-8'))
     # Make the MIDAS data file used for training the model
     midas_data = process_data.get_midas_data(data, pkn_abs)
+    # Rename columns in MIDAS the same way they are renamed in SIF
+    def rename_df_columns(df):
+        cols = midas_data.columns.tolist()
+        new_cols = []
+        for c in cols:
+            if c.find('AND') != -1:
+                c = c.replace('AND', 'A_ND')
+            if c.find('-') != -1:
+                c = c.replace('-', '_')
+            if c[0].isdigit():
+                c = 'abc_' + c
+            new_cols.append(c)
+        df.columns = new_cols
+        df.to_csv('MD-korkut.csv', index=False)
+    rename_df_columns(midas_data)
     return sif_str
 
 def rewrite_ab_stmts(stmts_in, data):
