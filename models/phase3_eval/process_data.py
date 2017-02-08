@@ -217,7 +217,7 @@ def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
             if c.find('-') != -1:
                 c = c.replace('-', '_')
             if c[3].isdigit():
-                c = c[0:3] + 'abc_' + c[4:]
+                c = c[0:3] + 'abc_' + c[3:]
             new_cols.append(c)
         df.columns = new_cols
         return df
