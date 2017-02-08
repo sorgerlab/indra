@@ -40,7 +40,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     model.add_component(o)
     o = Observable('AKT3p', model.monomers['AKT3'](S='p'))
     model.add_component(o)
-    o = Observable('ELK1', model.monomers['ELK1'](S383='p'))
+    o = Observable('ELK1p', model.monomers['ELK1'](S383='p'))
     model.add_component(o)
     # Set context
     pa.set_context('SKMEL28_SKIN')
