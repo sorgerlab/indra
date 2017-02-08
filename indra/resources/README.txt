@@ -68,6 +68,9 @@ curated_site_map.tsv
 - A table containing mappings for amino acid sites on proteins
   that are often misannotated
 
+transcription_factors.tsv
+- manually downloaded from http://fantom.gsc.riken.jp/5/sstar/Browse_Transcription_Factors_hg19
+
 Files that don't need periodical updates
 ========================================
 amino_acids.tsv
