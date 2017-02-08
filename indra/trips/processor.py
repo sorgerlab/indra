@@ -1012,7 +1012,7 @@ class TripsProcessor(object):
                 residue, pos = self._get_site_by_id(member.attrib['id'])
                 if residue is None:
                     residue = [None]
-                elif pos is None:
+                if pos is None:
                     pos = [None]
                 all_residues += residue
                 all_pos += pos
