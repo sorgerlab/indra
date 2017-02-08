@@ -1,5 +1,5 @@
-Installing INDRA
-================
+Installation
+============
 
 Installing Python
 -----------------
@@ -80,7 +80,7 @@ environmental variable.
 Installing releases with pip
 ````````````````````````````
 Releases of INDRA are also available via
-`pip <https://pip.pypa.io/en/latest/installing/>`_. You can install the latest
+`PyPI <https://pip.pypa.io/en/latest/installing/>`_. You can install the latest
 released version of INDRA as
 
 .. code-block:: bash
@@ -90,11 +90,23 @@ released version of INDRA as
 INDRA dependencies
 ------------------
 
-INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
-also PySB (for more information on PySB, see http://pysb.org). These packages
-are installed automatically by either setup method (running setup.py install
-or using pip). Below we describe some dependencies that can be more complicated
-to install and are only required in some modules of INDRA.
+INDRA depends on a few standard Python packages (e.g. rdflib, requests, pysb).
+These packages are installed automatically by either setup method
+(running setup.py install or using pip). Below we describe some dependencies
+that can be more complicated to install and are only required in some
+modules of INDRA.
+
+PySB and BioNetGen
+``````````````````
+INDRA builds on the `PySB <http://pysb.org>`_ framework to assemble rule-based
+models of biochemical systems. The `pysb` python package is installed by
+the standard install procedure. However, to be able to generate mathematical
+model equations and to export to formats such as SBML, the
+`BioNetGen <http://bionetgen.org/index.php/BioNetGen_Distributions>`_
+framework also needs to be installed in a way that is visible to PySB.
+Detailed instructions are given in the
+`PySB documentation <http://docs.pysb.org/en/latest/installation.html#option-1-install-pysb-natively-on-your-computer>`_.
+
 
 Pyjnius
 ```````

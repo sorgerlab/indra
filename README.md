@@ -50,9 +50,11 @@ release as
 However, releases will usually be behind the latest code available in this
 repository.
 
-INDRA depends on a few standard Python packages (e.g. rdflib, requests) and
-also PySB (for more information on PySB, see http://pysb.org).  These packages
-are installed by setup.py.
+INDRA depends on a few standard Python packages (e.g. rdflib, requests, pysb).
+These packages are installed by either setup method (using pip or running
+setup.py install). For certain modules and use cases, other dependencies
+may be needed, which are described in detail in the
+[documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
 Using INDRA
 -----------
