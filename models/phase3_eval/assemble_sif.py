@@ -105,21 +105,6 @@ def assemble_sif(stmts, data, out_file):
         fh.write(sif_str.encode('utf-8'))
     # Make the MIDAS data file used for training the model
     midas_data = process_data.get_midas_data(data, pkn_abs)
-    # Rename columns in MIDAS the same way they are renamed in SIF
-    def rename_df_columns(df):
-        cols = midas_data.columns.tolist()
-        new_cols = []
-        for c in cols:
-            if c.find('AND') != -1:
-                c = c.replace('AND', 'A_ND')
-            if c.find('-') != -1:
-                c = c.replace('-', '_')
-            if c[0].isdigit():
-                c = 'abc_' + c
-            new_cols.append(c)
-        df.columns = new_cols
-        df.to_csv('MD-korkut.csv', index=False)
-    rename_df_columns(midas_data)
     return sif_str
 
 def rewrite_ab_stmts(stmts_in, data):

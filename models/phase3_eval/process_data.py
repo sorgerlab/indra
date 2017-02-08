@@ -207,6 +207,21 @@ def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
         all_values.append(values)
         all_values.append(values_control)
     df = pandas.DataFrame.from_records(all_values)
+    # Rename columns in MIDAS the same way they are renamed in SIF
+    def rename_df_columns(df):
+        cols = df.columns.tolist()
+        new_cols = []
+        for c in cols:
+            if c.find('AND') != -1:
+                c = c.replace('AND', 'A_ND')
+            if c.find('-') != -1:
+                c = c.replace('-', '_')
+            if c[3].isdigit():
+                c = c[0:3] + 'abc_' + c[4:]
+            new_cols.append(c)
+        df.columns = new_cols
+        return df
+    df = rename_df_columns(df)
     df.to_csv(out_file, index=False)
     return df
 
