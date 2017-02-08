@@ -17,7 +17,7 @@ extraction knowledge base to obtain a list of INDRA Statements
 
     from indra import trips
 
-    model_text = 'MEK1 phosphorylates ERK1 and DUSP6 dephosphorylates ERK1.'
+    model_text = 'MAP2K1 phosphorylates MAPK1 and DUSP6 dephosphorylates MAPK1.'
     tp = trips.process_text(model_text)
 
 At this point `tp.statements` should contain 2 INDRA Statements:
@@ -107,7 +107,7 @@ From the assembled PySB format it is possible to export the model into other
 common formats such as SBML, BNGL and Kappa. One can also generate a Matlab or
 Mathematica script with ODEs corresponding to the model.
 
-.. ipython:: python
+::
 
     pa.export_model('sbml')
     pa.export_model('bngl')
@@ -115,6 +115,6 @@ Mathematica script with ODEs corresponding to the model.
 One can also pass a file name argument to the `export_model` function to save
 the exported model directly into a file:
 
-.. ipython:: python
+::
 
     pa.export_model('sbml', 'example_model.sbml')
