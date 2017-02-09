@@ -194,6 +194,8 @@ def get_midas_data(data, pkn_abs, pkn_drugs, out_file='MD-korkut.csv'):
         values['TR:SKMEL133:CellLine'] = 1
         for dc in drug_cols:
             values[dc] = 0
+        # control TR columns will be 0 for all but CellLine
+        values_control = copy(values)
         # Get drug conditions for row
         drug_cond = row[1]
         terms = drug_cond.split(',')
@@ -201,7 +203,6 @@ def get_midas_data(data, pkn_abs, pkn_drugs, out_file='MD-korkut.csv'):
             da, dose = term.split('|')
             if da in drug_abbrevs:
                 values['TR:%s:Drugs' % da] = dose
-        values_control = copy(values)
         # Get data conditions for row
         for ab_name in phospho_abs:
             values['DV:%s' % ab_name] = row[ab_name]
@@ -226,6 +227,7 @@ def get_midas_data(data, pkn_abs, pkn_drugs, out_file='MD-korkut.csv'):
         df.columns = new_cols
         return df
     df = rename_df_columns(df)
+    df = df.drop_duplicates()
     df.to_csv(out_file, index=False)
     return df
 
