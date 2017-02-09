@@ -2,9 +2,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 import collections
+from indra.util import read_unicode_csv
 from indra.literature import id_lookup
 from indra.statements import *
-from indra.databases import uniprot_client
+from indra.databases import uniprot_client, hgnc_client
 
 logger = logging.getLogger('sparser')
 
@@ -113,36 +114,70 @@ class SparserProcessor(object):
     def _get_agent_from_ref(self, ref):
         # TODO: handle collections
         if ref.attrib.get('category') == 'collection':
-            logger.warning('Skipping collection Agent.')
+            #logger.warning('Skipping collection Agent.')
             return None
-        name_tag = ref.find("var/[@name='name']")
-        if name_tag is not None:
-            name = name_tag.text
-        else:
-            return None
+
+        # Find the name, uid and raw-text tags first and get their text
+        # content if available
         uid_tag = ref.find("var/[@name='uid']")
-        if uid_tag is not None:
-            uid = uid_tag.text
+        name_tag = ref.find("var/[@name='name']")
+        text_tag = ref.find("var/[@name='raw-text']")
+        if name_tag is not None and name_tag.text:
+            uid = name_tag.text
         else:
             uid = None
+        if uid_tag is not None and uid_tag.text:
+            name = uid_tag.text
+        else:
+            name = None
+        if text_tag is not None and text_tag.text:
+            raw_text = text_tag.text
+        else:
+            raw_text = None
 
         db_refs = {}
-        text_tag = ref.find("var/[@name='raw-text']")
-        if text_tag is not None:
-            db_refs['TEXT'] = text_tag.text
+        # Save raw text if available
+        if raw_text:
+            db_refs['TEXT'] = raw_text
+        agent_name = name
+        # If we have a proper UID then we try to reconstruct an Agent from that
+        if uid is not None and len(uid.split(':')) == 2:
+            db_ns, db_id = uid.split(':')
+            be_id = bioentities_map.get((db_ns, db_id))
+            if be_id:
+                db_refs[db_ns] = db_id
+                db_refs['BE'] = be_id
+                agent_name = be_id
+            elif db_ns == 'UP':
+                db_refs['UP'] = db_id
+                gene_name = uniprot_client.get_gene_name(db_id)
+                if gene_name:
+                    agent_name = gene_name
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_refs['HGNC'] = hgnc_id
+            elif db_ns == 'NCIT':
+                db_refs['NCIT'] = db_id
+                target = ncit_map.get(db_id)
+                if target:
+                    db_refs[target[0]] = target[1]
+                    if target[0] == 'HGNC':
+                        up_id = hgnc_client.get_uniprot_id(target[1])
+                        if up_id:
+                            db_refs['UP'] = up_id
+            elif db_ns in ['GO', 'CHEBI', 'FA', 'XFAM', 'PR']:
+                db_refs[db_ns] = db_id
+            else:
+                logger.warning('Unknown database name space %s' % db_ns)
+        if agent_name is None:
+            if raw_text is not None:
+                agent_name = raw_text
+        if not agent_name:
+            return None
 
-        if uid is not None and uid.startswith('UP:'):
-            up_mnemonic = uid[3:]
-            up_id = uniprot_client.get_id_from_mnemonic(up_mnemonic)
-            if up_id is not None:
-                up_name = uniprot_client.get_gene_name(up_id)
-                if up_name is not None:
-                    name = up_name
-                db_refs['UP'] = up_id
+        assert(agent_name is not None)
 
-        assert name is not None
-
-        agent = Agent(name, db_refs=db_refs)
+        agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
     @staticmethod
@@ -178,3 +213,32 @@ _mod_class_map = {
     'farnesylation': Farnesylation,
     'defarnesylation': Defarnesylation
     }
+
+def _read_ncit_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/ncit_map.tsv')
+    ncit_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    next(csv_rows)
+    for row in csv_rows:
+        ncit_id = row[0]
+        target_ns = row[1]
+        target_id = row[2]
+        ncit_map[ncit_id] = (target_ns, target_id)
+    return ncit_map
+
+ncit_map = _read_ncit_map()
+
+def _read_bioentities_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../resources/bioentities_map.tsv')
+    bioentities_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        bioentities_map[(source_ns, source_id)] = be_id
+    return bioentities_map
+
+bioentities_map = _read_bioentities_map()
