@@ -20,7 +20,7 @@ def assemble_sif(stmts, data, out_file):
     stmts = stmts_act + stmts_inact
     # Get Ras227 and filter statments
     ras_genes = process_data.get_ras227_genes()
-    ras_genes = [x for x in ras_genes if x not in ['YAP1']]
+    #ras_genes = [x for x in ras_genes if x not in ['YAP1']]
     stmts = ac.filter_gene_list(stmts, ras_genes, 'all')
     # Get the drugs inhibiting their targets as INDRA
     # statements
@@ -74,6 +74,15 @@ def assemble_sif(stmts, data, out_file):
                         prior_abs.add(a.name)
         return sorted(list(prior_abs))
     pkn_abs = get_ab_names(stmts)
+    def get_drug_names(st):
+        prior_drugs = set()
+        for s in st:
+            for a in s.agent_list():
+                if a is not None:
+                    if a.name.find('Drugs') != -1:
+                        prior_drugs.add(a.name.split(':')[0])
+        return sorted(list(prior_drugs))
+    pkn_drugs = get_drug_names(stmts)
     print('Boolean PKN contains these antibodies: %s' % ', '.join(pkn_abs))
     # Because of a bug in CNO,
     # node names containing AND need to be replaced
@@ -104,7 +113,7 @@ def assemble_sif(stmts, data, out_file):
     with open(out_file, 'wb') as fh:
         fh.write(sif_str.encode('utf-8'))
     # Make the MIDAS data file used for training the model
-    midas_data = process_data.get_midas_data(data, pkn_abs)
+    midas_data = process_data.get_midas_data(data, pkn_abs, pkn_drugs)
     return sif_str
 
 def rewrite_ab_stmts(stmts_in, data):
