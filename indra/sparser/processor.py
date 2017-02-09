@@ -163,8 +163,15 @@ class SparserProcessor(object):
                     db_refs[target[0]] = target[1]
                     if target[0] == 'HGNC':
                         up_id = hgnc_client.get_uniprot_id(target[1])
+                        agent_name = hgnc_client.get_hgnc_name(target[1])
                         if up_id:
                             db_refs['UP'] = up_id
+                    elif target[0] == 'UP':
+                        agent_name = uniprot_client.get_gene_name(target[1])
+                        if agent_name:
+                            hgnc_id = hgnc_client.get_hgnc_id(agent_name)
+                            if hgnc_id:
+                                db_refs['HGNC'] = hgnc_id
             elif db_ns in ['GO', 'CHEBI', 'FA', 'XFAM', 'PR']:
                 db_refs[db_ns] = db_id
             else:
