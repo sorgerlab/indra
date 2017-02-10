@@ -30,7 +30,8 @@ def process_trips(txt, reread):
 def draw_graph(stmts):
     graphpr = {'rankdir': 'TD'}
     nodepr = {'fontsize': 12, 'shape': 'plaintext', 'margin': '0,0', 'pad': 0}
-    ga = GraphAssembler(st, graph_properties=graphpr, node_properties=nodepr)
+    ga = GraphAssembler(stmts, graph_properties=graphpr,
+                        node_properties=nodepr)
     ga.make_model()
     ga.save_dot('ras_pathway.dot')
     ga.save_pdf('ras_pathway.pdf')
