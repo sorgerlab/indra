@@ -129,13 +129,13 @@ class SparserProcessor(object):
         name_tag = ref.find("var/[@name='name']")
         text_tag = ref.find("var/[@name='raw-text']")
         if name_tag is not None and name_tag.text:
-            uid = name_tag.text
-        else:
-            uid = None
-        if uid_tag is not None and uid_tag.text:
-            name = uid_tag.text
+            name = name_tag.text
         else:
             name = None
+        if uid_tag is not None and uid_tag.text:
+            uid = uid_tag.text
+        else:
+            uid = None
         if text_tag is not None and text_tag.text:
             raw_text = text_tag.text
         else:
@@ -145,7 +145,7 @@ class SparserProcessor(object):
         # Save raw text if available
         if raw_text:
             db_refs['TEXT'] = raw_text
-        agent_name = name
+        agent_name = raw_text
         # If we have a proper UID then we try to reconstruct an Agent from that
         if uid is not None and len(uid.split(':')) == 2:
             db_ns, db_id = uid.split(':')
@@ -178,17 +178,17 @@ class SparserProcessor(object):
                             hgnc_id = hgnc_client.get_hgnc_id(agent_name)
                             if hgnc_id:
                                 db_refs['HGNC'] = hgnc_id
-            elif db_ns in ['GO', 'CHEBI', 'FA', 'XFAM', 'PR']:
+            elif db_ns in ['GO', 'CHEBI', 'FA', 'XFAM', 'MESH']:
                 db_refs[db_ns] = db_id
             else:
                 logger.warning('Unknown database name space %s' % db_ns)
-        if agent_name is None:
+        if not agent_name:
             if raw_text is not None:
                 agent_name = raw_text
-        if not agent_name:
-            return None
+            else:
+                return None
 
-        assert(agent_name is not None)
+        assert(agent_name)
 
         agent = Agent(agent_name, db_refs=db_refs)
         return agent
@@ -212,6 +212,13 @@ class SparserProcessor(object):
                 position_tag = residue_tag.find("var/[@name='position']")
                 if position_tag is not None:
                     position = position_tag.text.strip()
+        if residue and residue.startswith('phospho'):
+            residue = residue[6:]
+            try:
+                residue = get_valid_residue(residue)
+            except InvalidResidueError:
+                logger.error('Invalid residue found: %s' % residue)
+                residue = None
         return residue, position
 
     def _get_evidence(self, text):
