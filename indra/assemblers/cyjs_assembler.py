@@ -245,20 +245,24 @@ class CyJSAssembler(object):
                     members = n['data']['members']
                     for m in members:
                         # if expression is None, set to bin index n_bins
+                        # if there is an expression value, bin and set to None
                         if members[m]['expression'] is None:
                             members[m]['bin_expression'] = n_bins
                         else:
                             for thr_idx, thr in enumerate(bin_thr):
                                 if members[m]['expression'] <= thr:
                                     members[m]['bin_expression'] = thr_idx
+                                    members[m]['expression'] = None
                                     break
                 # set bin_expression for the node itself
+                # if there is an expression value, bin and set to None
                 if n['data']['expression'] is None:
                     n['data']['bin_expression'] = n_bins
                 else:
                     for thr_idx, thr in enumerate(bin_thr):
                         if n['data']['expression'] <= thr:
                             n['data']['bin_expression'] = thr_idx
+                            n['data']['expression'] = None
                             break
 
     def print_cyjs(self):
@@ -289,12 +293,30 @@ class CyJSAssembler(object):
             Default: model.js
         """
         model_dict = json.loads(self.print_cyjs())
+
         s = ''
         s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
         s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
         s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
         with open(fname, 'wt') as fh:
             fh.write(s)
+
+    def save_json(self, fname='model.json'):
+        """Save the assembled Cytoscape JS network in a file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the Cytoscape JS network to.
+            Default: model.js
+        """
+        cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
+        model_dict = {'exp_colorscale': self._exp_colorscale,
+                      'mut_colorscale': self._mut_colorscale,
+                      'model_elements': cyjs_dict}
+        json_str = json.dumps(model_dict, indent=1)
+        with open(fname, 'wt') as fh:
+            fh.write(json_str)
 
     def _add_regulate_activity(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
