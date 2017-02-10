@@ -121,7 +121,7 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
                 logger.info("PMID%s: Uploading and returning abstract "
                             % pmid)
                 put_abstract(pmid, abstract)
-                return ('abstract', abstract)
+                return (abstract, 'abstract')
         # We got a viable full text
         # (or something other than None or abstract...)
         else:
