@@ -9,7 +9,7 @@ import gzip
 from io import BytesIO
 from xml.etree import ElementTree as ET
 from indra import literature as lit
-from indra.literature import elsevier_client
+from indra.literature import elsevier_client, pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 # Python 2
 try:
@@ -79,18 +79,17 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
             (ft_content_type_s3 == 'abstract' and force_fulltext_lookup) or \
             (ft_content_type_s3 == 'elsevier_xml' and
                     not elsevier_client.extract_text(ft_content_s3)):
-        # FIXME FIXME FIXME
         if ft_content_type_s3 == 'elsevier_xml':
-            logger.info('elsevier_xml for %s missing full text element, '
-                        'getting again.' % pmid)
-        # FIXME FIXME FIXME
+            logger.info('PMID%s: elsevier_xml cached on S3 is missing full '
+                        'text element, getting again.' % pmid)
         # Try to retrieve from literature client
         logger.info("PMID%s: getting content using literature client" % pmid)
         (ft_content, ft_content_type) = lit.get_full_text(pmid, 'pmid')
         assert ft_content_type in ('pmc_oa_xml', 'elsevier_xml',
                                    'abstract', None)
         # If we tried to get the full text and didn't even get the abstract,
-        # then there was probably a problem with the web service or the DOI
+        # then there was probably a problem with the web service. Try to
+        # get the abstract instead:
         if ft_content_type is None:
             return (None, None)
         # If we got the abstract, and we already had the abstract on S3, then
@@ -104,9 +103,30 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
             logger.info("PMID%s: found abstract, uploading to S3" % pmid)
             put_abstract(pmid, ft_content)
             return (ft_content, ft_content_type)
-        # We got a full text (or something other than None or abstract...)
+        # If we got elsevier_xml, but cannot get a full text element, then
+        # get and put the abstract
+        elif ft_content_type == 'elsevier_xml' and \
+                not elsevier_client.extract_text(ft_content):
+            logger.info("PMID%s: Couldn't get a full text element for "
+                        "the elsevier_xml content; getting abstract "
+                        % pmid)
+            abstract = pubmed_client.get_abstract(pmid)
+            # Abstract is None, so return None
+            if abstract is None:
+                logger.info("PMID%s: Unable to get abstract, returning None"
+                            % pmid)
+                return (None, None)
+            # Otherwise, upload and return the abstract
+            else:
+                logger.info("PMID%s: Uploading and returning abstract "
+                            % pmid)
+                put_abstract(pmid, abstract)
+                return (abstract, 'abstract')
+        # We got a viable full text
+        # (or something other than None or abstract...)
         else:
-            logger.info("PMID%s: uploading %s" % (pmid, ft_content_type))
+            logger.info("PMID%s: uploading and returning %s"
+                        % (pmid, ft_content_type))
             put_full_text(pmid, ft_content, full_text_type=ft_content_type)
             return (ft_content, ft_content_type)
     # Some form of full text is already on S3
