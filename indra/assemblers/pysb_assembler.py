@@ -250,6 +250,8 @@ mod_acttype_map = {
     ist.Demyristoylation: 'catalytic',
     ist.Geranylgeranylation: 'catalytic',
     ist.Degeranylgeranylation: 'catalytic',
+    ist.Methylation: 'catalytic',
+    ist.Demethylation: 'catalytic',
 }
 
 
