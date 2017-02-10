@@ -9,7 +9,7 @@ import gzip
 from io import BytesIO
 from xml.etree import ElementTree as ET
 from indra import literature as lit
-from indra.literature import elsevier_client
+from indra.literature import elsevier_client, pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 # Python 2
 try:
