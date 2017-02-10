@@ -41,6 +41,8 @@ modifications that further inherit from
 - :py:class:`Demyristoylation`
 - :py:class:`Ribosylation`
 - :py:class:`Deribosylation`
+- :py:class:`Methylation`
+- :py:class:`Demethylation`
 
 There are additional subtypes of :py:class:`SelfModification`:
 
