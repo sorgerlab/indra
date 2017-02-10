@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 import itertools
 from indra.statements import *
-import logging
 
 logger = logging.getLogger('graph_assembler')
 try:
@@ -284,6 +284,9 @@ def _get_node_label(agent):
     if not (agent.db_refs.get('UP') or
             agent.db_refs.get('HGNC') or
             agent.db_refs.get('CHEBI')):
+        if agent.db_refs.get('BE'):
+            name_for_node = agent.db_refs['BE']
+            return name_for_node
         if agent.db_refs.get('TEXT'):
             name_for_node = agent.db_refs['TEXT']
             return name_for_node
