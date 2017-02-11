@@ -2229,3 +2229,56 @@ increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
 
 
+class PysbPreassembler(object):
+    def __init__(self, stmts=None):
+        if not stmts:
+            stmts = []
+        self.statements = stmts
+        self.agent_set = _BaseAgentSet()
+        pass
+
+    def add_statements(self, stmts):
+        self.statements = stmts
+
+    def _collect_active_forms(self):
+        for stmt in self.statements:
+            if isinstance(stmt, ist.ActiveForm):
+                base_agent = self.agent_set.get_create_base_agent(stmt.agent)
+                base_agent.add_activity_form(stmt.agent, stmt.is_active)
+
+    def replace_activities(self):
+        # TODO: handle activity hierarchies
+        self._collect_active_forms()
+        new_stmts = []
+        for stmt in self.statements:
+            stmt_agents = stmt.agent_list()
+            num_agents = len(stmt_agents)
+            agent_forms = [[] for a in stmt_agents]
+            for i, agent in enumerate(stmt_agents):
+                if agent is not None and agent.activity is not None:
+                    base_agent = self.agent_set.get_create_base_agent(agent)
+                    if agent.activity.is_active:
+                        active_forms = base_agent.active_forms
+                    else:
+                        active_forms = base_agent.inactive_forms
+                    for af in active_forms:
+                        new_agent = deepcopy(agent)
+                        self._set_agent_context(af, new_agent)
+                        new_agent.activity = None
+                        agent_forms[i].append(new_agent)
+                else:
+                    agent_forms[i].append(agent)
+            agent_combs = itertools.product(*agent_forms)
+            for agent_comb in agent_combs:
+                new_stmt = deepcopy(stmt)
+                new_stmt.set_agent_list(agent_comb)
+                new_stmts.append(new_stmt)
+        self.statements = new_stmts
+
+    @staticmethod
+    def _set_agent_context(from_agent, to_agent):
+        to_agent.bound_conditions = from_agent.bound_conditions
+        to_agent.mods = from_agent.mods
+        to_agent.mutations = from_agent.mutations
+        to_agent.location = from_agent.location
+        to_agent.activity = from_agent.activity
