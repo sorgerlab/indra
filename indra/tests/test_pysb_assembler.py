@@ -920,3 +920,10 @@ def test_activation_subj4():
     assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
     assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
 
+def test_pysb_preassembler():
+    from indra.assemblers.pysb_assembler import PysbPreassembler
+    st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
+    st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
+    ppa = PysbPreassembler([st1, st2])
+    ppa.replace_activities()
+    print(ppa.statements)
