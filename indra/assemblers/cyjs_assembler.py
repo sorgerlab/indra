@@ -273,42 +273,21 @@ class CyJSAssembler(object):
             cyjs_str : str
             A json string representation of the Cytoscape JS network.
         """
-        exp_colorscale_str = json.dumps(self._exp_colorscale)
-        mut_colorscale_str = json.dumps(self._mut_colorscale)
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        model_str = json.dumps(cyjs_dict, indent=1, sort_keys=True)
-        model_dict = {'exp_colorscale_str': exp_colorscale_str,
-                      'mut_colorscale_str': mut_colorscale_str,
-                      'model_elements_str': model_str}
+        model_dict = {'exp_colorscale': self._exp_colorscale,
+                      'mut_colorscale': self._mut_colorscale,
+                      'model_elements': cyjs_dict}
         cyjs_str = json.dumps(model_dict, indent=1)
         return cyjs_str
 
-    def save_model(self, fname='model.js'):
-        """Save the assembled Cytoscape JS network in a file.
-
-        Parameters
-        ----------
-        file_name : Optional[str]
-            The name of the file to save the Cytoscape JS network to.
-            Default: model.js
-        """
-        model_dict = json.loads(self.print_cyjs())
-
-        s = ''
-        s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
-        s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
-        s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
-        with open(fname, 'wt') as fh:
-            fh.write(s)
-
     def save_json(self, fname='model.json'):
-        """Save the assembled Cytoscape JS network in a file.
+        """Save the assembled Cytoscape JS network in a json file.
 
         Parameters
         ----------
         file_name : Optional[str]
             The name of the file to save the Cytoscape JS network to.
-            Default: model.js
+            Default: model.json
         """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
         model_dict = {'exp_colorscale': self._exp_colorscale,
@@ -317,6 +296,29 @@ class CyJSAssembler(object):
         json_str = json.dumps(model_dict, indent=1)
         with open(fname, 'wt') as fh:
             fh.write(json_str)
+
+    def save_model(self, fname='model.js'):
+        """Save the assembled Cytoscape JS network in a js file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the Cytoscape JS network to.
+            Default: model.js
+        """
+        exp_colorscale_str = json.dumps(self._exp_colorscale)
+        mut_colorscale_str = json.dumps(self._mut_colorscale)
+        cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
+        model_str = json.dumps(cyjs_dict, indent=1, sort_keys=True)
+        model_dict = {'exp_colorscale_str': exp_colorscale_str,
+                      'mut_colorscale_str': mut_colorscale_str,
+                      'model_elements_str': model_str}
+        s = ''
+        s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
+        s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
+        s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
+        with open(fname, 'wt') as fh:
+            fh.write(s)
 
     def _add_regulate_activity(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
