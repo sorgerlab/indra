@@ -1817,43 +1817,39 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
-    subj = deepcopy(stmt.subj)
-    subj.activity = None
-    subj_pattern = get_monomer_pattern(model, subj)
+    subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'inactive'})
     obj_active = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'active'})
 
-    param_name = 'kf_' + subj.name[0].lower() + \
+    param_name = 'kf_' + stmt.subj.name[0].lower() + \
         stmt.obj.name[0].lower() + '_act'
     kf_one_step_activate = \
         get_create_parameter(model, param_name, 1e-6)
 
-    for i, af in enumerate(subj_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(subj_act_patterns) > 1 else ''
-        rule_obj_str = get_agent_rule_str(stmt.obj)
-        rule_subj_str = get_agent_rule_str(subj)
-        polarity_str = 'activates' if stmt.is_activation else 'deactivates'
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_subj_str, polarity_str, rule_obj_str,
-             stmt.obj_activity, counter_str)
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+    rule_subj_str = get_agent_rule_str(stmt.subj)
+    polarity_str = 'activates' if stmt.is_activation else 'deactivates'
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_subj_str, polarity_str, rule_obj_str,
+         stmt.obj_activity)
 
-        if stmt.is_activation:
-            r = Rule(rule_name,
-                subj_pattern(af) + obj_inactive >> subj_pattern(af) + obj_active,
-                kf_one_step_activate)
-        else:
-            r = Rule(rule_name,
-                subj_pattern(af) + obj_active >> subj_pattern(af) + obj_inactive,
-                kf_one_step_activate)
+    if stmt.is_activation:
+        r = Rule(rule_name,
+            subj_pattern() + obj_inactive >> subj_pattern() + obj_active,
+            kf_one_step_activate)
+    else:
+        r = Rule(rule_name,
+            subj_pattern() + obj_active >> subj_pattern() + obj_inactive,
+            kf_one_step_activate)
 
-        add_rule_to_model(model, r)
-        anns = [Annotation(rule_name, subj_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, subj_pattern.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
@@ -2212,30 +2208,57 @@ class PysbPreassembler(object):
         for stmt in self.statements:
             if isinstance(stmt, ist.ActiveForm):
                 base_agent = self.agent_set.get_create_base_agent(stmt.agent)
-                base_agent.add_activity_form(stmt.agent, stmt.is_active)
+                # Handle the case where an activity flag is set
+                agent_to_add = stmt.agent
+                if stmt.agent.activity:
+                    new_agent = deepcopy(stmt.agent)
+                    new_agent.activity = None
+                    agent_to_add = new_agent
+                base_agent.add_activity_form(agent_to_add, stmt.is_active)
 
     def replace_activities(self):
         # TODO: handle activity hierarchies
+        # First collect all explicit active forms
         self._collect_active_forms()
         new_stmts = []
+        # Iterate over all statements
         for stmt in self.statements:
             stmt_agents = stmt.agent_list()
             num_agents = len(stmt_agents)
+            # Make a list with an empty list for each Agent so that later
+            # we can build combinations of Agent forms
             agent_forms = [[] for a in stmt_agents]
             for i, agent in enumerate(stmt_agents):
+                # This is the case where there is an activity flag on an
+                # Agent which we will attempt to replace with an explicit
+                # active form
                 if agent is not None and agent.activity is not None:
                     base_agent = self.agent_set.get_create_base_agent(agent)
+                    # If it is an "active" state
                     if agent.activity.is_active:
                         active_forms = base_agent.active_forms
+                        # If no explicit active forms are known then we use
+                        # the generic one
+                        if not active_forms:
+                            active_forms = [agent]
+                    # If it is an "inactive" state
                     else:
                         active_forms = base_agent.inactive_forms
+                        # If no explicit inactive forms are known then we use
+                        # the generic one
+                        if not active_forms:
+                            active_forms = [agent]
+                    # We now iterate over the active agent forms and create
+                    # new agents
                     for af in active_forms:
                         new_agent = deepcopy(agent)
                         self._set_agent_context(af, new_agent)
-                        new_agent.activity = None
                         agent_forms[i].append(new_agent)
+                # Otherwise we just copy over the agent as is
                 else:
                     agent_forms[i].append(agent)
+            # Now create all possible combinations of the agents and create new
+            # statements as needed
             agent_combs = itertools.product(*agent_forms)
             for agent_comb in agent_combs:
                 new_stmt = deepcopy(stmt)
