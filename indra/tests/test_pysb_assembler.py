@@ -486,6 +486,7 @@ def test_phos_atpdep():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model(policies='atp_dependent')
+    print(pa.model.rules)
     assert(len(pa.model.rules) == 5)
 
 def test_set_context():
