@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+from copy import deepcopy
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
@@ -105,7 +106,7 @@ def test_mtorc_get_parents():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.get_parents(rictor, 'all')
     assert(len(p) == 1)
-    assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+    assert(list(p)[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
 
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
@@ -113,14 +114,28 @@ def test_mtorc_transitive_closure():
     assert(len(p) == 1)
     assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
 
+def test_mtorc_partof_no_tc():
+    ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
+    ent_hierarchy_no_tc.isa_closure = {}
+    ent_hierarchy_no_tc.partof_closure = {}
+    assert(ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'BE', 'mTORC1'))
+    assert(not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'BE', 'mTORC2'))
+
+def test_erk_isa_no_tc():
+    ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
+    ent_hierarchy_no_tc.isa_closure = {}
+    ent_hierarchy_no_tc.partof_closure = {}
+    assert(ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'BE', 'MAPK'))
+    assert(not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'BE', 'JNK'))
+
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
     ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
-    assert(len(p1) == 14)
+    assert(len(p1) == 8)
     assert(ampk in p1)
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
-    assert(len(p2) == 13)
+    assert(len(p2) == 7)
     assert (ampk not in p2)
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert(len(p3) == 1)
