@@ -1538,10 +1538,8 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    enz_pattern = get_monomer_pattern(model, enz)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
+    enz_pattern = get_monomer_pattern(model, stmt.enz)
 
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
@@ -1550,20 +1548,17 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={demod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_%s_%s%s' % \
-                    (rule_enz_str, demod_condition_name, rule_sub_str,
-                     demod_site, counter_str)
-        r = Rule(rule_name,
-                 enz_pattern(af) + sub_mod >> enz_pattern(af) + sub_unmod,
-                 kf_demod)
-        add_rule_to_model(model, r)
-        anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-                Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+                (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+             enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
+             kf_demod)
+    add_rule_to_model(model, r)
+    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 
 def demodification_assemble_two_step(stmt, model, agent_set):
@@ -1573,21 +1568,19 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = demod_condition_name[2:]
     sub_bs = get_binding_site_name(stmt.sub)
     enz_bs = get_binding_site_name(stmt.enz)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_bound = get_monomer_pattern(model, enz,
+    enz_bound = get_monomer_pattern(model, stmt.enz,
                                     extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, enz,
+    enz_unbound = get_monomer_pattern(model, stmt.enz,
                                       extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
-    param_name = 'kf_' + enz.name[0].lower() + \
+    param_name = 'kf_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = 'kr_' + enz.name[0].lower() + \
+    param_name = 'kr_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = 'kc_' + enz.name[0].lower() + \
+    param_name = 'kc_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_' + demod_condition_name
     kf_demod = get_create_parameter(model, param_name, 1e-3)
 
@@ -1596,37 +1589,33 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    rule_enz_str = get_agent_rule_str(enz)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_bind_%s_%s%s' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             counter_str)
-        r = Rule(rule_name,
-                 enz_unbound(af) + \
-                 sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
-                 enz_bound(af) % \
-                 sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_bind_%s_%s' % \
+        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+             enz_unbound() + \
+             sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
+             enz_bound() % \
+             sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_bound(af) % \
-                sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
-            enz_unbound(af) + \
-                sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
-            kf_demod)
-        add_rule_to_model(model, r)
-        anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
-                Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+        enz_bound() % \
+            sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
+        enz_unbound() + \
+            sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
+        kf_demod)
+    add_rule_to_model(model, r)
+    anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
+            Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
-    enz_uncond = get_uncond_agent(enz)
+    enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     sub_uncond = get_uncond_agent(stmt.sub)
