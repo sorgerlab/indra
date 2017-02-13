@@ -178,11 +178,17 @@ class HierarchyManager(object):
                 return False
         else:
             if not self.uri_as_name:
-                t1 = rdflib.term.URIRef(self.find_entity(id1))
-                t2 = rdflib.term.URIRef(self.find_entity(id2))
+                e1 = self.find_entity(id1)
+                e2 = self.find_entity(id2)
+                if e1 is None or e2 is None:
+                    return False
+                t1 = rdflib.term.URIRef(e1)
+                t2 = rdflib.term.URIRef(e2)
             else:
-                t1 = rdflib.term.URIRef(self.get_uri(ns1, id1))
-                t2 = rdflib.term.URIRef(self.get_uri(ns2, id2))
+                u1 = self.get_uri(ns1, id1)
+                u2 = self.get_uri(ns2, id2)
+                t1 = rdflib.term.URIRef(u1)
+                t2 = rdflib.term.URIRef(u2)
 
             rel_uri = 'http://sorger.med.harvard.edu/indra/relations/isa'
             rel_ref = rdflib.term.URIRef(rel_uri)
@@ -229,11 +235,17 @@ class HierarchyManager(object):
                 return False
         else:
             if not self.uri_as_name:
-                t1 = rdflib.term.URIRef(self.find_entity(id1))
-                t2 = rdflib.term.URIRef(self.find_entity(id2))
+                e1 = self.find_entity(id1)
+                e2 = self.find_entity(id2)
+                if e1 is None or e2 is None:
+                    return False
+                t1 = rdflib.term.URIRef(e1)
+                t2 = rdflib.term.URIRef(e2)
             else:
-                t1 = rdflib.term.URIRef(self.get_uri(ns1, id1))
-                t2 = rdflib.term.URIRef(self.get_uri(ns2, id2))
+                u1 = self.get_uri(ns1, id1)
+                u2 = self.get_uri(ns2, id2)
+                t1 = rdflib.term.URIRef(u1)
+                t2 = rdflib.term.URIRef(u2)
 
             rel_uri = 'http://sorger.med.harvard.edu/indra/relations/partof'
             rel_ref = rdflib.term.URIRef(rel_uri)
