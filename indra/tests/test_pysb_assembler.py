@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers import PysbAssembler
 from indra.assemblers import pysb_assembler as pa
+from indra.assemblers.pysb_assembler import PysbPreassembler
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
@@ -927,9 +928,9 @@ def test_activation_subj4():
     assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
 
 def test_pysb_preassembler():
-    from indra.assemblers.pysb_assembler import PysbPreassembler
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
     st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
-    print(ppa.statements)
+    assert(len(ppa.statements) == 2)
+    assert(ppa.statements[1].enz.location == 'nucleus')
