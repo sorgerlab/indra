@@ -238,6 +238,8 @@ def test_pysb_assembler_actmod1():
     model = pa.make_model()
     assert(len(model.rules)==2)
     assert(len(model.monomers)==2)
+    model = pa.make_model(policies='two_step')
+    assert(len(model.rules)==5)
 
 def test_pysb_assembler_actmod2():
     mek = Agent('MEK', activity=ActivityCondition('activity', True))
@@ -256,6 +258,8 @@ def test_pysb_assembler_actmod2():
     model = pa.make_model()
     assert(len(model.rules)==4)
     assert(len(model.monomers)==2)
+    model = pa.make_model(policies='two_step')
+    assert(len(model.rules)==9)
 
 def test_pysb_assembler_phos_twostep1():
     enz = Agent('BRAF')

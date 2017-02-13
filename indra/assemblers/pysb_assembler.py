@@ -1275,65 +1275,58 @@ def modification_assemble_two_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
     sub_bs = get_binding_site_name(stmt.sub)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_bound = get_monomer_pattern(model, enz,
+    enz_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, enz,
+    enz_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
-    param_name = ('kf_' + enz.name[0].lower() +
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + enz.name[0].lower() +
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = ('kc_' + enz.name[0].lower() +
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mod_condition_name)
     kf_mod = get_create_parameter(model, param_name, 1)
 
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
 
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    enz_bs = get_binding_site_name(enz)
-    rule_enz_str = get_agent_rule_str(enz)
+    enz_bs = get_binding_site_name(stmt.enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_bind_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_unbound(af) + \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
-            enz_bound(af) % \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
-            kf_bind)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_bind_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+        enz_unbound() + \
+        sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
+        enz_bound() % \
+        sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
+        kf_bind)
+    add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_bound(af) % \
-                sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
-            enz_unbound(af) + \
-                sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
-            kf_mod)
-        add_rule_to_model(model, r)
-        # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_bound.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, sub_pattern.monomer.name,
-                           'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+        enz_bound() % \
+            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
+        enz_unbound() + \
+            sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
+        kf_mod)
+    add_rule_to_model(model, r)
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_bound.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, sub_pattern.monomer.name,
+                       'rule_has_object')]
+    model.annotations += anns
 
-    enz_uncond = get_uncond_agent(enz)
+    enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     sub_uncond = get_uncond_agent(stmt.sub)
@@ -1376,8 +1369,6 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     # ATP
     atp = model.monomers['ATP']
     atp_bs = 'ATP'
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
     # ATP-bound enzyme
     enz_atp_bound = get_monomer_pattern(model, enz,
         extra_fields={atp_bs: 1})
