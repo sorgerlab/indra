@@ -58,54 +58,55 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
-        component_counter = 0
+        self.component_counter = 0
         for rel, tc_dict in (('isa', self.isa_closure),
                              ('partof', self.partof_closure)):
-            qstr = self.prefixes + """
-                SELECT ?x ?y WHERE {{
-                    {{?x rn:{0}+ ?y .}}
-                    }}
-                """.format(rel)
-            res = self.graph.query(qstr)
-            for x, y in res:
+            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/%s' % rel
+            rel_ref = rdflib.term.URIRef(rel_uri)
+            for x in self.graph.all_nodes():
+                rel_closure = self.graph.transitive_objects(x, rel_ref)
                 xs = x.toPython()
-                ys = y.toPython()
-                try:
-                    tc_dict[xs].append(ys)
-                except KeyError:
-                    tc_dict[xs] = [ys]
-                xcomp = self.components.get(xs)
-                ycomp = self.components.get(ys)
-                if xcomp is None:
-                    if ycomp is None:
-                        # Neither x nor y are in a component so we start a
-                        # new component and assign x and y to the same
-                        # component
-                        self.components[xs] = component_counter
-                        self.components[ys] = component_counter
-                        component_counter += 1
-                    else:
-                        # Because y is already part of an existing component
-                        # we assign its component to x
-                        self.components[xs] = ycomp
-                else:
-                    if ycomp is None:
-                        # Because x is already part of an existing component
-                        # we assign its component to y
-                        self.components[ys] = xcomp
-                    else:
-                        # This is a special case in which both x and y are
-                        # parts of components
-                        # If they are in the same component then there's
-                        # nothing further to do
-                        if xcomp == ycomp:
-                            continue
-                        else:
-                            remove_component = max(xcomp, ycomp)
-                            joint_component = min(xcomp, ycomp)
-                            for k, v in self.components.items():
-                                if v == remove_component:
-                                    self.components[k] = joint_component
+                for y in rel_closure:
+                    ys = y.toPython()
+                    if xs == ys:
+                        continue
+                    try:
+                        tc_dict[xs].append(ys)
+                    except KeyError:
+                        tc_dict[xs] = [ys]
+                    self._add_component(xs, ys)
+
+    def _add_component(self, xs, ys):
+        xcomp = self.components.get(xs)
+        ycomp = self.components.get(ys)
+        if xcomp is None:
+            if ycomp is None:
+                # Neither x nor y are in a component so we start a
+                # new component and assign x and y to the same
+                # component
+                self.components[xs] = self.component_counter
+                self.components[ys] = self.component_counter
+                self.component_counter += 1
+            else:
+                # Because y is already part of an existing component
+                # we assign its component to x
+                self.components[xs] = ycomp
+        else:
+            if ycomp is None:
+                # Because x is already part of an existing component
+                # we assign its component to y
+                self.components[ys] = xcomp
+            else:
+                # This is a special case in which both x and y are
+                # parts of components
+                # If they are in the same component then there's
+                # nothing further to do
+                if xcomp != ycomp:
+                    remove_component = max(xcomp, ycomp)
+                    joint_component = min(xcomp, ycomp)
+                    for k, v in self.components.items():
+                        if v == remove_component:
+                            self.components[k] = joint_component
 
 
     @lru_cache(maxsize=100000)

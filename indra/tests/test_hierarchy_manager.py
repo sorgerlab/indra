@@ -105,7 +105,7 @@ def test_mtorc_get_parents():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.get_parents(rictor, 'all')
     assert(len(p) == 1)
-    assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+    assert(list(p)[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
 
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
@@ -117,10 +117,10 @@ def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
     ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
-    assert(len(p1) == 14)
+    assert(len(p1) == 8)
     assert(ampk in p1)
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
-    assert(len(p2) == 13)
+    assert(len(p2) == 7)
     assert (ampk not in p2)
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert(len(p3) == 1)
