@@ -755,6 +755,9 @@ class PysbAssembler(object):
         model : pysb.Model
             The assembled PySB model object.
         """
+        ppa = PysbPreassembler(self.statements)
+        ppa.replace_activities()
+        self.statements = ppa.statements
         # Set local policies for this make_model call that overwrite
         # the global policies of the PySB assembler
         if policies is not None:
@@ -1244,10 +1247,7 @@ def modification_assemble_one_step(stmt, model, agent_set):
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
     # Remove pre-set activity flag
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_pattern = get_monomer_pattern(model, enz)
-    enz_act_patterns = get_active_patterns(enz, agent_set)
+    enz_pattern = get_monomer_pattern(model, stmt.enz)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
     sub_unmod = get_monomer_pattern(model, stmt.sub,
@@ -1255,23 +1255,20 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={mod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-                enz_pattern(af) + sub_unmod >>
-                enz_pattern(af) + sub_mod,
-                kf_mod)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+            enz_pattern + sub_unmod >>
+            enz_pattern + sub_mod,
+            kf_mod)
+    add_rule_to_model(model, r)
 
-        # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-                Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()

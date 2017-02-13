@@ -240,7 +240,7 @@ def test_pysb_assembler_actmod1():
     assert(len(model.monomers)==2)
 
 def test_pysb_assembler_actmod2():
-    mek = Agent('MEK')
+    mek = Agent('MEK', activity=ActivityCondition('activity', True))
     erk = Agent('ERK')
     stmts = []
     stmts.append(ActiveForm(Agent('MEK',
@@ -406,8 +406,9 @@ def test_rule_name_str_5():
 
 def test_neg_act_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
-    st1 = ActiveForm(Agent('BRAF', mods=[mc]), 'active', True)
-    st2 = Phosphorylation(Agent('BRAF'), Agent('MAP2K2'))
+    st1 = ActiveForm(Agent('BRAF', mods=[mc]), 'activity', True)
+    braf = Agent('BRAF', activity=ActivityCondition('active', True))
+    st2 = Phosphorylation(braf, Agent('MAP2K2'))
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     pa.make_model()
