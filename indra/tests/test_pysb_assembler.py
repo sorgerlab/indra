@@ -880,7 +880,8 @@ def test_activation_subj1():
 
 def test_activation_subj2():
     """Subject activity is defined explicitly."""
-    st = Activation(Agent('a'), Agent('b'))
+    a_act = Agent('a', activity=ActivityCondition('activity', True))
+    st = Activation(a_act, Agent('b'))
     st2 = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
                      'activity', True)
     pa = PysbAssembler()
@@ -896,11 +897,13 @@ def test_activation_subj2():
 
 def test_activation_subj3():
     """Subject activity is defined implicitly by another statement."""
-    st = Activation(Agent('a'), Agent('b'))
+    a_act = Agent('a', activity=ActivityCondition('activity', True))
+    st = Activation(a_act, Agent('b'))
     st2 = Activation(Agent('c'), Agent('a'))
     pa = PysbAssembler()
     pa.add_statements([st, st2])
     pa.make_model()
+    assert(len(pa.model.rules) == 2)
     assert(pa.model.monomers['a'].sites == ['activity'])
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
@@ -911,14 +914,15 @@ def test_activation_subj3():
 
 def test_activation_subj4():
     """Subject activity is defined both explicitly and implicitly."""
-    st = Activation(Agent('a'), Agent('b'))
+    a_act = Agent('a', activity=ActivityCondition('activity', True))
+    st = Activation(a_act, Agent('b'))
     st2 = Activation(Agent('c'), Agent('a'))
     st3 = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
                      'activity', True)
     pa = PysbAssembler()
     pa.add_statements([st, st2, st3])
     pa.make_model()
-    assert(pa.model.monomers['a'].sites == ['activity', 'phospho'])
+    assert(set(pa.model.monomers['a'].sites) == set(['activity', 'phospho']))
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
     right = pa.model.rules[0].product_pattern
@@ -926,10 +930,18 @@ def test_activation_subj4():
     assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
     assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
 
-def test_pysb_preassembler():
+def test_pysb_preassembler_replace_activities():
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
     st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[1].enz.location == 'nucleus')
+
+def test_pysb_preassembler_replace_activities():
+    a_act = Agent('a', activity=ActivityCondition('activity', True))
+    st = Activation(a_act, Agent('b'))
+    st2 = Activation(Agent('c'), Agent('a'))
+    ppa = PysbPreassembler([st, st2])
+    ppa.replace_activities()
+    assert(len(ppa.statements) == 2)
