@@ -93,6 +93,26 @@ def test_get_children():
     assert isinstance(none_children, list)
     assert len(none_children) == 0
 
+def test_mtorc_children():
+    mtorc1 = 'http://sorger.med.harvard.edu/indra/entities/mTORC1'
+    mtorc2 = 'http://sorger.med.harvard.edu/indra/entities/mTORC2'
+    ch1 = ent_hierarchy.get_children(mtorc1)
+    ch2 = ent_hierarchy.get_children(mtorc2)
+    assert('http://identifiers.org/hgnc.symbol/RICTOR' not in ch1)
+    assert('http://identifiers.org/hgnc.symbol/RPTOR' not in ch2)
+
+def test_mtorc_get_parents():
+    rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
+    p = ent_hierarchy.get_parents(rictor, 'all')
+    assert(len(p) == 1)
+    assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+
+def test_mtorc_transitive_closure():
+    rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
+    p = ent_hierarchy.partof_closure.get(rictor)
+    assert(len(p) == 1)
+    assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
     ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
