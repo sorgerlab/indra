@@ -20,6 +20,13 @@ class HierarchyManager(object):
     ----------
     rdf_file : string
         Path to the RDF file containing the hierarchy.
+    build_closure : Optional[bool]
+        If True, the transitive closure of the hierarchy is generated
+        up from to speed up processing. Default: True
+    uri_as_name: Optional[bool]
+        If True, entries are accessed directly by their URIs. If False
+        entries are accessed by finding their name through the
+        hasName relationship. Default: True
 
     Attributes
     ----------
@@ -30,13 +37,14 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file, build_closure=True):
+    def __init__(self, rdf_file, build_closure=True, uri_as_name=True):
         """Initialize with the path to an RDF file"""
         self.graph = rdflib.Graph()
         self.graph.parse(rdf_file, format='nt')
         self.isa_closure = {}
         self.partof_closure = {}
         self.components = {}
+        self.uri_as_name = uri_as_name
         if build_closure:
             self.build_transitive_closures()
         # Build reverse lookup dict from the entity hierarchy
@@ -169,7 +177,20 @@ class HierarchyManager(object):
             else:
                 return False
         else:
-            return self.query_rdf(id1, 'rn:isa+', id2)
+            if not self.uri_as_name:
+                t1 = rdflib.term.URIRef(self.find_entity(id1))
+                t2 = rdflib.term.URIRef(self.find_entity(id2))
+            else:
+                t1 = rdflib.term.URIRef(self.get_uri(ns1, id1))
+                t2 = rdflib.term.URIRef(self.get_uri(ns2, id2))
+
+            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/isa'
+            rel_ref = rdflib.term.URIRef(rel_uri)
+            to = self.graph.transitive_objects(t1, rel_ref)
+            if t2 in to:
+                return True
+            else:
+                return False
 
     def partof(self, ns1, id1, ns2, id2):
         """Indicate whether one entity is physically part of another.
@@ -207,7 +228,20 @@ class HierarchyManager(object):
             else:
                 return False
         else:
-            return self.query_rdf(id1, 'rn:partof+', id2)
+            if not self.uri_as_name:
+                t1 = rdflib.term.URIRef(self.find_entity(id1))
+                t2 = rdflib.term.URIRef(self.find_entity(id2))
+            else:
+                t1 = rdflib.term.URIRef(self.get_uri(ns1, id1))
+                t2 = rdflib.term.URIRef(self.get_uri(ns2, id2))
+
+            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/partof'
+            rel_ref = rdflib.term.URIRef(rel_uri)
+            to = self.graph.transitive_objects(t1, rel_ref)
+            if t2 in to:
+                return True
+            else:
+                return False
 
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
@@ -292,16 +326,20 @@ ccomp_file_path = os.path.join(os.path.dirname(__file__),
                     '../resources/cellular_component_hierarchy.rdf')
 """Default entity hierarchy loaded from the RDF file at
 `resources/entity_hierarchy.rdf`."""
-entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True)
+entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True,
+                                    uri_as_name=True)
 """Default modification hierarchy loaded from the RDF file at
 `resources/modification_hierarchy.rdf`."""
-modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True)
+modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True,
+                                          uri_as_name=True)
 """Default activity hierarchy loaded from the RDF file at
 `resources/activity_hierarchy.rdf`."""
-activity_hierarchy = HierarchyManager(act_file_path, build_closure=True)
+activity_hierarchy = HierarchyManager(act_file_path, build_closure=True,
+                                      uri_as_name=True)
 """Default cellular_component hierarchy loaded from the RDF file at
 `resources/cellular_component_hierarchy.rdf`."""
-ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False)
+ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False,
+                                   uri_as_name=False)
 
 hierarchies = {'entity': entity_hierarchy,
                'modification': modification_hierarchy,
