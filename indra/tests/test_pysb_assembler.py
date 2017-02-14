@@ -930,7 +930,7 @@ def test_activation_subj4():
     assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
     assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
 
-def test_pysb_preassembler_replace_activities():
+def test_pysb_preassembler_replace_activities1():
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
     st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
     ppa = PysbPreassembler([st1, st2])
@@ -938,10 +938,26 @@ def test_pysb_preassembler_replace_activities():
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[1].enz.location == 'nucleus')
 
-def test_pysb_preassembler_replace_activities():
+def test_pysb_preassembler_replace_activities2():
     a_act = Agent('a', activity=ActivityCondition('activity', True))
     st = Activation(a_act, Agent('b'))
     st2 = Activation(Agent('c'), Agent('a'))
     ppa = PysbPreassembler([st, st2])
     ppa.replace_activities()
     assert(len(ppa.statements) == 2)
+
+def test_pysb_preassembler_replace_activities3():
+    p = Agent('PPP2CA')
+    bc = BoundCondition(p, False)
+    erk = Agent('ERK')
+    mek1 = Agent('MEK', mods=[ModCondition('phosphorylation',
+                                           None, None, True)])
+    mek2 = Agent('MEK', activity=ActivityCondition('activity', True),
+                 bound_conditions=[bc])
+    st2 = ActiveForm(mek1, 'activity', True)
+    st1 = Phosphorylation(mek2, erk)
+    ppa = PysbPreassembler([st1, st2])
+    ppa.replace_activities()
+    assert(len(ppa.statements) == 2)
+    assert(ppa.statements[0].enz.mods)
+    assert(ppa.statements[0].enz.bound_conditions)
