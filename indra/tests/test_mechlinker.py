@@ -10,3 +10,13 @@ def test_act_phos_to_af():
     ml = MechLinker([act_st, phos_st])
     linked_stmts = ml.link_statements()
     assert(len(linked_stmts) == 1)
+
+def test_act_af_to_phos():
+    act_st = Activation(Agent('A', activity=ActivityCondition('kinase', True)),
+                        Agent('B'))
+    af_st = ActiveForm(Agent('B', mods=[ModCondition('phosphorylation',
+                                                     None, None, True)]),
+                        'activity', True)
+    ml = MechLinker([act_st, af_st])
+    linked_stmts = ml.link_statements()
+    assert(len(linked_stmts) == 1)

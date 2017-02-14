@@ -190,71 +190,84 @@ class MechLinker(object):
             a list of source Statements and a Statement that has been derived
             or "linked" from the source Statements.
         """
+        linked_stmts = self.infer_active_forms(self.statements)
+        linked_stmts += self.infer_modifications(self.statements)
+        return linked_stmts
+
+    @staticmethod
+    def infer_active_forms(stmts):
+        # Infer ActiveForm from RegulateActivity + Modification
         linked_stmts = []
-        for act_stmt in get_statement_type(self.statements, RegulateActivity):
-            # Infer ActiveForm from RegulateActivity + Modification
-            if act_stmt.subj.activity is not None and \
+        for act_stmt in get_statement_type(stmts, RegulateActivity):
+            # TODO: revise the conditions here
+            if not (act_stmt.subj.activity is not None and \
                 act_stmt.subj.activity.activity_type == 'kinase' and \
-                act_stmt.subj.activity.is_active:
-                matching = []
-                ev = act_stmt.evidence
-                for mod_stmt in get_statement_type(self.statements,
-                                                   Modification):
-                    if mod_stmt.enz is not None:
-                        if mod_stmt.enz.entity_matches(act_stmt.subj) and \
-                            mod_stmt.sub.entity_matches(act_stmt.obj):
-                            matching.append(mod_stmt)
-                            ev.extend(mod_stmt.evidence)
-                if not matching:
-                    continue
-                mods = []
-                for mod_stmt in matching:
-                    mod_type_name = mod_stmt.__class__.__name__.lower()
-                    if isinstance(mod_stmt, AddModification):
-                        is_modified = True
-                    else:
-                        is_modified = False
-                        mod_type_name = mod_type_name[2:]
-                    mc = ModCondition(mod_type_name, mod_stmt.residue,
-                                      mod_stmt.position, is_modified)
-                    mods.append(mc)
-                source_stmts = [act_stmt] + [m for m in matching]
-                st = ActiveForm(Agent(act_stmt.obj.name, mods=mods,
-                                      db_refs=act_stmt.obj.db_refs),
-                                act_stmt.obj_activity, act_stmt.is_activation,
-                                evidence=ev)
-                linked_stmts.append(LinkedStatement(source_stmts, st))
-                logger.info('inferred: %s' % st)
-        # Infer indirect Phosphorylation from ActAct + ActiveForm
-        for act_stmt in get_statement_type(self.statements, RegulateActivity):
-            for af_stmt in get_statement_type(self.statements, ActiveForm):
-                if not af_stmt.agent.name == act_stmt.obj.name:
+                act_stmt.subj.activity.is_active):
+                continue
+            matching = []
+            ev = act_stmt.evidence
+            for mod_stmt in get_statement_type(stmts, Modification):
+                if mod_stmt.enz is not None:
+                    if mod_stmt.enz.entity_matches(act_stmt.subj) and \
+                        mod_stmt.sub.entity_matches(act_stmt.obj):
+                        matching.append(mod_stmt)
+                        ev.extend(mod_stmt.evidence)
+            if not matching:
+                continue
+            mods = []
+            for mod_stmt in matching:
+                mod_type_name = mod_stmt.__class__.__name__.lower()
+                if isinstance(mod_stmt, AddModification):
+                    is_modified = True
+                else:
+                    is_modified = False
+                    mod_type_name = mod_type_name[2:]
+                mc = ModCondition(mod_type_name, mod_stmt.residue,
+                                  mod_stmt.position, is_modified)
+                mods.append(mc)
+            source_stmts = [act_stmt] + [m for m in matching]
+            st = ActiveForm(Agent(act_stmt.obj.name, mods=mods,
+                                  db_refs=act_stmt.obj.db_refs),
+                            act_stmt.obj_activity, act_stmt.is_activation,
+                            evidence=ev)
+            linked_stmts.append(LinkedStatement(source_stmts, st))
+            logger.info('inferred: %s' % st)
+        return linked_stmts
+
+    @staticmethod
+    def infer_modifications(stmts):
+        # Infer indirect Modification from RegulateActivity + ActiveForm
+        linked_stmts = []
+        for act_stmt in get_statement_type(stmts, RegulateActivity):
+            for af_stmt in get_statement_type(stmts, ActiveForm):
+                if not af_stmt.agent.entity_matches(act_stmt.obj):
                     continue
                 mods = af_stmt.agent.mods
-                # Make sure the ActiveForm only involves phosphorylated
-                # sites
-                if not af_stmt.agent.mutations and \
-                    not af_stmt.agent.bound_conditions and \
-                    all([m.mod_type == 'phosphorylation' for m in mods]) and \
-                    all([m.is_modified for m in mods]):
-                    for m in mods:
-                        ev = act_stmt.evidence
-                        ev[0].epistemics['direct'] = False
-                        if (act_stmt.is_activation and af_stmt.is_active) or \
-                            (not act_stmt.is_activation and not
-                             af_stmt.is_active):
-                            st = Phosphorylation(act_stmt.subj,
-                                                 act_stmt.obj,
-                                                 m.residue, m.position,
-                                                 evidence=ev)
-                        elif (not act_stmt.is_activation and af_stmt.is_active) or \
-                              (act_stmt.is_activation and not af_stmt.is_active):
-                            st = Dephosphorylation(act_stmt.subj,
-                                                   act_stmt.obj,
-                                                   m.residue, m.position,
-                                                   evidence=ev)
-                        linked_stmts.append(LinkedStatement([act_stmt, af_stmt], st))
-                        logger.info('inferred: %s' % st)
+                # Make sure the ActiveForm only involves modified sites
+                if af_stmt.agent.mutations or \
+                    af_stmt.agent.bound_conditions or \
+                    af_stmt.agent.location:
+                    continue
+                if not af_stmt.agent.mods:
+                    continue
+                for mod in af_stmt.agent.mods:
+                    evs = act_stmt.evidence + af_stmt.evidence
+                    for ev in evs:
+                        ev.epistemics['direct'] = False
+                    if mod.is_modified:
+                        mod_type_name = mod.mod_type
+                    else:
+                        mod_type_name = 'de' + mod.mod_type
+                    mod_class = stmt_mod_map.get(mod_type_name)
+                    if not mod_class:
+                        continue
+                    st = mod_class(act_stmt.subj,
+                                   act_stmt.obj,
+                                   mod.residue, mod.position,
+                                   evidence=evs)
+                    ls = LinkedStatement([act_stmt, af_stmt], st)
+                    linked_stmts.append(ls)
+                    logger.info('inferred: %s' % st)
         return linked_stmts
 
 class BaseAgentSet(object):
@@ -315,12 +328,6 @@ class BaseAgent(object):
     states : list[indra.statements.ModCondition]
         A list of ModConditions that the associated Agent can have
     """
-    def AgentState(object):
-        def __init__(agent):
-            self.bound_conditions = agent.bound_conditions
-            self.mods = agent.mods
-            self.mutations = agent.mutations
-            self.location = agent.location
 
     def __init__(self, name):
         self.name = name
@@ -352,7 +359,10 @@ class BaseAgent(object):
 
     def add_active_state(self, activity_type, agent):
         agent_state = AgentState(agent)
-        self.active_states[activity_type].append(agent_state)
+        if activity_type in self.active_states:
+            self.active_states[activity_type].append(agent_state)
+        else:
+            self.active_states[activity_type] = [agent_state]
 
     def __str__(self):
         s = '%s(' % self.name
@@ -365,6 +375,13 @@ class BaseAgent(object):
 
     def __repr__(self):
         return str(self)
+
+def AgentState(object):
+    def __init__(agent):
+        self.bound_conditions = agent.bound_conditions
+        self.mods = agent.mods
+        self.mutations = agent.mutations
+        self.location = agent.location
 
 @python_2_unicode_compatible
 class LinkedStatement(object):
@@ -413,3 +430,23 @@ def get_graph_reductions(edges):
         if reduced_to is not None:
             reductions[n] = reduced_to
     return reductions
+
+stmt_mod_map = {
+    'phosphorylation': Phosphorylation,
+    'dephosphorylation': Dephosphorylation,
+    'autophosphorylation': Autophosphorylation,
+    'ubiquitination': Ubiquitination,
+    'deubiquitination': Deubiquitination,
+    'acetylation': Acetylation,
+    'deacetylation': Deacetylation,
+    'hydroxylation': Hydroxylation,
+    'dehydroxylation': Dehydroxylation,
+    'sumoylation': Sumoylation,
+    'desumoylation': Desumoylation,
+    'glycosylation': Glycosylation,
+    'deglycosylation': Deglycosylation,
+    'farnesylation': Farnesylation,
+    'defarnesylation': Defarnesylation,
+    'ribosylation': Ribosylation,
+    'deribosylation': Deribosylation,
+}
