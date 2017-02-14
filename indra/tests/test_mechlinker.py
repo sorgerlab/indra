@@ -2,8 +2,22 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import networkx
 from indra.statements import *
-from indra.mechlinker import MechLinker
+from indra.mechlinker import MechLinker, AgentState
 from indra.mechlinker import get_graph_reductions
+
+def test_agent_state():
+    mc = ModCondition('phosphorylation')
+    mut = MutCondition('600', 'V', 'E')
+    location = 'nucleus'
+    bc = BoundCondition(Agent('x'), True)
+    a = Agent('a', mods=[mc], mutations=[mut], bound_conditions=[bc],
+              location=location)
+    agent_state = AgentState(a)
+    assert(agent_state.mods)
+    assert(agent_state.mutations)
+    assert(agent_state.bound_conditions)
+    assert(agent_state.location)
+
 
 def test_act_phos_to_af():
     act_st = Activation(Agent('A', activity=ActivityCondition('kinase', True)),
@@ -63,3 +77,30 @@ def test_graph_reductions():
                           'transcription': 'transcription',
                           'catalytic': 'kinase',
                           'kinase': 'kinase'})
+
+def test_base_agent():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    ml = MechLinker([af])
+    ml.get_explicit_activities()
+
+def test_require_active_forms():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    ph = Phosphorylation(Agent('a'), Agent('b'))
+    ml = MechLinker([af, ph])
+    ml.get_explicit_activities()
+    ml.require_active_form()
+    assert(len(ml.statements) == 2)
+    assert(ml.statements[1].enz.mods)
+
+def test_require_active_forms2():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    af2 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
+    ph = Phosphorylation(Agent('a'), Agent('b'))
+    ml = MechLinker([af, af2, ph])
+    ml.get_explicit_activities()
+    ml.require_active_form()
+    assert(len(ml.statements) == 4)
+    assert(ml.statements[3].enz.location)

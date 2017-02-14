@@ -4,6 +4,7 @@ from future.utils import python_2_unicode_compatible
 import logging
 import networkx
 import itertools
+from copy import deepcopy
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
 
@@ -144,6 +145,27 @@ class MechLinker(object):
         """
         base_agent = self.base_agents.get_create_base_agent(agent)
         return base_agent
+
+    def require_active_form(self):
+        new_stmts = []
+        for stmt in self.statements:
+            if isinstance(stmt, Modification):
+                if stmt.enz is None:
+                    continue
+                enz_base = self.get_base(stmt.enz)
+                active_forms = enz_base.get_active_forms()
+                if not active_forms:
+                    new_stmts.append(stmt)
+                else:
+                    for af in active_forms:
+                        new_stmt = deepcopy(stmt)
+                        af.apply_to(new_stmt.enz)
+                        new_stmts.append(new_stmt)
+            else:
+                new_stmts.append(stmt)
+        self.statements = new_stmts
+        return new_stmts
+
 
     def reduce_activities(self):
         """Rewrite the activity types referenced in Statements for consistency.
@@ -295,10 +317,6 @@ class BaseAgentSet(object):
             base_agent = BaseAgent(agent.name)
             self.agents[agent.name] = base_agent
 
-        # Handle modification conditions
-        for mc in agent.mods:
-            base_agent.states.append(mc)
-
         return base_agent
 
     def keys(self):
@@ -324,20 +342,18 @@ class BaseAgent(object):
         A dict of activity types and their associated Agent states
     activity_reductions : dict
         A dict of activity types and the type they are reduced to by inference.
-    states : list[indra.statements.ModCondition]
-        A list of ModConditions that the associated Agent can have
     """
 
     def __init__(self, name):
         self.name = name
         self.activity_types = []
         self.active_states = {}
-        self.states = []
         self.activity_graph = None
         self.activity_reductions = None
 
     def get_activity_reduction(self, activity):
-        self.make_activity_reductions()
+        if self.activity_reductions is None:
+            self.make_activity_reductions()
         return self.activity_reductions.get(activity)
 
     def make_activity_reductions(self):
@@ -363,6 +379,16 @@ class BaseAgent(object):
         else:
             self.active_states[activity_type] = [agent_state]
 
+    def get_active_forms(self):
+        # TODO: handle inactive states
+        # TODO: handle activity types
+        if self.active_states:
+            states = []
+            for k, v in self.active_states.items():
+                states += v
+            return states
+        return None
+
     def __str__(self):
         s = '%s(' % self.name
         if self.activity_types:
@@ -375,12 +401,23 @@ class BaseAgent(object):
     def __repr__(self):
         return str(self)
 
-def AgentState(object):
-    def __init__(agent):
+class AgentState(object):
+    def __init__(self, agent):
         self.bound_conditions = agent.bound_conditions
         self.mods = agent.mods
         self.mutations = agent.mutations
         self.location = agent.location
+
+    def apply_to(self, agent):
+        agent.bound_conditions = self.bound_conditions
+        agent.mods = self.mods
+        agent.mutations = self.mutations
+        agent.location = self.location
+
+    def __repr__(self):
+        s = 'AgentState(%s, %s, %s, %s)' % (self.bound_conditions, self.mods,
+                                            self.mutations, self.location)
+        return s
 
 @python_2_unicode_compatible
 class LinkedStatement(object):
