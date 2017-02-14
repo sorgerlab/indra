@@ -1,4 +1,6 @@
 <http://sorger.med.harvard.edu/indra/entities/catalytic> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/activity> .
+<http://sorger.med.harvard.edu/indra/entities/gap> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/catalytic> .
+<http://sorger.med.harvard.edu/indra/entities/gef> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/catalytic> .
 <http://sorger.med.harvard.edu/indra/entities/gtpbound> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/activity> .
 <http://sorger.med.harvard.edu/indra/entities/kinase> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/catalytic> .
 <http://sorger.med.harvard.edu/indra/entities/phosphatase> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/catalytic> .
