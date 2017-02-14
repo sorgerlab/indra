@@ -42,15 +42,36 @@ class MechLinker(object):
             a list of source Statements and a Statement that has been derived
             or "linked" from the source Statements.
         """
-        self.get_activities()
+        self.get_explicit_activities()
         self.reduce_activities()
         linked_stmts = self.link_activations()
         for ls in linked_stmts:
             self.statements.append(ls.inferred_stmt)
         return linked_stmts
 
-    def get_activities(self):
-        """Aggregate all the known activities and active forms of Agents.
+    def get_explicit_activities(self):
+        """Aggregate all explicit activities given for Agents."""
+        for stmt in self.statements:
+            agents = stmt.agent_list()
+            # Activity types given as ActivityConditions
+            for agent in agents:
+                if agent is not None and agent.activity is not None:
+                    agent_base = self.get_base(agent)
+                    agent_base.add_activity(agent.activity.activity_type)
+            # Object activities given in RegulateActivity statements
+            if isinstance(stmt, RegulateActivity):
+                if stmt.obj is not None:
+                    obj_base = self.get_base(stmt.obj)
+                    obj_base.add_activity(stmt.obj_activity)
+            # Activity types given in ActiveForms
+            elif isinstance(stmt, ActiveForm):
+                agent_base = self.get_base(stmt.agent)
+                agent_base.add_activity(stmt.activity)
+                agent_base.add_active_state(stmt.activity, stmt.agent)
+
+
+    def get_implicit_activities(self):
+        """Aggregate all implicit activities and active forms of Agents.
 
         Iterate over self.statements and collect the implied activities
         and active forms of Agents that appear in the Statements. These are
@@ -60,11 +81,6 @@ class MechLinker(object):
         Statements.
         """
         for stmt in self.statements:
-            agents = stmt.agent_list()
-            for agent in agents:
-                if agent is not None and agent.activity is not None:
-                    agent_base = self.get_base(agent)
-                    agent_base.add_activity(agent.activity.activity_type)
             if isinstance(stmt, Phosphorylation) or\
                 isinstance(stmt, Transphosphorylation) or\
                 isinstance(stmt, Autophosphorylation):
@@ -106,10 +122,9 @@ class MechLinker(object):
                         act = 'activity'
                     gap_base.add_active_state('act', stmt.gap.mods)
             elif isinstance(stmt, RegulateActivity):
-                if stmt.obj is not None:
-                    obj_base =\
-                        self.get_base(stmt.obj)
-                    obj_base.add_activity(stmt.obj_activity)
+                if stmt.subj is not None:
+                    subj_base = self.get_base(stmt.subj)
+                    subj_base.add_activity(stmt.j)
             elif isinstance(stmt, ActiveForm):
                 agent_base = self.get_base(stmt.agent)
                 agent_base.add_activity(stmt.activity)
@@ -315,6 +330,13 @@ class BaseAgent(object):
     states : list[indra.statements.ModCondition]
         A list of ModConditions that the associated Agent can have
     """
+    def AgentState(object):
+        def __init__(agent):
+            self.bound_conditions = agent.bound_conditions
+            self.mods = agent.mods
+            self.mutations = agent.mutations
+            self.location = agent.location
+
     def __init__(self, name):
         self.name = name
         self.activities = []
@@ -339,31 +361,13 @@ class BaseAgent(object):
             if ah.isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.append((a2, a1))
 
-    def add_activity(self, activity):
+    def add_activity(self, activity_type):
         if activity not in self.activities:
             self.activities.append(activity)
 
-    def add_active_state(self, activity, mods):
-        if not mods:
-            return
-        try:
-            if not self.hasmod(self.active_states[activity], mods):
-                self.active_states[activity].append(mods)
-        except KeyError:
-            self.active_states[activity] = [mods]
-
-    @staticmethod
-    def hasmod(mods_list, mods):
-        for ml in mods_list:
-            found_ix = []
-            for m1 in ml:
-                for ix, m2 in enumerate(mods):
-                    if m1.equals(m2) and ix not in found_ix:
-                        found_ix.append(ix)
-                        break
-            if len(found_ix) == len(mods):
-                return True
-        return False
+    def add_active_state(self, activity_type, agent):
+        agent_state = AgentState(agent)
+        self.active_states[activity_type].append(agent_state)
 
     def __str__(self):
         s = '%s(' % self.name
