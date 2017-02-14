@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import logging
+import networkx
 import itertools
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
@@ -163,16 +164,14 @@ class MechLinker(object):
                         agent.activity.activity_type = act_red
             if isinstance(stmt, RegulateActivity):
                 if stmt.obj is not None:
-                    obj_base =\
-                        self.get_base(stmt.obj)
+                    obj_base = self.get_base(stmt.obj)
                     act_red = \
                         obj_base.get_activity_reduction(stmt.obj_activity)
                     if act_red is not None:
                         stmt.obj_activity = act_red
             elif isinstance(stmt, ActiveForm):
                 agent_base = self.get_base(stmt.agent)
-                act_red = \
-                    agent_base.get_activity_reduction(stmt.activity)
+                act_red = agent_base.get_activity_reduction(stmt.activity)
                 if act_red is not None:
                     stmt.activity = act_red
 
@@ -346,12 +345,12 @@ class BaseAgent(object):
         self.activity_reductions = get_graph_reductions(self.activity_graph)
 
     def make_activity_graph(self):
-        self.activity_graph  = []
+        self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
             if ah.isa('INDRA', a1, 'INDRA', a2):
-                self.activity_graph.append((a1, a2))
+                self.activity_graph.add_edge(a2, a1)
             if ah.isa('INDRA', a2, 'INDRA', a1):
-                self.activity_graph.append((a2, a1))
+                self.activity_graph.add_edge(a1, a2)
 
     def add_activity(self, activity_type):
         if activity_type not in self.activity_types:
@@ -412,23 +411,24 @@ class LinkedStatement(object):
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
 
-def get_graph_reductions(edges):
+def get_graph_reductions(graph):
+    def frontier(g, nd):
+        if g.out_degree(nd) == 0:
+            return set([nd])
+        else:
+            frontiers = set()
+            for n in g.successors(nd):
+                frontiers = frontiers.union(frontier(graph, n))
+            return frontiers
     reductions = {}
-    nodes = set()
-    for s, t in edges:
-        nodes.add(s)
-        nodes.add(t)
-    reverse_edges = {n:[] for n in nodes}
-    for s, t in edges:
-        reverse_edges[t].append(s)
-    for n in nodes:
-        next_nodes = reverse_edges[n]
-        reduced_to = None
-        while len(next_nodes) == 1:
-            reduced_to = next_nodes[0]
-            next_nodes = reverse_edges[next_nodes[0]]
-        if reduced_to is not None:
-            reductions[n] = reduced_to
+    nodes_sort = networkx.topological_sort(graph)
+    frontiers = [frontier(graph, n) for n in nodes_sort]
+    for i, n1 in enumerate(nodes_sort):
+        for j, n2 in enumerate(nodes_sort):
+            if i > j:
+                continue
+            if frontiers[i] == frontiers[j]:
+                reductions[n1] = n2
     return reductions
 
 stmt_mod_map = {
