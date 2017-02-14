@@ -161,6 +161,19 @@ class MechLinker(object):
                         new_stmt = deepcopy(stmt)
                         af.apply_to(new_stmt.enz)
                         new_stmts.append(new_stmt)
+            elif isinstance(stmt, RegulateAmount) or \
+                isinstance(stmt, RegulateActivity):
+                if stmt.subj is None:
+                    continue
+                subj_base = self.get_base(stmt.subj)
+                active_forms = subj_base.get_active_forms()
+                if not active_forms:
+                    new_stmts.append(stmt)
+                else:
+                    for af in active_forms:
+                        new_stmt = deepcopy(stmt)
+                        af.apply_to(new_stmt.subj)
+                        new_stmts.append(new_stmt)
             else:
                 new_stmts.append(stmt)
         self.statements = new_stmts

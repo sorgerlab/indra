@@ -84,7 +84,7 @@ def test_base_agent():
     ml = MechLinker([af])
     ml.get_explicit_activities()
 
-def test_require_active_forms():
+def test_require_active_forms_mod1():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
                     'activity', True)
     ph = Phosphorylation(Agent('a'), Agent('b'))
@@ -94,7 +94,7 @@ def test_require_active_forms():
     assert(len(ml.statements) == 2)
     assert(ml.statements[1].enz.mods)
 
-def test_require_active_forms2():
+def test_require_active_forms_mod2():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
                     'activity', True)
     af2 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
@@ -104,3 +104,14 @@ def test_require_active_forms2():
     ml.require_active_form()
     assert(len(ml.statements) == 4)
     assert(ml.statements[3].enz.location)
+
+def test_require_active_forms_act1():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    act = Activation(Agent('a'), Agent('b'))
+    ml = MechLinker([af, act])
+    ml.get_explicit_activities()
+    ml.require_active_form()
+    assert(len(ml.statements) == 2)
+    assert(ml.statements[1].subj.mods)
+
