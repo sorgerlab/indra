@@ -192,52 +192,37 @@ class MechLinker(object):
         """
         linked_stmts = []
         for act_stmt in get_statement_type(self.statements, RegulateActivity):
-            # Infer ActiveForm from ActAct + Phosphorylation
+            # Infer ActiveForm from RegulateActivity + Modification
             if act_stmt.subj.activity is not None and \
                 act_stmt.subj.activity.activity_type == 'kinase' and \
                 act_stmt.subj.activity.is_active:
                 matching = []
                 ev = act_stmt.evidence
-                for phos_stmt in get_statement_type(self.statements,
-                                                    Phosphorylation):
-                    if phos_stmt.enz is not None:
-                        if phos_stmt.enz.entity_matches(act_stmt.subj) and \
-                            phos_stmt.sub.entity_matches(act_stmt.obj):
-                            matching.append(phos_stmt)
-                            ev.extend(phos_stmt.evidence)
+                for mod_stmt in get_statement_type(self.statements,
+                                                   Modification):
+                    if mod_stmt.enz is not None:
+                        if mod_stmt.enz.entity_matches(act_stmt.subj) and \
+                            mod_stmt.sub.entity_matches(act_stmt.obj):
+                            matching.append(mod_stmt)
+                            ev.extend(mod_stmt.evidence)
                 if not matching:
                     continue
-                mods = [ModCondition('phosphorylation',
-                                     m.residue, m.position)
-                       for m in matching]
+                mods = []
+                for mod_stmt in matching:
+                    mod_type_name = mod_stmt.__class__.__name__.lower()
+                    if isinstance(mod_stmt, AddModification):
+                        is_modified = True
+                    else:
+                        is_modified = False
+                        mod_type_name = mod_type_name[2:]
+                    mc = ModCondition(mod_type_name, mod_stmt.residue,
+                                      mod_stmt.position, is_modified)
+                    mods.append(mc)
                 source_stmts = [act_stmt] + [m for m in matching]
-                st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
+                st = ActiveForm(Agent(act_stmt.obj.name, mods=mods,
+                                      db_refs=act_stmt.obj.db_refs),
                                 act_stmt.obj_activity, act_stmt.is_activation,
                                 evidence=ev)
-                linked_stmts.append(LinkedStatement(source_stmts, st))
-                logger.info('inferred: %s' % st)
-            # Infer ActiveForm from ActAct + Dephosphorylation
-            if act_stmt.subj.activity is not None and \
-                act_stmt.subj.activity.activity_type == 'phosphatase' and \
-                act_stmt.subj.activity.is_active:
-                matching = []
-                ev = act_stmt.evidence
-                for phos_stmt in get_statement_type(self.statements,
-                                                    Dephosphorylation):
-                    if phos_stmt.enz is not None:
-                        if phos_stmt.enz.entity_matches(act_stmt.subj) and \
-                            phos_stmt.sub.entity_matches(act_stmt.obj):
-                            matching.append(phos_stmt)
-                            ev.extend(phos_stmt.evidence)
-                if not matching:
-                    continue
-                mods = [ModCondition('phosphorylation',
-                                     m.residue, m.position, False)
-                       for m in matching]
-                st = ActiveForm(Agent(act_stmt.obj.name, mods=mods),
-                                act_stmt.obj_activity, act_stmt.is_activation,
-                                evidence=ev)
-                source_stmts = [act_stmt] + [m for m in matching]
                 linked_stmts.append(LinkedStatement(source_stmts, st))
                 logger.info('inferred: %s' % st)
         # Infer indirect Phosphorylation from ActAct + ActiveForm
@@ -339,7 +324,7 @@ class BaseAgent(object):
 
     def __init__(self, name):
         self.name = name
-        self.activities = []
+        self.activity_types = []
         self.active_states = {}
         self.states = []
         self.activity_graph = None
@@ -355,15 +340,15 @@ class BaseAgent(object):
 
     def make_activity_graph(self):
         self.activity_graph  = []
-        for a1, a2 in itertools.combinations(self.activities, 2):
+        for a1, a2 in itertools.combinations(self.activity_types, 2):
             if ah.isa('INDRA', a1, 'INDRA', a2):
                 self.activity_graph.append((a1, a2))
             if ah.isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.append((a2, a1))
 
     def add_activity(self, activity_type):
-        if activity not in self.activities:
-            self.activities.append(activity)
+        if activity_type not in self.activity_types:
+            self.activity_types.append(activity_type)
 
     def add_active_state(self, activity_type, agent):
         agent_state = AgentState(agent)
@@ -371,8 +356,8 @@ class BaseAgent(object):
 
     def __str__(self):
         s = '%s(' % self.name
-        if self.activities:
-            s += 'activities: %s, ' % self.activities
+        if self.activity_types:
+            s += 'activity_types: %s, ' % self.activity_types
         for k, v in self.active_states.items():
             s += '%s: %s' % (k, v)
         s += ')'
