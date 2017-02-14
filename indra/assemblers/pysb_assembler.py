@@ -2268,8 +2268,11 @@ class PysbPreassembler(object):
 
     @staticmethod
     def _set_agent_context(from_agent, to_agent):
-        to_agent.bound_conditions = from_agent.bound_conditions
-        to_agent.mods = from_agent.mods
-        to_agent.mutations = from_agent.mutations
+        # TODO: what can we do about semantic conflicts here like the same
+        # bound condition with True/False is_bound appearing in the
+        # two contexts?
+        to_agent.bound_conditions += from_agent.bound_conditions
+        to_agent.mods += from_agent.mods
+        to_agent.mutations += from_agent.mutations
         to_agent.location = from_agent.location
         to_agent.activity = from_agent.activity
