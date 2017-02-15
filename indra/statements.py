@@ -1901,6 +1901,34 @@ class RegulateAmount(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
+    def to_json(self):
+        if self.subj is None:
+            subj_entry = None
+        else:
+            subj_entry = self.subj.to_json()
+        if self.obj is None:
+            obj_entry = None
+        else:
+            obj_entry = self.obj.to_json()
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'subj': subj_entry, 'obj': obj_entry,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj = json_dict.get('obj')
+        evidence = json_dict.get('evidence')
+        if subj:
+            subj = Agent.from_json(subj)
+        if obj:
+            obj = Agent.from_json(obj)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(subj, obj, evidence=evidence)
+        return stmt
+
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
         if type(self) != type(other):
