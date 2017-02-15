@@ -813,14 +813,16 @@ class TripsProcessor(object):
             for component in components:
                 component_id = component.attrib['id']
                 agent = self._get_agent_by_id(component_id, None)
-                agents.append(agent)
+                if agent is not None:
+                    agents.append(agent)
             if not agents:
                 return None
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
-            agent.bound_conditions = \
-                [BoundCondition(ag, True) for ag in agents[1:]]
+            if len(agents) > 1:
+                agent.bound_conditions = \
+                    [BoundCondition(ag, True) for ag in agents[1:]]
         # If the entity is not a complex
         else:
             # Determine the agent name
@@ -884,7 +886,9 @@ class TripsProcessor(object):
                 mc = MutCondition(mut_values[0], mut_values[1],
                                   mut_values[2])
             except InvalidResidueError:
-                logger.error('Invalid residue in mutation condition.')
+                residues_str = '%s/%s' % (mut_values[1], mut_values[2])
+                logger.error('Invalid residue in mutation condition: %s' % \
+                             residues_str)
                 continue
             agent.mutations.append(mc)
         # Get location
@@ -933,7 +937,13 @@ class TripsProcessor(object):
             if bound_to_term_id is not None:
                 bound_to_term = self.tree.find("TERM/[@id='%s']" %
                                                bound_to_term_id)
-                if _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
+                if bound_to_term is None:
+                    pass
+                elif _is_type(bound_to_term, 'ONT::CELL-PART'):
+                    # We currently don't handle binding to cellular components
+                    # TODO: possibly handle this as location
+                    pass
+                elif _is_type(bound_to_term, 'ONT::MOLECULAR-PART'):
                     components = bound_to_term.findall('components/component')
                     for c in components:
                         bound_agent = \
@@ -966,7 +976,7 @@ class TripsProcessor(object):
                     bc = BoundCondition(ba, True)
                 agent.bound_conditions.append(bc)
             return
-        logger.warning('Unhandled precondition event type: %s' %
+        logger.debug('Unhandled precondition event type: %s' %
                        precond_event_type)
 
     def _find_in_term(self, term_id, path):
@@ -975,6 +985,8 @@ class TripsProcessor(object):
 
     def _get_basic_agent_by_id(self, term_id, event_id):
         agent = self._get_agent_by_id(term_id, event_id)
+        if agent is None:
+            return None
         if isinstance(agent, collections.Iterable):
             agent = agent[0]
             logger.warning('Extracting only one basic Agent from %s.'
@@ -998,6 +1010,10 @@ class TripsProcessor(object):
         if components is not None:
             for member in components.getchildren():
                 residue, pos = self._get_site_by_id(member.attrib['id'])
+                if residue is None:
+                    residue = [None]
+                if pos is None:
+                    pos = [None]
                 all_residues += residue
                 all_pos += pos
         else:
@@ -1007,8 +1023,10 @@ class TripsProcessor(object):
                 site_name = site_name_tag.text
             if site_type == 'ONT::MOLECULAR-SITE':
                 residue = site_term.find('features/site/code')
-                if residue is not None:
+                if residue is not None and residue.text:
                     residue = residue.text.upper()
+                else:
+                    residue = None
                 pos = site_term.find('features/site/pos')
                 if pos is not None:
                     pos = pos.text.upper()

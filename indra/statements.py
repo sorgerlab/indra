@@ -41,6 +41,8 @@ modifications that further inherit from
 - :py:class:`Demyristoylation`
 - :py:class:`Ribosylation`
 - :py:class:`Deribosylation`
+- :py:class:`Methylation`
+- :py:class:`Demethylation`
 
 There are additional subtypes of :py:class:`SelfModification`:
 
@@ -1100,6 +1102,13 @@ class Demyristoylation(Modification):
     """Demyristoylation modification."""
     pass
 
+class Methylation(Modification):
+    """Methylation modification."""
+    pass
+
+class Demethylation(Modification):
+    """Demethylation modification."""
+    pass
 
 @python_2_unicode_compatible
 class RegulateActivity(Statement):

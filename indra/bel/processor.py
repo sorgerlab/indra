@@ -214,10 +214,16 @@ class BelProcessor(object):
                         stmt = Deubiquitination(enz, sub, residue, mod_pos,
                                                 evidence)
 
+                elif mod == 'Methylation':
+                    if rel == 'DirectlyIncreases' or 'Increases':
+                        stmt = Methylation(enz, sub, residue, mod_pos,
+                                              evidence)
+                    elif rel == 'DirectlyDecreases' or 'Decreases':
+                        stmt = Demethylation(enz, sub, residue, mod_pos,
+                                                evidence)
+
                 else:
-                    logger.warning("Unknown modification type!")
-                    logger.warning("Activity: %s, Mod: %s, Mod_Pos: %s" %
-                                   (act_type, mod, mod_pos))
+                    logger.warning("Unknown modification type: %s" % mod)
                 # If we've matched a pattern, mark this as a converted statement
                 if stmt is not None:
                     if is_direct:

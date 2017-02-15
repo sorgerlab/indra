@@ -270,10 +270,32 @@ def update_ncit_map():
               inplace=True)
     df_chebi = get_ncit_df(url_chebi)
     df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
-    df_all = pandas.concat([df_chebi, df_go, df_hgnc])
+
+    # Add the old HGNC mappings
+    df_hgnc_old = pandas.read_csv('ncit_hgnc_map_old.tsv', sep='\t',
+                                  index_col=None, dtype=str)
+    df_hgnc = df_hgnc.append(df_hgnc_old)
+    df_hgnc.sort_values(['Source Code', 'Target Code'], ascending=True,
+                        inplace=True)
+
+    # Add UniProt mappings
+    df_uniprot = pandas.read_csv('Feb2017NCIt-SwissProt.txt', sep='\t',
+                                 index_col=None)
+    up_entries = {'Source Code': [], 'Target Coding Scheme': [],
+                  'Target Code': []}
+    for entry in df_uniprot.iterrows():
+        up_entries['Source Code'].append(entry[1]['code'].strip())
+        up_entries['Target Coding Scheme'].append('UP')
+        up_entries['Target Code'].append(entry[1]['Swiss_Prot'].strip())
+    df_uniprot = pandas.DataFrame.from_dict(up_entries)
+    df_uniprot.sort_values(['Source Code', 'Target Code'], ascending=True,
+                           inplace=True)
+
+    df_all = pandas.concat([df_chebi, df_go, df_hgnc, df_uniprot])
 
     fname = os.path.join(path, 'ncit_map.tsv')
-    df_all.to_csv(fname, sep='\t', columns=['Source Code', 'Target Coding Scheme',
+    df_all.to_csv(fname, sep=b'\t', columns=['Source Code',
+                                        'Target Coding Scheme',
                                         'Target Code'],
               header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
 

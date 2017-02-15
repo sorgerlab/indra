@@ -5,7 +5,7 @@ import glob
 from indra import sparser
 
 base_folder = os.path.join(os.environ['HOME'],
-                           'data/darpa/phase3_eval/sources/sparser-20170206')
+                           'data/darpa/phase3_eval/sources/sparser-20170210')
 
 def get_file_names(base_dir):
     fnames = glob.glob(os.path.join(base_dir, '*.xml'))
@@ -17,6 +17,8 @@ def get_file_stmts(fname):
         xml_bytes = xml_bytes.replace(b'hmsid', b'pmid')
         sp = sparser.process_xml(xml_bytes)
         if sp is None:
+            print('ERROR: Could not process %s' % fname.split('/')[-1])
+            print('----')
             return []
         return sp.statements
 

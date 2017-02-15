@@ -9,8 +9,8 @@ from indra.databases import hgnc_client
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition
 
-#data_file = 'handshake/Korkut et al. Data 12122016.xlsx'
-data_file = 'handshake/Korkut et al. Data 01172017.xlsx'
+data_file = 'data/Korkut et al. Data 01172017.xlsx'
+drug_grounding_file = 'data/drug_grounding.csv'
 
 def read_data(fname):
     """Returns the data as a dictionary."""
@@ -84,8 +84,9 @@ def get_agent_from_upid(up_id):
 
 def get_ras227_genes():
     ras227_file = '../../data/ras_pathway_proteins.csv'
-    df = pandas.read_csv(ras227_file, sep='\t', index_col=None, header=None)
-    gene_names = [x.decode('utf-8') for x in df[0]]
+    df = pandas.read_csv(ras227_file, sep='\t', index_col=None, header=None,
+                         encoding='utf-8')
+    gene_names = [x for x in df[0]]
     return gene_names
 
 def get_all_gene_names(data, out_file='prior_genes.txt'):
@@ -156,8 +157,10 @@ def get_drugs(data):
     drug_abbrevs = sorted(list(drug_abbrevs))
     return drug_abbrevs
 
-def get_drug_targets(fname='drug_grounding.csv'):
-    df = pandas.read_csv(fname, index_col=None, header=None)
+def get_drug_targets(fname=None):
+    if not fname:
+        fname = drug_grounding_file
+    df = pandas.read_csv(fname, index_col=None, header=None, encoding='utf-8')
     abbrevs = df[1]
     target_upids = df[6]
     targets = {}
@@ -176,11 +179,14 @@ def get_single_drug_treatments(data):
             drug_tx.append(cond)
     return drug_tx
 
-def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
+def get_midas_data(data, pkn_abs, pkn_drugs, out_file='MD-korkut.csv'):
     drug_abbrevs = get_drugs(data)
+    drug_abbrevs = [x for x in drug_abbrevs if x in pkn_drugs]
+    print(drug_abbrevs)
     phospho_abs = get_phos_antibodies(data)
     phospho_abs = set(phospho_abs).intersection(set(pkn_abs))
     drug_cols = ['TR:%s:Drugs' % dr for dr in drug_abbrevs]
+    print(drug_cols)
     all_values = []
     for row in data['protein'].iterrows():
         row = row[1]
@@ -189,13 +195,15 @@ def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
         values['TR:SKMEL133:CellLine'] = 1
         for dc in drug_cols:
             values[dc] = 0
+        # control TR columns will be 0 for all but CellLine
+        values_control = copy(values)
         # Get drug conditions for row
         drug_cond = row[1]
         terms = drug_cond.split(',')
         for term in terms:
             da, dose = term.split('|')
-            values['TR:%s:Drugs' % da] = dose
-        values_control = copy(values)
+            if da in drug_abbrevs:
+                values['TR:%s:Drugs' % da] = dose
         # Get data conditions for row
         for ab_name in phospho_abs:
             values['DV:%s' % ab_name] = row[ab_name]
@@ -205,6 +213,22 @@ def get_midas_data(data, pkn_abs, out_file='MD-korkut.csv'):
         all_values.append(values)
         all_values.append(values_control)
     df = pandas.DataFrame.from_records(all_values)
+    # Rename columns in MIDAS the same way they are renamed in SIF
+    def rename_df_columns(df):
+        cols = df.columns.tolist()
+        new_cols = []
+        for c in cols:
+            if c.find('AND') != -1:
+                c = c.replace('AND', 'A_ND')
+            if c.find('-') != -1:
+                c = c.replace('-', '_')
+            if c[3].isdigit():
+                c = c[0:3] + 'abc_' + c[3:]
+            new_cols.append(c)
+        df.columns = new_cols
+        return df
+    df = rename_df_columns(df)
+    df = df.drop_duplicates()
     df.to_csv(out_file, index=False)
     return df
 
