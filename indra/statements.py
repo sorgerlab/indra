@@ -89,6 +89,7 @@ from future.utils import python_2_unicode_compatible
 import os
 import abc
 import sys
+import uuid
 import rdflib
 import logging
 import textwrap
@@ -910,8 +911,16 @@ class Statement(object):
         return True
 
     def to_json(self):
-        """Return serialized Statement as a json string."""
-        return jsonpickle.encode(self)
+        """Return serialized Statement as a json dict."""
+        stmt_type = type(self).__name__
+        evidence = [ev.to_json() for ev in self.evidence]
+        supports = [st.uuid for st in self.supports]
+        supported_by = [st.uuid for st in self.supported_by]
+        json_dict = {'type': stmt_type,
+                     'evidence': evidence,
+                     'supports': supports,
+                     'supported_by': supported_by}
+        return json_dict
 
     @classmethod
     def from_json(cls, json_str):
@@ -1015,6 +1024,7 @@ class Modification(Statement):
         return matches
 
     def to_json(self):
+        json_dict = super(Modification, self).to_json()
         if self.enz is None:
             enz_entry = None
         else:
@@ -1023,10 +1033,8 @@ class Modification(Statement):
             sub_entry = None
         else:
             sub_entry = self.sub.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'enz': enz_entry, 'sub': sub_entry,
-                     'residue': self.residue, 'position': self.position,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict.update({'enz': enz_entry, 'sub': sub_entry,
+                          'residue': self.residue, 'position': self.position})
         return json_dict
 
     @classmethod
