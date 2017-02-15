@@ -34,7 +34,7 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = True
+    reassemble = False
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
     else:
@@ -44,6 +44,9 @@ if __name__ == '__main__':
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
         reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
         extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
+        #########
+        extra_stmts = ac.filter_evidence_source(extra_stmts, ['r3'], 'none')
+        #########
         reading_stmts = reach_stmts + extra_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
                                     save=pjoin(outf, 'gmapped_reading.pkl'))

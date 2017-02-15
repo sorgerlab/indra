@@ -11,17 +11,10 @@ import indra.tools.assemble_corpus as ac
 
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
-    # Filter the INDRA Statements to be put into the model
-    stmts = ac.filter_direct(stmts)
-    stmts = ac.filter_belief(stmts, 0.95)
-    stmts = ac.filter_top_level(stmts)
-    stmts = ac.filter_gene_list(stmts, data_genes, 'all')
-    stmts = filter_enzyme_kinase(stmts)
-    stmts = filter_mod_nokinase(stmts)
-    stmts = filter_transcription_factor(stmts)
-    # Simplify activity types
-    stmts = ac.reduce_activities(stmts)
-
+    # IF YOU DON'T WANT OT RERUN THE PREPROCESSING, LOAD FROM
+    # A PICKLE HERE
+    # stmts = ac.load_statements('pysb_assembler_input.pkl')
+    stmts = preprocess_stmts(stmts, data_genes)
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
@@ -47,7 +40,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     model.add_component(o)
     o = Observable('AKT2p', model.monomers['AKT2'](S474='p'))
     model.add_component(o)
-    o = Observable('AKT3p', model.monomers['AKT3'](S='p'))
+    o = Observable('AKT3p', model.monomers['AKT3'](phospho='p'))
     model.add_component(o)
     o = Observable('ELK1p', model.monomers['ELK1'](S383='p'))
     model.add_component(o)
@@ -57,6 +50,19 @@ def assemble_pysb(stmts, data_genes, out_file):
     base_file, _ = os.path.splitext(out_file)
     pa.export_model('kappa', '%s.ka' % base_file)
     return model
+
+def preprocess_stmts(stmts, data_genes):
+    # Filter the INDRA Statements to be put into the model
+    stmts = ac.filter_direct(stmts)
+    stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.filter_top_level(stmts)
+    stmts = ac.filter_gene_list(stmts, data_genes, 'all')
+    stmts = filter_enzyme_kinase(stmts)
+    stmts = filter_mod_nokinase(stmts)
+    stmts = filter_transcription_factor(stmts)
+    # Simplify activity types
+    stmts = ac.reduce_activities(stmts)
+    return stmts
 
 
 def assemble_index_cards(stmts, out_folder):
