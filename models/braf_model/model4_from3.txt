@@ -1,0 +1,4 @@
+< Vemurafenib binds BRAF V600E.
+---
+> Vemurafenib binds BRAF V600E that is not bound to BRAF V600E.
+> Vemurafenib binds BRAF V600E that is bound to BRAF V600E.

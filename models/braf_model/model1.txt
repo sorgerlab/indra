@@ -1,0 +1,14 @@
+The growth factor ligand EGF binds EGFR.
+The EGFR-EGF complex binds another EGFR-EGF complex.
+The EGFR-EGFR complex binds GRB2.
+EGFR-bound GRB2 binds SOS.
+GRB2-bound SOS binds RAS that is not bound to BRAF V600E.
+SOS-bound RAS binds GTP.
+GTP-bound RAS that is not bound to SOS binds BRAF V600E.
+Vemurafenib binds BRAF V600E.
+Phosphorylated MEK is activated.
+PP2A-alpha dephosphorylates MEK that is not bound to ERK.
+Active MEK that is not bound to PP2A-alpha phosphorylates ERK.
+Phosphorylated ERK is activated.
+DUSP6 dephosphorylates ERK that is not bound to SOS.
+BRAF V600E that is not bound to Vemurafenib phosphorylates MEK.
