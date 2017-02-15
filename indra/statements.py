@@ -791,7 +791,7 @@ class Evidence(object):
                   (self.epistemics == other.epistemics)
         return matches
 
-    def to_json():
+    def to_json(self):
         json_dict = {'source_api': self.source_api,
                      'source_id': self.source_id,
                      'pmid': self.pmid,
@@ -802,13 +802,13 @@ class Evidence(object):
 
     @classmethod
     def from_json(cls, json_dict):
-        source_api = json_dict.get(source_api)
-        source_id = json_dict.get(source_id)
-        pmid = json_dict.get(pmid)
-        text = json_dict.get(text)
-        annotations = json_dict.get(annotations, {})
-        epistemics = json_dict.get(epistemics, {})
-        ev = Evidence(source_api=source_api, souce_id=source_id,
+        source_api = json_dict.get('source_api')
+        source_id = json_dict.get('source_id')
+        pmid = json_dict.get('pmid')
+        text = json_dict.get('text')
+        annotations = json_dict.get('annotations', {})
+        epistemics = json_dict.get('epistemics', {})
+        ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics)
         return ev
@@ -1035,7 +1035,7 @@ class Modification(Statement):
         sub = json_dict.get('sub')
         residue = json_dict.get('residue')
         position = json_dict.get('position')
-        evidence = json_dict.get('evidence')
+        evidence = json_dict.get('evidence', [])
         if enz:
             enz = Agent.from_json(enz)
         if sub:
@@ -1362,7 +1362,7 @@ class RegulateActivity(Statement):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         obj_activity = json_dict.get('obj_activity')
-        evidence = json_dict.get('evidence')
+        evidence = json_dict.get('evidence', [])
         if subj:
             subj = Agent.from_json(subj)
         if obj:
@@ -1552,7 +1552,9 @@ class ActiveForm(Statement):
             logger.warning('ActiveForm is_active missing, defaulting ' +
                            'to True')
             is_active = True
-        stmt = cls(agent, activity, is_active)
+        evidence = json_dict.get('evidence', [])
+        evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(agent, activity, is_active, evidence=evidence)
         return stmt
 
     def __str__(self):
@@ -1836,6 +1838,20 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+    def to_json(self):
+        members = [m.to_json() for m in self.members]
+        evidence = [ev.to_json() for ev in self.evidence]
+        json_dict = {'members': members, 'evidence': evidence}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        members = json_dict.get('members')
+        evidence = json_dict.get('evidence', [])
+        members = [Agent.from_json(m) for m in members]
+        evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(members, evidence=evidence)
+        return stmt
 
 @python_2_unicode_compatible
 class Translocation(Statement):
