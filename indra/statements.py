@@ -94,6 +94,7 @@ import logging
 import textwrap
 import jsonpickle
 from collections import namedtuple
+from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
@@ -130,6 +131,31 @@ class BoundCondition(object):
     def __init__(self, agent, is_bound=True):
         self.agent = agent
         self.is_bound = is_bound
+
+    def to_json(self):
+        if agent is None:
+            agent_entry = None
+        else:
+            agent_entry = self.agent.to_json()
+        json_dict = {'agent': agent_entry, 'is_bound': is_bound}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        agent_entry = json_dict.get('agent')
+        if agent_entry is None:
+            logger.error('BoundCondition missing agent.')
+            return None
+        agent = Agent.from_json(agent_entry)
+        if agent is None:
+            return None
+        is_bound = json_dict.get('is_bound')
+        if is_bound is None:
+            logger.error('BoundCondition missing is_bound, defaulting to True.')
+            is_bound = True
+        bc = BoundCondition(agent, is_bound)
+        assert(unicode_strs(bc))
+        return bc
 
 @python_2_unicode_compatible
 class MutCondition(object):
@@ -168,6 +194,21 @@ class MutCondition(object):
         residue_from_match = (self.residue_from == other.residue_from)
         residue_to_match = (self.residue_to == other.residue_to)
         return (pos_match and residue_from_match and residue_to_match)
+
+    def to_json(self):
+        json_dict = {'position': self.position,
+                     'residue_from': self.residue_from,
+                     'residue_to': self.residue_to}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        position = json_dict.get('position')
+        residue_from = json_dict.get('residue_from')
+        residue_to = json_dict.get('residue_to')
+        mc = cls(position, residue_from, residue_to)
+        assert(unicode_strs(mc))
+        return mc
 
     def __str__(self):
         s = '(%s, %s, %s)' % (self.residue_from, self.position,
@@ -257,6 +298,29 @@ class ModCondition(object):
     def __repr__(self):
         return str(self)
 
+    def to_json(self):
+        json_dict = {'mod_type': self.mod_type,
+                     'residue': self.residue,
+                     'position': self.position,
+                     'is_modified': self.is_modified}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        mod_type = json_dict.get('mod_type')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        is_modified = json_dict.get('is_modified')
+        if not mod_type:
+            logger.error('ModCondition missing mod_type.')
+            return None
+        if is_modified is None:
+            logger.warning('ModCondition missing is_modified, defaulting to True')
+            is_modified = True
+        mc = ModCondition(mod_type, residue, position, is_modified)
+        assert(unicode_strs(mc))
+        return mc
+
     def equals(self, other):
         type_match = (self.mod_type == other.mod_type)
         residue_match = (self.residue == other.residue)
@@ -319,6 +383,27 @@ class ActivityCondition(object):
     def matches_key(self):
         key = (str(self.activity_type), str(self.is_active))
         return str(key)
+
+    def to_json(self):
+        json_dict = {'activity_type': self.activity_type,
+                     'is_active': self.is_active}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        activity_type = json_dict.get('activity_type')
+        is_active = json_dict.get('is_active')
+        if not activity_type:
+            logger.error('ActivityCondition missing activity_type, ' +
+                         'defaulting to `activity`')
+            activity_type = 'activity'
+        if is_active is None:
+            logger.warning('ActivityCondition missing is_active, ' +
+                           'defaulting to True')
+            is_active = True
+        ac = ActivityCondition(activity_type, is_active)
+        assert(unicode_strs(ac))
+        return ac
 
     def __str__(self):
         s = '%s' % self.activity_type
