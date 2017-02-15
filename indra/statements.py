@@ -709,6 +709,7 @@ class Agent(object):
         agent.mutations = [MutCondition.from_json(mut) for mut in mutations]
         agent.bound_conditions = [BoundCondition.from_json(bc)
                                   for bc in bound_conditions]
+        agent.location = location
         if activity:
             agent.activity = ActivityCondition.from_json(activity)
         return agent
@@ -1525,6 +1526,34 @@ class ActiveForm(Statement):
                return True
         else:
             return False
+
+    def to_json(self):
+        json_dict = {'agent': self.agent.to_json(),
+                     'activity': self.activity,
+                     'is_active': self.is_active,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        agent = json_dict.get('agent')
+        if agent:
+            agent = Agent.from_json(agent)
+        else:
+            logger.error('ActiveForm statement missing agent')
+            return None
+        activity = json_dict.get('activity')
+        is_active = json_dict.get('is_active')
+        if activity is None:
+            logger.warning('ActiveForm activity missing, defaulting ' +
+                           'to `activity`')
+            activity = 'activity'
+        if is_active is None:
+            logger.warning('ActiveForm is_active missing, defaulting ' +
+                           'to True')
+            is_active = True
+        stmt = cls(agent, activity, is_active)
+        return stmt
 
     def __str__(self):
         s = ("ActiveForm(%s, %s, %s)" %
