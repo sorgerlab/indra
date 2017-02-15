@@ -1022,7 +1022,8 @@ class Modification(Statement):
             sub_entry = None
         else:
             sub_entry = self.sub.to_json()
-        json_dict = {'enz': enz_entry, 'sub': sub_entry,
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'enz': enz_entry, 'sub': sub_entry,
                      'residue': self.residue, 'position': self.position,
                      'evidence': [ev.to_json() for ev in self.evidence]}
         return json_dict
@@ -1339,6 +1340,36 @@ class RegulateActivity(Statement):
                 return False
         else:
             return False
+
+    def to_json(self):
+        if self.subj is None:
+            subj_entry = None
+        else:
+            subj_entry = self.subj.to_json()
+        if self.obj is None:
+            obj_entry = None
+        else:
+            obj_entry = self.obj.to_json()
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'subj': subj_entry, 'obj': obj_entry,
+                     'obj_activity': self.obj_activity,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj = json_dict.get('obj')
+        obj_activity = json_dict.get('obj_activity')
+        evidence = json_dict.get('evidence')
+        if subj:
+            subj = Agent.from_json(subj)
+        if obj:
+            obj = Agent.from_json(obj)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(subj, obj, obj_activity, evidence=evidence)
+        return stmt
 
     def __str__(self):
         obj_act_str = ', %s' % self.obj_activity if \
