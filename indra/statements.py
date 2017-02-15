@@ -1730,6 +1730,34 @@ class RasGef(Statement):
         matches = super(RasGef, self).equals(other)
         return matches
 
+    def to_json(self):
+        if self.gef is None:
+            gef_entry = None
+        else:
+            gef_entry = self.gef.to_json()
+        if self.ras is None:
+            ras_entry = None
+        else:
+            ras_entry = self.ras.to_json()
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'gef': gef_entry, 'ras': ras_entry,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        gef = json_dict.get('gef')
+        ras = json_dict.get('ras')
+        evidence = json_dict.get('evidence')
+        if gef:
+            gef = Agent.from_json(gef)
+        if ras:
+            ras = Agent.from_json(ras)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(gef, ras, evidence=evidence)
+        return stmt
+
 
 @python_2_unicode_compatible
 class RasGap(Statement):
@@ -1791,6 +1819,34 @@ class RasGap(Statement):
     def equals(self, other):
         matches = super(RasGap, self).equals(other)
         return matches
+
+    def to_json(self):
+        if self.gap is None:
+            gap_entry = None
+        else:
+            gap_entry = self.gap.to_json()
+        if self.ras is None:
+            ras_entry = None
+        else:
+            ras_entry = self.ras.to_json()
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'gap': gap_entry, 'ras': ras_entry,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        gap = json_dict.get('gap')
+        ras = json_dict.get('ras')
+        evidence = json_dict.get('evidence')
+        if gap:
+            gap = Agent.from_json(gap)
+        if ras:
+            ras = Agent.from_json(ras)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(gap, ras, evidence=evidence)
+        return stmt
 
 
 @python_2_unicode_compatible

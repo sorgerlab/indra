@@ -62,3 +62,15 @@ def test_translocation():
     jd = stmt.to_json()
     jd2 = Translocation.from_json(jd).to_json()
     assert(jd == jd2)
+
+def test_rasgap():
+    stmt = RasGap(Agent('a'), Agent('b'), evidence=[ev])
+    jd = stmt.to_json()
+    jd2 = RasGap.from_json(jd).to_json()
+    assert(jd == jd2)
+
+def test_rasgef():
+    stmt = RasGef(Agent('a'), Agent('b'), evidence=[ev])
+    jd = stmt.to_json()
+    jd2 = RasGef.from_json(jd).to_json()
+    assert(jd == jd2)
