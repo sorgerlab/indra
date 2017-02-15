@@ -17,7 +17,7 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
-def read_sources():
+def read_extra_sources():
     trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
     r3_stmts = process_r3.read_stmts(process_r3.active_forms_file)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = False
+    reassemble = True
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
     else:
@@ -42,10 +42,12 @@ if __name__ == '__main__':
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
-        reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
+        reading_stmts = reach_stmts + extra_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
                                     save=pjoin(outf, 'gmapped_reading.pkl'))
-        stmts = prior_stmts + reading_stmts
+        stmts = prior_stmts + reading_stmts + extra_stmts
 
         stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_genes_only(stmts, specific_only=False)
