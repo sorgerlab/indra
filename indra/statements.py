@@ -1126,6 +1126,30 @@ class SelfModification(Statement):
                   (self.position == other.position)
         return matches
 
+    def to_json(self):
+        if self.enz is None:
+            enz_entry = None
+        else:
+            enz_entry = self.enz.to_json()
+        stmt_type = type(self).__name__
+        json_dict = {'type': stmt_type, 'enz': enz_entry,
+                     'residue': self.residue, 'position': self.position,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        enz = json_dict.get('enz')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        evidence = json_dict.get('evidence', [])
+        if enz:
+            enz = Agent.from_json(enz)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(enz, residue, position, evidence=evidence)
+        return stmt
+
 
 class Phosphorylation(Modification):
     """Phosphorylation modification.
@@ -1916,6 +1940,29 @@ class Translocation(Statement):
         key = (type(self), self.agent.matches_key(), str(self.from_location),
                 str(self.to_location))
         return str(key)
+
+    def to_json(self):
+        json_dict = {'agent': self.agent.to_json(),
+                     'from_location': self.from_location,
+                     'to_location': self.to_location,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        agent = json_dict.get('agent')
+        if agent:
+            agent = Agent.from_json(agent)
+        else:
+            logger.error('Translocation statement missing agent')
+            return None
+        from_location = json_dict.get('from_location')
+        to_location = json_dict.get('to_location')
+        evidence = json_dict.get('evidence', [])
+        evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(agent, from_location, to_location, evidence=evidence)
+        return stmt
+
 
 @python_2_unicode_compatible
 class RegulateAmount(Statement):
