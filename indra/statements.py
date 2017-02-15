@@ -674,6 +674,50 @@ class Agent(object):
 
         return matches
 
+    def to_json(self):
+        if self.activity is None:
+            activity_entry = None
+        else:
+            activity_entry = self.activity.to_json()
+        json_dict = {'name': self.name,
+                     'db_refs': self.db_refs,
+                     'mods': [mc.to_json() for mc in self.mods],
+                     'mutations': [mc.to_json() for mc in self.mutations],
+                     'activity': activity_entry,
+                     'location': self.location,
+                     'bound_conditions': [bc.to_json() for bc in
+                                          self.bound_conditions]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        name = json_dict.get('name')
+        db_refs = json_dict.get('db_refs')
+        mods = json_dict.get('mods')
+        mutations = json_dict.get('mutations')
+        activity = json_dict.get('activity')
+        bound_conditions = json_dict.get('bound_conditions')
+        location = json_dict.get('location')
+
+        if not name:
+            logger.error('Agent missing name.')
+            return None
+        if not db_refs:
+            db_refs = {}
+        agent = Agent(name, db_refs=db_refs)
+        if mods:
+            agent.mods = [ModCondition.from_json(mod) for mod in mods]
+        if mutations:
+            agent.mutations = [MutCondition.from_json(mut) for mut in mutations]
+        if activity:
+            agent.activity = ActivityCondition.from_json(activity)
+        if location:
+            agent.location = location
+        if bound_conditions:
+            agent.bound_conditions = [BoundCondition.from_json(bc)
+                                      for bc in bound_conditions]
+        return agent
+
     def __str__(self):
         attr_strs = []
         if self.mods:
