@@ -114,7 +114,7 @@ class Preassembler(object):
         """
         unique_stmts = []
         # Remove exact duplicates using a set() call, then make copies:
-        st = list(deepcopy(set(stmts)))
+        st = list(set(stmts))
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
