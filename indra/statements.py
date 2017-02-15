@@ -692,11 +692,11 @@ class Agent(object):
     @classmethod
     def from_json(cls, json_dict):
         name = json_dict.get('name')
-        db_refs = json_dict.get('db_refs')
-        mods = json_dict.get('mods')
-        mutations = json_dict.get('mutations')
+        db_refs = json_dict.get('db_refs', {})
+        mods = json_dict.get('mods', [])
+        mutations = json_dict.get('mutations', [])
         activity = json_dict.get('activity')
-        bound_conditions = json_dict.get('bound_conditions')
+        bound_conditions = json_dict.get('bound_conditions', [])
         location = json_dict.get('location')
 
         if not name:
@@ -705,17 +705,12 @@ class Agent(object):
         if not db_refs:
             db_refs = {}
         agent = Agent(name, db_refs=db_refs)
-        if mods:
-            agent.mods = [ModCondition.from_json(mod) for mod in mods]
-        if mutations:
-            agent.mutations = [MutCondition.from_json(mut) for mut in mutations]
+        agent.mods = [ModCondition.from_json(mod) for mod in mods]
+        agent.mutations = [MutCondition.from_json(mut) for mut in mutations]
+        agent.bound_conditions = [BoundCondition.from_json(bc)
+                                  for bc in bound_conditions]
         if activity:
             agent.activity = ActivityCondition.from_json(activity)
-        if location:
-            agent.location = location
-        if bound_conditions:
-            agent.bound_conditions = [BoundCondition.from_json(bc)
-                                      for bc in bound_conditions]
         return agent
 
     def __str__(self):
@@ -794,6 +789,28 @@ class Evidence(object):
                   (self.annotations == other.annotations) and\
                   (self.epistemics == other.epistemics)
         return matches
+
+    def to_json():
+        json_dict = {'source_api': self.source_api,
+                     'source_id': self.source_id,
+                     'pmid': self.pmid,
+                     'text': self.text,
+                     'annotations': self.annotations,
+                     'epistemics': self.epistemics}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        source_api = json_dict.get(source_api)
+        source_id = json_dict.get(source_id)
+        pmid = json_dict.get(pmid)
+        text = json_dict.get(text)
+        annotations = json_dict.get(annotations, {})
+        epistemics = json_dict.get(epistemics, {})
+        ev = Evidence(source_api=source_api, souce_id=source_id,
+                      pmid=pmid, text=text, annotations=annotations,
+                      epistemics=epistemics)
+        return ev
 
     def __str__(self):
         ev_str = 'Evidence(%s, %s, %s, %s)' % \
@@ -995,6 +1012,36 @@ class Modification(Statement):
                   (self.residue == other.residue) and\
                   (self.position == other.position)
         return matches
+
+    def to_json(self):
+        if self.enz is None:
+            enz_entry = None
+        else:
+            enz_entry = self.enz.to_json()
+        if self.sub is None:
+            sub_entry = None
+        else:
+            sub_entry = self.sub.to_json()
+        json_dict = {'enz': enz_entry, 'sub': sub_entry,
+                     'residue': self.residue, 'position': self.position,
+                     'evidence': [ev.to_json() for ev in self.evidence]}
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        enz = json_dict.get('enz')
+        sub = json_dict.get('sub')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        evidence = json_dict.get('evidence')
+        if enz:
+            enz = Agent.from_json(enz)
+        if sub:
+            sub = Agent.from_json(sub)
+        if evidence:
+            evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt = cls(enz, sub, residue, position, evidence=evidence)
+        return stmt
 
     def __str__(self):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
