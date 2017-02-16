@@ -858,6 +858,7 @@ class Statement(object):
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
+        self.uuid = uuid.uuid4()
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -916,30 +917,28 @@ class Statement(object):
         evidence = [ev.to_json() for ev in self.evidence]
         supports = [st.uuid for st in self.supports]
         supported_by = [st.uuid for st in self.supported_by]
-        json_dict = {'type': stmt_type,
+        json_dict = {'id': self.uuid,
+                     'type': stmt_type,
                      'evidence': evidence,
                      'supports': supports,
                      'supported_by': supported_by}
         return json_dict
 
     @classmethod
-    def from_json(cls, json_str):
-        """Return Statement object by deserializing json string."""
-        try:
-            stmt = jsonpickle.decode(json_str)
-            if isinstance(stmt, cls):
-                return stmt
-            else:
-                logger.error('Could not construct Statement from json: ' + 
-                             'Deserialized object is of type %s' % 
-                             type(stmt).__name__)
-                return None
-        except ValueError as e:
-            logger.error('Could not construct Statement from json: %s' % e)
-            return None
-        except IndexError as e:
-            logger.error('Could not construct Statement from json: %s' % e)
-            return None
+    def from_json(cls, json_dict):
+        stmt_type = json_dict.get('type')
+        stmt_cls = getattr(sys.modules[__name__], stmt_type)
+        stmt = stmt_cls.from_json(json_dict)
+        evidence = json_dict.get('evidence', [])
+        stmt.evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt.supports = json_dict.get('supports', [])
+        stmt.supported_by = json_dict.get('supported_by', [])
+        stmt.belief = json_dict.get('belief', 1.0)
+        stmt_id = json_dict.get('id')
+        if not stmt_id:
+            stmt_id = uuid.uuid4()
+        stmt.uuid = stmt_id
+        return stmt
 
 
 @python_2_unicode_compatible
@@ -1048,9 +1047,7 @@ class Modification(Statement):
             enz = Agent.from_json(enz)
         if sub:
             sub = Agent.from_json(sub)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(enz, sub, residue, position, evidence=evidence)
+        stmt = cls(enz, sub, residue, position)
         return stmt
 
     def __str__(self):
@@ -1135,6 +1132,7 @@ class SelfModification(Statement):
         return matches
 
     def to_json(self):
+        json_dict = super(SelfModification, self).to_json()
         if self.enz is None:
             enz_entry = None
         else:
@@ -1150,12 +1148,9 @@ class SelfModification(Statement):
         enz = json_dict.get('enz')
         residue = json_dict.get('residue')
         position = json_dict.get('position')
-        evidence = json_dict.get('evidence', [])
         if enz:
             enz = Agent.from_json(enz)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(enz, residue, position, evidence=evidence)
+        stmt = cls(enz, residue, position)
         return stmt
 
 
@@ -1375,6 +1370,7 @@ class RegulateActivity(Statement):
             return False
 
     def to_json(self):
+        json_dict = super(RegulateActivity, self).to_json()
         if self.subj is None:
             subj_entry = None
         else:
@@ -1394,14 +1390,11 @@ class RegulateActivity(Statement):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         obj_activity = json_dict.get('obj_activity')
-        evidence = json_dict.get('evidence', [])
         if subj:
             subj = Agent.from_json(subj)
         if obj:
             obj = Agent.from_json(obj)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(subj, obj, obj_activity, evidence=evidence)
+        stmt = cls(subj, obj, obj_activity)
         return stmt
 
     def __str__(self):
@@ -1560,10 +1553,10 @@ class ActiveForm(Statement):
             return False
 
     def to_json(self):
-        json_dict = {'agent': self.agent.to_json(),
-                     'activity': self.activity,
-                     'is_active': self.is_active,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict = super(ActiveForm, self).to_json()
+        json_dict.update({'agent': self.agent.to_json(),
+                          'activity': self.activity,
+                          'is_active': self.is_active})
         return json_dict
 
     @classmethod
@@ -1584,9 +1577,7 @@ class ActiveForm(Statement):
             logger.warning('ActiveForm is_active missing, defaulting ' +
                            'to True')
             is_active = True
-        evidence = json_dict.get('evidence', [])
-        evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(agent, activity, is_active, evidence=evidence)
+        stmt = cls(agent, activity, is_active)
         return stmt
 
     def __str__(self):
@@ -1739,6 +1730,7 @@ class RasGef(Statement):
         return matches
 
     def to_json(self):
+        json_dict = super(RasGef, self).to_json()
         if self.gef is None:
             gef_entry = None
         else:
@@ -1747,9 +1739,8 @@ class RasGef(Statement):
             ras_entry = None
         else:
             ras_entry = self.ras.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'gef': gef_entry, 'ras': ras_entry,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict.update({'gef': gef_entry,
+                          'ras': ras_entry})
         return json_dict
 
     @classmethod
@@ -1761,9 +1752,7 @@ class RasGef(Statement):
             gef = Agent.from_json(gef)
         if ras:
             ras = Agent.from_json(ras)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(gef, ras, evidence=evidence)
+        stmt = cls(gef, ras)
         return stmt
 
 
@@ -1829,6 +1818,7 @@ class RasGap(Statement):
         return matches
 
     def to_json(self):
+        json_dict = super(RasGap, self).to_json()
         if self.gap is None:
             gap_entry = None
         else:
@@ -1837,9 +1827,7 @@ class RasGap(Statement):
             ras_entry = None
         else:
             ras_entry = self.ras.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'gap': gap_entry, 'ras': ras_entry,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict.update({'gap': gap_entry, 'ras': ras_entry})
         return json_dict
 
     @classmethod
@@ -1851,9 +1839,7 @@ class RasGap(Statement):
             gap = Agent.from_json(gap)
         if ras:
             ras = Agent.from_json(ras)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(gap, ras, evidence=evidence)
+        stmt = cls(gap, ras)
         return stmt
 
 
@@ -1927,9 +1913,9 @@ class Complex(Statement):
         return matches
 
     def to_json(self):
+        json_dict = super(Complex, self).to_json()
         members = [m.to_json() for m in self.members]
-        evidence = [ev.to_json() for ev in self.evidence]
-        json_dict = {'members': members, 'evidence': evidence}
+        json_dict.update({'members': members})
         return json_dict
 
     @classmethod
@@ -1937,8 +1923,7 @@ class Complex(Statement):
         members = json_dict.get('members')
         evidence = json_dict.get('evidence', [])
         members = [Agent.from_json(m) for m in members]
-        evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(members, evidence=evidence)
+        stmt = cls(members)
         return stmt
 
 @python_2_unicode_compatible
@@ -2006,10 +1991,10 @@ class Translocation(Statement):
         return str(key)
 
     def to_json(self):
-        json_dict = {'agent': self.agent.to_json(),
-                     'from_location': self.from_location,
-                     'to_location': self.to_location,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict = super(Translocation, self).to_json()
+        json_dict.update({'agent': self.agent.to_json(),
+                          'from_location': self.from_location,
+                          'to_location': self.to_location})
         return json_dict
 
     @classmethod
@@ -2022,9 +2007,7 @@ class Translocation(Statement):
             return None
         from_location = json_dict.get('from_location')
         to_location = json_dict.get('to_location')
-        evidence = json_dict.get('evidence', [])
-        evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(agent, from_location, to_location, evidence=evidence)
+        stmt = cls(agent, from_location, to_location)
         return stmt
 
 
@@ -2058,6 +2041,7 @@ class RegulateAmount(Statement):
         self.obj = agent_list[1]
 
     def to_json(self):
+        json_dict = super(RegulateAmount, self).to_json()
         if self.subj is None:
             subj_entry = None
         else:
@@ -2066,9 +2050,7 @@ class RegulateAmount(Statement):
             obj_entry = None
         else:
             obj_entry = self.obj.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'subj': subj_entry, 'obj': obj_entry,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        json_dict.update({'subj': subj_entry, 'obj': obj_entry})
         return json_dict
 
     @classmethod
@@ -2080,9 +2062,7 @@ class RegulateAmount(Statement):
             subj = Agent.from_json(subj)
         if obj:
             obj = Agent.from_json(obj)
-        if evidence:
-            evidence = [Evidence.from_json(ev) for ev in evidence]
-        stmt = cls(subj, obj, evidence=evidence)
+        stmt = cls(subj, obj)
         return stmt
 
     def refinement_of(self, other, hierarchies):
