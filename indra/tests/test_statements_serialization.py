@@ -23,54 +23,54 @@ def test_agent_mod_condition():
 def test_modification():
     stmt = Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev])
     jd = stmt.to_json()
-    jd2 = Phosphorylation.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_selfmodification():
     stmt = Autophosphorylation(Agent('a'), 'Y', '1234', evidence=[ev])
     jd = stmt.to_json()
-    jd2 = Autophosphorylation.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_activation():
     stmt = Activation(Agent('a'), Agent('b'), 'kinase', evidence=[ev])
     jd = stmt.to_json()
-    jd2 = Activation.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_amount():
     stmt = IncreaseAmount(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
-    jd2 = IncreaseAmount.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_active_form():
     stmt = ActiveForm(Agent('a', location='nucleus'), 'kinase', False,
                       evidence=[ev])
     jd = stmt.to_json()
-    jd2 = ActiveForm.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_complex():
     stmt = Complex([Agent('a'), Agent('b')], evidence=[ev])
     jd = stmt.to_json()
-    jd2 = Complex.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_translocation():
     stmt = Translocation(Agent('a'), 'cytoplasm', 'nucleus', evidence=[ev])
     jd = stmt.to_json()
-    jd2 = Translocation.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_rasgap():
     stmt = RasGap(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
-    jd2 = RasGap.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_rasgef():
     stmt = RasGef(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
-    jd2 = RasGef.from_json(jd).to_json()
+    jd2 = Statement.from_json(jd).to_json()
     assert(jd == jd2)
