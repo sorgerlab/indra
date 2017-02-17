@@ -229,6 +229,41 @@ class MechLinker(object):
         return linked_stmts
 
     @staticmethod
+    def infer_activations(stmts):
+        linked_stmts = []
+        act_stmts = get_statement_type(stmts, RegulateActivity)
+        af_stmts = get_statement_type(stmts, ActiveForm)
+        mod_stmts = get_statement_type(stmts, Modification)
+        for af_stmt, mod_stmt in itertools.product(*(af_stmts, mod_stmts)):
+            # There has to be an enzyme and the substrate and the
+            # agent of the active form have to match
+            if mod_stmt.enz is None or \
+                (not af_stmt.agent.entity_matches(mod_stmt.sub)):
+                continue
+            # We now check the modifications to make sure they are consistent
+            if not af_stmt.agent.mods:
+                continue
+            found = False
+            for mc in af_stmt.agent.mods:
+                if stmt_mod_map.get(mc.mod_type) == mod_stmt.__class__ and \
+                    mc.residue == mod_stmt.residue and \
+                    mc.position == mod_stmt.position:
+                    found = True
+            if not found:
+                continue
+            # Collect evidence
+            ev = mod_stmt.evidence
+            # Finally, check the polarity of the ActiveForm
+            if af_stmt.is_active:
+                st = Activation(mod_stmt.enz, mod_stmt.agent, af_stmt.activity,
+                                evidence=ev)
+            else:
+                st = Inhibition(mod_stmt.enz, mod_stmt.agent, af_stmt.activity,
+                                evidence=ev)
+            linked_stmts.append(LinkedStatement([af_stmt, mod_stmt], st))
+        return linked_stmts
+
+    @staticmethod
     def infer_active_forms(stmts):
         # Infer ActiveForm from RegulateActivity + Modification
         linked_stmts = []
