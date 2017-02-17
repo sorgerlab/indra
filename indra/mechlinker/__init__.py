@@ -7,6 +7,7 @@ import itertools
 from copy import deepcopy
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
+from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
 
 logger = logging.getLogger('mechlinker')
 
@@ -226,6 +227,37 @@ class MechLinker(object):
         """
         linked_stmts = self.infer_active_forms(self.statements)
         linked_stmts += self.infer_modifications(self.statements)
+        return linked_stmts
+
+    def replace_complexes(self, linked_stmts=None):
+        if not linked_stmts:
+            linked_stmts = self.infer_complexes(self.statements)
+        new_stmts = []
+        for stmt in self.statements:
+            if not isinstance(stmt, Complex):
+                new_stmts.append(stmt)
+                continue
+            found = False
+            for linked_stmt in linked_stmts:
+                if linked_stmt.refinement_of(stmt, eh):
+                    found = True
+            if not found:
+                new_stmts.append(stmt)
+            else:
+                logger.info('Removing complex: %s' % stmt)
+        self.statements = new_stmts
+
+    @staticmethod
+    def infer_complexes(stmts):
+        interact_stmts = get_statement_type(stmts, Modification)
+        interact_stmts += get_statement_type(stmts, RasGap)
+        interact_stmts += get_statement_type(stmts, RasGef)
+        linked_stmts = []
+        for mstmt in interact_stmts:
+            if mstmt.enz is None:
+                continue
+            st = Complex([mstmt.enz, mstmt.sub], evidence=mstmt.evidence)
+            linked_stmts.append(st)
         return linked_stmts
 
     def replace_activations(self, linked_stmts=None):
