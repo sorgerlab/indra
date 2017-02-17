@@ -6,8 +6,7 @@ import networkx
 import itertools
 from copy import deepcopy
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import activity_hierarchy as ah
-from indra.preassembler.hierarchy_manager import entity_hierarchy as eh
+from indra.preassembler.hierarchy_manager import hierarchies
 
 logger = logging.getLogger('mechlinker')
 
@@ -239,7 +238,7 @@ class MechLinker(object):
                 continue
             found = False
             for linked_stmt in linked_stmts:
-                if linked_stmt.refinement_of(stmt, eh):
+                if linked_stmt.refinement_of(stmt, hierarchies):
                     found = True
             if not found:
                 new_stmts.append(stmt)
@@ -250,8 +249,6 @@ class MechLinker(object):
     @staticmethod
     def infer_complexes(stmts):
         interact_stmts = get_statement_type(stmts, Modification)
-        interact_stmts += get_statement_type(stmts, RasGap)
-        interact_stmts += get_statement_type(stmts, RasGef)
         linked_stmts = []
         for mstmt in interact_stmts:
             if mstmt.enz is None:
@@ -464,9 +461,9 @@ class BaseAgent(object):
     def make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
-            if ah.isa('INDRA', a1, 'INDRA', a2):
+            if hierarchies['activity'].isa('INDRA', a1, 'INDRA', a2):
                 self.activity_graph.add_edge(a2, a1)
-            if ah.isa('INDRA', a2, 'INDRA', a1):
+            if hierarchies['activity'].isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.add_edge(a1, a2)
 
     def add_activity(self, activity_type):
