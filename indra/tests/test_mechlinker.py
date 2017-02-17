@@ -133,3 +133,17 @@ def test_replace_activations():
     assert(len(ml.statements) == 2)
     print(ml.statements)
 
+def test_infer_complexes():
+    phos = Phosphorylation(Agent('b'), Agent('a'))
+    linked_stmts = MechLinker.infer_complexes([phos])
+    assert(len(linked_stmts) == 1)
+    print(linked_stmts)
+
+def test_replace_complexes():
+    phos = Phosphorylation(Agent('b'), Agent('a'))
+    cplx = Complex([Agent('a'), Agent('b')])
+    ml = MechLinker([phos, cplx])
+    ml.replace_complexes()
+    assert(len(ml.statements) == 1)
+    print(ml.statements)
+
