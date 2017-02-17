@@ -115,3 +115,11 @@ def test_require_active_forms_act1():
     assert(len(ml.statements) == 2)
     assert(ml.statements[1].subj.mods)
 
+def test_infer_activations():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    phos = Phosphorylation(Agent('b'), Agent('a'))
+    linked_stmts = MechLinker.infer_activations([af, phos])
+    assert(len(linked_stmts) == 1)
+    print(linked_stmts)
+
