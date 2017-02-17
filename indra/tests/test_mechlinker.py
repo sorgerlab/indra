@@ -123,3 +123,13 @@ def test_infer_activations():
     assert(len(linked_stmts) == 1)
     print(linked_stmts)
 
+def test_replace_activations():
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    phos = Phosphorylation(Agent('b'), Agent('a'))
+    act = Activation(Agent('b'), Agent('a'))
+    ml = MechLinker([af, phos, act])
+    ml.replace_activations()
+    assert(len(ml.statements) == 2)
+    print(ml.statements)
+

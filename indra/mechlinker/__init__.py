@@ -228,6 +228,27 @@ class MechLinker(object):
         linked_stmts += self.infer_modifications(self.statements)
         return linked_stmts
 
+    def replace_activations(self, linked_stmts=None):
+        if not linked_stmts:
+            linked_stmts = self.infer_activations(self.statements)
+        new_stmts = []
+        for stmt in self.statements:
+            if not isinstance(stmt, RegulateActivity):
+                new_stmts.append(stmt)
+                continue
+            found = False
+            for linked_stmt in linked_stmts:
+                inferred_stmt = linked_stmt.inferred_stmt
+                if stmt.is_activation == inferred_stmt.is_activation and \
+                    stmt.subj.entity_matches(inferred_stmt.subj) and \
+                    stmt.obj.entity_matches(inferred_stmt.obj):
+                        found = True
+            if not found:
+                new_stmts.append(stmt)
+            else:
+                logger.info('Removing activation: %s' % stmt)
+        self.statements = new_stmts
+
     @staticmethod
     def infer_activations(stmts):
         linked_stmts = []
@@ -255,10 +276,10 @@ class MechLinker(object):
             ev = mod_stmt.evidence
             # Finally, check the polarity of the ActiveForm
             if af_stmt.is_active:
-                st = Activation(mod_stmt.enz, mod_stmt.agent, af_stmt.activity,
+                st = Activation(mod_stmt.enz, mod_stmt.sub, af_stmt.activity,
                                 evidence=ev)
             else:
-                st = Inhibition(mod_stmt.enz, mod_stmt.agent, af_stmt.activity,
+                st = Inhibition(mod_stmt.enz, mod_stmt.sub, af_stmt.activity,
                                 evidence=ev)
             linked_stmts.append(LinkedStatement([af_stmt, mod_stmt], st))
         return linked_stmts
