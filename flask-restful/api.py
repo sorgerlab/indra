@@ -1,45 +1,54 @@
-from flask import Flask, request
-from flask_restful import Resource, Api, reqparse
-from indra import reach
-from indra.statements import *
 import json
+from bottle import route, run, request, post, default_app
+from indra import trips, reach, bel, biopax
+from indra.statements import *
 
-app = Flask(__name__)
-api = Api(app)
-parser = reqparse.RequestParser()
-parser.add_argument('txt')
-parser.add_argument('json')
 
-class InputText(Resource):
-    def post(self):
-        args = parser.parse_args()
-        txt = args['txt']
-	rp = reach.process_text(txt, offline=False)
-	st = rp.statements
-	json_statements = {}
-        json_statements['statements'] = []
-	for s in st:
-            s_json = s.to_json()
-            json_statements['statements'].append(s_json)
-        json_statements = json.dumps(json_statements)
-        return json_statements, 201
+@route('/trips/process_text', method='POST')
+def trips_process_text():
+    body = json.load(request.body)
+    text = body.get('text')
+    tp = trips.process_text(text)
+    if tp and tp.statements:
+        stmts = json.dumps([json.loads(st.to_json()) for st
+                            in tp.statements])
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
 
-api.add_resource(InputText, '/parse')
 
-class InputStmtJSON(Resource):
-    def post(self):
-        args = parser.parse_args()
-        print(args)
-        json_data = args['json']
-        json_dict = json.loads(json_data)
-	st = []
-	for j in json_dict['statements']:
-            s = Statement.from_json(j)
-            print(s)
-            st.append(s)
-        return 201
+@route('/reach/process_text', method='POST')
+def reach_process_text():
+    body = json.load(request.body)
+    text = body.get('text')
+    rp = reach.process_text(text)
+    if rp and rp.statements:
+        stmts = json.dumps([json.loads(st.to_json()) for st
+                            in rp.statements])
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
 
-api.add_resource(InputStmtJSON, '/load')
+
+@route('/reach/process_pmc', method='POST')
+def reach_process_pmc():
+    body = json.load(request.body)
+    pmcid = body.get('pmcid')
+    rp = reach.process_pmc(pmcid)
+    if rp and rp.statements:
+        stmts = json.dumps([json.loads(st.to_json()) for st
+                            in rp.statements])
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app = default_app()
+    run(app)
