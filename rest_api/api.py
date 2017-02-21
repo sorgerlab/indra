@@ -3,7 +3,8 @@ import logging
 from bottle import route, run, request, default_app
 from indra import trips, reach, bel, biopax
 from indra.statements import *
-from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler
+from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
+                             CyJSAssembler
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -123,6 +124,26 @@ def assemble_grapg():
     res = {'model': model_str}
     return res
 
+### CyJS ###
+
+@route('/assemblers/cyjs', method='POST')
+def assemble_cyjs():
+    body = json.load(request.body)
+    stmts_str = body.get('statements')
+    stmts = _stmts_from_json(stmts_str)
+    cja = CyJSAssembler()
+    cja.add_statements(stmts)
+    cja.make_model(grouping=True,
+                   drop_virtual_edges=False,
+                   add_edge_weights=True)
+    line = body.get('line')
+    if line is not None:
+        cja.set_context(cell_type = line,
+                        bin_expression = True,
+                        n_bins = 9)
+    model_str = cja.print_cyjs()
+    return model_str
+
 def _stmts_to_json(stmts):
     stj = json.dumps([json.loads(st.to_json()) for st in stmts])
     return stj
@@ -135,3 +156,4 @@ def _stmts_from_json(stmts_str):
 if __name__ == '__main__':
     app = default_app()
     run(app)
+
