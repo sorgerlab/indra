@@ -1,6 +1,6 @@
 import json
 import logging
-from bottle import route, run, request, default_app
+from bottle import route, run, request, default_app, response
 from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
@@ -8,6 +8,14 @@ from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
+
+### ALLOW CORS ###
+def allow_cors(func):
+    """ this is a decorator which enable CORS for specified endpoint """
+    def wrapper(*args, **kwargs):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return func(*args, **kwargs)
+    return wrapper
 
 ###### INPUT PROCESSING #######
 
@@ -41,6 +49,7 @@ def trips_process_xml():
 
 ### REACH ###
 @route('/reach/process_text', method='POST')
+@allow_cors
 def reach_process_text():
     body = json.load(request.body)
     text = body.get('text')
@@ -191,6 +200,7 @@ def assemble_graph():
 ### CyJS ###
 
 @route('/assemblers/cyjs', method='POST')
+@allow_cors
 def assemble_cyjs():
     body = json.load(request.body)
     stmts_str = body.get('statements')
