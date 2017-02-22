@@ -26,7 +26,12 @@ class PybelAssembler(object):
         belgraph = pybel.BELGraph()
         braf = ('Protein', 'HGNC', 'BRAF')
         mek = ('Protein', 'HGNC', 'MAP2K1')
+        belgraph.add_node(braf, {'function': 'Protein', 'name':'BRAF',
+                                 'namespace':'HGNC'})
+        belgraph.add_node(mek, {'function': 'Protein', 'name':'MAP2K1',
+                                'namespace':'HGNC'})
         edge = {'annotations': {},
+                'function': '',
                 'citation': {
                     'authors': '',
                     'comments': '',
@@ -42,7 +47,7 @@ class PybelAssembler(object):
                 'object': {
                     'effect': {'name': 'kin', 'namespace': 'bel'},
                     'modifier': 'Activity'}}
-        belgraph.add_edges_from([(braf, mek, edge)])
+        belgraph.add_edge(braf, mek, attr_dict=edge)
         self.model = belgraph
         return self.model
 
