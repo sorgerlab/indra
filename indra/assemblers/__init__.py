@@ -34,3 +34,7 @@ try:
     from indra.assemblers.kami_assembler import KamiAssembler
 except ImportError:
     pass
+try:
+    from indra.assemblers.pybel_assembler import PybelAssembler
+except ImportError:
+    pass
