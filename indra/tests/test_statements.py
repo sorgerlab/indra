@@ -1177,7 +1177,7 @@ def test_serialize():
     ev1 = Evidence(text='1\U0001F4A9')
     st = Phosphorylation(Agent('a\U0001F4A9'), Agent('b'), evidence=[ev1])
     jstr = st.to_json()
-    st2 = Statement.from_json(jstr)
+    st2 = stmts_from_json(jstr)
     assert(st.equals(st2))
     assert unicode_strs((ev1, st, st2))
 

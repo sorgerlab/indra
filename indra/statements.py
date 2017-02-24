@@ -139,12 +139,12 @@ class BoundCondition(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         agent_entry = json_dict.get('agent')
         if agent_entry is None:
             logger.error('BoundCondition missing agent.')
             return None
-        agent = Agent.from_json(agent_entry)
+        agent = Agent._from_json(agent_entry)
         if agent is None:
             return None
         is_bound = json_dict.get('is_bound')
@@ -200,7 +200,7 @@ class MutCondition(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         position = json_dict.get('position')
         residue_from = json_dict.get('residue_from')
         residue_to = json_dict.get('residue_to')
@@ -306,7 +306,7 @@ class ModCondition(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         mod_type = json_dict.get('mod_type')
         residue = json_dict.get('residue')
         position = json_dict.get('position')
@@ -390,7 +390,7 @@ class ActivityCondition(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         activity_type = json_dict.get('activity_type')
         is_active = json_dict.get('is_active')
         if not activity_type:
@@ -691,7 +691,7 @@ class Agent(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         name = json_dict.get('name')
         db_refs = json_dict.get('db_refs', {})
         mods = json_dict.get('mods', [])
@@ -706,13 +706,13 @@ class Agent(object):
         if not db_refs:
             db_refs = {}
         agent = Agent(name, db_refs=db_refs)
-        agent.mods = [ModCondition.from_json(mod) for mod in mods]
-        agent.mutations = [MutCondition.from_json(mut) for mut in mutations]
-        agent.bound_conditions = [BoundCondition.from_json(bc)
+        agent.mods = [ModCondition._from_json(mod) for mod in mods]
+        agent.mutations = [MutCondition._from_json(mut) for mut in mutations]
+        agent.bound_conditions = [BoundCondition._from_json(bc)
                                   for bc in bound_conditions]
         agent.location = location
         if activity:
-            agent.activity = ActivityCondition.from_json(activity)
+            agent.activity = ActivityCondition._from_json(activity)
         return agent
 
     def __str__(self):
@@ -809,7 +809,7 @@ class Evidence(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         source_api = json_dict.get('source_api')
         source_id = json_dict.get('source_id')
         pmid = json_dict.get('pmid')
@@ -935,12 +935,12 @@ class Statement(object):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         stmt_type = json_dict.get('type')
         stmt_cls = getattr(sys.modules[__name__], stmt_type)
-        stmt = stmt_cls.from_json(json_dict)
+        stmt = stmt_cls._from_json(json_dict)
         evidence = json_dict.get('evidence', [])
-        stmt.evidence = [Evidence.from_json(ev) for ev in evidence]
+        stmt.evidence = [Evidence._from_json(ev) for ev in evidence]
         stmt.supports = json_dict.get('supports', [])
         stmt.supported_by = json_dict.get('supported_by', [])
         stmt.belief = json_dict.get('belief', 1.0)
@@ -1045,16 +1045,16 @@ class Modification(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         enz = json_dict.get('enz')
         sub = json_dict.get('sub')
         residue = json_dict.get('residue')
         position = json_dict.get('position')
         evidence = json_dict.get('evidence', [])
         if enz:
-            enz = Agent.from_json(enz)
+            enz = Agent._from_json(enz)
         if sub:
-            sub = Agent.from_json(sub)
+            sub = Agent._from_json(sub)
         stmt = cls(enz, sub, residue, position)
         return stmt
 
@@ -1150,12 +1150,12 @@ class SelfModification(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         enz = json_dict.get('enz')
         residue = json_dict.get('residue')
         position = json_dict.get('position')
         if enz:
-            enz = Agent.from_json(enz)
+            enz = Agent._from_json(enz)
         stmt = cls(enz, residue, position)
         return stmt
 
@@ -1386,14 +1386,14 @@ class RegulateActivity(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         obj_activity = json_dict.get('obj_activity')
         if subj:
-            subj = Agent.from_json(subj)
+            subj = Agent._from_json(subj)
         if obj:
-            obj = Agent.from_json(obj)
+            obj = Agent._from_json(obj)
         stmt = cls(subj, obj, obj_activity)
         return stmt
 
@@ -1560,10 +1560,10 @@ class ActiveForm(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         agent = json_dict.get('agent')
         if agent:
-            agent = Agent.from_json(agent)
+            agent = Agent._from_json(agent)
         else:
             logger.error('ActiveForm statement missing agent')
             return None
@@ -1738,14 +1738,14 @@ class RasGef(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         gef = json_dict.get('gef')
         ras = json_dict.get('ras')
         evidence = json_dict.get('evidence')
         if gef:
-            gef = Agent.from_json(gef)
+            gef = Agent._from_json(gef)
         if ras:
-            ras = Agent.from_json(ras)
+            ras = Agent._from_json(ras)
         stmt = cls(gef, ras)
         return stmt
 
@@ -1820,14 +1820,14 @@ class RasGap(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         gap = json_dict.get('gap')
         ras = json_dict.get('ras')
         evidence = json_dict.get('evidence')
         if gap:
-            gap = Agent.from_json(gap)
+            gap = Agent._from_json(gap)
         if ras:
-            ras = Agent.from_json(ras)
+            ras = Agent._from_json(ras)
         stmt = cls(gap, ras)
         return stmt
 
@@ -1908,10 +1908,10 @@ class Complex(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         members = json_dict.get('members')
         evidence = json_dict.get('evidence', [])
-        members = [Agent.from_json(m) for m in members]
+        members = [Agent._from_json(m) for m in members]
         stmt = cls(members)
         return stmt
 
@@ -1989,10 +1989,10 @@ class Translocation(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         agent = json_dict.get('agent')
         if agent:
-            agent = Agent.from_json(agent)
+            agent = Agent._from_json(agent)
         else:
             logger.error('Translocation statement missing agent')
             return None
@@ -2040,14 +2040,14 @@ class RegulateAmount(Statement):
         return json_dict
 
     @classmethod
-    def from_json(cls, json_dict):
+    def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         evidence = json_dict.get('evidence')
         if subj:
-            subj = Agent.from_json(subj)
+            subj = Agent._from_json(subj)
         if obj:
-            obj = Agent.from_json(obj)
+            obj = Agent._from_json(obj)
         stmt = cls(subj, obj)
         return stmt
 
@@ -2107,6 +2107,29 @@ class IncreaseAmount(RegulateAmount):
         Evidence objects in support of the synthesis statement.
     """
     pass
+
+def stmts_from_json(json_in):
+    def get_by_id(stmts, uid):
+        for st in stmts:
+            if st.uuid == uid:
+                return st
+    if not isinstance(json_in, list):
+        st = Statement._from_json(json_in)
+        return st
+    else:
+        stmts = []
+        for json_stmt in json_in:
+            st = Statement._from_json(json_stmt)
+            stmts.append(st)
+        for st in stmts:
+            for i, uid in enumerate(st.supports):
+                ss = get_by_id(stmts, uid)
+                st.supports[i] = ss
+            for i, uid in enumerate(st.supported_by):
+                ss = get_by_id(stmts, uid)
+                st.supported_by[i] = ss
+        return stmts
+
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
