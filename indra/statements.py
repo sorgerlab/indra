@@ -134,11 +134,8 @@ class BoundCondition(object):
         self.is_bound = is_bound
 
     def to_json(self):
-        if agent is None:
-            agent_entry = None
-        else:
-            agent_entry = self.agent.to_json()
-        json_dict = {'agent': agent_entry, 'is_bound': is_bound}
+        json_dict = {'agent': self.agent.to_json(),
+                     'is_bound': self.is_bound}
         return json_dict
 
     @classmethod
@@ -300,10 +297,12 @@ class ModCondition(object):
         return str(self)
 
     def to_json(self):
-        json_dict = {'mod_type': self.mod_type,
-                     'residue': self.residue,
-                     'position': self.position,
-                     'is_modified': self.is_modified}
+        json_dict = {'mod_type': self.mod_type}
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
+        json_dict['is_modified'] = self.is_modified
         return json_dict
 
     @classmethod
@@ -676,18 +675,19 @@ class Agent(object):
         return matches
 
     def to_json(self):
-        if self.activity is None:
-            activity_entry = None
-        else:
-            activity_entry = self.activity.to_json()
         json_dict = {'name': self.name,
-                     'db_refs': self.db_refs,
-                     'mods': [mc.to_json() for mc in self.mods],
-                     'mutations': [mc.to_json() for mc in self.mutations],
-                     'activity': activity_entry,
-                     'location': self.location,
-                     'bound_conditions': [bc.to_json() for bc in
-                                          self.bound_conditions]}
+                     'db_refs': self.db_refs}
+        if self.mods:
+            json_dict['mods'] = [mc.to_json() for mc in self.mods]
+        if self.mutations:
+            json_dict['mutations'] = [mc.to_json() for mc in self.mutations]
+        if self.activity is not None:
+            json_dict['activation'] = self.activity.to_json()
+        if self.location is not None:
+            json_dict['location'] = self.location
+        if self.bound_conditions:
+            json_dict['bound_conditions'] = [bc.to_json() for bc in
+                                             self.bound_conditions]
         return json_dict
 
     @classmethod
@@ -793,12 +793,19 @@ class Evidence(object):
         return matches
 
     def to_json(self):
-        json_dict = {'source_api': self.source_api,
-                     'source_id': self.source_id,
-                     'pmid': self.pmid,
-                     'text': self.text,
-                     'annotations': self.annotations,
-                     'epistemics': self.epistemics}
+        json_dict = {}
+        if self.source_api:
+            json_dict['source_api'] = self.source_api
+        if self.source_id:
+            json_dict['source_id'] = self.source_id
+        if self.pmid:
+            json_dict['pmid'] = self.pmid
+        if self.text:
+            json_dict['text'] = self.text
+        if self.annotations:
+            json_dict['annotations'] = self.annotations
+        if self.epistemics:
+            json_dict['epistemics']  = self.epistemics
         return json_dict
 
     @classmethod
@@ -914,14 +921,17 @@ class Statement(object):
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
-        evidence = [ev.to_json() for ev in self.evidence]
-        supports = [st.uuid for st in self.supports]
-        supported_by = [st.uuid for st in self.supported_by]
-        json_dict = {'id': self.uuid,
-                     'type': stmt_type,
-                     'evidence': evidence,
-                     'supports': supports,
-                     'supported_by': supported_by}
+        json_dict = {'id': '%s' % self.uuid,
+                     'type': stmt_type}
+        if self.evidence:
+            evidence = [ev.to_json() for ev in self.evidence]
+            json_dict['evidence'] = evidence
+        if self.supports:
+            json_dict['supports'] = \
+                ['%s' % st.uuid for st in self.supports]
+        if self.supported_by:
+            json_dict['supported_by'] = \
+                ['%s' % st.uuid for st in self.supported_by]
         return json_dict
 
     @classmethod
@@ -1024,16 +1034,14 @@ class Modification(Statement):
 
     def to_json(self):
         json_dict = super(Modification, self).to_json()
-        if self.enz is None:
-            enz_entry = None
-        else:
-            enz_entry = self.enz.to_json()
-        if self.sub is None:
-            sub_entry = None
-        else:
-            sub_entry = self.sub.to_json()
-        json_dict.update({'enz': enz_entry, 'sub': sub_entry,
-                          'residue': self.residue, 'position': self.position})
+        if self.enz is not None:
+            json_dict['enz'] = self.enz.to_json()
+        if self.sub is not None:
+            json_dict['sub'] = self.sub.to_json()
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
         return json_dict
 
     @classmethod
@@ -1133,14 +1141,12 @@ class SelfModification(Statement):
 
     def to_json(self):
         json_dict = super(SelfModification, self).to_json()
-        if self.enz is None:
-            enz_entry = None
-        else:
-            enz_entry = self.enz.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'enz': enz_entry,
-                     'residue': self.residue, 'position': self.position,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        if self.enz is not None:
+            json_dict['enz'] = self.enz.to_json()
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
         return json_dict
 
     @classmethod
@@ -1371,18 +1377,12 @@ class RegulateActivity(Statement):
 
     def to_json(self):
         json_dict = super(RegulateActivity, self).to_json()
-        if self.subj is None:
-            subj_entry = None
-        else:
-            subj_entry = self.subj.to_json()
-        if self.obj is None:
-            obj_entry = None
-        else:
-            obj_entry = self.obj.to_json()
-        stmt_type = type(self).__name__
-        json_dict = {'type': stmt_type, 'subj': subj_entry, 'obj': obj_entry,
-                     'obj_activity': self.obj_activity,
-                     'evidence': [ev.to_json() for ev in self.evidence]}
+        if self.subj is not None:
+            json_dict['subj'] = self.subj.to_json()
+        if self.obj is not None:
+            json_dict['obj'] = self.obj.to_json()
+        if self.obj_activity is not None:
+            json_dict['obj_activity'] = self.obj_activity
         return json_dict
 
     @classmethod
@@ -1731,16 +1731,10 @@ class RasGef(Statement):
 
     def to_json(self):
         json_dict = super(RasGef, self).to_json()
-        if self.gef is None:
-            gef_entry = None
-        else:
-            gef_entry = self.gef.to_json()
-        if self.ras is None:
-            ras_entry = None
-        else:
-            ras_entry = self.ras.to_json()
-        json_dict.update({'gef': gef_entry,
-                          'ras': ras_entry})
+        if self.gef is not None:
+            json_dict['gef'] = self.gef.to_json()
+        if self.ras is not None:
+            json_dict['ras'] = self.ras.to_json()
         return json_dict
 
     @classmethod
@@ -1819,15 +1813,10 @@ class RasGap(Statement):
 
     def to_json(self):
         json_dict = super(RasGap, self).to_json()
-        if self.gap is None:
-            gap_entry = None
-        else:
-            gap_entry = self.gap.to_json()
-        if self.ras is None:
-            ras_entry = None
-        else:
-            ras_entry = self.ras.to_json()
-        json_dict.update({'gap': gap_entry, 'ras': ras_entry})
+        if self.gap is not None:
+            json_dict['gap'] = self.gap.to_json()
+        if self.ras is not None:
+            json_dict['ras'] = self.ras.to_json()
         return json_dict
 
     @classmethod
@@ -1915,7 +1904,7 @@ class Complex(Statement):
     def to_json(self):
         json_dict = super(Complex, self).to_json()
         members = [m.to_json() for m in self.members]
-        json_dict.update({'members': members})
+        json_dict['members'] = members
         return json_dict
 
     @classmethod
@@ -1992,9 +1981,11 @@ class Translocation(Statement):
 
     def to_json(self):
         json_dict = super(Translocation, self).to_json()
-        json_dict.update({'agent': self.agent.to_json(),
-                          'from_location': self.from_location,
-                          'to_location': self.to_location})
+        json_dict['agent'] = self.agent.to_json()
+        if self.from_location is not None:
+            json_dict['from_location'] = self.from_location
+        if self.to_location is not None:
+            json_dict['to_location'] = self.to_location
         return json_dict
 
     @classmethod
@@ -2042,15 +2033,10 @@ class RegulateAmount(Statement):
 
     def to_json(self):
         json_dict = super(RegulateAmount, self).to_json()
-        if self.subj is None:
-            subj_entry = None
-        else:
-            subj_entry = self.subj.to_json()
-        if self.obj is None:
-            obj_entry = None
-        else:
-            obj_entry = self.obj.to_json()
-        json_dict.update({'subj': subj_entry, 'obj': obj_entry})
+        if self.subj is not None:
+            json_dict['subj'] = self.subj.to_json()
+        if self.obj is not None:
+            json_dict['obj'] = self.obj.to_json()
         return json_dict
 
     @classmethod

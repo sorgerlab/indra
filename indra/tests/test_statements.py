@@ -1177,20 +1177,9 @@ def test_serialize():
     ev1 = Evidence(text='1\U0001F4A9')
     st = Phosphorylation(Agent('a\U0001F4A9'), Agent('b'), evidence=[ev1])
     jstr = st.to_json()
-    st2 = Phosphorylation.from_json(jstr)
+    st2 = Statement.from_json(jstr)
     assert(st.equals(st2))
     assert unicode_strs((ev1, st, st2))
-
-def test_serialize_errors():
-    st = Phosphorylation(Agent('a\U0001F4A9'), Agent('b\U0001F4A9'))
-    jstr = st.to_json()
-    st2 = Complex.from_json(jstr)
-    assert(st2 is None)
-    st3 = Phosphorylation.from_json('{}')
-    assert(st3 is None)
-    st4 = Phosphorylation.from_json('xyz' + jstr)
-    assert(st4 is None)
-    assert unicode_strs((st, st2, st3, st4))
 
 def test_location_refinement():
     a1 = Agent('a', location='plasma membrane')
