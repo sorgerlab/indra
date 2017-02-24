@@ -2130,6 +2130,13 @@ def stmts_from_json(json_in):
                 st.supported_by[i] = ss
         return stmts
 
+def stmts_to_json(stmts_in):
+    if not isinstance(stmts_in, list):
+        json_dict = stmts_in.to_json()
+        return json_dict
+    else:
+        json_dict = [st.to_json() for st in stmts_in]
+    return json_dict
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
