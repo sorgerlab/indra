@@ -53,6 +53,7 @@ def assemble_pysb(stmts, data_genes, out_file):
 
 def preprocess_stmts(stmts, data_genes):
     # Filter the INDRA Statements to be put into the model
+    stmts = ac.filter_by_type(stmts, Complex, invert=True)
     stmts = ac.filter_direct(stmts)
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
