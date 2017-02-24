@@ -13,3 +13,7 @@ def test_simple_phosphorylation():
     assert ('Protein', 'HGNC', 'BRAF') in belgraph.nodes()
     assert ('Protein', 'HGNC', 'MAP2K1') in belgraph.nodes()
     assert len(belgraph.edges()) == 1
+
+if __name__ == '__main__':
+     test_simple_phosphorylation()
+
