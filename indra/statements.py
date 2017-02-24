@@ -921,6 +921,14 @@ class Statement(object):
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
+        ### For backwards compatibility, could be removed later
+        all_stmts = [self] + self.supports + self.supported_by
+        for st in all_stmts:
+            try:
+                uid = st.uuid
+            except AttributeError:
+                st.uuid = uuid.uuid4()
+        ##################
         json_dict = {'id': '%s' % self.uuid,
                      'type': stmt_type}
         if self.evidence:
