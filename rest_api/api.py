@@ -26,7 +26,7 @@ def trips_process_text():
     text = body.get('text')
     tp = trips.process_text(text)
     if tp and tp.statements:
-        stmts = _stmts_to_json(tp.statements)
+        stmts = stmts_to_json(tp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -39,7 +39,7 @@ def trips_process_xml():
     xml_str = body.get('xml_str')
     tp = trips.process_xml(xml_str)
     if tp and tp.statements:
-        stmts = _stmts_to_json(tp.statements)
+        stmts = stmts_to_json(tp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -55,7 +55,7 @@ def reach_process_text():
     text = body.get('text')
     rp = reach.process_text(text)
     if rp and rp.statements:
-        stmts = _stmts_to_json(rp.statements)
+        stmts = stmts_to_json(rp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -68,7 +68,7 @@ def reach_process_json():
     json_str = body.get('json')
     rp = reach.process_json_str(json_str)
     if rp and rp.statements:
-        stmts = _stmts_to_json(rp.statements)
+        stmts = stmts_to_json(rp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -81,7 +81,7 @@ def reach_process_pmc():
     pmcid = body.get('pmcid')
     rp = reach.process_pmc(pmcid)
     if rp and rp.statements:
-        stmts = _stmts_to_json(rp.statements)
+        stmts = stmts_to_json(rp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -96,7 +96,7 @@ def bel_process_ndex_neighborhood():
     genes = body.get('genes')
     bp = bel.process_ndex_neighborhood(genes)
     if bp and bp.statements:
-        stmts = _stmts_to_json(bp.statements)
+        stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -109,7 +109,7 @@ def bel_process_belrdf():
     belrdf = body.get('belrdf')
     bp = bel.process_belrdf(belrdf)
     if bp and bp.statements:
-        stmts = _stmts_to_json(bp.statements)
+        stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -123,7 +123,7 @@ def biopax_process_pc_pathsbetween():
     genes = body.get('genes')
     bp = biopax.process_pc_pathsbetween(genes)
     if bp and bp.statements:
-        stmts = _stmts_to_json(bp.statements)
+        stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -137,7 +137,7 @@ def biopax_process_pc_pathsfromto():
     target = body.get('target')
     bp = bel.process_pc_pathsfromto(source, target)
     if bp and bp.statements:
-        stmts = _stmts_to_json(bp.statements)
+        stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -150,7 +150,7 @@ def biopax_process_pc_neighborhood():
     genes = body.get('genes')
     bp = bel.process_pc_neighborhood(genes)
     if bp and bp.statements:
-        stmts = _stmts_to_json(bp.statements)
+        stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
         return res
     else:
@@ -164,8 +164,8 @@ def biopax_process_pc_neighborhood():
 @route('/assemblers/pysb', method='POST')
 def assemble_pysb():
     body = json.load(request.body)
-    stmts_str = body.get('statements')
-    stmts = _stmts_from_json(stmts_str)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model()
@@ -178,8 +178,8 @@ def assemble_pysb():
 @route('/assemblers/cx', method='POST')
 def assemble_cx():
     body = json.load(request.body)
-    stmts_str = body.get('statements')
-    stmts = _stmts_from_json(stmts_str)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
     ca = CxAssembler(stmts)
     model_str = ca.make_model()
     res = {'model': model_str}
@@ -190,8 +190,8 @@ def assemble_cx():
 @route('/assemblers/graph', method='POST')
 def assemble_graph():
     body = json.load(request.body)
-    stmts_str = body.get('statements')
-    stmts = _stmts_from_json(stmts_str)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
     ga = GraphAssembler(stmts)
     model_str = ga.make_model()
     res = {'model': model_str}
@@ -203,8 +203,8 @@ def assemble_graph():
 @allow_cors
 def assemble_cyjs():
     body = json.load(request.body)
-    stmts_str = body.get('statements')
-    stmts = _stmts_from_json(stmts_str)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
     cja = CyJSAssembler()
     cja.add_statements(stmts)
     cja.make_model(grouping=True,
@@ -217,15 +217,6 @@ def assemble_cyjs():
                         n_bins = 9)
     model_str = cja.print_cyjs()
     return model_str
-
-def _stmts_to_json(stmts):
-    stj = json.dumps([json.loads(st.to_json()) for st in stmts])
-    return stj
-
-def _stmts_from_json(stmts_str):
-    stmts_json = json.loads(stmts_str)
-    stmts = [Statement.from_json(json.dumps(stj)) for stj in stmts_json]
-    return stmts
 
 if __name__ == '__main__':
     app = default_app()
