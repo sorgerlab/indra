@@ -240,6 +240,9 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
     stmt_type : indra.statements.Statement
         The class of the statement type to filter for.
         Example: indra.statements.Modification
+    invert : Optional[bool]
+        If True, the statements that are not of the given type
+        are returned. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -249,7 +252,12 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
         A list of filtered statements.
     """
     logger.info('Filtering %d statements...' % len(stmts_in))
-    stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    invert = kwargs.get('invert', False)
+    if not invert:
+        stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    else:
+        stmts_out = [st for st in stmts_in if not isinstance(st, stmt_type)]
+
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:
