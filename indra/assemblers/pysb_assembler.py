@@ -755,6 +755,9 @@ class PysbAssembler(object):
         model : pysb.Model
             The assembled PySB model object.
         """
+        ppa = PysbPreassembler(self.statements)
+        ppa.replace_activities()
+        self.statements = ppa.statements
         # Set local policies for this make_model call that overwrite
         # the global policies of the PySB assembler
         if policies is not None:
@@ -1244,10 +1247,7 @@ def modification_assemble_one_step(stmt, model, agent_set):
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
     # Remove pre-set activity flag
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_pattern = get_monomer_pattern(model, enz)
-    enz_act_patterns = get_active_patterns(enz, agent_set)
+    enz_pattern = get_monomer_pattern(model, stmt.enz)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
     sub_unmod = get_monomer_pattern(model, stmt.sub,
@@ -1255,88 +1255,78 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={mod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-                enz_pattern(af) + sub_unmod >>
-                enz_pattern(af) + sub_mod,
-                kf_mod)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+            enz_pattern + sub_unmod >>
+            enz_pattern + sub_mod,
+            kf_mod)
+    add_rule_to_model(model, r)
 
-        # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-                Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
     if stmt.enz is None:
         return
     sub_bs = get_binding_site_name(stmt.sub)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_bound = get_monomer_pattern(model, enz,
+    enz_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, enz,
+    enz_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
-    param_name = ('kf_' + enz.name[0].lower() +
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + enz.name[0].lower() +
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = ('kc_' + enz.name[0].lower() +
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mod_condition_name)
     kf_mod = get_create_parameter(model, param_name, 1)
 
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
 
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    enz_bs = get_binding_site_name(enz)
-    rule_enz_str = get_agent_rule_str(enz)
+    enz_bs = get_binding_site_name(stmt.enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_bind_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_unbound(af) + \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
-            enz_bound(af) % \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
-            kf_bind)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_bind_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+        enz_unbound() + \
+        sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
+        enz_bound() % \
+        sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
+        kf_bind)
+    add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, mod_condition_name, rule_sub_str, mod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_bound(af) % \
-                sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
-            enz_unbound(af) + \
-                sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
-            kf_mod)
-        add_rule_to_model(model, r)
-        # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_bound.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, sub_pattern.monomer.name,
-                           'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+    r = Rule(rule_name,
+        enz_bound() % \
+            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
+        enz_unbound() + \
+            sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
+        kf_mod)
+    add_rule_to_model(model, r)
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_bound.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, sub_pattern.monomer.name,
+                       'rule_has_object')]
+    model.annotations += anns
 
-    enz_uncond = get_uncond_agent(enz)
+    enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     sub_uncond = get_uncond_agent(stmt.sub)
@@ -1379,31 +1369,27 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     # ATP
     atp = model.monomers['ATP']
     atp_bs = 'ATP'
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
     # ATP-bound enzyme
-    enz_atp_bound = get_monomer_pattern(model, enz,
+    enz_atp_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={atp_bs: 1})
     # ATP-free enzyme
-    enz_atp_unbound = get_monomer_pattern(model, enz,
+    enz_atp_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={atp_bs: None})
     # Substrate-bound enzyme
     sub_bs = get_binding_site_name(stmt.sub)
-    enz_sub_bound = get_monomer_pattern(model, enz,
+    enz_sub_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1})
     # Substrte and ATP-bound enzyme
-    enz_sub_atp_bound = get_monomer_pattern(model, enz,
+    enz_sub_atp_bound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: 1, atp_bs: 2})
-    enz_sub_atp_unbound = get_monomer_pattern(model, enz,
+    enz_sub_atp_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: None, atp_bs: None})
     # Substrate-free enzyme
-    enz_sub_unbound = get_monomer_pattern(model, enz,
+    enz_sub_unbound = get_monomer_pattern(model, stmt.enz,
         extra_fields={sub_bs: None})
-    # Enzyme active forms
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    enz_bs = get_binding_site_name(enz)
+    enz_bs = get_binding_site_name(stmt.enz)
     # Unconditional enzyme
-    enz_uncond = get_uncond_agent(enz)
+    enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     # Substrate
@@ -1413,18 +1399,15 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
     # Enzyme binding ATP
-    param_name = ('kf_' + enz.name[0].lower() + '_atp_bind')
+    param_name = ('kf_' + stmt.enz.name[0].lower() + '_atp_bind')
     kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + enz.name[0].lower() + '_atp_bind')
+    param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
     kr_bind_atp = get_create_parameter(model, param_name, 1e-6)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_phospho_bind_atp%s' % \
-            (enz_rule_str, counter_str)
-        r = Rule(rule_name,
-            enz_atp_unbound(af) + atp(b=None) >>
-            enz_atp_bound(af) %  atp(b=1), kf_bind_atp)
-        add_rule_to_model(model, r)
+    rule_name = '%s_phospho_bind_atp' % (enz_rule_str)
+    r = Rule(rule_name,
+        enz_atp_unbound() + atp(b=None) >>
+        enz_atp_bound() %  atp(b=1), kf_bind_atp)
+    add_rule_to_model(model, r)
 
     # Enzyme releasing ATP
     rule_name = '%s_phospho_dissoc_atp' % (enz_rule_str)
@@ -1434,50 +1417,46 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
     # Enzyme binding substrate
-    param_name = ('kf_' + enz.name[0].lower() +
+    param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + enz.name[0].lower() +
+    param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = ('kc_' + enz.name[0].lower() +
+    param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_phos')
     kf_phospho = get_create_parameter(model, param_name, 1)
 
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
 
-    rule_enz_str = get_agent_rule_str(enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_phospho_bind_%s_%s%s' % \
-            (rule_enz_str, rule_sub_str, phos_site, counter_str)
-        r = Rule(rule_name,
-            enz_sub_unbound(af) + \
-            sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
-            enz_sub_bound(af) % \
-            sub_pattern(**{phos_site: 'u', enz_bs: 1}),
-            kf_bind)
-        add_rule_to_model(model, r)
+    rule_name = '%s_phospho_bind_%s_%s' % \
+        (rule_enz_str, rule_sub_str, phos_site)
+    r = Rule(rule_name,
+        enz_sub_unbound() + \
+        sub_pattern(**{phos_site: 'u', enz_bs: None}) >>
+        enz_sub_bound() % \
+        sub_pattern(**{phos_site: 'u', enz_bs: 1}),
+        kf_bind)
+    add_rule_to_model(model, r)
 
     # Enzyme phosphorylating substrate
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_phospho_%s_%s%s' % \
-            (rule_enz_str, rule_sub_str, phos_site, counter_str)
-        r = Rule(rule_name,
-            enz_sub_atp_bound(af) % atp(b=2) % \
-                sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
-            enz_sub_atp_unbound(af) + atp(b=None) + \
-                sub_pattern(**{phos_site: 'p', enz_bs: None}),
-            kf_phospho)
-        add_rule_to_model(model, r)
-        # Add rule annotations to model
-        anns = [Annotation(rule_name, enz_sub_atp_bound.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_phospho_%s_%s' % \
+        (rule_enz_str, rule_sub_str, phos_site)
+    r = Rule(rule_name,
+        enz_sub_atp_bound() % atp(b=2) % \
+            sub_pattern(**{phos_site: 'u', enz_bs: 1}) >>
+        enz_sub_atp_unbound() + atp(b=None) + \
+            sub_pattern(**{phos_site: 'p', enz_bs: None}),
+        kf_phospho)
+    add_rule_to_model(model, r)
+    # Add rule annotations to model
+    anns = [Annotation(rule_name, enz_sub_atp_bound.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
     # Enzyme dissociating from substrate
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
@@ -1559,10 +1538,8 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    enz_pattern = get_monomer_pattern(model, enz)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
+    enz_pattern = get_monomer_pattern(model, stmt.enz)
 
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
@@ -1571,20 +1548,17 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={demod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(enz)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_%s_%s%s' % \
-                    (rule_enz_str, demod_condition_name, rule_sub_str,
-                     demod_site, counter_str)
-        r = Rule(rule_name,
-                 enz_pattern(af) + sub_mod >> enz_pattern(af) + sub_unmod,
-                 kf_demod)
-        add_rule_to_model(model, r)
-        anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-                Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+                (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+             enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
+             kf_demod)
+    add_rule_to_model(model, r)
+    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
+            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 
 def demodification_assemble_two_step(stmt, model, agent_set):
@@ -1594,21 +1568,19 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = demod_condition_name[2:]
     sub_bs = get_binding_site_name(stmt.sub)
     enz_bs = get_binding_site_name(stmt.enz)
-    enz = deepcopy(stmt.enz)
-    enz.activity = None
-    enz_bound = get_monomer_pattern(model, enz,
+    enz_bound = get_monomer_pattern(model, stmt.enz,
                                     extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, enz,
+    enz_unbound = get_monomer_pattern(model, stmt.enz,
                                       extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
-    param_name = 'kf_' + enz.name[0].lower() + \
+    param_name = 'kf_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
     kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = 'kr_' + enz.name[0].lower() + \
+    param_name = 'kr_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
     kr_bind = get_create_parameter(model, param_name, 1e-3)
-    param_name = 'kc_' + enz.name[0].lower() + \
+    param_name = 'kc_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_' + demod_condition_name
     kf_demod = get_create_parameter(model, param_name, 1e-3)
 
@@ -1617,37 +1589,33 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    enz_act_patterns = get_active_patterns(enz, agent_set)
-    rule_enz_str = get_agent_rule_str(enz)
+    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
+    rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    for i, af in enumerate(enz_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(enz_act_patterns) > 1 else ''
-        rule_name = '%s_%s_bind_%s_%s%s' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             counter_str)
-        r = Rule(rule_name,
-                 enz_unbound(af) + \
-                 sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
-                 enz_bound(af) % \
-                 sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
-                 kf_bind)
-        add_rule_to_model(model, r)
+    rule_name = '%s_%s_bind_%s_%s' % \
+        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+             enz_unbound() + \
+             sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
+             enz_bound() % \
+             sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
 
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_enz_str, demod_condition_name, rule_sub_str, demod_site,
-             counter_str)
-        r = Rule(rule_name,
-            enz_bound(af) % \
-                sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
-            enz_unbound(af) + \
-                sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
-            kf_demod)
-        add_rule_to_model(model, r)
-        anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
-                Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+    r = Rule(rule_name,
+        enz_bound() % \
+            sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
+        enz_unbound() + \
+            sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
+        kf_demod)
+    add_rule_to_model(model, r)
+    anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
+            Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
-    enz_uncond = get_uncond_agent(enz)
+    enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
     enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
     sub_uncond = get_uncond_agent(stmt.sub)
@@ -1849,43 +1817,39 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
-    subj = deepcopy(stmt.subj)
-    subj.activity = None
-    subj_pattern = get_monomer_pattern(model, subj)
+    subj_pattern = get_monomer_pattern(model, stmt.subj)
 
     obj_inactive = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'inactive'})
     obj_active = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'active'})
 
-    param_name = 'kf_' + subj.name[0].lower() + \
+    param_name = 'kf_' + stmt.subj.name[0].lower() + \
         stmt.obj.name[0].lower() + '_act'
     kf_one_step_activate = \
         get_create_parameter(model, param_name, 1e-6)
 
-    for i, af in enumerate(subj_act_patterns):
-        counter_str = '_%s' % (i + 1) if len(subj_act_patterns) > 1 else ''
-        rule_obj_str = get_agent_rule_str(stmt.obj)
-        rule_subj_str = get_agent_rule_str(subj)
-        polarity_str = 'activates' if stmt.is_activation else 'deactivates'
-        rule_name = '%s_%s_%s_%s%s' % \
-            (rule_subj_str, polarity_str, rule_obj_str,
-             stmt.obj_activity, counter_str)
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+    rule_subj_str = get_agent_rule_str(stmt.subj)
+    polarity_str = 'activates' if stmt.is_activation else 'deactivates'
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_subj_str, polarity_str, rule_obj_str,
+         stmt.obj_activity)
 
-        if stmt.is_activation:
-            r = Rule(rule_name,
-                subj_pattern(af) + obj_inactive >> subj_pattern(af) + obj_active,
-                kf_one_step_activate)
-        else:
-            r = Rule(rule_name,
-                subj_pattern(af) + obj_active >> subj_pattern(af) + obj_inactive,
-                kf_one_step_activate)
+    if stmt.is_activation:
+        r = Rule(rule_name,
+            subj_pattern() + obj_inactive >> subj_pattern() + obj_active,
+            kf_one_step_activate)
+    else:
+        r = Rule(rule_name,
+            subj_pattern() + obj_active >> subj_pattern() + obj_inactive,
+            kf_one_step_activate)
 
-        add_rule_to_model(model, r)
-        anns = [Annotation(rule_name, subj_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
-        model.annotations += anns
+    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, subj_pattern.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
+    model.annotations += anns
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
@@ -2229,3 +2193,86 @@ increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
 
 
+class PysbPreassembler(object):
+    def __init__(self, stmts=None):
+        if not stmts:
+            stmts = []
+        self.statements = stmts
+        self.agent_set = _BaseAgentSet()
+        pass
+
+    def add_statements(self, stmts):
+        self.statements = stmts
+
+    def _collect_active_forms(self):
+        for stmt in self.statements:
+            if isinstance(stmt, ist.ActiveForm):
+                base_agent = self.agent_set.get_create_base_agent(stmt.agent)
+                # Handle the case where an activity flag is set
+                agent_to_add = stmt.agent
+                if stmt.agent.activity:
+                    new_agent = deepcopy(stmt.agent)
+                    new_agent.activity = None
+                    agent_to_add = new_agent
+                base_agent.add_activity_form(agent_to_add, stmt.is_active)
+
+    def replace_activities(self):
+        # TODO: handle activity hierarchies
+        # First collect all explicit active forms
+        self._collect_active_forms()
+        new_stmts = []
+        # Iterate over all statements
+        for stmt in self.statements:
+            stmt_agents = stmt.agent_list()
+            num_agents = len(stmt_agents)
+            # Make a list with an empty list for each Agent so that later
+            # we can build combinations of Agent forms
+            agent_forms = [[] for a in stmt_agents]
+            for i, agent in enumerate(stmt_agents):
+                # This is the case where there is an activity flag on an
+                # Agent which we will attempt to replace with an explicit
+                # active form
+                if agent is not None and agent.activity is not None:
+                    base_agent = self.agent_set.get_create_base_agent(agent)
+                    # If it is an "active" state
+                    if agent.activity.is_active:
+                        active_forms = base_agent.active_forms
+                        # If no explicit active forms are known then we use
+                        # the generic one
+                        if not active_forms:
+                            active_forms = [agent]
+                    # If it is an "inactive" state
+                    else:
+                        active_forms = base_agent.inactive_forms
+                        # If no explicit inactive forms are known then we use
+                        # the generic one
+                        if not active_forms:
+                            active_forms = [agent]
+                    # We now iterate over the active agent forms and create
+                    # new agents
+                    for af in active_forms:
+                        new_agent = deepcopy(agent)
+                        self._set_agent_context(af, new_agent)
+                        agent_forms[i].append(new_agent)
+                # Otherwise we just copy over the agent as is
+                else:
+                    agent_forms[i].append(agent)
+            # Now create all possible combinations of the agents and create new
+            # statements as needed
+            agent_combs = itertools.product(*agent_forms)
+            for agent_comb in agent_combs:
+                new_stmt = deepcopy(stmt)
+                new_stmt.set_agent_list(agent_comb)
+                new_stmts.append(new_stmt)
+        self.statements = new_stmts
+
+    @staticmethod
+    def _set_agent_context(from_agent, to_agent):
+        # TODO: what can we do about semantic conflicts here like the same
+        # bound condition with True/False is_bound appearing in the
+        # two contexts?
+        to_agent.bound_conditions += from_agent.bound_conditions
+        to_agent.mods += from_agent.mods
+        to_agent.mutations += from_agent.mutations
+        to_agent.location = from_agent.location
+        to_agent.activity = from_agent.activity

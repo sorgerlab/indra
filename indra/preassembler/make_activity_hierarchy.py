@@ -30,6 +30,8 @@ def main():
     g.add((en.term('gtpbound'), isa, en.term('activity')))
     g.add((en.term('kinase'), isa, en.term('catalytic')))
     g.add((en.term('phosphatase'), isa, en.term('catalytic')))
+    g.add((en.term('gef'), isa, en.term('catalytic')))
+    g.add((en.term('gap'), isa, en.term('catalytic')))
 
     save_hierarchy(g, hierarchy_path)
 
