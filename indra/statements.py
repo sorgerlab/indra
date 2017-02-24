@@ -89,11 +89,13 @@ from future.utils import python_2_unicode_compatible
 import os
 import abc
 import sys
+import uuid
 import rdflib
 import logging
 import textwrap
 import jsonpickle
 from collections import namedtuple
+from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
@@ -130,6 +132,28 @@ class BoundCondition(object):
     def __init__(self, agent, is_bound=True):
         self.agent = agent
         self.is_bound = is_bound
+
+    def to_json(self):
+        json_dict = {'agent': self.agent.to_json(),
+                     'is_bound': self.is_bound}
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        agent_entry = json_dict.get('agent')
+        if agent_entry is None:
+            logger.error('BoundCondition missing agent.')
+            return None
+        agent = Agent._from_json(agent_entry)
+        if agent is None:
+            return None
+        is_bound = json_dict.get('is_bound')
+        if is_bound is None:
+            logger.error('BoundCondition missing is_bound, defaulting to True.')
+            is_bound = True
+        bc = BoundCondition(agent, is_bound)
+        assert(unicode_strs(bc))
+        return bc
 
 @python_2_unicode_compatible
 class MutCondition(object):
@@ -168,6 +192,21 @@ class MutCondition(object):
         residue_from_match = (self.residue_from == other.residue_from)
         residue_to_match = (self.residue_to == other.residue_to)
         return (pos_match and residue_from_match and residue_to_match)
+
+    def to_json(self):
+        json_dict = {'position': self.position,
+                     'residue_from': self.residue_from,
+                     'residue_to': self.residue_to}
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        position = json_dict.get('position')
+        residue_from = json_dict.get('residue_from')
+        residue_to = json_dict.get('residue_to')
+        mc = cls(position, residue_from, residue_to)
+        assert(unicode_strs(mc))
+        return mc
 
     def __str__(self):
         s = '(%s, %s, %s)' % (self.residue_from, self.position,
@@ -257,6 +296,31 @@ class ModCondition(object):
     def __repr__(self):
         return str(self)
 
+    def to_json(self):
+        json_dict = {'mod_type': self.mod_type}
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
+        json_dict['is_modified'] = self.is_modified
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        mod_type = json_dict.get('mod_type')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        is_modified = json_dict.get('is_modified')
+        if not mod_type:
+            logger.error('ModCondition missing mod_type.')
+            return None
+        if is_modified is None:
+            logger.warning('ModCondition missing is_modified, defaulting to True')
+            is_modified = True
+        mc = ModCondition(mod_type, residue, position, is_modified)
+        assert(unicode_strs(mc))
+        return mc
+
     def equals(self, other):
         type_match = (self.mod_type == other.mod_type)
         residue_match = (self.residue == other.residue)
@@ -319,6 +383,27 @@ class ActivityCondition(object):
     def matches_key(self):
         key = (str(self.activity_type), str(self.is_active))
         return str(key)
+
+    def to_json(self):
+        json_dict = {'activity_type': self.activity_type,
+                     'is_active': self.is_active}
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        activity_type = json_dict.get('activity_type')
+        is_active = json_dict.get('is_active')
+        if not activity_type:
+            logger.error('ActivityCondition missing activity_type, ' +
+                         'defaulting to `activity`')
+            activity_type = 'activity'
+        if is_active is None:
+            logger.warning('ActivityCondition missing is_active, ' +
+                           'defaulting to True')
+            is_active = True
+        ac = ActivityCondition(activity_type, is_active)
+        assert(unicode_strs(ac))
+        return ac
 
     def __str__(self):
         s = '%s' % self.activity_type
@@ -589,6 +674,47 @@ class Agent(object):
 
         return matches
 
+    def to_json(self):
+        json_dict = {'name': self.name,
+                     'db_refs': self.db_refs}
+        if self.mods:
+            json_dict['mods'] = [mc.to_json() for mc in self.mods]
+        if self.mutations:
+            json_dict['mutations'] = [mc.to_json() for mc in self.mutations]
+        if self.activity is not None:
+            json_dict['activation'] = self.activity.to_json()
+        if self.location is not None:
+            json_dict['location'] = self.location
+        if self.bound_conditions:
+            json_dict['bound_conditions'] = [bc.to_json() for bc in
+                                             self.bound_conditions]
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        name = json_dict.get('name')
+        db_refs = json_dict.get('db_refs', {})
+        mods = json_dict.get('mods', [])
+        mutations = json_dict.get('mutations', [])
+        activity = json_dict.get('activity')
+        bound_conditions = json_dict.get('bound_conditions', [])
+        location = json_dict.get('location')
+
+        if not name:
+            logger.error('Agent missing name.')
+            return None
+        if not db_refs:
+            db_refs = {}
+        agent = Agent(name, db_refs=db_refs)
+        agent.mods = [ModCondition._from_json(mod) for mod in mods]
+        agent.mutations = [MutCondition._from_json(mut) for mut in mutations]
+        agent.bound_conditions = [BoundCondition._from_json(bc)
+                                  for bc in bound_conditions]
+        agent.location = location
+        if activity:
+            agent.activity = ActivityCondition._from_json(activity)
+        return agent
+
     def __str__(self):
         attr_strs = []
         if self.mods:
@@ -666,6 +792,35 @@ class Evidence(object):
                   (self.epistemics == other.epistemics)
         return matches
 
+    def to_json(self):
+        json_dict = {}
+        if self.source_api:
+            json_dict['source_api'] = self.source_api
+        if self.source_id:
+            json_dict['source_id'] = self.source_id
+        if self.pmid:
+            json_dict['pmid'] = self.pmid
+        if self.text:
+            json_dict['text'] = self.text
+        if self.annotations:
+            json_dict['annotations'] = self.annotations
+        if self.epistemics:
+            json_dict['epistemics']  = self.epistemics
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        source_api = json_dict.get('source_api')
+        source_id = json_dict.get('source_id')
+        pmid = json_dict.get('pmid')
+        text = json_dict.get('text')
+        annotations = json_dict.get('annotations', {})
+        epistemics = json_dict.get('epistemics', {})
+        ev = Evidence(source_api=source_api, source_id=source_id,
+                      pmid=pmid, text=text, annotations=annotations,
+                      epistemics=epistemics)
+        return ev
+
     def __str__(self):
         ev_str = 'Evidence(%s, %s, %s, %s)' % \
                  (self.source_api, self.pmid, self.annotations,
@@ -710,6 +865,7 @@ class Statement(object):
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
+        self.uuid = uuid.uuid4()
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -763,27 +919,44 @@ class Statement(object):
         return True
 
     def to_json(self):
-        """Return serialized Statement as a json string."""
-        return jsonpickle.encode(self)
+        """Return serialized Statement as a json dict."""
+        stmt_type = type(self).__name__
+        ### For backwards compatibility, could be removed later
+        all_stmts = [self] + self.supports + self.supported_by
+        for st in all_stmts:
+            try:
+                uid = st.uuid
+            except AttributeError:
+                st.uuid = uuid.uuid4()
+        ##################
+        json_dict = {'id': '%s' % self.uuid,
+                     'type': stmt_type}
+        if self.evidence:
+            evidence = [ev.to_json() for ev in self.evidence]
+            json_dict['evidence'] = evidence
+        if self.supports:
+            json_dict['supports'] = \
+                ['%s' % st.uuid for st in self.supports]
+        if self.supported_by:
+            json_dict['supported_by'] = \
+                ['%s' % st.uuid for st in self.supported_by]
+        return json_dict
 
     @classmethod
-    def from_json(cls, json_str):
-        """Return Statement object by deserializing json string."""
-        try:
-            stmt = jsonpickle.decode(json_str)
-            if isinstance(stmt, cls):
-                return stmt
-            else:
-                logger.error('Could not construct Statement from json: ' + 
-                             'Deserialized object is of type %s' % 
-                             type(stmt).__name__)
-                return None
-        except ValueError as e:
-            logger.error('Could not construct Statement from json: %s' % e)
-            return None
-        except IndexError as e:
-            logger.error('Could not construct Statement from json: %s' % e)
-            return None
+    def _from_json(cls, json_dict):
+        stmt_type = json_dict.get('type')
+        stmt_cls = getattr(sys.modules[__name__], stmt_type)
+        stmt = stmt_cls._from_json(json_dict)
+        evidence = json_dict.get('evidence', [])
+        stmt.evidence = [Evidence._from_json(ev) for ev in evidence]
+        stmt.supports = json_dict.get('supports', [])
+        stmt.supported_by = json_dict.get('supported_by', [])
+        stmt.belief = json_dict.get('belief', 1.0)
+        stmt_id = json_dict.get('id')
+        if not stmt_id:
+            stmt_id = uuid.uuid4()
+        stmt.uuid = stmt_id
+        return stmt
 
 
 @python_2_unicode_compatible
@@ -867,6 +1040,32 @@ class Modification(Statement):
                   (self.position == other.position)
         return matches
 
+    def to_json(self):
+        json_dict = super(Modification, self).to_json()
+        if self.enz is not None:
+            json_dict['enz'] = self.enz.to_json()
+        if self.sub is not None:
+            json_dict['sub'] = self.sub.to_json()
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        enz = json_dict.get('enz')
+        sub = json_dict.get('sub')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        evidence = json_dict.get('evidence', [])
+        if enz:
+            enz = Agent._from_json(enz)
+        if sub:
+            sub = Agent._from_json(sub)
+        stmt = cls(enz, sub, residue, position)
+        return stmt
+
     def __str__(self):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
         pos_str = (', %s' % self.position) if self.position is not None else ''
@@ -947,6 +1146,26 @@ class SelfModification(Statement):
                   (self.residue == other.residue) and\
                   (self.position == other.position)
         return matches
+
+    def to_json(self):
+        json_dict = super(SelfModification, self).to_json()
+        if self.enz is not None:
+            json_dict['enz'] = self.enz.to_json()
+        if self.residue is not None:
+            json_dict['residue'] = self.residue
+        if self.position is not None:
+            json_dict['position'] = self.position
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        enz = json_dict.get('enz')
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        if enz:
+            enz = Agent._from_json(enz)
+        stmt = cls(enz, residue, position)
+        return stmt
 
 
 class Phosphorylation(Modification):
@@ -1164,6 +1383,28 @@ class RegulateActivity(Statement):
         else:
             return False
 
+    def to_json(self):
+        json_dict = super(RegulateActivity, self).to_json()
+        if self.subj is not None:
+            json_dict['subj'] = self.subj.to_json()
+        if self.obj is not None:
+            json_dict['obj'] = self.obj.to_json()
+        if self.obj_activity is not None:
+            json_dict['obj_activity'] = self.obj_activity
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj = json_dict.get('obj')
+        obj_activity = json_dict.get('obj_activity')
+        if subj:
+            subj = Agent._from_json(subj)
+        if obj:
+            obj = Agent._from_json(obj)
+        stmt = cls(subj, obj, obj_activity)
+        return stmt
+
     def __str__(self):
         obj_act_str = ', %s' % self.obj_activity if \
             self.obj_activity != 'activity' else ''
@@ -1319,6 +1560,34 @@ class ActiveForm(Statement):
         else:
             return False
 
+    def to_json(self):
+        json_dict = super(ActiveForm, self).to_json()
+        json_dict.update({'agent': self.agent.to_json(),
+                          'activity': self.activity,
+                          'is_active': self.is_active})
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        agent = json_dict.get('agent')
+        if agent:
+            agent = Agent._from_json(agent)
+        else:
+            logger.error('ActiveForm statement missing agent')
+            return None
+        activity = json_dict.get('activity')
+        is_active = json_dict.get('is_active')
+        if activity is None:
+            logger.warning('ActiveForm activity missing, defaulting ' +
+                           'to `activity`')
+            activity = 'activity'
+        if is_active is None:
+            logger.warning('ActiveForm is_active missing, defaulting ' +
+                           'to True')
+            is_active = True
+        stmt = cls(agent, activity, is_active)
+        return stmt
+
     def __str__(self):
         s = ("ActiveForm(%s, %s, %s)" %
                 (self.agent, self.activity, self.is_active))
@@ -1468,6 +1737,26 @@ class RasGef(Statement):
         matches = super(RasGef, self).equals(other)
         return matches
 
+    def to_json(self):
+        json_dict = super(RasGef, self).to_json()
+        if self.gef is not None:
+            json_dict['gef'] = self.gef.to_json()
+        if self.ras is not None:
+            json_dict['ras'] = self.ras.to_json()
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        gef = json_dict.get('gef')
+        ras = json_dict.get('ras')
+        evidence = json_dict.get('evidence')
+        if gef:
+            gef = Agent._from_json(gef)
+        if ras:
+            ras = Agent._from_json(ras)
+        stmt = cls(gef, ras)
+        return stmt
+
 
 @python_2_unicode_compatible
 class RasGap(Statement):
@@ -1529,6 +1818,26 @@ class RasGap(Statement):
     def equals(self, other):
         matches = super(RasGap, self).equals(other)
         return matches
+
+    def to_json(self):
+        json_dict = super(RasGap, self).to_json()
+        if self.gap is not None:
+            json_dict['gap'] = self.gap.to_json()
+        if self.ras is not None:
+            json_dict['ras'] = self.ras.to_json()
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        gap = json_dict.get('gap')
+        ras = json_dict.get('ras')
+        evidence = json_dict.get('evidence')
+        if gap:
+            gap = Agent._from_json(gap)
+        if ras:
+            ras = Agent._from_json(ras)
+        stmt = cls(gap, ras)
+        return stmt
 
 
 @python_2_unicode_compatible
@@ -1600,6 +1909,19 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
+    def to_json(self):
+        json_dict = super(Complex, self).to_json()
+        members = [m.to_json() for m in self.members]
+        json_dict['members'] = members
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        members = json_dict.get('members')
+        evidence = json_dict.get('evidence', [])
+        members = [Agent._from_json(m) for m in members]
+        stmt = cls(members)
+        return stmt
 
 @python_2_unicode_compatible
 class Translocation(Statement):
@@ -1665,6 +1987,29 @@ class Translocation(Statement):
                 str(self.to_location))
         return str(key)
 
+    def to_json(self):
+        json_dict = super(Translocation, self).to_json()
+        json_dict['agent'] = self.agent.to_json()
+        if self.from_location is not None:
+            json_dict['from_location'] = self.from_location
+        if self.to_location is not None:
+            json_dict['to_location'] = self.to_location
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        agent = json_dict.get('agent')
+        if agent:
+            agent = Agent._from_json(agent)
+        else:
+            logger.error('Translocation statement missing agent')
+            return None
+        from_location = json_dict.get('from_location')
+        to_location = json_dict.get('to_location')
+        stmt = cls(agent, from_location, to_location)
+        return stmt
+
+
 @python_2_unicode_compatible
 class RegulateAmount(Statement):
     """Superclass handling operations on directed, two-element interactions."""
@@ -1693,6 +2038,26 @@ class RegulateAmount(Statement):
                              type(self).__name__)
         self.subj = agent_list[0]
         self.obj = agent_list[1]
+
+    def to_json(self):
+        json_dict = super(RegulateAmount, self).to_json()
+        if self.subj is not None:
+            json_dict['subj'] = self.subj.to_json()
+        if self.obj is not None:
+            json_dict['obj'] = self.obj.to_json()
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj = json_dict.get('obj')
+        evidence = json_dict.get('evidence')
+        if subj:
+            subj = Agent._from_json(subj)
+        if obj:
+            obj = Agent._from_json(obj)
+        stmt = cls(subj, obj)
+        return stmt
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
@@ -1750,6 +2115,36 @@ class IncreaseAmount(RegulateAmount):
         Evidence objects in support of the synthesis statement.
     """
     pass
+
+def stmts_from_json(json_in):
+    def get_by_id(stmts, uid):
+        for st in stmts:
+            if st.uuid == uid:
+                return st
+    if not isinstance(json_in, list):
+        st = Statement._from_json(json_in)
+        return st
+    else:
+        stmts = []
+        for json_stmt in json_in:
+            st = Statement._from_json(json_stmt)
+            stmts.append(st)
+        for st in stmts:
+            for i, uid in enumerate(st.supports):
+                ss = get_by_id(stmts, uid)
+                st.supports[i] = ss
+            for i, uid in enumerate(st.supported_by):
+                ss = get_by_id(stmts, uid)
+                st.supported_by[i] = ss
+        return stmts
+
+def stmts_to_json(stmts_in):
+    if not isinstance(stmts_in, list):
+        json_dict = stmts_in.to_json()
+        return json_dict
+    else:
+        json_dict = [st.to_json() for st in stmts_in]
+    return json_dict
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
