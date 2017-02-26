@@ -617,7 +617,7 @@ def reduce_activities(stmts_in, **kwargs):
     logger.info('Reducing activities on %d statements...' % len(stmts_in))
     stmts_out = [deepcopy(st) for st in stmts_in]
     ml = MechLinker(stmts_out)
-    ml.get_activities()
+    ml.get_explicit_activities()
     ml.reduce_activities()
     stmts_out = ml.statements
     dump_pkl = kwargs.get('save')

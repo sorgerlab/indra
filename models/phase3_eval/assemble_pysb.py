@@ -6,6 +6,7 @@ from pysb import Observable
 from pysb.export.kappa import KappaExporter
 from indra.util import read_unicode_csv
 from indra.assemblers import PysbAssembler, IndexCardAssembler
+from indra.mechlinker import MechLinker
 from indra.statements import *
 import indra.tools.assemble_corpus as ac
 
@@ -18,7 +19,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
     # Add observables
     o = Observable('MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
     model.add_component(o)
@@ -63,6 +64,10 @@ def preprocess_stmts(stmts, data_genes):
     stmts = filter_transcription_factor(stmts)
     # Simplify activity types
     stmts = ac.reduce_activities(stmts)
+    ml = MechLinker(stmts)
+    ml.replace_activations()
+    ml.require_active_form()
+    stmts = ml.statements
     return stmts
 
 
