@@ -45,31 +45,35 @@ class PybelAssembler(object):
                                      PmodParser.POSITION: stmt.position }]
                 self.model.add_node(enz_node, enz_attr)
                 self.model.add_node(sub_node, sub_attr)
-        #braf = ('Protein', 'HGNC', 'BRAF')
-        #mek = ('Protein', 'HGNC', 'MAP2K1')
-        #belgraph.add_node(braf, {'function': 'Protein', 'name':'BRAF',
-        #                         'namespace':'HGNC'})
-        #belgraph.add_node(mek, {'function': 'Protein', 'name':'MAP2K1',
-        #                        'namespace':'HGNC'})
-        edge = {pc.ANNOTATIONS: {},
-                pc.CITATION: {
-                    'authors': '',
-                    'comments': '',
-                    'date': '',
-                    'name': 'Mol Cell Biol 2001 Apr 21(8) 2659-70',
-                    'reference': '11283246',
-                    'type': 'PubMed'},
-                pc.EVIDENCE: 'Some evidence text.',
-                pc.SUBJECT: {
-                    pc.EFFECT: {pc.NAME: 'kin',
-                                pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE},
-                    pc.MODIFIER: pc.ACTIVITY},
-                pc.RELATION: pc.INCREASES,
-                pc.OBJECT: {}}
-                #'object': {
-                #    'effect': {'name': 'kin', 'namespace': 'bel'},
-                #    'modifier': 'Activity'}}
-        self.model.add_edge(enz_node, sub_node, attr_dict=edge)
+                # Create an edge for each evidence object
+                edge = {pc.SUBJECT: {
+                        pc.EFFECT: {pc.NAME: 'kin',
+                                    pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE},
+                        pc.MODIFIER: pc.ACTIVITY},
+                        pc.RELATION: pc.INCREASES,
+                        pc.OBJECT: {}}
+                        #'object': {
+                        #    'effect': {'name': 'kin', 'namespace': 'bel'},
+                        #    'modifier': 'Activity'}}
+                # If there's no evidence for this statement, add node without
+                # any evidence info
+                import ipdb; ipdb.set_trace()
+                if not stmt.evidence:
+                    edge[pc.ANNOTATIONS] = {}
+                    edge[pc.CITATION] = {}
+                    edge[pc.EVIDENCE] = ''
+                    self.model.add_edge(enz_node, sub_node, attr_dict=edge)
+                # Otherwise, add an edge for each piece of evidence.
+                else:
+                    for ev in stmt.evidence:
+                        edge[pc.ANNOTATIONS] = {}
+                        # FIXME Retrieve citation information from pubmed_client
+                        edge[pc.CITATION] = {'authors': '', 'comments': '',
+                                             'date': '', 'name': '',
+                                             'reference': ev.pmid,
+                                             'type': 'PubMed'},
+                        edge[pc.EVIDENCE] = ev.text
+                        self.model.add_edge(enz_node, sub_node, attr_dict=edge)
         return self.model
 
 def _get_agent_node(agent):
