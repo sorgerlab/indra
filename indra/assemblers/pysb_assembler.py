@@ -1635,7 +1635,9 @@ demodification_assemble_default = demodification_assemble_one_step
 # Map specific modification monomer/assembly functions to the generic
 # Modification assembly function
 mod_class_names = [modclass.__name__.lower()
-                   for modclass in ist.Modification.__subclasses__()]
+                   for modclass in ist.AddModification.__subclasses__()]
+mod_class_names += [modclass.__name__.lower()
+                    for modclass in ist.RemoveModification.__subclasses__()]
 policies = ['interactions_only', 'one_step', 'two_step', 'default']
 for mc, func_type, pol in itertools.product(mod_class_names,
                                             ('monomers', 'assemble'),
