@@ -6,7 +6,7 @@ from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, ModCondition, Evidence
 
 def read_phosphosite(fname):
-    df = pandas.read_csv(fname, index_col=None)
+    df = pandas.read_csv(fname, index_col=None, sep='\t')
     statements = []
     antibody_map = {}
     for _, row in df.iterrows():
