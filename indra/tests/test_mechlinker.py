@@ -117,7 +117,7 @@ def test_require_active_forms_mod3():
     assert(len(ml.statements) == 2)
     assert(len(ml.statements[1].enz.mods) == 2)
 
-def test_require_active_forms_mod5():
+def test_require_active_forms_mod4():
     mc1 = ModCondition('phosphorylation', 'T', '185')
     mc2 = ModCondition('phosphorylation', 'Y', '187')
     af = ActiveForm(Agent('a', mods=[mc1, mc2]),
@@ -128,6 +128,21 @@ def test_require_active_forms_mod5():
     ml.require_active_form()
     assert(len(ml.statements) == 2)
     assert(len(ml.statements[1].enz.mods) == 2)
+
+def test_require_active_forms_mod5():
+    mc1 = ModCondition('phosphorylation', 'T', '185')
+    mc2 = ModCondition('phosphorylation', 'Y', '187')
+    mc3 = ModCondition('phosphorylation', 'S', '999')
+    af = ActiveForm(Agent('a', mods=[mc1, mc2]),
+                    'kinase', True)
+    af2 = ActiveForm(Agent('a', mods=[mc3]),
+                     'kinase', False)
+    ph = Phosphorylation(Agent('a'), Agent('b'))
+    ml = MechLinker([af, af2, ph])
+    ml.get_explicit_activities()
+    ml.require_active_form()
+    assert(len(ml.statements) == 3)
+    assert(len(ml.statements[2].enz.mods) == 2)
 
 def test_require_active_forms_act1():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
