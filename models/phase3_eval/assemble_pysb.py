@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import pickle
 from os.path import join as pjoin
 import os.path
 from pysb import Observable, bng
@@ -102,11 +103,20 @@ def preprocess_stmts(stmts, data_genes):
     ml = MechLinker(stmts)
     ml.get_explicit_activities()
     ml.reduce_activities()
+    af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
+    non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
+    af_stmts = ac.run_preassembly(af_stmts)
+    stmts = af_stmts + non_af_stmts
+    # Replace activations when possible
+    ml = MechLinker(stmts)
+    ml.get_explicit_activities()
     ml.replace_activations()
+    # Require active forms
     ml.require_active_form()
+    # Remove inconsequential PTMs
+    ml.statements = filter_inconsequential_ptms(ml.statements,
+                                                get_mod_whitelist())
     stmts = ml.statements
-    stmts = filter_inconsequential_ptms(stmts, get_mod_whitelist())
-    stmts = ac.run_preassembly(stmts)
     return stmts
 
 
