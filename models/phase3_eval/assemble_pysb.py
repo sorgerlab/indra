@@ -31,7 +31,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Add observables
     add_observables(model)
     # Set context
-    pa.set_context('SKMEL28_SKIN')
+    set_context(model)
     pa.save_model(out_file)
     pa.export_model('kappa', '%s.ka' % base_file)
     return model
@@ -41,30 +41,37 @@ def generate_equations(model, pkl_cache):
     with open(pkl_cache, 'w') as fh:
         pickle.dump(model, fh)
 
-def add_observables(model)
-    o = Observable('MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
+def set_context(model):
+    pa.set_context('SKMEL28_SKIN')
+    # Set BRAF V600E
+    for ic in model.initials:
+        if str(ic[0]).startswith('BRAF'):
+            ic[0].monomer_patterns[0].site_conditions['V600'] = 'E'
+
+def add_observables(model):
+    o = Observable(b'MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
     model.add_component(o)
-    o = Observable('MAPK3p', model.monomers['MAPK3'](T202='p', Y204='p'))
+    o = Observable(b'MAPK3p', model.monomers['MAPK3'](T202='p', Y204='p'))
     model.add_component(o)
-    o = Observable('GSK3Ap', model.monomers['GSK3A'](S21='p'))
+    o = Observable(b'GSK3Ap', model.monomers['GSK3A'](S21='p'))
     model.add_component(o)
-    o = Observable('GSK3Bp', model.monomers['GSK3B'](S9='p'))
+    o = Observable(b'GSK3Bp', model.monomers['GSK3B'](S9='p'))
     model.add_component(o)
-    o = Observable('RPS6p', model.monomers['RPS6'](S235='p'))
+    o = Observable(b'RPS6p', model.monomers['RPS6'](S235='p'))
     model.add_component(o)
-    o = Observable('EIF4EBP1p', model.monomers['EIF4EBP1'](phospho='p'))
+    o = Observable(b'EIF4EBP1p', model.monomers['EIF4EBP1'](phospho='p'))
     model.add_component(o)
-    o = Observable('JUNp', model.monomers['JUN'](S73='p'))
+    o = Observable(b'JUNp', model.monomers['JUN'](S73='p'))
     model.add_component(o)
-    o = Observable('FOXO3p', model.monomers['FOXO3'](S315='p'))
+    o = Observable(b'FOXO3p', model.monomers['FOXO3'](S315='p'))
     model.add_component(o)
-    o = Observable('AKT1p', model.monomers['AKT1'](S473='p'))
+    o = Observable(b'AKT1p', model.monomers['AKT1'](S473='p'))
     model.add_component(o)
-    o = Observable('AKT2p', model.monomers['AKT2'](S474='p'))
+    o = Observable(b'AKT2p', model.monomers['AKT2'](S474='p'))
     model.add_component(o)
-    o = Observable('AKT3p', model.monomers['AKT3'](phospho='p'))
+    o = Observable(b'AKT3p', model.monomers['AKT3'](phospho='p'))
     model.add_component(o)
-    o = Observable('ELK1p', model.monomers['ELK1'](S383='p'))
+    o = Observable(b'ELK1p', model.monomers['ELK1'](S383='p'))
     model.add_component(o)
 
 def get_mod_whitelist():
@@ -189,8 +196,8 @@ def filter_inconsequential_ptms(stmts_in, whitelist):
                     skip = True
         if not skip:
             stmts_out.append(stmt)
-        else:
-            print('Removed: %s' % stmt)
+        #else:
+        #    print('Removed: %s' % stmt)
     print('Total statements remaining: %d' % len(stmts_out))
     return stmts_out
 
@@ -211,7 +218,7 @@ def filter_mutation_status(stmts_in, mutations, deletions):
                 break
         if not skip:
             stmts_out.append(stmt)
-        else:
-            print('Removed: %s' % stmt)
+        #else:
+        #    print('Removed: %s' % stmt)
     print('Total statements remaining: %d' % len(stmts_out))
     return stmts_out
