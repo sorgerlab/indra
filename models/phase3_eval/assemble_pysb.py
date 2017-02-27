@@ -27,24 +27,24 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    model = pa.make_model()
-    # Add observables
-    add_observables(model)
+    pa.make_model()
     # Set context
-    set_context(model)
+    set_context(pa)
+    # Add observables
+    add_observables(pa.model)
     pa.save_model(out_file)
     pa.export_model('kappa', '%s.ka' % base_file)
-    return model
+    return pa.model
 
 def generate_equations(model, pkl_cache):
     bng.generate_equations(model, verbose=True)
     with open(pkl_cache, 'w') as fh:
         pickle.dump(model, fh)
 
-def set_context(model):
+def set_context(pa):
     pa.set_context('SKMEL28_SKIN')
     # Set BRAF V600E
-    for ic in model.initials:
+    for ic in pa.model.initial_conditions:
         if str(ic[0]).startswith('BRAF'):
             ic[0].monomer_patterns[0].site_conditions['V600'] = 'E'
 
@@ -99,12 +99,14 @@ def preprocess_stmts(stmts, data_genes):
     stmts = filter_mod_nokinase(stmts)
     stmts = filter_transcription_factor(stmts)
     # Simplify activity types
-    stmts = ac.reduce_activities(stmts)
     ml = MechLinker(stmts)
+    ml.get_explicit_activities()
+    ml.reduce_activities()
     ml.replace_activations()
     ml.require_active_form()
     stmts = ml.statements
     stmts = filter_inconsequential_ptms(stmts, get_mod_whitelist())
+    stmts = ac.run_preassembly(stmts)
     return stmts
 
 

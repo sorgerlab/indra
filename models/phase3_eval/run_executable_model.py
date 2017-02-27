@@ -60,9 +60,9 @@ def sim_all(model, drug_targets):
 
 if __name__ == '__main__':
     print('Loading model')
-    model = load_model('output/korkut_model_pysb.pkl')
+    model = load_model('output/korkut_model_pysb_odes.pkl')
     drug_targets = get_drug_targets('data/drug_grounding.csv')
-    rerun = False
+    rerun = True
     if rerun:
         all_results = sim_all(model, drug_targets)
     else:
