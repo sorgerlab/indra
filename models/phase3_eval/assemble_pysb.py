@@ -80,9 +80,9 @@ def add_observables(model):
     model.add_component(o)
     o = Observable(b'RB1p', model.monomers['RB1'](S807='p'))
     model.add_component(o)
-    o = Observable(b'RPS6KA1p', model.monomers['RPS6KA1'](phospho='p'))
+    o = Observable(b'RPS6KA1p', model.monomers['RPS6KA1'](T359='p'))
     model.add_component(o)
-    o = Observable(b'RPS6KB1p', model.monomers['RPS6KB1'](T359='p'))
+    o = Observable(b'RPS6KB1p', model.monomers['RPS6KB1'](phospho='p'))
     model.add_component(o)
     o = Observable(b'PDPK1p', model.monomers['PDPK1'](S241='p'))
     model.add_component(o)
@@ -92,7 +92,7 @@ def add_observables(model):
     model.add_component(o)
     o = Observable(b'IRS1p', model.monomers['IRS1'](S307='p'))
     model.add_component(o)
-    o = Observable(b'ESR1p', model.monomers['ESR1p'](S118='p'))
+    o = Observable(b'ESR1p', model.monomers['ESR1'](S118='p'))
     model.add_component(o)
 
 
