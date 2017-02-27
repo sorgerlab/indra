@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
 import pickle
 from os.path import join as pjoin
 from indra.tools import assemble_corpus as ac
@@ -31,6 +32,19 @@ def get_prior_genes(fname):
         return genes
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        assemble_models = ['pysb', 'sif', 'cx']
+    else:
+        model_types = sys.argv[1:]
+        if 'all' in model_types:
+            assemble_models = ['pysb', 'sif', 'cx']
+        else:
+            assemble_models = sys.argv[1:]
+
+    print('Assembling the following model types: %s' % \
+          ', '.join(assemble_models))
+    print('##############')
+
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
@@ -60,11 +74,6 @@ if __name__ == '__main__':
         stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
         stmts = ac.run_preassembly(stmts, return_toplevel=False,
                                    save=pjoin(outf, 'preassembled.pkl'))
-
-    assemble_models = []
-    assemble_models.append('sif')
-    assemble_models.append('pysb')
-    assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:
