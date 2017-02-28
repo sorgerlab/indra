@@ -167,3 +167,12 @@ def test_filter_by_type():
 def test_filter_top_level():
     st_out = ac.filter_top_level([st14, st15])
     assert(len(st_out) == 1)
+
+def test_filter_no_hypothesis():
+    a = Agent('MAPK1')
+    ev1 = Evidence(epistemics={'hypothesis': True})
+    ev2 = Evidence(epistemics={'hypothesis': False})
+    st1 = Phosphorylation(None, a, evidence=[ev1, ev2])
+    st2 = Phosphorylation(None, a, evidence=[ev1, ev1])
+    st_out = ac.filter_no_hypothesis([st1, st2])
+    assert(len(st_out) == 1)
