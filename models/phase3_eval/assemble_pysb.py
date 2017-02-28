@@ -17,7 +17,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     base_file, _ = os.path.splitext(out_file)
     # IF YOU DON'T WANT OT RERUN THE PREPROCESSING, LOAD FROM
     # A PICKLE HERE
-    stmts = ac.load_statements('%s.pkl' % base_file)
+    #stmts = ac.load_statements('%s.pkl' % base_file)
     stmts = preprocess_stmts(stmts, data_genes)
 
     # This is the "final" set of statements going into the assembler so it
@@ -28,7 +28,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    pa.make_model()
+    pa.make_model(reverse_effects=True)
     # Set context
     set_context(pa)
     # Add observables

@@ -731,7 +731,8 @@ class PysbAssembler(object):
         """
         self.statements += stmts
 
-    def make_model(self, policies=None, initial_conditions=True):
+    def make_model(self, policies=None, initial_conditions=True,
+                   reverse_effects=False):
         """Assemble the PySB model from the collected INDRA Statements.
 
         This method assembles a PySB model from the set of INDRA Statements.
@@ -757,6 +758,8 @@ class PysbAssembler(object):
         """
         ppa = PysbPreassembler(self.statements)
         ppa.replace_activities()
+        if reverse_effects:
+            ppa.add_reverse_effects()
         self.statements = ppa.statements
         # Set local policies for this make_model call that overwrite
         # the global policies of the PySB assembler
@@ -2267,6 +2270,34 @@ class PysbPreassembler(object):
                 new_stmt.set_agent_list(agent_comb)
                 new_stmts.append(new_stmt)
         self.statements = new_stmts
+
+    def add_reverse_effects(self):
+        # TODO: generalize to other modification sites
+        pos_mod_sites = {}
+        neg_mod_sites = {}
+        for stmt in self.statements:
+            if isinstance(stmt, ist.Phosphorylation):
+                agent = stmt.sub.name
+                try:
+                    pos_mod_sites[agent].append((stmt.residue, stmt.position))
+                except KeyError:
+                    pos_mod_sites[agent] = [(stmt.residue, stmt.position)]
+            if isinstance(stmt, ist.Dephosphorylation):
+                agent = stmt.sub.name
+                try:
+                    neg_mod_sites[agent].append((stmt.residue, stmt.position))
+                except KeyError:
+                    neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
+        new_stmts = []
+        for agent_name, pos_sites in pos_mod_sites.items():
+            neg_sites = neg_mod_sites.get(agent_name, [])
+            no_neg_site = set(pos_sites).difference(set(neg_sites))
+            for residue, position in no_neg_site:
+                st = ist.Dephosphorylation(ist.Agent('phosphatase'),
+                                           ist.Agent(agent_name),
+                                           residue, position)
+                new_stmts.append(st)
+        self.statements += new_stmts
 
     @staticmethod
     def _set_agent_context(from_agent, to_agent):
