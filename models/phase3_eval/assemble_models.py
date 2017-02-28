@@ -7,7 +7,7 @@ from indra.tools import assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 
 import process_data, process_r3, process_sparser, process_trips
-from read_phosphosite import read_phosphosite
+import read_phosphosite
 from assemble_sif import assemble_sif
 from assemble_cx import assemble_cx
 from assemble_pysb import assemble_pysb
@@ -18,11 +18,15 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
-def read_extra_sources():
+def read_extra_sources(out_file):
     trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
-    r3_stmts = process_r3.read_stmts(process_r3.active_forms_file)
-    stmts = trips_stmts + sparser_stmts + r3_stmts
+    r3_stmts = process_r3.read_stmts(process_r3.active_forms_files[0])
+    r3_stmts += process_r3.read_stmts(process_r3.active_forms_files[1])
+    phosphosite_stmts, _ = \
+        read_phosphosite.read_phosphosite(read_phosphosite.phosphosite_file)
+    stmts = trips_stmts + sparser_stmts + r3_stmts + phosphosite_stmts
+    ac.dump_statements(stmts, out_file)
     return stmts
 
 def get_prior_genes(fname):
@@ -57,14 +61,11 @@ if __name__ == '__main__':
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
         reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
-        extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
-        #########
-        extra_stmts = ac.filter_evidence_source(extra_stmts, ['r3'], 'none')
-        phosphosite_stmts, _ = read_phosphosite('annotated_kinases_v4.csv')
-        #########
-        reading_stmts = reach_stmts + extra_stmts + phosphosite_stmts
+        #extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
+        extra_stmts = read_extra_sources(pjoin(outf, 'extra_stmts.pkl'))
+        reading_stmts = reach_stmts + extra_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
-                                    save=pjoin(outf, 'gmapped_reading.pkl'))
+                                         save=pjoin(outf, 'gmapped_reading.pkl'))
         stmts = prior_stmts + reading_stmts + extra_stmts
 
         stmts = ac.filter_grounded_only(stmts)

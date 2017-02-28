@@ -3,7 +3,8 @@ from builtins import dict, str
 import json
 from indra.statements import Statement, Evidence
 
-active_forms_file = 'sources/cure-active-forms-2017-01-30.txt'
+active_forms_files = ['sources/cure-active-forms-2017-01-30.txt',
+                      'sources/r3-egfr-signaling-active-forms-2016-10-18.txt']
 
 def read_jsons(fname):
     all_json = []
@@ -49,4 +50,6 @@ def read_stmts(fname):
     return stmts
 
 if __name__ == '__main__':
-    stmts = read_stmts(active_forms_file)
+    stmts = []
+    for aff in active_forms_files:
+        stmts = read_stmts(aff)
