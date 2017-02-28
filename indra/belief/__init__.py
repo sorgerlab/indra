@@ -17,6 +17,7 @@ class BeliefEngine(object):
                 'biogrid': 0.01,
                 'sparser': 0.3,
                 'r3': 0.1,
+                'phosphosite': 0.01,
                 'assertion': 0.0
                 },
             'syst': {
@@ -27,6 +28,7 @@ class BeliefEngine(object):
                 'biogrid': 0.01,
                 'sparser': 0.3,
                 'r3': 0.1,
+                'phosphosite': 0.01,
                 'assertion': 0.0
                 }
             }

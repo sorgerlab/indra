@@ -60,8 +60,9 @@ if __name__ == '__main__':
         extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
         #########
         extra_stmts = ac.filter_evidence_source(extra_stmts, ['r3'], 'none')
+        phosphosite_stmts, _ = read_phosphosite('annotated_kinases_v4.csv')
         #########
-        reading_stmts = reach_stmts + extra_stmts
+        reading_stmts = reach_stmts + extra_stmts + phosphosite_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
                                     save=pjoin(outf, 'gmapped_reading.pkl'))
         stmts = prior_stmts + reading_stmts + extra_stmts
