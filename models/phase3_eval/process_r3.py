@@ -20,6 +20,17 @@ def read_stmts(fname):
     stmts = []
     for js in jsons:
         st = Statement.from_json(json.dumps(js))
+        if not hasattr(st.agent, 'mutations'):
+            st.agent.mutations = []
+        if not hasattr(st.agent, 'location'):
+            st.agent.location = None
+        if not hasattr(st.agent, 'activity'):
+            st.agent.activity = None
+        # Location and bound conditions alone not relevant here
+        if (not st.agent.mods) and (not st.agent.mutations):
+            continue
+        st.agent.location = None
+        st.agent.bound_conditions = []
         stmts.append(st)
     for st in stmts:
         # Correct evidence
