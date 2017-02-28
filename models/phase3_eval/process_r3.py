@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
+from indra.databases import uniprot_client, hgnc_client
 from indra.statements import Statement, Evidence
 
 active_forms_files = ['sources/cure-active-forms-2017-01-30.txt',
@@ -43,11 +44,22 @@ def read_stmts(fname):
             ev.source_id = None
             ev.annotations = {}
             ev.epistemics = {}
+        fix_protein_grounding(st.agent)
         # Correct supports/supported by
         st.supports = []
         st.supported_by = []
         st.belief = 1
     return stmts
+
+def fix_protein_grounding(agent):
+    if not agent.db_refs.get('TEXT'):
+        agent.db_refs['TEXT'] = agent.name
+    up_id = agent.db_refs.get('UP')
+    if up_id:
+        hgnc_symbol = uniprot_client.get_gene_name(up_id)
+        hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
+        if hgnc_id:
+            agent.db_refs['HGNC'] = hgnc_id
 
 if __name__ == '__main__':
     stmts = []
