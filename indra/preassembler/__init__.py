@@ -126,9 +126,14 @@ class Preassembler(object):
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix == 0:
+                    ev_keys = [ev.matches_key() for ev in stmt.evidence]
                     first_stmt = stmt
                 else:
-                    first_stmt.evidence += stmt.evidence
+                    for ev in stmt.evidence:
+                        key = ev.matches_key()
+                        if key not in ev_keys:
+                            first_stmt.evidence.append(ev)
+                            ev_keys.append(key)
             # This should never be None or anything else
             assert isinstance(first_stmt, Statement)
             unique_stmts.append(first_stmt)

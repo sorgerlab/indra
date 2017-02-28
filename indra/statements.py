@@ -783,6 +783,11 @@ class Evidence(object):
         else:
             self.epistemics = {}
 
+    def matches_key(self):
+        key = str((self.source_api, self.source_id, self.pmid,
+                  self.text, self.annotations, self.epistemics))
+        return key
+
     def equals(self, other):
         matches = (self.source_api == other.source_api) and\
                   (self.source_id == other.source_id) and\
