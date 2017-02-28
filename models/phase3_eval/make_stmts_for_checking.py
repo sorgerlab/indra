@@ -2,20 +2,23 @@ import process_data as pd
 from indra.databases import hgnc_client
 from read_phosphosite import read_phosphosite
 from indra.statements import Agent, Dephosphorylation, Phosphorylation
+from collections import defaultdict
+from indra.preassembler import Preassembler
+from indra.preassembler.hierarchy_manager import hierarchies
+import pickle
 
 data_dict = pd.read_data(pd.data_file)
 protein_data = data_dict['protein']
 abs = pd.get_phos_antibodies(data_dict)
 drug_tx = pd.get_single_drug_treatments(data_dict)
 drug_targets = pd.get_drug_targets()
-ps_data = read_phosphosite('data/annotated_kinases_v4.csv')
+ps_data = read_phosphosite('annotated_kinases_v4.csv')
 
 INC_THRESHOLD = 1.5
 DEC_THRESHOLD = 0.5
 DRUG_COL = 'Sample Description (drug abbre. | dose or time-point)'
 
-stmts = []
-
+stmts = defaultdict(lambda: defaultdict(list))
 
 for tx in drug_tx:
     # Get the drug name
@@ -30,7 +33,8 @@ for tx in drug_tx:
         for ab in abs:
             try:
                 phosphoforms = ps_data[1][ab]
-            except KeyError:
+            except KeyError as e:
+                print("Error, skipping: %s" % e)
                 continue
             # Each entry in this list is an Agent with db_refs filled in
             # and associated mod conditions for the phosphorylated sites
@@ -44,15 +48,24 @@ for tx in drug_tx:
                     if fold_change < DEC_THRESHOLD:
                         stmt = Phosphorylation(target_agent, psf_agent,
                                                mod.residue, mod.position)
-                        stmts.append(stmt)
+                        stmts[drug_name][ab].append(stmt)
                     elif fold_change > INC_THRESHOLD:
                         stmt = Dephosphorylation(target_agent, psf_agent,
                                                  mod.residue, mod.position)
-                        stmts.append(stmt)
+                        stmts[drug_name][ab].append(stmt)
 
-            # Get the target of the drug
-            # Determine if the ab measurement went up or down
-            # Get the modified protein states associated with the ab
+# Now, preassemble the statements to remove duplicates
+pa_dict = {} # Preassembled dict (convert to regular dict because
+             # defaultdict with lambda can't be preassembled
+for drug_name, ab_dict in stmts.items():
+    pa_ab_dict = {}
+    for ab_name, stmt_list in ab_dict.items():
+        pa = Preassembler(hierarchies)
+        pa.add_statements(stmt_list)
+        pa.combine_duplicates()
+        pa_ab_dict[ab_name] = pa.unique_stmts
+    pa_dict[drug_name] = pa_ab_dict
 
-    # Get the data for the drug row
-    # Iterate
+with open('data_stmts.pkl', 'wb') as f:
+    pickle.dump(pa_dict, f)
+
