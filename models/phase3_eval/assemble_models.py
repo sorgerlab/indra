@@ -61,6 +61,7 @@ if __name__ == '__main__':
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
         reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        reach_stmts = ac.filter_no_hypothesis(reach_stmts)
         #extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
         extra_stmts = read_extra_sources(pjoin(outf, 'extra_stmts.pkl'))
         reading_stmts = reach_stmts + extra_stmts

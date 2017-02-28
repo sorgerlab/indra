@@ -17,7 +17,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     base_file, _ = os.path.splitext(out_file)
     # IF YOU DON'T WANT OT RERUN THE PREPROCESSING, LOAD FROM
     # A PICKLE HERE
-    # stmts = ac.load_statements('pysb_assembler_input.pkl')
+    stmts = ac.load_statements('%s.pkl' % base_file)
     stmts = preprocess_stmts(stmts, data_genes)
 
     # This is the "final" set of statements going into the assembler so it
@@ -64,7 +64,7 @@ def add_observables(model):
     model.add_component(o)
     o = Observable(b'RPS6pS240', model.monomers['RPS6'](S240='p'))
     model.add_component(o)
-    o = Observable(b'EIF4EBP1p', model.monomers['EIF4EBP1'](phospho='p'))
+    o = Observable(b'EIF4EBP1p', model.monomers['EIF4EBP1'](S65='p'))
     model.add_component(o)
     o = Observable(b'JUNp', model.monomers['JUN'](S73='p'))
     model.add_component(o)
@@ -98,7 +98,7 @@ def add_observables(model):
 
 def get_mod_whitelist():
     mod_whitelist = {}
-    _, ab_map = read_phosphosite('annotated_kinases_v4.csv')
+    _, ab_map = read_phosphosite('sources/annotated_kinases_v4.csv')
     for k, v in ab_map.items():
         for agent in v:
             res_pos = (agent.mods[0].residue, agent.mods[0].position)
