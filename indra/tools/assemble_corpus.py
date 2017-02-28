@@ -365,7 +365,24 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     dump_pkl = kwargs.get('save')
     logger.info('Filtering %d statements to above %f belief' %
                 (len(stmts_in), belief_cutoff))
-    stmts_out = [s for s in stmts_in if s.belief >= belief_cutoff]
+    # The first round of filtering is in the top-level list
+    stmts_out = []
+    # Now we eliminate supports/supported-by
+    for stmt in stmts_in:
+        if stmt.belief >= belief_cutoff:
+            stmts_out.append(stmt)
+        else:
+            continue
+        supp_by = []
+        supp = []
+        for st in stmt.supports:
+            if st.belief >= belief_cutoff:
+                supp.append(st)
+        for st in stmt.supported_by:
+            if st.belief >= belief_cutoff:
+                supp_by.append(st)
+        stmt.supports = supp
+        stmt.supported_by = supp_by
     logger.info('%d statements after filter...' % len(stmts_out))
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)

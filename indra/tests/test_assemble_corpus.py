@@ -175,4 +175,14 @@ def test_filter_no_hypothesis():
     st1 = Phosphorylation(None, a, evidence=[ev1, ev2])
     st2 = Phosphorylation(None, a, evidence=[ev1, ev1])
     st_out = ac.filter_no_hypothesis([st1, st2])
-    assert(len(st_out) == 1)
+
+def test_belief_cut_plus_filter_top():
+    st1 = Phosphorylation(None, Agent('a'))
+    st2 = Phosphorylation(Agent('b'), Agent('a'))
+    st1.supports = [st2]
+    st2.supported_by = [st1]
+    st1.belief = 0.9
+    st2.belief = 0.1
+    st_high_belief = ac.filter_belief([st1, st2], 0.5)
+    st_top_level = ac.filter_top_level(st_high_belief)
+    assert(len(st_top_level) == 1)
