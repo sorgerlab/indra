@@ -13,25 +13,25 @@ def load_model(pkl_file):
         model = pickle.load(fh)
         return model
 
-def sim_inhibit(model, inhibit_names, inhibit_ratio):
+def sim_inhibit(sim, model, inhibit_names, inhibit_ratio):
     params = [p.value for p in model.parameters]
-    for p in model.parameters:
+    for i, p in enumerate(model.parameters):
         for name in inhibit_names:
             pname = '%s_0' % name
             if p.name == pname:
-                p.value = p.value * (1.0 - inhibit_ratio)
+                params[i] = params[i] * (1.0 - inhibit_ratio)
 
     print('Running perturbed condition')
-    sim = ScipyOdeSimulator(model, ts)
-    res = sim.run()
-    for i, p in enumerate(model.parameters):
-        p.value = params[i]
-    return res.observables
+    sim._initials = None
+    res = sim.run(param_values=params)
+    res = deepcopy(res.observables)
+    return res
 
-def sim_unperturbed(model):
+def sim_unperturbed(sim):
     print('Running unperturbed condition')
-    sim = ScipyOdeSimulator(model, ts)
-    res = sim.run()
+    sim._initials = None
+    params = [p.value for p in model.parameters]
+    res = sim.run(param_values=params)
     res = deepcopy(res.observables)
     return res
 
@@ -49,10 +49,11 @@ def plot_all(model, all_results):
 
 def sim_all(model, drug_targets):
     all_results = {}
-    res = sim_unperturbed(model)
+    sim = ScipyOdeSimulator(model, ts)
+    res = sim_unperturbed(sim)
     all_results['unperturbed'] = res
     for drug_abbrev, targets in drug_targets.items():
-        res = sim_inhibit(model, targets, 0.99)
+        res = sim_inhibit(sim, model, targets, 0.99)
         all_results[drug_abbrev] = res
     with open('output/sim_results.pkl', 'wb') as fh:
         pickle.dump(all_results, fh)
