@@ -32,6 +32,8 @@ class IndexCardAssembler(object):
                 card = assemble_complex(stmt)
             elif isinstance(stmt, Translocation):
                 card = assemble_translocation(stmt)
+            elif isinstance(stmt, RegulateActivity):
+                card = assemble_regulate_activity(stmt)
             else:
                 continue
             if card is not None:
@@ -92,6 +94,30 @@ def assemble_complex(stmt):
         p = get_participant(m)
         card.card['interaction']['participant_a']['entities'].append(p)
     return card
+
+
+def assemble_regulate_activity(stmt):
+    # Top level card
+    card = IndexCard()
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    int_type = ('increases' if stmt.is_activation else 'decreases')
+    card.card['interaction']['interaction_type'] = int_type
+    card.card['interaction']['participant_a'] = get_participant(stmt.subj)
+    # Embedded interaction
+    if stmt.obj_activity == 'kinase':
+        interaction = {}
+        interaction['negative_information'] = False
+        interaction['participant_a'] = get_participant(stmt.obj)
+        interaction['participant_b'] = get_participant(None)
+        interaction['interaction_type'] = 'adds_modification'
+        interaction['modifications'] = [{
+            'feature_type': 'modification_feature',
+            'modification_type': 'phosphorylation',
+            }]
+        card.card['interaction']['participant_b'] = interaction
+    return card
+
 
 def assemble_modification(stmt):
     card = IndexCard()
