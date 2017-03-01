@@ -107,19 +107,23 @@ def assemble_regulate_activity(stmt):
     card.card['interaction']['interaction_type'] = int_type
     card.card['interaction']['participant_a'] = get_participant(stmt.subj)
     # Embedded interaction
+    interaction = {}
+    interaction['negative_information'] = False
+    interaction['participant_a'] = get_participant(stmt.obj)
     if stmt.obj_activity == 'kinase':
-        interaction = {}
-        interaction['negative_information'] = False
-        interaction['participant_a'] = get_participant(stmt.obj)
-        interaction['participant_b'] = get_participant(None)
+        interaction['participant_b'] = get_generic('protein')
         interaction['interaction_type'] = 'adds_modification'
         interaction['modifications'] = [{
             'feature_type': 'modification_feature',
             'modification_type': 'phosphorylation',
             }]
         card.card['interaction']['participant_b'] = interaction
+    elif stmt.obj_activity == 'transcription':
+        interaction['participant_b'] = get_generic('gene')
+        interaction['interaction_type'] = 'increases'
+        card.card['interaction']['participant_b'] = interaction
     else:
-        return []
+        return None
     return card
 
 def assemble_regulate_amount(stmt):
@@ -234,15 +238,18 @@ def assemble_translocation(stmt):
     card.card['interaction'] = interaction
     return card
 
+def get_generic(entity_type='protein'):
+    participant = {
+        'entity_text': [''],
+        'entity_type': entity_type,
+        'identifier': 'GENERIC'
+        }
+    return participant
+
 def get_participant(agent):
     # Handle missing Agent as generic protein
     if agent is None:
-        participant = {
-            'entity_text': [''],
-            'entity_type': 'protein',
-            'identifier': 'GENERIC'
-            }
-        return participant
+        return get_generic('protein')
     # The Agent is not missing
     text_name = agent.db_refs.get('TEXT')
     if text_name is None:
