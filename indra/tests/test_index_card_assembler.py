@@ -100,3 +100,19 @@ def test_chemical():
     print(card.get_string())
     print()
     jsonschema.validate(card.card, schema)
+
+def test_assemble_regulateactivity():
+    stmt = Activation(braf, map2k1, 'kinase', evidence=ev)
+    card = assemble_regulate_activity(stmt)
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    print(card.get_string())
+    print()
+    jsonschema.validate(card.card, schema)
+
+def test_assemble_regulateactivity():
+    stmt = IncreaseAmount(braf, map2k1, evidence=ev)
+    card = assemble_regulate_amount(stmt)
+    card.card['pmc_id'] = get_pmc_id(stmt)
+    print(card.get_string())
+    print()
+    jsonschema.validate(card.card, schema)
