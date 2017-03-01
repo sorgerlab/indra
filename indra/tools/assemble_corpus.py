@@ -13,6 +13,7 @@ import logging
 from copy import deepcopy
 from indra.statements import *
 from indra.belief import BeliefEngine
+from indra.util import read_unicode_csv
 from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
 from indra.preassembler import Preassembler
@@ -685,6 +686,7 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     """Filter statements based on existing mutations/deletions
 
@@ -734,6 +736,52 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_enzyme_kinase(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
+                                    delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, Phosphorylation):
+            if st.enz is not None:
+                if st.enz.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_mod_nokinase(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
+                                    delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, Modification) and not \
+           isinstance(st, Phosphorylation):
+            if st.enz is not None:
+                if st.enz.name not in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_transcription_factor(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    tf_table = \
+        read_unicode_csv(path + '/../resources/transcription_factors.csv')
+    gene_names = [lin[1] for lin in list(tf_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, RegulateAmount):
+            if st.subj is not None:
+                if st.subj.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
     return stmts_out
 
 
