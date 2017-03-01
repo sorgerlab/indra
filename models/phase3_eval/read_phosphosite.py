@@ -38,7 +38,7 @@ def read_phosphosite(fname):
         sub_readout = deepcopy(sub)
         mc = ModCondition('phosphorylation', residue, position)
         sub_readout.mods = [mc]
-        ps = row['phosphosite']
+        ps = row['phosphosite'].decode('utf-8')
         if ps in antibody_map:
             found = False
             for p in antibody_map[ps]:

@@ -23,12 +23,14 @@ def assemble_pysb(stmts, data_genes, out_file):
     # This is the "final" set of statements going into the assembler so it
     # makes sense to cache these.
     # This is also the point where index cards can be generated
-    ac.dump_statements(stmts, '%s.pkl' % base_file)
+    #ac.dump_statements(stmts, '%s_before_pa.pkl' % base_file)
 
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model(reverse_effects=True)
+    #ac.dump_statements(pa.statements, '%s_after_pa.pkl' % base_file)
+    assemble_index_cards(pa.statements, 'output/index_cards')
     # Set context
     set_context(pa)
     # Add observables
@@ -37,10 +39,38 @@ def assemble_pysb(stmts, data_genes, out_file):
     pa.export_model('kappa', '%s.ka' % base_file)
     return pa.model
 
-def generate_equations(model, pkl_cache):
-    bng.generate_equations(model, verbose=True)
-    with open(pkl_cache, 'w') as fh:
-        pickle.dump(model, fh)
+def preprocess_stmts(stmts, data_genes):
+    # Filter the INDRA Statements to be put into the model
+    stmts = ac.filter_mutation_status(stmts,
+                                      {'BRAF': [('V', '600', 'E')]}, ['PTEN'])
+    stmts = ac.filter_by_type(stmts, Complex, invert=True)
+    stmts = ac.filter_direct(stmts)
+    stmts = ac.filter_belief(stmts, 0.95)
+    stmts = ac.filter_top_level(stmts)
+    stmts = ac.filter_gene_list(stmts, data_genes, 'all')
+    stmts = filter_enzyme_kinase(stmts)
+    stmts = filter_mod_nokinase(stmts)
+    stmts = filter_transcription_factor(stmts)
+    # Simplify activity types
+    ml = MechLinker(stmts)
+    ml.get_explicit_activities()
+    ml.reduce_activities()
+    af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
+    non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
+    af_stmts = ac.run_preassembly(af_stmts)
+    stmts = af_stmts + non_af_stmts
+    # Replace activations when possible
+    ml = MechLinker(stmts)
+    ml.get_explicit_activities()
+    ml.replace_activations()
+    # Require active forms
+    ml.require_active_form()
+    # Remove inconsequential PTMs
+    ml.statements = ac.filter_inconsequential_mods(ml.statements,
+                                                   get_mod_whitelist())
+    stmts = ml.statements
+    return stmts
+
 
 def set_context(pa):
     pa.set_context('SKMEL28_SKIN')
@@ -48,6 +78,13 @@ def set_context(pa):
     for ic in pa.model.initial_conditions:
         if str(ic[0]).startswith('BRAF'):
             ic[0].monomer_patterns[0].site_conditions['V600'] = 'E'
+
+
+def generate_equations(model, pkl_cache):
+    bng.generate_equations(model, verbose=True)
+    with open(pkl_cache, 'w') as fh:
+        pickle.dump(model, fh)
+
 
 def add_observables(model):
     o = Observable(b'MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
@@ -101,44 +138,18 @@ def get_mod_whitelist():
     _, ab_map = read_phosphosite('sources/annotated_kinases_v4.csv')
     for k, v in ab_map.items():
         for agent in v:
-            res_pos = (agent.mods[0].residue, agent.mods[0].position)
+            mod = ('phosphorylation', agent.mods[0].residue,
+                   agent.mods[0].position)
             try:
-                mod_whitelist[agent.name].append(res_pos)
+                mod_whitelist[agent.name].append(mod)
             except KeyError:
-                mod_whitelist[agent.name] = [res_pos]
+                mod_whitelist[agent.name] = [mod]
+            # Add generic mods to make sure we keep them
+            mod = ('phosphorylation', agent.mods[0].residue, None)
+            mod_whitelist[agent.name].append(mod)
+            mod = ('phosphorylation', None, None)
+            mod_whitelist[agent.name].append(mod)
     return mod_whitelist
-
-
-def preprocess_stmts(stmts, data_genes):
-    # Filter the INDRA Statements to be put into the model
-    stmts = filter_mutation_status(stmts, {'BRAF': [('V', '600', 'E')]}, ['PTEN'])
-    stmts = ac.filter_by_type(stmts, Complex, invert=True)
-    stmts = ac.filter_direct(stmts)
-    stmts = ac.filter_belief(stmts, 0.95)
-    stmts = ac.filter_top_level(stmts)
-    stmts = ac.filter_gene_list(stmts, data_genes, 'all')
-    stmts = filter_enzyme_kinase(stmts)
-    stmts = filter_mod_nokinase(stmts)
-    stmts = filter_transcription_factor(stmts)
-    # Simplify activity types
-    ml = MechLinker(stmts)
-    ml.get_explicit_activities()
-    ml.reduce_activities()
-    af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
-    non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
-    af_stmts = ac.run_preassembly(af_stmts)
-    stmts = af_stmts + non_af_stmts
-    # Replace activations when possible
-    ml = MechLinker(stmts)
-    ml.get_explicit_activities()
-    ml.replace_activations()
-    # Require active forms
-    ml.require_active_form()
-    # Remove inconsequential PTMs
-    ml.statements = filter_inconsequential_ptms(ml.statements,
-                                                get_mod_whitelist())
-    stmts = ml.statements
-    return stmts
 
 
 def assemble_index_cards(stmts, out_folder):
@@ -204,54 +215,4 @@ def filter_transcription_factor(stmts_in):
                     stmts_out.append(st)
         else:
             stmts_out.append(st)
-    return stmts_out
-
-def filter_inconsequential_ptms(stmts_in, whitelist):
-    states_used = whitelist
-    for stmt in stmts_in:
-        for agent in stmt.agent_list():
-            if agent is not None:
-                if agent.mods:
-                    for mc in agent.mods:
-                        res_pos = (mc.residue, mc.position)
-                        try:
-                            states_used[agent.name].append(res_pos)
-                        except KeyError:
-                            states_used[agent.name] = [res_pos]
-    stmts_out = []
-    for stmt in stmts_in:
-        skip = False
-        if isinstance(stmt, Modification):
-            if stmt.residue is not None or stmt.position is not None:
-                res_pos = (stmt.residue, stmt.position)
-                used = states_used.get(stmt.sub.name, [])
-                if res_pos not in used:
-                    skip = True
-        if not skip:
-            stmts_out.append(stmt)
-        #else:
-        #    print('Removed: %s' % stmt)
-    print('Total statements remaining: %d' % len(stmts_out))
-    return stmts_out
-
-def filter_mutation_status(stmts_in, mutations, deletions):
-    stmts_out = []
-    for stmt in stmts_in:
-        skip = False
-        for agent in stmt.agent_list():
-            if agent is not None and agent.name in deletions:
-                skip = True
-            if agent is not None and agent.mutations:
-                muts = mutations.get(agent.name, [])
-                for mut in agent.mutations:
-                    mut_tup = (mut.residue_from, mut.position, mut.residue_to)
-                    if mut_tup not in muts:
-                        skip = True
-            if skip:
-                break
-        if not skip:
-            stmts_out.append(stmt)
-        #else:
-        #    print('Removed: %s' % stmt)
-    print('Total statements remaining: %d' % len(stmts_out))
     return stmts_out
