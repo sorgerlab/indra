@@ -683,6 +683,57 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_mutation_status(stmts_in, mutations, deletions):
+    """Filter statements based on existing mutations/deletions
+
+    This filter helps to contextualize a set of statements to a given
+    cell type. Given a list of deleted genes, it removes statements that refer
+    to these genes. It also takes a list of mutations and removes statements
+    that refer to mutations not relevant for the given context.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    mutations : dict
+        A dictionary whose keys are gene names, and the values are lists of
+        tuples of the form (residue_from, position, residue_to).
+        Example: mutations = {'BRAF': [('V', '600', 'E')]}
+    deletions : list
+        A list of gene names that are deleted.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements for mutation status...' %
+                len(stmts_in))
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        for agent in stmt.agent_list():
+            if agent is not None and agent.name in deletions:
+                skip = True
+                break
+            if agent is not None and agent.mutations:
+                muts = mutations.get(agent.name, [])
+                for mut in agent.mutations:
+                    mut_tup = (mut.residue_from, mut.position, mut.residue_to)
+                    if mut_tup not in muts:
+                        skip = True
+            if skip:
+                break
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes.

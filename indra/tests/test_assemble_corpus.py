@@ -3,7 +3,7 @@ from builtins import dict, str
 import pickle
 from indra.tools import assemble_corpus as ac
 from indra.statements import Activation, Phosphorylation, Agent, \
-                             Evidence, ModCondition
+                             Evidence, ModCondition, MutCondition
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -197,3 +197,17 @@ def test_filter_inconsequential_mods():
     whitelist = {'b': [('phosphorylation', None, None)]}
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
     assert(len(st_out) == 2)
+
+def test_filter_mutation_status():
+    braf_mut = Agent('BRAF', mutations=MutCondition('600', 'V', 'E'))
+    braf_other_mut = Agent('BRAF', mutations=MutCondition('555', 'K', 'G'))
+    st1 = Phosphorylation(braf_mut, Agent('a'))
+    st2 = Phosphorylation(braf_other_mut, Agent('a'))
+    mutations = {'BRAF': [('V', '600', 'E')]}
+    deletions = []
+    st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
+    assert(len(st_out) == 1)
+    mutations = {}
+    deletions = ['a']
+    st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
+    assert(len(st_out) == 0)
