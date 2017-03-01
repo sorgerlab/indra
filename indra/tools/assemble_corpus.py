@@ -628,7 +628,7 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
     Inconsequential here means that the site is not mentioned / tested
     in any other statement. In some cases specific sites should be
     preserved, for instance, to be used as readouts in a model.
-    In this case, the given sites can be passed in a whitelist. 
+    In this case, the given sites can be passed in a whitelist.
 
     Parameters
     ----------
@@ -664,6 +664,8 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
                             states_used[agent.name].append(mod)
                         except KeyError:
                             states_used[agent.name] = [mod]
+    for k, v in states_used.items():
+        states_used[k] = list(set(v))
     stmts_out = []
     for stmt in stmts_in:
         skip = False
@@ -683,7 +685,7 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_mutation_status(stmts_in, mutations, deletions):
+def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     """Filter statements based on existing mutations/deletions
 
     This filter helps to contextualize a set of statements to a given

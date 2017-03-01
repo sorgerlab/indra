@@ -198,6 +198,12 @@ def test_filter_inconsequential_mods():
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
     assert(len(st_out) == 2)
 
+def test_filter_inconsequential_mods2():
+    st1 = Phosphorylation(Agent('a'), Agent('b'), 'S', '315')
+    whitelist = {'b': [('phosphorylation', 'S', '315')]}
+    st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
+    assert(len(st_out) == 1)
+
 def test_filter_mutation_status():
     braf_mut = Agent('BRAF', mutations=MutCondition('600', 'V', 'E'))
     braf_other_mut = Agent('BRAF', mutations=MutCondition('555', 'K', 'G'))
