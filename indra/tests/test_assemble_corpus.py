@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
 from indra.tools import assemble_corpus as ac
-from indra.statements import Activation, Phosphorylation, Agent, Evidence
+from indra.statements import Activation, Phosphorylation, Agent, \
+                             Evidence, ModCondition
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -186,3 +187,13 @@ def test_belief_cut_plus_filter_top():
     st_high_belief = ac.filter_belief([st1, st2], 0.5)
     st_top_level = ac.filter_top_level(st_high_belief)
     assert(len(st_top_level) == 1)
+
+def test_filter_inconsequential_mods():
+    mc = ModCondition('phosphorylation', None, None, True)
+    st1 = Phosphorylation(None, Agent('a'))
+    st2 = Phosphorylation(Agent('a', mods=[mc]), Agent('b'))
+    st_out = ac.filter_inconsequential_mods([st1, st2])
+    assert(len(st_out) == 1)
+    whitelist = {'b': [('phosphorylation', None, None)]}
+    st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
+    assert(len(st_out) == 2)

@@ -622,6 +622,67 @@ def filter_top_level(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
+    """Filter out Modifications that modify inconsequential sites
+
+    Inconsequential here means that the site is not mentioned / tested
+    in any other statement. In some cases specific sites should be
+    preserved, for instance, to be used as readouts in a model.
+    In this case, the given sites can be passed in a whitelist. 
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    whitelist : Optional[dict]
+        A whitelist containing agent modification sites whose
+        modifications should be preserved even if no other statement
+        refers to them. The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of tuples of
+        (modification_type, residue, position). Example:
+        whitelist = {'MAP2K1': [('phosphorylation', 'S', '222')]}
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    if whitelist is None:
+        whitelist = {}
+    logger.info('Filtering %d statements to remove' % len(stmts_in) +
+                ' inconsequential modifications...')
+    states_used = whitelist
+    for stmt in stmts_in:
+        for agent in stmt.agent_list():
+            if agent is not None:
+                if agent.mods:
+                    for mc in agent.mods:
+                        mod = (mc.mod_type, mc.residue, mc.position)
+                        try:
+                            states_used[agent.name].append(mod)
+                        except KeyError:
+                            states_used[agent.name] = [mod]
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        if isinstance(stmt, Modification):
+            mod_type = stmt.__class__.__name__.lower()
+            if mod_type.startswith('de'):
+                mod_type = mod_type[2:]
+            mod = (mod_type, stmt.residue, stmt.position)
+            used = states_used.get(stmt.sub.name, [])
+            if mod not in used:
+                skip = True
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes.
