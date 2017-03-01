@@ -359,6 +359,7 @@ def get_pmc_id(stmt):
 
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence if ev.text]
+    ev_txts = list(set(ev_txts))
     if not ev_txts:
         sources = list(set([ev.source_api for ev in stmt.evidence]))
         ev_txts = ['Evidence text not available in source database: %s' % \
