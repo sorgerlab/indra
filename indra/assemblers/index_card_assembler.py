@@ -34,6 +34,8 @@ class IndexCardAssembler(object):
                 card = assemble_translocation(stmt)
             elif isinstance(stmt, RegulateActivity):
                 card = assemble_regulate_activity(stmt)
+            elif isinstance(stmt, RegulateAmount):
+                card = assemble_regulate_amount(stmt)
             else:
                 continue
             if card is not None:
@@ -116,6 +118,22 @@ def assemble_regulate_activity(stmt):
             'modification_type': 'phosphorylation',
             }]
         card.card['interaction']['participant_b'] = interaction
+    else:
+        return []
+    return card
+
+def assemble_regulate_amount(stmt):
+    # Top level card
+    card = IndexCard()
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    if isinstance(stmt, IncreaseAmount):
+        int_type = 'increases'
+    else:
+        int_type = 'decreases'
+    card.card['interaction']['interaction_type'] = int_type
+    card.card['interaction']['participant_a'] = get_participant(stmt.subj)
+    card.card['interaction']['participant_b'] = get_participant(stmt.obj)
     return card
 
 
