@@ -31,6 +31,7 @@ class MechLinker(object):
         Parameters
         ----------
         stmts : list[indra.statements.Statement]
+            A list of Statements to add.
         """
         self.statements.extend(stmts)
 
@@ -52,7 +53,11 @@ class MechLinker(object):
         return linked_stmts
 
     def get_explicit_activities(self):
-        """Aggregate all explicit activities given for Agents."""
+        """Aggregate all explicit activities and active forms of Agents.
+
+        This function iterates over self.statements and extracts explicitly
+        stated activity types and active forms for Agents.
+        """
         for stmt in self.statements:
             agents = stmt.agent_list()
             # Activity types given as ActivityConditions
@@ -71,16 +76,20 @@ class MechLinker(object):
                 agent_base.add_activity(stmt.activity)
                 agent_base.add_active_state(stmt.activity, stmt.agent)
 
-
     def get_implicit_activities(self):
         """Aggregate all implicit activities and active forms of Agents.
 
         Iterate over self.statements and collect the implied activities
-        and active forms of Agents that appear in the Statements. These are
-        collected in BaseAgents, one for each type of Agent. For instance,
-        there is a single BaseAgent for a type of protein like MAPK1 while
-        MAPK1 may appear in a variety of states within Agents used in
-        Statements.
+        and active forms of Agents that appear in the Statements.
+
+        Note that using this function to collect implied Agent activities can
+        be risky. Assume, for instance, that a Statement from a reading
+        system states that EGF bound to EGFR phosphorylates ERK. This would
+        be interpreted as implicit evidence for the EGFR-bound form of EGF
+        to have 'kinase' activity, which is clearly incorrect.
+
+        In contrast the alternative pair of this function:
+        get_explicit_activities collects only explicitly stated activities.
         """
         for stmt in self.statements:
             if isinstance(stmt, Phosphorylation) or\
@@ -127,10 +136,6 @@ class MechLinker(object):
                 if stmt.subj is not None:
                     subj_base = self.get_base(stmt.subj)
                     subj_base.add_activity(stmt.j)
-            elif isinstance(stmt, ActiveForm):
-                agent_base = self.get_base(stmt.agent)
-                agent_base.add_activity(stmt.activity)
-                agent_base.add_active_state(stmt.activity, stmt.agent.mods)
 
     def get_base(self, agent):
         """Return the BaseAgent corresponding to an Agent.
@@ -147,6 +152,22 @@ class MechLinker(object):
         return base_agent
 
     def require_active_form(self):
+        """Rewrites Statements with Agents' active forms in active positions.
+
+        As an example, the enzyme in a Modification Statement can be expected
+        to be in an active state. Similarly, subjects of RegulateAmount and
+        RegulateActivity Statements can be expected to be in an active form.
+        This function takes the collected active states of Agents in their
+        corresponding BaseAgents and then rewrites other Statements to apply
+        the active Agent states to them.
+
+        Returns
+        -------
+        new_stmts : list[indra.statements.Statement]
+            A list of Statements which includes the newly rewritten Statements.
+            This list is also set as the internal Statement list of the
+            MechLinker.
+        """
         new_stmts = []
         for stmt in self.statements:
             if isinstance(stmt, Modification):
@@ -248,6 +269,18 @@ class MechLinker(object):
 
     @staticmethod
     def infer_complexes(stmts):
+        """Infer Complex from other Statements implying physical interaction.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of Statements to infer Complexes from.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatements representing the inferred Statements.
+        """
         interact_stmts = get_statement_type(stmts, Modification)
         linked_stmts = []
         for mstmt in interact_stmts:
@@ -280,6 +313,26 @@ class MechLinker(object):
 
     @staticmethod
     def infer_activations(stmts):
+        """Infer RegulateActivity Modification + ActiveForm.
+
+        This function looks for combinations of Modification and ActiveForm
+        Statements and infers Activation/Inhibition Statements from them.
+        For example, if we know that A phosphorylates B, and the
+        phosphorylated form of B is active, then we can infer that
+        A activates B. This can also be viewed as having "explained" a given
+        Activation/Inhibition Statement with a combination of more mechanistic
+        Modification + ActiveForm Statements.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of Statements to infer RegulateActivity from.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatements representing the inferred Statements.
+        """
         linked_stmts = []
         act_stmts = get_statement_type(stmts, RegulateActivity)
         af_stmts = get_statement_type(stmts, ActiveForm)
@@ -315,12 +368,29 @@ class MechLinker(object):
 
     @staticmethod
     def infer_active_forms(stmts):
-        # Infer ActiveForm from RegulateActivity + Modification
+        """Infer ActiveForm from RegulateActivity + Modification.
+
+        This function looks for combinations of Activation/Inhibition
+        Statements and Modification Statements, and infers an ActiveForm
+        from them. For example, if we know that A activates B and
+        A phosphorylates B, then we can infer that the phosphorylated form
+        of B is active.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of Statements to infer ActiveForms from.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatements representing the inferred Statements.
+        """
         linked_stmts = []
         for act_stmt in get_statement_type(stmts, RegulateActivity):
             # TODO: revise the conditions here
-            if not (act_stmt.subj.activity is not None and \
-                act_stmt.subj.activity.activity_type == 'kinase' and \
+            if not (act_stmt.subj.activity is not None and
+                act_stmt.subj.activity.activity_type == 'kinase' and
                 act_stmt.subj.activity.is_active):
                 continue
             matching = []
@@ -355,7 +425,27 @@ class MechLinker(object):
 
     @staticmethod
     def infer_modifications(stmts):
-        # Infer indirect Modification from RegulateActivity + ActiveForm
+        """Infer indirect Modification from RegulateActivity + ActiveForm.
+
+        This function looks for combinations of Activation/Inhibition Statements
+        and ActiveForm Statements that imply a Modification Statement.
+        For example, if we know that A activates B, and phosphorylated B is
+        active, then we can infer that A leads to the phosphorylation of B.
+        An additional requirement when making this assumption is that the
+        activity of B should only be dependent on the modified state and not
+        other context - otherwise the inferred Modification is not necessarily
+        warranted.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of Statements to infer Modifications from.
+
+        Returns
+        -------
+        linked_stmts : list[indra.mechlinker.LinkedStatement]
+            A list of LinkedStatements representing the inferred Statements.
+        """
         linked_stmts = []
         for act_stmt in get_statement_type(stmts, RegulateActivity):
             for af_stmt in get_statement_type(stmts, ActiveForm):
@@ -388,6 +478,7 @@ class MechLinker(object):
                     linked_stmts.append(ls)
                     logger.info('inferred: %s' % st)
         return linked_stmts
+
 
 class BaseAgentSet(object):
     """Container for a set of BaseAgents.
@@ -426,6 +517,7 @@ class BaseAgentSet(object):
     def __getitem__(self, name):
         return self.agents[name]
 
+
 @python_2_unicode_compatible
 class BaseAgent(object):
     """Represents all activity types and active forms of an Agent.
@@ -434,7 +526,7 @@ class BaseAgent(object):
     ----------
     name : str
         The name of the BaseAgent
-    activities : list[str]
+    activity_types : list[str]
         A list of activity types that the Agent has
     active_states : dict
         A dict of activity types and their associated Agent states
@@ -456,7 +548,7 @@ class BaseAgent(object):
 
     def make_activity_reductions(self):
         self.make_activity_graph()
-        self.activity_reductions = get_graph_reductions(self.activity_graph)
+        self.activity_reductions = _get_graph_reductions(self.activity_graph)
 
     def make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
@@ -499,7 +591,17 @@ class BaseAgent(object):
     def __repr__(self):
         return str(self)
 
+
 class AgentState(object):
+    """A class representing Agent state without identifying a specific Agent.
+
+    Properties
+    ----------
+    bound_conditions : list[indra.statements.BoundCondition]
+    mods : list[indra.statements.ModCondition]
+    mutations : list[indra.statements.Mutation]
+    location : indra.statements.location
+    """
     def __init__(self, agent):
         self.bound_conditions = agent.bound_conditions
         self.mods = agent.mods
@@ -507,6 +609,13 @@ class AgentState(object):
         self.location = agent.location
 
     def apply_to(self, agent):
+        """Apply this object's state to an Agent.
+
+        Parameters
+        ----------
+        agent : indra.statements.Agent
+            The agent to which the state should be applied
+        """
         agent.bound_conditions = self.bound_conditions
         agent.mods = self.mods
         agent.mutations = self.mutations
@@ -516,6 +625,7 @@ class AgentState(object):
         s = 'AgentState(%s, %s, %s, %s)' % (self.bound_conditions, self.mods,
                                             self.mutations, self.location)
         return s
+
 
 @python_2_unicode_compatible
 class LinkedStatement(object):
@@ -543,11 +653,23 @@ class LinkedStatement(object):
     def __repr__(self):
         return str(self)
 
+
 def get_statement_type(stmts, stmt_type):
     return [st for st in stmts if isinstance(st, stmt_type)]
 
-def get_graph_reductions(graph):
+
+def _get_graph_reductions(graph):
+    """Return transitive reductions on a DAG.
+
+    This is used to reduce the set of activities of a BaseAgent to the most
+    specific one(s) possible. For instance, if a BaseAgent is know to have
+    'activity', 'catalytic' and 'kinase' activity, then this function will
+    return {'activity': 'kinase', 'catalytic': 'kinase', 'kinase': 'kinase'}
+    as the set of reductions.
+    """
     def frontier(g, nd):
+        """Return the nodes after nd in the topological sort that are at the
+        lowest possible level of the topological sort."""
         if g.out_degree(nd) == 0:
             return set([nd])
         else:
@@ -558,6 +680,9 @@ def get_graph_reductions(graph):
     reductions = {}
     nodes_sort = networkx.topological_sort(graph)
     frontiers = [frontier(graph, n) for n in nodes_sort]
+    # This loop ensures that if a node n2 comes after node n1 in the topological
+    # sort, and their frontiers are identical then n1 can be reduced to n2.
+    # If their frontiers aren't identical, the reduction cannot be done.
     for i, n1 in enumerate(nodes_sort):
         for j, n2 in enumerate(nodes_sort):
             if i > j:

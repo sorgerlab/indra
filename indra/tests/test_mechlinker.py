@@ -3,7 +3,7 @@ from builtins import dict, str
 import networkx
 from indra.statements import *
 from indra.mechlinker import MechLinker, AgentState
-from indra.mechlinker import get_graph_reductions
+from indra.mechlinker import _get_graph_reductions
 
 def test_agent_state():
     mc = ModCondition('phosphorylation')
@@ -56,7 +56,7 @@ def test_graph_reductions():
                           ('activity', 'catalytic'),
                           ('activity', 'phosphatase'),
                           ('catalytic', 'phosphatase')])
-    reductions = get_graph_reductions(G)
+    reductions = _get_graph_reductions(G)
     assert(reductions == {'activity': 'catalytic',
                           'kinase': 'kinase',
                           'phosphatase': 'phosphatase',
@@ -64,7 +64,7 @@ def test_graph_reductions():
     G = networkx.DiGraph([('activity', 'kinase'),
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic')])
-    reductions = get_graph_reductions(G)
+    reductions = _get_graph_reductions(G)
     assert(reductions == {'activity': 'kinase',
                           'catalytic': 'kinase',
                           'kinase': 'kinase'})
@@ -72,7 +72,7 @@ def test_graph_reductions():
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic'),
                           ('activity', 'transcription')])
-    reductions = get_graph_reductions(G)
+    reductions = _get_graph_reductions(G)
     assert(reductions == {'activity': 'activity',
                           'transcription': 'transcription',
                           'catalytic': 'kinase',
@@ -139,6 +139,7 @@ def test_require_active_forms_mod5():
                      'kinase', False)
     ph = Phosphorylation(Agent('a'), Agent('b'))
     ml = MechLinker([af, af2, ph])
+    import ipdb; ipdb.set_trace()
     ml.get_explicit_activities()
     ml.require_active_form()
     assert(len(ml.statements) == 3)
