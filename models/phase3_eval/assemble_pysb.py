@@ -51,7 +51,7 @@ def preprocess_stmts(stmts, data_genes):
     stmts = ac.filter_transcription_factor(stmts)
     # Simplify activity types
     ml = MechLinker(stmts)
-    ml.get_explicit_activities()
+    ml.gather_explicit_activities()
     ml.reduce_activities()
     af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
     non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
@@ -59,10 +59,10 @@ def preprocess_stmts(stmts, data_genes):
     stmts = af_stmts + non_af_stmts
     # Replace activations when possible
     ml = MechLinker(stmts)
-    ml.get_explicit_activities()
+    ml.gather_explicit_activities()
     ml.replace_activations()
     # Require active forms
-    ml.require_active_form()
+    ml.require_active_forms()
     num_stmts = len(ml.statements)
     while True:
         # Remove inconsequential PTMs

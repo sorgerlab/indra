@@ -123,7 +123,7 @@ class MechLinker(object):
                     subj_base = self._get_base(stmt.subj)
                     subj_base.add_activity(stmt.j)
 
-    def require_active_form(self):
+    def require_active_forms(self):
         """Rewrites Statements with Agents' active forms in active positions.
 
         As an example, the enzyme in a Modification Statement can be expected

@@ -90,7 +90,7 @@ def test_require_active_forms_mod1():
     ph = Phosphorylation(Agent('a'), Agent('b'))
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 2)
     assert(ml.statements[1].enz.mods)
 
@@ -101,7 +101,7 @@ def test_require_active_forms_mod2():
     ph = Phosphorylation(Agent('a'), Agent('b'))
     ml = MechLinker([af, af2, ph])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 4)
     assert(ml.statements[3].enz.location)
 
@@ -113,7 +113,7 @@ def test_require_active_forms_mod3():
     ph = Phosphorylation(Agent('a'), Agent('b'))
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 2)
     assert(len(ml.statements[1].enz.mods) == 2)
 
@@ -125,7 +125,7 @@ def test_require_active_forms_mod4():
     ph = Phosphorylation(Agent('a', mods=[mc1]), Agent('b'))
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 2)
     assert(len(ml.statements[1].enz.mods) == 2)
 
@@ -140,7 +140,7 @@ def test_require_active_forms_mod5():
     ph = Phosphorylation(Agent('a'), Agent('b'))
     ml = MechLinker([af, af2, ph])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 3)
     assert(len(ml.statements[2].enz.mods) == 2)
 
@@ -150,7 +150,7 @@ def test_require_active_forms_act1():
     act = Activation(Agent('a'), Agent('b'))
     ml = MechLinker([af, act])
     ml.gather_explicit_activities()
-    ml.require_active_form()
+    ml.require_active_forms()
     assert(len(ml.statements) == 2)
     assert(ml.statements[1].subj.mods)
 
