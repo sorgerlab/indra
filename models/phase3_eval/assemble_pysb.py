@@ -1,36 +1,34 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
-from os.path import join as pjoin
 import os.path
+from os.path import join as pjoin
 from pysb import Observable, bng
 from pysb.export.kappa import KappaExporter
-from indra.util import read_unicode_csv
-from indra.assemblers import PysbAssembler, IndexCardAssembler
-from indra.mechlinker import MechLinker
 from indra.statements import *
+from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
+from indra.assemblers import PysbAssembler, IndexCardAssembler
 from read_phosphosite import read_phosphosite
 
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
     base_file, _ = os.path.splitext(out_file)
-    # IF YOU DON'T WANT OT RERUN THE PREPROCESSING, LOAD FROM
-    # A PICKLE HERE
     #stmts = ac.load_statements('%s.pkl' % base_file)
     stmts = preprocess_stmts(stmts, data_genes)
 
     # This is the "final" set of statements going into the assembler so it
     # makes sense to cache these.
     # This is also the point where index cards can be generated
-    #ac.dump_statements(stmts, '%s_before_pa.pkl' % base_file)
+    ac.dump_statements(stmts, '%s_before_pa.pkl' % base_file)
+    assemble_index_cards(stmts, 'output/index_cards')
 
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
+    #pa.make_model(reverse_effects=True)
     pa.make_model(reverse_effects=True)
     #ac.dump_statements(pa.statements, '%s_after_pa.pkl' % base_file)
-    assemble_index_cards(pa.statements, 'output/index_cards')
     # Set context
     set_context(pa)
     # Add observables
@@ -48,9 +46,9 @@ def preprocess_stmts(stmts, data_genes):
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
-    stmts = filter_enzyme_kinase(stmts)
-    stmts = filter_mod_nokinase(stmts)
-    stmts = filter_transcription_factor(stmts)
+    stmts = ac.filter_enzyme_kinase(stmts)
+    stmts = ac.filter_mod_nokinase(stmts)
+    stmts = ac.filter_transcription_factor(stmts)
     # Simplify activity types
     ml = MechLinker(stmts)
     ml.get_explicit_activities()
@@ -65,9 +63,16 @@ def preprocess_stmts(stmts, data_genes):
     ml.replace_activations()
     # Require active forms
     ml.require_active_form()
-    # Remove inconsequential PTMs
-    ml.statements = ac.filter_inconsequential_mods(ml.statements,
-                                                   get_mod_whitelist())
+    num_stmts = len(ml.statements)
+    while True:
+        # Remove inconsequential PTMs
+        ml.statements = ac.filter_inconsequential_mods(ml.statements,
+                                                       get_mod_whitelist())
+        ml.statements = ac.filter_inconsequential_acts(ml.statements,
+                                                       get_mod_whitelist())
+        if num_stmts <= len(ml.statements):
+            break
+        num_stmts = len(ml.statements)
     stmts = ml.statements
     return stmts
 
@@ -135,7 +140,7 @@ def add_observables(model):
 
 def get_mod_whitelist():
     mod_whitelist = {}
-    _, ab_map = read_phosphosite('sources/annotated_kinases_v4.csv')
+    _, ab_map = read_phosphosite('sources/annotated_kinases_v5.csv')
     for k, v in ab_map.items():
         for agent in v:
             mod = ('phosphorylation', agent.mods[0].residue,
@@ -167,52 +172,3 @@ def assemble_index_cards(stmts, out_folder):
         if ica.cards:
             ica.save_model(pjoin(out_folder, 'index_card_%d.json' % counter))
             counter += 1
-
-# These filters are currently in a very basic implementation stage
-# where they work well on the statements encountered in the scope of this
-# evaluation. They could be generalized and refactored to become
-# part of the core of INDRA.
-# Note that implicitly these filters also filter out statements in which
-# the subject is None.
-def filter_enzyme_kinase(stmts_in):
-    kinase_table = read_unicode_csv('../../indra/resources/kinases.tsv',
-                                    delimiter='\t')
-    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
-    stmts_out = []
-    for st in stmts_in:
-        if isinstance(st, Phosphorylation):
-            if st.enz is not None:
-                if st.enz.name in gene_names:
-                    stmts_out.append(st)
-        else:
-            stmts_out.append(st)
-    return stmts_out
-
-def filter_mod_nokinase(stmts_in):
-    kinase_table = read_unicode_csv('../../indra/resources/kinases.tsv',
-                                    delimiter='\t')
-    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
-    stmts_out = []
-    for st in stmts_in:
-        if isinstance(st, Modification) and not \
-           isinstance(st, Phosphorylation):
-            if st.enz is not None:
-                if st.enz.name not in gene_names:
-                    stmts_out.append(st)
-        else:
-            stmts_out.append(st)
-    return stmts_out
-
-def filter_transcription_factor(stmts_in):
-    tf_table = \
-        read_unicode_csv('../../indra/resources/transcription_factors.csv')
-    gene_names = [lin[1] for lin in list(tf_table)[1:]]
-    stmts_out = []
-    for st in stmts_in:
-        if isinstance(st, RegulateAmount):
-            if st.subj is not None:
-                if st.subj.name in gene_names:
-                    stmts_out.append(st)
-        else:
-            stmts_out.append(st)
-    return stmts_out
