@@ -813,9 +813,10 @@ def _check_mod_assembly(mod_class):
     assert(len(model.monomers)==2)
 
 def test_modification_assembly():
-    for mod_class in Modification.__subclasses__():
+    classes = AddModification.__subclasses__() + \
+              RemoveModification.__subclasses__()
+    for mod_class in classes:
         _check_mod_assembly(mod_class)
-
 
 def test_rule_annotation():
     a = Agent('A', db_refs={'HGNC': '1234'})
@@ -834,7 +835,9 @@ def test_rule_annotation():
         assert len(obj) == 1
         assert obj[0] == 'B'
 
-    for mod_class in Modification.__subclasses__():
+    classes = AddModification.__subclasses__() + \
+              RemoveModification.__subclasses__()
+    for mod_class in classes:
         stmt = mod_class(a, b)
         check_rule_annotation(stmt, 'one_step')
         check_rule_annotation(stmt, 'two_step')
