@@ -32,7 +32,6 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Set context
     set_context(pa)
     # Add observables
-    import ipdb; ipdb.set_trace()
     add_observables(pa.model)
     pa.save_model(out_file)
     #pa.export_model('kappa', '%s.ka' % base_file)
@@ -40,12 +39,6 @@ def assemble_pysb(stmts, data_genes, out_file):
 
 def preprocess_stmts(stmts, data_genes):
     # Filter the INDRA Statements to be put into the model
-    for stmt in stmts:
-        for agent in stmt.agent_list():
-            if agent is not None and agent.name == 'AKT1':
-                for mod in agent.mods:
-                    if mod.position == '475':
-                        mod.position = '473'
     stmts = ac.filter_mutation_status(stmts,
                                       {'BRAF': [('V', '600', 'E')]}, ['PTEN'])
     stmts = ac.filter_by_type(stmts, Complex, invert=True)
