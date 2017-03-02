@@ -6,7 +6,7 @@ from pysb.integrate import ScipyOdeSimulator
 
 from process_data import get_drug_targets
 
-ts = numpy.linspace(0, 86400, 1000)
+ts = numpy.linspace(0, 86400, 1440)
 
 def load_model(pkl_file):
     with open(pkl_file, 'r') as fh:
@@ -40,12 +40,28 @@ def plot_all(model, all_results):
         fname = 'output/%s.png' % obs.name
         plt.figure()
         for drug_abbrev in all_results.keys():
-            plt.plot(ts, all_results[drug_abbrev][obs.name],
+            plt.plot(ts[:60], all_results[drug_abbrev][obs.name][:60],
                      label=drug_abbrev)
         plt.xlabel('Time (seconds)')
         plt.ylabel('Amount (molecules)')
         plt.legend()
         plt.savefig(fname)
+
+def compare_all(model, all_results):
+    ratios = {}
+    for obs in model.observables:
+        ratios[obs.name] = {}
+        base = all_results['unperturbed'][obs.name][10]
+        for drug_abbrev in all_results.keys():
+            if drug_abbrev == 'unperturbed':
+                continue
+            treated = all_results[drug_abbrev][obs.name][10]
+            if base < 1e-10:
+                ratio = 1.0
+            else:
+                ratio = treated / base
+            ratios[obs.name][drug_abbrev] = ratio
+    return ratios
 
 def sim_all(model, drug_targets):
     all_results = {}
