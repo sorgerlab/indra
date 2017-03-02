@@ -686,6 +686,62 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
+    """Filter out Activations that modify inconsequential activities
+
+    Inconsequential here means that the site is not mentioned / tested
+    in any other statement. In some cases specific activity types should be
+    preserved, for instance, to be used as readouts in a model.
+    In this case, the given activities can be passed in a whitelist.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    whitelist : Optional[dict]
+        A whitelist containing agent activity types which  should be preserved
+        even if no other statement refers to them.
+        The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of activity types.
+        Example: whitelist = {'MAP2K1': ['kinase']}
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    if whitelist is None:
+        whitelist = {}
+    logger.info('Filtering %d statements to remove' % len(stmts_in) +
+                ' inconsequential activations...')
+    states_used = whitelist
+    for stmt in stmts_in:
+        for agent in stmt.agent_list():
+            if agent is not None:
+                if agent.activity:
+                    act = agent.activity.activity_type
+                    try:
+                        states_used[agent.name].append(act)
+                    except KeyError:
+                        states_used[agent.name] = [act]
+    for k, v in states_used.items():
+        states_used[k] = list(set(v))
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        if isinstance(stmt, RegulateActivity):
+            used = states_used.get(stmt.obj.name, [])
+            if stmt.obj_activity not in used:
+                skip = True
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
 
 def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     """Filter statements based on existing mutations/deletions
