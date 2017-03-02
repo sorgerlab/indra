@@ -57,7 +57,10 @@ class MechLinker(object):
             elif isinstance(stmt, ActiveForm):
                 agent_base = self._get_base(stmt.agent)
                 agent_base.add_activity(stmt.activity)
-                agent_base.add_active_state(stmt.activity, stmt.agent)
+                if stmt.is_active:
+                    agent_base.add_active_state(stmt.activity, stmt.agent)
+                else:
+                    agent_base.add_inactive_state(stmt.activity, stmt.agent)
 
     def gather_implicit_activities(self):
         """Aggregate all implicit activities and active forms of Agents.
@@ -75,8 +78,8 @@ class MechLinker(object):
         gather_explicit_activities collects only explicitly stated activities.
         """
         for stmt in self.statements:
-            if isinstance(stmt, Phosphorylation) or\
-                isinstance(stmt, Transphosphorylation) or\
+            if isinstance(stmt, Phosphorylation) or \
+                isinstance(stmt, Transphosphorylation) or \
                 isinstance(stmt, Autophosphorylation):
                 if stmt.enz is not None:
                     enz_base = self._get_base(stmt.enz)
@@ -245,7 +248,6 @@ class MechLinker(object):
             A list of LinkedStatements representing the inferred Statements.
         """
         linked_stmts = []
-        act_stmts = _get_statements_by_type(stmts, RegulateActivity)
         af_stmts = _get_statements_by_type(stmts, ActiveForm)
         mod_stmts = _get_statements_by_type(stmts, Modification)
         for af_stmt, mod_stmt in itertools.product(*(af_stmts, mod_stmts)):
@@ -536,6 +538,7 @@ class BaseAgent(object):
         self.name = name
         self.activity_types = []
         self.active_states = {}
+        self.inactive_states = {}
         self.activity_graph = None
         self.activity_reductions = None
 
@@ -567,12 +570,27 @@ class BaseAgent(object):
         else:
             self.active_states[activity_type] = [agent_state]
 
+    def add_inactive_state(self, activity_type, agent):
+        agent_state = AgentState(agent)
+        if activity_type in self.inactive_states:
+            self.inactive_states[activity_type].append(agent_state)
+        else:
+            self.inactive_states[activity_type] = [agent_state]
+
     def get_active_forms(self):
-        # TODO: handle inactive states
         # TODO: handle activity types
         if self.active_states:
             states = []
             for k, v in self.active_states.items():
+                states += v
+            return states
+        return None
+
+    def get_inactive_forms(self):
+        # TODO: handle activity types
+        if self.inactive_states:
+            states = []
+            for k, v in self.inactive_states.items():
                 states += v
             return states
         return None
