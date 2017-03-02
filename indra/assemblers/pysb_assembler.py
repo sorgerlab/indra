@@ -2119,7 +2119,7 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set):
                             stmt.obj.name[0].lower() + '_deg'
         # Scale the average apparent decreaseamount rate by the default
         # protein initial condition
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-7)
+        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-8)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name,
@@ -2160,6 +2160,8 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 def increaseamount_assemble_one_step(stmt, model, agent_set):
+    if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
+        return
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
     obj_pattern = get_monomer_pattern(model, stmt.obj)
@@ -2187,7 +2189,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
                             stmt.obj.name[0].lower() + '_synth'
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
-        kf_one_step_synth = get_create_parameter(model, param_name, 2e-1)
+        kf_one_step_synth = get_create_parameter(model, param_name, 2e-6)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
@@ -2275,6 +2277,8 @@ class PysbPreassembler(object):
         # TODO: generalize to other modification sites
         pos_mod_sites = {}
         neg_mod_sites = {}
+        syntheses = []
+        degradations = []
         for stmt in self.statements:
             if isinstance(stmt, ist.Phosphorylation):
                 agent = stmt.sub.name
@@ -2282,12 +2286,17 @@ class PysbPreassembler(object):
                     pos_mod_sites[agent].append((stmt.residue, stmt.position))
                 except KeyError:
                     pos_mod_sites[agent] = [(stmt.residue, stmt.position)]
-            if isinstance(stmt, ist.Dephosphorylation):
+            elif isinstance(stmt, ist.Dephosphorylation):
                 agent = stmt.sub.name
                 try:
                     neg_mod_sites[agent].append((stmt.residue, stmt.position))
                 except KeyError:
                     neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
+            elif isinstance(stmt, ist.IncreaseAmount):
+                syntheses.append(stmt.subj.name)
+            elif isinstance(stmt, ist.DecreaseAmount):
+                degradations.append(stmt.subj.name)
+
         new_stmts = []
         for agent_name, pos_sites in pos_mod_sites.items():
             neg_sites = neg_mod_sites.get(agent_name, [])
@@ -2297,6 +2306,11 @@ class PysbPreassembler(object):
                                            ist.Agent(agent_name),
                                            residue, position)
                 new_stmts.append(st)
+        for agent_name in syntheses:
+            if agent_name not in degradations:
+                st = ist.DecreaseAmount(None, ist.Agent(agent_name))
+                new_stmts.append(st)
+
         self.statements += new_stmts
 
     @staticmethod
