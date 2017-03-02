@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import re
 import pickle
 import os.path
 from os.path import join as pjoin
-from pysb import Observable, bng
+from pysb import Observable, ReactionPattern, ComplexPattern, bng
 from pysb.export.kappa import KappaExporter
 from indra.statements import *
 from indra.mechlinker import MechLinker
@@ -26,19 +27,25 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    #pa.make_model(reverse_effects=True)
     pa.make_model(reverse_effects=True)
     #ac.dump_statements(pa.statements, '%s_after_pa.pkl' % base_file)
     # Set context
     set_context(pa)
     # Add observables
+    import ipdb; ipdb.set_trace()
     add_observables(pa.model)
     pa.save_model(out_file)
-    pa.export_model('kappa', '%s.ka' % base_file)
+    #pa.export_model('kappa', '%s.ka' % base_file)
     return pa.model
 
 def preprocess_stmts(stmts, data_genes):
     # Filter the INDRA Statements to be put into the model
+    for stmt in stmts:
+        for agent in stmt.agent_list():
+            if agent is not None and agent.name == 'AKT1':
+                for mod in agent.mods:
+                    if mod.position == '475':
+                        mod.position = '473'
     stmts = ac.filter_mutation_status(stmts,
                                       {'BRAF': [('V', '600', 'E')]}, ['PTEN'])
     stmts = ac.filter_by_type(stmts, Complex, invert=True)
@@ -92,6 +99,34 @@ def generate_equations(model, pkl_cache):
 
 
 def add_observables(model):
+    _, ab_map = read_phosphosite('sources/annotated_kinases_v5.csv')
+    for ab_name, agents in ab_map.items():
+        patterns = []
+        for agent in agents:
+            try:
+                monomer = model.monomers[agent.name]
+            except KeyError:
+                continue
+            mc = agent.mods[0]
+            site_names = ['phospho', mc.residue]
+            if mc.position is not None:
+                site_names.append(mc.residue + mc.position)
+            for site_name in site_names:
+                try:
+                    pattern = monomer(**{site_name: 'p'})
+                    patterns.append(ComplexPattern([pattern], None))
+                except Exception:
+                    pass
+        if patterns:
+            obs_name = ab_name
+            if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
+                obs_name = obs_name.replace('-', '_')
+            if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
+                obs_name = 'p' + obs_name
+            obs_name = obs_name.encode('utf-8')
+            o = Observable(obs_name, ReactionPattern(patterns))
+            model.add_component(o)
+    '''
     o = Observable(b'MAPK1p', model.monomers['MAPK1'](T185='p', Y187='p'))
     model.add_component(o)
     o = Observable(b'MAPK3p', model.monomers['MAPK3'](T202='p', Y204='p'))
@@ -136,6 +171,7 @@ def add_observables(model):
     model.add_component(o)
     o = Observable(b'ESR1p', model.monomers['ESR1'](S118='p'))
     model.add_component(o)
+    '''
 
 
 def get_mod_whitelist():

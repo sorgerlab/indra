@@ -6,7 +6,7 @@ from indra.util import unicode_strs
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, ModCondition, Evidence
 
-phosphosite_file = 'sources/annotated_kinases_v4.csv'
+phosphosite_file = 'sources/annotated_kinases_v5.csv'
 
 def read_phosphosite(fname):
     df = pandas.read_csv(fname, index_col=None, sep='\t')
