@@ -462,11 +462,6 @@ class TripsProcessor(object):
 
     def get_active_forms_state(self):
         """Extract ActiveForm INDRA Statements."""
-        def _agent_is_basic(agent):
-            if not agent.mods and not agent.mutations \
-                    and not agent.bound_conditions and not agent.location:
-                return True
-            return False
         for term in self._isolated_terms:
             act = term.find('features/active')
             if act is None:
@@ -481,8 +476,9 @@ class TripsProcessor(object):
             # Skip aggregates for now
             if not isinstance(agent, Agent):
                 continue
-            # Skip if the Agent doesn't have any state
-            if _agent_is_basic(agent):
+            # If the Agent state is at the base state then this is not an
+            # ActiveForm statement
+            if _is_base_agent_state(agent):
                 continue
             # Remove the activity flag since it's irrelevant here
             agent.activity = None
@@ -707,6 +703,8 @@ class TripsProcessor(object):
             else:
                 to_loc_id = to_loc_tag.attrib.get('id')
                 to_location = self._get_cell_loc_by_id(to_loc_id)
+            if from_location is None and to_location is None:
+                continue
             # Get evidence
             ev = self._get_evidence(event)
             if isinstance(agent, list):
