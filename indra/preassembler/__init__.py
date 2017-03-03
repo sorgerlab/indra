@@ -193,6 +193,10 @@ class Preassembler(object):
            from the `supported_by` fields of other statements). This list
            is returned to the caller.
 
+        On multi-core machines, the algorithm can be parallelized by setting
+        the poolsize argument to the desired number of worker processes.
+        This feature is only available in Python > 3.4.
+
         .. note:: Subfamily relationships must be consistent across arguments
 
             For now, we require that merges can only occur if the *isa*
@@ -207,6 +211,16 @@ class Preassembler(object):
         return_toplevel : bool
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
+        poolsize : int or None
+            The number of worker processes to use to parallelize the
+            comparisons performed by the function. If None (default), no
+            parallelization is performed. NOTE: Parallelization is only
+            available on Python 3.4 and above.
+        size_cutoff : int
+            The threshold number of statements determining whether the
+            comparisons within a group of statements should be run in the
+            parent process or be sent to a worker process. Default value is 100.
+            Not relevant when parallelization is not used.
 
         Returns
         -------
