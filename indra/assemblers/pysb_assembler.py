@@ -1636,22 +1636,26 @@ demodification_assemble_default = demodification_assemble_one_step
 
 # Map specific modification monomer/assembly functions to the generic
 # Modification assembly function
-mod_class_names = [modclass.__name__.lower()
-                   for modclass in ist.AddModification.__subclasses__()]
-mod_class_names += [modclass.__name__.lower()
-                    for modclass in ist.RemoveModification.__subclasses__()]
 policies = ['interactions_only', 'one_step', 'two_step', 'default']
-for mc, func_type, pol in itertools.product(mod_class_names,
+
+mod_classes = [cls for cls in ist.AddModification.__subclasses__()]
+for mc, func_type, pol in itertools.product(mod_classes,
                                             ('monomers', 'assemble'),
                                             policies):
-    if mc.startswith('de'):
-        code = '{mc}_{func_type}_{pol} = ' \
-               'demodification_{func_type}_{pol}'.format(
-                        mc=mc, func_type=func_type, pol=pol)
-    else:
-        code = '{mc}_{func_type}_{pol} = ' \
-               'modification_{func_type}_{pol}'.format(
-                        mc=mc, func_type=func_type, pol=pol)
+    code = '{mc}_{func_type}_{pol} = ' \
+            'modification_{func_type}_{pol}'.format(
+                    mc=ist.modclass_to_modtype[mc], func_type=func_type,
+                    pol=pol)
+    exec(code)
+
+demod_classes = [cls for cls in ist.RemoveModification.__subclasses__()]
+for mc, func_type, pol in itertools.product(demod_classes,
+                                            ('monomers', 'assemble'),
+                                            policies):
+    code = '{mc}_{func_type}_{pol} = ' \
+            'demodification_{func_type}_{pol}'.format(
+                    mc=ist.modclass_to_modtype[mc], func_type=func_type,
+                    pol=pol)
     exec(code)
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
