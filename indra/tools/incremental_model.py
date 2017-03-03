@@ -3,14 +3,9 @@ from builtins import dict, str
 import pickle
 import logging
 from indra.statements import Agent
-from indra.belief import BeliefEngine
 import indra.tools.assemble_corpus as ac
-from indra.assemblers import PysbAssembler
-from indra.databases import uniprot_client, hgnc_client
-from indra.preassembler import Preassembler
-from indra.preassembler import grounding_mapper as gm
+from indra.databases import hgnc_client
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 logger = logging.getLogger('incremental_model')
 

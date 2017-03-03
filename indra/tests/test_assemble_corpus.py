@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
 from indra.tools import assemble_corpus as ac
-from indra.statements import Activation, Phosphorylation, Agent, Evidence
+from indra.statements import *
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -167,3 +167,61 @@ def test_filter_by_type():
 def test_filter_top_level():
     st_out = ac.filter_top_level([st14, st15])
     assert(len(st_out) == 1)
+
+def test_filter_no_hypothesis():
+    a = Agent('MAPK1')
+    ev1 = Evidence(epistemics={'hypothesis': True})
+    ev2 = Evidence(epistemics={'hypothesis': False})
+    st1 = Phosphorylation(None, a, evidence=[ev1, ev2])
+    st2 = Phosphorylation(None, a, evidence=[ev1, ev1])
+    st_out = ac.filter_no_hypothesis([st1, st2])
+
+def test_belief_cut_plus_filter_top():
+    st1 = Phosphorylation(None, Agent('a'))
+    st2 = Phosphorylation(Agent('b'), Agent('a'))
+    st1.supports = [st2]
+    st2.supported_by = [st1]
+    st1.belief = 0.9
+    st2.belief = 0.1
+    st_high_belief = ac.filter_belief([st1, st2], 0.5)
+    st_top_level = ac.filter_top_level(st_high_belief)
+    assert(len(st_top_level) == 1)
+
+def test_filter_inconsequential_mods():
+    mc = ModCondition('phosphorylation', None, None, True)
+    st1 = Phosphorylation(None, Agent('a'))
+    st2 = Phosphorylation(Agent('a', mods=[mc]), Agent('b'))
+    st_out = ac.filter_inconsequential_mods([st1, st2])
+    assert(len(st_out) == 1)
+    whitelist = {'b': [('phosphorylation', None, None)]}
+    st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
+    assert(len(st_out) == 2)
+
+def test_filter_inconsequential_mods2():
+    st1 = Phosphorylation(Agent('a'), Agent('b'), 'S', '315')
+    whitelist = {'b': [('phosphorylation', 'S', '315')]}
+    st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
+    assert(len(st_out) == 1)
+
+def test_filter_inconsequential_activities():
+    st1 = Activation(Agent('a', activity=ActivityCondition('kinase', True)),
+                     Agent('b'), 'activity')
+    st2 = Activation(Agent('c'), Agent('a'), 'kinase')
+    st_out = ac.filter_inconsequential_acts([st1, st2])
+    assert(len(st_out) == 1)
+    st_out = ac.filter_inconsequential_acts(st_out)
+    assert(len(st_out) == 0)
+
+def test_filter_mutation_status():
+    braf_mut = Agent('BRAF', mutations=MutCondition('600', 'V', 'E'))
+    braf_other_mut = Agent('BRAF', mutations=MutCondition('555', 'K', 'G'))
+    st1 = Phosphorylation(braf_mut, Agent('a'))
+    st2 = Phosphorylation(braf_other_mut, Agent('a'))
+    mutations = {'BRAF': [('V', '600', 'E')]}
+    deletions = []
+    st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
+    assert(len(st_out) == 1)
+    mutations = {}
+    deletions = ['a']
+    st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
+    assert(len(st_out) == 0)

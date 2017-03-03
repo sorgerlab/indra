@@ -13,6 +13,7 @@ import logging
 from copy import deepcopy
 from indra.statements import *
 from indra.belief import BeliefEngine
+from indra.util import read_unicode_csv
 from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
 from indra.preassembler import Preassembler
@@ -240,6 +241,9 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
     stmt_type : indra.statements.Statement
         The class of the statement type to filter for.
         Example: indra.statements.Modification
+    invert : Optional[bool]
+        If True, the statements that are not of the given type
+        are returned. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -249,7 +253,12 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
         A list of filtered statements.
     """
     logger.info('Filtering %d statements...' % len(stmts_in))
-    stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    invert = kwargs.get('invert', False)
+    if not invert:
+        stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
+    else:
+        stmts_out = [st for st in stmts_in if not isinstance(st, stmt_type)]
+
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:
@@ -357,7 +366,24 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     dump_pkl = kwargs.get('save')
     logger.info('Filtering %d statements to above %f belief' %
                 (len(stmts_in), belief_cutoff))
-    stmts_out = [s for s in stmts_in if s.belief >= belief_cutoff]
+    # The first round of filtering is in the top-level list
+    stmts_out = []
+    # Now we eliminate supports/supported-by
+    for stmt in stmts_in:
+        if stmt.belief >= belief_cutoff:
+            stmts_out.append(stmt)
+        else:
+            continue
+        supp_by = []
+        supp = []
+        for st in stmt.supports:
+            if st.belief >= belief_cutoff:
+                supp.append(st)
+        for st in stmt.supported_by:
+            if st.belief >= belief_cutoff:
+                supp_by.append(st)
+        stmt.supports = supp
+        stmt.supported_by = supp_by
     logger.info('%d statements after filter...' % len(stmts_out))
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
@@ -498,6 +524,37 @@ def filter_direct(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_no_hypothesis(stmts_in, **kwargs):
+    """Filter to statements that are not marked as hypothesis in epistemics.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements to no hypothesis...' % len(stmts_in))
+    stmts_out = []
+    for st in stmts_in:
+        all_hypotheses = True
+        for ev in st.evidence:
+            if not ev.epistemics.get('hypothesis', False):
+                all_hypotheses = False
+                break
+        if not all_hypotheses:
+            stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     """Filter to statements that have evidence from a given set of sources.
 
@@ -566,6 +623,223 @@ def filter_top_level(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
+    """Filter out Modifications that modify inconsequential sites
+
+    Inconsequential here means that the site is not mentioned / tested
+    in any other statement. In some cases specific sites should be
+    preserved, for instance, to be used as readouts in a model.
+    In this case, the given sites can be passed in a whitelist.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    whitelist : Optional[dict]
+        A whitelist containing agent modification sites whose
+        modifications should be preserved even if no other statement
+        refers to them. The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of tuples of
+        (modification_type, residue, position). Example:
+        whitelist = {'MAP2K1': [('phosphorylation', 'S', '222')]}
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    if whitelist is None:
+        whitelist = {}
+    logger.info('Filtering %d statements to remove' % len(stmts_in) +
+                ' inconsequential modifications...')
+    states_used = whitelist
+    for stmt in stmts_in:
+        for agent in stmt.agent_list():
+            if agent is not None:
+                if agent.mods:
+                    for mc in agent.mods:
+                        mod = (mc.mod_type, mc.residue, mc.position)
+                        try:
+                            states_used[agent.name].append(mod)
+                        except KeyError:
+                            states_used[agent.name] = [mod]
+    for k, v in states_used.items():
+        states_used[k] = list(set(v))
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        if isinstance(stmt, Modification):
+            mod_type = stmt.__class__.__name__.lower()
+            if mod_type.startswith('de'):
+                mod_type = mod_type[2:]
+            mod = (mod_type, stmt.residue, stmt.position)
+            used = states_used.get(stmt.sub.name, [])
+            if mod not in used:
+                skip = True
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
+    """Filter out Activations that modify inconsequential activities
+
+    Inconsequential here means that the site is not mentioned / tested
+    in any other statement. In some cases specific activity types should be
+    preserved, for instance, to be used as readouts in a model.
+    In this case, the given activities can be passed in a whitelist.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    whitelist : Optional[dict]
+        A whitelist containing agent activity types which  should be preserved
+        even if no other statement refers to them.
+        The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of activity types.
+        Example: whitelist = {'MAP2K1': ['kinase']}
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    if whitelist is None:
+        whitelist = {}
+    logger.info('Filtering %d statements to remove' % len(stmts_in) +
+                ' inconsequential activations...')
+    states_used = whitelist
+    for stmt in stmts_in:
+        for agent in stmt.agent_list():
+            if agent is not None:
+                if agent.activity:
+                    act = agent.activity.activity_type
+                    try:
+                        states_used[agent.name].append(act)
+                    except KeyError:
+                        states_used[agent.name] = [act]
+    for k, v in states_used.items():
+        states_used[k] = list(set(v))
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        if isinstance(stmt, RegulateActivity):
+            used = states_used.get(stmt.obj.name, [])
+            if stmt.obj_activity not in used:
+                skip = True
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
+    """Filter statements based on existing mutations/deletions
+
+    This filter helps to contextualize a set of statements to a given
+    cell type. Given a list of deleted genes, it removes statements that refer
+    to these genes. It also takes a list of mutations and removes statements
+    that refer to mutations not relevant for the given context.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    mutations : dict
+        A dictionary whose keys are gene names, and the values are lists of
+        tuples of the form (residue_from, position, residue_to).
+        Example: mutations = {'BRAF': [('V', '600', 'E')]}
+    deletions : list
+        A list of gene names that are deleted.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements for mutation status...' %
+                len(stmts_in))
+    stmts_out = []
+    for stmt in stmts_in:
+        skip = False
+        for agent in stmt.agent_list():
+            if agent is not None and agent.name in deletions:
+                skip = True
+                break
+            if agent is not None and agent.mutations:
+                muts = mutations.get(agent.name, [])
+                for mut in agent.mutations:
+                    mut_tup = (mut.residue_from, mut.position, mut.residue_to)
+                    if mut_tup not in muts:
+                        skip = True
+            if skip:
+                break
+        if not skip:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+def filter_enzyme_kinase(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
+                                    delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, Phosphorylation):
+            if st.enz is not None:
+                if st.enz.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_mod_nokinase(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
+                                    delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, Modification) and not \
+           isinstance(st, Phosphorylation):
+            if st.enz is not None:
+                if st.enz.name not in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
+def filter_transcription_factor(stmts_in):
+    path = os.path.dirname(os.path.abspath(__file__))
+    tf_table = \
+        read_unicode_csv(path + '/../resources/transcription_factors.csv')
+    gene_names = [lin[1] for lin in list(tf_table)[1:]]
+    stmts_out = []
+    for st in stmts_in:
+        if isinstance(st, RegulateAmount):
+            if st.subj is not None:
+                if st.subj.name in gene_names:
+                    stmts_out.append(st)
+        else:
+            stmts_out.append(st)
+    return stmts_out
+
 
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes.
@@ -609,7 +883,7 @@ def reduce_activities(stmts_in, **kwargs):
     logger.info('Reducing activities on %d statements...' % len(stmts_in))
     stmts_out = [deepcopy(st) for st in stmts_in]
     ml = MechLinker(stmts_out)
-    ml.get_activities()
+    ml.gather_explicit_activities()
     ml.reduce_activities()
     stmts_out = ml.statements
     dump_pkl = kwargs.get('save')

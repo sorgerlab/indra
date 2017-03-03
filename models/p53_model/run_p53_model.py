@@ -59,10 +59,6 @@ def assemble_model(model_name, reread=False):
         model.add_component(obs)
 
     if model_name == 'p53_ATM_var':
-        #model.add_component(Parameter('ATMa_0', 1))
-        #atm = model.monomers['ATM']
-        #model.initial(atm(activity='active'),
-        #              model.parameters['ATMa_0'])
         model.add_component(Parameter('ATMa_0', 1))
         atm = model.monomers['ATM']
         model.initial(atm(phospho='p'),
@@ -80,17 +76,13 @@ def assemble_model(model_name, reread=False):
     return model
 
 def run_model(model):
-    sim_hours = 200
+    sim_hours = 20
     ts = np.linspace(0, sim_hours*3600, sim_hours*60)
     solver = Solver(model, ts)
     solver.run()
     plt.figure(figsize=(2,2), dpi=300)
     set_fig_params()
     plt.plot(ts, solver.yobs['p53_active'], 'r')
-    #if model.name == 'p53_ATR':
-    #    plt.plot(ts, solver.yobs['atr_active'], 'b')
-    #else:
-    #    plt.plot(ts, solver.yobs['atm_active'], 'b')
     plt.xticks([])
     plt.xlabel('Time (a.u.)', fontsize=12)
     plt.ylabel('Active p53', fontsize=12)
@@ -99,9 +91,8 @@ def run_model(model):
     return ts, solver
 
 if __name__ == '__main__':
-    reread = False
-    #model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
-    model_names = ['p53_ATM_var']
+    reread = True
+    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)

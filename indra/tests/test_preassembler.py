@@ -64,13 +64,13 @@ def test_combine_duplicates():
     p4 = Phosphorylation(raf, mek,
             evidence=Evidence(text='beep'))
     p5 = Phosphorylation(mek, erk,
-            evidence=Evidence(text='foo'))
+            evidence=Evidence(text='foo2'))
     p6 = Dephosphorylation(mek, erk,
-            evidence=Evidence(text='bar'))
+            evidence=Evidence(text='bar2'))
     p7 = Dephosphorylation(mek, erk,
-            evidence=Evidence(text='baz'))
+            evidence=Evidence(text='baz2'))
     p8 = Dephosphorylation(mek, erk,
-            evidence=Evidence(text='beep'))
+            evidence=Evidence(text='beep2'))
     p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
                            evidence=Evidence(text='beep'))
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
@@ -86,6 +86,24 @@ def test_combine_duplicates():
     assert(len(pa.unique_stmts[2].evidence) == 1)
     assert(pa.unique_stmts[3].matches(p1)) # RAF phos MEK
     assert(len(pa.unique_stmts[3].evidence) == 4)
+
+def test_combine_evidence_exact_duplicates():
+    raf = Agent('RAF1')
+    mek = Agent('MEK1')
+    p1 = Phosphorylation(raf, mek,
+            evidence=Evidence(text='foo'))
+    p2 = Phosphorylation(raf, mek,
+            evidence=Evidence(text='bar'))
+    p3 = Phosphorylation(raf, mek,
+            evidence=Evidence(text='bar'))
+    stmts = [p1, p2, p3]
+    pa = Preassembler(hierarchies, stmts=stmts)
+    pa.combine_duplicates()
+    # The statements come out sorted by their matches_key
+    assert(len(pa.unique_stmts) == 1)
+    assert(len(pa.unique_stmts[0].evidence) == 2)
+    assert(set(ev.text for ev in pa.unique_stmts[0].evidence) ==
+           set(['foo', 'bar']))
 
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level

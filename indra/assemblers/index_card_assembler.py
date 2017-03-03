@@ -32,6 +32,10 @@ class IndexCardAssembler(object):
                 card = assemble_complex(stmt)
             elif isinstance(stmt, Translocation):
                 card = assemble_translocation(stmt)
+            elif isinstance(stmt, RegulateActivity):
+                card = assemble_regulate_activity(stmt)
+            elif isinstance(stmt, RegulateAmount):
+                card = assemble_regulate_amount(stmt)
             else:
                 continue
             if card is not None:
@@ -92,6 +96,50 @@ def assemble_complex(stmt):
         p = get_participant(m)
         card.card['interaction']['participant_a']['entities'].append(p)
     return card
+
+
+def assemble_regulate_activity(stmt):
+    # Top level card
+    card = IndexCard()
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    int_type = ('increases' if stmt.is_activation else 'decreases')
+    card.card['interaction']['interaction_type'] = int_type
+    card.card['interaction']['participant_a'] = get_participant(stmt.subj)
+    # Embedded interaction
+    interaction = {}
+    interaction['negative_information'] = False
+    interaction['participant_a'] = get_participant(stmt.obj)
+    if stmt.obj_activity == 'kinase':
+        interaction['participant_b'] = get_generic('protein')
+        interaction['interaction_type'] = 'adds_modification'
+        interaction['modifications'] = [{
+            'feature_type': 'modification_feature',
+            'modification_type': 'phosphorylation',
+            }]
+        card.card['interaction']['participant_b'] = interaction
+    elif stmt.obj_activity == 'transcription':
+        interaction['participant_b'] = get_generic('gene')
+        interaction['interaction_type'] = 'increases'
+        card.card['interaction']['participant_b'] = interaction
+    else:
+        return None
+    return card
+
+def assemble_regulate_amount(stmt):
+    # Top level card
+    card = IndexCard()
+    card.card['submitter'] = global_submitter
+    card.card['evidence'] = get_evidence_text(stmt)
+    if isinstance(stmt, IncreaseAmount):
+        int_type = 'increases'
+    else:
+        int_type = 'decreases'
+    card.card['interaction']['interaction_type'] = int_type
+    card.card['interaction']['participant_a'] = get_participant(stmt.subj)
+    card.card['interaction']['participant_b'] = get_participant(stmt.obj)
+    return card
+
 
 def assemble_modification(stmt):
     card = IndexCard()
@@ -190,15 +238,18 @@ def assemble_translocation(stmt):
     card.card['interaction'] = interaction
     return card
 
+def get_generic(entity_type='protein'):
+    participant = {
+        'entity_text': [''],
+        'entity_type': entity_type,
+        'identifier': 'GENERIC'
+        }
+    return participant
+
 def get_participant(agent):
     # Handle missing Agent as generic protein
     if agent is None:
-        participant = {
-            'entity_text': [''],
-            'entity_type': 'protein',
-            'identifier': 'GENERIC'
-            }
-        return participant
+        return get_generic('protein')
     # The Agent is not missing
     text_name = agent.db_refs.get('TEXT')
     if text_name is None:
@@ -308,6 +359,7 @@ def get_pmc_id(stmt):
 
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence if ev.text]
+    ev_txts = list(set(ev_txts))
     if not ev_txts:
         sources = list(set([ev.source_api for ev in stmt.evidence]))
         ev_txts = ['Evidence text not available in source database: %s' % \

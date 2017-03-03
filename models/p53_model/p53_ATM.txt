@@ -1,9 +1,9 @@
-ATM activates itself.
-ATM activates p53.
-p53 activates Wip1.
-p53 activates MDM2.
-Wip1 inactivates p53.
-Wip1 inactivates ATM.
-MDM2 inactivates p53.
+Active ATM activates itself.
+Active ATM activates p53.
+Active p53 activates Wip1.
+Active p53 activates MDM2.
+Active Wip1 inactivates p53.
+Active Wip1 inactivates ATM.
+Active MDM2 inactivates p53.
 HIPK2 inactivates Wip1.
 P14ARF inactivates Mdm2.

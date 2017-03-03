@@ -49,7 +49,6 @@ class HierarchyManager(object):
             self.build_transitive_closures()
         # Build reverse lookup dict from the entity hierarchy
         self._children = {}
-        logger.info('Generating reverse lookup table for families')
         all_children = set(self.isa_closure.keys()).union(
                             self.partof_closure.keys())
         for child in all_children:

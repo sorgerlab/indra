@@ -1,12 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
 import pickle
 from os.path import join as pjoin
 from indra.tools import assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 
 import process_data, process_r3, process_sparser, process_trips
-from read_phosphosite import read_phosphosite
+import read_phosphosite
 from assemble_sif import assemble_sif
 from assemble_cx import assemble_cx
 from assemble_pysb import assemble_pysb
@@ -17,11 +18,15 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
-def read_sources():
+def read_extra_sources(out_file):
     trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
-    r3_stmts = process_r3.read_stmts(process_r3.active_forms_file)
-    stmts = trips_stmts + sparser_stmts + r3_stmts
+    r3_stmts = process_r3.read_stmts(process_r3.active_forms_files[0])
+    r3_stmts += process_r3.read_stmts(process_r3.active_forms_files[1])
+    phosphosite_stmts, _ = \
+        read_phosphosite.read_phosphosite(read_phosphosite.phosphosite_file)
+    stmts = trips_stmts + sparser_stmts + r3_stmts + phosphosite_stmts
+    ac.dump_statements(stmts, out_file)
     return stmts
 
 def get_prior_genes(fname):
@@ -31,6 +36,19 @@ def get_prior_genes(fname):
         return genes
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        assemble_models = ['pysb', 'sif', 'cx']
+    else:
+        model_types = sys.argv[1:]
+        if 'all' in model_types:
+            assemble_models = ['pysb', 'sif', 'cx']
+        else:
+            assemble_models = sys.argv[1:]
+
+    print('Assembling the following model types: %s' % \
+          ', '.join(assemble_models))
+    print('##############')
+
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
@@ -42,10 +60,14 @@ if __name__ == '__main__':
         prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
         prior_stmts = ac.map_grounding(prior_stmts,
                                        save=pjoin(outf, 'gmapped_prior.pkl'))
-        reading_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+        reach_stmts = ac.filter_no_hypothesis(reach_stmts)
+        #extra_stmts = ac.load_statements(pjoin(outf, 'extra_stmts.pkl'))
+        extra_stmts = read_extra_sources(pjoin(outf, 'extra_stmts.pkl'))
+        reading_stmts = reach_stmts + extra_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
-                                    save=pjoin(outf, 'gmapped_reading.pkl'))
-        stmts = prior_stmts + reading_stmts
+                                         save=pjoin(outf, 'gmapped_reading.pkl'))
+        stmts = prior_stmts + reading_stmts + extra_stmts
 
         stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_genes_only(stmts, specific_only=False)
@@ -55,11 +77,6 @@ if __name__ == '__main__':
         stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
         stmts = ac.run_preassembly(stmts, return_toplevel=False,
                                    save=pjoin(outf, 'preassembled.pkl'))
-
-    assemble_models = []
-    assemble_models.append('sif')
-    assemble_models.append('pysb')
-    assemble_models.append('cx')
 
     ### PySB assembly
     if 'pysb' in assemble_models:

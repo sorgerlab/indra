@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import pickle
 from indra.tools.incremental_model import IncrementalModel
 from indra.mechlinker import MechLinker
 from indra.assemblers import EnglishAssembler
@@ -21,12 +20,15 @@ def print_linked_stmt(stmt):
     print(final_txt)
     return final_txt
 
+
 if __name__ == '__main__':
     fname = 'models/rasmachine/rem/model.pkl'
     model = IncrementalModel(fname)
     model.preassemble()
-    stmts = model.toplevel_stmts
+    stmts = model.assembled_stmts
     ml = MechLinker(stmts)
-    linked_stmts = ml.link_statements()
+    linked_stmts = ml.infer_active_forms()
+    linked_stmts += ml.infer_modifications()
+    linked_stmts += ml.infer_activations()
     for stmt in linked_stmts:
         print_linked_stmt(stmt)

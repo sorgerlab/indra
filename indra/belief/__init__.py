@@ -12,17 +12,23 @@ class BeliefEngine(object):
             'rand': {
                 'biopax': 0.2,
                 'bel': 0.1,
-                'trips': 0.4,
+                'trips': 0.3,
                 'reach': 0.3,
                 'biogrid': 0.01,
+                'sparser': 0.3,
+                'r3': 0.1,
+                'phosphosite': 0.01,
                 'assertion': 0.0
                 },
             'syst': {
                 'biopax': 0.01,
                 'bel': 0.01,
-                'trips': 0.2,
-                'reach': 0.0,
+                'trips': 0.05,
+                'reach': 0.05,
                 'biogrid': 0.01,
+                'sparser': 0.3,
+                'r3': 0.1,
+                'phosphosite': 0.01,
                 'assertion': 0.0
                 }
             }

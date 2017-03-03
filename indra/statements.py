@@ -783,6 +783,11 @@ class Evidence(object):
         else:
             self.epistemics = {}
 
+    def matches_key(self):
+        key = str((self.source_api, self.source_id, self.pmid,
+                  self.text, self.annotations, self.epistemics))
+        return key
+
     def equals(self, other):
         matches = (self.source_api == other.source_api) and\
                   (self.source_id == other.source_id) and\
@@ -1074,6 +1079,12 @@ class Modification(Statement):
                    res_str, pos_str))
         return s
 
+class AddModification(Modification):
+    pass
+
+class RemoveModification(Modification):
+    pass
+
 
 @python_2_unicode_compatible
 class SelfModification(Statement):
@@ -1168,7 +1179,7 @@ class SelfModification(Statement):
         return stmt
 
 
-class Phosphorylation(Modification):
+class Phosphorylation(AddModification):
     """Phosphorylation modification.
 
     Examples
@@ -1208,7 +1219,7 @@ class Transphosphorylation(SelfModification):
     pass
 
 
-class Dephosphorylation(Modification):
+class Dephosphorylation(RemoveModification):
     """Dephosphorylation modification.
 
     Examples
@@ -1222,102 +1233,102 @@ class Dephosphorylation(Modification):
     pass
 
 
-class Hydroxylation(Modification):
+class Hydroxylation(AddModification):
     """Hydroxylation modification."""
     pass
 
 
-class Dehydroxylation(Modification):
+class Dehydroxylation(RemoveModification):
     """Dehydroxylation modification."""
     pass
 
 
-class Sumoylation(Modification):
+class Sumoylation(AddModification):
     """Sumoylation modification."""
     pass
 
 
-class Desumoylation(Modification):
+class Desumoylation(RemoveModification):
     """Desumoylation modification."""
     pass
 
 
-class Acetylation(Modification):
+class Acetylation(AddModification):
     """Acetylation modification."""
     pass
 
 
-class Deacetylation(Modification):
+class Deacetylation(RemoveModification):
     """Deacetylation modification."""
     pass
 
 
-class Glycosylation(Modification):
+class Glycosylation(AddModification):
     """Glycosylation modification."""
     pass
 
 
-class Deglycosylation(Modification):
+class Deglycosylation(RemoveModification):
     """Deglycosylation modification."""
     pass
 
 
-class Ribosylation(Modification):
+class Ribosylation(AddModification):
     """Ribosylation modification."""
     pass
 
 
-class Deribosylation(Modification):
+class Deribosylation(RemoveModification):
     """Deribosylation modification."""
     pass
 
 
-class Ubiquitination(Modification):
+class Ubiquitination(AddModification):
     """Ubiquitination modification."""
     pass
 
 
-class Deubiquitination(Modification):
+class Deubiquitination(RemoveModification):
     """Deubiquitination modification."""
     pass
 
 
-class Farnesylation(Modification):
+class Farnesylation(AddModification):
     """Farnesylation modification."""
     pass
 
 
-class Defarnesylation(Modification):
+class Defarnesylation(RemoveModification):
     """Defarnesylation modification."""
     pass
 
 
-class Geranylgeranylation(Modification):
+class Geranylgeranylation(AddModification):
     """Geranylgeranylation modification."""
     pass
 
 
-class Degeranylgeranylation(Modification):
+class Degeranylgeranylation(RemoveModification):
     """Degeranylgeranylation modification."""
     pass
 
 
-class Palmitoylation(Modification):
+class Palmitoylation(AddModification):
     """Palmitoylation modification."""
     pass
 
 
-class Depalmitoylation(Modification):
+class Depalmitoylation(RemoveModification):
     """Depalmitoylation modification."""
     pass
 
 
-class Myristoylation(Modification):
+class Myristoylation(AddModification):
     """Myristoylation modification."""
     pass
 
 
-class Demyristoylation(Modification):
+class Demyristoylation(RemoveModification):
     """Demyristoylation modification."""
     pass
 
