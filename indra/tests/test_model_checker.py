@@ -681,13 +681,16 @@ def test_rasgef_rasgtp():
 
 def test_rasgef_rasgtp_phos():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
-    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
-                db_refs={'HGNC':'2'})
+    ras = Agent('KRAS', db_refs={'HGNC':'2'})
+    ras_a = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                  db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    raf_a = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
     rasgef_stmt = RasGef(sos, ras)
-    rasgtp_stmt = RasGtpActivation(ras, raf, 'kinase')
-    phos = Phosphorylation(raf, mek)
+    rasgtp_stmt = RasGtpActivation(ras_a, raf, 'kinase')
+    phos = Phosphorylation(raf_a, mek)
     stmt_to_check = Phosphorylation(sos, mek)
     # Assemble and check
     pysba = PysbAssembler()
@@ -752,7 +755,8 @@ def test_rasgap_rasgtp_phos():
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
     ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                   db_refs={'HGNC': '2'})
-    raf = Agent('BRAF', db_refs={'HGNC':'3'})
+    raf = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
     rasgap_stmt = RasGap(nf1, ras)
     rasgtp_stmt = RasGtpActivation(ras_g, raf, 'kinase')
