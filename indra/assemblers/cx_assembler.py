@@ -445,9 +445,12 @@ class CxAssembler(object):
             self.cx['edgeAttributes'].append(edge_attribute)
 
 def _get_stmt_type(stmt):
-    if isinstance(stmt, Modification):
+    if isinstance(stmt, AddModification):
         edge_type = 'Modification'
         edge_polarity = 'positive'
+    elif isinstance(stmt, RemoveModification):
+        edge_type = 'Modification'
+        edge_polarity = 'negative'
     elif isinstance(stmt, SelfModification):
         edge_type = 'SelfModification'
         edge_polarity = 'positive'

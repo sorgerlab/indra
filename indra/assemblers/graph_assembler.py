@@ -107,12 +107,7 @@ class GraphAssembler():
         # Assemble in two stages.
         # First, create the nodes of the graph
         for stmt in self.statements:
-            if isinstance(stmt, Phosphorylation):
-                if stmt.enz is None:
-                    continue
-                self._add_node(stmt.enz)
-                self._add_node(stmt.sub)
-            elif isinstance(stmt, Dephosphorylation):
+            if isinstance(stmt, Modification):
                 if stmt.enz is None:
                     continue
                 self._add_node(stmt.enz)
@@ -125,10 +120,11 @@ class GraphAssembler():
                     self._add_node(m)
         # Second, create the edges of the graph
         for stmt in self.statements:
-            if isinstance(stmt, Phosphorylation):
+            if isinstance(stmt, Modification):
                 if stmt.enz is None:
                     continue
-                self._add_phosphorylation(stmt.enz, stmt.sub)
+                modtype = modclass_to_modtype[stmt.__class__]
+                self._add_modification(modtype, stmt.enz, stmt.sub)
             elif isinstance(stmt, Dephosphorylation):
                 if stmt.enz is None:
                     continue
@@ -208,28 +204,16 @@ class GraphAssembler():
                         label=node_label,
                         **self.node_properties)
 
-    def _add_phosphorylation(self, enz, sub):
-        """Assemble a Phosphorylation statement."""
+    def _add_modification(self, modtype, enz, sub):
+        """Assemble a Modification statement."""
         source = _get_node_key(enz)
         target = _get_node_key(sub)
-        edge_key = (source, target, 'phosphorylation')
+        edge_key = (source, target, modtype)
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        params = {'color': '#000000',
-                  'arrowhead': 'normal',
-                  'dir': 'forward'}
-        self._add_edge(source, target, **params)
-
-    def _add_dephosphorylation(self, enz, sub):
-        """Assemble a Dephosphorylation statement."""
-        source = _get_node_key(enz)
-        target = _get_node_key(sub)
-        edge_key = (source, target, 'dephosphorylation')
-        if edge_key in self.existing_edges:
-            return
-        self.existing_edges.append(edge_key)
-        params = {'color': '#ff0000',
+        color = '#000000' if not modtype.startswith('de') else '#ff0000'
+        params = {'color': color,
                   'arrowhead': 'normal',
                   'dir': 'forward'}
         self._add_edge(source, target, **params)

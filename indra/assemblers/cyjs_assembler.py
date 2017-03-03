@@ -8,9 +8,7 @@ import collections
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap as colormap
 from matplotlib.colors import rgb2hex, hex2color
-from indra.statements import Activation, Inhibition, RegulateActivity, \
-                             Complex, Modification, \
-                             SelfModification, Agent
+from indra.statements import *
 from indra.databases import hgnc_client
 from indra.databases import context_client
 from indra.preassembler import Preassembler
@@ -674,9 +672,12 @@ def _get_db_refs(agent):
 
 
 def _get_stmt_type(stmt):
-    if isinstance(stmt, Modification):
+    if isinstance(stmt, AddModification):
         edge_type = 'Modification'
         edge_polarity = 'positive'
+    elif isinstance(stmt, RemoveModification):
+        edge_type = 'Modification'
+        edge_polarity = 'negative'
     elif isinstance(stmt, SelfModification):
         edge_type = 'SelfModification'
         edge_polarity = 'positive'
