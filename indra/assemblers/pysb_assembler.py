@@ -51,7 +51,6 @@ def _is_whitelisted(stmt):
     return False
 
 # BaseAgent classes ####################################################
-
 class _BaseAgentSet(object):
     """Container for a dict of BaseAgents with their names as keys."""
     def __init__(self):
@@ -2161,6 +2160,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
 
 def increaseamount_assemble_one_step(stmt, model, agent_set):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
+        logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
@@ -2199,19 +2199,17 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
 
-
 class PysbPreassembler(object):
     def __init__(self, stmts=None):
         if not stmts:
             stmts = []
         self.statements = stmts
         self.agent_set = _BaseAgentSet()
-        pass
 
     def add_statements(self, stmts):
         self.statements = stmts
 
-    def _collect_active_forms(self):
+    def _gather_active_forms(self):
         for stmt in self.statements:
             if isinstance(stmt, ist.ActiveForm):
                 base_agent = self.agent_set.get_create_base_agent(stmt.agent)
@@ -2226,7 +2224,7 @@ class PysbPreassembler(object):
     def replace_activities(self):
         # TODO: handle activity hierarchies
         # First collect all explicit active forms
-        self._collect_active_forms()
+        self._gather_active_forms()
         new_stmts = []
         # Iterate over all statements
         for stmt in self.statements:
