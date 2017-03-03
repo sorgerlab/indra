@@ -1376,3 +1376,21 @@ def test_unicode_str_methods():
     st = Complex([ag, ag], evidence=ev)
     print(st)
     print(repr(st))
+
+def test_modtype_to_modclass():
+    cls = modtype_to_modclass.get('farnesylation')
+    assert(cls == Farnesylation)
+    cls = modtype_to_modclass.get('deubiquitination')
+    assert(cls == Deubiquitination)
+
+def test_modclass_to_modtype():
+    modtype = modclass_to_modtype.get(Depalmitoylation)
+    assert(modtype == 'depalmitoylation')
+    modtype = modclass_to_modtype.get(Phosphorylation)
+    assert(modtype == 'phosphorylation')
+
+def test_modtype_to_inverse():
+    modtype_inv = modtype_to_inverse.get('ubiquitination')
+    assert(modtype_inv == 'deubiquitination')
+    modtype_inv = modtype_to_inverse.get('dephosphorylation')
+    assert(modtype_inv == 'phosphorylation')

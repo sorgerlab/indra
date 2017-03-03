@@ -640,31 +640,9 @@ class TripsProcessor(object):
 
             mod = mod_names.get(event_type)
             if 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
-                if mod == 'phosphorylation':
-                    mod_stmt = Dephosphorylation
-                elif mod == 'ubiquitination':
-                    mod_stmt = Deubiquitination
-                elif mod == 'farnesylation':
-                    mod_stmt = Defarnesylation
-                elif mod == 'ribosylation':
-                    mod_stmt = Deribosylation
-                elif mod == 'hydroxylation':
-                    mod_stmt = Dehydroxylation
-                elif mod == 'acetylation':
-                    mod_stmt = Deacetylation
+                mod_stmt = modclass_to_inverse[modtype_to_modclass[mod]]
             else:
-                if mod == 'phosphorylation':
-                    mod_stmt = Phosphorylation
-                elif mod == 'ubiquitination':
-                    mod_stmt = Ubiquitination
-                elif mod == 'farnesylation':
-                    mod_stmt = Farnesylation
-                elif mod == 'ribosylation':
-                    mod_stmt = Ribosylation
-                elif mod == 'hydroxylation':
-                    mod_stmt = Hydroxylation
-                elif mod == 'acetylation':
-                    mod_stmt = Acetylation
+                mod_stmt = modtype_to_modclass[mod]
             for ea, aa in _agent_list_product((enzyme_agent, affected_agent)):
                 if aa is None:
                     continue

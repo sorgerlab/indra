@@ -176,62 +176,22 @@ class BelProcessor(object):
                     is_direct = False
 
                 # Build the INDRA statement
-                stmt = None
-
+                # Handle PhosphorylationSerine, etc.
                 if mod.startswith('Phosphorylation'):
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Phosphorylation(enz, sub, residue, mod_pos,
-                                               evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Dephosphorylation(enz, sub, residue, mod_pos,
-                                                 evidence)
-                elif mod == 'Hydroxylation':
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Hydroxylation(enz, sub, residue, mod_pos,
-                                             evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Dehydroxylation(enz, sub, residue, mod_pos,
-                                             evidence)
-                elif mod == 'Sumoylation':
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Sumoylation(enz, sub, residue, mod_pos,
-                                           evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Desumoylation(enz, sub, residue, mod_pos,
-                                             evidence)
-                elif mod == 'Acetylation':
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Acetylation(enz, sub, residue, mod_pos,
-                                           evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Deacetylation(enz, sub, residue, mod_pos,
-                                             evidence)
-                elif mod == 'Ubiquitination':
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Ubiquitination(enz, sub, residue, mod_pos,
-                                              evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Deubiquitination(enz, sub, residue, mod_pos,
-                                                evidence)
-
-                elif mod == 'Methylation':
-                    if rel == 'DirectlyIncreases' or 'Increases':
-                        stmt = Methylation(enz, sub, residue, mod_pos,
-                                              evidence)
-                    elif rel == 'DirectlyDecreases' or 'Decreases':
-                        stmt = Demethylation(enz, sub, residue, mod_pos,
-                                                evidence)
-
+                    modtype = 'phosphorylation'
                 else:
-                    logger.warning("Unknown modification type: %s" % mod)
-                # If we've matched a pattern, mark this as a converted statement
-                if stmt is not None:
-                    if is_direct:
-                        self.statements.append(stmt)
-                        self.converted_direct_stmts.append(stmt_str)
-                    else:
-                        self.converted_indirect_stmts.append(stmt_str)
-                        self.indirect_stmts.append(stmt)
+                    modtype = mod.lower()
+                # Get the class and invert if needed
+                modclass = modtype_to_modclass[modtype]
+                if rel == 'DirectlyDecreases' or rel == 'Decreases':
+                    modclass = modclass_to_inverse[modclass]
+                stmt = modclass(enz, sub, residue, mod_pos, evidence)
+                if is_direct:
+                    self.statements.append(stmt)
+                    self.converted_direct_stmts.append(stmt_str)
+                else:
+                    self.converted_indirect_stmts.append(stmt_str)
+                    self.indirect_stmts.append(stmt)
         return
 
     def get_composite_activating_mods(self):

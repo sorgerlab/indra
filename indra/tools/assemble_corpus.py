@@ -691,9 +691,9 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
     for stmt in stmts_in:
         skip = False
         if isinstance(stmt, Modification):
-            mod_type = stmt.__class__.__name__.lower()
-            if mod_type.startswith('de'):
-                mod_type = mod_type[2:]
+            mod_type = modclass_to_modtype[stmt.__class__]
+            if isinstance(stmt, RemoveModification):
+                mod_type = modtype_to_inverse[mod_type]
             mod = (mod_type, stmt.residue, stmt.position)
             used = states_used.get(stmt.sub.name, [])
             if mod not in used:

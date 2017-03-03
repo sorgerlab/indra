@@ -263,7 +263,7 @@ class MechLinker(object):
                 continue
             found = False
             for mc in af_stmt.agent.mods:
-                if _stmt_mod_map.get(mc.mod_type) == mod_stmt.__class__ and \
+                if mc.mod_type == modclass_to_modtype[mod_stmt.__class__] and \
                     mc.residue == mod_stmt.residue and \
                     mc.position == mod_stmt.position:
                     found = True
@@ -381,8 +381,8 @@ class MechLinker(object):
                     if mod.is_modified:
                         mod_type_name = mod.mod_type
                     else:
-                        mod_type_name = 'de' + mod.mod_type
-                    mod_class = _stmt_mod_map.get(mod_type_name)
+                        mod_type_name = modtype_to_inverse[mod.mod_type]
+                    mod_class = modtype_to_modclass[mod_type_name]
                     if not mod_class:
                         continue
                     st = mod_class(act_stmt.subj,
@@ -709,22 +709,3 @@ def _get_graph_reductions(graph):
                 reductions[n1] = n2
     return reductions
 
-_stmt_mod_map = {
-    'phosphorylation': Phosphorylation,
-    'dephosphorylation': Dephosphorylation,
-    'autophosphorylation': Autophosphorylation,
-    'ubiquitination': Ubiquitination,
-    'deubiquitination': Deubiquitination,
-    'acetylation': Acetylation,
-    'deacetylation': Deacetylation,
-    'hydroxylation': Hydroxylation,
-    'dehydroxylation': Dehydroxylation,
-    'sumoylation': Sumoylation,
-    'desumoylation': Desumoylation,
-    'glycosylation': Glycosylation,
-    'deglycosylation': Deglycosylation,
-    'farnesylation': Farnesylation,
-    'defarnesylation': Defarnesylation,
-    'ribosylation': Ribosylation,
-    'deribosylation': Deribosylation,
-}

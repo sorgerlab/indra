@@ -146,15 +146,14 @@ def assemble_modification(stmt):
     card.card['submitter'] = global_submitter
     card.card['evidence'] = get_evidence_text(stmt)
 
-    mod_type = stmt.__class__.__name__.lower()
+    mod_type = modclass_to_modtype[stmt.__class__]
     interaction = {}
     interaction['negative_information'] = False
-    if mod_type.startswith('de'):
+    if isinstance(stmt, RemoveModification):
         interaction['interaction_type'] = 'removes_modification'
-        mod_type = stmt.__class__.__name__.lower()[2:]
+        mod_type = modtype_to_inverse[mod_type]
     else:
         interaction['interaction_type'] = 'adds_modification'
-        mod_type = stmt.__class__.__name__.lower()
 
     interaction['modifications'] = [{
                 'feature_type': 'modification_feature',

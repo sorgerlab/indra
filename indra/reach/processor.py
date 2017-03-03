@@ -126,7 +126,7 @@ class ReachProcessor(object):
                 args = [controller_agent, theme_agent, residue, pos, ev]
 
                 # Here ModStmt is a sub-class of Modification
-                ModStmt = stmt_mod_map.get(modification_type)
+                ModStmt = modtype_to_modclass.get(modification_type)
                 if ModStmt is None:
                     logger.warning('Unhandled modification type: %s' %
                                    modification_type)
@@ -619,26 +619,6 @@ agent_mod_map = {
     'ribosylation': ('ribosylation', True),
     'deribosylation': ('ribosylation', False),
     'unknown': ('modification', True),
-}
-
-stmt_mod_map = {
-    'phosphorylation': Phosphorylation,
-    'dephosphorylation': Dephosphorylation,
-    'autophosphorylation': Autophosphorylation,
-    'ubiquitination': Ubiquitination,
-    'deubiquitination': Deubiquitination,
-    'acetylation': Acetylation,
-    'deacetylation': Deacetylation,
-    'hydroxylation': Hydroxylation,
-    'dehydroxylation': Dehydroxylation,
-    'sumoylation': Sumoylation,
-    'desumoylation': Desumoylation,
-    'glycosylation': Glycosylation,
-    'deglycosylation': Deglycosylation,
-    'farnesylation': Farnesylation,
-    'defarnesylation': Defarnesylation,
-    'ribosylation': Ribosylation,
-    'deribosylation': Deribosylation,
 }
 
 def _read_bioentities_map():

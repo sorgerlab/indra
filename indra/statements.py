@@ -2237,6 +2237,31 @@ def _read_amino_acids():
 
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
+# Mapping between modification type string (used in ModConditions and
+# subclasses of Modification
+modtype_to_modclass = {cls.__name__.lower(): cls for cls in \
+                       AddModification.__subclasses__() + \
+                       RemoveModification.__subclasses__()}
+
+modclass_to_modtype = {cls: cls.__name__.lower() for cls in \
+                       AddModification.__subclasses__() + \
+                       RemoveModification.__subclasses__()}
+
+def _get_mod_inverse_maps():
+    modtype_to_inverse = {}
+    modclass_to_inverse = {}
+    for cls in AddModification.__subclasses__():
+        modtype = modclass_to_modtype[cls]
+        modtype_inv = 'de' + modtype
+        cls_inv = modtype_to_modclass[modtype_inv]
+        modtype_to_inverse[modtype] = modtype_inv
+        modtype_to_inverse[modtype_inv] = modtype
+        modclass_to_inverse[cls] = cls_inv
+        modclass_to_inverse[cls_inv] = cls
+    return modtype_to_inverse, modclass_to_inverse
+
+modtype_to_inverse, modclass_to_inverse = _get_mod_inverse_maps()
+
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""

@@ -25,7 +25,7 @@ class IndexCardProcessor(object):
             mcs = [self._get_mod_condition(mod) for mod in mods]
             ev = self._get_evidence(card)
             for mc in mcs:
-                stmt_class = self._mod_type_map.get(mc.mod_type)
+                stmt_class = modtype_to_modclass.get(mc.mod_type)
                 if stmt_class is None:
                     print('%s not found in mod type map' % mc.mod_type)
                     continue
@@ -183,18 +183,3 @@ class IndexCardProcessor(object):
                 all_evidence.append(e)
         return all_evidence
 
-    _mod_type_map = {
-            'phosphorylation': Phosphorylation,
-            'dephosphorylation': Dephosphorylation,
-            'ubiquitination': Ubiquitination,
-            'deubiquitination': Deubiquitination,
-            'acetylation': Acetylation,
-            'deacetylation': Deacetylation,
-            'farnesylation': Farnesylation,
-            'glycosylation': Glycosylation,
-            'deglycosylation': Deglycosylation,
-            'hydroxylation': Hydroxylation,
-            'dehydroxylatoni': Dehydroxylation,
-            'sumoylation': Sumoylation,
-            'desumoylation': Desumoylation
-            }
