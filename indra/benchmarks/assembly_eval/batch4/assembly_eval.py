@@ -118,11 +118,10 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     print('%d statements after combining related.' % len(related_stmts))
 
     # Instantiate the mechanism linker
-    ml = MechLinker(related_stmts)
     # Link statements
-    linked_stmts = ml.infer_active_forms()
-    linked_stmts += ml.infer_modifications()
-    linked_stmts += ml.infer_activations()
+    linked_stmts = MechLinker.infer_active_forms(related_stmts)
+    linked_stmts += MechLinker.infer_modifications(related_stmts)
+    linked_stmts += MechLinker.infer_activations(related_stmts)
     # Run BeliefEngine on linked statements
     epe.set_linked_probs(linked_stmts)
     # Print linked statements for debugging purposes

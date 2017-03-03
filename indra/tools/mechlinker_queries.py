@@ -26,9 +26,8 @@ if __name__ == '__main__':
     model = IncrementalModel(fname)
     model.preassemble()
     stmts = model.assembled_stmts
-    ml = MechLinker(stmts)
-    linked_stmts = ml.infer_active_forms()
-    linked_stmts += ml.infer_modifications()
-    linked_stmts += ml.infer_activations()
+    linked_stmts = MechLinker.infer_active_forms(stmts)
+    linked_stmts += MechLinker.infer_modifications(stmts)
+    linked_stmts += MechLinker.infer_activations(stmts)
     for stmt in linked_stmts:
         print_linked_stmt(stmt)
