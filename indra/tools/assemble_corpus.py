@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import sys
-import time
 try:
     # Python 2
     import cPickle as pickle
@@ -138,17 +137,18 @@ def run_preassembly(stmts_in, **kwargs):
         all statements are returned irrespective of level of specificity.
         Default: True
     poolsize : Optional[int]
-        FIXME FIXME FIXME
+        The number of worker processes to use to parallelize the
+        comparisons performed by the function. If None (default), no
+        parallelization is performed. NOTE: Parallelization is only
+        available on Python 3.4 and above.
     size_cutoff : Optional[int]
-        FIXME FIXME FIXME
+        Groups with size_cutoff or more statements are sent to worker
+        processes, while smaller groups are compared in the parent process.
+        Default value is 100. Not relevant when parallelization is not
+        used.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
-        The name of a pickle file to save the unique statements into.
-
-    Returns
-    -------
-    stmts_out : list[indra.statements.Statement]
         A list of preassembled top-level statements.
     """
     dump_pkl_unique = kwargs.get('save_unique')
@@ -207,9 +207,15 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         all statements are returned irrespective of level of specificity.
         Default: True
     poolsize : Optional[int]
-        FIXME FIXME FIXME
+        The number of worker processes to use to parallelize the
+        comparisons performed by the function. If None (default), no
+        parallelization is performed. NOTE: Parallelization is only
+        available on Python 3.4 and above.
     size_cutoff : Optional[int]
-        FIXME FIXME FIXME
+        Groups with size_cutoff or more statements are sent to worker
+        processes, while smaller groups are compared in the parent process.
+        Default value is 100. Not relevant when parallelization is not
+        used.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -223,12 +229,9 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     return_toplevel = kwargs.get('return_toplevel', True)
     poolsize = kwargs.get('poolsize', None)
     size_cutoff = kwargs.get('size_cutoff', 100)
-    start = time.time()
     stmts_out = preassembler.combine_related(return_toplevel=False,
                                              poolsize=poolsize,
                                              size_cutoff=size_cutoff)
-    end = time.time()
-    elapsed = end - start
     logger.debug("Time elapsed, combine_related: %s" % elapsed)
     beliefengine.set_hierarchy_probs(stmts_out)
     stmts_top = filter_top_level(stmts_out)

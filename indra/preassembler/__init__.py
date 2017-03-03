@@ -208,15 +208,15 @@ class Preassembler(object):
 
         Parameters
         ----------
-        return_toplevel : bool
+        return_toplevel : Optional[bool]
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
-        poolsize : int or None
+        poolsize : Optional[int]
             The number of worker processes to use to parallelize the
             comparisons performed by the function. If None (default), no
             parallelization is performed. NOTE: Parallelization is only
             available on Python 3.4 and above.
-        size_cutoff : int
+        size_cutoff : Optional[int]
             Groups with size_cutoff or more statements are sent to worker
             processes, while smaller groups are compared in the parent process.
             Default value is 100. Not relevant when parallelization is not
