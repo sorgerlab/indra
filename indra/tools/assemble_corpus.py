@@ -33,6 +33,9 @@ def dump_statements(stmts, fname):
     fname : str
         The name of the pickle file to dump statements into.
     """
+    if sys.version_info[0] < 3:
+        logger.warning('Files pickled in Python 2 may be incompatible with '
+                       'Python 3')
     logger.info('Dumping %d statements into %s...' % (len(stmts), fname))
     with open(fname, 'wb') as fh:
         pickle.dump(stmts, fh, protocol=2)
@@ -56,7 +59,14 @@ def load_statements(fname, as_dict=False):
     """
     logger.info('Loading %s...' % fname)
     with open(fname, 'rb') as fh:
-        stmts = pickle.load(fh)
+        # Encoding argument not available in pickle for Python 2
+        if sys.version_info[0] < 3:
+            stmts = pickle.load(fh)
+        # Encoding argument specified here to enable compatibility with
+        # pickle files created with Python 2
+        else:
+            stmts = pickle.load(fh, encoding='latin1')
+
     if isinstance(stmts, dict):
         if as_dict:
             return stmts
