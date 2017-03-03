@@ -149,6 +149,11 @@ def run_preassembly(stmts_in, **kwargs):
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
+        The name of a pickle file to save the unique statements into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
         A list of preassembled top-level statements.
     """
     dump_pkl_unique = kwargs.get('save_unique')
