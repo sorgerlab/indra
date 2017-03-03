@@ -131,7 +131,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     print('=============')
 
     # Combine all statements including linked ones
-    all_statements = ml.statements + [ls.inferred_stmt for ls in linked_stmts]
+    all_statements = related_stmts + [ls.inferred_stmt for ls in linked_stmts]
 
     # Instantiate a new preassembler
     pa = Preassembler(hierarchies, all_statements)
