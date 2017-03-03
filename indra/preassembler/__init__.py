@@ -6,6 +6,7 @@ import logging
 import itertools
 import functools
 import collections
+import multiprocessing as mp
 from copy import copy, deepcopy
 try:
     import pygraphviz as pgv
@@ -14,7 +15,6 @@ except ImportError:
 from indra.statements import *
 from indra.databases import uniprot_client
 
-import multiprocessing as mp
 
 logger = logging.getLogger('preassembler')
 
