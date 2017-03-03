@@ -144,6 +144,7 @@ class MechLinker(object):
         for stmt in self.statements:
             if isinstance(stmt, Modification):
                 if stmt.enz is None:
+                    new_stmts.append(stmt)
                     continue
                 enz_base = self._get_base(stmt.enz)
                 active_forms = enz_base.get_active_forms()
@@ -157,6 +158,7 @@ class MechLinker(object):
             elif isinstance(stmt, RegulateAmount) or \
                 isinstance(stmt, RegulateActivity):
                 if stmt.subj is None:
+                    new_stmts.append(stmt)
                     continue
                 subj_base = self._get_base(stmt.subj)
                 active_forms = subj_base.get_active_forms()
