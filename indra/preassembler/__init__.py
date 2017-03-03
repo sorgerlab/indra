@@ -217,10 +217,10 @@ class Preassembler(object):
             parallelization is performed. NOTE: Parallelization is only
             available on Python 3.4 and above.
         size_cutoff : int
-            The threshold number of statements determining whether the
-            comparisons within a group of statements should be run in the
-            parent process or be sent to a worker process. Default value is 100.
-            Not relevant when parallelization is not used.
+            Groups with size_cutoff or more statements are sent to worker
+            processes, while smaller groups are compared in the parent process.
+            Default value is 100. Not relevant when parallelization is not
+            used.
 
         Returns
         -------
@@ -429,8 +429,8 @@ class Preassembler(object):
                     parent_proc_groups.append(g)
 
         # Now run preassembly!
-        logger.debug("Group sizes: %d large, %d small" %
-                     (len(child_proc_groups), len(parent_proc_groups)))
+        logger.info("Groups: %d parent, %d worker" %
+                    (len(parent_proc_groups), len(child_proc_groups)))
 
         # Check if we are running any groups in child processes; note that if
         # use_mp is False, child_proc_groups will be empty
@@ -456,7 +456,7 @@ class Preassembler(object):
         for stmt_tuples in parent_proc_groups:
             stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
                                             hierarchies=self.hierarchies))
-        logger.debug("Done running parent process groups")
+        logger.info("Done running parent process groups")
 
         while not workers_ready:
             logger.debug("Checking child processes")
@@ -472,7 +472,7 @@ class Preassembler(object):
                 pool.close()
                 pool.join()
             time.sleep(1)
-        logger.debug("Done.")
+        logger.info("Done.")
         # Combine all redundant map edges
         stmt_ix_map_set = set([])
         for group_ix_map in stmt_ix_map:
