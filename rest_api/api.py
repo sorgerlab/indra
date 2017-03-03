@@ -22,7 +22,8 @@ def allow_cors(func):
 ### TRIPS ###
 @route('/trips/process_text', method='POST')
 def trips_process_text():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     text = body.get('text')
     tp = trips.process_text(text)
     if tp and tp.statements:
@@ -35,7 +36,8 @@ def trips_process_text():
 
 @route('/trips/process_xml', method='POST')
 def trips_process_xml():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     xml_str = body.get('xml_str')
     tp = trips.process_xml(xml_str)
     if tp and tp.statements:
@@ -51,7 +53,8 @@ def trips_process_xml():
 @route('/reach/process_text', method='POST')
 @allow_cors
 def reach_process_text():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     text = body.get('text')
     rp = reach.process_text(text)
     if rp and rp.statements:
@@ -64,7 +67,8 @@ def reach_process_text():
 
 @route('/reach/process_json', method='POST')
 def reach_process_json():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     json_str = body.get('json')
     rp = reach.process_json_str(json_str)
     if rp and rp.statements:
@@ -77,7 +81,8 @@ def reach_process_json():
 
 @route('/reach/process_pmc', method='POST')
 def reach_process_pmc():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     pmcid = body.get('pmcid')
     rp = reach.process_pmc(pmcid)
     if rp and rp.statements:
@@ -92,7 +97,8 @@ def reach_process_pmc():
 ### BEL ###
 @route('/bel/process_ndex_neighborhood', method='POST')
 def bel_process_ndex_neighborhood():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     genes = body.get('genes')
     bp = bel.process_ndex_neighborhood(genes)
     if bp and bp.statements:
@@ -105,7 +111,8 @@ def bel_process_ndex_neighborhood():
 
 @route('/bel/process_belrdf', method='POST')
 def bel_process_belrdf():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     belrdf = body.get('belrdf')
     bp = bel.process_belrdf(belrdf)
     if bp and bp.statements:
@@ -119,7 +126,8 @@ def bel_process_belrdf():
 ### BioPAX ###
 @route('/biopax/process_pc_pathsbetween', method='POST')
 def biopax_process_pc_pathsbetween():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     genes = body.get('genes')
     bp = biopax.process_pc_pathsbetween(genes)
     if bp and bp.statements:
@@ -132,7 +140,8 @@ def biopax_process_pc_pathsbetween():
 
 @route('/biopax/process_pc_pathsfromto', method='POST')
 def biopax_process_pc_pathsfromto():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     source = body.get('source')
     target = body.get('target')
     bp = bel.process_pc_pathsfromto(source, target)
@@ -146,7 +155,8 @@ def biopax_process_pc_pathsfromto():
 
 @route('/biopax/process_pc_neighborhood', method='POST')
 def biopax_process_pc_neighborhood():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     genes = body.get('genes')
     bp = bel.process_pc_neighborhood(genes)
     if bp and bp.statements:
@@ -163,7 +173,8 @@ def biopax_process_pc_neighborhood():
 
 @route('/assemblers/pysb', method='POST')
 def assemble_pysb():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     pa = PysbAssembler()
@@ -177,7 +188,8 @@ def assemble_pysb():
 
 @route('/assemblers/cx', method='POST')
 def assemble_cx():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     ca = CxAssembler(stmts)
@@ -189,7 +201,8 @@ def assemble_cx():
 
 @route('/assemblers/graph', method='POST')
 def assemble_graph():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     ga = GraphAssembler(stmts)
@@ -202,7 +215,9 @@ def assemble_graph():
 @route('/assemblers/cyjs', method='POST')
 @allow_cors
 def assemble_cyjs():
-    body = json.load(request.body)
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    #body = json.load(request.body)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     cja = CyJSAssembler()
