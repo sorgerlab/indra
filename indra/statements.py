@@ -2128,25 +2128,21 @@ class IncreaseAmount(RegulateAmount):
     pass
 
 def stmts_from_json(json_in):
-    def get_by_id(stmts, uid):
-        for st in stmts:
-            if st.uuid == uid:
-                return st
     if not isinstance(json_in, list):
         st = Statement._from_json(json_in)
         return st
     else:
         stmts = []
+        uuid_dict = {}
         for json_stmt in json_in:
             st = Statement._from_json(json_stmt)
             stmts.append(st)
+            uuid_dict[st.uuid] = st
         for st in stmts:
             for i, uid in enumerate(st.supports):
-                ss = get_by_id(stmts, uid)
-                st.supports[i] = ss
+                st.supports[i] = uuid_dict[uid]
             for i, uid in enumerate(st.supported_by):
-                ss = get_by_id(stmts, uid)
-                st.supported_by[i] = ss
+                st.supported_by[i] = uuid_dict[uid]
         return stmts
 
 def stmts_to_json(stmts_in):
