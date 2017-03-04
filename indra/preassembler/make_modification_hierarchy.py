@@ -4,6 +4,7 @@ import sys
 import csv
 from os.path import join, dirname, abspath
 from rdflib import Graph, Namespace, Literal
+from indra.statements import modtype_conditions
 
 hierarchy_path = join(dirname(abspath(__file__)),
                       '../resources/modification_hierarchy.rdf')
@@ -27,11 +28,10 @@ def main():
 
     isa = rn.term('isa')
 
-    g.add((en.term('phosphorylation'), isa, en.term('modification')))
-    g.add((en.term('ubiquitination'), isa, en.term('modification')))
-    g.add((en.term('sumoylation'), isa, en.term('modification')))
-    g.add((en.term('acetylation'), isa, en.term('modification')))
-    g.add((en.term('hydroxylation'), isa, en.term('modification')))
+    for modtype in sorted(modtype_conditions):
+        if modtype == 'modification':
+            continue
+        g.add((en.term(modtype), isa, en.term('modification')))
 
     save_hierarchy(g, hierarchy_path)
 

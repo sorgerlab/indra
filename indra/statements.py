@@ -255,6 +255,8 @@ class ModCondition(object):
     ... ModCondition('phosphorylation', 'Y', '187', is_modified=False)))
     """
     def __init__(self, mod_type, residue=None, position=None, is_modified=True):
+        if mod_type not in modtype_conditions:
+            logger.warning('Unknown modification type: %s' % mod_type)
         self.mod_type = mod_type
         self.residue = get_valid_residue(residue)
         if isinstance(position, int):
@@ -2233,15 +2235,22 @@ def _read_amino_acids():
 
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
-# Mapping between modification type string (used in ModConditions and
-# subclasses of Modification
+# Mapping between modification type strings and subclasses of Modification
 modtype_to_modclass = {cls.__name__.lower(): cls for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
+# Add modification as a generic type
+modtype_to_modclass['modification'] = Modification
 
 modclass_to_modtype = {cls: cls.__name__.lower() for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
+# Add modification as a generic type
+modtype_to_modclass[Modification] = 'modification'
+# These are the modification types that are valid in ModConditions
+modtype_conditions = [modclass_to_modtype[mt] for mt in \
+                      AddModification.__subclasses__()]
+modtype_conditions.append('modification')
 
 def _get_mod_inverse_maps():
     modtype_to_inverse = {}
