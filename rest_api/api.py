@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 
 ### ALLOW CORS ###
 def allow_cors(func):
-    """ this is a decorator which enable CORS for specified endpoint """
+    """This is a decorator which enable CORS for the specified endpoint."""
     def wrapper(*args, **kwargs):
         response.headers['Access-Control-Allow-Origin'] = '*'
         return func(*args, **kwargs)
@@ -22,6 +22,7 @@ def allow_cors(func):
 ### TRIPS ###
 @route('/trips/process_text', method='POST')
 def trips_process_text():
+    """Process text with TRIPS and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
@@ -36,6 +37,7 @@ def trips_process_text():
 
 @route('/trips/process_xml', method='POST')
 def trips_process_xml():
+    """Process TRIPS EKB XML and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     xml_str = body.get('xml_str')
@@ -53,6 +55,7 @@ def trips_process_xml():
 @route('/reach/process_text', method='POST')
 @allow_cors
 def reach_process_text():
+    """Process text with REACH and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
@@ -67,6 +70,7 @@ def reach_process_text():
 
 @route('/reach/process_json', method='POST')
 def reach_process_json():
+    """Process REACH json and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     json_str = body.get('json')
@@ -81,6 +85,7 @@ def reach_process_json():
 
 @route('/reach/process_pmc', method='POST')
 def reach_process_pmc():
+    """Process PubMedCentral article and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
@@ -97,6 +102,7 @@ def reach_process_pmc():
 ### BEL ###
 @route('/bel/process_ndex_neighborhood', method='POST')
 def bel_process_ndex_neighborhood():
+    """Process BEL Large Corpus neighborhood and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -111,6 +117,7 @@ def bel_process_ndex_neighborhood():
 
 @route('/bel/process_belrdf', method='POST')
 def bel_process_belrdf():
+    """Process BEL RDF and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     belrdf = body.get('belrdf')
@@ -126,6 +133,7 @@ def bel_process_belrdf():
 ### BioPAX ###
 @route('/biopax/process_pc_pathsbetween', method='POST')
 def biopax_process_pc_pathsbetween():
+    """Process PathwayCommons paths between genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -140,6 +148,7 @@ def biopax_process_pc_pathsbetween():
 
 @route('/biopax/process_pc_pathsfromto', method='POST')
 def biopax_process_pc_pathsfromto():
+    """Process PathwayCommons paths from-to genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     source = body.get('source')
@@ -155,6 +164,7 @@ def biopax_process_pc_pathsfromto():
 
 @route('/biopax/process_pc_neighborhood', method='POST')
 def biopax_process_pc_neighborhood():
+    """Process PathwayCommons neighborhood, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -173,6 +183,7 @@ def biopax_process_pc_neighborhood():
 
 @route('/assemblers/pysb', method='POST')
 def assemble_pysb():
+    """Assemble INDRA Statements and return PySB model string."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -188,6 +199,7 @@ def assemble_pysb():
 
 @route('/assemblers/cx', method='POST')
 def assemble_cx():
+    """Assemble INDRA Statements and return CX network json."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -201,6 +213,7 @@ def assemble_cx():
 
 @route('/assemblers/graph', method='POST')
 def assemble_graph():
+    """Assemble INDRA Statements and return Graphviz graph dot string."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -215,9 +228,9 @@ def assemble_graph():
 @route('/assemblers/cyjs', method='POST')
 @allow_cors
 def assemble_cyjs():
+    """Assemble INDRA Statements and return Cytoscape JS network."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
-    #body = json.load(request.body)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     cja = CyJSAssembler()
