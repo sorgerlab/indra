@@ -12,7 +12,7 @@ def main():
         install_list.append('functools32')
 
     setup(name='indra',
-          version='1.3.0',
+          version='1.4.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
@@ -26,8 +26,8 @@ def main():
                     'indra.biopax', 'indra.databases', 'indra.index_cards',
                     'indra.literature', 'indra.mechlinker',
                     'indra.preassembler', 'indra.reach', 'indra.resources',
-                    'indra.tests', 'indra.tools', 'indra.tools.reading',
-                    'indra.trips', 'indra.util'],
+                    'indra.sparser', 'indra.tests', 'indra.tools',
+                    'indra.tools.reading', 'indra.trips', 'indra.util'],
           install_requires=install_list,
           tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
           include_package_data=True,
