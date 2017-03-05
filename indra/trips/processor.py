@@ -1269,10 +1269,10 @@ def _get_db_refs(term):
     # This is the INDRA prioritization of grounding name spaces. Lower score
     # takes precedence.
     ns_priority = {
-        'BE': 1,
-        'HGNC': 2,
-        'UP': 2,
-        'CHEBI': 2,
+        'HGNC': 1,
+        'UP': 1,
+        'BE': 2,
+        'CHEBI': 3,
         'GO': 4,
         'FA': 5,
         'XFAM': 5,
