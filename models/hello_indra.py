@@ -20,7 +20,7 @@ stmts = tp.statements # Don't show this one
 pa = PysbAssembler()
 pa.add_statements(stmts)
 pa.make_model()
-t = np.linspace(0, 25000)
+t = np.linspace(0, 2500)
 sol = Solver(pa.model, t)
 sol.run()
 
