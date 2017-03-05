@@ -263,7 +263,8 @@ class BiopaxProcessor(object):
                         set(monomer.mods).difference(gained_mods)
 
                     mods = [m for m in gained_mods
-                            if m.mod_type not in ['active', 'inactive']]
+                            if m[0] not in ['active', 'inactive']]
+                    mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
                     # NOTE: with the ActiveForm representation we cannot
                     # separate static_mods and gained_mods. We assume here
                     # that the static_mods are inconsequential and therefore
@@ -271,7 +272,7 @@ class BiopaxProcessor(object):
                     # don't care don't write semantics. Therefore only the
                     # gained_mods are listed in the ActiveForm as Agent
                     # conditions.
-                    monomer.mods = mods
+                    monomer.mods = mcs
                     if mods:
                         stmt = ActiveForm(monomer, activity, is_active,
                                           evidence=ev)
@@ -408,7 +409,7 @@ class BiopaxProcessor(object):
         for f in feats:
             mc = BiopaxProcessor._extract_mod_from_feature(f)
             if mc is not None:
-                if not get_activity and mc.mod_type in ['active', 'inactive']:
+                if not get_activity and mc[0] in ['active', 'inactive']:
                     # Skip activity as a modification state for now
                     continue
                 mods.append(mc)
@@ -555,10 +556,10 @@ class BiopaxProcessor(object):
                     gained_mods = set(mod_in).difference(set(mod_out))
 
                 for m in gained_mods:
-                    if m.mod_type  in ['active', 'inactive']:
+                    if m[0]  in ['active', 'inactive']:
                         # Skip activity as a modification state
                         continue
-                    stmt = (enz, sub, m.residue, m.position, ev)
+                    stmt = (enz, sub, m[1], m[2], ev)
                     stmts.append(stmt)
         return stmts
 
@@ -652,6 +653,7 @@ class BiopaxProcessor(object):
         # If the entity has a reference which has members, we iterate
         # over them.
         mods = BiopaxProcessor._get_entity_mods(bpe, get_activity=False)
+        mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
 
         if expand_er:
             er = BiopaxProcessor._get_entref(bpe)
@@ -662,13 +664,13 @@ class BiopaxProcessor(object):
                     for m in members:
                         name = BiopaxProcessor._get_element_name(m)
                         db_refs = BiopaxProcessor._get_db_refs(m)
-                        agents.append(Agent(name, db_refs=db_refs, mods=mods))
+                        agents.append(Agent(name, db_refs=db_refs, mods=mcs))
                     return agents
         # If it is a single entity, we get its name and database
         # references
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
-        agent = Agent(name, db_refs=db_refs, mods=mods)
+        agent = Agent(name, db_refs=db_refs, mods=mcs)
         return agent
 
     @staticmethod
@@ -712,9 +714,10 @@ class BiopaxProcessor(object):
                             mf_pos_status.toString())
             else:
                 mod_pos = mf_site.getSequencePosition()
+                mod_pos = '%s' % mod_pos
         else:
             mod_pos = None
-        mc = ModCondition(mod_type, residue, mod_pos)
+        mc = (mod_type, residue, mod_pos)
         return mc
 
     @staticmethod
