@@ -360,10 +360,13 @@ def get_agent_rule_str(agent):
     return rule_str
 
 
-def add_rule_to_model(model, rule):
+def add_rule_to_model(model, rule, annotations=None):
     """Add a Rule to a PySB model and handle duplicate component errors."""
     try:
         model.add_component(rule)
+        # If the rule was actually added, also add the annotations
+        if annotations:
+            model.annotations += annotations
     # If this rule is already in the model, issue a warning and continue
     except ComponentDuplicateNameError:
         msg = "Rule %s already in model! Skipping." % rule.name
@@ -1030,8 +1033,6 @@ def complex_assemble_one_step(stmt, model, agent_set):
                             agent1_pattern(**{agent1_bs: 1}) % \
                             agent2_pattern(**{agent2_bs: 1}),
                             kf_bind)
-        add_rule_to_model(model, r)
-
         anns = [Annotation(rule_name, agent1_pattern.monomer.name,
                            'rule_has_subject'),
                 Annotation(rule_name, agent1_pattern.monomer.name,
@@ -1039,7 +1040,10 @@ def complex_assemble_one_step(stmt, model, agent_set):
                 Annotation(rule_name, agent2_pattern.monomer.name,
                            'rule_has_subject'),
                 Annotation(rule_name, agent2_pattern.monomer.name,
-                           'rule_has_object')]
+                           'rule_has_object'),
+                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+        add_rule_to_model(model, r, anns)
+
 
         # In reverse reaction, assume that dissocition is unconditional
 
@@ -1055,17 +1059,17 @@ def complex_assemble_one_step(stmt, model, agent_set):
                             monomer1_uncond(**{agent1_bs: None}) + \
                             monomer2_uncond(**{agent2_bs: None}),
                             kr_bind)
-        add_rule_to_model(model, r)
-
-        anns += [Annotation(rule_name, monomer1_uncond.monomer.name,
+        anns = [Annotation(rule_name, monomer1_uncond.monomer.name,
                            'rule_has_subject'),
                 Annotation(rule_name, monomer1_uncond.monomer.name,
                            'rule_has_object'),
                 Annotation(rule_name, monomer2_uncond.monomer.name,
                            'rule_has_subject'),
                 Annotation(rule_name, monomer2_uncond.monomer.name,
-                           'rule_has_object')]
-        model.annotations += anns
+                           'rule_has_object'),
+                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+        add_rule_to_model(model, r, anns)
+
 
 def complex_assemble_multi_way(stmt, model, agent_set):
     # Get the rate parameter
@@ -1156,8 +1160,10 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     # Finally, create the rule and add it to the model
     rule_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
     rule_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
-    add_rule_to_model(model, rule_fwd)
-    add_rule_to_model(model, rule_rev)
+    anns = [Annotation(rule_fwd.name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, rule_fwd, anns)
+    anns = [Annotation(rule_rev.name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, rule_rev, anns)
 
 complex_assemble_default = complex_assemble_one_step
 
@@ -1233,8 +1239,6 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
     rhs = enz(**{active_site: 1}) + sub(**{mod_site: 1})
     r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
     add_rule_to_model(model, r_fwd)
-    #r_rev = Rule(rule_name + '_rev', rhs >> lhs, kr_bind)
-    #add_rule_to_model(model, r_rev)
 
 
 def modification_assemble_one_step(stmt, model, agent_set):
@@ -1265,12 +1269,11 @@ def modification_assemble_one_step(stmt, model, agent_set):
             enz_pattern + sub_unmod >>
             enz_pattern + sub_mod,
             kf_mod)
-    add_rule_to_model(model, r)
-
-    # Add rule annotations to model
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
+
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
@@ -1310,7 +1313,8 @@ def modification_assemble_two_step(stmt, model, agent_set):
         enz_bound() % \
         sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
         kf_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     rule_name = '%s_%s_%s_%s' % \
         (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
@@ -1320,13 +1324,12 @@ def modification_assemble_two_step(stmt, model, agent_set):
         enz_unbound() + \
             sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
         kf_mod)
-    add_rule_to_model(model, r)
-    # Add rule annotations to model
     anns = [Annotation(rule_name, enz_bound.monomer.name,
                        'rule_has_subject'),
             Annotation(rule_name, sub_pattern.monomer.name,
                        'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
@@ -1340,7 +1343,8 @@ def modification_assemble_two_step(stmt, model, agent_set):
              sub_mon_uncond(**{enz_bs: 1}) >>
              enz_mon_uncond(**{sub_bs: None}) + \
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 modification_monomers_default = modification_monomers_one_step
 modification_assemble_default = modification_assemble_one_step
@@ -1409,14 +1413,16 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     r = Rule(rule_name,
         enz_atp_unbound() + atp(b=None) >>
         enz_atp_bound() %  atp(b=1), kf_bind_atp)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     # Enzyme releasing ATP
     rule_name = '%s_phospho_dissoc_atp' % (enz_rule_str)
     r = Rule(rule_name,
         enz_mon_uncond({atp_bs: 1}) % atp(b=1) >>
         enz_mon_uncond({atp_bs: None}) + atp(b=None), kr_bind_atp)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     # Enzyme binding substrate
     param_name = ('kf_' + stmt.enz.name[0].lower() +
@@ -1442,7 +1448,8 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
         enz_sub_bound() % \
         sub_pattern(**{phos_site: 'u', enz_bs: 1}),
         kf_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     # Enzyme phosphorylating substrate
     rule_name = '%s_phospho_%s_%s' % \
@@ -1453,12 +1460,12 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
         enz_sub_atp_unbound() + atp(b=None) + \
             sub_pattern(**{phos_site: 'p', enz_bs: None}),
         kf_phospho)
-    add_rule_to_model(model, r)
-    # Add rule annotations to model
     anns = [Annotation(rule_name, enz_sub_atp_bound.monomer.name,
                        'rule_has_subject'),
             Annotation(rule_name, sub_pattern.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
+    # Add rule annotations to model
 
     # Enzyme dissociating from substrate
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
@@ -1466,7 +1473,8 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
              sub_mon_uncond(**{enz_bs: 1}) >>
              enz_mon_uncond(**{sub_bs: None}) + \
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 
 # DEMODIFICATION #####################################################
@@ -1557,10 +1565,10 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     r = Rule(rule_name,
              enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
              kf_demod)
-    add_rule_to_model(model, r)
     anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 
 def demodification_assemble_two_step(stmt, model, agent_set):
@@ -1602,7 +1610,8 @@ def demodification_assemble_two_step(stmt, model, agent_set):
              enz_bound() % \
              sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
              kf_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     rule_name = '%s_%s_%s_%s' % \
         (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
@@ -1612,10 +1621,10 @@ def demodification_assemble_two_step(stmt, model, agent_set):
         enz_unbound() + \
             sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
         kf_demod)
-    add_rule_to_model(model, r)
     anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
     enz_uncond = get_uncond_agent(stmt.enz)
     enz_rule_str = get_agent_rule_str(enz_uncond)
@@ -1629,7 +1638,8 @@ def demodification_assemble_two_step(stmt, model, agent_set):
              sub_mon_uncond(**{enz_bs: 1}) >>
              enz_mon_uncond(**{sub_bs: None}) + \
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 demodification_monomers_default = demodification_monomers_one_step
 demodification_assemble_default = demodification_assemble_one_step
@@ -1701,10 +1711,10 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set):
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
                                           phos_site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-    add_rule_to_model(model, r)
     anns = [Annotation(rule_name, pattern_unphos.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, pattern_phos.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
 
@@ -1760,10 +1770,10 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
                                            rule_bound_str, phos_site)
     r = Rule(rule_name, enz_pattern % sub_unphos >> \
                     enz_pattern % sub_phos, kf)
-    add_rule_to_model(model, r)
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unphos.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
@@ -1853,11 +1863,11 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
             subj_pattern() + obj_active >> subj_pattern() + obj_inactive,
             kf_one_step_activate)
 
-    add_rule_to_model(model, r)
     anns = [Annotation(rule_name, subj_pattern.monomer.name,
                        'rule_has_subject'),
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
@@ -1935,11 +1945,11 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
              gef_pattern + ras_inactive >>
              gef_pattern + ras_active,
              kf_gef)
-    add_rule_to_model(model, r)
     anns = [Annotation(r.name, gef_pattern.monomer.name,
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 rasgef_assemble_default = rasgef_assemble_one_step
 
@@ -1998,11 +2008,11 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
              gap_pattern + ras_active >>
              gap_pattern + ras_inactive,
              kf_gap)
-    add_rule_to_model(model, r)
     anns = [Annotation(r.name, gap_pattern.monomer.name,
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
-    model.annotations += anns
+    anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 rasgap_assemble_default = rasgap_assemble_one_step
 
@@ -2065,7 +2075,8 @@ def translocation_assemble_default(stmt, model, agent_set):
                                    extra_fields={'loc':
                                                  _n(stmt.to_location)})
     r = Rule(rule_name, agent_from >> agent_to, kf_trans)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 # DEGRADATION ###############################################
 
@@ -2128,7 +2139,8 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set):
         r = Rule(rule_name,
             subj_pattern + obj_pattern >> subj_pattern,
             kf_one_step_degrade)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 decreaseamount_assemble_default = decreaseamount_assemble_one_step
 decreaseamount_monomers_default = decreaseamount_monomers_one_step
@@ -2160,7 +2172,8 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
             subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
             kf_bind)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 def increaseamount_assemble_one_step(stmt, model, agent_set):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
@@ -2198,7 +2211,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
                  kf_one_step_synth)
-    add_rule_to_model(model, r)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
 
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
