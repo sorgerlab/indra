@@ -93,18 +93,12 @@ import uuid
 import rdflib
 import logging
 import textwrap
-import jsonpickle
 from collections import namedtuple
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
-
-# Set the JSONpickle backend. We need to use the json module explicitly (rather
-# than simplejson, which is the default if installed), because it returns
-# unicode strings upon unpickling, which is what we want.
-jsonpickle.set_preferred_backend('json')
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
