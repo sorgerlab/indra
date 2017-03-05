@@ -527,7 +527,7 @@ def test_annotation():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.annotations) == 4)
+    assert(len(pa.model.annotations) == 5)
 
 def test_print_model():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
