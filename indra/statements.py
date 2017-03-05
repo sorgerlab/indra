@@ -872,7 +872,7 @@ class Statement(object):
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
-        self.uuid = uuid.uuid4()
+        self.uuid = '%s' % uuid.uuid4()
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -934,7 +934,7 @@ class Statement(object):
             try:
                 uid = st.uuid
             except AttributeError:
-                st.uuid = uuid.uuid4()
+                st.uuid = '%s' % uuid.uuid4()
         ##################
         json_dict = {'id': '%s' % self.uuid,
                      'type': stmt_type}
@@ -961,7 +961,7 @@ class Statement(object):
         stmt.belief = json_dict.get('belief', 1.0)
         stmt_id = json_dict.get('id')
         if not stmt_id:
-            stmt_id = uuid.uuid4()
+            stmt_id = '%s' % uuid.uuid4()
         stmt.uuid = stmt_id
         return stmt
 
