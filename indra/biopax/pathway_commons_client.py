@@ -100,7 +100,7 @@ def owl_str_to_model(owl_str):
     bais = autoclass('java.io.ByteArrayInputStream')
     scs = autoclass('java.nio.charset.StandardCharsets')
     jstr = autoclass('java.lang.String')
-    istream = bais(jstr(owl_str).getBytes(scs.UTF_8));
+    istream = bais(owl_str)
     biopax_model = io.convertFromOWL(istream)
     return biopax_model
 
