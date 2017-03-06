@@ -780,7 +780,7 @@ class TripsProcessor(object):
                 return None
             return member_agents
 
-        db_refs = _get_db_refs(term)
+        db_refs, _ = _get_db_refs(term)
 
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
@@ -1281,6 +1281,7 @@ def _get_db_refs(term):
     # We get the top priority entry from each score group
     score_groups = itertools.groupby(grounding_terms, lambda x: x['score'])
     top_per_score_group = []
+    ambiguities = []
     for score, group in score_groups:
         entries = list(group)
         for entry in entries:
@@ -1299,9 +1300,16 @@ def _get_db_refs(term):
             entry['priority'] = priority
         if len(entries) > 1:
             top_entry = entries[0]
-            for entry in entries:
+            top_idx = 0
+            for i, entry in enumerate(entries):
                 if entry['priority'] < top_entry['priority']:
                     top_entry = entry
+                    top_idx = i
+            for i, entry in enumerate(entries):
+                if i == top_idx:
+                    continue
+                if (entry['priority'] - top_entry['priority']) <= 1:
+                    ambiguities.append((top_entry, entry))
         else:
             top_entry = entries[0]
         top_per_score_group.append(top_entry)
@@ -1320,11 +1328,15 @@ def _get_db_refs(term):
                         top_per_score_group[1]['priority']
         if score_diff < 0.2 and priority_diff >= 2:
             top_grounding = top_per_score_group[1]
+    relevant_ambiguities = []
+    for ambiguity in ambiguities:
+        if top_grounding in ambiguity:
+            relevant_ambiguities.append(ambiguity)
 
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
 
-    return db_refs
+    return db_refs, relevant_ambiguities
 
 
 def _get_grounding_terms(term):
