@@ -1,4 +1,4 @@
-Active ATR activates itself.
+Active ATR activates ATR.
 Active ATR activates p53.
 Active p53 activates Wip1.
 Active p53 activates MDM2.

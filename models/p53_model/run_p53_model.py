@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from indra import trips
@@ -22,8 +23,10 @@ def assemble_model(model_name, reread=False):
         fname = model_name + '.txt'
         print('Reading %s' % fname)
         with open(fname, 'rb') as fh:
+            ts = time.time()
             tp = trips.process_text(fh.read(), xml_fname)
-
+            te = time.time()
+            print('Reading took %.2fs' % (te-ts))
     print('Assembling statements:')
     for i, st in enumerate(tp.statements):
         print('%d: %s' % (i, st))
@@ -31,7 +34,10 @@ def assemble_model(model_name, reread=False):
 
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
+    ts = time.time()
     model = pa.make_model()
+    te = time.time()
+    print('Assembly took %.2fs' % (te-ts))
     model.name = model_name
 
     p53 = model.monomers['TP53']
@@ -39,7 +45,7 @@ def assemble_model(model_name, reread=False):
     model.add_component(obs)
     if not model_name.endswith('var'):
         model.parameters['kf_aa_act_1'].value = 5e-06
-    model.parameters['kf_pt_act_1'].value = 1e-05
+    model.parameters['kf_pt_act_1'].value = 5e-06
 
     if model_name == 'p53_ATM':
         model.add_component(Parameter('ATMa_0', 1))
@@ -78,8 +84,11 @@ def assemble_model(model_name, reread=False):
 def run_model(model):
     sim_hours = 20
     ts = np.linspace(0, sim_hours*3600, sim_hours*60)
+    tst = time.time()
     solver = Solver(model, ts)
     solver.run()
+    te = time.time()
+    print('Simulation took %.2fs' % (te-tst))
     plt.figure(figsize=(2,2), dpi=300)
     set_fig_params()
     plt.plot(ts, solver.yobs['p53_active'], 'r')
@@ -91,7 +100,7 @@ def run_model(model):
     return ts, solver
 
 if __name__ == '__main__':
-    reread = True
+    reread = False
     model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)

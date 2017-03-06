@@ -1,4 +1,4 @@
-Active ATM activates itself.
+Active ATM activates ATM.
 Active ATM activates p53.
 Active p53 activates Wip1.
 Active p53 activates MDM2.
