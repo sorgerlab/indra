@@ -548,7 +548,8 @@ class BiopaxProcessor(object):
 
                 mod_shared = set(mod_in).intersection(set(mod_out))
 
-                sub.mods = list(mod_shared)
+                sub.mods = [ModCondition(m[0], m[1], m[2], True) for
+                            m in list(mod_shared)]
 
                 if mod_gain:
                     gained_mods = set(mod_out).difference(set(mod_in))
@@ -922,6 +923,7 @@ class BiopaxProcessor(object):
         'methylated arginine': ('methylation', 'R'),
         'ubiquitination': ('ubiquitination', None),
         'ubiquitinylated lysine': ('ubiquitination', 'K'),
+        'ubiquitination signature tetrapeptidyl lysine': ('ubiquitination', 'K'),
         }
 
 # Functions for accessing frequently used java classes with shortened path
