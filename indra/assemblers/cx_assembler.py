@@ -443,6 +443,10 @@ class CxAssembler(object):
                               'n': 'Text',
                               'v': text}
             self.cx['edgeAttributes'].append(edge_attribute)
+        # Add the serialized JSON INDRA Statement
+        stmt_dict = stmt.to_json()
+        edge_attribute = {'po': edge_id, 'n': 'indra', 'v': stmt_dict}
+        self.cx['edgeAttributes'].append(edge_attribute)
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, AddModification):
