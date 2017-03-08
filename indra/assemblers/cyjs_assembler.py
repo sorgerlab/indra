@@ -275,7 +275,7 @@ class CyJSAssembler(object):
         model_dict = {'exp_colorscale': self._exp_colorscale,
                       'mut_colorscale': self._mut_colorscale,
                       'model_elements': cyjs_dict}
-        cyjs_str = json.dumps(model_dict, indent=1)
+        cyjs_str = json.dumps(model_dict, indent=1, sort_keys=True)
         return cyjs_str
 
     def save_json(self, fname='model.json'):
@@ -291,7 +291,7 @@ class CyJSAssembler(object):
         model_dict = {'exp_colorscale': self._exp_colorscale,
                       'mut_colorscale': self._mut_colorscale,
                       'model_elements': cyjs_dict}
-        json_str = json.dumps(model_dict, indent=1)
+        json_str = json.dumps(model_dict, indent=1, sort_keys=True)
         with open(fname, 'wt') as fh:
             fh.write(json_str)
 
