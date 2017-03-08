@@ -1264,7 +1264,7 @@ def _get_db_refs(term):
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
-        return db_refs
+        return db_refs, []
 
     # This is the INDRA prioritization of grounding name spaces. Lower score
     # takes precedence.
@@ -1329,9 +1329,15 @@ def _get_db_refs(term):
         if score_diff < 0.2 and priority_diff >= 2:
             top_grounding = top_per_score_group[1]
     relevant_ambiguities = []
-    for ambiguity in ambiguities:
-        if top_grounding in ambiguity:
-            relevant_ambiguities.append(ambiguity)
+    for amb in ambiguities:
+        if top_grounding not in amb:
+            continue
+        if top_grounding == amb[0]:
+            relevant_ambiguities.append({'preferred': amb[0],
+                                         'alternative': amb[1]})
+        else:
+            relevant_ambiguities.append({'preferred': amb[1],
+                                         'alternative': amb[0]})
 
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
@@ -1387,6 +1393,7 @@ def _get_grounding_terms(term):
 
         # Now get the match score associated with the term
         match_score = dt.attrib.get('match-score')
+        db_name = dt.attrib.get('name')
         # Handling corner cases for unscored matches
         if match_score is None:
             if not score_started:
@@ -1404,9 +1411,13 @@ def _get_grounding_terms(term):
         # at the top of the list
         if not refs:
             match_score = 0
-
+        entity_type = dt.find('types/type')
+        if entity_type is not None:
+            entity_type = entity_type.text
         grounding_term = {'score': match_score,
-                          'refs': refs}
+                          'refs': refs,
+                          'name': db_name,
+                          'type': entity_type}
         terms.append(grounding_term)
     # Finally, the scores are sorted in descending order
     terms = sorted(terms, key=operator.itemgetter('score'), reverse=True)
