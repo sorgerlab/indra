@@ -410,6 +410,21 @@ class TripsProcessor(object):
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
 
+    def get_regulate_amounts(self):
+        """Extract Increase/DecreaseAmount Statements."""
+        pos_events = []
+        neg_events = []
+        pattern = "EVENT/[type='ONT::STIMULATE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        pos_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::INCREASE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        pos_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::INHIBIT']/arg2/[type='ONT::TRANSCRIBE']/.."
+        neg_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::DECREASE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        neg_events += self.tree.findall(pattern)
+        # Look at polarity
+        #pattern = "EVENT/[type='ONT::MODULATE']/arg2/[type='ONT::TRANSCRIBE']/.."
+
     def get_active_forms(self):
         """Extract ActiveForm INDRA Statements."""
         act_events = self.tree.findall("EVENT/[type='ONT::ACTIVATE']")
