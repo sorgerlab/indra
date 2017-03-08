@@ -2309,9 +2309,9 @@ class PysbPreassembler(object):
                 except KeyError:
                     neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
             elif isinstance(stmt, ist.IncreaseAmount):
-                syntheses.append(stmt.subj.name)
+                syntheses.append(stmt.obj.name)
             elif isinstance(stmt, ist.DecreaseAmount):
-                degradations.append(stmt.subj.name)
+                degradations.append(stmt.obj.name)
 
         new_stmts = []
         for agent_name, pos_sites in pos_mod_sites.items():
