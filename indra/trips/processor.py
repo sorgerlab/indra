@@ -780,7 +780,7 @@ class TripsProcessor(object):
                 return None
             return member_agents
 
-        db_refs = _get_db_refs(term)
+        db_refs, _ = _get_db_refs(term)
 
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
@@ -1264,7 +1264,7 @@ def _get_db_refs(term):
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
-        return db_refs
+        return db_refs, []
 
     # This is the INDRA prioritization of grounding name spaces. Lower score
     # takes precedence.
@@ -1281,6 +1281,7 @@ def _get_db_refs(term):
     # We get the top priority entry from each score group
     score_groups = itertools.groupby(grounding_terms, lambda x: x['score'])
     top_per_score_group = []
+    ambiguities = []
     for score, group in score_groups:
         entries = list(group)
         for entry in entries:
@@ -1299,9 +1300,16 @@ def _get_db_refs(term):
             entry['priority'] = priority
         if len(entries) > 1:
             top_entry = entries[0]
-            for entry in entries:
+            top_idx = 0
+            for i, entry in enumerate(entries):
                 if entry['priority'] < top_entry['priority']:
                     top_entry = entry
+                    top_idx = i
+            for i, entry in enumerate(entries):
+                if i == top_idx:
+                    continue
+                if (entry['priority'] - top_entry['priority']) <= 1:
+                    ambiguities.append((top_entry, entry))
         else:
             top_entry = entries[0]
         top_per_score_group.append(top_entry)
@@ -1320,11 +1328,21 @@ def _get_db_refs(term):
                         top_per_score_group[1]['priority']
         if score_diff < 0.2 and priority_diff >= 2:
             top_grounding = top_per_score_group[1]
+    relevant_ambiguities = []
+    for amb in ambiguities:
+        if top_grounding not in amb:
+            continue
+        if top_grounding == amb[0]:
+            relevant_ambiguities.append({'preferred': amb[0],
+                                         'alternative': amb[1]})
+        else:
+            relevant_ambiguities.append({'preferred': amb[1],
+                                         'alternative': amb[0]})
 
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
 
-    return db_refs
+    return db_refs, relevant_ambiguities
 
 
 def _get_grounding_terms(term):
@@ -1375,6 +1393,7 @@ def _get_grounding_terms(term):
 
         # Now get the match score associated with the term
         match_score = dt.attrib.get('match-score')
+        db_name = dt.attrib.get('name')
         # Handling corner cases for unscored matches
         if match_score is None:
             if not score_started:
@@ -1392,9 +1411,13 @@ def _get_grounding_terms(term):
         # at the top of the list
         if not refs:
             match_score = 0
-
+        entity_type = dt.find('types/type')
+        if entity_type is not None:
+            entity_type = entity_type.text
         grounding_term = {'score': match_score,
-                          'refs': refs}
+                          'refs': refs,
+                          'name': db_name,
+                          'type': entity_type}
         terms.append(grounding_term)
     # Finally, the scores are sorted in descending order
     terms = sorted(terms, key=operator.itemgetter('score'), reverse=True)
