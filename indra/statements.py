@@ -470,16 +470,6 @@ class Agent(object):
         else:
             self.db_refs = db_refs
 
-    def __setstate__(self, state):
-        if 'active' in state:
-            logger.warning('Pickle file is out of date!')
-        if state.get('active') is not None:
-            state['activity'] = ActivityCondition(state['active'], True)
-        else:
-            state['activity'] = None
-        state.pop('active', None)
-        self.__dict__.update(state)
-
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
