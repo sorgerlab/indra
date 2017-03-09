@@ -1318,11 +1318,11 @@ class Demyristoylation(RemoveModification):
     """Demyristoylation modification."""
     pass
 
-class Methylation(Modification):
+class Methylation(AddModification):
     """Methylation modification."""
     pass
 
-class Demethylation(Modification):
+class Demethylation(RemoveModification):
     """Demethylation modification."""
     pass
 
