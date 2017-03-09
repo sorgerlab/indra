@@ -156,7 +156,9 @@ class GeneNetwork(object):
         bp.get_acetylation()
         bp.get_palmitoylation()
         bp.get_glycosylation()
+        bp.get_ubiquitination()
         bp.get_activity_modification()
+        bp.get_regulate_amounts()
         # Save statements to pickle file if we're caching
         if self.basename is not None:
             with open(biopax_stmt_path, 'wb') as f:
