@@ -621,6 +621,8 @@ agent_mod_map = {
     'defarnesylation': ('farnesylation', False),
     'ribosylation': ('ribosylation', True),
     'deribosylation': ('ribosylation', False),
+    'methylation': ('methylation', True),
+    'demethylation': ('methylation', False),
     'unknown': ('modification', True),
 }
 
