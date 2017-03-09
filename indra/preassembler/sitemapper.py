@@ -140,7 +140,7 @@ class SiteMapper(object):
                                   if isinstance(stmt, Modification)
                                   else stmt_copy.enz)
                 # Check the modification on the appropriate agent
-                old_mod_list = [ModCondition(None, stmt.residue,
+                old_mod_list = [ModCondition('modification', stmt.residue,
                                              stmt.position)]
                 # Figure out if this site is invalid
                 stmt_invalid_sites = \

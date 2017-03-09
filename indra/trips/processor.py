@@ -876,6 +876,7 @@ class TripsProcessor(object):
             # Determine the agent name
             hgnc_id = db_refs.get('HGNC')
             up_id = db_refs.get('UP')
+            be_id = db_refs.get('BE')
             agent_name = None
             # HGNC name takes precedence
             if hgnc_id:
@@ -887,6 +888,10 @@ class TripsProcessor(object):
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name:
                     agent_name = gene_name
+            # If it is mapped to Bioentities then we standardize its name
+            # to the Bioentities entry name
+            elif be_id:
+                agent_name = be_id
             # Otherwise, take the name of the term as agent name
             else:
                 name = term.find("name")

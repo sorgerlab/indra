@@ -87,7 +87,7 @@ class _BaseAgentSet(object):
 
         # Handle location condition
         if agent.location is not None:
-            base_agent.create_site('loc', [agent.location])
+            base_agent.create_site('loc', [_n(agent.location)])
 
         # Handle activity
         if agent.activity is not None:
@@ -355,7 +355,7 @@ def get_agent_rule_str(agent):
             else:
                 rule_str_list.append('n' + _n(b.agent.name))
     if agent.location is not None:
-        rule_str_list.append(agent.location.replace(' ', '_'))
+        rule_str_list.append(_n(agent.location))
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
@@ -564,7 +564,7 @@ def get_site_pattern(agent):
 
     # Handle location
     if agent.location is not None:
-        pattern['loc'] = agent.location
+        pattern['loc'] = _n(agent.location)
 
     # Handle activity
     if agent.activity is not None:
@@ -2061,7 +2061,7 @@ def translocation_assemble_default(stmt, model, agent_set):
     if stmt.from_location is None or stmt.to_location is None:
         return
     param_name = 'kf_%s_%s_%s' % (_n(stmt.agent.name).lower(),
-                                  stmt.from_location, stmt.to_location)
+                                  _n(stmt.from_location), _n(stmt.to_location))
     kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
     monomer = model.monomers[_n(stmt.agent.name)]
     rule_agent_str = get_agent_rule_str(stmt.agent)
