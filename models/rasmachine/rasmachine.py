@@ -392,6 +392,7 @@ if __name__ == '__main__':
                                             ['biopax', 'bel'], policy='none')
     no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
     orig_stmts = db_stmts + no_db_stmts
+    orig_stmts = ac.filter_top_level(orig_stmts)
     stats['orig_final'] = len(orig_stmts)
     logger.info('%d final statements' % len(orig_stmts))
 
@@ -413,6 +414,7 @@ if __name__ == '__main__':
                                             ['biopax', 'bel'], policy='none')
     no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
     new_stmts = db_stmts + no_db_stmts
+    new_stmts = ac.filter_top_level(new_stmts)
     stats['new_final'] = len(new_stmts)
     logger.info('%d final statements' % len(new_stmts))
 
