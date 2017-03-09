@@ -569,6 +569,8 @@ def test_44():
     assert(p53.name == 'TP53')
     assert(mdm2.name == 'MDM2')
 
+'''
+# Not sure if this is good to extract like this so leaving out for now
 def test_45():
     sentence = 'p53 increases mdm2.'
     tp = process_sentence_xml(sentence)
@@ -579,6 +581,7 @@ def test_45():
     mdm2 = st.obj
     assert(p53.name == 'TP53')
     assert(mdm2.name == 'MDM2')
+'''
 
 def test_46():
     sentence = 'p53 increases the transcription of mdm2.'
