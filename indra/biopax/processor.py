@@ -278,7 +278,16 @@ class BiopaxProcessor(object):
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
-    def get_regulate_amounts(self):
+    def get_regulate_amounts(self, force_contains=None):
+        """Extract INDRA RegulateAmount statements from the model.
+
+        Parameters
+        ----------
+        force_contains : Optional[list[str]]
+            A list of gene names for filtering. Only Statements in which the
+            gene names in the force_contains list appear will be extracted.
+            Default: None
+        """
         pb = _bpp('PatternBox')
 
         p = pb.controlsExpressionWithTemplateReac()
@@ -349,6 +358,11 @@ class BiopaxProcessor(object):
                   for cit in citations]
             for subj, obj in itertools.product(_listify(controller),
                                                _listify(controlled)):
+                if force_contains is not None:
+                    if subj and subj.name not in force_contains:
+                        continue
+                    if obj and obj.name not in force_contains:
+                        continue
                 subj_act = ActivityCondition('transcription', True)
                 subj.activity = subj_act
                 if control_type == 'ACTIVATION':
