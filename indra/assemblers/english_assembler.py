@@ -50,6 +50,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_complex(stmt))
             elif isinstance(stmt, ist.RegulateActivity):
                 stmt_strs.append(_assemble_regulate_activity(stmt))
+            elif isinstance(stmt, ist.RegulateAmount):
+                stmt_strs.append(_assemble_regulate_amount(stmt))
             elif isinstance(stmt, ist.ActiveForm):
                 stmt_strs.append(_assemble_activeform(stmt))
             elif isinstance(stmt, ist.Translocation):
@@ -171,30 +173,7 @@ def _assemble_modification(stmt):
         mod_str = ''
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
-'''
-def _assemble_dephosphorylation(stmt):
-    """Assemble Dephosphorylation statements into text."""
-    sub_str = _assemble_agent_str(stmt.sub)
-    if stmt.enz is not None:
-        enz_str = _assemble_agent_str(stmt.enz)
-        if _get_is_direct(stmt):
-            phos_str = ' dephosphorylates '
-        else:
-            phos_str = ' leads to the dephosphorylation of '
-        stmt_str = enz_str + phos_str + sub_str
-    else:
-        stmt_str = sub_str + ' is dephosphorylated'
 
-    if stmt.residue is not None:
-        if stmt.position is None:
-            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
-        else:
-            mod_str = 'on ' + stmt.residue + stmt.position
-    else:
-        mod_str = 'on an unknown residue '
-    stmt_str += ' ' + mod_str
-    return _make_sentence(stmt_str)
-'''
 def _assemble_complex(stmt):
     """Assemble Complex statements into text."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
@@ -224,6 +203,23 @@ def _assemble_regulate_activity(stmt):
     else:
         rel_str = ' inhibits '
     stmt_str = subj_str + rel_str + obj_str
+    return _make_sentence(stmt_str)
+
+def _assemble_regulate_amount(stmt):
+    """Assemble RegulateAmount statements into text."""
+    obj_str = _assemble_agent_str(stmt.obj)
+    if stmt.subj is not None:
+        subj_str = _assemble_agent_str(stmt.subj)
+        if isinstance(stmt, ist.IncreaseAmount):
+            rel_str = ' increases the amount of '
+        elif isinstance(stmt, ist.DecreaseAmount):
+            rel_str = ' decreases the amount of '
+        stmt_str = subj_str + rel_str + obj_str
+    else:
+        if isinstance(stmt, ist.IncreaseAmount):
+            stmt_str = obj_str + ' is produced'
+        elif isinstance(stmt, ist.DecreaseAmount):
+            stmt_str = obj_str + ' is degraded'
     return _make_sentence(stmt_str)
 
 def _assemble_translocation(stmt):

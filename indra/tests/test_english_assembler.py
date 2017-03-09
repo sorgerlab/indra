@@ -213,6 +213,33 @@ def test_inhibition():
     print(s)
     assert(s == 'MEK inhibits ERK.')
 
+def test_regulateamount():
+    st = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert(s == 'TP53 increases the amount of MDM2.')
+    st = DecreaseAmount(Agent('TP53'), Agent('MDM2'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert(s == 'TP53 decreases the amount of MDM2.')
+    st = DecreaseAmount(None, Agent('MDM2'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert(s == 'MDM2 is degraded.')
+    st = IncreaseAmount(None, Agent('MDM2'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert(s == 'MDM2 is produced.')
+
+
 def test_agent_loc():
     a = Agent('BRAF', location='cytoplasm')
     print(ea._assemble_agent_str(a))
