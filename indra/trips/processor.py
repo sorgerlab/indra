@@ -83,6 +83,7 @@ class TripsProcessor(object):
         self.statements = []
         self._static_events = self._find_static_events()
         self._isolated_terms = self._find_isolated_terms()
+        self._subsumed_events = []
         self.all_events = {}
         self.get_all_events()
         self.extracted_events = {k: [] for k in self.all_events.keys()}
@@ -359,6 +360,8 @@ class TripsProcessor(object):
         for event in syn_events:
             if event.attrib['id'] in self._static_events:
                 continue
+            if event.attrib['id'] in self._subsumed_events:
+                continue
             affected = event.find(".//*[@role=':AFFECTED-RESULT']")
             if affected is None:
                 msg = 'Skipping synthesis event with no affected term.'
@@ -409,6 +412,75 @@ class TripsProcessor(object):
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
+
+    def get_regulate_amounts(self):
+        """Extract Increase/DecreaseAmount Statements."""
+        pos_events = []
+        neg_events = []
+        pattern = "EVENT/[type='ONT::STIMULATE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        pos_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::INCREASE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        pos_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::INHIBIT']/arg2/[type='ONT::TRANSCRIBE']/.."
+        neg_events += self.tree.findall(pattern)
+        pattern = "EVENT/[type='ONT::DECREASE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        neg_events += self.tree.findall(pattern)
+        # Look at polarity
+        pattern = "EVENT/[type='ONT::MODULATE']/arg2/[type='ONT::TRANSCRIBE']/.."
+        mod_events = self.tree.findall(pattern)
+        for event in mod_events:
+            pol = event.find('polarity')
+            if pol is not None:
+                if pol.text == 'ONT::POSITIVE':
+                    pos_events.append(event)
+                elif pol.text == 'ONT::NEGATIVE':
+                    neg_events.append(event)
+        combs = zip([pos_events, neg_events], [IncreaseAmount, DecreaseAmount])
+        for events, cls in combs:
+            for event in events:
+                # The agent has to exist and be a protein type
+                agent = event.find(".//*[@role=':AGENT']")
+                if agent is None:
+                    continue
+                if agent.find('type') is None or \
+                    (agent.find('type').text not in protein_types):
+                    continue
+                agent_id = agent.attrib.get('id')
+                if agent_id is None:
+                    continue
+                agent_agent = self._get_agent_by_id(agent_id,
+                                                    event.attrib['id'])
+
+                # The affected, we already know is ONT::TRANSCRIPTION
+                affected_arg = event.find(".//*[@role=':AFFECTED']")
+                affected_id = affected_arg.attrib.get('id')
+                affected_event = self.tree.find("EVENT/[@id='%s']" %
+                                                affected_id)
+                if affected_event is None:
+                    continue
+                affected = \
+                    affected_event.find(".//*[@role=':AFFECTED-RESULT']")
+                if affected is None:
+                    affected = \
+                        affected_event.find(".//*[@role=':AFFECTED']")
+                    if affected is None:
+                        continue
+                affected_id = affected.attrib.get('id')
+                if affected_id is None:
+                    continue
+                affected_agent = \
+                        self._get_agent_by_id(affected_id,
+                                              affected_event.attrib['id'])
+                ev = self._get_evidence(event)
+                location = self._get_event_location(event)
+                for subj, obj in \
+                        _agent_list_product((agent_agent, affected_agent)):
+                    st = cls(subj, obj, evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
+                self._add_extracted(_get_type(event), event.attrib['id'])
+                self._subsumed_events.append(affected_event.attrib['id'])
+
 
     def get_active_forms(self):
         """Extract ActiveForm INDRA Statements."""

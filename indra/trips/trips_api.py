@@ -57,6 +57,7 @@ def process_xml(xml_string):
     tp.get_active_forms_state()
     tp.get_activations()
     tp.get_translocation()
+    tp.get_regulate_amounts()
     tp.get_degradations()
     tp.get_syntheses()
     return tp

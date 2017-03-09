@@ -557,3 +557,62 @@ def test_43():
     assert(erk.name == 'ERK')
     assert(erk.db_refs.get('BE') == 'ERK')
     assert(len(erk.mods) == 1)
+
+def test_44():
+    sentence = 'p53 positively regulates the transcription of mdm2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, IncreaseAmount))
+    p53 = st.subj
+    mdm2 = st.obj
+    assert(p53.name == 'TP53')
+    assert(mdm2.name == 'MDM2')
+
+'''
+# Not sure if this is good to extract like this so leaving out for now
+def test_45():
+    sentence = 'p53 increases mdm2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, IncreaseAmount))
+    p53 = st.subj
+    mdm2 = st.obj
+    assert(p53.name == 'TP53')
+    assert(mdm2.name == 'MDM2')
+'''
+
+def test_46():
+    sentence = 'p53 increases the transcription of mdm2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, IncreaseAmount))
+    p53 = st.subj
+    mdm2 = st.obj
+    assert(p53.name == 'TP53')
+    assert(mdm2.name == 'MDM2')
+
+def test_47():
+    sentence = 'p53 decreases the transcription of mdm2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, DecreaseAmount))
+    p53 = st.subj
+    mdm2 = st.obj
+    assert(p53.name == 'TP53')
+    assert(mdm2.name == 'MDM2')
+
+def test_48():
+    sentence = 'p53 downregulates the transcription of mdm2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, DecreaseAmount))
+    p53 = st.subj
+    mdm2 = st.obj
+    assert(p53.name == 'TP53')
+    assert(mdm2.name == 'MDM2')
+

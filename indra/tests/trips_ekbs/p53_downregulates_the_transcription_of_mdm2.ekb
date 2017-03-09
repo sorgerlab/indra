@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input>
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT04085_IO-7487338" id="paragraph4084">p53 downregulates the transcription of mdm2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="4664" pid="paragraph4084">p53 downregulates the transcription of mdm2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="43" id="V7487375" lisp="(ONT::EVENT ONT::V7487375 ONT::INHIBIT :AGENT ONT::V7487367 :AFFECTED ONT::V7487387 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph4084" rule="-RULE30_1_AGENT_AFFECTED" start="0" uttnum="4664">
+		<type>ONT::INHIBIT</type>
+		<force>ONT::TRUE</force>
+		<predicate end="43" id="V7487375" start="0">
+			<type>ONT::INHIBIT</type>
+			<text>p53 downregulates the transcription of mdm2</text>
+		</predicate>
+		<arg1 end="4" id="V7487367" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">p53</text>
+		</arg1>
+		<arg2 end="43" id="V7487387" role=":AFFECTED" start="18">
+			<type>ONT::TRANSCRIBE</type>
+			<text normalization="">the transcription of mdm2</text>
+		</arg2>
+		<text>p53 downregulates the transcription of mdm2</text>
+	</EVENT>
+	<TERM dbid="HGNC:11998|NCIT:C17387|UP:P04637|FA:02632|NCIT:C52271|XFAM:PF11619.6" end="4" id="V7487367" lisp="(ONT::TERM ONT::V7487367 ONT::GENE-PROTEIN :NAME W::P-53 :DRUM ((:DRUM (TERM :ID FA::|02632| :NAME &quot;p53 family&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;p53&quot; :STATUS &quot;ID&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C52271 :NAME &quot;TP53&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;p53&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.82444 :MATCHED &quot;P53&quot; :STATUS &quot;synonym&quot; :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17387 :NAME &quot;tumor protein-p53&quot; :SCORE 0.82444 :MATCHES ((MATCH :SCORE 0.82444 :MATCHED &quot;P53&quot; :STATUS &quot;synonym&quot; :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|11998| :NAME &quot;tumor protein p53&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;p53&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P04637) :ONT-TYPES (ONT::GENE)) (TERM :ID XFAM::PF11619.6 :NAME &quot;P53 C&quot; :SCORE 0.65301 :MATCHES ((MATCH :SCORE 0.65301 :MATCHED &quot;P53&quot; :STATUS &quot;WK&quot; :NO-CAPS-SINGLE-CAP 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)))))" paragraph="paragraph4084" rule="-SIMPLE-REF" start="0" uttnum="4664">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>P-53</name>
+		<drum-terms>
+			<drum-term dbid="FA:02632" match-score="1.0" matched-name="p53" name="p53 family">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52271" match-score="0.82857" matched-name="p53" name="TP53">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17387" match-score="0.82444" matched-name="P53" name="tumor protein-p53">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:11998" match-score="0.65714" matched-name="p53" name="tumor protein p53">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P04637"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="XFAM:PF11619.6" match-score="0.65301" matched-name="P53" name="P53 C">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>p53</text>
+	</TERM>
+	<EVENT end="43" id="V7487387" lisp="(ONT::EVENT ONT::V7487387 ONT::TRANSCRIBE :AFFECTED-RESULT ONT::V7487410)" paragraph="paragraph4084" rule="-RULE50_4_AGENT_AFFECTED-RESULT-AFFECTED-RESULT" start="18" uttnum="4664">
+		<type>ONT::TRANSCRIBE</type>
+		<predicate end="43" id="V7487387" start="18">
+			<type>ONT::TRANSCRIBE</type>
+			<text>the transcription of mdm2</text>
+		</predicate>
+		<arg2 end="43" id="V7487410" role=":AFFECTED-RESULT" start="36">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of mdm2</text>
+		</arg2>
+		<text>the transcription of mdm2</text>
+	</EVENT>
+	<TERM dbid="UP:Q00987|NCIT:C51283|HGNC:6973|NCIT:C17515" end="43" id="V7487410" lisp="(ONT::TERM ONT::V7487410 ONT::GENE-PROTEIN :NAME W::MDM-2 :DRUM ((:DRUM (TERM :ID HGNC::|6973| :NAME &quot;MDM2 proto-oncogene&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;MDM2&quot; :STATUS &quot;Approved Symbol&quot; :NO-CAPS-ALL-CAPS 1)) :DBXREFS (UP::Q00987) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51283 :NAME &quot;MDM2&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;MDM2&quot; :STATUS &quot;name&quot; :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17515 :NAME &quot;MDM2 protein&quot; :SCORE 0.82444 :MATCHES ((MATCH :SCORE 0.82444 :MATCHED &quot;MDM2&quot; :STATUS &quot;synonym&quot; :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph4084" rule="-SIMPLE-REF" start="36" uttnum="4664">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>MDM-2</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6973" match-score="0.99587" matched-name="MDM2" name="MDM2 proto-oncogene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q00987"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51283" match-score="0.99587" matched-name="MDM2" name="MDM2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17515" match-score="0.82444" matched-name="MDM2" name="MDM2 protein">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>of mdm2</text>
+	</TERM>
+</ekb>
