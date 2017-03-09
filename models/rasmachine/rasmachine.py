@@ -241,6 +241,36 @@ def _extend_dict(d1, d2):
         d1[k] = v
     return d1
 
+def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
+    logger.info('Filtering %d statements to above %f belief' %
+                (len(stmts_in), belief_cutoff))
+    # The first round of filtering is in the top-level list
+    stmts_out = []
+    # Now we eliminate supports/supported-by
+    for stmt in stmts_in:
+        sources = set([ev.source_api for ev in stmt.evidence])
+        if stmt.belief >= belief_cutoff or \
+            sources.intersection(db_names):
+            stmts_out.append(stmt)
+        else:
+            continue
+        supp_by = []
+        supp = []
+        for st in stmt.supports:
+            sources = set([ev.source_api for ev in st.evidence])
+            if st.belief >= belief_cutoff or \
+                sources.intersection(db_names):
+                supp.append(st)
+        for st in stmt.supported_by:
+            sources = set([ev.source_api for ev in st.evidence])
+            if st.belief >= belief_cutoff or \
+                sources.intersection(db_names):
+                supp_by.append(st)
+        stmt.supports = supp
+        stmt.supported_by = supp_by
+    logger.info('%d statements after filter...' % len(stmts_out))
+    return stmts_out
+
 if __name__ == '__main__':
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
@@ -386,12 +416,8 @@ if __name__ == '__main__':
     # Original statistics
     stats['orig_stmts'] = len(model.get_statements())
     stats['orig_assembled'] = len(model.assembled_stmts)
-    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
-                                         ['biopax', 'bel'], policy='one')
-    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
-                                            ['biopax', 'bel'], policy='none')
-    no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
-    orig_stmts = db_stmts + no_db_stmts
+    orig_stmts = filter_db_highbelief(model.assembled_stmts, ['bel', 'biopax'],
+                                      belief_threshold)
     orig_stmts = ac.filter_top_level(orig_stmts)
     stats['orig_final'] = len(orig_stmts)
     logger.info('%d final statements' % len(orig_stmts))
@@ -408,12 +434,8 @@ if __name__ == '__main__':
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
     stats['new_assembled'] = len(model.assembled_stmts)
-    db_stmts = ac.filter_evidence_source(model.assembled_stmts,
-                                         ['biopax', 'bel'], policy='one')
-    no_db_stmts = ac.filter_evidence_source(model.assembled_stmts,
-                                            ['biopax', 'bel'], policy='none')
-    no_db_stmts = ac.filter_belief(no_db_stmts, belief_threshold)
-    new_stmts = db_stmts + no_db_stmts
+    new_stmts = filter_db_highbelief(model.assembled_stmts, ['bel', 'biopax'],
+                                     belief_threshold)
     new_stmts = ac.filter_top_level(new_stmts)
     stats['new_final'] = len(new_stmts)
     logger.info('%d final statements' % len(new_stmts))
