@@ -363,11 +363,13 @@ class ReachProcessor(object):
                 be_id = bioentities_map.get(('PF', xr['id']))
                 if be_id:
                     db_refs['BE'] = be_id
+                    agent_name = be_id
                 db_refs['PF'] = xr['id']
             elif ns == 'interpro':
                 be_id = bioentities_map.get(('IP', xr['id']))
                 if be_id:
                     db_refs['BE'] = be_id
+                    agent_name = be_id
                 db_refs['PF'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
@@ -384,6 +386,7 @@ class ReachProcessor(object):
                     db_refs['HMDB'] = xr['id']
             elif ns == 'be':
                 db_refs['BE'] = xr['id']
+                agent_name = db_refs['BE']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
