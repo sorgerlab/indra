@@ -100,6 +100,25 @@ class CyJSAssembler(object):
             self._add_edge_weights()
         return self.print_cyjs()
 
+
+    def get_gene_names(self):
+        """Get gene names of all nodes and node members
+
+        Parameters
+        ----------
+        """
+        # Collect all gene names in network
+        gene_names = []
+        for node in self._nodes:
+            members = node['data'].get('members')
+            if members:
+                gene_names += list(members.keys())
+            else:
+                if node['data']['name'].startswith('Group'):
+                    continue
+                gene_names.append(node['data']['name'])
+        return gene_names
+
     def set_context(self, *args, **kwargs):
         """Set protein expression data as node attribute
 
@@ -128,16 +147,7 @@ class CyJSAssembler(object):
             logger.warning('No cell type given.')
             return
 
-        # Collect all gene names in network
-        gene_names = []
-        for node in self._nodes:
-            members = node['data'].get('members')
-            if members:
-                gene_names += list(members.keys())
-            else:
-                if node['data']['name'].startswith('Group'):
-                    continue
-                gene_names.append(node['data']['name'])
+        gene_names = self.get_gene_names()
 
         # Get expression and mutation from context client
         exp = context_client.get_protein_expression(gene_names, cell_type)
