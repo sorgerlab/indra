@@ -1,0 +1,8 @@
+Active ATR activates p53.
+Active p53 activates Wip1.
+Active p53 activates Mdm2.
+Active Wip1 inactivates p53.
+Active Mdm2 inactivates p53.
+HIPK2 inactivates Wip1.
+P14ARF inactivates Mdm2.
+Active ATR activates ATR.
