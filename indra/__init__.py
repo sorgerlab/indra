@@ -37,8 +37,17 @@ from indra import util
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
 
+# Suppress INFO-level logging from some dependencies
 logging.getLogger('requests').setLevel(logging.ERROR)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('rdflib').setLevel(logging.ERROR)
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
+
+# This is specifically to suppress lib2to3 logging from networkx
+import lib2to3.pgen2.driver
+class Lib2to3LoggingModuleShim(object):
+    def getLogger(self):
+        return logging.getLogger('lib2to3')
+lib2to3.pgen2.driver.logging = Lib2to3LoggingModuleShim()
+logging.getLogger('lib2to3').setLevel(logging.ERROR)
