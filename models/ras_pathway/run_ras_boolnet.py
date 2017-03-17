@@ -30,12 +30,12 @@ sa.make_model()
 bn_str = sa.print_boolean_net('ras_pathway_bn.txt')
 # Condition 1
 off = []
-on = ['Growth_factor_proteins']
+on = ['GROWTH-FACTOR']
 avgs = get_sim_avgs(bn_str, off=off, on=on)
 jun_basic_noinh = avgs['JUN']
 # Condition 2
 off = ['MAP2K1', 'MAP2K2']
-on = ['Growth_factor_proteins']
+on = ['GROWTH-FACTOR']
 avgs = get_sim_avgs(bn_str, off=off, on=on)
 jun_basic_inh = avgs['JUN']
 
@@ -45,17 +45,17 @@ sa.make_model()
 bn_str = sa.print_boolean_net('ras_pathway_ext_bn.txt')
 # Condition 1
 off = []
-on = ['Growth_factor_proteins']
+on = ['GROWTH-FACTOR']
 avgs = get_sim_avgs(bn_str, off=off, on=on)
 jun_ext_noinh = avgs['JUN']
 # Condition 2
 off = ['MAP2K1', 'MAP2K2']
-on = ['Growth_factor_proteins']
+on = ['GROWTH-FACTOR']
 avgs = get_sim_avgs(bn_str, off=off, on=on)
 jun_ext_inh = avgs['JUN']
 # Condition 3
 off = ['MAP2K1', 'MAP2K2', 'MAPK8', 'MAPK9']
-on = ['Growth_factor_proteins']
+on = ['GROWTH-FACTOR']
 avgs = get_sim_avgs(bn_str, off=off, on=on)
 jun_ext_inh2 = avgs['JUN']
 
