@@ -10,7 +10,8 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
-export PYTHONPATH=$PYTHONPATH:../../../indra:..
+export PYTHONPATH=$PYTHONPATH:../../../indra
+echo $PYTHONPATH
 log_file="$model_name/log.txt"
 config_file="$model_name/config.yaml"
 python rasmachine.py $model_name $config_file >> $log_file 2>> $log_file

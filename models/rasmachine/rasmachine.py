@@ -17,7 +17,7 @@ from indra import reach
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client
-from indra.assemblers import CxAssembler, PysbAssembler
+from indra.assemblers import CxAssembler
 from indra.tools.incremental_model import IncrementalModel
 
 model_path = os.path.dirname(os.path.abspath(__file__))
