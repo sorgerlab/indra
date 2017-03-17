@@ -715,7 +715,7 @@ class PysbAssembler(object):
         self.statements = []
         self.agent_set = None
         self.model = None
-        self.default_initial_amount = 1000.0
+        self.default_initial_amount = 10000.0
         if policies is None:
             self.policies = {'other': 'default'}
         elif isinstance(policies, basestring):
@@ -1019,7 +1019,7 @@ def complex_assemble_one_step(stmt, model, agent_set):
         param_name = agent1.name[0].lower() + \
                      agent2.name[0].lower() + '_bind'
         kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-3)
+        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-1)
 
         # Make a rule name
         rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
@@ -1077,7 +1077,7 @@ def complex_assemble_multi_way(stmt, model, agent_set):
     # Get the rate parameter
     abbr_name = ''.join([m.name[0].lower() for m in stmt.members])
     kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
-    kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-6)
+    kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-1)
 
     # Make a rule name
     rule_name = '_'.join([get_agent_rule_str(m) for m in stmt.members])
@@ -1293,10 +1293,10 @@ def modification_assemble_two_step(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, param_name, 1e-6)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    kr_bind = get_create_parameter(model, param_name, 1e-1)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1)
+    kf_mod = get_create_parameter(model, param_name, 100)
 
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
@@ -1410,7 +1410,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     param_name = ('kf_' + stmt.enz.name[0].lower() + '_atp_bind')
     kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
     param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
-    kr_bind_atp = get_create_parameter(model, param_name, 1e-6)
+    kr_bind_atp = get_create_parameter(model, param_name, 1.)
     rule_name = '%s_phospho_bind_atp' % (enz_rule_str)
     r = Rule(rule_name,
         enz_atp_unbound() + atp(b=None) >>
@@ -1429,13 +1429,13 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     # Enzyme binding substrate
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    kf_bind = get_create_parameter(model, param_name, 1e-6
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    kr_bind = get_create_parameter(model, param_name, 1e-1)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_phos')
-    kf_phospho = get_create_parameter(model, param_name, 1)
+    kf_phospho = get_create_parameter(model, param_name, 100)
 
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
@@ -1591,10 +1591,10 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, param_name, 1e-6)
     param_name = 'kr_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_bind'
-    kr_bind = get_create_parameter(model, param_name, 1e-3)
+    kr_bind = get_create_parameter(model, param_name, 1e-1)
     param_name = 'kc_' + stmt.enz.name[0].lower() + \
         stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 1e-3)
+    kf_demod = get_create_parameter(model, param_name, 100)
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
@@ -1700,7 +1700,8 @@ def autophosphorylation_assemble_interactions_only(stmt, model, agent_set):
 
 def autophosphorylation_assemble_one_step(stmt, model, agent_set):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
-    kf_autophospho = get_create_parameter(model, param_name, 1e-3)
+    # http://www.jbc.org/content/286/4/2689.full
+    kf_autophospho = get_create_parameter(model, param_name, 1e-2)
 
     # See NOTE in monomers_one_step
     phos_site = get_mod_site_name('phosphorylation',
@@ -1755,7 +1756,7 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
-    kf = get_create_parameter(model, param_name, 1e-3)
+    kf = get_create_parameter(model, param_name, 1e-6)
 
     phos_site = get_mod_site_name('phosphorylation',
                                   stmt.residue, stmt.position)
@@ -2135,7 +2136,7 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set):
                             stmt.obj.name[0].lower() + '_deg'
         # Scale the average apparent decreaseamount rate by the default
         # protein initial condition
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-8)
+        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-9)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name,
@@ -2198,7 +2199,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
 
     if stmt.subj is None:
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_synth'
-        kf_one_step_synth = get_create_parameter(model, param_name, 2e-3,
+        kf_one_step_synth = get_create_parameter(model, param_name, 2,
                                                    unique=True)
         rule_name = '%s_synthesized' % rule_obj_str
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
@@ -2208,7 +2209,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
                             stmt.obj.name[0].lower() + '_synth'
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
-        kf_one_step_synth = get_create_parameter(model, param_name, 2e-6)
+        kf_one_step_synth = get_create_parameter(model, param_name, 2e-4)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
