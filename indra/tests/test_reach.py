@@ -33,6 +33,13 @@ def test_parse_site_text_number_first():
     assert(site == '293')
     assert(unicode_strs((residue, site)))
 
+def test_parse_site_text_number_first_space():
+    t = '293 T'
+    residue, site = ReachProcessor._parse_site_text(t)
+    assert(residue == 'T')
+    assert(site == '293')
+    assert(unicode_strs((residue, site)))
+
 def test_parse_site_text_other_aa():
     t = 'A431'
     residue, site = ReachProcessor._parse_site_text(t)

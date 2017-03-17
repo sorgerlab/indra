@@ -594,7 +594,7 @@ _site_pattern2 = '(' + '|'.join([v['short_name'].upper() for
 _site_pattern3 = '(' + '|'.join([v['indra_name'].upper() for
                                  v in amino_acids.values()]) + \
                         ')[^0-9]*([0-9]+)$'
-_site_pattern4 = '([0-9]+)([' + ''.join(list(amino_acids.keys())) + '])$'
+_site_pattern4 = '([0-9]+)[ ]?([' + ''.join(list(amino_acids.keys())) + '])$'
 _site_pattern5 = '^([' + ''.join(list(amino_acids.keys())) + '])$'
 _site_pattern6 = '^(' + '|'.join([v['short_name'].upper() for
                                  v in amino_acids.values()]) + ')$'
