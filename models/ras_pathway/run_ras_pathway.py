@@ -1,8 +1,10 @@
 import sys
+import time
 import pickle
 from indra import trips
 from indra import reach
 from indra.assemblers import GraphAssembler
+import indra.tools.assemble_corpus as ac
 
 
 def process_reach(txt, reread):
@@ -22,7 +24,7 @@ def process_trips(txt, reread):
         sentences = txt.strip().split('\n')
         for sentence in sentences:
             print(sentence)
-            tp = trips.process_text(txt)
+            tp = trips.process_text(sentence)
             stmts += tp.statements
     else:
         tp = trips.process_xml(open('trips_output.xml', 'r').read())
@@ -52,8 +54,16 @@ if __name__ == '__main__':
     reader = sys.argv[1]
     if reader == 'reach':
         print('Using REACH')
+        ts = time.time()
         stmts = process_reach(txt, reread)
+        te = time.time()
     elif reader == 'trips':
         print('Using TRIPS')
+        ts = time.time()
         stmts = process_trips(txt, reread)
-
+        te = time.time()
+    else:
+        print('Invalid reader')
+        sys.exit()
+    print('Time taken: %.2fs' % (te-ts))
+    ac.dump_statements(stmts, 'statements.pkl')
