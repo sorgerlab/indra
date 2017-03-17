@@ -18,14 +18,18 @@ def process_reach(txt, reread):
 
 def process_trips(txt, reread):
     if reread:
-        tp = trips.process_text(txt)
-        st = tp.statements
+        stmts = []
+        sentences = txt.strip().split('\n')
+        for sentence in sentences:
+            print(sentence)
+            tp = trips.process_text(txt)
+            stmts += tp.statements
     else:
         tp = trips.process_xml(open('trips_output.xml', 'r').read())
-        st = tp.statements
-    for s in st:
-        print('%s\t%s' % (s, s.evidence[0].text))
-    return st
+        stmts = tp.statements
+    for st in stmts:
+        print('%s\t%s' % (st, st.evidence[0].text))
+    return stmts
 
 def draw_graph(stmts):
     graphpr = {'rankdir': 'TD'}
