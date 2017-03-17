@@ -1,8 +1,10 @@
 import sys
+import time
 import pickle
 from indra import trips
 from indra import reach
 from indra.assemblers import GraphAssembler
+import indra.tools.assemble_corpus as ac
 
 
 def process_reach(txt, reread):
@@ -18,14 +20,18 @@ def process_reach(txt, reread):
 
 def process_trips(txt, reread):
     if reread:
-        tp = trips.process_text(txt)
-        st = tp.statements
+        stmts = []
+        sentences = txt.strip().split('\n')
+        for sentence in sentences:
+            print(sentence)
+            tp = trips.process_text(sentence)
+            stmts += tp.statements
     else:
         tp = trips.process_xml(open('trips_output.xml', 'r').read())
-        st = tp.statements
-    for s in st:
-        print('%s\t%s' % (s, s.evidence[0].text))
-    return st
+        stmts = tp.statements
+    for st in stmts:
+        print('%s\t%s' % (st, st.evidence[0].text))
+    return stmts
 
 def draw_graph(stmts):
     graphpr = {'rankdir': 'TD'}
@@ -48,8 +54,16 @@ if __name__ == '__main__':
     reader = sys.argv[1]
     if reader == 'reach':
         print('Using REACH')
+        ts = time.time()
         stmts = process_reach(txt, reread)
+        te = time.time()
     elif reader == 'trips':
         print('Using TRIPS')
+        ts = time.time()
         stmts = process_trips(txt, reread)
-
+        te = time.time()
+    else:
+        print('Invalid reader')
+        sys.exit()
+    print('Time taken: %.2fs' % (te-ts))
+    ac.dump_statements(stmts, 'statements.pkl')

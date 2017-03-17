@@ -5,10 +5,10 @@ import pickle
 import matplotlib
 import numpy as np
 # To suppress plots from popping up
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pysb.integrate import Solver
 from pysb.bng import generate_equations
+from indra.util.plot_formatting import *
 
 import assemble_model
 
@@ -60,16 +60,19 @@ def get_steady_state(model, y0):
 def plot_fold_change_time(ts, yobs, yobs_ref, save_plot):
     erk_foldchange = yobs['ERK_p'] / yobs_ref['ERK_p']
     ras_foldchange = yobs['RAS_active'] / yobs_ref['RAS_active']
-    plt.figure()
-    plt.plot(ts, erk_foldchange, linewidth=5)
-    plt.plot(ts, ras_foldchange, linewidth=5)
+    plt.figure(figsize=(2, 2), dpi=300)
+    set_fig_params()
+    plt.plot(ts, erk_foldchange, 'b')
+    plt.plot(ts, ras_foldchange, 'g')
     plt.xticks([])
-    plt.xlabel('time (a.u)', fontsize=15)
+    plt.xlabel('Time (a.u)', fontsize=7)
 
     plt.xlim([0, 30000])
-    plt.ylabel('Fold-change after Vemurafenib treatment', fontsize=15)
-    plt.legend(['Phosphorylated ERK', 'Active RAS'])
-    plt.savefig(save_plot, dpi=600)
+    plt.ylabel('Fold-change after Vemurafenib treatment', fontsize=7)
+    plt.legend(['Phosphorylated ERK', 'Active RAS'], fontsize=7)
+    ax = plt.gca()
+    format_axis(ax)
+    plt.savefig(save_plot)
     plt.clf()
 
 
@@ -96,38 +99,37 @@ def get_egf_vem_doseresp(egf_doses, vem_doses, readout='absolute'):
 
 def plot_egf_vem_dose(egf_doses, vem_doses, erk, ras, save_plot):
     cmap = plt.get_cmap('jet')
+    plt.figure(figsize=(3, 3), dpi=300)
+    set_fig_params()
     f, (ax1, ax2) = plt.subplots(1, 2)
     max_erk = np.amax(erk) + 1
     max_ras = np.amax(ras) + 1
-    f1 = ax1.imshow(np.flipud(erk), cmap=cmap, vmin=0, vmax=max_erk)
-    ax1.set_title('pERK rebound')
-    ax1.set_xlabel('Vemurafenib')
-    ax1.set_ylabel('EGF')
-    ax1.set_aspect('equal')
+
+    f1 = ax1.imshow(np.flipud(ras), cmap=cmap, vmin=0, vmax=max_ras,
+                    interpolation='hermite')
+    ax1.set_title('Active RAS')
+    ax1.set_xlabel('[Vemurafenib]', fontsize=7)
+    ax1.set_ylabel('[EGF]', fontsize=7)
     ax1.set_xticks([])
     ax1.set_yticks([])
+    ax1.set_aspect('equal')
     cb = f.colorbar(f1, ax=ax1, fraction=0.05, pad=0.05)
-    cb.set_ticks([0, max_erk])
-    # cb.set_ticklabels([0, max_erk])
-    f2 = ax2.imshow(np.flipud(ras), cmap=cmap, vmin=0, vmax=max_ras)
-    ax2.set_title('Active RAS')
-    ax2.set_xlabel('Vemurafenib')
-    # ax2.set_ylabel('EGF')
+    cb.set_ticks([0, max_ras])
+
+    f2 = ax2.imshow(np.flipud(erk), cmap=cmap, vmin=0, vmax=max_erk,
+                    interpolation='hermite')
+    ax2.set_title('pERK rebound')
+    ax2.set_xlabel('[Vemurafenib]', fontsize=7)
+    ax2.set_ylabel('[EGF]', fontsize=7)
+    ax2.set_aspect('equal')
     ax2.set_xticks([])
     ax2.set_yticks([])
-    ax2.set_aspect('equal')
     cb = f.colorbar(f2, ax=ax2, fraction=0.05, pad=0.05)
-    cb.set_ticks([0, max_ras])
-    # cb.set_ticklabels([0, max_ras])
-    f.savefig(save_plot)
+    cb.set_ticks([0, max_erk])
 
-    #plt.plot(egf_doses, erk_vals, linewidth=5)
-    #plt.plot(egf_doses, ras_vals, linewidth=5)
-    #plt.xticks([])
-    #plt.xlabel('EGF dose (a.u.)', fontsize=15)
-    #plt.ylabel('Fold-change after Vemurafenib treatment', fontsize=15)
-    #plt.legend(['ERK_p', 'RAS_active'])
-    #plt.savefig(save_plot)
+    format_axis(ax1)
+    format_axis(ax2)
+    f.savefig(save_plot)
 
 
 def load_model(model_id):
@@ -165,9 +167,13 @@ if __name__ == '__main__':
         yobs1, y1 = simulate_untreated(model, ts)
         yobs2, y2 = simulate_vemurafenib_treatment(model, ts, y1[-1])
         plot_fold_change_time(ts, yobs2, yobs1[-1],
-                              'outputs/model%s_vem_time.png' % model_id)
+                              'outputs/model%s_vem_time.pdf' % model_id)
         erk_foldchange, ras_foldchange = \
             get_egf_vem_doseresp(egf_doses, vem_doses, 'ss_min_diff')
         plot_egf_vem_dose(egf_doses, vem_doses,
                               erk_foldchange, ras_foldchange,
-                              'outputs/model%s_egf_vem_dose.png' % model_id)
+                              'outputs/model%s_egf_vem_dose.pdf' % model_id)
+        with open('doseresp_result_model%d.pkl' % model_id, 'wb') as fh:
+            pickle.dump([egf_doses, vem_doses, erk_foldchange, ras_foldchange], 
+                        fh)
+
