@@ -633,21 +633,23 @@ def get_annotation(component, db_name, db_ref):
     subj = component
     if db_name == 'UP':
         obj = url + 'uniprot/%s' % db_ref
-        pred = 'is'
     elif db_name == 'HGNC':
         obj = url + 'hgnc/HGNC:%s' % db_ref
-        pred = 'is'
     elif db_name == 'XFAM' and db_ref.startswith('PF'):
         obj = url + 'pfam/%s' % db_ref
-        pred = 'is'
     elif db_name == 'IP':
         obj = url + 'interpro/%s' % db_ref
-        pred = 'is'
     elif db_name == 'CHEBI':
         obj = url + 'chebi/%s' % db_ref
-        pred = 'is'
+    elif db_name == 'NCIT':
+        obj = url + 'ncit/%s' % db_ref
+    elif db_name == 'GO':
+        obj = url + 'go/%s' % db_ref
+    elif db_name == 'BE':
+        obj = 'http://sorger.med.harvard.edu/indra/entities/%s' % db_ref
     else:
         return None
+    pred = 'is'
     return Annotation(subj, obj, pred)
 
 def parse_identifiers_url(url):

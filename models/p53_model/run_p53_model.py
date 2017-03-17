@@ -11,6 +11,11 @@ from pysb import Observable, Parameter
 from pysb.integrate import Solver
 
 def assemble_model(model_name, reread=False):
+    if model_name.startswith('ATM'):
+        atm_atr = 'ATM'
+    else:
+        atm_atr = 'ATR'
+
     xml_fname = model_name + '.xml'
     if not reread:
         print('Processing %s' % xml_fname)
@@ -40,43 +45,46 @@ def assemble_model(model_name, reread=False):
     print('Assembly took %.2fs' % (te-ts))
     model.name = model_name
 
+    # Add ative p53 observable
     p53 = model.monomers['TP53']
     obs = Observable(b'p53_active', p53(activity='active'))
     model.add_component(obs)
-    if not model_name.endswith('var'):
-        model.parameters['kf_aa_act_1'].value = 5e-06
+
+    # Update Wip1 -| p53 parameter
     model.parameters['kf_pt_act_1'].value = 5e-06
 
-    if model_name == 'p53_ATM':
-        model.add_component(Parameter('ATMa_0', 1))
-        atm = model.monomers['ATM']
-        model.initial(atm(activity='active'),
-                      model.parameters['ATMa_0'])
-        model.parameters['kf_pa_act_1'].value = 1e-04
-        obs = Observable(b'atm_active', atm(activity='active'))
-        model.add_component(obs)
+    # Update the Wip1 -| ATM parameter in ATM models
+    if atm_atr == 'ATM':
+        if not (model_name.endswith('v4a') or model_name.endswith('v4b')):
+            model.parameters['kf_pa_act_1'].value = 1e-04
+        else:
+            model.parameters['kf_pa_dephosphorylation_1'].value = 1e-04
 
-    if model_name == 'p53_ATR':
-        model.add_component(Parameter('ATRa_0', 1))
-        atr = model.monomers['ATR']
-        model.initial(atr(activity='active'),
-                      model.parameters['ATRa_0'])
-        obs = Observable(b'atr_active', atr(activity='active'))
-        model.add_component(obs)
+    # Update ATR/ATM autoactivation parameter in v3/v4 models
+    if model_name.endswith('v3'):
+        model.parameters['kf_aa_act_1'].value = 5e-06
+    elif model_name.endswith('v4a'):
+        model.parameters['kf_a_autophos_1'].value = 5e-06
+    elif model_name.endswith('v4b'):
+        model.parameters['kf_aa_phosphorylation_1'].value = 5e-06
 
-    if model_name == 'p53_ATM_var':
-        model.add_component(Parameter('ATMa_0', 1))
-        atm = model.monomers['ATM']
-        model.initial(atm(phospho='p'),
-                      model.parameters['ATMa_0'])
-        model.parameters['kf_pa_dephosphorylation_1'].value = 1e-04
+    # Start with some initial active/phosphorylated ATR/ATM
+    model.add_component(Parameter('%sa_0' % atm_atr, 1))
+    atm_atr_m = model.monomers[atm_atr]
+    if not model_name.startswith('ATM_v4'):
+        model.initial(atm_atr_m(activity='active'),
+                      model.parameters['%sa_0' % atm_atr])
+    else:
+        model.initial(atm_atr_m(phospho='p'),
+                      model.parameters['%sa_0' % atm_atr])
+
+    # Set some of the transcription/degradation parameters in v4 models:
+    if model_name.startswith('ATM_v4'):
         model.parameters['MDM2_0'].value = 0
         model.parameters['kf_m_deg_1'].value = 8e-01
         model.parameters['kf_tm_synth_1'].value = 0.2
-        model.parameters['kf_aa_phosphorylation_1'].value = 5e-06
-        obs = Observable(b'atm_active', atm(phospho='p'))
-        model.add_component(obs)
 
+    # Save and return model
     pa.model = model
     pa.save_model('%s.py' % model_name)
     return model
@@ -89,19 +97,29 @@ def run_model(model):
     solver.run()
     te = time.time()
     print('Simulation took %.2fs' % (te-tst))
-    plt.figure(figsize=(2,2), dpi=300)
+    plt.figure(figsize=(1.8, 1), dpi=300)
     set_fig_params()
     plt.plot(ts, solver.yobs['p53_active'], 'r')
     plt.xticks([])
-    plt.xlabel('Time (a.u.)', fontsize=12)
-    plt.ylabel('Active p53', fontsize=12)
+    plt.xlabel('Time (a.u.)', fontsize=7)
+    plt.ylabel('Active p53', fontsize=7)
     plt.yticks([])
+    ax = plt.gca()
+    format_axis(ax)
+    #plt.subplots_adjust()
     plt.savefig(model.name + '.pdf')
     return ts, solver
 
 if __name__ == '__main__':
     reread = False
-    model_names = ['p53_ATR', 'p53_ATM', 'p53_ATM_var']
+    model_names = ['ATR_v1',
+                   'ATR_v2',
+                   'ATR_v3',
+                   'ATM_v1',
+                   'ATM_v2',
+                   'ATM_v3',
+                   'ATM_v4a',
+                   'ATM_v4b']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
