@@ -1429,7 +1429,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     # Enzyme binding substrate
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6
+    kf_bind = get_create_parameter(model, param_name, 1e-6)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-1)
