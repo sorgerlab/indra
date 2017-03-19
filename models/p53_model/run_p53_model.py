@@ -9,6 +9,7 @@ from indra.assemblers import PysbAssembler
 from indra.util.plot_formatting import *
 from pysb import Observable, Parameter
 from pysb.integrate import Solver
+from pysb.export import export
 
 def assemble_model(model_name, reread=False):
     if model_name.startswith('ATM'):
@@ -110,6 +111,14 @@ def run_model(model):
     plt.savefig(model.name + '.pdf')
     return ts, solver
 
+def export_pomi(model, formats):
+    for f in formats:
+        model_export = export(model, f)
+        extension = (f if f != 'pysb_flat' else 'py')
+        fname = 'POMI1.0.%s' % extension
+        with open(fname, 'wb') as fh:
+            fh.write(model_export)
+
 if __name__ == '__main__':
     reread = False
     model_names = ['ATR_v1',
@@ -123,3 +132,6 @@ if __name__ == '__main__':
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
+        if model_name == 'ATM_v4b':
+            formats = ['sbml', 'bngl', 'kappa', 'pysb_flat']
+            export_pomi(model, formats)
