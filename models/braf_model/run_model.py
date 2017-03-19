@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pysb.integrate import Solver
 from pysb.bng import generate_equations
+from pysb.export import export
 from indra.util.plot_formatting import *
 
 import assemble_model
@@ -141,6 +142,7 @@ def save_model(model):
     with open('model%d.pkl' % model_id, 'wb') as fh:
         pickle.dump(model, fh)
 
+
 def print_statistics(model):
     print('# monomers: %d' % len(model.monomers))
     print('# rules: %d' % len(model.rules))
@@ -148,6 +150,16 @@ def print_statistics(model):
     print('# rate constants: %d' % len(p_rate))
     print('# initial conditions: %d' % len(model.initial_conditions))
     print('# ODEs: %d' % len(model.odes))
+
+
+def export_memi(model, formats, version):
+    for f in formats:
+        model_export = export(model, f)
+        extension = (f if f != 'pysb_flat' else 'py')
+        fname = 'MEMI%s.%s' % (version, extension)
+        with open(fname, 'wb') as fh:
+            fh.write(model_export)
+
 
 if __name__ == '__main__':
     sim_hours = 10
@@ -164,16 +176,25 @@ if __name__ == '__main__':
             generate_equations(model)
             save_model(model)
         print_statistics(model)
+
+        # Run time-course simulation
         yobs1, y1 = simulate_untreated(model, ts)
         yobs2, y2 = simulate_vemurafenib_treatment(model, ts, y1[-1])
         plot_fold_change_time(ts, yobs2, yobs1[-1],
-                              'outputs/model%s_vem_time.pdf' % model_id)
+                              'model%s_vem_time.pdf' % model_id)
+
+        # Run dose response experiments
         erk_foldchange, ras_foldchange = \
             get_egf_vem_doseresp(egf_doses, vem_doses, 'ss_min_diff')
         plot_egf_vem_dose(egf_doses, vem_doses,
                               erk_foldchange, ras_foldchange,
-                              'outputs/model%s_egf_vem_dose.pdf' % model_id)
+                              'model%s_egf_vem_dose.pdf' % model_id)
+        # Save results of dose response runs
         with open('doseresp_result_model%d.pkl' % model_id, 'wb') as fh:
             pickle.dump([egf_doses, vem_doses, erk_foldchange, ras_foldchange], 
                         fh)
 
+        # Export models in various formats
+        version = ('1.%d' % (model_id-1) if model_id != 4 else '1.2')
+        formats = ['sbml', 'bngl', 'kappa', 'pysb_flat']
+        export_memi(model, formats, version)
