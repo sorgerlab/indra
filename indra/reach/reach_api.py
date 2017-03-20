@@ -94,6 +94,10 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     if abs_txt is None:
         return None
     rp = process_text(abs_txt, citation=pubmed_id, offline=offline)
+    if rp and rp.statements:
+        for st in rp.statements:
+            for ev in st.evidence:
+                ev.epistemics['section_type'] = 'abstract'
     return rp
 
 
