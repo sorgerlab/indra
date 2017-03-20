@@ -67,16 +67,8 @@ class BiopaxProcessor(object):
             return
         pcc.model_to_owl(self.model, file_name)
 
-    def get_complexes(self, force_contains=None):
-        """Extract INDRA Complex statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
+    def get_complexes(self):
+        """Extract INDRA Complex statements from the model."""
         for obj in self.model.getObjects().toArray():
             bpe = _cast_biopax_element(obj)
             if not _is_complex(bpe):
@@ -103,112 +95,50 @@ class BiopaxProcessor(object):
                     self.statements.append(decode_obj(Complex(c, ev),
                                                       encoding='utf-8'))
 
-    def get_phosphorylation(self, force_contains=None):
-        """Extract INDRA Phosphorylation statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('phospho',
-                                               force_contains=force_contains)
+    def get_phosphorylation(self):
+        """Extract INDRA Phosphorylation statements from the model."""
+        stmts = self._get_generic_modification('phospho')
         for s in stmts:
             self.statements.append(decode_obj(Phosphorylation(*s),
                                               encoding='utf-8'))
 
-    def get_dephosphorylation(self, force_contains=None):
-        """Extract INDRA Dephosphorylation statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('phospho', mod_gain=False,
-                                               force_contains=force_contains)
+    def get_dephosphorylation(self):
+        """Extract INDRA Dephosphorylation statements from the model."""
+        stmts = self._get_generic_modification('phospho', mod_gain=False)
         for s in stmts:
             self.statements.append(decode_obj(Dephosphorylation(*s),
                                               encoding='utf-8'))
 
-    def get_acetylation(self, force_contains=None):
-        """Extract INDRA Acetylation statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('acetyl',
-                                               force_contains=force_contains)
+    def get_acetylation(self):
+        """Extract INDRA Acetylation statements from the model."""
+        stmts = self._get_generic_modification('acetyl')
         for s in stmts:
             self.statements.append(decode_obj(Acetylation(*s),
                                               encoding='utf-8'))
 
-    def get_glycosylation(self, force_contains=None):
-        """Extract INDRA Glycosylation statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('glycosyl',
-                                               force_contains=force_contains)
+    def get_glycosylation(self):
+        """Extract INDRA Glycosylation statements from the model."""
+        stmts = self._get_generic_modification('glycosyl')
         for s in stmts:
             self.statements.append(decode_obj(Glycosylation(*s),
                                               encoding='utf-8'))
 
-    def get_palmitoylation(self, force_contains=None):
-        """Extract INDRA Palmitoylation statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('palmitoyl',
-                                               force_contains=force_contains)
+    def get_palmitoylation(self):
+        """Extract INDRA Palmitoylation statements from the model."""
+        stmts = self._get_generic_modification('palmitoyl')
         for s in stmts:
             self.statements.append(decode_obj(Palmitoylation(*s),
                                               encoding='utf-8'))
 
-    def get_ubiquitination(self, force_contains=None):
-        """Extract INDRA Ubiquitination statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
-        stmts = self._get_generic_modification('ubiq',
-                                               force_contains=force_contains)
+    def get_ubiquitination(self):
+        """Extract INDRA Ubiquitination statements from the model."""
+        stmts = self._get_generic_modification('ubiq')
         for s in stmts:
             self.statements.append(decode_obj(Ubiquitination(*s),
                                               encoding='utf-8'))
 
-    def get_activity_modification(self, force_contains=None):
-        """Extract INDRA ActiveForm statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
+    def get_activity_modification(self):
+        """Extract INDRA ActiveForm statements from the model."""
         mcc = _bpp('constraint.ModificationChangeConstraint')
         mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         mod_filter = 'residue modification, active'
@@ -256,9 +186,6 @@ class BiopaxProcessor(object):
 
                 monomers = self._get_agents_from_entity(output_spe)
                 for monomer in _listify(monomers):
-                    if force_contains is not None:
-                        if monomer not in force_contains:
-                            continue
                     static_mods =\
                         set(monomer.mods).difference(gained_mods)
 
@@ -278,16 +205,8 @@ class BiopaxProcessor(object):
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
-    def get_regulate_amounts(self, force_contains=None):
-        """Extract INDRA RegulateAmount statements from the model.
-
-        Parameters
-        ----------
-        force_contains : Optional[list[str]]
-            A list of gene names for filtering. Only Statements in which the
-            gene names in the force_contains list appear will be extracted.
-            Default: None
-        """
+    def get_regulate_amounts(self):
+        """Extract INDRA RegulateAmount statements from the model."""
         pb = _bpp('PatternBox')
 
         p = pb.controlsExpressionWithTemplateReac()
@@ -358,11 +277,6 @@ class BiopaxProcessor(object):
                   for cit in citations]
             for subj, obj in itertools.product(_listify(controller),
                                                _listify(controlled)):
-                if force_contains is not None:
-                    if subj and subj.name not in force_contains:
-                        continue
-                    if obj and obj.name not in force_contains:
-                        continue
                 subj_act = ActivityCondition('transcription', True)
                 subj.activity = subj_act
                 if control_type == 'ACTIVATION':
@@ -429,11 +343,8 @@ class BiopaxProcessor(object):
                 mods.append(mc)
         return mods
 
-    def _get_generic_modification(self, mod_filter=None, mod_gain=True,
-                                  force_contains=None):
-        '''
-        Get all modification reactions given a filter
-        '''
+    def _get_generic_modification(self, mod_filter=None, mod_gain=True):
+        """Get all modification reactions given a filter."""
         mcc = _bpp('constraint.ModificationChangeConstraint')
         mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         # Start with a generic modification pattern
@@ -548,12 +459,6 @@ class BiopaxProcessor(object):
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
-                # If neither the required enzyme nor the substrate is
-                # present then skip
-                if force_contains is not None:
-                    if (enz.name not in force_contains) and \
-                        (sub.name not in force_contains):
-                        continue
                 # Get the modifications
                 mod_in =\
                     BiopaxProcessor._get_entity_mods(input_spe, False)
