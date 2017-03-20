@@ -110,6 +110,18 @@ class SifAssembler(object):
             sif_str += '%s %s %s\n' % (n1, rel, n2)
         return sif_str
 
+    def save_model(self, fname):
+        """Save the assembled model's SIF string into a file.
+
+        Parameters
+        ----------
+        fname : str
+            The name of the file to save the SIF into.
+        """
+        sif_str = self.print_model()
+        with open(fname, 'wb') as fh:
+            fh.write(sif_str.encode('utf-8'))
+
     def print_boolean_net(self, out_file=None):
         """Return a Boolean network from the assembled graph.
 
