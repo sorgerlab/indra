@@ -135,8 +135,6 @@ def assemble_model(model_id, reread=False):
     if model_id >= 3:
         model.parameters['kf_bb_bind_1'].value = 10
         model.parameters['kr_bb_bind_1'].value = 1
-
-    if model_id == 4:
         model.parameters['kf_vb_bind_2'].value = 1e-04
 
     pa.model = model
