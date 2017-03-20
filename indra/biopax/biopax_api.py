@@ -159,8 +159,13 @@ def process_model(model):
     has to call methods of bp (e.g. bp.get_complexes()) to
     populate bp.statements.
     """
-    bproc = BiopaxProcessor(model)
+    bp = BiopaxProcessor(model)
     # bproc.get_complexes()
-    # bproc.get_phosphorylation()
-    # bproc.print_statements()
-    return bproc
+    bp.get_phosphorylation()
+    bp.get_dephosphorylation()
+    bp.get_acetylation()
+    bp.get_palmitoylation()
+    bp.get_ubiquitination()
+    bp.get_activity_modification()
+    bp.get_regulate_amounts()
+    return bp
