@@ -124,7 +124,7 @@ def assemble_model(model_id, reread=False):
     model.parameters['PPP2CA_0'].value = 1e5
 
     if model_id >= 2:
-        model.parameters['PHOSPHATASE_0'].value = 1e2
+        model.parameters['Phosphatase_0'].value = 1e2
         model.parameters['kf_es_bind_1'].value = 1e-05
         model.parameters['kr_es_bind_1'].value = 1e-04
         model.parameters['kc_es_phosphorylation_1'].value = 1
