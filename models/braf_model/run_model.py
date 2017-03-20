@@ -166,7 +166,7 @@ if __name__ == '__main__':
     ts = np.linspace(0, sim_hours*3600, sim_hours*60)
     egf_doses = np.logspace(1, 4, 9)
     vem_doses = np.logspace(4, 6, 9)
-    for model_id in (1, 2, 4):
+    for model_id in (1, 2, 3):
         print('Running model %d' % model_id)
         print('----------------')
         if os.path.exists('model%d.pkl' % model_id):
@@ -195,6 +195,6 @@ if __name__ == '__main__':
                         fh)
 
         # Export models in various formats
-        version = ('1.%d' % (model_id-1) if model_id != 4 else '1.2')
+        version = '1.%d' % (model_id-1)
         formats = ['sbml', 'bngl', 'kappa', 'pysb_flat']
         export_memi(model, formats, version)
