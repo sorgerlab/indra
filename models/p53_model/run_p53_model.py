@@ -11,12 +11,59 @@ from pysb import Observable, Parameter
 from pysb.integrate import Solver
 from pysb.export import export
 
-def assemble_model(model_name, reread=False):
-    if model_name.startswith('ATM'):
+
+def add_observable(model):
+    # Add active p53 observable
+    p53 = model.monomers['TP53']
+    obs = Observable('p53_active', p53(activity='active'))
+    model.add_component(obs)
+
+def set_parameters(model):
+    if model.name.startswith('ATM'):
         atm_atr = 'ATM'
     else:
         atm_atr = 'ATR'
 
+    # Set activation parameters to 1e-7
+    for param in model.parameters:
+        if param.name.startswith('kf') and param.name.find('act') != -1:
+            param.value = 1e-7
+
+    # Update Wip1 -| p53 parameter
+    model.parameters['kf_pt_act_1'].value = 5e-7
+
+    # Update the Wip1 -| ATM parameter in ATM models
+    if atm_atr == 'ATM':
+        if not (model.name.endswith('v4a') or model.name.endswith('v4b')):
+            model.parameters['kf_pa_act_1'].value = 1e-5
+        else:
+            model.parameters['kf_pa_dephosphorylation_1'].value = 1e-5
+
+    # Update ATR/ATM autoactivation parameter in v3/v4 models
+    if model.name.endswith('v3'):
+        model.parameters['kf_aa_act_1'].value = 5e-7
+    elif model.name.endswith('v4a'):
+        model.parameters['kf_a_autophos_1'].value = 5e-7
+    elif model.name.endswith('v4b'):
+        model.parameters['kf_aa_phosphorylation_1'].value = 5e-7
+
+    # Set some of the transcription/degradation parameters in v4 models:
+    if model.name.startswith('ATM_v4'):
+        model.parameters['MDM2_0'].value = 0
+        model.parameters['kf_m_deg_1'].value = 8e-2
+        model.parameters['kf_tm_synth_1'].value = 2e-2
+
+    # Start with some initial active/phosphorylated ATR/ATM
+    model.add_component(Parameter('%sa_0' % atm_atr, 1))
+    atm_atr_m = model.monomers[atm_atr]
+    if not model.name.startswith('ATM_v4'):
+        model.initial(atm_atr_m(activity='active'),
+                      model.parameters['%sa_0' % atm_atr])
+    else:
+        model.initial(atm_atr_m(phospho='p'),
+                      model.parameters['%sa_0' % atm_atr])
+
+def assemble_model(model_name, reread=False):
     xml_fname = model_name + '.xml'
     if not reread:
         print('Processing %s' % xml_fname)
@@ -46,44 +93,8 @@ def assemble_model(model_name, reread=False):
     print('Assembly took %.2fs' % (te-ts))
     model.name = model_name
 
-    # Add ative p53 observable
-    p53 = model.monomers['TP53']
-    obs = Observable(b'p53_active', p53(activity='active'))
-    model.add_component(obs)
-
-    # Update Wip1 -| p53 parameter
-    model.parameters['kf_pt_act_1'].value = 5e-06
-
-    # Update the Wip1 -| ATM parameter in ATM models
-    if atm_atr == 'ATM':
-        if not (model_name.endswith('v4a') or model_name.endswith('v4b')):
-            model.parameters['kf_pa_act_1'].value = 1e-04
-        else:
-            model.parameters['kf_pa_dephosphorylation_1'].value = 1e-04
-
-    # Update ATR/ATM autoactivation parameter in v3/v4 models
-    if model_name.endswith('v3'):
-        model.parameters['kf_aa_act_1'].value = 5e-06
-    elif model_name.endswith('v4a'):
-        model.parameters['kf_a_autophos_1'].value = 5e-06
-    elif model_name.endswith('v4b'):
-        model.parameters['kf_aa_phosphorylation_1'].value = 5e-06
-
-    # Start with some initial active/phosphorylated ATR/ATM
-    model.add_component(Parameter('%sa_0' % atm_atr, 1))
-    atm_atr_m = model.monomers[atm_atr]
-    if not model_name.startswith('ATM_v4'):
-        model.initial(atm_atr_m(activity='active'),
-                      model.parameters['%sa_0' % atm_atr])
-    else:
-        model.initial(atm_atr_m(phospho='p'),
-                      model.parameters['%sa_0' % atm_atr])
-
-    # Set some of the transcription/degradation parameters in v4 models:
-    if model_name.startswith('ATM_v4'):
-        model.parameters['MDM2_0'].value = 0
-        model.parameters['kf_m_deg_1'].value = 8e-01
-        model.parameters['kf_tm_synth_1'].value = 0.2
+    add_observable(model)
+    set_parameters(model)
 
     # Save and return model
     pa.model = model
