@@ -156,7 +156,6 @@ def test_get_entity_mods():
 
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
-    bp.get_phosphorylation()
     assert_pmids(bp.statements)
     assert(unicode_strs(bp.statements))
 

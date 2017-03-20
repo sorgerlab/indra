@@ -3,8 +3,9 @@ from builtins import dict, str
 import os
 import pickle
 import logging
-from indra.bel import bel_api
-from indra.biopax import biopax_api as ba
+from indra import bel
+from indra import biopax
+import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.sitemapper import default_mapper as sm
@@ -73,7 +74,7 @@ class GeneNetwork(object):
             bel_statements = []
             for gene in self.gene_list:
                 logger.info("Getting BEL statements for gene %s" % gene)
-                bel_proc = bel_api.process_ndex_neighborhood([gene])
+                bel_proc = bel.process_ndex_neighborhood([gene])
                 if bel_proc is not None:
                     bel_statements += bel_proc.statements
             # Save to pickle file if we're caching
@@ -82,15 +83,12 @@ class GeneNetwork(object):
                     pickle.dump(bel_statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            logger.info("Filtering statements to match gene list")
             if len(self.gene_list) > 1:
-                bel_statements = [s for s in bel_statements
-                                  if all([(agent.name in self.gene_list)
-                                          for agent in s.agent_list()])]
+                bel_statements = ac.filter_gene_list(bel_statements,
+                                                     self.gene_list, 'one')
             else:
-                bel_statements = [s for s in bel_statements
-                                  if any([(agent.name in self.gene_list)
-                                          for agent in s.agent_list()])]
+                bel_statements = ac.filter_gene_list(bel_statements,
+                                                     self.gene_list, 'all')
         return bel_statements
 
     def get_biopax_stmts(self, filter=False, query='pathsbetween'):
@@ -134,49 +132,35 @@ class GeneNetwork(object):
         # Check for cached file before querying Pathway Commons Web API
         if self.basename is not None and os.path.isfile(biopax_ras_owl_path):
             logger.info("Loading Biopax from OWL file %s" % biopax_ras_owl_path)
-            bp = ba.process_owl(biopax_ras_owl_path)
+            bp = biopax.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
         else:
             if (len(self.gene_list) < 2) and (query == 'pathsbetween'):
                 logger.warning('Using neighborhood query for one gene.')
                 query = 'neighborhood'
             if query == 'pathsbetween':
-                bp = ba.process_pc_pathsbetween(self.gene_list)
+                bp = biopax.process_pc_pathsbetween(self.gene_list)
             elif query == 'neighborhood':
-                bp = ba.process_pc_neighborhood(self.gene_list)
+                bp = biopax.process_pc_neighborhood(self.gene_list)
             else:
                 logger.error('Invalid query type: %s' % query)
                 return []
             # Save the file if we're caching
             if self.basename is not None:
                 bp.save_model(biopax_ras_owl_path)
-        # Extract statements from Biopax model
-        bp.get_phosphorylation()
-        bp.get_dephosphorylation()
-        bp.get_acetylation()
-        bp.get_palmitoylation()
-        bp.get_glycosylation()
-        bp.get_ubiquitination()
-        bp.get_activity_modification()
-        bp.get_regulate_amounts()
         # Save statements to pickle file if we're caching
         if self.basename is not None:
             with open(biopax_stmt_path, 'wb') as f:
                 pickle.dump(bp.statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            logger.info("Filtering statements to match gene list")
             if len(self.gene_list) > 1:
-                bp_statements = [s for s in bp.statements
-                                  if all([(agent.name in self.gene_list)
-                                          for agent in s.agent_list()])]
+                bp_statements = ac.filter_gene_list(bp_statements,
+                                                     self.gene_list, 'one')
             else:
-                bp_statements = [s for s in bp.statements
-                                  if any([(agent.name in self.gene_list)
-                                          for agent in s.agent_list()])]
-            return bp_statements
-        else:
-            return bp.statements
+                bp_statements = ac.filter_gene_list(bp_statements,
+                                                     self.gene_list, 'all')
+        return bp.statements
 
     def get_statements(self, filter=False):
         """Return the combined list of statements from BEL and Pathway Commons.
@@ -278,28 +262,4 @@ class GeneNetwork(object):
             with open(results_filename, 'wb') as f:
                 pickle.dump(self.results, f, protocol=2)
         return self.results
-
-
-def grounding_filter(stmts):
-    """Filter a set of statements to include only those with grounded entities.
-
-    If a statement contains only agents having a non-empty `db_refs` dict,
-    it is included in the result
-
-    Parameters
-    ----------
-    stmts : list of :py:class:`indra.statements.Statement`
-        Statements to filter.
-
-    Returns
-    -------
-    list of :py:class:`indra.statements.Statement`
-        Statements after filtering.
-    """
-    grounded_stmts = []
-    for stmt in stmts:
-        agents = [a for a in stmt.agent_list() if a is not None]
-        if all(a.db_refs for a in agents):
-            grounded_stmts.append(stmt)
-    return grounded_stmts
 

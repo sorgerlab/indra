@@ -153,7 +153,7 @@ def biopax_process_pc_pathsfromto():
     body = json.loads(response)
     source = body.get('source')
     target = body.get('target')
-    bp = bel.process_pc_pathsfromto(source, target)
+    bp = biopax.process_pc_pathsfromto(source, target)
     if bp and bp.statements:
         stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
@@ -168,7 +168,7 @@ def biopax_process_pc_neighborhood():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
-    bp = bel.process_pc_neighborhood(genes)
+    bp = biopax.process_pc_neighborhood(genes)
     if bp and bp.statements:
         stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}
