@@ -459,6 +459,54 @@ def test_mut():
     assert(braf.monomer.name == 'BRAF')
     assert(braf.site_conditions == {'V600': 'E'})
 
+def test_mut_missing1():
+    mut = MutCondition('600', 'V', None)
+    st = Phosphorylation(Agent('BRAF', mutations=[mut]), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'V600': 'X'})
+
+def test_mut_missing2():
+    mut = MutCondition('600', None, 'E')
+    st = Phosphorylation(Agent('BRAF', mutations=[mut]), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'mut600': 'E'})
+
+def test_mut_missing3():
+    mut = MutCondition(None, 'V', 'E')
+    st = Phosphorylation(Agent('BRAF', mutations=[mut]), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'V': 'E'})
+
+def test_mut_missing4():
+    mut = MutCondition(None, None, None)
+    st = Phosphorylation(Agent('BRAF', mutations=[mut]), Agent('MEK'))
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(braf.monomer.name == 'BRAF')
+    assert(braf.site_conditions == {'mut': 'X'})
+
 def test_agent_loc():
     st = Phosphorylation(Agent('BRAF', location='cytoplasm'), Agent('MEK'))
     pa = PysbAssembler()
