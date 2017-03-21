@@ -76,14 +76,14 @@ class _BaseAgentSet(object):
 
         # Handle mutation conditions
         for mc in agent.mutations:
-            if mc.residue_from is None:
-                res_from = 'X'
+            res_from = mc.residue_from if mc.residue_from else 'mut'
+            res_to = mc.residue_to if mc.residue_to else 'X'
+            if mc.position is None:
+                mut_site_name = res_from
             else:
-                res_from = mc.residue_from
-            mut_site_name = res_from + mc.position
-            base_agent.create_site(mut_site_name, states=['WT'])
-            if mc.residue_to is not None:
-                base_agent.add_site_states(mut_site_name, [mc.residue_to])
+                mut_site_name = res_from + mc.position
+
+            base_agent.create_site(mut_site_name, states=['WT', res_to])
 
         # Handle location condition
         if agent.location is not None:
@@ -340,13 +340,13 @@ def get_agent_rule_str(agent):
             mstr += mod.position
         rule_str_list.append('%s' % mstr)
     for mut in agent.mutations:
-        if mut.residue_from is None:
-            res_from = 'X'
+        res_from = mut.residue_from if mut.residue_from else 'mut'
+        res_to = mut.residue_to if mut.residue_to else 'X'
+        if mut.position is None:
+            mut_site_name = res_from
         else:
-            res_from = mut.residue_from
-        mstr = res_from + mut.position
-        if mut.residue_to is not None:
-            mstr += mut.residue_to
+            mut_site_name = res_from + mut.position
+        mstr = mut_site_name + res_to
         rule_str_list.append(mstr)
     if agent.bound_conditions:
         for b in agent.bound_conditions:
@@ -554,13 +554,13 @@ def get_site_pattern(agent):
 
     # Handle mutations
     for mc in agent.mutations:
-        if mc.residue_from is None:
-            res_from = 'X'
+        res_from = mc.residue_from if mc.residue_from else 'mut'
+        res_to = mc.residue_to if mc.residue_to else 'X'
+        if mc.position is None:
+            mut_site_name = res_from
         else:
-            res_from = mc.residue_from
-        mut_site_name = res_from + mc.position
-        mut_site_state = mc.residue_to
-        pattern[mut_site_name] = mut_site_state
+            mut_site_name = res_from + mc.position
+        pattern[mut_site_name] = res_to
 
     # Handle location
     if agent.location is not None:
