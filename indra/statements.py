@@ -210,6 +210,15 @@ class MutCondition(object):
     def __repr__(self):
         return 'MutCondition' + str(self)
 
+    def refinement_of(self, other):
+        from_match = (self.residue_from == other.residue_from or \
+            (self.residue_from is not None and other.residue_from is None))
+        to_match = (self.residue_to == other.residue_to or \
+            (self.residue_to is not None and other.residue_to is None))
+        pos_match = (self.position == other.position or \
+            (self.position is not None and other.position is None))
+        return (from_match and to_match and pos_match)
+
 
 @python_2_unicode_compatible
 class ModCondition(object):
@@ -598,12 +607,22 @@ class Agent(object):
         # MUTATIONS
         # Similar to the above, we check that self has all of the mutations
         # of other.
-        # Make sure they have the same mutations
+        matched_indices = []
+        # This outer loop checks that each mutation in the other Agent
+        # is matched.
         for other_mut in other.mutations:
             mut_found = False
-            for self_mut in self.mutations:
-                if self_mut.matches(other_mut):
-                    mut_found = True
+            # We need to keep track of indices for this Agent's mutations
+            # to make sure that each one is used at most once to match
+            # the mutation of one of the other Agent's mutations.
+            for ix, self_mut in enumerate(self.mutations):
+                if self_mut.refinement_of(other_mut):
+                    # If this mutation hasn't been used for matching yet
+                    if not ix in matched_indices:
+                        # Set the index as used
+                        matched_indices.append(ix)
+                        mut_found = True
+                        break
             # If we didn't find an exact match for this mut in other, then
             # no refinement
             if not mut_found:
