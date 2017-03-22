@@ -15,10 +15,10 @@ of network models.
 License and funding
 -------------------
 
-INDRA is made available under the `MIT License
-<https://opensource.org/licenses/MIT>`_. Users are asked to acknowledge DARPA
-grant W911NF-14-1-0397, “Programmatic modelling for reasoning across complex
-mechanisms,” Peter Sorger and Dexter Pratt PIs.
+INDRA is made available under the 2-clause `BSD license
+<https://opensource.org/licenses/BSD-2-Clause>`_. Users are asked to
+acknowledge DARPA grant W911NF-14-1-0397, “Programmatic modelling for 
+reasoning across complex mechanisms,” Peter Sorger and Dexter Pratt PIs.
 
 .. _PySB: http://pysb.org
 
