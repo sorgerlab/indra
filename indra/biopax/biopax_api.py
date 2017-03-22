@@ -26,12 +26,6 @@ def process_pc_neighborhood(gene_names, neighbor_limit=1):
     -------
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
-
-    Notes
-    -----
-    As returned from this function, bp.statements is empty and one
-    has to call methods of bp (e.g. bp.get_complexes()) to
-    populate bp.statements.
     """
     model = pcc.graph_query('neighborhood', gene_names,
                             neighbor_limit=neighbor_limit)
@@ -63,12 +57,6 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1):
     -------
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
-
-    Notes
-    -----
-    As returned from this function, bp.statements is empty and one
-    has to call methods of bp (e.g. bp.get_complexes()) to
-    populate bp.statements.
     """
     model = pcc.graph_query('pathsbetween', gene_names,
                              neighbor_limit=neighbor_limit)
@@ -104,12 +92,6 @@ def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
     -------
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
-
-    Notes
-    -----
-    As returned from this function, bp.statements is empty and one
-    has to call methods of bp (e.g. bp.get_complexes()) to
-    populate bp.statements.
     """
     model = pcc.graph_query('pathsfromto', source_genes,
                              target_genes, neighbor_limit)
@@ -129,12 +111,6 @@ def process_owl(owl_filename):
     -------
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
-
-    Notes
-    -----
-    As returned from this function, bp.statements is empty and one
-    has to call methods of bp (e.g. bp.get_complexes()) to
-    populate bp.statements.
     """
     model = pcc.owl_to_model(owl_filename)
     return process_model(model)
@@ -152,12 +128,6 @@ def process_model(model):
     -------
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
-
-    Notes
-    -----
-    As returned from this function, bp.statements is empty and one
-    has to call methods of bp (e.g. bp.get_complexes()) to
-    populate bp.statements.
     """
     bp = BiopaxProcessor(model)
     # bproc.get_complexes()
