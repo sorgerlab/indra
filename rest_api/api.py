@@ -5,6 +5,7 @@ from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
                              CyJSAssembler
+import indra.tools.assemble_corpus as ac
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -245,6 +246,38 @@ def assemble_cyjs():
                         n_bins = 9)
     model_str = cja.print_cyjs()
     return model_str
+
+@route('preassembly/map_grounding', method='POST')
+def map_grounding():
+    """Map grounding on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.map_grounding(stmts) 
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('preassembly/map_sequence', method='POST')
+def map_grounding():
+    """Map sequence on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.map_sequence(stmts) 
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
 
 if __name__ == '__main__':
     app = default_app()
