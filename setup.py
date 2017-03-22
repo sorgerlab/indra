@@ -13,7 +13,7 @@ def main():
         install_list.append('functools32')
 
     setup(name='indra',
-          version='1.4.1',
+          version='1.4.2',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
