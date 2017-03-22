@@ -247,14 +247,15 @@ def assemble_cyjs():
     model_str = cja.print_cyjs()
     return model_str
 
-@route('preassembly/map_grounding', method='POST')
+@route('/preassembly/map_grounding', method='POST')
+@allow_cors
 def map_grounding():
     """Map grounding on a list of INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.map_grounding(stmts) 
+    stmts_out = ac.map_grounding(stmts)
     if stmts_out:
         stmts_json = stmts_to_json(stmts_out)
         res = {'statements': stmts_json}
@@ -263,14 +264,15 @@ def map_grounding():
         res = {'statements': []}
     return res
 
-@route('preassembly/map_sequence', method='POST')
+@route('/preassembly/map_sequence', method='POST')
+@allow_cors
 def map_grounding():
     """Map sequence on a list of INDRA Statements."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.map_sequence(stmts) 
+    stmts_out = ac.map_sequence(stmts)
     if stmts_out:
         stmts_json = stmts_to_json(stmts_out)
         res = {'statements': stmts_json}
