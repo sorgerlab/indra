@@ -6,7 +6,8 @@ INDRA
 INDRA (Integrated Network and Dynamical Reasoning Assembler) generates
 executable models of pathway dynamics from natural language (using the
 [TRIPS](http://trips.ihmc.us/parser/cgi/drum) and
-[REACH](https://github.com/clulab/reach) parsers), and BioPAX and BEL sources
+[REACH](https://github.com/clulab/reach) reading systems), and BioPAX and
+BEL sources
 (including the [Pathway Commons database](http://pathwaycommons.org/) and
 [NDEx](http://ndexbio.org).
 
@@ -60,7 +61,7 @@ Using INDRA
 -----------
 
 In this example INDRA assembles a PySB model from the natural language
-description of a mechanism via the [TRIPS parser web
+description of a mechanism via the [TRIPS reading web
 service](http://trips.ihmc.us/parser/cgi/drum).
 
 ```python
@@ -77,7 +78,7 @@ model = pa.make_model(policies='two_step')
 
 INDRA also provides an interface for the
 [REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language
-parser. In this example, a full paper from [PubMed
+processor. In this example, a full paper from [PubMed
 Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
 [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
 
