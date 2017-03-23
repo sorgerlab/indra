@@ -9,12 +9,13 @@ executable models of pathway dynamics from natural language (using the
 [REACH](https://github.com/clulab/reach) reading systems), and BioPAX and
 BEL sources
 (including the [Pathway Commons database](http://pathwaycommons.org/) and
-[NDEx](http://ndexbio.org).
+[NDEx](http://ndexbio.org)).
 
 Documentation
 -------------
 
-Documentation is available at http://indra.readthedocs.io.
+Documentation is available at
+[http://indra.readthedocs.io](http://indra.readthedocs.io).
 
 Installing INDRA
 ----------------
