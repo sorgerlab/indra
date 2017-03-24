@@ -223,11 +223,12 @@ class ModelChecker(object):
         for path in _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
-        #for path in _find_sources_with_paths(self.get_im(), obj_obs.name,
-        #                                     input_rule_set, target_polarity):
-        #    num_paths += 1
         if num_paths > 0:
-            return True
+            # Get the first path
+            for path in _find_sources_with_paths(self.get_im(),
+                                                 obj_obs.name, input_rule_set,
+                                                 target_polarity):
+                return True
         else:
             return False
 
@@ -275,7 +276,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
         else:
             sign = _path_polarity(im, reversed(path))
         if (sources is None or node in sources) and sign == polarity:
-            logger.info('Found path: %s' % path)
+            logger.info('Found path: %s' % list(reversed(path)))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, 1):
             new_path = list(path)

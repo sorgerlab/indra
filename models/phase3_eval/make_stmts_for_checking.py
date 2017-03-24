@@ -12,7 +12,7 @@ protein_data = data_dict['protein']
 abs = pd.get_phos_antibodies(data_dict)
 drug_tx = pd.get_single_drug_treatments(data_dict)
 drug_targets = pd.get_drug_targets()
-ps_data = read_phosphosite('sources/annotated_kinases_v4.csv')
+ps_data = read_phosphosite('sources/annotated_kinases_v5.csv')
 
 INC_THRESHOLD = 1.2
 DEC_THRESHOLD = 0.8
