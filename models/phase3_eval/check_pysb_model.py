@@ -44,8 +44,8 @@ for drug_name, ab_dict in data_stmts.items():
         value = data_values[drug_name][ab]
         if value > 0.5 and value < 1.5:
             continue
-        if not (drug_name == 'ZS' and ab == 'S6_pS235_V'):
-            continue
+        #if not (drug_name == 'ZS' and ab == 'S6_pS235_V'):
+        #    continue
                #(drug_name == 'RO' or \
                # drug_name == '901' and ab == 'MAPK_pT202'):
         # For each subset, check statements; if any of them checks out, we're
@@ -53,15 +53,17 @@ for drug_name, ab_dict in data_stmts.items():
         print("-- Checking the effect of %s on %s --" % (drug_name, ab))
         relation = 'positive' if value > 1 else 'negative'
         path_found = 0
+        path = ''
         for stmt in stmt_list:
             print("Checking: %s" % stmt)
             result = mc.check_statement(stmt)
             if result:
                 print("Path found, skipping rest")
                 path_found = 1
+                path = str(result)
                 break
             else:
                 print("No path found")
 
-        results.append((drug_name, ab, relation, value, path_found))
+        results.append((drug_name, ab, relation, value, path_found, path))
 write_unicode_csv('model_check_results.csv', results)

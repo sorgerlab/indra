@@ -159,8 +159,8 @@ class ModelChecker(object):
         for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
             # Return True for the first valid path we find
-            if self._find_im_paths(enz_mp, obj_obs, target_polarity):
-                return True
+            result =  self._find_im_paths(enz_mp, obj_obs, target_polarity)
+            return result
         # If we got here, then there was no path for any observable
         return False
 
@@ -220,14 +220,21 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?
         num_paths = 0
-        for path in _find_sources(self.get_im(), obj_obs.name, input_rule_set,
+        path_lengths = []
+        for source, polarity, path_length in
+                    _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
-        if num_paths > 0:
-            # Get the first path
-            for path in _find_sources_with_paths(self.get_im(),
-                                                 obj_obs.name, input_rule_set,
-                                                 target_polarity):
+            path_lengths.append(path_length)
+        if num_paths > 0
+            if min(path_lengths) <= 5:
+                # Get the first path
+                for path in _find_sources_with_paths(self.get_im(),
+                                                     obj_obs.name,
+                                                     input_rule_set,
+                                                     target_polarity):
+                    return path
+            else:
                 return True
         else:
             return False
