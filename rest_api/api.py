@@ -183,6 +183,7 @@ def biopax_process_pc_neighborhood():
 ### PYSB ###
 
 @route('/assemblers/pysb', method='POST')
+@allow_cors
 def assemble_pysb():
     """Assemble INDRA Statements and return PySB model string."""
     response = request.body.read().decode('utf-8')
