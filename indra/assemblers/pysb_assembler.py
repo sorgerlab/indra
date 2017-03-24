@@ -12,7 +12,7 @@ from pysb.core import SelfExporter
 import pysb.export
 
 from indra import statements as ist
-from indra.databases import context_client
+from indra.databases import context_client, get_identifiers_url
 from indra.preassembler.hierarchy_manager import entity_hierarchy as enth
 from indra.tools.expand_families import _agent_from_uri
 
@@ -629,28 +629,12 @@ def get_annotation(component, db_name, db_ref):
 
     Annotation formats follow guidelines at http://identifiers.org/.
     """
-    url = 'http://identifiers.org/'
-    subj = component
-    if db_name == 'UP':
-        obj = url + 'uniprot/%s' % db_ref
-    elif db_name == 'HGNC':
-        obj = url + 'hgnc/HGNC:%s' % db_ref
-    elif db_name == 'XFAM' and db_ref.startswith('PF'):
-        obj = url + 'pfam/%s' % db_ref
-    elif db_name == 'IP':
-        obj = url + 'interpro/%s' % db_ref
-    elif db_name == 'CHEBI':
-        obj = url + 'chebi/%s' % db_ref
-    elif db_name == 'NCIT':
-        obj = url + 'ncit/%s' % db_ref
-    elif db_name == 'GO':
-        obj = url + 'go/%s' % db_ref
-    elif db_name == 'BE':
-        obj = 'http://sorger.med.harvard.edu/indra/entities/%s' % db_ref
-    else:
+    url = get_identifiers_url(db_name, db_ref)
+    if not url:
         return None
-    pred = 'is'
-    return Annotation(subj, obj, pred)
+    subj = component
+    ann = Annotation(subj, url, 'is')
+    return ann
 
 def parse_identifiers_url(url):
     """Parse an identifiers.org URL into (namespace, ID) tuple."""
