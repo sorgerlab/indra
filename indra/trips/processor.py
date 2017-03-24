@@ -1456,7 +1456,7 @@ def _get_db_refs(term):
     # We need to add a prefix for CHEBI
     chebi_id = db_refs.get('CHEBI')
     if chebi_id:
-        db_refs[chebi_id] = 'CHEBI:%s' % chebi_id
+        db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
     # We need to strip the trailing version number for XFAM and rename to PF
     pfam_id = db_refs.get('XFAM')
     if pfam_id:
