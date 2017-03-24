@@ -22,6 +22,7 @@ def allow_cors(func):
 
 ### TRIPS ###
 @route('/trips/process_text', method='POST')
+@allow_cors
 def trips_process_text():
     """Process text with TRIPS and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -37,6 +38,7 @@ def trips_process_text():
     return res
 
 @route('/trips/process_xml', method='POST')
+@allow_cors
 def trips_process_xml():
     """Process TRIPS EKB XML and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -70,6 +72,7 @@ def reach_process_text():
     return res
 
 @route('/reach/process_json', method='POST')
+@allow_cors
 def reach_process_json():
     """Process REACH json and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -85,6 +88,7 @@ def reach_process_json():
     return res
 
 @route('/reach/process_pmc', method='POST')
+@allow_cors
 def reach_process_pmc():
     """Process PubMedCentral article and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -102,6 +106,7 @@ def reach_process_pmc():
 
 ### BEL ###
 @route('/bel/process_ndex_neighborhood', method='POST')
+@allow_cors
 def bel_process_ndex_neighborhood():
     """Process BEL Large Corpus neighborhood and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -117,6 +122,7 @@ def bel_process_ndex_neighborhood():
     return res
 
 @route('/bel/process_belrdf', method='POST')
+@allow_cors
 def bel_process_belrdf():
     """Process BEL RDF and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -133,6 +139,7 @@ def bel_process_belrdf():
 
 ### BioPAX ###
 @route('/biopax/process_pc_pathsbetween', method='POST')
+@allow_cors
 def biopax_process_pc_pathsbetween():
     """Process PathwayCommons paths between genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -148,6 +155,7 @@ def biopax_process_pc_pathsbetween():
     return res
 
 @route('/biopax/process_pc_pathsfromto', method='POST')
+@allow_cors
 def biopax_process_pc_pathsfromto():
     """Process PathwayCommons paths from-to genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -164,6 +172,7 @@ def biopax_process_pc_pathsfromto():
     return res
 
 @route('/biopax/process_pc_neighborhood', method='POST')
+@allow_cors
 def biopax_process_pc_neighborhood():
     """Process PathwayCommons neighborhood, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -200,6 +209,7 @@ def assemble_pysb():
 ### CX ###
 
 @route('/assemblers/cx', method='POST')
+@allow_cors
 def assemble_cx():
     """Assemble INDRA Statements and return CX network json."""
     response = request.body.read().decode('utf-8')
@@ -214,6 +224,7 @@ def assemble_cx():
 ### GRAPH ###
 
 @route('/assemblers/graph', method='POST')
+@allow_cors
 def assemble_graph():
     """Assemble INDRA Statements and return Graphviz graph dot string."""
     response = request.body.read().decode('utf-8')
