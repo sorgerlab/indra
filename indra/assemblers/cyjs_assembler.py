@@ -10,7 +10,7 @@ from matplotlib.colors import LinearSegmentedColormap as colormap
 from matplotlib.colors import rgb2hex, hex2color
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.databases import context_client
+from indra.databases import context_client, get_identifiers_url
 from indra.preassembler import Preassembler
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -632,42 +632,25 @@ class CyJSAssembler(object):
 def _get_db_refs(agent):
     cyjs_db_refs = {}
     for db_name, db_ids in agent.db_refs.items():
+        if db_name == 'TEXT':
+            continue
         if isinstance(db_ids, int):
             db_id = str(db_ids)
         elif isinstance(db_ids, basestring):
             db_id = db_ids
         else:
             db_id = db_ids[0]
-        if db_name == 'UP':
-            name = 'UniProt'
-            val = 'http://identifiers.org/uniprot/%s' % db_id
-        elif db_name == 'HGNC':
-            name = 'HGNC'
-            val = 'http://identifiers.org/hgnc/HGNC:%s' % db_id
-        elif db_name == 'CHEBI':
-            name = 'ChEBI'
-            val = 'http://identifiers.org/chebi/%s' % db_id
-        elif db_name == 'PUBCHEM':
-            name = 'PubChem'
-            val = 'http://identifiers.org/pubchem.compound/%s' % db_id
-        elif db_name == 'HMDB':
-            name = 'HMDB'
-            val = 'http://identifiers.org/hmdb/%s' % db_id
-        elif db_name == 'GO':
-            name = 'GO'
-            val = 'http://identifiers.org/go/%s' % db_id
-        elif db_name == 'MESH':
-            name = 'MESH'
-            val = 'http://identifiers.org/mesh/%s' % db_id
-        elif db_name == 'IP':
-            name = 'InterPro'
-            val = 'http://identifiers.org/interpro/%s' % db_id
-        elif db_name == 'TEXT':
+        url = get_identifiers_url(db_name, db_id)
+        if not url:
             continue
-        else:
-            val = db_id
+        db_name_map = {
+            'UP': 'UniProt', 'PUBCHEM': 'PubChem',
+            'IP': 'InterPro', 'NXPFA': 'NextProtFamily',
+            'PF': 'Pfam', 'CHEBI': 'ChEBI'}
+        name = db_name_map.get(db_name)
+        if not name:
             name = db_name
-        cyjs_db_refs[name] = val
+        cyjs_db_refs[name] = url
     return cyjs_db_refs
 
 
