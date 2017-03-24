@@ -1452,6 +1452,28 @@ def _get_db_refs(term):
     for k, v in top_grounding['refs'].items():
         db_refs[k] = v
 
+    # Now standardize db_refs to the INDRA standards
+    # We need to add a prefix for CHEBI
+    chebi_id = db_refs.get('CHEBI')
+    if chebi_id:
+        db_refs[chebi_id] = 'CHEBI:%s' % chebi_id
+    # We need to strip the trailing version number for XFAM and rename to PF
+    pfam_id = db_refs.get('XFAM')
+    if pfam_id:
+        pfam_id = pfam_id.split('.')[0]
+        db_refs.pop('XFAM', None)
+        db_refs['PF'] = pfam_id
+    # We need to add GO prefix if it is missing
+    go_id = db_refs.get('GO')
+    if go_id:
+        if not go_id.startswith('GO:'):
+            db_refs['GO'] = 'GO:%s' % go_id
+    # We need to deal with Nextprot families
+    nxp_id = db_refs.get('FA')
+    if nxp_id:
+        db_refs.pop('FA', None)
+        db_refs['NXPFA'] = nxp_id
+
     return db_refs, relevant_ambiguities
 
 
