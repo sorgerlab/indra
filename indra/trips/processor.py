@@ -21,7 +21,8 @@ mod_names = {
     'ONT::RIBOSYLATION': 'ribosylation',
     'ONT::ACETYLATION': 'acetylation',
     'ONT::HYDROXYLATION': 'hydroxylation',
-    'ONT::FARNESYLATION': 'farnesylation'
+    'ONT::FARNESYLATION': 'farnesylation',
+    'ONT::PTM': 'ptm'
     }
 
 protein_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
@@ -623,9 +624,18 @@ class TripsProcessor(object):
             mod_events += events
         for event in mod_events:
             event_id = event.attrib['id']
-            event_type = _get_type(event)
             if event_id in self._static_events:
                 continue
+            event_type = _get_type(event)
+            if event_type == 'ONT::PTM':
+                name = event.find('name')
+                if name is not None and \
+                    name.text == 'protein dephosphorylation':
+                    mod = 'dephosphorylation'
+                else:
+                    continue
+            else:
+                mod = mod_names.get(event_type)
 
             # Get enzyme Agent
             enzyme = event.find(".//*[@role=':AGENT']")
@@ -710,7 +720,6 @@ class TripsProcessor(object):
                             self.statements.append(st)
                     continue
 
-            mod = mod_names.get(event_type)
             if 'ONT::MANNER-UNDO' in [mt.text for mt in mod_types]:
                 mod_stmt = modclass_to_inverse[modtype_to_modclass[mod]]
             else:
@@ -1107,6 +1116,11 @@ class TripsProcessor(object):
         # Find the modification type
         mod_type = event.find('type').text
         mod_type_name = mod_names.get(mod_type)
+        if mod_type_name == 'ptm':
+            name = event.find('name')
+            if name is not None and \
+                name.text == 'protein dephosphorylation':
+                mod_type_name = 'phosphorylation'
         # If it is an unknown modification type
         if mod_type_name is None:
             logger.warning('Unhandled modification type: %s')
