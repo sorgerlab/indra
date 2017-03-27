@@ -1,3 +1,4 @@
+import sys
 import json
 import logging
 from bottle import route, run, request, default_app, response
@@ -285,6 +286,60 @@ def map_grounding():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.map_sequence(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/run_preassembly', method='POST')
+@allow_cors
+def run_preassembly():
+    """Run preassembly on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.run_preassembly(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/filter_by_type', method='POST')
+@allow_cors
+def filter_by_type():
+    """Filter to a given INDRA Statement type."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmt_type_str = body.get('type')
+    stmt_type_str = stmt_type_str.capitalize()
+    stmt_type = getattr(sys.modules[__name__], stmt_type_str)
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_by_type(stmts, stmt_type)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/filter_grounded_only', method='POST')
+@allow_cors
+def filter_grounded_only():
+    """Filter to a given INDRA Statement type."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_grounded_only(stmts)
     if stmts_out:
         stmts_json = stmts_to_json(stmts_out)
         res = {'statements': stmts_json}
