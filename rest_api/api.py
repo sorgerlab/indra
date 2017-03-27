@@ -334,7 +334,7 @@ def filter_by_type():
 @route('/preassembly/filter_grounded_only', method='POST')
 @allow_cors
 def filter_grounded_only():
-    """Filter to a given INDRA Statement type."""
+    """Filter to grounded Statements only."""
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
