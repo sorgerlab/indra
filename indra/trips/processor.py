@@ -641,6 +641,8 @@ class TripsProcessor(object):
                     if mod is None:
                         logger.warning('Unhandled PTM subtype: %s' % name)
                         continue
+                else:
+                    continue
             else:
                 mod = ont_to_mod_type.get(event_type)
 
@@ -1132,6 +1134,11 @@ class TripsProcessor(object):
                     mod_class = modtype_to_modclass[mod_type_name]
                     if issubclass(mod_class, RemoveModification):
                         mod_type_name = modtype_to_inverse[mod_type_name]
+                else:
+                    logger.warning('Unhandled PTM subtype: %s' % event_name)
+                    return None
+            else:
+                return None
         else:
             mod_type_name = ont_to_mod_type.get(mod_type)
         if mod_type_name is None:
