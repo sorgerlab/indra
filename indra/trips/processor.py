@@ -24,10 +24,7 @@ ont_to_mod_type = {
     'ONT::FARNESYLATION': 'farnesylation',
     }
 
-ptm_to_mod_type = {
-    'protein dephosphorylation': 'dephosphorylation',
-    'protein deubiquitination': 'deubiquitination'
-    }
+ptm_to_mod_type = {'protein %s' % m: m for m in modtype_to_modclass.keys()}
 
 protein_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
                  'ONT::PROTEIN', 'ONT::PROTEIN-FAMILY', 'ONT::GENE',
@@ -639,9 +636,10 @@ class TripsProcessor(object):
             if event_type == 'ONT::PTM':
                 name = event.find('name')
                 if name is not None:
+                    name = name.text
                     mod = ptm_to_mod_type.get(name)
                     if mod is None:
-                        logger.warning('Unhandled PTM subtype: %s' % mod_type)
+                        logger.warning('Unhandled PTM subtype: %s' % name)
                         continue
             else:
                 mod = ont_to_mod_type.get(event_type)
@@ -1129,11 +1127,11 @@ class TripsProcessor(object):
             event_name = event.find('name')
             if event_name is not None:
                 event_name = event_name.text
-                mod_type_name = ptm_to_mod_type(event_name)
+                mod_type_name = ptm_to_mod_type.get(event_name)
                 if mod_type_name:
-                    mod_class = mod_type_to_class[mod_type_name]
-                    if isinstance(mod_class, RemoveModification):
-                        mod_type_name = mod_type_to_inverse[mod_type_name]
+                    mod_class = modtype_to_modclass[mod_type_name]
+                    if issubclass(mod_class, RemoveModification):
+                        mod_type_name = modtype_to_inverse[mod_type_name]
         else:
             mod_type_name = ont_to_mod_type.get(mod_type)
         if mod_type_name is None:
