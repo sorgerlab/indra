@@ -15,14 +15,18 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('trips')
 
-mod_names = {
+ont_to_mod_type = {
     'ONT::PHOSPHORYLATION': 'phosphorylation',
     'ONT::UBIQUITINATION': 'ubiquitination',
     'ONT::RIBOSYLATION': 'ribosylation',
     'ONT::ACETYLATION': 'acetylation',
     'ONT::HYDROXYLATION': 'hydroxylation',
     'ONT::FARNESYLATION': 'farnesylation',
-    'ONT::PTM': 'ptm'
+    }
+
+ptm_to_mod_type = {
+    'protein dephosphorylation': 'dephosphorylation',
+    'protein deubiquitination': 'deubiquitination'
     }
 
 protein_types = ['ONT::GENE-PROTEIN', 'ONT::CHEMICAL', 'ONT::MOLECULE',
@@ -617,11 +621,16 @@ class TripsProcessor(object):
 
     def get_modifications(self):
         """Extract all types of Modification INDRA Statements."""
-        mod_event_types = mod_names.keys()
+        # Get all the specific mod types
+        mod_event_types = list(ont_to_mod_type.keys())
+        # Add ONT::PTMs as a special case
+        mod_event_types += ['ONT::PTM']
         mod_events = []
         for mod_event_type in mod_event_types:
             events = self.tree.findall("EVENT/[type='%s']" % mod_event_type)
             mod_events += events
+
+        # Iterate over all modification events
         for event in mod_events:
             event_id = event.attrib['id']
             if event_id in self._static_events:
@@ -629,13 +638,13 @@ class TripsProcessor(object):
             event_type = _get_type(event)
             if event_type == 'ONT::PTM':
                 name = event.find('name')
-                if name is not None and \
-                    name.text == 'protein dephosphorylation':
-                    mod = 'dephosphorylation'
-                else:
-                    continue
+                if name is not None:
+                    mod = ptm_to_mod_type.get(name)
+                    if mod is None:
+                        logger.warning('Unhandled PTM subtype: %s' % mod_type)
+                        continue
             else:
-                mod = mod_names.get(event_type)
+                mod = ont_to_mod_type.get(event_type)
 
             # Get enzyme Agent
             enzyme = event.find(".//*[@role=':AGENT']")
@@ -972,7 +981,8 @@ class TripsProcessor(object):
         precond_event_type = _get_type(precond_event)
 
         # Modification precondition
-        if precond_event_type in mod_names.keys():
+        mod_types = list(ont_to_mod_type.keys()) + ['ONT::PTM']
+        if precond_event_type in mod_types:
             mods = self._get_modification(precond_event)
             agent.mods = mods
             return
@@ -1115,15 +1125,19 @@ class TripsProcessor(object):
     def _get_modification(self, event):
         # Find the modification type
         mod_type = event.find('type').text
-        mod_type_name = mod_names.get(mod_type)
-        if mod_type_name == 'ptm':
-            name = event.find('name')
-            if name is not None and \
-                name.text == 'protein dephosphorylation':
-                mod_type_name = 'phosphorylation'
-        # If it is an unknown modification type
+        if mod_type == 'ONT::PTM':
+            event_name = event.find('name')
+            if event_name is not None:
+                event_name = event_name.text
+                mod_type_name = ptm_to_mod_type(event_name)
+                if mod_type_name:
+                    mod_class = mod_type_to_class[mod_type_name]
+                    if isinstance(mod_class, RemoveModification):
+                        mod_type_name = mod_type_to_inverse[mod_type_name]
+        else:
+            mod_type_name = ont_to_mod_type.get(mod_type)
         if mod_type_name is None:
-            logger.warning('Unhandled modification type: %s')
+            logger.warning('Unhandled modification type: %s' % mod_type)
             return None
 
         # Check if the event is negated
