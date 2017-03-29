@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
+import json
 from builtins import dict, str
 import numpy
 import logging
@@ -121,6 +122,50 @@ class SifAssembler(object):
         sif_str = self.print_model()
         with open(fname, 'wb') as fh:
             fh.write(sif_str.encode('utf-8'))
+
+    def print_loopy(self, as_url=True):
+        """Return 
+
+        Parameters
+        ----------
+        out_file : Optional[str]
+            A file name in which the Loopy network is saved.
+
+        Returns
+        -------
+        full_str : str
+            The string representing the Loopy network.
+        """
+        init_str = ''
+        node_id = 1
+        node_list = {}
+        for node, data in self.graph.nodes(data=True):
+            node_name = data['name']
+            nodex = int(500*numpy.random.rand())
+            nodey = int(500*numpy.random.rand())
+            hue = int(5*numpy.random.rand())
+            node_attr = [node_id, nodex, nodey, 1, node_name, hue]
+            node_list[node] = node_attr
+            node_id += 1
+        nodes = list(node_list.values())
+
+        edges = []
+        for s, t, data in self.graph.edges(data=True):
+            s_id = node_list[s][0]
+            t_id = node_list[t][0]
+            if data['polarity'] == 'positive':
+                pol = 1
+            else:
+                pol = -1
+            edge = [s_id, t_id, 89, pol, 0]
+            edges.append(edge)
+
+        labels = []
+        components = [nodes, edges, labels]
+        model = json.dumps(components, separators=(',', ':'))
+        if as_url:
+            model = 'http://ncase.me/loopy/v1/?data=' + model
+        return model
 
     def print_boolean_net(self, out_file=None):
         """Return a Boolean network from the assembled graph.
