@@ -6,15 +6,15 @@ from indra.assemblers.pysb_assembler import \
         PysbAssembler,\
         UnknownPolicyError, \
         get_binding_site_name, PysbPreassembler, _BaseAgent, _BaseAgentSet, \
-        get_agent_rule_str, abbrevs, states
+        get_agent_rule_str, abbrevs, states, get_mod_site_name
 
 
 class KamiAssembler(PysbAssembler):
     def make_model(self, policies=None, initial_conditions=True,
                    reverse_effects=False):
-        """Assemble the PySB model from the collected INDRA Statements.
+        """Assemble the Kami model from the collected INDRA Statements.
 
-        This method assembles a PySB model from the set of INDRA Statements.
+        This method assembles a Kami model from the set of INDRA Statements.
         The assembled model is both returned and set as the assembler's
         model argument.
 
@@ -22,18 +22,18 @@ class KamiAssembler(PysbAssembler):
         ----------
         policies : Optional[Union[str, dict]]
             A string or dictionary of policies, as defined in
-            :py:class:`indra.assemblers.PysbAssembler`. This set of policies
+            :py:class:`indra.assemblers.KamiAssembler`. This set of policies
             locally supersedes the default setting in the assembler. This
             is useful when this function is called multiple times with
             different policies.
         initial_conditions : Optional[bool]
             If True, default initial conditions are generated for the
-            Monomers in the model.
+            agents in the model.
 
         Returns
         -------
-        model : pysb.Model
-            The assembled PySB model object.
+        model : dict
+            The assembled Kami model.
         """
         ppa = PysbPreassembler(self.statements)
         ppa.replace_activities()
@@ -41,7 +41,7 @@ class KamiAssembler(PysbAssembler):
             ppa.add_reverse_effects()
         self.statements = ppa.statements
         # Set local policies for this make_model call that overwrite
-        # the global policies of the PySB assembler
+        # the global policies of the Kami assembler
         if policies is not None:
             global_policies = self.policies
             if isinstance(policies, basestring):
@@ -50,32 +50,19 @@ class KamiAssembler(PysbAssembler):
                 local_policies = {'other': 'default'}
                 local_policies.update(policies)
             self.policies = local_policies
+
         self.model = {}
         graphs = []
         self.model['graphs'] = graphs
         self.model['typing'] = []
-        self.agent_set = _BaseAgentSet()
-        # Collect information about the monomers/self.agent_set from the
-        # statements
-        self._monomers()
+
         # Add the monomers to the model based on our BaseAgentSet
         # Action graph generated here
         action_graph = {'id': 'action_graph',
                         'attrs': {'name': 'action_graph'}}
         action_graph['graph'] = {'nodes': [], 'edges': []}
         graphs.append(action_graph)
-        """
-        for agent_name, agent in self.agent_set.items():
-            nodes = []
-            edges = []
-            #m = Monomer(_n(agent_name), agent.sites, agent.site_states)
-            #m.site_annotations = agent.site_annotations
-            #self.model.add_component(m)
-            #for db_name, db_ref in agent.db_refs.items():
-            #    a = get_annotation(m, db_name, db_ref)
-            #    if a is not None:
-            #        self.model.add_annotation(a)
-        """
+
         # Iterate over the statements to generate rules
         self._assemble()
         # Add initial conditions
@@ -144,13 +131,13 @@ def complex_assemble_one_step(stmt, model, agent_set):
     pairs = itertools.combinations(stmt.members, 2)
     for pair in pairs:
         # Make a rule name
-        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
-        rule_name += '_bind'
-        action_name =  rule_name + '_act'
+        nugget_name = '_'.join([get_agent_rule_str(m) for m in pair])
+        nugget_name += '_bind'
+        action_name =  nugget_name + '_act'
         kf_bind = 1e-6
-        nugget_dict = {'id': rule_name,
+        nugget_dict = {'id': nugget_name,
                        'graph': {'attrs':
-                                    {'name': rule_name,
+                                    {'name': nugget_name,
                                      'rate': kf_bind}}}
         # Initialize dicts/lists for this nugget
         nodes = [{'id': action_name}]
@@ -174,10 +161,10 @@ def complex_assemble_one_step(stmt, model, agent_set):
         nugget_dict['graph']['edges'] = edges
         # Typing dicts linking the nugget to the Action Graph and to the
         # Kami graph
-        typing_dict_ag = {'from': rule_name, 'to': 'action_graph',
+        typing_dict_ag = {'from': nugget_name, 'to': 'action_graph',
                           'mapping': {}, 'total': False,
                           'ignore_attrs': False}
-        typing_dict_kami = {'from': rule_name, 'to': 'kami',
+        typing_dict_kami = {'from': nugget_name, 'to': 'kami',
                             'mapping': typing_dict, 'total': True,
                             'ignore_attrs': True}
         # Add the graphs for this nugget to the graphs and typing lists
@@ -185,13 +172,13 @@ def complex_assemble_one_step(stmt, model, agent_set):
         model['graphs'].append(nugget_dict)
 
         # In reverse reaction, assume that dissocition is unconditional
-        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
-        rule_name += '_dissociate'
-        action_name =  rule_name + '_act'
+        nugget_name = '_'.join([get_agent_rule_str(m) for m in pair])
+        nugget_name += '_dissociate'
+        action_name =  nugget_name + '_act'
         kr_bind = 1e-1
-        nugget_dict = {'id': rule_name,
+        nugget_dict = {'id': nugget_name,
                        'graph': {'attrs':
-                                    {'name': rule_name,
+                                    {'name': nugget_name,
                                      'rate': kr_bind}}}
         # Initialize dicts/lists for this nugget
         nodes = [{'id': action_name}]
@@ -209,10 +196,10 @@ def complex_assemble_one_step(stmt, model, agent_set):
         nugget_dict['graph']['edges'] = edges
         # Typing dicts linking the nugget to the Action Graph and to the
         # Kami graph
-        typing_dict_ag = {'from': rule_name, 'to': 'action_graph',
+        typing_dict_ag = {'from': nugget_name, 'to': 'action_graph',
                           'mapping': {}, 'total': False,
                           'ignore_attrs': False}
-        typing_dict_kami = {'from': rule_name, 'to': 'kami',
+        typing_dict_kami = {'from': nugget_name, 'to': 'kami',
                             'mapping': typing_dict, 'total': True,
                             'ignore_attrs': True}
         # Add the graphs for this nugget to the graphs and typing lists
@@ -230,35 +217,65 @@ def modification_monomers_one_step(stmt, agent_set):
 def modification_assemble_one_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
-    mod_condition_name = stmt.__class__.__name__.lower()
-    param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                  stmt.sub.name[0].lower(), mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1e-6)
 
-    # See NOTE in monomers_one_step
+    # Define some basic parameters for the modification
+    mod_condition_name = stmt.__class__.__name__.lower()
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    # Remove pre-set activity flag
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: mod_site_state})
 
+    # Make a nugget name
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
+    nugget_name = '%s_%s_%s_%s' % \
         (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
-    r = Rule(rule_name,
-            enz_pattern + sub_unmod >>
-            enz_pattern + sub_mod,
-            kf_mod)
-    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
+    action_name =  nugget_name + '_act'
+    kf_mod = 1e-6
+    nugget_dict = {'id': nugget_name,
+                   'graph': {'attrs':
+                                {'name': nugget_name,
+                                 'rate': kf_mod}}}
+
+    # Initialize dicts/lists for this nugget
+    nodes = [{'id': action_name}]
+    edges = []
+    typing_dict = {action_name: 'bnd'}
+
+    # Add enzyme conditions
+    enz_nodes, enz_edges, enz_types = get_agent_conditions(stmt.enz)
+    nodes += enz_nodes
+    edges += enz_edges
+    typing_dict.update(enz_types)
+
+    # Add substrate conditions
+    sub_nodes, sub_edges, sub_types = get_agent_conditions(stmt.sub)
+    nodes += sub_nodes
+    edges += sub_edges
+    typing_dict.update(sub_types)
+
+    # Add nodes/edges/types for the modification itself
+    nodes.append({'id': mod_site, 'attrs': {'val': unmod_site_state}})
+    nodes.append({'id': action_name, 'attrs': {'val': mod_site_state}})
+    edges.append({'from': mod_site, 'to': stmt.sub.name})
+    edges.append({'from': action_name, 'to': mod_site})
+    edges.append({'from': stmt.enz.name, 'to': action_name})
+    typing_dict.update({stmt.enz.name: 'agent', stmt.sub.name: 'agent',
+                        mod_site: 'site', action_name: 'mod'})
+    nugget_dict['graph']['nodes'] = nodes
+    nugget_dict['graph']['edges'] = edges
+
+    # Typing dicts linking the nugget to the Action Graph and to the
+    # Kami graph
+    typing_dict_ag = {'from': nugget_name, 'to': 'action_graph',
+                      'mapping': {}, 'total': False,
+                      'ignore_attrs': False}
+    typing_dict_kami = {'from': nugget_name, 'to': 'kami',
+                        'mapping': typing_dict, 'total': True,
+                        'ignore_attrs': True}
+    # Add the graphs for this nugget to the graphs and typing lists
+    model['typing'] += [typing_dict_ag, typing_dict_kami]
+    model['graphs'].append(nugget_dict)
 
 
 def demodification_monomers_one_step(stmt, agent_set):
@@ -294,14 +311,14 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
+    nugget_name = '%s_%s_%s_%s' % \
                 (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(rule_name,
+    r = Rule(nugget_name,
              enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
              kf_demod)
     anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(nugget_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
 modification_monomers_default = modification_monomers_one_step
@@ -334,50 +351,6 @@ for mc, func_type, pol in itertools.product(demod_classes,
                     pol=pol)
     exec(code)
 
-def phosphorylation_monomers_one_step(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-
-
-def phosphorylation_assemble_one_step(stmt, model, agent_set):
-    """
-    if stmt.enz is None:
-        return
-    mod_condition_name = stmt.__class__.__name__.lower()
-    param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                  stmt.sub.name[0].lower(), mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1e-6)
-
-    # See NOTE in monomers_one_step
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    # Remove pre-set activity flag
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: mod_site_state})
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
-    r = Rule(rule_name,
-            enz_pattern + sub_unmod >>
-            enz_pattern + sub_mod,
-            kf_mod)
-    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-    """
 
 def get_agent_conditions(agent):
     nodes = []
