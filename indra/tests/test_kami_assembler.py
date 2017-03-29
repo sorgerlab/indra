@@ -30,7 +30,7 @@ def test_complex_no_conditions():
     assert isinstance(model['graphs'], list)
     assert isinstance(model['typing'], list)
     graph_list = model['graphs']
-    assert len(graph_list) == 2
+    assert len(graph_list) == 3
     assert len(graph_list[1]['graph']['edges']) == 4
     assert len(graph_list[1]['graph']['nodes']) == 5
 
@@ -43,7 +43,7 @@ def test_complex_bound_condition():
     assert isinstance(model['graphs'], list)
     assert isinstance(model['typing'], list)
     graph_list = model['graphs']
-    assert len(graph_list) == 2
+    assert len(graph_list) == 3
     assert len(graph_list[1]['graph']['edges']) == 6
     assert len(graph_list[1]['graph']['nodes']) == 7
     import json
@@ -58,7 +58,7 @@ def test_complex_not_bound_condition():
     assert isinstance(model['graphs'], list)
     assert isinstance(model['typing'], list)
     graph_list = model['graphs']
-    assert len(graph_list) == 2
+    assert len(graph_list) == 3
     assert len(graph_list[1]['graph']['edges']) == 6
     assert len(graph_list[1]['graph']['nodes']) == 7
     import json
@@ -75,7 +75,7 @@ def test_complex_mod_condition():
         assert isinstance(model['graphs'], list)
         assert isinstance(model['typing'], list)
         graph_list = model['graphs']
-        assert len(graph_list) == 2
+        assert len(graph_list) == 3
         assert len(graph_list[1]['graph']['edges']) == 5
         assert len(graph_list[1]['graph']['nodes']) == 6
         import json

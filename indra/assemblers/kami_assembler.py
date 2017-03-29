@@ -145,7 +145,6 @@ def complex_assemble_one_step(stmt, model, agent_set):
         rule_name += '_bind'
         action_name =  rule_name + '_act'
         kf_bind = 1e-6
-        kr_bind = 1e-1
         nugget_dict = {'id': rule_name, 'name': rule_name,
                        'graph': {'attributes':
                                     {'name': rule_name,
@@ -182,8 +181,42 @@ def complex_assemble_one_step(stmt, model, agent_set):
         model['typing'] += [typing_dict_ag, typing_dict_kami]
         model['graphs'].append(nugget_dict)
 
-        """
         # In reverse reaction, assume that dissocition is unconditional
+        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
+        rule_name += '_dissociate'
+        action_name =  rule_name + '_act'
+        kr_bind = 1e-1
+        nugget_dict = {'id': rule_name, 'name': rule_name,
+                       'graph': {'attributes':
+                                    {'name': rule_name,
+                                     'rate': kr_bind}}}
+        # Initialize dicts/lists for this nugget
+        nodes = [{'id': action_name}]
+        edges = []
+        typing_dict = {action_name: 'brk'}
+        for agent in pair:
+            agent_bs = get_binding_site_name(agent)
+            nodes.append({'id': agent.name})
+            nodes.append({'id': agent_bs})
+            edges.append({'from': agent_bs, 'to': agent.name})
+            edges.append({'from': agent_bs, 'to': action_name})
+            # Add to the Kami typing dict
+            typing_dict.update({agent.name: 'agent', agent_bs: 'locus'})
+        nugget_dict['graph']['nodes'] = nodes
+        nugget_dict['graph']['edges'] = edges
+        # Typing dicts linking the nugget to the Action Graph and to the
+        # Kami graph
+        typing_dict_ag = {'from': rule_name, 'to': 'action_graph',
+                          'typing': {}, 'total': False,
+                          'ignore_attrs': False}
+        typing_dict_kami = {'from': rule_name, 'to': 'kami',
+                            'typing': typing_dict, 'total': True,
+                            'ignore_attrs': True}
+        # Add the graphs for this nugget to the graphs and typing lists
+        model['typing'] += [typing_dict_ag, typing_dict_kami]
+        model['graphs'].append(nugget_dict)
+
+        """
         agent1_uncond = get_uncond_agent(agent1)
         agent1_rule_str = get_agent_rule_str(agent1_uncond)
         monomer1_uncond = get_monomer_pattern(model, agent1_uncond)
@@ -311,41 +344,4 @@ def get_agent_conditions(agent):
         types.update({mod_site: 'state'})
 
     return nodes, edges, types
-
-    # Handle modifications
-    for mod in agent.mods:
-        mod_site_str = abbrevs[mod.mod_type]
-        if mod.residue is not None:
-            mod_site_str = mod.residue
-        mod_pos_str = mod.position if mod.position is not None else ''
-        mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
-        site_states = states[mod.mod_type]
-        if mod.is_modified:
-            pattern[mod_site] = (site_states[1], WILD)
-        else:
-            pattern[mod_site] = (site_states[0], WILD)
-
-    # Handle mutations
-    for mc in agent.mutations:
-        res_from = mc.residue_from if mc.residue_from else 'mut'
-        res_to = mc.residue_to if mc.residue_to else 'X'
-        if mc.position is None:
-            mut_site_name = res_from
-        else:
-            mut_site_name = res_from + mc.position
-        pattern[mut_site_name] = res_to
-
-    # Handle location
-    if agent.location is not None:
-        pattern['loc'] = _n(agent.location)
-
-    # Handle activity
-    if agent.activity is not None:
-        active_site_name = agent.activity.activity_type
-        if agent.activity.is_active:
-            active_site_state = 'active'
-        else:
-            active_site_state = 'inactive'
-        pattern[active_site_name] = active_site_state
-
-    return pattern
+    #TODO: locations, mutations, activity states
