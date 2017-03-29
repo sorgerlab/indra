@@ -140,84 +140,46 @@ complex_monomers_default = complex_monomers_one_step
 def complex_assemble_one_step(stmt, model, agent_set):
     pairs = itertools.combinations(stmt.members, 2)
     for pair in pairs:
-        agent1 = pair[0]
-        agent2 = pair[1]
-        param_name = agent1.name[0].lower() + \
-                     agent2.name[0].lower() + '_bind'
-        kf_bind = 1e-6
-        kr_bind = 1e-1
-
         # Make a rule name
         rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
         rule_name += '_bind'
-
-        # Construct full patterns of each agent with conditions
-        #agent1_pattern = get_monomer_pattern(model, agent1)
-        #agent2_pattern = get_monomer_pattern(model, agent2)
-        agent1_bs = get_binding_site_name(agent2)
-        agent2_bs = get_binding_site_name(agent1)
-        """
-        #r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) + \
-        #                    agent2_pattern(**{agent2_bs: None}) >>
-        #                    agent1_pattern(**{agent1_bs: 1}) % \
-        #                    agent2_pattern(**{agent2_bs: 1}),
-        #                    kf_bind)
-        anns = [Annotation(rule_name, agent1_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, agent1_pattern.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, agent2_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, agent2_pattern.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-        add_rule_to_model(model, r, anns)
-        """
-        nugget_dict = {}
-        nugget_dict['id'] = rule_name
-        nugget_dict['name'] = rule_name
-        nugget_dict['graph'] = {'attributes':
-                                 {'name': rule_name,
-                                  'rate': kf_bind}}
-        nodes = []
         action_name =  rule_name + '_act'
-        nodes.append({'id': agent1.name})
-        nodes.append({'id': agent1_bs})
-        nodes.append({'id': agent2.name})
-        nodes.append({'id': agent2_bs})
-        nodes.append({'id': action_name})
-        nugget_dict['graph']['nodes'] = nodes
-
+        kf_bind = 1e-6
+        kr_bind = 1e-1
+        nugget_dict = {'id': rule_name, 'name': rule_name,
+                       'graph': {'attributes':
+                                    {'name': rule_name,
+                                     'rate': kf_bind}}}
+        # Initialize dicts/lists for this nugget
+        nodes = [{'id': action_name}]
         edges = []
-        edges.append({'from': agent1_bs, 'to': agent1.name})
-        edges.append({'from': agent2_bs, 'to': agent2.name})
-        edges.append({'from': agent1_bs, 'to': action_name})
-        edges.append({'from': agent2_bs, 'to': action_name})
+        typing_dict = {action_name: 'bnd'}
+        for agent in pair:
+            # Construct full patterns of each agent with conditions
+            #agent1_pattern = get_monomer_pattern(model, agent1)
+            agent_bs = get_binding_site_name(agent)
+            nodes.append({'id': agent.name})
+            nodes.append({'id': agent_bs})
+            edges.append({'from': agent_bs, 'to': agent.name})
+            edges.append({'from': agent_bs, 'to': action_name})
+            # Add to the Kami typing dict
+            typing_dict.update({agent.name: 'agent', agent_bs: 'locus'})
+        nugget_dict['graph']['nodes'] = nodes
         nugget_dict['graph']['edges'] = edges
-
+        # Typing dicts linking the nugget to the Action Graph and to the
+        # Kami graph
+        typing_dict_ag = {'from': rule_name, 'to': 'action_graph',
+                          'typing': {}, 'total': False,
+                          'ignore_attrs': False}
+        typing_dict_kami = {'from': rule_name, 'to': 'kami',
+                            'typing': typing_dict, 'total': True,
+                            'ignore_attrs': True}
+        # Add the graphs for this nugget to the graphs and typing lists
+        model['typing'] += [typing_dict_ag, typing_dict_kami]
         model['graphs'].append(nugget_dict)
 
-        typing_dict_ag = {}
-        typing_dict_ag['from'] = rule_name
-        typing_dict_ag['to'] = 'action_graph'
-        typing_dict_ag['typing'] = {}
-        typing_dict_ag['total'] = False
-        typing_dict_ag['ignore_attrs'] = False
-        typing_dict_kami = {}
-        typing_dict_kami['from'] = rule_name
-        typing_dict_kami['to'] = 'kami'
-        typing_dict_kami['typing'] = {agent1.name: 'agent',
-                                      agent2.name: 'agent',
-                                      agent1_bs: 'locus',
-                                      agent2_bs: 'locus',
-                                      action_name: 'bnd'}
-        typing_dict_kami['total'] = True
-        typing_dict_kami['ignore_attrs'] = True
-
-        model['typing'] += [typing_dict_ag, typing_dict_kami]
-
-        # In reverse reaction, assume that dissocition is unconditional
         """
+        # In reverse reaction, assume that dissocition is unconditional
         agent1_uncond = get_uncond_agent(agent1)
         agent1_rule_str = get_agent_rule_str(agent1_uncond)
         monomer1_uncond = get_monomer_pattern(model, agent1_uncond)
