@@ -102,8 +102,8 @@ BRAF and MAP2K1.
     map2k1 = Agent('MAP2K1')
     stmt = Phosphorylation(braf, map2k1)
 
-Assembling a PySB model
-```````````````````````
+Assembling a PySB model and exporting to SBML
+````````````````````````````````````````````
 In this example, assume that we have already collected a list of INDRA Statements
 from any of the input sources and that this list is called `stmts`. We will
 instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
@@ -118,3 +118,21 @@ instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
 Here the `model` variable is a PySB Model object representing a rule-based
 executable model, which can be further manipulated, simulated, saved and exported
 to other formats.
+
+For instance, exporting the model to `SBML <http://sbml.org>`_ format can
+be done as
+
+.. code:: python
+
+    sbml_model = pa.export_model('sbml')
+
+which gives an SBML model string in the `sbml_model` variable, or as
+
+.. code:: python
+
+    pa.export_model('sbml', file_name='model.sbml')
+
+which writes the SBML model into the `model.sbml` file. Other formats for export
+that are supported include BNGL, Kappa and Matlab. For a full list, see the
+`PySB export module
+<http://docs.pysb.org/en/latest/modules/export/index.html>`_.
