@@ -1,13 +1,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 import itertools
 import indra.statements as ist
 from indra.assemblers.pysb_assembler import \
         PysbAssembler,\
         UnknownPolicyError, \
-        get_binding_site_name, PysbPreassembler, _BaseAgent, _BaseAgentSet, \
+        get_binding_site_name, PysbPreassembler, \
         get_agent_rule_str, abbrevs, states, get_mod_site_name
 
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
+
+logger = logging.getLogger('kami_assembler')
 
 class KamiAssembler(PysbAssembler):
     def make_model(self, policies=None, initial_conditions=True,
@@ -56,7 +65,6 @@ class KamiAssembler(PysbAssembler):
         self.model['graphs'] = graphs
         self.model['typing'] = []
 
-        # Add the monomers to the model based on our BaseAgentSet
         # Action graph generated here
         action_graph = {'id': 'action_graph',
                         'attrs': {'name': 'action_graph'}}
@@ -107,21 +115,7 @@ class KamiAssembler(PysbAssembler):
 # COMPLEX ############################################################
 
 def complex_monomers_one_step(stmt, agent_set):
-    """In this (very simple) implementation, proteins in a complex are
-    each given site names corresponding to each of the other members
-    of the complex (lower case). So the resulting complex can be
-    "fully connected" in that each member can be bound to
-    all the others."""
-    for i, member in enumerate(stmt.members):
-        gene_mono = agent_set.get_create_base_agent(member)
-
-        # Specify a binding site for each of the other complex members
-        # bp = abbreviation for "binding partner"
-        for j, bp in enumerate(stmt.members):
-            # The protein doesn't bind to itstmt!
-            if i == j:
-                continue
-            gene_mono.create_site(get_binding_site_name(bp))
+    pass
 
 
 complex_monomers_default = complex_monomers_one_step
