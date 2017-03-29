@@ -141,9 +141,10 @@ class SifAssembler(object):
         node_list = {}
         for node, data in self.graph.nodes(data=True):
             node_name = data['name']
-            nodex = 370
-            nodey = 257
-            node_attr = [node_id, nodex, nodey, 1, node_name, 4]
+            nodex = int(500*numpy.random.rand())
+            nodey = int(500*numpy.random.rand())
+            hue = int(5*numpy.random.rand())
+            node_attr = [node_id, nodex, nodey, 1, node_name, hue]
             node_list[node] = node_attr
             node_id += 1
         nodes = list(node_list.values())
