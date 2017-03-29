@@ -279,47 +279,73 @@ def modification_assemble_one_step(stmt, model, agent_set):
 
 
 def demodification_monomers_one_step(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    pass
 
 
 def demodification_assemble_one_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
+
+    # Define some basic parameters for the modification
     demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-                stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 1e-6)
-
-    demod_site = get_mod_site_name(mod_condition_name,
+    mod_condition_name = ist.modtype_to_inverse[demod_condition_name]
+    mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: mod_site_state})
 
+    # Make a nugget name
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     nugget_name = '%s_%s_%s_%s' % \
-                (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(nugget_name,
-             enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
-             kf_demod)
-    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(nugget_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
+        (rule_enz_str, demod_condition_name, rule_sub_str, mod_site)
+    action_name =  nugget_name + '_act'
+    kf_mod = 1e-6
+    nugget_dict = {'id': nugget_name,
+                   'graph': {'attrs':
+                                {'name': nugget_name,
+                                 'rate': kf_mod}}}
+
+    # Initialize dicts/lists for this nugget
+    nodes = [{'id': action_name}]
+    edges = []
+    typing_dict = {action_name: 'bnd'}
+
+    # Add enzyme conditions
+    enz_nodes, enz_edges, enz_types = get_agent_conditions(stmt.enz)
+    nodes += enz_nodes
+    edges += enz_edges
+    typing_dict.update(enz_types)
+
+    # Add substrate conditions
+    sub_nodes, sub_edges, sub_types = get_agent_conditions(stmt.sub)
+    nodes += sub_nodes
+    edges += sub_edges
+    typing_dict.update(sub_types)
+
+    # Add nodes/edges/types for the modification itself
+    nodes.append({'id': mod_site, 'attrs': {'val': mod_site_state}})
+    nodes.append({'id': action_name, 'attrs': {'val': unmod_site_state}})
+    edges.append({'from': mod_site, 'to': stmt.sub.name})
+    edges.append({'from': action_name, 'to': mod_site})
+    edges.append({'from': stmt.enz.name, 'to': action_name})
+    typing_dict.update({stmt.enz.name: 'agent', stmt.sub.name: 'agent',
+                        mod_site: 'site', action_name: 'mod'})
+    nugget_dict['graph']['nodes'] = nodes
+    nugget_dict['graph']['edges'] = edges
+
+    # Typing dicts linking the nugget to the Action Graph and to the
+    # Kami graph
+    typing_dict_ag = {'from': nugget_name, 'to': 'action_graph',
+                      'mapping': {}, 'total': False,
+                      'ignore_attrs': False}
+    typing_dict_kami = {'from': nugget_name, 'to': 'kami',
+                        'mapping': typing_dict, 'total': True,
+                        'ignore_attrs': True}
+    # Add the graphs for this nugget to the graphs and typing lists
+    model['typing'] += [typing_dict_ag, typing_dict_kami]
+    model['graphs'].append(nugget_dict)
+
 
 modification_monomers_default = modification_monomers_one_step
 modification_assemble_default = modification_assemble_one_step
