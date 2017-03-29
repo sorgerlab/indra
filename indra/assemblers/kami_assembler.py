@@ -130,9 +130,9 @@ def complex_assemble_one_step(stmt, model, agent_set):
         action_name =  nugget_name + '_act'
         kf_bind = 1e-6
         nugget_dict = {'id': nugget_name,
-                       'graph': {'attrs':
-                                    {'name': nugget_name,
-                                     'rate': kf_bind}}}
+                       'graph': {},
+                       'attrs': {'name': nugget_name,
+                                  'rate': kf_bind}}
         # Initialize dicts/lists for this nugget
         nodes = [{'id': action_name}]
         edges = []
@@ -171,9 +171,9 @@ def complex_assemble_one_step(stmt, model, agent_set):
         action_name =  nugget_name + '_act'
         kr_bind = 1e-1
         nugget_dict = {'id': nugget_name,
-                       'graph': {'attrs':
-                                    {'name': nugget_name,
-                                     'rate': kr_bind}}}
+                       'attrs': {'name': nugget_name,
+                                 'rate': kr_bind},
+                       'graph': {}}
         # Initialize dicts/lists for this nugget
         nodes = [{'id': action_name}]
         edges = []
@@ -227,9 +227,9 @@ def modification_assemble_one_step(stmt, model, agent_set):
     action_name =  nugget_name + '_act'
     kf_mod = 1e-6
     nugget_dict = {'id': nugget_name,
-                   'graph': {'attrs':
-                                {'name': nugget_name,
-                                 'rate': kf_mod}}}
+                   'graph': {},
+                   'attrs': {'name': nugget_name,
+                             'rate': kf_mod}}
 
     # Initialize dicts/lists for this nugget
     nodes = [{'id': action_name}]
@@ -296,9 +296,9 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     action_name =  nugget_name + '_act'
     kf_mod = 1e-6
     nugget_dict = {'id': nugget_name,
-                   'graph': {'attrs':
-                                {'name': nugget_name,
-                                 'rate': kf_mod}}}
+                   'graph': {},
+                   'attrs': {'name': nugget_name,
+                             'rate': kf_mod}}
 
     # Initialize dicts/lists for this nugget
     nodes = [{'id': action_name}]
