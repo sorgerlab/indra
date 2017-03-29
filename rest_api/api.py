@@ -1,3 +1,4 @@
+import sys
 import json
 import logging
 from bottle import route, run, request, default_app, response
@@ -5,6 +6,7 @@ from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
                              CyJSAssembler
+import indra.tools.assemble_corpus as ac
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -21,6 +23,7 @@ def allow_cors(func):
 
 ### TRIPS ###
 @route('/trips/process_text', method='POST')
+@allow_cors
 def trips_process_text():
     """Process text with TRIPS and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -36,6 +39,7 @@ def trips_process_text():
     return res
 
 @route('/trips/process_xml', method='POST')
+@allow_cors
 def trips_process_xml():
     """Process TRIPS EKB XML and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -69,6 +73,7 @@ def reach_process_text():
     return res
 
 @route('/reach/process_json', method='POST')
+@allow_cors
 def reach_process_json():
     """Process REACH json and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -84,6 +89,7 @@ def reach_process_json():
     return res
 
 @route('/reach/process_pmc', method='POST')
+@allow_cors
 def reach_process_pmc():
     """Process PubMedCentral article and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -101,6 +107,7 @@ def reach_process_pmc():
 
 ### BEL ###
 @route('/bel/process_ndex_neighborhood', method='POST')
+@allow_cors
 def bel_process_ndex_neighborhood():
     """Process BEL Large Corpus neighborhood and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -116,6 +123,7 @@ def bel_process_ndex_neighborhood():
     return res
 
 @route('/bel/process_belrdf', method='POST')
+@allow_cors
 def bel_process_belrdf():
     """Process BEL RDF and return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -132,6 +140,7 @@ def bel_process_belrdf():
 
 ### BioPAX ###
 @route('/biopax/process_pc_pathsbetween', method='POST')
+@allow_cors
 def biopax_process_pc_pathsbetween():
     """Process PathwayCommons paths between genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -147,6 +156,7 @@ def biopax_process_pc_pathsbetween():
     return res
 
 @route('/biopax/process_pc_pathsfromto', method='POST')
+@allow_cors
 def biopax_process_pc_pathsfromto():
     """Process PathwayCommons paths from-to genes, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -163,6 +173,7 @@ def biopax_process_pc_pathsfromto():
     return res
 
 @route('/biopax/process_pc_neighborhood', method='POST')
+@allow_cors
 def biopax_process_pc_neighborhood():
     """Process PathwayCommons neighborhood, return INDRA Statements."""
     response = request.body.read().decode('utf-8')
@@ -182,6 +193,7 @@ def biopax_process_pc_neighborhood():
 ### PYSB ###
 
 @route('/assemblers/pysb', method='POST')
+@allow_cors
 def assemble_pysb():
     """Assemble INDRA Statements and return PySB model string."""
     response = request.body.read().decode('utf-8')
@@ -198,6 +210,7 @@ def assemble_pysb():
 ### CX ###
 
 @route('/assemblers/cx', method='POST')
+@allow_cors
 def assemble_cx():
     """Assemble INDRA Statements and return CX network json."""
     response = request.body.read().decode('utf-8')
@@ -212,6 +225,7 @@ def assemble_cx():
 ### GRAPH ###
 
 @route('/assemblers/graph', method='POST')
+@allow_cors
 def assemble_graph():
     """Assemble INDRA Statements and return Graphviz graph dot string."""
     response = request.body.read().decode('utf-8')
@@ -246,7 +260,95 @@ def assemble_cyjs():
     model_str = cja.print_cyjs()
     return model_str
 
+@route('/preassembly/map_grounding', method='POST')
+@allow_cors
+def map_grounding():
+    """Map grounding on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.map_grounding(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/map_sequence', method='POST')
+@allow_cors
+def map_grounding():
+    """Map sequence on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.map_sequence(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/run_preassembly', method='POST')
+@allow_cors
+def run_preassembly():
+    """Run preassembly on a list of INDRA Statements."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.run_preassembly(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/filter_by_type', method='POST')
+@allow_cors
+def filter_by_type():
+    """Filter to a given INDRA Statement type."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmt_type_str = body.get('type')
+    stmt_type_str = stmt_type_str.capitalize()
+    stmt_type = getattr(sys.modules[__name__], stmt_type_str)
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_by_type(stmts, stmt_type)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+@route('/preassembly/filter_grounded_only', method='POST')
+@allow_cors
+def filter_grounded_only():
+    """Filter to grounded Statements only."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_grounded_only(stmts)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
 if __name__ == '__main__':
     app = default_app()
-    run(app)
+    run(app, host='0.0.0.0', port='8080')
 
