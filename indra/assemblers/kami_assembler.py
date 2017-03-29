@@ -232,7 +232,7 @@ def modification_assemble_one_step(stmt, model, agent_set):
                              'rate': kf_mod}}
 
     # Initialize dicts/lists for this nugget
-    nodes = [{'id': action_name}]
+    nodes = []
     edges = []
     typing_dict = {action_name: 'bnd'}
 
@@ -249,6 +249,8 @@ def modification_assemble_one_step(stmt, model, agent_set):
     typing_dict.update(sub_types)
 
     # Add nodes/edges/types for the modification itself
+    nodes.append({'id': stmt.enz.name})
+    nodes.append({'id': stmt.sub.name})
     nodes.append({'id': mod_site, 'attrs': {'val': unmod_site_state}})
     nodes.append({'id': action_name, 'attrs': {'val': mod_site_state}})
     edges.append({'from': mod_site, 'to': stmt.sub.name})
@@ -301,7 +303,7 @@ def demodification_assemble_one_step(stmt, model, agent_set):
                              'rate': kf_mod}}
 
     # Initialize dicts/lists for this nugget
-    nodes = [{'id': action_name}]
+    nodes = []
     edges = []
     typing_dict = {action_name: 'bnd'}
 
@@ -318,13 +320,15 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     typing_dict.update(sub_types)
 
     # Add nodes/edges/types for the modification itself
+    nodes.append({'id': stmt.enz.name})
+    nodes.append({'id': stmt.sub.name})
     nodes.append({'id': mod_site, 'attrs': {'val': mod_site_state}})
     nodes.append({'id': action_name, 'attrs': {'val': unmod_site_state}})
     edges.append({'from': mod_site, 'to': stmt.sub.name})
     edges.append({'from': action_name, 'to': mod_site})
     edges.append({'from': stmt.enz.name, 'to': action_name})
     typing_dict.update({stmt.enz.name: 'agent', stmt.sub.name: 'agent',
-                        mod_site: 'site', action_name: 'mod'})
+                        mod_site: 'state', action_name: 'mod'})
     nugget_dict['graph']['nodes'] = nodes
     nugget_dict['graph']['edges'] = edges
 

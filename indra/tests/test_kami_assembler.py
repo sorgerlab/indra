@@ -85,28 +85,28 @@ def test_mod_one_step():
     ka = KamiAssembler()
     ka.add_statements([stmt])
     model = ka.make_model()
+    print(json.dumps(model, indent=1))
     assert isinstance(model, dict)
     assert isinstance(model['graphs'], list)
     assert isinstance(model['typing'], list)
     graph_list = model['graphs']
     assert len(graph_list) == 2
     assert len(graph_list[1]['graph']['edges']) == 3
-    assert len(graph_list[1]['graph']['nodes']) == 3
-    print(json.dumps(model, indent=1))
+    assert len(graph_list[1]['graph']['nodes']) == 4
 
 def test_demod_one_step():
     stmt = Deubiquitination(mek, erk, 'K', '123')
     ka = KamiAssembler()
     ka.add_statements([stmt])
     model = ka.make_model()
+    print(json.dumps(model, indent=1))
     assert isinstance(model, dict)
     assert isinstance(model['graphs'], list)
     assert isinstance(model['typing'], list)
     graph_list = model['graphs']
     assert len(graph_list) == 2
     assert len(graph_list[1]['graph']['edges']) == 3
-    assert len(graph_list[1]['graph']['nodes']) == 3
-    print(json.dumps(model, indent=1))
+    assert len(graph_list[1]['graph']['nodes']) == 4
 
 if __name__ == '__main__':
     test_phosphorylation_no_site()
