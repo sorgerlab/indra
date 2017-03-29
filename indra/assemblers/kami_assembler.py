@@ -4,7 +4,7 @@ from indra.assemblers.pysb_assembler import \
         PysbAssembler,\
         UnknownPolicyError, \
         get_binding_site_name, PysbPreassembler, _BaseAgent, _BaseAgentSet, \
-        get_agent_rule_str
+        get_agent_rule_str, abbrevs, states
 import itertools
 
 class KamiAssembler(PysbAssembler):
@@ -294,6 +294,21 @@ def get_agent_conditions(agent):
                   {'from': agent_bs, 'to': test_name}]
         types.update({agent_bs: 'locus',
                       test_name: test_type})
+
+    for mod in agent.mods:
+        mod_site_str = abbrevs[mod.mod_type]
+        if mod.residue is not None:
+            mod_site_str = mod.residue
+        mod_pos_str = mod.position if mod.position is not None else ''
+        mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
+        site_states = states[mod.mod_type]
+        if mod.is_modified:
+            val = site_states[1]
+        else:
+            val = site_states[0]
+        nodes += [{'id': mod_site, 'attrs': {'val': val}}]
+        edges += [{'from': mod_site, 'to': agent.name}]
+        types.update({mod_site: 'state'})
 
     return nodes, edges, types
 
