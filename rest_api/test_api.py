@@ -33,3 +33,11 @@ def test_filter_grounded_only():
     stmts_json = res_json.get('statements')
     stmts = stmts_from_json(stmts_json)
     assert(len(stmts) == 1)
+
+def test_loopy():
+    url = base_url + '/reach/process_text'
+    res = requests.post(url, json={'text': 'MEK activates ERK.'})
+    url = base_url + '/assemblers/sif/loopy'
+    res = requests.post(url, json=res.json())
+    res_json = res.json()
+    print(res_json.get('loopy_url'))

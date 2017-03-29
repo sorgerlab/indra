@@ -5,7 +5,7 @@ from bottle import route, run, request, default_app, response
 from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-                             CyJSAssembler
+                             CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
 
 logger = logging.getLogger('rest_api')
@@ -259,6 +259,20 @@ def assemble_cyjs():
                         n_bins = 9)
     model_str = cja.print_cyjs()
     return model_str
+
+@route('/assemblers/sif/loopy', method='POST')
+@allow_cors
+def assemble_loopy():
+    """Assemble INDRA Statements into a Loopy model using SIF Assembler."""
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    sa = SifAssembler(stmts)
+    sa.make_model(use_name_as_key=True)
+    model_str = sa.print_loopy(as_url=True)
+    res = {'loopy_url': model_str}
+    return res
 
 @route('/preassembly/map_grounding', method='POST')
 @allow_cors
