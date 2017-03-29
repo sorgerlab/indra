@@ -155,6 +155,10 @@ def complex_assemble_one_step(stmt, model, agent_set):
         edges = []
         typing_dict = {action_name: 'bnd'}
         for agent in pair:
+            agent_nodes, agent_edges, agent_types = get_agent_conditions(agent)
+            nodes += agent_nodes
+            edges += agent_edges
+            typing_dict.update(agent_types)
             # Construct full patterns of each agent with conditions
             #agent1_pattern = get_monomer_pattern(model, agent1)
             agent_bs = get_binding_site_name(agent)
@@ -268,3 +272,65 @@ def phosphorylation_assemble_one_step(stmt, model, agent_set):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
     """
+
+def get_agent_conditions(agent):
+    nodes = []
+    edges = []
+    types = {}
+    # Handle bound conditions
+    for bc in agent.bound_conditions:
+        # Here we make the assumption that the binding site
+        # is simply named after the binding partner
+        if bc.is_bound:
+            test_type = 'is_bnd'
+        else:
+            test_type = 'is_free'
+        bound_name = bc.agent.name
+        agent_bs = get_binding_site_name(bc.agent)
+        test_name = '%s_bound_to_%s_test' % (agent.name, bound_name)
+        nodes += [{'id': agent_bs},
+                  {'id': test_name}]
+        edges += [{'from': agent_bs, 'to': agent.name},
+                  {'from': agent_bs, 'to': test_name}]
+        types.update({agent_bs: 'locus',
+                      test_name: test_type})
+
+    return nodes, edges, types
+
+    # Handle modifications
+    for mod in agent.mods:
+        mod_site_str = abbrevs[mod.mod_type]
+        if mod.residue is not None:
+            mod_site_str = mod.residue
+        mod_pos_str = mod.position if mod.position is not None else ''
+        mod_site = ('%s%s' % (mod_site_str, mod_pos_str))
+        site_states = states[mod.mod_type]
+        if mod.is_modified:
+            pattern[mod_site] = (site_states[1], WILD)
+        else:
+            pattern[mod_site] = (site_states[0], WILD)
+
+    # Handle mutations
+    for mc in agent.mutations:
+        res_from = mc.residue_from if mc.residue_from else 'mut'
+        res_to = mc.residue_to if mc.residue_to else 'X'
+        if mc.position is None:
+            mut_site_name = res_from
+        else:
+            mut_site_name = res_from + mc.position
+        pattern[mut_site_name] = res_to
+
+    # Handle location
+    if agent.location is not None:
+        pattern['loc'] = _n(agent.location)
+
+    # Handle activity
+    if agent.activity is not None:
+        active_site_name = agent.activity.activity_type
+        if agent.activity.is_active:
+            active_site_state = 'active'
+        else:
+            active_site_state = 'inactive'
+        pattern[active_site_name] = active_site_state
+
+    return pattern
