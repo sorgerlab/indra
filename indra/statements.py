@@ -1,5 +1,5 @@
 """
-Statements representing mechanistic relationships between biological agents.
+Statements represent mechanistic relationships between biological agents.
 
 Statement classes follow an inheritance hierarchy, with all Statement types
 inheriting from the parent class :py:class:`Statement`. At
@@ -76,6 +76,46 @@ of context specified on them including
 The *active* form of an agent (in terms
 of its post-translational modifications or bound state) is indicated by an
 instance of the class :py:class:`ActiveForm`.
+
+Agents also carry grounding information which links them to database entries.
+These database references are represented as a dictionary in the `db_refs`
+attribute of each Agent. The dictionary can have multiple entries. For
+instance, INDRA's input Processors produce genes and proteins that carry
+both UniProt and HGNC IDs in db_refs, whenever possible. Bioentities provides
+a name space for protein families that are typically used in the literature.
+More information about Bioentities can be found here:
+https://github.com/sorgerlab/bioentities
+
++------------------------+------------------+--------------------------+
+| Type                   | Database         | Example                  |
++========================+==================+==========================+
+| Gene/Protein           | HGNC             | {'HGNC': '11998'}        |
++------------------------+------------------+--------------------------+
+| Gene/Protein           | UniProt          | {'UP': 'P04637'}         |
++------------------------+------------------+--------------------------+
+| Gene/Protein family    | Bioentities      | {'BE': 'ERK'}            |
++------------------------+------------------+--------------------------+
+| Gene/Protein family    | InterPro         | {'IP': 'IPR000308'}      |
++------------------------+------------------+--------------------------+
+| Gene/Protein family    | Pfam             | {'PF': 'PF00071'}        |
++------------------------+------------------+--------------------------+
+| Gene/Protein family    | NextProt family  | {'NXPFAM': '03114'}      |
++------------------------+------------------+--------------------------+
+| Chemical               | ChEBI            | {'CHEBI': 'CHEBI:63637'} |
++------------------------+------------------+--------------------------+
+| Chemical               | PubChem          | {'PUBCHEM': '42611257'}  |
++------------------------+------------------+--------------------------+
+| Metabolite             | HMDB             | {'HMDB': 'HMDB00122'}    |
++------------------------+------------------+--------------------------+
+| Process, location, etc.| GO               | {'GO': 'GO:0006915'}     |
++------------------------+------------------+--------------------------+
+| Process, disease, etc. | MeSH             | {'MESH': 'D008113'}      |
++------------------------+------------------+--------------------------+
+| General terms          | NCIT             | {'NCIT': 'C28597'}       |
++------------------------+------------------+--------------------------+
+| Raw text               | TEXT             | {'TEXT': 'Nf-kappaB'}    |
++------------------------+------------------+--------------------------+
+
 
 The evidence for a given Statement, which could include relevant citations,
 database identifiers, and passages of text from the scientific literature, is
