@@ -12,7 +12,13 @@ def test_phosphorylation_no_site():
     ka = KamiAssembler()
     ka.add_statements([stmt])
     model = ka.make_model()
-    assert model == {'foo': 'bar'}
+    assert isinstance(model, dict)
+    assert isinstance(model['graphs'], list)
+    assert isinstance(model['typing'], list)
+    graph_list = model['graphs']
+    assert len(graph_list) == 2
+    assert len(graph_list[1]['graph']['edges']) == 4
+    assert len(graph_list[1]['graph']['nodes']) == 5
 
 if __name__ == '__main__':
     test_phosphorylation_no_site()

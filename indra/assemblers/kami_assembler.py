@@ -3,8 +3,9 @@ from builtins import dict, str
 from indra.assemblers.pysb_assembler import \
         PysbAssembler,\
         UnknownPolicyError, \
-        get_binding_site_name, PysbPreassembler, _BaseAgent, _BaseAgentSet
-
+        get_binding_site_name, PysbPreassembler, _BaseAgent, _BaseAgentSet, \
+        get_agent_rule_str
+import itertools
 
 class KamiAssembler(PysbAssembler):
     def make_model(self, policies=None, initial_conditions=True,
@@ -48,14 +49,22 @@ class KamiAssembler(PysbAssembler):
                 local_policies.update(policies)
             self.policies = local_policies
         self.model = {}
+        graphs = []
+        self.model['graphs'] = graphs
+        self.model['typing'] = []
         self.agent_set = _BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
         self._monomers()
         # Add the monomers to the model based on our BaseAgentSet
         # Action graph generated here
+        action_graph = {'id': 'action_graph', 'name': 'action_graph'}
+        action_graph['graph'] = {}
+        graphs.append(action_graph)
+        """
         for agent_name, agent in self.agent_set.items():
-            pass
+            nodes = []
+            edges = []
             #m = Monomer(_n(agent_name), agent.sites, agent.site_states)
             #m.site_annotations = agent.site_annotations
             #self.model.add_component(m)
@@ -63,7 +72,7 @@ class KamiAssembler(PysbAssembler):
             #    a = get_annotation(m, db_name, db_ref)
             #    if a is not None:
             #        self.model.add_annotation(a)
-
+        """
         # Iterate over the statements to generate rules
         self._assemble()
         # Add initial conditions
@@ -103,6 +112,140 @@ class KamiAssembler(PysbAssembler):
                 raise UnknownPolicyError('%s function %s not defined' %
                                          (stage, func_name))
         return func(stmt, *args)
+
+
+# COMPLEX ############################################################
+
+def complex_monomers_one_step(stmt, agent_set):
+    """In this (very simple) implementation, proteins in a complex are
+    each given site names corresponding to each of the other members
+    of the complex (lower case). So the resulting complex can be
+    "fully connected" in that each member can be bound to
+    all the others."""
+    for i, member in enumerate(stmt.members):
+        gene_mono = agent_set.get_create_base_agent(member)
+
+        # Specify a binding site for each of the other complex members
+        # bp = abbreviation for "binding partner"
+        for j, bp in enumerate(stmt.members):
+            # The protein doesn't bind to itstmt!
+            if i == j:
+                continue
+            gene_mono.create_site(get_binding_site_name(bp))
+
+
+complex_monomers_default = complex_monomers_one_step
+
+
+def complex_assemble_one_step(stmt, model, agent_set):
+    pairs = itertools.combinations(stmt.members, 2)
+    for pair in pairs:
+        agent1 = pair[0]
+        agent2 = pair[1]
+        param_name = agent1.name[0].lower() + \
+                     agent2.name[0].lower() + '_bind'
+        kf_bind = 1e-6
+        kr_bind = 1e-1
+
+        # Make a rule name
+        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
+        rule_name += '_bind'
+
+        # Construct full patterns of each agent with conditions
+        #agent1_pattern = get_monomer_pattern(model, agent1)
+        #agent2_pattern = get_monomer_pattern(model, agent2)
+        agent1_bs = get_binding_site_name(agent2)
+        agent2_bs = get_binding_site_name(agent1)
+        """
+        #r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) + \
+        #                    agent2_pattern(**{agent2_bs: None}) >>
+        #                    agent1_pattern(**{agent1_bs: 1}) % \
+        #                    agent2_pattern(**{agent2_bs: 1}),
+        #                    kf_bind)
+        anns = [Annotation(rule_name, agent1_pattern.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, agent1_pattern.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, agent2_pattern.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, agent2_pattern.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+        add_rule_to_model(model, r, anns)
+        """
+        nugget_dict = {}
+        nugget_dict['id'] = rule_name
+        nugget_dict['name'] = rule_name
+        nugget_dict['graph'] = {'attributes':
+                                 {'name': rule_name,
+                                  'rate': kf_bind}}
+        nodes = []
+        action_name =  rule_name + '_act'
+        nodes.append({'id': agent1.name})
+        nodes.append({'id': agent1_bs})
+        nodes.append({'id': agent2.name})
+        nodes.append({'id': agent2_bs})
+        nodes.append({'id': action_name})
+        nugget_dict['graph']['nodes'] = nodes
+
+        edges = []
+        edges.append({'from': agent1_bs, 'to': agent1.name})
+        edges.append({'from': agent2_bs, 'to': agent2.name})
+        edges.append({'from': agent1_bs, 'to': action_name})
+        edges.append({'from': agent2_bs, 'to': action_name})
+        nugget_dict['graph']['edges'] = edges
+
+        model['graphs'].append(nugget_dict)
+
+        typing_dict_ag = {}
+        typing_dict_ag['from'] = rule_name
+        typing_dict_ag['to'] = 'action_graph'
+        typing_dict_ag['typing'] = {}
+        typing_dict_ag['total'] = False
+        typing_dict_ag['ignore_attrs'] = False
+        typing_dict_kami = {}
+        typing_dict_kami['from'] = rule_name
+        typing_dict_kami['to'] = 'kami'
+        typing_dict_kami['typing'] = {agent1.name: 'agent',
+                                      agent2.name: 'agent',
+                                      agent1_bs: 'locus',
+                                      agent2_bs: 'locus',
+                                      action_name: 'bnd'}
+        typing_dict_kami['total'] = True
+        typing_dict_kami['ignore_attrs'] = True
+
+        model['typing'] += [typing_dict_ag, typing_dict_kami]
+
+        # In reverse reaction, assume that dissocition is unconditional
+        """
+        agent1_uncond = get_uncond_agent(agent1)
+        agent1_rule_str = get_agent_rule_str(agent1_uncond)
+        monomer1_uncond = get_monomer_pattern(model, agent1_uncond)
+        agent2_uncond = get_uncond_agent(agent2)
+        agent2_rule_str = get_agent_rule_str(agent2_uncond)
+        monomer2_uncond = get_monomer_pattern(model, agent2_uncond)
+        rule_name = '%s_%s_dissociate' % (agent1_rule_str, agent2_rule_str)
+        r = Rule(rule_name, monomer1_uncond(**{agent1_bs: 1}) % \
+                            monomer2_uncond(**{agent2_bs: 1}) >>
+                            monomer1_uncond(**{agent1_bs: None}) + \
+                            monomer2_uncond(**{agent2_bs: None}),
+                            kr_bind)
+        anns = [Annotation(rule_name, monomer1_uncond.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, monomer1_uncond.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, monomer2_uncond.monomer.name,
+                           'rule_has_subject'),
+                Annotation(rule_name, monomer2_uncond.monomer.name,
+                           'rule_has_object'),
+                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+        add_rule_to_model(model, r, anns)
+        """
+
+complex_assemble_default = complex_assemble_one_step
+
+
+
 
 def phosphorylation_monomers_one_step(stmt, agent_set):
     if stmt.enz is None:
@@ -163,94 +306,3 @@ def phosphorylation_assemble_one_step(stmt, model, agent_set):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
     """
-
-# COMPLEX ############################################################
-
-def complex_monomers_one_step(stmt, agent_set):
-    """In this (very simple) implementation, proteins in a complex are
-    each given site names corresponding to each of the other members
-    of the complex (lower case). So the resulting complex can be
-    "fully connected" in that each member can be bound to
-    all the others."""
-    for i, member in enumerate(stmt.members):
-        gene_mono = agent_set.get_create_base_agent(member)
-
-        # Specify a binding site for each of the other complex members
-        # bp = abbreviation for "binding partner"
-        for j, bp in enumerate(stmt.members):
-            # The protein doesn't bind to itstmt!
-            if i == j:
-                continue
-            gene_mono.create_site(get_binding_site_name(bp))
-
-
-
-complex_monomers_default = complex_monomers_one_step
-
-
-def complex_assemble_one_step(stmt, model, agent_set):
-    model['foo'] = 'bar'
-    """
-    pairs = itertools.combinations(stmt.members, 2)
-    for pair in pairs:
-        agent1 = pair[0]
-        agent2 = pair[1]
-        param_name = agent1.name[0].lower() + \
-                     agent2.name[0].lower() + '_bind'
-        kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-1)
-
-        # Make a rule name
-        rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
-        rule_name += '_bind'
-
-        # Construct full patterns of each agent with conditions
-        agent1_pattern = get_monomer_pattern(model, agent1)
-        agent2_pattern = get_monomer_pattern(model, agent2)
-        agent1_bs = get_binding_site_name(agent2)
-        agent2_bs = get_binding_site_name(agent1)
-        r = Rule(rule_name, agent1_pattern(**{agent1_bs: None}) + \
-                            agent2_pattern(**{agent2_bs: None}) >>
-                            agent1_pattern(**{agent1_bs: 1}) % \
-                            agent2_pattern(**{agent2_bs: 1}),
-                            kf_bind)
-        anns = [Annotation(rule_name, agent1_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, agent1_pattern.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, agent2_pattern.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, agent2_pattern.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-        add_rule_to_model(model, r, anns)
-
-
-        # In reverse reaction, assume that dissocition is unconditional
-
-        agent1_uncond = get_uncond_agent(agent1)
-        agent1_rule_str = get_agent_rule_str(agent1_uncond)
-        monomer1_uncond = get_monomer_pattern(model, agent1_uncond)
-        agent2_uncond = get_uncond_agent(agent2)
-        agent2_rule_str = get_agent_rule_str(agent2_uncond)
-        monomer2_uncond = get_monomer_pattern(model, agent2_uncond)
-        rule_name = '%s_%s_dissociate' % (agent1_rule_str, agent2_rule_str)
-        r = Rule(rule_name, monomer1_uncond(**{agent1_bs: 1}) % \
-                            monomer2_uncond(**{agent2_bs: 1}) >>
-                            monomer1_uncond(**{agent1_bs: None}) + \
-                            monomer2_uncond(**{agent2_bs: None}),
-                            kr_bind)
-        anns = [Annotation(rule_name, monomer1_uncond.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, monomer1_uncond.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, monomer2_uncond.monomer.name,
-                           'rule_has_subject'),
-                Annotation(rule_name, monomer2_uncond.monomer.name,
-                           'rule_has_object'),
-                Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-        add_rule_to_model(model, r, anns)
-    """
-
-complex_assemble_default = complex_assemble_one_step
-
