@@ -183,7 +183,7 @@ class BoundCondition(object):
             return None
         is_bound = json_dict.get('is_bound')
         if is_bound is None:
-            logger.error('BoundCondition missing is_bound, defaulting to True.')
+            logger.warning('BoundCondition missing is_bound, defaulting to True.')
             is_bound = True
         bc = BoundCondition(agent, is_bound)
         assert(unicode_strs(bc))
@@ -353,12 +353,14 @@ class ModCondition(object):
     @classmethod
     def _from_json(cls, json_dict):
         mod_type = json_dict.get('mod_type')
-        residue = json_dict.get('residue')
-        position = json_dict.get('position')
-        is_modified = json_dict.get('is_modified')
         if not mod_type:
             logger.error('ModCondition missing mod_type.')
             return None
+        if mod_type not in modtype_to_modclass.keys():
+            logger.warning('Unknown modification type: %s' % mod_type)
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        is_modified = json_dict.get('is_modified')
         if is_modified is None:
             logger.warning('ModCondition missing is_modified, defaulting to True')
             is_modified = True
