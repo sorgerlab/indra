@@ -2289,7 +2289,7 @@ modclass_to_modtype = {cls: cls.__name__.lower() for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
-modtype_to_modclass[Modification] = 'modification'
+modclass_to_modtype[Modification] = 'modification'
 # These are the modification types that are valid in ModConditions
 modtype_conditions = [modclass_to_modtype[mt] for mt in \
                       AddModification.__subclasses__()]
