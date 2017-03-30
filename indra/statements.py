@@ -2279,13 +2279,13 @@ def _read_amino_acids():
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
 # Mapping between modification type strings and subclasses of Modification
-modtype_to_modclass = {cls.__name__.lower(): cls for cls in \
+modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modtype_to_modclass['modification'] = Modification
 
-modclass_to_modtype = {cls: cls.__name__.lower() for cls in \
+modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
