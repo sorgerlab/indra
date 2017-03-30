@@ -42,14 +42,19 @@ class SparserProcessor(object):
 
     def get_modifications(self):
         mod_events = {}
-        for mod_type in _mod_class_map.keys():
+        mod_types = modtype_to_modclass.keys() + \
+            ['phosphorylate', 'dephosphorylate']
+        for mod_type in mod_types:
             mod_events[mod_type] = self._sems.get(mod_type)
         if not mod_events:
             return
         for mod_type, sems in mod_events.items():
             if not sems:
                 continue
-            indra_class = _mod_class_map.get(mod_type)
+            if mod_type in ['phosphorylate', 'dephosphorylate']:
+                indra_class = modtype_to_modclass.get(mod_type[:-1] + 'ion')
+            else:
+                indra_class = modtype_to_modclass.get(mod_type)
             if indra_class is None:
                 logger.warning('Unhandled modification type %s' % mod_type)
                 continue
@@ -120,6 +125,9 @@ class SparserProcessor(object):
                 else:
                     st = Inhibition(subj, obj, evidence=[ev])
                 self.statements.append(st)
+
+    def get_translocations(self):
+        pass
 
     def _get_agent_from_ref(self, ref):
         # TODO: handle collections
@@ -248,15 +256,6 @@ def get_bioentities_mapping(db_ns, db_id):
         db_id = db_id.split('.')[0]
     be_id = bioentities_map.get((db_ns, db_id))
     return be_id
-
-_mod_class_map = {
-    'phosphorylate': Phosphorylation,
-    'dephosphorylate': Dephosphorylation,
-    'ubiquitination': Ubiquitination,
-    'deubiquitination': Deubiquitination,
-    'farnesylation': Farnesylation,
-    'defarnesylation': Defarnesylation
-    }
 
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
