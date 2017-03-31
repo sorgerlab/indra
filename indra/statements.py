@@ -183,7 +183,7 @@ class BoundCondition(object):
             return None
         is_bound = json_dict.get('is_bound')
         if is_bound is None:
-            logger.error('BoundCondition missing is_bound, defaulting to True.')
+            logger.warning('BoundCondition missing is_bound, defaulting to True.')
             is_bound = True
         bc = BoundCondition(agent, is_bound)
         assert(unicode_strs(bc))
@@ -353,12 +353,14 @@ class ModCondition(object):
     @classmethod
     def _from_json(cls, json_dict):
         mod_type = json_dict.get('mod_type')
-        residue = json_dict.get('residue')
-        position = json_dict.get('position')
-        is_modified = json_dict.get('is_modified')
         if not mod_type:
             logger.error('ModCondition missing mod_type.')
             return None
+        if mod_type not in modtype_to_modclass.keys():
+            logger.warning('Unknown modification type: %s' % mod_type)
+        residue = json_dict.get('residue')
+        position = json_dict.get('position')
+        is_modified = json_dict.get('is_modified')
         if is_modified is None:
             logger.warning('ModCondition missing is_modified, defaulting to True')
             is_modified = True
@@ -2279,17 +2281,17 @@ def _read_amino_acids():
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
 # Mapping between modification type strings and subclasses of Modification
-modtype_to_modclass = {cls.__name__.lower(): cls for cls in \
+modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modtype_to_modclass['modification'] = Modification
 
-modclass_to_modtype = {cls: cls.__name__.lower() for cls in \
+modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in \
                        AddModification.__subclasses__() + \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
-modtype_to_modclass[Modification] = 'modification'
+modclass_to_modtype[Modification] = 'modification'
 # These are the modification types that are valid in ModConditions
 modtype_conditions = [modclass_to_modtype[mt] for mt in \
                       AddModification.__subclasses__()]

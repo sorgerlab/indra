@@ -2,10 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
 from indra.databases import uniprot_client, hgnc_client
-from indra.statements import Statement, Evidence
+from indra.statements import stmts_from_json, Evidence
 
-active_forms_files = ['sources/cure-active-forms-2017-01-30.txt',
-                      'sources/r3-egfr-signaling-active-forms-2016-10-18.txt']
+active_forms_files = ['sources/cure-active-forms-2017-03-30.txt']
 
 def read_jsons(fname):
     all_json = []
@@ -14,14 +13,16 @@ def read_jsons(fname):
     lin = [l.strip() for l in lin if l.strip()]
     for l in lin:
         lin_json = json.loads(l)
-        all_json.append(lin_json[0])
+        all_json.append(lin_json)
     return all_json
 
 def read_stmts(fname):
     jsons = read_jsons(fname)
     stmts = []
     for js in jsons:
-        st = Statement.from_json(json.dumps(js))
+        if not isinstance(js['evidence'], list):
+            js['evidence'] = [js['evidence']]
+        st = stmts_from_json(js)
         if not hasattr(st.agent, 'mutations'):
             st.agent.mutations = []
         if not hasattr(st.agent, 'location'):
@@ -35,31 +36,70 @@ def read_stmts(fname):
         st.agent.bound_conditions = []
         stmts.append(st)
     for st in stmts:
-        # Correct evidence
-        if isinstance(st.evidence, Evidence):
-            st.evidence = [st.evidence]
         for ev in st.evidence:
-            ev.source_api = 'r3'
             ev.pmid = None
             ev.source_id = None
             ev.annotations = {}
             ev.epistemics = {}
+        fix_mod_conditions(st.agent)
         fix_protein_grounding(st.agent)
         # Correct supports/supported by
         st.supports = []
         st.supported_by = []
         st.belief = 1
+    stmts = eliminate_duplicates(stmts)
     return stmts
 
+def fix_mod_conditions(agent):
+    for mc in agent.mods:
+        if mc.mod_type == 'glucosylation':
+            mc.mod_type = 'glycosylation'
+        if mc.mod_type == 'fucosylation':
+            mc.mod_type = 'glycosylation'
+
 def fix_protein_grounding(agent):
+    for k, v in agent.db_refs.items():
+        agent.db_refs.pop(k, None)
+        agent.db_refs[k.upper()] = v
     if not agent.db_refs.get('TEXT'):
         agent.db_refs['TEXT'] = agent.name
     up_id = agent.db_refs.get('UP')
     if up_id:
+        up_id = up_id.split('-')[0]
+        agent.db_refs['UP'] = up_id
         hgnc_symbol = uniprot_client.get_gene_name(up_id)
         hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
         if hgnc_id:
+            agent.name = hgnc_symbol
             agent.db_refs['HGNC'] = hgnc_id
+
+def eliminate_duplicates(stmts):
+    stmts_by_ag = {}
+    for stmt in stmts:
+        stmt.agent.db_refs.pop('TEXT', None)
+        try:
+            stmts_by_ag[stmt.agent.name].append(stmt)
+        except KeyError:
+            stmts_by_ag[stmt.agent.name] = [stmt]
+    unique_by_ag = {}
+    for k, v in stmts_by_ag.items():
+        for st in v:
+            found = False
+            try:
+                uniques = unique_by_ag[k]
+            except KeyError:
+                unique_by_ag[k] = []
+                uniques = []
+            for stmt in uniques:
+                if stmt.equals(st):
+                    found = True
+                    break
+            if not found:
+                unique_by_ag[k].append(st)
+    new_stmts = []
+    for k, v in unique_by_ag.items():
+        new_stmts += v
+    return new_stmts
 
 if __name__ == '__main__':
     stmts = []

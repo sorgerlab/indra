@@ -26,8 +26,8 @@ class BeliefEngine(object):
                 'trips': 0.05,
                 'reach': 0.05,
                 'biogrid': 0.01,
-                'sparser': 0.3,
-                'r3': 0.1,
+                'sparser': 0.05,
+                'r3': 0.05,
                 'phosphosite': 0.01,
                 'assertion': 0.0
                 }

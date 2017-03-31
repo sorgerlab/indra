@@ -27,8 +27,12 @@ class SparserProcessor(object):
         # Get citation info
         pmcid = self.tree.attrib.get('pmcid')
         pmid = self.tree.attrib.get('pmid')
+        if not pmid:
+            pmid = self.tree.attrib.get('id')
         self.pmid = None
         if pmid:
+            if pmid.startswith('PMID'):
+                pmid = pmid[4:]
             self.pmid = pmid
         elif pmcid:
             ids = id_lookup(pmcid, 'pmcid')
@@ -38,14 +42,19 @@ class SparserProcessor(object):
 
     def get_modifications(self):
         mod_events = {}
-        for mod_type in _mod_class_map.keys():
+        mod_types = list(modtype_to_modclass.keys()) + \
+            ['phosphorylate', 'dephosphorylate']
+        for mod_type in mod_types:
             mod_events[mod_type] = self._sems.get(mod_type)
         if not mod_events:
             return
         for mod_type, sems in mod_events.items():
             if not sems:
                 continue
-            indra_class = _mod_class_map.get(mod_type)
+            if mod_type in ['phosphorylate', 'dephosphorylate']:
+                indra_class = modtype_to_modclass.get(mod_type[:-1] + 'ion')
+            else:
+                indra_class = modtype_to_modclass.get(mod_type)
             if indra_class is None:
                 logger.warning('Unhandled modification type %s' % mod_type)
                 continue
@@ -117,6 +126,9 @@ class SparserProcessor(object):
                     st = Inhibition(subj, obj, evidence=[ev])
                 self.statements.append(st)
 
+    def get_translocations(self):
+        pass
+
     def _get_agent_from_ref(self, ref):
         # TODO: handle collections
         if ref.attrib.get('category') == 'collection':
@@ -149,12 +161,12 @@ class SparserProcessor(object):
         # If we have a proper UID then we try to reconstruct an Agent from that
         if uid is not None and len(uid.split(':')) == 2:
             db_ns, db_id = uid.split(':')
-            be_id = bioentities_map.get((db_ns, db_id))
+            be_id = get_bioentities_mapping(db_ns, db_id)
             if be_id:
                 db_refs[db_ns] = db_id
                 db_refs['BE'] = be_id
                 agent_name = be_id
-            elif db_ns == 'UP':
+            elif db_ns in ['UP', 'Uniprot']:
                 db_refs['UP'] = db_id
                 gene_name = uniprot_client.get_gene_name(db_id)
                 if gene_name:
@@ -178,7 +190,15 @@ class SparserProcessor(object):
                             hgnc_id = hgnc_client.get_hgnc_id(agent_name)
                             if hgnc_id:
                                 db_refs['HGNC'] = hgnc_id
-            elif db_ns in ['GO', 'CHEBI', 'FA', 'XFAM', 'MESH']:
+            elif db_ns == 'FA':
+                db_refs['NXPFA'] = db_id
+            elif db_ns == 'XFAM':
+                db_refs['PF'] = db_id.split('.')[0]
+            elif db_ns == 'CHEBI':
+                db_refs['CHEBI'] = 'CHEBI:' + db_id
+            elif db_ns in ['GO', 'MESH', 'BE']:
+                db_refs[db_ns] = db_id
+            elif db_ns in ['PR', 'CO', 'CVCL', 'EFO', 'ORPHANET']:
                 db_refs[db_ns] = db_id
             else:
                 logger.warning('Unknown database name space %s' % db_ns)
@@ -213,7 +233,7 @@ class SparserProcessor(object):
                 if position_tag is not None:
                     position = position_tag.text.strip()
         if residue and residue.startswith('phospho'):
-            residue = residue[6:]
+            residue = residue[7:]
             try:
                 residue = get_valid_residue(residue)
             except InvalidResidueError:
@@ -225,14 +245,17 @@ class SparserProcessor(object):
         ev = Evidence(source_api='sparser', pmid=self.pmid, text=text)
         return ev
 
-_mod_class_map = {
-    'phosphorylate': Phosphorylation,
-    'dephosphorylate': Dephosphorylation,
-    'ubiquitination': Ubiquitination,
-    'deubiquitination': Deubiquitination,
-    'farnesylation': Farnesylation,
-    'defarnesylation': Defarnesylation
-    }
+def get_bioentities_mapping(db_ns, db_id):
+    if db_ns == 'FA':
+        db_ns = 'NXP'
+        db_id = 'FA:' + db_id
+    elif db_ns == 'IPR':
+        db_ns = 'IP'
+    elif db_ns == 'XFAM':
+        db_ns = 'PF'
+        db_id = db_id.split('.')[0]
+    be_id = bioentities_map.get((db_ns, db_id))
+    return be_id
 
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
