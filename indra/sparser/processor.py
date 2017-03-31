@@ -42,7 +42,7 @@ class SparserProcessor(object):
 
     def get_modifications(self):
         mod_events = {}
-        mod_types = modtype_to_modclass.keys() + \
+        mod_types = list(modtype_to_modclass.keys()) + \
             ['phosphorylate', 'dephosphorylate']
         for mod_type in mod_types:
             mod_events[mod_type] = self._sems.get(mod_type)
