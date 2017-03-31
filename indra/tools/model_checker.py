@@ -221,12 +221,12 @@ class ModelChecker(object):
         # TODO: Make it optionally possible to return on the first path?
         num_paths = 0
         path_lengths = []
-        for source, polarity, path_length in
+        for source, polarity, path_length in \
                     _find_sources(self.get_im(), obj_obs.name, input_rule_set,
                                   target_polarity):
             num_paths += 1
             path_lengths.append(path_length)
-        if num_paths > 0
+        if num_paths > 0:
             if min(path_lengths) <= 5:
                 # Get the first path
                 for path in _find_sources_with_paths(self.get_im(),
