@@ -107,8 +107,11 @@ class KamiAssembler(PysbAssembler):
             if func is None:
                 # The given statement type doesn't have a default
                 # policy.
-                raise UnknownPolicyError('%s function %s not defined' %
-                                         (stage, func_name))
+                #raise UnknownPolicyError('%s function %s not defined' %
+                #                         (stage, func_name))
+                logger.warning('%s function %s not defined' %
+                               (stage, func_name))
+                return
         return func(stmt, *args)
 
 
