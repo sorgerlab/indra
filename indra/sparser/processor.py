@@ -68,10 +68,13 @@ class SparserProcessor(object):
 
                 # Get substrate agent
                 substrate = event.find("ref/var/[@name='substrate']/ref")
-                # TODO: handle agent-or-substrate
                 if substrate is None:
-                    logger.debug('Skipping phosphorylation without substrate.')
-                    continue
+                    substrate = event.find("ref/var/" +
+                                           "[@name='agent-or-substrate']/ref")
+                    if substrate is None:
+                        logger.debug('Skipping phosphorylation without' +
+                                     'substrate.')
+                        continue
                 sub = self._get_agent_from_ref(substrate)
                 if sub is None:
                     logger.debug('Skipping phosphorylation without substrate.')
