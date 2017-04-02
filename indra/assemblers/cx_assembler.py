@@ -365,6 +365,11 @@ class CxAssembler(object):
                           'n': 'INDRA statement',
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
+        indra_stmt_json = json.dumps(stmt.to_json())
+        edge_attribute = {'po': edge_id,
+                          'n': 'INDRA json',
+                          'v': indra_stmt_json}
+        self.cx['edgeAttributes'].append(edge_attribute)
         # Add the type of statement as the edge type
         stmt_type, stmt_polarity = _get_stmt_type(stmt)
         edge_attribute = {'po': edge_id,

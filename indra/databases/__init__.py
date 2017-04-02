@@ -18,7 +18,6 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'go/%s' % db_id
     elif db_name == 'PUBCHEM':
         if db_id.startswith('PUBCHEM:'):
-            logger.earning('Invalid PUBCHEM ID.')
             db_id = db_id[8:]
         url = identifiers_url + 'pubchem.compound/%s' % db_id
     elif db_name == 'PF':
@@ -36,4 +35,5 @@ def get_identifiers_url(db_name, db_id):
         return None
     else:
         logger.warning('Unhandled name space %s' % db_name)
+        url = None
     return url
