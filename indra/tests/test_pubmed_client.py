@@ -22,12 +22,12 @@ def test_get_pmc_ids():
 def test_get_title():
     title = pubmed_client.get_title('27754804')
     assert(title)
-    assert(title.startswith('Targeting autophagy'))
+    assert(title.lower().startswith('targeting autophagy'))
 
 def test_get_title_prefix():
     title = pubmed_client.get_title('PMID27754804')
     assert(title)
-    assert(title.startswith('Targeting autophagy'))
+    assert(title.lower().startswith('targeting autophagy'))
 
 def test_expand_pagination():
     pages = '456-7'
@@ -42,7 +42,7 @@ def test_get_abstract_notitle():
 
 def test_get_abstract_title():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
-    assert(abstract.startswith('Targeting autophagy'))
+    assert(abstract.lower().startswith('targeting autophagy'))
     assert(abstract.endswith('vemurafenib.'))
     assert unicode_strs(abstract)
 
