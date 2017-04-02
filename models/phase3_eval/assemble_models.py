@@ -19,10 +19,11 @@ def build_prior(genes, out_file):
     return stmts
 
 def read_extra_sources(out_file):
-    trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
+    sparser_stmts += \
+        process_sparser.read_stmts(process_sparser.sentences_folder)
     r3_stmts = process_r3.read_stmts(process_r3.active_forms_files[0])
-    r3_stmts += process_r3.read_stmts(process_r3.active_forms_files[1])
+    trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     phosphosite_stmts, _ = \
         read_phosphosite.read_phosphosite(read_phosphosite.phosphosite_file)
     stmts = trips_stmts + sparser_stmts + r3_stmts + phosphosite_stmts
