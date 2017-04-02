@@ -6,6 +6,9 @@ from indra import sparser
 
 base_folder = os.path.join(os.environ['HOME'],
                            'data/darpa/phase3_eval/sources/sparser-20170330')
+sentences_folder = os.path.join(os.environ['HOME'],
+                           'data/darpa/phase3_eval/sources/sparser-20170210')
+
 
 def get_file_names(base_dir):
     fnames = glob.glob(os.path.join(base_dir, '*.xml'))
