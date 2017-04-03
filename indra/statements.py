@@ -2187,9 +2187,15 @@ def stmts_from_json(json_in):
             uuid_dict[st.uuid] = st
         for st in stmts:
             for i, uid in enumerate(st.supports):
-                st.supports[i] = uuid_dict[uid]
+                try:
+                    st.supports[i] = uuid_dict[uid]
+                except KeyError:
+                    pass
             for i, uid in enumerate(st.supported_by):
-                st.supported_by[i] = uuid_dict[uid]
+                try:
+                    st.supported_by[i] = uuid_dict[uid]
+                except KeyError:
+                    pass
         return stmts
 
 def stmts_to_json(stmts_in):
