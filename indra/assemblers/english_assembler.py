@@ -56,6 +56,10 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_activeform(stmt))
             elif isinstance(stmt, ist.Translocation):
                 stmt_strs.append(_assemble_translocation(stmt))
+            elif isinstance(stmt, ist.RasGef):
+                stmt_strs.append(_assemble_ras_gef(stmt))
+            elif isinstance(stmt, ist.RasGap):
+                stmt_strs.append(_assemble_ras_gap(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         if stmt_strs:
@@ -230,6 +234,20 @@ def _assemble_translocation(stmt):
         stmt_str += ' from the ' + stmt.from_location
     if stmt.to_location is not None:
         stmt_str += ' to the ' + stmt.to_location
+    return _make_sentence(stmt_str)
+
+def _assemble_ras_gap(stmt):
+    """Assemble RasGap statements into text."""
+    subj_str = _assemble_agent_str(stmt.gap)
+    obj_str = _assemble_agent_str(stmt.ras)
+    stmt_str = subj_str + ' inhibits ' + obj_str
+    return _make_sentence(stmt_str)
+
+def _assemble_ras_gef(stmt):
+    """Assemble RasGef statements into text."""
+    subj_str = _assemble_agent_str(stmt.gef)
+    obj_str = _assemble_agent_str(stmt.ras)
+    stmt_str = subj_str + ' activates ' + obj_str
     return _make_sentence(stmt_str)
 
 def _make_sentence(txt):
