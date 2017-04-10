@@ -5,7 +5,7 @@ import itertools
 from collections import defaultdict
 import indra.statements as ist
 from indra.assemblers.pysb_assembler import \
-        PysbAssembler,\
+        PysbAssembler, _is_whitelisted, \
         UnknownPolicyError, \
         get_binding_site_name, PysbPreassembler, \
         get_agent_rule_str, abbrevs, states, get_mod_site_name
@@ -84,6 +84,11 @@ class KamiAssembler(PysbAssembler):
 
         return self.model
 
+    def _assemble(self):
+        """Calls the appropriate assemble method based on policies."""
+        for stmt in self.statements:
+            if _is_whitelisted(stmt):
+                self._dispatch(stmt, 'assemble', self.model)
 
     def _dispatch(self, stmt, stage, *args):
         """Construct and call an assembly function.
@@ -117,6 +122,7 @@ class KamiAssembler(PysbAssembler):
 
 
 class Nugget(object):
+    """Represents a Kami Nugget."""
     def __init__(self, id, name, rate):
         self.counters = defaultdict(int)
         self.id = id
@@ -127,6 +133,7 @@ class Nugget(object):
         self.typings = {}
 
     def add_agent(self, agent):
+        """Add an INDRA Agent and its conditions to the Nugget."""
         agent_id = self.add_node(agent.name)
         self.add_typing(agent_id, 'agent')
         # Handle bound conditions
@@ -164,6 +171,7 @@ class Nugget(object):
         return agent_id
 
     def add_node(self, name_base, attrs=None):
+        """Add a node with a given base name to the Nugget and return ID."""
         if name_base not in self.counters:
             node_id = name_base
         else:
@@ -176,12 +184,15 @@ class Nugget(object):
         return node_id
 
     def add_edge(self, from_node, to_node):
+        """Add an edge between two nodes to the Nugget."""
         self.edges.append({'from': from_node, 'to': to_node})
 
     def add_typing(self, node_id, typing):
+        """Add typing information to a node in the Nugget."""
         self.typings[node_id] = typing
 
     def get_nugget_dict(self):
+        """Return the Nugget as a dictionary."""
         nugget_dict = \
             {'id': self.id,
              'graph': {
@@ -196,19 +207,14 @@ class Nugget(object):
         return nugget_dict
 
     def get_typing_dict(self):
+        """Return the Nugget's typing information as a dictionary."""
         return self.typings
 
 
 # COMPLEX ############################################################
 
-def complex_monomers_one_step(stmt, agent_set):
-    pass
 
-
-complex_monomers_default = complex_monomers_one_step
-
-
-def complex_assemble_one_step(stmt, model, agent_set):
+def complex_assemble_one_step(stmt, model):
     pairs = itertools.combinations(stmt.members, 2)
     for pair in pairs:
         # Make a rule name
@@ -314,28 +320,20 @@ def _mod_demod_assemble_one_step(stmt, model, is_mod):
     model['graphs'].append(nugget.get_nugget_dict())
 
 
-def modification_monomers_one_step(stmt, agent_set):
-    pass
 
-
-def modification_assemble_one_step(stmt, model, agent_set):
+def modification_assemble_one_step(stmt, model):
     if stmt.enz is None:
         return
     _mod_demod_assemble_one_step(stmt, model, True)
 
-def demodification_monomers_one_step(stmt, agent_set):
-    pass
 
-
-def demodification_assemble_one_step(stmt, model, agent_set):
+def demodification_assemble_one_step(stmt, model):
     if stmt.enz is None:
         return
     _mod_demod_assemble_one_step(stmt, model, False)
 
 
-modification_monomers_default = modification_monomers_one_step
 modification_assemble_default = modification_assemble_one_step
-demodification_monomers_default = demodification_monomers_one_step
 demodification_assemble_default = demodification_assemble_one_step
 
 
@@ -344,8 +342,7 @@ demodification_assemble_default = demodification_assemble_one_step
 policies = ['one_step', 'default']
 
 mod_classes = [cls for cls in ist.AddModification.__subclasses__()]
-for mc, func_type, pol in itertools.product(mod_classes,
-                                            ('monomers', 'assemble'),
+for mc, func_type, pol in itertools.product(mod_classes, ('assemble', ),
                                             policies):
     code = '{mc}_{func_type}_{pol} = ' \
             'modification_{func_type}_{pol}'.format(
@@ -354,13 +351,11 @@ for mc, func_type, pol in itertools.product(mod_classes,
     exec(code)
 
 demod_classes = [cls for cls in ist.RemoveModification.__subclasses__()]
-for mc, func_type, pol in itertools.product(demod_classes,
-                                            ('monomers', 'assemble'),
+for mc, func_type, pol in itertools.product(demod_classes, ('assemble', ),
                                             policies):
     code = '{mc}_{func_type}_{pol} = ' \
             'demodification_{func_type}_{pol}'.format(
                     mc=ist.modclass_to_modtype[mc], func_type=func_type,
                     pol=pol)
     exec(code)
-
 
