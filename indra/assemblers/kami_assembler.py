@@ -167,7 +167,7 @@ class Nugget(object):
         if name_base not in self.counters:
             node_id = name_base
         else:
-            node_id = '%s%d' % (name_base, self.counters[name_base])
+            node_id = '%s_%d' % (name_base, self.counters[name_base])
         node = {'id': node_id}
         if attrs:
             node['attrs'] = attrs
@@ -274,17 +274,12 @@ complex_assemble_default = complex_assemble_one_step
 
 def _mod_demod_assemble_one_step(stmt, model, is_mod):
     # Define some basic parameters for the modification
-    if is_mod:
-        mod_condition_name = stmt.__class__.__name__.lower()
-    else:
-        demod_condition_name = stmt.__class__.__name__.lower()
-        mod_condition_name = ist.modtype_to_inverse[demod_condition_name]
+    mod_condition_name = stmt.__class__.__name__.lower()
+    if not is_mod:
+        mod_condition_name = ist.modtype_to_inverse[mod_condition_name]
+
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-
-    # Make a nugget name
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     nugget_name = '%s_%s_%s_%s' % \
@@ -295,16 +290,11 @@ def _mod_demod_assemble_one_step(stmt, model, is_mod):
     enz_id = nugget.add_agent(stmt.enz)
     sub_id = nugget.add_agent(stmt.sub)
 
-    # Add nodes/edges/types for the modification itself
-    if is_mod:
-        mod_site_id = nugget.add_node(mod_site, {'val': unmod_site_state})
-    else:
-        mod_site_id = nugget.add_node(mod_site, {'val': mod_site_state})
-    if is_mod:
-        action_id = nugget.add_node(action_name, {'val': mod_site_state})
-    else:
-        action_id = nugget.add_node(action_name, {'val': unmod_site_state})
+    st = states[mod_condition_name]
+    from_state, to_state = (st[0], st[1]) if is_mod else (st[1], st[0])
 
+    mod_site_id = nugget.add_node(mod_site, {'val': from_state})
+    action_id = nugget.add_node(action_name, {'val': to_state})
     nugget.add_typing(mod_site_id, 'site')
     nugget.add_typing(action_id, 'mod')
     nugget.add_edge(mod_site_id, sub_id)
