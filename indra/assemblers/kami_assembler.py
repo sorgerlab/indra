@@ -301,7 +301,7 @@ def _mod_demod_assemble_one_step(stmt, model, is_mod):
 
     mod_site_id = nugget.add_node(mod_site, {'val': from_state})
     action_id = nugget.add_node(action_name, {'val': to_state})
-    nugget.add_typing(mod_site_id, 'site')
+    nugget.add_typing(mod_site_id, 'state')
     nugget.add_typing(action_id, 'mod')
     nugget.add_edge(mod_site_id, sub_id)
     nugget.add_edge(action_id, mod_site_id)
