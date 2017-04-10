@@ -272,16 +272,13 @@ def complex_assemble_one_step(stmt, model, agent_set):
 complex_assemble_default = complex_assemble_one_step
 
 
-
-def modification_monomers_one_step(stmt, agent_set):
-    pass
-
-def modification_assemble_one_step(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-
+def _mod_demod_assemble_one_step(stmt, model, is_mod):
     # Define some basic parameters for the modification
-    mod_condition_name = stmt.__class__.__name__.lower()
+    if is_mod:
+        mod_condition_name = stmt.__class__.__name__.lower()
+    else:
+        demod_condition_name = stmt.__class__.__name__.lower()
+        mod_condition_name = ist.modtype_to_inverse[demod_condition_name]
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
     unmod_site_state = states[mod_condition_name][0]
@@ -299,9 +296,16 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_id = nugget.add_agent(stmt.sub)
 
     # Add nodes/edges/types for the modification itself
-    mod_site_id = nugget.add_node(mod_site, {'val': unmod_site_state})
+    if is_mod:
+        mod_site_id = nugget.add_node(mod_site, {'val': unmod_site_state})
+    else:
+        mod_site_id = nugget.add_node(mod_site, {'val': mod_site_state})
+    if is_mod:
+        action_id = nugget.add_node(action_name, {'val': mod_site_state})
+    else:
+        action_id = nugget.add_node(action_name, {'val': unmod_site_state})
+
     nugget.add_typing(mod_site_id, 'site')
-    action_id = nugget.add_node(action_name, {'val': mod_site_state})
     nugget.add_typing(action_id, 'mod')
     nugget.add_edge(mod_site_id, sub_id)
     nugget.add_edge(action_id, mod_site_id)
@@ -320,6 +324,15 @@ def modification_assemble_one_step(stmt, model, agent_set):
     model['graphs'].append(nugget.get_nugget_dict())
 
 
+def modification_monomers_one_step(stmt, agent_set):
+    pass
+
+
+def modification_assemble_one_step(stmt, model, agent_set):
+    if stmt.enz is None:
+        return
+    _mod_demod_assemble_one_step(stmt, model, True)
+
 def demodification_monomers_one_step(stmt, agent_set):
     pass
 
@@ -327,68 +340,7 @@ def demodification_monomers_one_step(stmt, agent_set):
 def demodification_assemble_one_step(stmt, model, agent_set):
     if stmt.enz is None:
         return
-
-    # Define some basic parameters for the modification
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = ist.modtype_to_inverse[demod_condition_name]
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-
-    # Make a nugget name
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    nugget_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, demod_condition_name, rule_sub_str, mod_site)
-    action_name =  nugget_name + '_act'
-    kf_mod = 1e-6
-    nugget_dict = {'id': nugget_name,
-                   'graph': {},
-                   'attrs': {'name': nugget_name,
-                             'rate': kf_mod}}
-
-    # Initialize dicts/lists for this nugget
-    nodes = []
-    edges = []
-    typing_dict = {action_name: 'bnd'}
-
-    # Add enzyme conditions
-    enz_nodes, enz_edges, enz_types = get_agent_conditions(stmt.enz)
-    nodes += enz_nodes
-    edges += enz_edges
-    typing_dict.update(enz_types)
-
-    # Add substrate conditions
-    sub_nodes, sub_edges, sub_types = get_agent_conditions(stmt.sub)
-    nodes += sub_nodes
-    edges += sub_edges
-    typing_dict.update(sub_types)
-
-    # Add nodes/edges/types for the modification itself
-    nodes.append({'id': stmt.enz.name})
-    nodes.append({'id': stmt.sub.name})
-    nodes.append({'id': mod_site, 'attrs': {'val': mod_site_state}})
-    nodes.append({'id': action_name, 'attrs': {'val': unmod_site_state}})
-    edges.append({'from': mod_site, 'to': stmt.sub.name})
-    edges.append({'from': action_name, 'to': mod_site})
-    edges.append({'from': stmt.enz.name, 'to': action_name})
-    typing_dict.update({stmt.enz.name: 'agent', stmt.sub.name: 'agent',
-                        mod_site: 'state', action_name: 'mod'})
-    nugget_dict['graph']['nodes'] = nodes
-    nugget_dict['graph']['edges'] = edges
-
-    # Typing dicts linking the nugget to the Action Graph and to the
-    # Kami graph
-    typing_dict_ag = {'from': nugget_name, 'to': 'action_graph',
-                      'mapping': {}, 'total': False,
-                      'ignore_attrs': False}
-    typing_dict_kami = {'from': nugget_name, 'to': 'kami',
-                        'mapping': typing_dict, 'total': True,
-                        'ignore_attrs': True}
-    # Add the graphs for this nugget to the graphs and typing lists
-    model['typing'] += [typing_dict_ag, typing_dict_kami]
-    model['graphs'].append(nugget_dict)
+    _mod_demod_assemble_one_step(stmt, model, False)
 
 
 modification_monomers_default = modification_monomers_one_step

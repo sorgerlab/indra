@@ -108,5 +108,12 @@ def test_demod_one_step():
     assert len(graph_list[1]['graph']['edges']) == 3
     assert len(graph_list[1]['graph']['nodes']) == 4
 
-if __name__ == '__main__':
-    test_phosphorylation_no_site()
+def test_unique_id():
+    egf = Agent('EGF')
+    egfr = Agent('EGFR', bound_conditions=BoundCondition(egf, True))
+    stmt = Complex([egfr, egfr])
+    ka = KamiAssembler()
+    ka.add_statements([stmt])
+    model = ka.make_model()
+    print(json.dumps(model, indent=1))
+
