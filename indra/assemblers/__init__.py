@@ -30,3 +30,7 @@ try:
     from indra.assemblers.cyjs_assembler import CyJSAssembler
 except ImportError:
     pass
+try:
+    from indra.assemblers.kami_assembler import KamiAssembler
+except ImportError:
+    pass
