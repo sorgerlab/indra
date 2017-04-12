@@ -530,6 +530,19 @@ def test_translocation():
     assert(f2.site_conditions == {'loc': 'cytoplasm'})
     assert(r.rate_forward.name == 'kf_foxo3a_nucleus_cytoplasm_1')
 
+def test_translocation_to():
+    st = Translocation(Agent('FOXO3A'), None, 'nucleus')
+    pa = PysbAssembler()
+    pa.add_statements([st])
+    pa.make_model()
+    assert(len(pa.model.rules) == 1)
+    r = pa.model.rules[0]
+    f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f1.site_conditions == {})
+    f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
+    assert(f2.site_conditions == {'loc': 'nucleus'})
+    assert(r.rate_forward.name == 'kf_foxo3a_nucleus_1')
+
 def test_phos_atpdep():
     st = Phosphorylation(Agent('BRAF'), Agent('MEK'), 'S', '222')
     pa = PysbAssembler()

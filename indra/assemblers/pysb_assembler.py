@@ -2039,25 +2039,36 @@ rasgtpactivation_assemble_default = activation_assemble_default
 # TRANSLOCATION ###############################################
 def translocation_monomers_default(stmt, agent_set):
     # Skip if either from or to locations are missing
-    if stmt.from_location is None or stmt.to_location is None:
+    if stmt.to_location is None:
         return
     agent = agent_set.get_create_base_agent(stmt.agent)
-    agent.create_site('loc', [_n(stmt.from_location), _n(stmt.to_location)])
+    states = [_n(stmt.to_location)]
+    if stmt.from_location is not None:
+        states.append(_n(stmt.from_location))
+
+    agent.create_site('loc', states)
 
 def translocation_assemble_default(stmt, model, agent_set):
-    if stmt.from_location is None or stmt.to_location is None:
+    if stmt.to_location is None:
         return
-    param_name = 'kf_%s_%s_%s' % (_n(stmt.agent.name).lower(),
-                                  _n(stmt.from_location), _n(stmt.to_location))
+    if stmt.from_location is None:
+        from_str = ''
+    else:
+        from_str = _n(stmt.from_location) + '_'
+    param_name = 'kf_%s_%s%s' % (_n(stmt.agent.name).lower(),
+                                  from_str, _n(stmt.to_location))
     kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
     monomer = model.monomers[_n(stmt.agent.name)]
     rule_agent_str = get_agent_rule_str(stmt.agent)
-    rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
-                                              _n(stmt.from_location),
+    rule_name = '%s_translocates_%sto_%s' % (rule_agent_str,
+                                              from_str,
                                               _n(stmt.to_location))
-    agent_from = get_monomer_pattern(model, stmt.agent,
-                                     extra_fields={'loc':
-                                                   _n(stmt.from_location)})
+    if stmt.from_location is None:
+        agent_from = get_monomer_pattern(model, stmt.agent)
+    else:
+        agent_from = get_monomer_pattern(model, stmt.agent,
+                                         extra_fields={'loc':
+                                                       _n(stmt.from_location)})
     agent_to = get_monomer_pattern(model, stmt.agent,
                                    extra_fields={'loc':
                                                  _n(stmt.to_location)})
