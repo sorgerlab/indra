@@ -74,7 +74,7 @@ def _assemble_agent_str(agent):
     if agent.location is not None:
         agent_str += ' in the ' + agent.location
 
-    if not agent.mods and not agent.bound_conditions:
+    if not agent.mods and not agent.bound_conditions and not agent.activity:
         return agent_str
 
     # Handle bound conditions
@@ -118,6 +118,15 @@ def _assemble_agent_str(agent):
                 else:
                     mod_lst.append(m.residue + m.position)
             agent_str += _join_list(mod_lst)
+
+    # Handle activity conditions
+    if agent.activity is not None:
+        # TODO: handle activity types
+        if agent.activity.is_active:
+            prefix = 'active'
+        else:
+            prefix = 'inactive'
+        agent_str = prefix + ' ' + agent_str
 
     return agent_str
 

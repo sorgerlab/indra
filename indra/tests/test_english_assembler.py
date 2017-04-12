@@ -245,6 +245,11 @@ def test_agent_loc():
     print(ea._assemble_agent_str(a))
     assert(ea._assemble_agent_str(a) == 'BRAF in the cytoplasm')
 
+def test_agent_activity():
+    a = Agent('BRAF', activity=ActivityCondition('activity', True))
+    print(ea._assemble_agent_str(a))
+    assert(ea._assemble_agent_str(a) == 'active BRAF')
+
 def test_translocation():
     st1 = Translocation(Agent('FOXO3A'))
     st2 = Translocation(Agent('FOXO3A'), 'cytoplasm')
