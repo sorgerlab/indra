@@ -538,10 +538,10 @@ def test_translocation_to():
     assert(len(pa.model.rules) == 1)
     r = pa.model.rules[0]
     f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f1.site_conditions == {})
+    assert(f1.site_conditions == {'loc': 'cytoplasm'})
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
     assert(f2.site_conditions == {'loc': 'nucleus'})
-    assert(r.rate_forward.name == 'kf_foxo3a_nucleus_1')
+    assert(r.rate_forward.name == 'kf_foxo3a_cytoplasm_nucleus_1')
 
 def test_phos_atpdep():
     st = Phosphorylation(Agent('BRAF'), Agent('MEK'), 'S', '222')
