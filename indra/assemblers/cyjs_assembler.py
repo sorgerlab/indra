@@ -39,6 +39,8 @@ class CyJSAssembler(object):
         self._id_counter = 0
         self._exp_colorscale = []
         self._mut_colorscale = []
+        self._gene_names = []
+        self._context = {}
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -117,7 +119,62 @@ class CyJSAssembler(object):
                 if node['data']['name'].startswith('Group'):
                     continue
                 gene_names.append(node['data']['name'])
-        return gene_names
+        self._gene_names = gene_names
+
+    def set_CCLE_context(self, cell_types):
+        """Get context of all nodes and node members
+
+        Parameters
+        ----------
+        """
+        self.get_gene_names()
+        gene_names = self._gene_names
+        exp = context_client.get_protein_expression(gene_names, cell_types)
+        mut = context_client.get_mutations(gene_names, cell_types)
+        # context_client gives back a dict with genes as keys. prefer lines keys
+        def transpose_context(context_dict):
+            d = context_dict
+            d_genes = [x for x in d]
+            d_lines = [x for x in d[d_genes[0]]]
+            transposed = {x:{y:d[y][x] for y in d_genes} for x in d_lines}
+            return transposed
+        exp = transpose_context(exp)
+        mut = transpose_context(mut)
+        # create bins for the exp values
+        # because colorbrewer only does 3-9 bins and I don't feel like
+        # reinventing color scheme theory, this will only bin 3-9 bins
+        def bin_exp(expression_dict):
+            d = expression_dict
+            exp_values = []
+            for line in d:
+                for gene in d[line]:
+                    val = d[line][gene]
+                    if (val) != None:
+                        exp_values.append(val)
+            thr_dict = {}
+            for n_bins in range(3,10):
+                bin_thr = np.histogram(np.log10(exp_values), n_bins)[1][1:]
+                thr_dict[n_bins] = bin_thr
+            # this dict isn't yet binned, that happens in the loop
+            binned_dict = {x:deepcopy(expression_dict) for x in (range(3,10))}
+            for n_bins in binned_dict:
+                for line in binned_dict[n_bins]:
+                    for gene in binned_dict[n_bins][line]:
+                        # last bin is reserved for None
+                        if binned_dict[n_bins][line][gene] is None:
+                            binned_dict[n_bins][line][gene] = n_bins
+                        else:
+                            val = np.log10(binned_dict[n_bins][line][gene])
+                            for thr_idx, thr in enumerate(thr_dict[n_bins]):
+                                if val <= thr:
+                                    binned_dict[n_bins][line][gene] = thr_idx
+                                    break
+                        #import pdb; pdb.set_trace();
+            return binned_dict
+        binned_exp = bin_exp(exp)
+        context = {'bin_expression' : binned_exp,
+                   'mutation' : mut}
+        self._context['CCLE'] = context
 
     def set_context(self, *args, **kwargs):
         """Set protein expression data as node attribute
