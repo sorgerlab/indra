@@ -769,23 +769,3 @@ def _get_stmt_type(stmt):
         edge_type = stmt.__class__.__str__()
         edge_polarity = 'none'
     return edge_type, edge_polarity
-
-
-def _build_color_scale(hex_colors_list, n_bins):
-    rgb_colors = [hex2color(x) for x in hex_colors_list]
-    rgb_colors_array = np.array(rgb_colors)
-    rgb_names = {'red': 0, 'green': 1, 'blue': 2}
-    linear_mapping = np.linspace(0, 1, len(rgb_colors_array))
-    cdict = {}
-    for rgb_name in rgb_names:
-        color_list = []
-        rgb_idx = rgb_names[rgb_name]
-        for lin, val in zip(linear_mapping, rgb_colors_array[:, rgb_idx]):
-            color_list.append((lin, val, val))
-        cdict[rgb_name] = color_list
-    cmap = colormap('expression_colormap', cdict, 256, 1)
-    color_scale = []
-    for i in np.linspace(0, 1, n_bins):
-        color_scale.append(rgb2hex(cmap(i)))
-
-    return color_scale
