@@ -100,7 +100,7 @@ class CyJSAssembler(object):
             self._drop_virtual_edges()
         if kwargs.get('add_edge_weights'):
             self._add_edge_weights()
-        return self.print_cyjs()
+        return self.print_cyjs_graph()
 
 
     def get_gene_names(self):
@@ -330,7 +330,7 @@ class CyJSAssembler(object):
                             n['data']['expression'] = None
                             break
 
-    def print_cyjs(self):
+    def print_cyjs_graph(self):
         """Return the assembled Cytoscape JS network as a json string.
 
             Returns
@@ -339,28 +339,47 @@ class CyJSAssembler(object):
             A json string representation of the Cytoscape JS network.
         """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        model_dict = {'exp_colorscale': self._exp_colorscale,
-                      'mut_colorscale': self._mut_colorscale,
-                      'model_elements': cyjs_dict}
-        cyjs_str = json.dumps(model_dict, indent=1, sort_keys=True)
+        cyjs_str = json.dumps(cyjs_dict, indent=1, sort_keys=True)
         return cyjs_str
 
-    def save_json(self, fname='model.json'):
+    def print_cyjs_context(self):
+        """Return a list of node names and their respective context.
+
+            Returns
+            -------
+            cyjs_str_context : str
+            A json string of the context dictionary. e.g. -
+            {'CCLE' : {'exp' : {'gene' : 'val'},
+                       'mut' : {'gene' : 'val'}
+                      }
+            }
+        """
+        context = self._context
+        context_str = json.dumps(context, indent=1, sort_keys=True)
+        return context_str
+
+    def save_json(self, fname='model'):
         """Save the assembled Cytoscape JS network in a json file.
 
         Parameters
         ----------
         file_name : Optional[str]
             The name of the file to save the Cytoscape JS network to.
-            Default: model.json
+            Default: model
         """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
         model_dict = {'exp_colorscale': self._exp_colorscale,
                       'mut_colorscale': self._mut_colorscale,
-                      'model_elements': cyjs_dict}
-        json_str = json.dumps(model_dict, indent=1, sort_keys=True)
-        with open(fname, 'wt') as fh:
-            fh.write(json_str)
+                      'model_elements': cyjs_dict,
+                      'context' : self._context}
+        cyjs_str = self.print_cyjs_graph()
+        # outputs the graph
+        with open(fname + '.json', 'wt') as fh:
+            fh.write(cyjs_str)
+        # outputs the context of graph nodes
+        context_str = self.print_cyjs_context()
+        with open(fname + '_context' + '.json', 'wt') as fh:
+            fh.write(context_str)
 
     def save_model(self, fname='model.js'):
         """Save the assembled Cytoscape JS network in a js file.
