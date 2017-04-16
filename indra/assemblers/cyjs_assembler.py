@@ -319,8 +319,6 @@ class CyJSAssembler(object):
             else:
                 member_db_refs = {}
             members[member[1]] = {
-                    'mutation': None,
-                    'expression': None,
                     'db_refs': member_db_refs
                     }
         node = {'data': {'id': node_id, 'name': node_name,
