@@ -129,8 +129,8 @@ class CyJSAssembler(object):
         """
         self.get_gene_names()
         gene_names = self._gene_names
-        exp = context_client.get_protein_expression(gene_names, cell_types)
-        mut = context_client.get_mutations(gene_names, cell_types)
+        exp = {}
+        mut = {}
         # context_client gives back a dict with genes as keys. prefer lines keys
         def transpose_context(context_dict):
             d = context_dict
@@ -138,8 +138,21 @@ class CyJSAssembler(object):
             d_lines = [x for x in d[d_genes[0]]]
             transposed = {x:{y:d[y][x] for y in d_genes} for x in d_lines}
             return transposed
-        exp = transpose_context(exp)
-        mut = transpose_context(mut)
+        # access the context service in chunks of cell types.
+        # it will timeout if queried with larger chunks.
+        while len(cell_types) > 0:
+            cell_types_chunk = cell_types[:10]
+            del cell_types[:10]
+            exp_temp = context_client.get_protein_expression(gene_names, \
+                                                             cell_types_chunk)
+            exp_temp = transpose_context(exp_temp)
+            for e in exp_temp:
+                exp[e] = exp_temp[e]
+            mut_temp = context_client.get_mutations(gene_names, \
+                                                    cell_types_chunk)
+            mut_temp = transpose_context(mut_temp)
+            for m in mut_temp:
+                mut[m] = mut_temp[m]
         # create bins for the exp values
         # because colorbrewer only does 3-9 bins and I don't feel like
         # reinventing color scheme theory, this will only bin 3-9 bins
