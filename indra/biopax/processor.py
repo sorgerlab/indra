@@ -690,6 +690,9 @@ class BiopaxProcessor(object):
                     name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
+        #elif _is_rna(bpe):
+        #    logger.info("Rna!")
+        #    name = bpe.getDisplayName()
         elif _is_small_molecule(bpe):
             name = bpe.getDisplayName()
         elif _is_physical_entity(bpe):
@@ -899,6 +902,11 @@ def _is_protein(pe):
             isinstance(pe, _bpimpl('Protein')) or \
             isinstance(pe, _bp('ProteinReference')) or \
             isinstance(pe, _bpimpl('ProteinReference'))
+    return val
+
+def _is_rna(pe):
+    """Return True if the element is an RNA"""
+    val = isinstance(pe, _bp('Rna')) or isinstance(pe, _bpimpl('Rna'))
     return val
 
 def _is_small_molecule(pe):
