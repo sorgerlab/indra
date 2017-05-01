@@ -575,6 +575,14 @@ class TripsProcessor(object):
 
             arg1 = event.find("arg1")
             arg2 = event.find("arg2")
+            # EKB-AGENT
+            if arg1 is None and arg2 is None:
+                args = list(event.findall('arg'))
+                if len(args) < 2:
+                    continue
+                arg1 = args[0]
+                arg2 = args[1]
+
             if (arg1 is None or arg1.attrib.get('id') is None) or \
                (arg2 is None or arg2.attrib.get('id') is None):
                 logger.debug('Skipping complex with less than 2 members')
