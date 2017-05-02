@@ -26,8 +26,8 @@ def test_bel_ndex_query():
     unicode_strs(bp.statements)
 
 def test_process_belrdf():
-    with open(test_rdf_nfkb, 'rt') as fh:
-        rdf_str_nfkb = fh.read()
+    with open(test_rdf_nfkb, 'rb') as fh:
+        rdf_str_nfkb = fh.read().decode('utf-8')
     bp = bel.process_belrdf(rdf_str_nfkb)
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
