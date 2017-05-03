@@ -16,7 +16,7 @@ from indra.literature import pmc_client, s3_client, get_full_text, \
 # Logger
 logger = logging.getLogger('runreach')
 
-def upload_reach_json(output_dir, text_sources):
+def upload_reach_json(output_dir, text_sources, reach_version):
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
     def join_parts(prefix):
@@ -56,7 +56,8 @@ def upload_reach_json(output_dir, text_sources):
             # Look up the paper source type
             source_text = text_sources.get(json_prefix)
             logger.info('%s (%d of %d): source %s' %
-                      (json_prefix, json_ix + 1, len(json_prefixes), source_text))
+                        (json_prefix, json_ix + 1, len(json_prefixes),
+                         source_text))
             s3_client.put_reach_output(full_json, json_prefix, reach_version,
                                        source_text)
             num_uploaded += 1
@@ -69,7 +70,8 @@ def upload_reach_json(output_dir, text_sources):
 
 
 def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
-        force_fulltext, path_to_reach, reach_version, cleanup=False, verbose=True):
+        force_fulltext, path_to_reach, reach_version, cleanup=False,
+        verbose=True):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -310,7 +312,7 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
             f.write('%s\n' % c)
 
     # Upload!
-    upload_reach_json(output_dir, text_sources)
+    upload_reach_json(output_dir, text_sources, reach_version)
 
     if cleanup:
         shutil.rmtree(base_dir)
@@ -349,7 +351,7 @@ if __name__ == '__main__':
         text_sources_file = sys.argv[3]
         with open(text_sources_file, 'rb') as f:
             text_sources = pickle.load(f)
-        upload_reach_json(output_dir, text_sources)
+        upload_reach_json(output_dir, text_sources, reach_version)
         sys.exit()
 
     # =======================

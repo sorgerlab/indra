@@ -25,8 +25,8 @@ if __name__ == '__main__':
     end_index = int(sys.argv[5])
     path_to_reach = os.environ.get('REACH_JAR_PATH')
     reach_version = os.environ.get('REACH_VERSION')
-    if not path_to_reach and reach_version:
-        print('REACH_JAR_PATH and REACH_VERSION not defined, exiting.')
+    if path_to_reach is None or reach_version is None:
+        print('REACH_JAR_PATH and/or REACH_VERSION not defined, exiting.')
         sys.exit(1)
 
     try:
