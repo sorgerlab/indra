@@ -68,53 +68,8 @@ def upload_reach_json(output_dir, text_sources):
             f.write('%s\n' % fail)
 
 
-if __name__ == '__main__':
-
-    cleanup = False
-    verbose = True
-    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    reach_version = '1.3.3-b4a284'
-    force_read = False
-    force_fulltext = False
-
-    # Check the arguments
-    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
-            "[force_fulltext]\n" % sys.argv[0]
-    usage += "Alternative usage: %s upload_json output_dir content_types_file" % \
-              sys.argv[0]
-    if len(sys.argv) not in  (4, 6, 7):
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 4 and sys.argv[1] != 'upload_json':
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
-        print(usage)
-        sys.exit()
-    elif len(sys.argv) == 7:
-        force_fulltext = True
-
-    # One type of operation: just upload previously read JSON files
-    if len(sys.argv) == 4 and sys.argv[1] == 'upload_json':
-        output_dir = sys.argv[2]
-        text_sources_file = sys.argv[3]
-        with open(text_sources_file, 'rb') as f:
-            text_sources = pickle.load(f)
-        upload_reach_json(output_dir, text_sources)
-        sys.exit()
-
-    # =======================
-    # Alternatively, run the whole process
-    # Get the command line arguments
-    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
-    start_index = int(start_index)
-    end_index = int(end_index)
-    num_cores = int(num_cores)
-
-    # Load the list of PMIDs from the given file
-    with open(pmid_list_file) as f:
-        pmid_list = [line.strip('\n') for line in f.readlines()]
+def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
+        force_fulltext, path_to_reach, reach_version, cleanup=False, verbose=True):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -361,3 +316,54 @@ if __name__ == '__main__':
         shutil.rmtree(base_dir)
 
 
+if __name__ == '__main__':
+    # Set some variables
+    cleanup = False
+    verbose = True
+    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    reach_version = '1.3.3-b4a284'
+    force_read = False
+    force_fulltext = False
+
+    # Check the arguments
+    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
+            "[force_fulltext]\n" % sys.argv[0]
+    usage += "Alternative usage: %s upload_json output_dir content_types_file" % \
+              sys.argv[0]
+    if len(sys.argv) not in  (4, 6, 7):
+        print(usage)
+        sys.exit()
+    if len(sys.argv) == 4 and sys.argv[1] != 'upload_json':
+        print(usage)
+        sys.exit()
+    if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
+        print(usage)
+        sys.exit()
+    elif len(sys.argv) == 7:
+        force_fulltext = True
+
+    # One type of operation: just upload previously read JSON files
+    if len(sys.argv) == 4 and sys.argv[1] == 'upload_json':
+        output_dir = sys.argv[2]
+        text_sources_file = sys.argv[3]
+        with open(text_sources_file, 'rb') as f:
+            text_sources = pickle.load(f)
+        upload_reach_json(output_dir, text_sources)
+        sys.exit()
+
+    # =======================
+    # Alternatively, run the whole process
+    # Get the command line arguments
+    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
+    start_index = int(start_index)
+    end_index = int(end_index)
+    num_cores = int(num_cores)
+
+    # Load the list of PMIDs from the given file
+    with open(pmid_list_file) as f:
+        pmid_list = [line.strip('\n') for line in f.readlines()]
+
+    # Do the reading
+    run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
+        force_fulltext, path_to_reach, reach_version, cleanup=cleanup, verbose=verbose)
