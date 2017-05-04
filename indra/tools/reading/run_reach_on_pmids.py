@@ -72,12 +72,13 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
                   for json_prefix in json_prefixes]
     # Create a multiprocessing pool
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
-    pool = ctx.Pool(num_cores)
+    #pool = ctx.Pool(num_cores)
     logger.info('Uploading and processing local REACH JSON files')
     upload_process_pmid_func = \
             functools.partial(upload_process_pmid, output_dir=output_dir,
                               reach_version=reach_version)
-    res = pool.map(upload_process_pmid_func, pmid_info)
+    #res = pool.map(upload_process_pmid_func, pmid_info)
+    res = [upload_process_pmid_func(inf) for inf in pmid_info]
 
     """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
@@ -173,6 +174,7 @@ def process_reach_str(reach_json_str, pmid):
     if reach_json_str is None:
         raise ValueError('reach_json_str cannot be None')
     # Run the REACH processor on the JSON
+    import ipdb; ipdb.set_trace()
     try:
         reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
     # If there's a problem, skip it
@@ -378,8 +380,6 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     #    for c in content_not_found:
     #        f.write('%s\n' % c)
 
-
-
 if __name__ == '__main__':
     # Set some variables
     cleanup = False
@@ -413,7 +413,7 @@ if __name__ == '__main__':
         text_sources_file = sys.argv[3]
         with open(text_sources_file, 'rb') as f:
             text_sources = pickle.load(f)
-        upload_reach_json(output_dir, text_sources, reach_version)
+        upload_process_reach_files(output_dir, text_sources, reach_version)
         sys.exit()
 
     # =======================
