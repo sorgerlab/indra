@@ -24,7 +24,7 @@ logger = logging.getLogger('runreach')
 ctx = mp.get_context('spawn')
 
 
-def upload_process_reach_json(pmid_info, output_dir=None, reach_version=None):
+def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
     # The prefixes should be PMIDs
     pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
@@ -39,7 +39,8 @@ def upload_process_reach_json(pmid_info, output_dir=None, reach_version=None):
     return {pmid: process_reach_str(full_json, pmid)}
 
 
-def upload_reach_json(output_dir, pmid_info_dict, reach_version, num_cores):
+def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
+                               num_cores):
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
     def join_parts(prefix):
@@ -72,10 +73,10 @@ def upload_reach_json(output_dir, pmid_info_dict, reach_version, num_cores):
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
     pool = ctx.Pool(num_cores)
     logger.info('Uploading and processing local REACH JSON files')
-    upload_process_reach_json_func = \
-            functools.partial(upload_process_reach_json, output_dir=output_dir,
+    upload_process_pmid_func = \
+            functools.partial(upload_process_pmid, output_dir=output_dir,
                               reach_version=reach_version)
-    res = pool.map(upload_process_reach_json_func, pmid_info)
+    res = pool.map(upload_process_pmid_func, pmid_info)
 
     """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
@@ -330,19 +331,30 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
                num_cores=num_cores)
 
     # Write the configuration file to the temp directory
-    conf_file_path = os.path.join(base_dir, 'indra.conf')
-    with open(conf_file_path, 'w') as f:
-        f.write(conf_file_text)
+    if num_found > 0:
+        conf_file_path = os.path.join(base_dir, 'indra.conf')
+        with open(conf_file_path, 'w') as f:
+            f.write(conf_file_text)
 
-    # Run REACH!
-    args = ['java', '-jar', path_to_reach, conf_file_path]
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if verbose:
-        for line in iter(p.stdout.readline, b''):
-            logger.info(line)
-    (p_out, p_err) = p.communicate()
-    if p.returncode:
-        raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
+        # Run REACH!
+        args = ['java', '-jar', path_to_reach, conf_file_path]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        if verbose:
+            for line in iter(p.stdout.readline, b''):
+                logger.info(line)
+        (p_out, p_err) = p.communicate()
+        if p.returncode:
+            raise Exception(p_out.decode('utf-8') + '\n' +
+                            p_err.decode('utf-8'))
+
+        # Process JSON files from local file system, process to INDRA Statements
+        # and upload to S3
+        upload_process_reach_files(output_dir, pmids_unread, reach_version,
+                                   num_cores)
+        # Delete the tmp directory if desired
+        if cleanup:
+            shutil.rmtree(base_dir)
 
     # Create a new multiprocessing pool for processing the REACH JSON
     # files previously cached on S3
@@ -353,12 +365,6 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     res = pool.map(process_reach_from_s3, pmids_read.keys())
     pool.close()
 
-    # Process JSON files from local file system, process to INDRA Statements
-    # and upload to S3
-    upload_reach_json(output_dir, pmids_unread, reach_version, num_cores)
-    # Delete the tmp directory if desired
-    if cleanup:
-        shutil.rmtree(base_dir)
 
     # Save the list of PMIDs with no content found on S3/literature client
     #content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
