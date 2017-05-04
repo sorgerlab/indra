@@ -78,58 +78,65 @@ def upload_reach_json(output_dir, text_sources, reach_version):
 # Version 2: If JSON is available, return JSON or process
 # it and return statements (process it?)
 
-def get_content(pmid, input_dir=None, force_read=False, force_fulltext=False):
+def download_from_s3(pmid, input_dir=None, force_read=False,
+                     force_fulltext=False):
     if input_dir is None:
         raise ValueError('input_dir must be defined')
+
+    # First define the text retrieval function
+    def get_text():
+        full_pmid = s3_client.check_pmid(pmid)
+        # Look for the full text
+        (content, content_type) = s3_client.get_upload_content(pmid,
+                                        force_fulltext_lookup=force_fulltext)
+        content_path = None
+        # Write the contents to a file
+        if content_type is None or content is None:
+            # No content found on S3, skipping
+            content_source = 'content_not_found'
+        elif content_type == 'pmc_oa_xml':
+            content_source = 'pmc_oa_xml'
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
+        elif content_type == 'pmc_auth_xml':
+            content_source = 'pmc_auth_xml'
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
+        elif content_type == 'pmc_oa_txt':
+            content_source = 'pmc_oa_txt'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'elsevier_xml':
+            content = elsevier_client.extract_text(content)
+            # Couldn't get text from Elsevier XML
+            if content is None:
+                content_source = 'elsevier_extract_text_failure'
+            else:
+                content_source = 'elsevier_xml'
+                content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'txt':
+            content_source = 'txt'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'abstract':
+            content_source = 'abstract'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        # Unhandled content type, skipping
+        else:
+            content_source = 'unhandled_content_type_%s' % content_type
+        # If we got content, write the content to a file with the appropriate
+        # extension
+        if content_path:
+            with open(content_path, 'wb') as f:
+                # The XML string is Unicode
+                enc = content.encode('utf-8')
+                f.write(enc)
+        # Return dict of results for this PMID
+        result = {pmid: {'content_source': content_source,
+                         'content_path': content_path}}
+        return result
+
     # If we're forcing a read regardless of whether there is cached REACH
     # output, then we download the text content
-    full_pmid = s3_client.check_pmid(pmid)
-    # Look for the full text
-    (content, content_type) = s3_client.get_upload_content(pmid,
-                                    force_fulltext_lookup=force_fulltext)
-    content_path = None
-    # Write the contents to a file
-    if content_type is None or content is None:
-        # No content found on S3, skipping
-        content_source = 'content_not_found'
-    elif content_type == 'pmc_oa_xml':
-        content_source = 'pmc_oa_xml'
-        content_path = os.path.join(input_dir, '%s.nxml' % pmid)
-    elif content_type == 'pmc_auth_xml':
-        content_source = 'pmc_auth_xml'
-        content_path = os.path.join(input_dir, '%s.nxml' % pmid)
-    elif content_type == 'pmc_oa_txt':
-        content_source = 'pmc_oa_txt'
-        content_path = os.path.join(input_dir, '%s.txt' % pmid)
-    elif content_type == 'elsevier_xml':
-        content = elsevier_client.extract_text(content)
-        # Couldn't get text from Elsevier XML
-        if content is None:
-            content_source = 'elsevier_extract_text_failure'
-        else:
-            content_source = 'elsevier_xml'
-            content_path = os.path.join(input_dir, '%s.txt' % pmid)
-    elif content_type == 'txt':
-        content_source = 'txt'
-        content_path = os.path.join(input_dir, '%s.txt' % pmid)
-    elif content_type == 'abstract':
-        content_source = 'abstract'
-        content_path = os.path.join(input_dir, '%s.txt' % pmid)
-    # Unhandled content type, skipping
-    else:
-        content_source = 'unhandled_content_type_%s' % content_type
-    # If we got content, write the content to a file with the appropriate
-    # extension
-    if content_path:
-        with open(content_path, 'wb') as f:
-            # The XML string is Unicode
-            enc = content.encode('utf-8')
-            f.write(enc)
-    # Return dict of results for this PMID
-    result = {pmid: {'content_source': content_source,
-                     'content_path': content_path}}
-    return result
-
+    if force_read:
+        return get_text()
+    # If not, look for REACH JSON on S3
 
 def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
         force_fulltext, path_to_reach, reach_version, cleanup=False,
