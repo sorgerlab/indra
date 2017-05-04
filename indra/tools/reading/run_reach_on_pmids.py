@@ -80,8 +80,10 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
     upload_process_pmid_func = \
             functools.partial(upload_process_pmid, output_dir=output_dir,
                               reach_version=reach_version)
-    #res = pool.map(upload_process_pmid_func, pmid_info)
-    res = [upload_process_pmid_func(inf) for inf in pmid_info]
+    res = pool.map(upload_process_pmid_func, pmid_info)
+    stmts_by_pmid = {pmid: stmts for res_dict in res
+                                 for pmid, stmts in res_dict.items()}
+    return stmts_by_pmid
 
     """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
@@ -177,7 +179,6 @@ def process_reach_str(reach_json_str, pmid):
     if reach_json_str is None:
         raise ValueError('reach_json_str cannot be None')
     # Run the REACH processor on the JSON
-    import ipdb; ipdb.set_trace()
     try:
         reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
     # If there's a problem, skip it
@@ -341,6 +342,7 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
 """.format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
+    stmts = {}
     # Write the configuration file to the temp directory
     if num_found > 0:
         conf_file_path = os.path.join(base_dir, 'indra.conf')
@@ -361,8 +363,8 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
 
         # Process JSON files from local file system, process to INDRA Statements
         # and upload to S3
-        upload_process_reach_files(output_dir, pmids_unread, reach_version,
-                                   num_cores)
+        stmts.update(upload_process_reach_files(output_dir, pmids_unread,
+                                            reach_version, num_cores))
         # Delete the tmp directory if desired
         if cleanup:
             shutil.rmtree(base_dir)
@@ -375,7 +377,10 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     logger.info('Processing REACH JSON from S3 in parallel')
     res = pool.map(process_reach_from_s3, pmids_read.keys())
     pool.close()
-
+    s3_stmts = {pmid: stmt_list for res_dict in res
+                                for pmid, stmt_list in res_dict.items()}
+    stmts.update(s3_stmts)
+    return stmts
 
     # Save the list of PMIDs with no content found on S3/literature client
     #content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
@@ -432,6 +437,6 @@ if __name__ == '__main__':
         pmid_list = [line.strip('\n') for line in f.readlines()]
 
     # Do the reading
-    run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
-        force_fulltext, path_to_reach, reach_version, cleanup=cleanup,
-        verbose=verbose)
+    stmts = run(pmid_list, tmp_dir, num_cores, start_index, end_index,
+                force_read, force_fulltext, path_to_reach, reach_version,
+                cleanup=cleanup, verbose=verbose)
