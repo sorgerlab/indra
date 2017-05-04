@@ -51,7 +51,10 @@ def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
     # Upload the REACH output to S3
     s3_client.put_reach_output(full_json, pmid, reach_version, source_text)
     # Process the REACH output with INDRA
-    return {pmid: process_reach_str(full_json, pmid)}
+    # Convert the JSON object into a string first so that a series of string
+    # replacements can happen in the REACH processor
+    reach_json_str = json.dumps(full_json)
+    return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
 def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
