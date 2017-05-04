@@ -211,30 +211,52 @@ def put_abstract(pmid, text):
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
-def get_reach_metadata(pmid):
+def get_reach_obj_with_version(pmid, reach_version):
     reach_key = get_reach_key(pmid)
     try:
+        # Get the REACH object
         reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
-        logger.info("%s: found REACH output on S3; checking version" % pmid)
-        reach_metadata = reach_gz_obj['Metadata']
-        # The REACH version string comes back as str in Python 2, not unicode
-        # Using str (instead of .decode) should work in both Python 2 and 3
-        reach_version = reach_metadata.get('reach_version')
-        if reach_version is not None:
-            reach_version = str(reach_version)
-        source_text = reach_metadata.get('source_text')
-        if source_text is not None:
-            source_text = str(source_text)
+        # TODO: Currently we don't look at source text, but we may want to
+        # later
+        # source_text = reach_metadata.get('source_text')
+        # if source_text is not None:
+        #     source_text = str(source_text)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
             logger.info('No REACH output found on S3 for key %s' % reach_key)
-            reach_version = None
-            source_text = None
+            return None
+            # reach_version = None
+            # source_text = None
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
-    return (reach_version, source_text)
+    # Now that we've got the REACH object, check the metadata
+    logger.info("%s: found REACH output on S3; checking version" % pmid)
+    reach_metadata = reach_gz_obj['Metadata']
+    # The REACH version string comes back as str in Python 2, not unicode
+    # Using str (instead of .decode) should work in both Python 2 and 3
+    read_reach_version = reach_metadata.get('reach_version')
+    # If the version is None, then we'll definitely re-read
+    if read_reach_version is None:
+        return None
+    # Compare the existing version on S3 with the current version
+    # If the versions are different, return None, indicating need to re-read
+    if read_reach_version != reach_version:
+        logger.info('%s: found %s, current %s, returning None' %
+                    (pmid, read_reach_version, reach_version))
+        return None
+    # Otherwise, get the REACH JSON object for later processing
+    else:
+        logger.info('%s: found same version (%s), getting JSON' %
+                    (pmid, read_reach_version))
+        reach_gz = reach_gz_obj['Body'].read()
+        # Gunzip the the content
+        reach_bytes = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
+        # Convert from bytes to str (shouldn't affect content since all
+        # Unicode should be escaped in the JSON)
+        reach_uni = reach_bytes.decode('utf-8')
+        return reach_uni
 
 
 def get_reach_output(pmid):

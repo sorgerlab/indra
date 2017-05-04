@@ -91,11 +91,11 @@ def test_reach_output():
     retrieved_reach_data = s3_client.get_reach_output(pmid)
     assert retrieved_reach_data == reach_data
     assert unicode_strs(retrieved_reach_data)
-    # Get the reach version of the key we created
-    (ret_reach_version, ret_source_text) = s3_client.get_reach_metadata(pmid)
-    assert ret_reach_version == reach_version
-    assert ret_source_text == source_text
-    assert unicode_strs(ret_reach_version)
+    # Get the data back using a version-specific function
+    ret_reach_data_versioned = \
+            s3_client.get_reach_obj_with_version(pmid, reach_version)
+    assert ret_reach_data_versioned is not None
+    assert unicode_strs(ret_reach_data_versioned)
 
 def test_gzip_string():
     content = 'asdf'
