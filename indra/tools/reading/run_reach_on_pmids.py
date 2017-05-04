@@ -23,6 +23,21 @@ logger = logging.getLogger('runreach')
 # Get a multiprocessing context
 ctx = mp.get_context('spawn')
 
+def join_parts(prefix):
+    """Join different REACH output JSON files into a single JSON."""
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error('Failed to open JSON files for %s; REACH error?' %
+                      prefix)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
 
 def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
     # The prefixes should be PMIDs
@@ -43,20 +58,6 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
                                num_cores):
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
-    def join_parts(prefix):
-        """Join different REACH output JSON files into a single JSON."""
-        try:
-            with open(prefix + '.uaz.entities.json', 'rt') as f:
-                entities = json.load(f)
-            with open(prefix + '.uaz.events.json', 'rt') as f:
-                events = json.load(f)
-            with open(prefix + '.uaz.sentences.json', 'rt') as f:
-                sentences = json.load(f)
-        except IOError as e:
-            logger.error('Failed to open JSON files for %s; REACH error?' %
-                          prefix)
-            return None
-        return {'events': events, 'entities': entities, 'sentences': sentences}
 
     # Collect prefixes
     json_files = glob.glob(os.path.join(output_dir, '*.json'))
