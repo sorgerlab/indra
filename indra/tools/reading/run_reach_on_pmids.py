@@ -247,7 +247,13 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
         logger.info('Content sources:')
         for source, count in content_source_list:
             logger.info('%s: %d' % (source, count))
-
+    # Save text sources
+    logger.info('Saving text sources...')
+    text_source_file = os.path.join(base_dir, 'content_types.pkl')
+    with open(text_source_file, 'wb') as f:
+        pickle.dump(pmids_unread, f, protocol=2)
+    import sys
+    sys.exit()
     # Create the REACH configuration file
     conf_file_text = """
     #
@@ -382,7 +388,7 @@ if __name__ == '__main__':
     path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     reach_version = '1.3.3-b4a284'
-    force_read = False
+    force_read = True
     force_fulltext = False
 
     # Check the arguments
