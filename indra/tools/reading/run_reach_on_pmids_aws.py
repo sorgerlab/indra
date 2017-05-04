@@ -18,11 +18,12 @@ if __name__ == '__main__':
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
-    pmid_list_key = 'pmid_lists/' + sys.argv[1]
-    tmp_dir = sys.argv[2]
-    num_cores = int(sys.argv[3])
-    start_index = int(sys.argv[4])
-    end_index = int(sys.argv[5])
+    base_name = sys.argv[1]
+    pmid_list_key = 'pmid_lists/' + sys.argv[2]
+    tmp_dir = sys.argv[3]
+    num_cores = int(sys.argv[4])
+    start_index = int(sys.argv[5])
+    end_index = int(sys.argv[6])
     path_to_reach = os.environ.get('REACH_JAR_PATH')
     reach_version = os.environ.get('REACH_VERSION')
     if path_to_reach is None or reach_version is None:
@@ -44,6 +45,14 @@ if __name__ == '__main__':
     pmid_list = [line.strip() for line in pmid_list_str.split('\n')]
 
     # Run the REACH reading pipeline
-    rr.run(pmid_list, tmp_dir, num_cores, start_index, end_index, False,
-           False, path_to_reach, reach_version, cleanup=False, verbose=True)
+    stmts = rr.run(pmid_list, tmp_dir, num_cores, start_index, end_index,
+                   False, False, path_to_reach, reach_version, cleanup=False,
+                   verbose=True)
+    # Pickle the statements to a bytestring
+    pickle_key_name = 'reading_results/%s/stmts_%d_%d.pkl' % \
+                      (basename, start_index, end_index)
+    stmts_bytes = pickle.dumps(stmts)
+    client.put_object(Key=pickle_key_name, Body=stmts_bytes,
+                      Bucket=bucket_name)
+
 
