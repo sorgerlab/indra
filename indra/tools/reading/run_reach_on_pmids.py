@@ -13,6 +13,7 @@ import logging
 import functools
 import multiprocessing as mp
 from collections import Counter
+from indra import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 
@@ -152,6 +153,27 @@ def download_from_s3(pmid, input_dir=None, reach_version=None,
     return result
 
 
+def process_reach_str(reach_json_str, pmid):
+    if reach_json_str is None:
+        raise ValueError('reach_json_str cannot be None')
+    # Run the REACH processor on the JSON
+    try:
+        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
+    # If there's a problem, skip it
+    except Exception as e:
+        print("Exception processing %s" % pmid)
+        print(e)
+    return reach_proc.statements
+
+
+def process_reach_from_s3(pmid):
+    reach_json_str = s3_client.get_reach_json_str(pmid)
+    if reach_json_str is None:
+        return []
+    else:
+        return {pmid: process_reach_str(reach_json_str, pmid)}
+
+
 def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
         force_fulltext, path_to_reach, reach_version, cleanup=False,
         verbose=True):
@@ -181,6 +203,8 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
                                          force_read=force_read,
                                          force_fulltext=force_fulltext)
     res = pool.map(download_from_s3_func, pmids_in_range)
+    # Close the pool to allow worker processes to exit before running REACH
+    pool.close()
     # Combine the results into a single dict
     pmid_results = {pmid: results for pmid_dict in res
                                   for pmid, results in pmid_dict.items()}
@@ -207,6 +231,15 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
         logger.info('Content sources:')
         for source, count in content_source_list:
             logger.info('%s: %d' % (source, count))
+
+    # Create a new pool
+    logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
+    pool = ctx.Pool(num_cores)
+    logger.info('Processing REACH JSON from S3 in parallel')
+    # Download and process the JSON files on S3
+    res = pool.map(process_reach_from_s3, pmids_read.keys())
+
+    import ipdb; ipdb.set_trace()
 
     """
     # If we're re-reading no matter what, we don't have to check for existing
@@ -428,14 +461,17 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     if p.returncode:
         raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
 
+    # Process papers on S3, collect statements?
+    # Process papers just read, collect statements?
+
     # Save the list of PMIDs with no content found on S3/literature client
     content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
     with open(content_not_found_file, 'wt') as f:
         for c in content_not_found:
             f.write('%s\n' % c)
 
-    # Upload!
-    upload_reach_json(output_dir, text_sources, reach_version)
+    #res = pool.map(pmids_read.keys(), 
+    #process_reach_json(output_dir, text_sources, reach_version)
 
     if cleanup:
         shutil.rmtree(base_dir)
