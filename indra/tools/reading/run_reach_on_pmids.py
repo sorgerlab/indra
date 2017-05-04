@@ -78,8 +78,8 @@ def upload_reach_json(output_dir, text_sources, reach_version):
 # Version 2: If JSON is available, return JSON or process
 # it and return statements (process it?)
 
-def download_from_s3(pmid, input_dir=None, force_read=False,
-                     force_fulltext=False):
+def download_from_s3(pmid, input_dir=None, reach_version=None,
+                     force_read=False, force_fulltext=False):
     if input_dir is None:
         raise ValueError('input_dir must be defined')
 
@@ -134,9 +134,23 @@ def download_from_s3(pmid, input_dir=None, force_read=False,
 
     # If we're forcing a read regardless of whether there is cached REACH
     # output, then we download the text content
-    if force_read:
+    if force_read or reach_version is None:
         return get_text()
     # If not, look for REACH JSON on S3
+    (read_reach_version, read_source_text) = \
+                            s3_client.get_reach_metadata(pmid)
+    # Found it, same version, no need to get text
+    if read_reach_version is not None and \
+       read_reach_version == reach_version:
+       result = {pmid: {'reach_version': read_reach_version,
+                        'reach_source_text': read_source_text}}
+    # Found it, different version, get the text
+    else:
+        result = get_text()
+        result[pmid].update({'reach_version': read_reach_version,
+                             'reach_source_text': read_source_text})
+    return result
+
 
 def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
         force_fulltext, path_to_reach, reach_version, cleanup=False,
@@ -161,30 +175,39 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     ctx = mp.get_context('spawn')
     pool = ctx.Pool(num_cores)
     logger.info('Getting content for PMIDs in parallel')
-    get_content_func = functools.partial(get_content, input_dir=input_dir,
+    download_from_s3_func = functools.partial(download_from_s3,
+                                         input_dir=input_dir,
+                                         reach_version=reach_version,
                                          force_read=force_read,
                                          force_fulltext=force_fulltext)
-    res = pool.map(get_content_func, pmids_in_range)
+    res = pool.map(download_from_s3_func, pmids_in_range)
     # Combine the results into a single dict
     pmid_results = {pmid: results for pmid_dict in res
                                   for pmid, results in pmid_dict.items()}
     # Tabulate and log content results here
-    num_found = len([pmid for pmid in pmid_results
-                          if pmid_results[pmid]['content_path']])
-    logger.info('Found content for %d / %d papers' %
-                (num_found, len(pmid_results)))
+    pmids_read = {pmid: result for pmid, result in pmid_results.items()
+                       if result.get('reach_version') == reach_version}
+    pmids_unread = {pmid: pmid_results[pmid]
+                    for pmid in
+                    set(pmid_results.keys()).difference(set(pmids_read.keys()))}
+    logger.info('%d / %d papers already read with REACH %s' %
+                (len(pmids_read), len(pmid_results), reach_version))
+    num_found = len([pmid for pmid in pmids_unread
+                          if pmids_unread[pmid].get('content_path')])
+    logger.info('Retrieved content for %d / %d papers to be read' %
+                (num_found, len(pmids_unread)))
     # Tabulate sources and log in sorted order
-    content_source_list = [pmid_dict['content_source']
-                           for pmid_dict in pmid_results.values()]
+    content_source_list = [pmid_dict.get('content_source')
+                           for pmid_dict in pmids_unread.values()]
     content_source_counter = Counter(content_source_list)
     content_source_list = [(source, count)
                             for source, count in content_source_counter.items()]
     content_source_list.sort(key=lambda x: x[1], reverse=True)
-    logger.info('Content sources:')
-    for source, count in content_source_list:
-        logger.info('%s: %d' % (source, count))
+    if content_source_list:
+        logger.info('Content sources:')
+        for source, count in content_source_list:
+            logger.info('%s: %d' % (source, count))
 
-    # TODO: log results here!
     """
     # If we're re-reading no matter what, we don't have to check for existing
     # REACH output
