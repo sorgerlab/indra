@@ -400,35 +400,39 @@ if __name__ == '__main__':
     force_fulltext = False
 
     # Check the arguments
-    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
-            "[force_fulltext]\n" % sys.argv[0]
-    usage += "Alternative usage: %s upload_json output_dir " \
+    usage = "Usage: %s basename pmid_list tmp_dir num_cores start_index " \
+            "end_index [force_fulltext]\n" % sys.argv[0]
+    usage += "Alternative usage: %s upload_json basename output_dir " \
                         "content_types_file num_cores" % sys.argv[0]
-    if len(sys.argv) not in  (5, 6, 7):
+    if len(sys.argv) not in  (6, 7, 8):
         print(usage)
         sys.exit()
-    if len(sys.argv) == 5 and sys.argv[1] != 'upload_json':
+    if len(sys.argv) == 6 and sys.argv[1] != 'upload_json':
         print(usage)
         sys.exit()
-    if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
+    if len(sys.argv) == 8 and sys.argv[6] != 'force_fulltext':
         print(usage)
         sys.exit()
-    elif len(sys.argv) == 7:
+    elif len(sys.argv) == 8:
         force_fulltext = True
 
     # One type of operation: just upload previously read JSON files
     if len(sys.argv) == 5 and sys.argv[1] == 'upload_json':
-        output_dir = sys.argv[2]
-        text_sources_file = sys.argv[3]
+        basename = sys.argv[2]
+        output_dir = sys.argv[3]
+        text_sources_file = sys.argv[4]
+        num_cores = int(sys.argv[5])
         with open(text_sources_file, 'rb') as f:
             text_sources = pickle.load(f)
-        upload_process_reach_files(output_dir, text_sources, reach_version, 1)
+        upload_process_reach_files(output_dir, text_sources, reach_version,
+                                   num_cores)
         sys.exit()
 
     # =======================
     # Alternatively, run the whole process
     # Get the command line arguments
-    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
+    (basename, pmid_list_file, tmp_dir, num_cores,
+                                start_index, end_index) = sys.argv[1:7]
     start_index = int(start_index)
     end_index = int(end_index)
     num_cores = int(num_cores)
@@ -441,3 +445,9 @@ if __name__ == '__main__':
     stmts = run(pmid_list, tmp_dir, num_cores, start_index, end_index,
                 force_read, force_fulltext, path_to_reach, reach_version,
                 cleanup=cleanup, verbose=verbose)
+
+    # Pickle the statements
+    pickle_file = '%s_stmts_%d_%d.pkl' % (basename, start_index, end_index)
+    with open(pickle_file, 'wb') as f:
+        pickle.dump(stmts, f, protocol=2)
+
