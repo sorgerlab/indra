@@ -417,15 +417,18 @@ if __name__ == '__main__':
         force_fulltext = True
 
     # One type of operation: just upload previously read JSON files
-    if len(sys.argv) == 5 and sys.argv[1] == 'upload_json':
+    if len(sys.argv) == 6 and sys.argv[1] == 'upload_json':
         basename = sys.argv[2]
         output_dir = sys.argv[3]
         text_sources_file = sys.argv[4]
         num_cores = int(sys.argv[5])
         with open(text_sources_file, 'rb') as f:
             text_sources = pickle.load(f)
-        upload_process_reach_files(output_dir, text_sources, reach_version,
-                                   num_cores)
+        stmts = upload_process_reach_files(output_dir, text_sources, reach_version,
+                                           num_cores)
+        pickle_file = '%s_stmts.pkl' % basename
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(stmts, f, protocol=2)
         sys.exit()
 
     # =======================
