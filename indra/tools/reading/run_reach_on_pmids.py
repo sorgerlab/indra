@@ -252,8 +252,7 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
         pickle.dump(pmids_unread, f, protocol=2)
-    import sys
-    sys.exit()
+
     # Create the REACH configuration file
     conf_file_text = """
     #
