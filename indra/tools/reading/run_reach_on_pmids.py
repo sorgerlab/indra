@@ -393,12 +393,12 @@ if __name__ == '__main__':
     # Check the arguments
     usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
             "[force_fulltext]\n" % sys.argv[0]
-    usage += "Alternative usage: %s upload_json output_dir content_types_file" % \
-              sys.argv[0]
-    if len(sys.argv) not in  (4, 6, 7):
+    usage += "Alternative usage: %s upload_json output_dir " \
+                        "content_types_file num_cores" % sys.argv[0]
+    if len(sys.argv) not in  (5, 6, 7):
         print(usage)
         sys.exit()
-    if len(sys.argv) == 4 and sys.argv[1] != 'upload_json':
+    if len(sys.argv) == 5 and sys.argv[1] != 'upload_json':
         print(usage)
         sys.exit()
     if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
@@ -408,12 +408,12 @@ if __name__ == '__main__':
         force_fulltext = True
 
     # One type of operation: just upload previously read JSON files
-    if len(sys.argv) == 4 and sys.argv[1] == 'upload_json':
+    if len(sys.argv) == 5 and sys.argv[1] == 'upload_json':
         output_dir = sys.argv[2]
         text_sources_file = sys.argv[3]
         with open(text_sources_file, 'rb') as f:
             text_sources = pickle.load(f)
-        upload_process_reach_files(output_dir, text_sources, reach_version)
+        upload_process_reach_files(output_dir, text_sources, reach_version, 1)
         sys.exit()
 
     # =======================
