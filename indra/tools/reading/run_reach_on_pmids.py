@@ -75,7 +75,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
                   for json_prefix in json_prefixes]
     # Create a multiprocessing pool
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
-    #pool = ctx.Pool(num_cores)
+    pool = ctx.Pool(num_cores)
     logger.info('Uploading and processing local REACH JSON files')
     upload_process_pmid_func = \
             functools.partial(upload_process_pmid, output_dir=output_dir,
@@ -83,6 +83,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
     res = pool.map(upload_process_pmid_func, pmid_info)
     stmts_by_pmid = {pmid: stmts for res_dict in res
                                  for pmid, stmts in res_dict.items()}
+    pool.close()
     return stmts_by_pmid
 
     """
