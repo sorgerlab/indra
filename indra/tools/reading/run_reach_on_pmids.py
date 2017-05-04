@@ -12,6 +12,7 @@ import pickle
 import logging
 import functools
 import multiprocessing as mp
+from collections import Counter
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 
@@ -78,6 +79,8 @@ def upload_reach_json(output_dir, text_sources, reach_version):
 # it and return statements (process it?)
 
 def get_content(pmid, input_dir=None, force_read=False, force_fulltext=False):
+    if input_dir is None:
+        raise ValueError('input_dir must be defined')
     # If we're forcing a read regardless of whether there is cached REACH
     # output, then we download the text content
     full_pmid = s3_client.check_pmid(pmid)
@@ -155,6 +158,24 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
                                          force_read=force_read,
                                          force_fulltext=force_fulltext)
     res = pool.map(get_content_func, pmids_in_range)
+    # Combine the results into a single dict
+    pmid_results = {pmid: results for pmid_dict in res
+                                  for pmid, results in pmid_dict.items()}
+    # Tabulate and log content results here
+    num_found = len([pmid for pmid in pmid_results
+                          if pmid_results[pmid]['content_path']])
+    logger.info('Found content for %d / %d papers' %
+                (num_found, len(pmid_results)))
+    # Tabulate sources and log in sorted order
+    content_source_list = [pmid_dict['content_source']
+                           for pmid_dict in pmid_results.values()]
+    content_source_counter = Counter(content_source_list)
+    content_source_list = [(source, count)
+                            for source, count in content_source_counter.items()]
+    content_source_list.sort(key=lambda x: x[1], reverse=True)
+    logger.info('Content sources:')
+    for source, count in content_source_list:
+        logger.info('%s: %d' % (source, count))
 
     # TODO: log results here!
     """
