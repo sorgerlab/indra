@@ -9,8 +9,8 @@ if __name__ == '__main__':
 
     bucket_name = 'bigmech'
     s3_client = boto3.client('s3')
-    pmid_list_filename = sys.argv[1]
-    job_name = sys.argv[2]
+    job_name = sys.argv[1]
+    pmid_list_filename = sys.argv[2]
     pmid_list_key = 'pmid_lists/' + pmid_list_filename
     # Upload the pmid_list to Amazon S3
     s3_client.upload_file(pmid_list_filename, 'bigmech', pmid_list_key)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # The command to run
     base_command_list = ['python', '-m',
                          'indra.tools.reading.run_reach_on_pmids_aws',
-                         pmid_list_filename, '/tmp', '16']
+                         job_name, pmid_list_filename, '/tmp', '16', '0', '10']
     # Submit the reading job
     batch_client = boto3.client('batch')
     # Iterate over the list of PMIDs and submit the job in chunks
@@ -42,5 +42,5 @@ if __name__ == '__main__':
                             jobQueue='run_reach_queue',
                             jobDefinition='run_reach_jobdef',
                             containerOverrides={'environment': environment_vars,
-                                                'command': command})
+                                                'command': base_command_list})
 
