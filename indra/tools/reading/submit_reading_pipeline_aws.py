@@ -48,9 +48,9 @@ if __name__ == '__main__':
     for start_ix in range(0, num_pmids, pmids_per_job):
         end_ix = start_ix + pmids_per_job
         command_list = base_command_list + [str(start_ix), str(end_ix)]
+        print(command_list)
         batch_client.submit_job(jobName=job_name,
                             jobQueue='run_reach_queue',
                             jobDefinition='run_reach_jobdef',
                             containerOverrides={'environment': environment_vars,
                                                 'command': command_list})
-

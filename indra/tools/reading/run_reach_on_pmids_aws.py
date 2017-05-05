@@ -36,7 +36,8 @@ if __name__ == '__main__':
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('Could not find PMID list file at %s, exiting' % key)
+            logger.info('Could not find PMID list file at %s, exiting' %
+                        pmid_list_key)
             sys.exit(1)
         # If there was some other kind of problem, re-raise the exception
         else:
