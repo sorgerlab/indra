@@ -14,7 +14,7 @@ if __name__ == '__main__':
     pmid_list_key = 'reading_results/%s/pmids' % basename
     # Upload the pmid_list to Amazon S3
     s3_client.upload_file(pmid_list_filename, 'bigmech', pmid_list_key)
-    pmids_per_job = 100
+    pmids_per_job = 1000
 
     # Get AWS credentials
     # http://stackoverflow.com/questions/36287720/boto3-get-credentials-dynamically
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         job_name = '%s_%d_%d' % (basename, start_ix, end_ix)
         command_list = ['python', '-m',
                         'indra.tools.reading.run_reach_on_pmids_aws',
-                        job_name, '/tmp', '16', str(start_ix), str(end_ix)]
+                        basename, '/tmp', '16', str(start_ix), str(end_ix)]
         print(command_list)
         batch_client.submit_job(jobName=job_name,
                             jobQueue='run_reach_queue',

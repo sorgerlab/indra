@@ -53,6 +53,8 @@ if __name__ == '__main__':
     # Pickle the statements to a bytestring
     pickle_key_name = 'reading_results/%s/stmts/%d_%d.pkl' % \
                       (basename, start_index, end_index)
+    logger.info("Saving stmts for %d papers to %s" %
+                (len(stmts), pickle_key_name))
     stmts_bytes = pickle.dumps(stmts)
     client.put_object(Key=pickle_key_name, Body=stmts_bytes,
                       Bucket=bucket_name)
