@@ -12,6 +12,7 @@ if __name__ == '__main__':
     import botocore
     import os
     import sys
+    import pickle
     import logging
 
     logger = logging.getLogger('run_reach_on_pmids_aws')
