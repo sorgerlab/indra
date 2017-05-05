@@ -20,7 +20,7 @@ if __name__ == '__main__':
     client = boto3.client('s3')
     bucket_name = 'bigmech'
     basename = sys.argv[1]
-    pmid_list_key = 'reading_results/%s/pmids' + sys.argv[1]
+    pmid_list_key = 'reading_results/%s/pmids' % sys.argv[1]
     tmp_dir = sys.argv[2]
     num_cores = int(sys.argv[3])
     start_index = int(sys.argv[4])
