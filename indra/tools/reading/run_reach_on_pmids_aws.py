@@ -47,9 +47,16 @@ if __name__ == '__main__':
     pmid_list = [line.strip() for line in pmid_list_str.split('\n')]
 
     # Run the REACH reading pipeline
-    stmts = rr.run(pmid_list, tmp_dir, num_cores, start_index, end_index,
-                   False, False, path_to_reach, reach_version, cleanup=False,
-                   verbose=True)
+    (stmts, content_types) = rr.run(pmid_list, tmp_dir, num_cores, start_index,
+                                    end_index, False, False, path_to_reach,
+                                    reach_version, cleanup=False, verbose=True)
+    # Pickle the content types to S3
+    ct_key_name = 'reading_results/%s/content_types/%d_%d.pkl' % \
+                  (basename, start_index, end_index)
+    logger.info("Saving content types for %d papers to %s" %
+                (len(stmts), ct_key_name))
+    ct_bytes = pickle.dumps(content_types)
+    client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
     # Pickle the statements to a bytestring
     pickle_key_name = 'reading_results/%s/stmts/%d_%d.pkl' % \
                       (basename, start_index, end_index)

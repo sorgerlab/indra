@@ -381,7 +381,7 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     s3_stmts = {pmid: stmt_list for res_dict in res
                                 for pmid, stmt_list in res_dict.items()}
     stmts.update(s3_stmts)
-    return stmts
+    return (stmts, pmids_unread)
 
     # Save the list of PMIDs with no content found on S3/literature client
     #content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
@@ -445,9 +445,10 @@ if __name__ == '__main__':
         pmid_list = [line.strip('\n') for line in f.readlines()]
 
     # Do the reading
-    stmts = run(pmid_list, tmp_dir, num_cores, start_index, end_index,
-                force_read, force_fulltext, path_to_reach, reach_version,
-                cleanup=cleanup, verbose=verbose)
+    (stmts, content_types) = run(pmid_list, tmp_dir, num_cores, start_index,
+                                 end_index, force_read, force_fulltext,
+                                 path_to_reach, reach_version,
+                                 cleanup=cleanup, verbose=verbose)
 
     # Pickle the statements
     pickle_file = '%s_stmts_%d_%d.pkl' % (basename, start_index, end_index)
