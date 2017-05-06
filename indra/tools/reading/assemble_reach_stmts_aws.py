@@ -22,7 +22,7 @@ def assemble_batch_results(result_type):
             break
     # Now that we have the keys, get and unpickle each of the pickles
     results = {}
-    for key in result_file_keys[0:3]:
+    for key in result_file_keys:
         try:
             logger.info('Downloading and unpickling %s' % key)
             result_obj = client.get_object(Bucket=bucket_name, Key=key)
