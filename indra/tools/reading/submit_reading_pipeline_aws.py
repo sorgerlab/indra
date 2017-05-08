@@ -54,21 +54,26 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=0, end_ix=None,
                        jobDefinition='run_reach_jobdef',
                        containerOverrides={'environment': environment_vars,
                                            'command': command_list})
-        job_list.append(job_info)
+        job_list.append({'jobId': job_info['jobId']})
     return job_list
 
-def submit_combine(basename):
+def submit_combine(basename, job_ids=None):
+    # Get environment variables
+    environment_vars = get_environment()
+
     job_name = '%s_combine_reach' % basename
     command_list = ['python', '-m',
                     'indra.tools.reading.assemble_reach_stmts_aws',
                     basename]
     print(command_list)
-    batch_client.submit_job(jobName=job_name, jobQueue='run_reach_queue',
-                       jobDefinition='run_reach_jobdef',
-                       containerOverrides={'environment': environment_vars,
-                                           'command': command_list,
-                                           'memory': 60000,
-                                           'vcpus': 1})
+    kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
+              'jobDefinition': 'run_reach_jobdef',
+              'containerOverrides': {'environment': environment_vars,
+                                     'command': command_list,
+                                     'memory': 60000, 'vcpus': 1}}
+    if job_ids:
+        kwargs['dependsOn'] = job_ids
+    batch_client.submit_job(**kwargs)
 
 if __name__ == '__main__':
     import sys
@@ -85,12 +90,12 @@ if __name__ == '__main__':
     if job_type == 'read':
         basename = sys.argv[2]
         pmid_list_filename = sys.argv[3]
-        main_start_ix = int(sys.argv[4])
-        main_end_ix = int(sys.argv[5])
+        start_ix = int(sys.argv[4])
+        end_ix = int(sys.argv[5])
         pmids_per_job = int(sys.argv[6])
         # force_read
         # force_fulltext
-        job_ids = submit_reach(basename, pmid_list_filename, start_ix,
+        job_ids = submit_run_reach(basename, pmid_list_filename, start_ix,
                                end_ix, pmids_per_job)
     elif job_type == 'combine':
         basename = sys.argv[2]
@@ -98,11 +103,11 @@ if __name__ == '__main__':
     elif job_type == 'full':
         basename = sys.argv[2]
         pmid_list_filename = sys.argv[3]
-        main_start_ix = int(sys.argv[4])
-        main_end_ix = int(sys.argv[5])
+        start_ix = int(sys.argv[4])
+        end_ix = int(sys.argv[5])
         pmids_per_job = int(sys.argv[6])
-        job_ids = submit_reach(basename, pmid_list_filename, start_ix,
-                               end_ix, pmids_per_job)
+        job_ids = submit_run_reach(basename, pmid_list_filename, start_ix,
+                                   end_ix, pmids_per_job)
         submit_combine(basename, job_ids)
     else:
         print('job type must be "read", "combine", or "full"')
