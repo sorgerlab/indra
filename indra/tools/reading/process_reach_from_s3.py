@@ -28,10 +28,6 @@ if __name__ == '__main__':
     if end_ix > len(pmid_list):
         end_ix = len(pmid_list)
 
-    # Initialize S3 stuff
-    bucket_name ='bigmech'
-    client = boto3.client('s3')
-
     stmts = {}
     for ix, pmid in enumerate(pmid_list[start_ix:end_ix]):
         reach_json_str = s3_client.get_reach_json_str(pmid)

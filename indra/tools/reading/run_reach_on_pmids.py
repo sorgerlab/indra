@@ -10,29 +10,57 @@ import glob
 import json
 import pickle
 import logging
+import functools
+import multiprocessing as mp
+from collections import Counter
+from indra import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 
 # Logger
 logger = logging.getLogger('runreach')
 
-def upload_reach_json(output_dir, text_sources):
+# Get a multiprocessing context
+ctx = mp.get_context('spawn')
+
+def join_parts(prefix):
+    """Join different REACH output JSON files into a single JSON."""
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error('Failed to open JSON files for %s; REACH error?' %
+                      prefix)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
+def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
+    # The prefixes should be PMIDs
+    pmid, source_text = pmid_info
+    prefix_with_path = os.path.join(output_dir, pmid)
+    full_json = join_parts(prefix_with_path)
+    # Check that all parts of the JSON could be assembled
+    if full_json is None:
+        logger.error('REACH output missing JSON for %s' % pmid)
+        return {pmid: []}
+    # Upload the REACH output to S3
+    s3_client.put_reach_output(full_json, pmid, reach_version, source_text)
+    # Process the REACH output with INDRA
+    # Convert the JSON object into a string first so that a series of string
+    # replacements can happen in the REACH processor
+    reach_json_str = json.dumps(full_json)
+    return {pmid: process_reach_str(reach_json_str, pmid)}
+
+
+def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
+                               num_cores):
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
-    def join_parts(prefix):
-        """Join different REACH output JSON files into a single JSON."""
-        try:
-            with open(prefix + '.uaz.entities.json', 'rt') as f:
-                entities = json.load(f)
-            with open(prefix + '.uaz.events.json', 'rt') as f:
-                events = json.load(f)
-            with open(prefix + '.uaz.sentences.json', 'rt') as f:
-                sentences = json.load(f)
-        except IOError as e:
-            logger.error('Failed to open JSON files for %s; REACH error?' %
-                          prefix)
-            return None
-        return {'events': events, 'entities': entities, 'sentences': sentences}
 
     # Collect prefixes
     json_files = glob.glob(os.path.join(output_dir, '*.json'))
@@ -41,80 +69,138 @@ def upload_reach_json(output_dir, text_sources):
         filename = os.path.basename(json_file)
         prefix = filename.split('.')[0]
         json_prefixes.add(prefix)
-    # Now iterate over the collected prefixes, combine the JSON, and send to S3
-    num_uploaded = 0
-    num_failures = 0
-    failures = []
-    # The prefixes should be PMIDs
-    for json_ix, json_prefix in enumerate(json_prefixes):
-        prefix_with_path = os.path.join(output_dir, json_prefix)
-        full_json = join_parts(prefix_with_path)
-        if full_json is None:
-            num_failures += 1
-            failures.append(json_prefix)
-        else:
-            # Look up the paper source type
-            source_text = text_sources.get(json_prefix)
-            logger.info('%s (%d of %d): source %s' %
-                      (json_prefix, json_ix + 1, len(json_prefixes), source_text))
-            s3_client.put_reach_output(full_json, json_prefix, reach_version,
-                                       source_text)
-            num_uploaded += 1
+    # Make a list with PMID and source_text info
+    pmid_info = [(json_prefix,
+                  pmid_info_dict[json_prefix].get('content_source'))
+                  for json_prefix in json_prefixes]
+    # Create a multiprocessing pool
+    logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
+    pool = ctx.Pool(num_cores)
+    logger.info('Uploading and processing local REACH JSON files')
+    upload_process_pmid_func = \
+            functools.partial(upload_process_pmid, output_dir=output_dir,
+                              reach_version=reach_version)
+    res = pool.map(upload_process_pmid_func, pmid_info)
+    stmts_by_pmid = {pmid: stmts for res_dict in res
+                                 for pmid, stmts in res_dict.items()}
+    pool.close()
+    return stmts_by_pmid
+
+    """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
         (num_uploaded, num_failures))
     failures_file = os.path.join(output_dir, 'failures.txt')
     with open(failures_file, 'wt') as f:
         for fail in failures:
             f.write('%s\n' % fail)
+    """
+
+# Version 1: If JSON is not available, get content and store;
+#       assume force_read is False
+# Version 1.5: If JSON is not available, get content and store;
+#       check for force_read
+# Version 2: If JSON is available, return JSON or process
+# it and return statements (process it?)
+
+def download_from_s3(pmid, input_dir=None, reach_version=None,
+                     force_read=False, force_fulltext=False):
+    if input_dir is None:
+        raise ValueError('input_dir must be defined')
+
+    # First define the text retrieval function
+    def get_text():
+        full_pmid = s3_client.check_pmid(pmid)
+        # Look for the full text
+        (content, content_type) = s3_client.get_upload_content(pmid,
+                                        force_fulltext_lookup=force_fulltext)
+        content_path = None
+        # Write the contents to a file
+        if content_type is None or content is None:
+            # No content found on S3, skipping
+            content_source = 'content_not_found'
+        elif content_type == 'pmc_oa_xml':
+            content_source = 'pmc_oa_xml'
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
+        elif content_type == 'pmc_auth_xml':
+            content_source = 'pmc_auth_xml'
+            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
+        elif content_type == 'pmc_oa_txt':
+            content_source = 'pmc_oa_txt'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'elsevier_xml':
+            content = elsevier_client.extract_text(content)
+            # Couldn't get text from Elsevier XML
+            if content is None:
+                content_source = 'elsevier_extract_text_failure'
+            else:
+                content_source = 'elsevier_xml'
+                content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'txt':
+            content_source = 'txt'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        elif content_type == 'abstract':
+            content_source = 'abstract'
+            content_path = os.path.join(input_dir, '%s.txt' % pmid)
+        # Unhandled content type, skipping
+        else:
+            content_source = 'unhandled_content_type_%s' % content_type
+        # If we got content, write the content to a file with the appropriate
+        # extension
+        if content_path:
+            with open(content_path, 'wb') as f:
+                # The XML string is Unicode
+                enc = content.encode('utf-8')
+                f.write(enc)
+        # Return dict of results for this PMID
+        result = {pmid: {'content_source': content_source,
+                         'content_path': content_path}}
+        return result
+
+    # If we're forcing a read regardless of whether there is cached REACH
+    # output, then we download the text content
+    if force_read or reach_version is None:
+        return get_text()
+    # If not, look for REACH JSON on S3
+    (read_reach_version, read_source_text) = \
+                            s3_client.get_reach_metadata(pmid)
+    # Found it, same version, no need to get text
+    if read_reach_version is not None and \
+       read_reach_version == reach_version:
+       result = {pmid: {'reach_version': read_reach_version,
+                        'reach_source_text': read_source_text}}
+    # Found it, different version, get the text
+    else:
+        result = get_text()
+        result[pmid].update({'reach_version': read_reach_version,
+                             'reach_source_text': read_source_text})
+    return result
 
 
-if __name__ == '__main__':
+def process_reach_str(reach_json_str, pmid):
+    if reach_json_str is None:
+        raise ValueError('reach_json_str cannot be None')
+    # Run the REACH processor on the JSON
+    try:
+        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
+    # If there's a problem, skip it
+    except Exception as e:
+        print("Exception processing %s" % pmid)
+        print(e)
+        return []
+    return reach_proc.statements
 
-    cleanup = False
-    verbose = True
-    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    reach_version = '1.3.3-b4a284'
-    force_read = False
-    force_fulltext = False
 
-    # Check the arguments
-    usage = "Usage: %s pmid_list tmp_dir num_cores start_index end_index " \
-            "[force_fulltext]\n" % sys.argv[0]
-    usage += "Alternative usage: %s upload_json output_dir content_types_file" % \
-              sys.argv[0]
-    if len(sys.argv) not in  (4, 6, 7):
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 4 and sys.argv[1] != 'upload_json':
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 7 and sys.argv[6] != 'force_fulltext':
-        print(usage)
-        sys.exit()
-    elif len(sys.argv) == 7:
-        force_fulltext = True
+def process_reach_from_s3(pmid):
+    reach_json_str = s3_client.get_reach_json_str(pmid)
+    if reach_json_str is None:
+        return []
+    else:
+        return {pmid: process_reach_str(reach_json_str, pmid)}
 
-    # One type of operation: just upload previously read JSON files
-    if len(sys.argv) == 4 and sys.argv[1] == 'upload_json':
-        output_dir = sys.argv[2]
-        text_sources_file = sys.argv[3]
-        with open(text_sources_file, 'rb') as f:
-            text_sources = pickle.load(f)
-        upload_reach_json(output_dir, text_sources)
-        sys.exit()
 
-    # =======================
-    # Alternatively, run the whole process
-    # Get the command line arguments
-    (pmid_list_file, tmp_dir, num_cores, start_index, end_index) = sys.argv[1:6]
-    start_index = int(start_index)
-    end_index = int(end_index)
-    num_cores = int(num_cores)
-
-    # Load the list of PMIDs from the given file
-    with open(pmid_list_file) as f:
-        pmid_list = [line.strip('\n') for line in f.readlines()]
+def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
+        force_fulltext, path_to_reach, reach_version, cleanup=False,
+        verbose=True):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -128,127 +214,51 @@ if __name__ == '__main__':
     output_dir = os.path.join(base_dir, 'output')
     os.makedirs(input_dir)
     os.makedirs(output_dir)
-
     pmids_to_read = []
 
-    # If we're re-reading no matter what, we don't have to check for existing
-    # REACH output
-    if force_read:
-        pmids_to_read = pmids_in_range
-    # Otherwise, check if we've read the PMIDs already
-    else:
-        for pmid in pmids_in_range:
-            pmid = s3_client.check_pmid(pmid)
-            (read_reach_version, read_source_text) = \
-                                    s3_client.get_reach_metadata(pmid)
-            # Found it, same version
-            if read_reach_version is not None and \
-               read_reach_version == reach_version:
-                logger.info('%s: found same version (%s), skipping' %
-                            (pmid, read_reach_version))
-            # Found it, different version
-            else:
-                logger.info('%s: found %s, current %s; will re-read' %
-                            (pmid, read_reach_version, reach_version))
-                pmids_to_read.append(pmid)
-
-    if not pmids_to_read:
-        logger.info('No pmids to read!')
-        sys.exit(0)
-    else:
-        logger.info('Preparing to run REACH on %d PMIDs' % len(pmids_to_read))
-
-    # Now iterate over the pmids to read and download from S3 to the input
-    # directory
-    num_pmc_oa_xml = 0
-    num_pmc_auth_xml = 0
-    num_txt = 0
-    num_elsevier_xml = 0
-    num_abstract = 0
-    num_not_found = 0
-    num_elsevier_xml_fail = 0
-    # Keep a map of the content type we've downloaded for each PMID
-    text_sources = {}
-    content_not_found = []
-    for pmid in pmids_to_read:
-        full_pmid = s3_client.check_pmid(pmid)
-        # Look for the full text
-        (content, content_type) = s3_client.get_upload_content(pmid, force_fulltext_lookup=force_fulltext)
-        # If we don't find the XML on S3, look for it using the PMC client
-        #if xml:
-        #    num_found_s3 += 1
-        #else:
-        #    logger.info('No content for %s from S3' % pmid)
-        #    (content, content_type) = get_full_text(pmid, 'pmid')
-        #    if content_type == 'nxml':
-        #        logger.info('Found nxml for %s from PMC web service' % pmid)
-        #        xml = content
-        #        num_found_not_s3 += 1
-        #        # Upload the xml to S3 for next time
-        #        logger.info('Uploading full text for %s to S3' % pmid)
-        #        s3_client.put_full_text(pmid, xml, full_text_type='pmc_oa_xml')
-        #    #elif content_type == 'abstract':
-        #    #    logger.info('Found abstract for %s' % pmid)
-        #    #    s3_client.put_abstract(pmid, content)
-        #    else:
-        #        logger.info('No full text found for %s' % pmid)
-        # Write the contents to a file
-        if content_type is None or content is None:
-            num_not_found += 1
-            content_not_found.append(pmid)
-            logger.info('No content found on S3 for %s, skipping' % pmid)
-            continue
-        elif content_type == 'pmc_oa_xml':
-            num_pmc_oa_xml += 1
-            text_sources[full_pmid] = 'pmc_oa_xml'
-            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
-        elif content_type == 'pmc_auth_xml':
-            num_pmc_auth_xml += 1
-            text_sources[full_pmid] = 'pmc_auth_xml'
-            content_path = os.path.join(input_dir, '%s.nxml' % pmid)
-        elif content_type == 'pmc_oa_txt':
-            num_txt += 1
-            text_sources[full_pmid] = 'pmc_oa_txt'
-            content_path = os.path.join(input_dir, '%s.txt' % pmid)
-        elif content_type == 'elsevier_xml':
-            content = elsevier_client.extract_text(content)
-            if content is None:
-                logger.info("%s: Couldn't get text from Elsevier XML" % pmid)
-                num_elsevier_xml_fail += 1
-                continue
-            num_elsevier_xml += 1
-            text_sources[full_pmid] = 'elsevier_xml'
-            content_path = os.path.join(input_dir, '%s.txt' % pmid)
-        elif content_type == 'txt':
-            num_txt += 1
-            text_sources[full_pmid] = 'txt'
-            content_path = os.path.join(input_dir, '%s.txt' % pmid)
-        elif content_type == 'abstract':
-            num_abstract += 1
-            text_sources[full_pmid] = 'abstract'
-            content_path = os.path.join(input_dir, '%s.txt' % pmid)
-        else:
-            num_not_found += 1
-            logger.info('Unhandled content type %s for %s, skipping' %
-                        (content_type, pmid))
-            continue
-        # Write the content to a file with the appropriate extension
-        with open(content_path, 'wb') as f:
-            # The XML string is Unicode
-            enc = content.encode('utf-8')
-            f.write(enc)
+    # Get multiprocessing pool
+    logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
+    pool = ctx.Pool(num_cores)
+    logger.info('Getting content for PMIDs in parallel')
+    download_from_s3_func = functools.partial(download_from_s3,
+                                         input_dir=input_dir,
+                                         reach_version=reach_version,
+                                         force_read=force_read,
+                                         force_fulltext=force_fulltext)
+    res = pool.map(download_from_s3_func, pmids_in_range)
+    # Close the pool to allow worker processes to exit before running REACH
+    pool.close()
+    # Combine the results into a single dict
+    pmid_results = {pmid: results for pmid_dict in res
+                                  for pmid, results in pmid_dict.items()}
+    # Tabulate and log content results here
+    pmids_read = {pmid: result for pmid, result in pmid_results.items()
+                       if result.get('reach_version') == reach_version}
+    pmids_unread = {pmid: pmid_results[pmid]
+                    for pmid in
+                    set(pmid_results.keys()).difference(set(pmids_read.keys()))}
+    logger.info('%d / %d papers already read with REACH %s' %
+                (len(pmids_read), len(pmid_results), reach_version))
+    num_found = len([pmid for pmid in pmids_unread
+                          if pmids_unread[pmid].get('content_path')])
+    logger.info('Retrieved content for %d / %d papers to be read' %
+                (num_found, len(pmids_unread)))
+    # Tabulate sources and log in sorted order
+    content_source_list = [pmid_dict.get('content_source')
+                           for pmid_dict in pmids_unread.values()]
+    content_source_counter = Counter(content_source_list)
+    content_source_list = [(source, count)
+                            for source, count in content_source_counter.items()]
+    content_source_list.sort(key=lambda x: x[1], reverse=True)
+    if content_source_list:
+        logger.info('Content sources:')
+        for source, count in content_source_list:
+            logger.info('%s: %d' % (source, count))
+    # Save text sources
     logger.info('Saving text sources...')
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
-        pickle.dump(text_sources, f, protocol=2)
-    logger.info('Found content PMIDs:')
-    logger.info('%d pmc_oa_xml' % num_pmc_oa_xml)
-    logger.info('%d pmc_auth_xml' % num_pmc_auth_xml)
-    logger.info('%d elsevier_xml' % num_elsevier_xml)
-    logger.info('%d elsevier_xml with no full text' % num_elsevier_xml_fail)
-    logger.info('%d txt (incl. some Elsevier)' % num_txt)
-    logger.info('%d abstract' % num_abstract)
-    logger.info('%d no content' % num_not_found)
+        pickle.dump(pmids_unread, f, protocol=2)
 
     # Create the REACH configuration file
     conf_file_text = """
@@ -333,31 +343,115 @@ if __name__ == '__main__':
 """.format(base_dir=base_dir, input_dir=input_dir, output_dir=output_dir,
                num_cores=num_cores)
 
+    stmts = {}
     # Write the configuration file to the temp directory
-    conf_file_path = os.path.join(base_dir, 'indra.conf')
-    with open(conf_file_path, 'w') as f:
-        f.write(conf_file_text)
+    if num_found > 0:
+        conf_file_path = os.path.join(base_dir, 'indra.conf')
+        with open(conf_file_path, 'w') as f:
+            f.write(conf_file_text)
 
-    # Run REACH!
-    args = ['java', '-jar', path_to_reach, conf_file_path]
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if verbose:
-        for line in iter(p.stdout.readline, b''):
-            logger.info(line)
-    (p_out, p_err) = p.communicate()
-    if p.returncode:
-        raise Exception(p_out.decode('utf-8') + '\n' + p_err.decode('utf-8'))
+        # Run REACH!
+        args = ['java', '-jar', path_to_reach, conf_file_path]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        if verbose:
+            for line in iter(p.stdout.readline, b''):
+                logger.info(line)
+        (p_out, p_err) = p.communicate()
+        if p.returncode:
+            raise Exception(p_out.decode('utf-8') + '\n' +
+                            p_err.decode('utf-8'))
+
+        # Process JSON files from local file system, process to INDRA Statements
+        # and upload to S3
+        stmts.update(upload_process_reach_files(output_dir, pmids_unread,
+                                            reach_version, num_cores))
+        # Delete the tmp directory if desired
+        if cleanup:
+            shutil.rmtree(base_dir)
+
+    # Create a new multiprocessing pool for processing the REACH JSON
+    # files previously cached on S3
+    logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
+    pool = ctx.Pool(num_cores)
+    # Download and process the JSON files on S3
+    logger.info('Processing REACH JSON from S3 in parallel')
+    res = pool.map(process_reach_from_s3, pmids_read.keys())
+    pool.close()
+    s3_stmts = {pmid: stmt_list for res_dict in res
+                                for pmid, stmt_list in res_dict.items()}
+    stmts.update(s3_stmts)
+    return (stmts, pmids_unread)
 
     # Save the list of PMIDs with no content found on S3/literature client
-    content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
-    with open(content_not_found_file, 'wt') as f:
-        for c in content_not_found:
-            f.write('%s\n' % c)
+    #content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
+    #with open(content_not_found_file, 'wt') as f:
+    #    for c in content_not_found:
+    #        f.write('%s\n' % c)
 
-    # Upload!
-    upload_reach_json(output_dir, text_sources)
+if __name__ == '__main__':
+    # Set some variables
+    cleanup = False
+    verbose = True
+    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    reach_version = '1.3.3-b4a284'
+    force_read = True
+    force_fulltext = False
 
-    if cleanup:
-        shutil.rmtree(base_dir)
+    # Check the arguments
+    usage = "Usage: %s basename pmid_list tmp_dir num_cores start_index " \
+            "end_index [force_fulltext]\n" % sys.argv[0]
+    usage += "Alternative usage: %s upload_json basename output_dir " \
+                        "content_types_file num_cores" % sys.argv[0]
+    if len(sys.argv) not in  (6, 7, 8):
+        print(usage)
+        sys.exit()
+    if len(sys.argv) == 6 and sys.argv[1] != 'upload_json':
+        print(usage)
+        sys.exit()
+    if len(sys.argv) == 8 and sys.argv[6] != 'force_fulltext':
+        print(usage)
+        sys.exit()
+    elif len(sys.argv) == 8:
+        force_fulltext = True
 
+    # One type of operation: just upload previously read JSON files
+    if len(sys.argv) == 6 and sys.argv[1] == 'upload_json':
+        basename = sys.argv[2]
+        output_dir = sys.argv[3]
+        text_sources_file = sys.argv[4]
+        num_cores = int(sys.argv[5])
+        with open(text_sources_file, 'rb') as f:
+            text_sources = pickle.load(f)
+        stmts = upload_process_reach_files(output_dir, text_sources, reach_version,
+                                           num_cores)
+        pickle_file = '%s_stmts.pkl' % basename
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(stmts, f, protocol=2)
+        sys.exit()
+
+    # =======================
+    # Alternatively, run the whole process
+    # Get the command line arguments
+    (basename, pmid_list_file, tmp_dir, num_cores,
+                                start_index, end_index) = sys.argv[1:7]
+    start_index = int(start_index)
+    end_index = int(end_index)
+    num_cores = int(num_cores)
+
+    # Load the list of PMIDs from the given file
+    with open(pmid_list_file) as f:
+        pmid_list = [line.strip('\n') for line in f.readlines()]
+
+    # Do the reading
+    (stmts, content_types) = run(pmid_list, tmp_dir, num_cores, start_index,
+                                 end_index, force_read, force_fulltext,
+                                 path_to_reach, reach_version,
+                                 cleanup=cleanup, verbose=verbose)
+
+    # Pickle the statements
+    pickle_file = '%s_stmts_%d_%d.pkl' % (basename, start_index, end_index)
+    with open(pickle_file, 'wb') as f:
+        pickle.dump(stmts, f, protocol=2)
 

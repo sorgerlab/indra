@@ -1,5 +1,5 @@
-Large-Scale Machine Reading
-===========================
+Large-Scale Machine Reading with Starcluster
+============================================
 
 The following doc describes the steps involved in reading a large numbers of
 papers in parallel on Amazon EC2 using REACH, caching the JSON output on Amazon
