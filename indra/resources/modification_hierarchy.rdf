@@ -3,6 +3,7 @@
 <http://sorger.med.harvard.edu/indra/entities/geranylgeranylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
 <http://sorger.med.harvard.edu/indra/entities/glycosylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
 <http://sorger.med.harvard.edu/indra/entities/hydroxylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
+<http://sorger.med.harvard.edu/indra/entities/methylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
 <http://sorger.med.harvard.edu/indra/entities/myristoylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
 <http://sorger.med.harvard.edu/indra/entities/palmitoylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
 <http://sorger.med.harvard.edu/indra/entities/phosphorylation> <http://sorger.med.harvard.edu/indra/relations/isa> <http://sorger.med.harvard.edu/indra/entities/modification> .
