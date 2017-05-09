@@ -33,7 +33,12 @@ if __name__ == '__main__':
         if hgnc_name in pmids_for_gene:
             print('%s: already got PMIDs, skipping' % hgnc_name)
             continue
-        pmids = pubmed_client.get_ids_for_gene(hgnc_name)
+        try:
+            pmids = pubmed_client.get_ids_for_gene(hgnc_name)
+        except ValueError as ex:
+            print("Exception in gettting PMIDs for %s: %s" % (hgnc_name, ex))
+            print("Continuing...")
+            continue
         print('%s: %d PMIDs' % (hgnc_name, len(pmids)))
         pmids_for_gene[hgnc_name] = pmids
         num_added += 1
