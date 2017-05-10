@@ -98,11 +98,11 @@ if __name__ == '__main__':
     parent_read_parser = argparse.ArgumentParser(add_help=False)
     parent_read_parser.add_argument('basename',
         help='Defines job names and S3 keys')
-    parent_read_parser.add_argument('pmids',
+    parent_read_parser.add_argument('pmid_file',
         help='Path to file containing PMIDs to read')
-    parent_read_parser.add_argument('--start_ix',
+    parent_read_parser.add_argument('--start_ix', type=int,
         help='Start index of PMIDs to read.')
-    parent_read_parser.add_argument('--end_ix',
+    parent_read_parser.add_argument('--end_ix', type=int,
         help='End index of PMIDs to read (default: read all PMIDs)')
     parent_read_parser.add_argument('--force_read', action='store_true',
         help='Read papers even if previously read by current REACH.')
@@ -125,33 +125,20 @@ if __name__ == '__main__':
         description='Run REACH and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     args = parser.parse_args()
-    sys.exit()
 
-    if job_type == 'read':
-        basename = sys.argv[2]
-        pmid_list_filename = sys.argv[3]
-        start_ix = int(sys.argv[4])
-        end_ix = int(sys.argv[5])
-        pmids_per_job = int(sys.argv[6])
-        # force_read
-        # force_fulltext
-        job_ids = submit_run_reach(args.basename, args.pmid_list,
+    if args.job_type == 'read':
+        job_ids = submit_run_reach(args.basename, args.pmid_file,
                                    args.start_ix, args.end_ix,
                                    args.pmids_per_job)
-    elif job_type == 'combine':
-        basename = sys.argv[2]
-        submit_combine(basename)
-    elif job_type == 'full':
-        basename = sys.argv[2]
-        pmid_list_filename = sys.argv[3]
-        start_ix = int(sys.argv[4])
-        end_ix = int(sys.argv[5])
-        pmids_per_job = int(sys.argv[6])
-        job_ids = submit_run_reach(basename, pmid_list_filename, start_ix,
-                                   end_ix, pmids_per_job)
-        submit_combine(basename, job_ids)
+    elif args.job_type == 'combine':
+        submit_combine(args.basename)
+    elif args.job_type == 'full':
+        job_ids = submit_run_reach(args.basename, args.pmid_file,
+                                   args.start_ix, args.end_ix,
+                                   args.pmids_per_job)
+        submit_combine(args.basename, job_ids)
     else:
-        print('job type must be "read", "combine", or "full"')
+        print('job_type must be one of ("read", "combine", "full")')
         sys.exit(1)
 
 
