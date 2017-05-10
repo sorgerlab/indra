@@ -22,7 +22,7 @@ def get_environment():
 
 
 def submit_run_reach(basename, pmid_list_filename, start_ix=0, end_ix=None,
-                 pmids_per_job=3000):
+                     pmids_per_job=3000):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -77,15 +77,55 @@ def submit_combine(basename, job_ids=None):
 
 if __name__ == '__main__':
     import sys
+    import argparse
     import boto3
     import botocore.session
     from indra.literature import elsevier_client as ec
 
     bucket_name = 'bigmech'
-    job_type =sys.argv[1]
+    #job_type =sys.argv[1]
 
     # Submit the reading job
     batch_client = boto3.client('batch')
+
+    # Create the top-level parser
+    parser = argparse.ArgumentParser('submit_reading_pipeline_aws.py',
+            description='Run machine reading with REACH using AWS Batch.')
+    subparsers = parser.add_subparsers(title='Job Type',
+            help='Type of jobs to submit.')
+    subparsers.required = True
+    subparsers.dest = 'job_type'
+    parent_read_parser = argparse.ArgumentParser(add_help=False)
+    parent_read_parser.add_argument('basename',
+        help='Defines job names and S3 keys')
+    parent_read_parser.add_argument('pmids',
+        help='Path to file containing PMIDs to read')
+    parent_read_parser.add_argument('--start_ix',
+        help='Start index of PMIDs to read.')
+    parent_read_parser.add_argument('--end_ix',
+        help='End index of PMIDs to read (default: read all PMIDs)')
+    parent_read_parser.add_argument('--force_read', action='store_true',
+        help='Read papers even if previously read by current REACH.')
+    parent_read_parser.add_argument('--force_fulltext', action='store_true',
+        help='Get full text content even if content already on S3.')
+    parent_read_parser.add_argument('--pmids_per_job', default=3000, type=int,
+        help='Number of PMIDs to read for each AWS Batch job.')
+    read_parser = subparsers.add_parser('read', parents=[parent_read_parser],
+        help='Run REACH and cache INDRA Statements on S3.',
+        description='Run REACH and cache INDRA Statements on S3.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    combine_parser = subparsers.add_parser('combine',
+        help='Combine INDRA Statement subsets into a single file.',
+        description='Combine INDRA Statement subsets into a single file.')
+    combine_parser.add_argument('basename',
+        help='Defines job name and S3 keys')
+    full_parser = subparsers.add_parser('full',
+        parents=[parent_read_parser],
+        help='Run REACH and combine INDRA Statements when done.',
+        description='Run REACH and combine INDRA Statements when done.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    args = parser.parse_args()
+    sys.exit()
 
     if job_type == 'read':
         basename = sys.argv[2]
@@ -95,8 +135,9 @@ if __name__ == '__main__':
         pmids_per_job = int(sys.argv[6])
         # force_read
         # force_fulltext
-        job_ids = submit_run_reach(basename, pmid_list_filename, start_ix,
-                               end_ix, pmids_per_job)
+        job_ids = submit_run_reach(args.basename, args.pmid_list,
+                                   args.start_ix, args.end_ix,
+                                   args.pmids_per_job)
     elif job_type == 'combine':
         basename = sys.argv[2]
         submit_combine(basename)
