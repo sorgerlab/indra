@@ -233,6 +233,7 @@ class ModelChecker(object):
                                                      obj_obs.name,
                                                      input_rule_set,
                                                      target_polarity):
+                    path.reverse()
                     return path
             else:
                 return True
