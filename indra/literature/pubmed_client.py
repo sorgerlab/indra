@@ -18,8 +18,8 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('pubmed')
 
-pubmed_search = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
-pubmed_fetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+pubmed_search = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
+pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
@@ -37,7 +37,7 @@ def get_ids(search_term, **kwargs):
 
     The options are passed as named arguments. For details on parameters that
     can be used, see
-    http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch Some useful
+    https://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch Some useful
     parameters to pass are db='pmc' to search PMC instead of pubmed reldate=2
     to search for papers within the last 2 days mindate='2016/03/01',
     maxdate='2016/03/31' to search for papers in March 2016.
