@@ -160,7 +160,11 @@ class ModelChecker(object):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
             # Return True for the first valid path we find
             result =  self._find_im_paths(enz_mp, obj_obs, target_polarity)
-            return result
+            # If result for this observable is not False, then we return it;
+            # otherwise, that means there was no path for this observable, so
+            # we have to try the next one
+            if result:
+                return result
         # If we got here, then there was no path for any observable
         return False
 
