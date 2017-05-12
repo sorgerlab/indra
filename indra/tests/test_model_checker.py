@@ -118,7 +118,7 @@ def test_one_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == True
+    assert results[0][1] == ['A_phos_B', 'B_phosphoT185_obs']
 
 @with_model
 def test_two_step_phosphorylation():
@@ -160,7 +160,7 @@ def test_two_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == True
+    assert results[0][1] == ['A_phos_B', 'B_phosphoT185_obs']
 
 def test_pysb_assembler_phospho_policies():
     a = Agent('A', db_refs={'HGNC': '1'})
@@ -175,7 +175,7 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == True
+    assert results[0][1] == ['A_phosphorylation_B_T185', 'B_phosphoT185_obs']
     # Try one step
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [st])
@@ -183,7 +183,7 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == True
+    assert results[0][1] == ['A_phosphorylation_B_T185', 'B_phosphoT185_obs']
     # Try interactions_only
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [st])
@@ -311,7 +311,9 @@ def test_consumption_rule():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == True
+    assert checks[0][1] == ['Pvd_binds_DUSP', 'DUSP_binds_MAPK1_phosT185',
+                            'DUSP_dephos_MAPK1_at_T185',
+                            'MAPK1_phosphoT185_obs']
 
 def test_dephosphorylation():
     dusp = Agent('DUSP6', db_refs={'HGNC':'1'})
@@ -327,8 +329,10 @@ def test_dephosphorylation():
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
         assert checks[0][1] == result
-    check_policy('one_step', True)
-    check_policy('two_step', True)
+    check_policy('one_step', ['DUSP6_dephosphorylation_MAPK1_T185',
+                              'MAPK1_phosphoT185_obs'])
+    check_policy('two_step', ['DUSP6_dephosphorylation_MAPK1_T185',
+                              'MAPK1_phosphoT185_obs'])
     check_policy('interactions_only', False)
 
 @with_model
@@ -400,9 +404,9 @@ def test_distinguish_path_polarity1():
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == False
-    assert results[1][1] == True
+    assert results[1][1] == ['A_activate_B', 'B_dephos_C', 'C_phosphoT185_obs']
     assert results[2][1] == False
-    assert results[3][1] == True
+    assert results[3][1] == ['B_dephos_C', 'C_phosphoT185_obs']
 
 @with_model
 def test_distinguish_path_polarity2():
@@ -435,7 +439,8 @@ def test_distinguish_path_polarity2():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == True
+    import ipdb; ipdb.set_trace()
+    assert results[0][1] == ['A_inhibit_B', 'B_dephos_C', 'C_phosphoT185_obs']
     assert results[1][1] == False
     assert results[2][1] == True
     assert results[3][1] == True
@@ -940,7 +945,14 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    test_one_step_phosphorylation()
+    #test_one_step_phosphorylation()
+    #test_two_step_phosphorylation()
+    #test_pysb_assembler_phospho_policies()
+    #test_consumption_rule()
+    #test_dephosphorylation()
+    #test_invalid_modification()
+    #test_distinguish_path_polarity1()
+    test_distinguish_path_polarity2()
     #test_multitype_path()
     #test_rasgap_activation()
     #test_rasgap_rasgtp()
@@ -956,13 +968,7 @@ if __name__ == '__main__':
     #test_phosphorylation_annotations()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
-    #test_distinguish_path_polarity1()
-    #test_distinguish_path_polarity2()
     #test_distinguish_path_polarity_none_stmt()
-    #test_pysb_assembler_phospho_policies()
-    #test_invalid_modification()
     #test_ras_220_network()
     #test_path_polarity()
-    #test_consumption_rule()
-    #test_dephosphorylation()
 
