@@ -21,7 +21,7 @@ def get_environment():
     return environment_vars
 
 
-def submit_run_reach(basename, pmid_list_filename, start_ix=0, end_ix=None,
+def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
                      pmids_per_job=3000):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
@@ -33,6 +33,9 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=0, end_ix=None,
         with open(pmid_list_filename, 'rt') as f:
             lines = f.readlines()
             end_ix = len(lines)
+
+    if start_ix is None:
+        start_ix = 0
 
     # Get environment variables
     environment_vars = get_environment()
