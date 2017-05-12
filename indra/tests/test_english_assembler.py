@@ -250,6 +250,16 @@ def test_agent_activity():
     print(ea._assemble_agent_str(a))
     assert(ea._assemble_agent_str(a) == 'active BRAF')
 
+def test_agent_activity_stmt():
+    braf = Agent('BRAF', activity=ActivityCondition('activity', True))
+    mek = Agent('MAP2K1')
+    st = Activation(braf, mek)
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert(s == 'Active BRAF activates MAP2K1.')
+
 def test_translocation():
     st1 = Translocation(Agent('FOXO3A'))
     st2 = Translocation(Agent('FOXO3A'), 'cytoplasm')
