@@ -439,11 +439,11 @@ def test_distinguish_path_polarity2():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    import ipdb; ipdb.set_trace()
     assert results[0][1] == ['A_inhibit_B', 'B_dephos_C', 'C_phosphoT185_obs']
     assert results[1][1] == False
-    assert results[2][1] == True
-    assert results[3][1] == True
+    assert results[2][1] == ['A_inhibit_B', 'B_dephos_C', 'C_phosphoT185_obs']
+    assert results[3][1] == ['B_dephos_C', 'C_phosphoT185_obs']
+
 
 @with_model
 def test_check_activation():
@@ -945,13 +945,13 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-    #test_one_step_phosphorylation()
-    #test_two_step_phosphorylation()
-    #test_pysb_assembler_phospho_policies()
-    #test_consumption_rule()
-    #test_dephosphorylation()
-    #test_invalid_modification()
-    #test_distinguish_path_polarity1()
+    test_one_step_phosphorylation()
+    test_two_step_phosphorylation()
+    test_pysb_assembler_phospho_policies()
+    test_consumption_rule()
+    test_dephosphorylation()
+    test_invalid_modification()
+    test_distinguish_path_polarity1()
     test_distinguish_path_polarity2()
     #test_multitype_path()
     #test_rasgap_activation()
