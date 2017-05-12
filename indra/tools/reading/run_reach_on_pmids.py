@@ -20,8 +20,6 @@ from indra.literature import pmc_client, s3_client, get_full_text, \
 # Logger
 logger = logging.getLogger('runreach')
 
-# Get a multiprocessing context
-ctx = mp.get_context('spawn')
 
 def join_parts(prefix):
     """Join different REACH output JSON files into a single JSON."""
@@ -75,7 +73,9 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
                   for json_prefix in json_prefixes]
     # Create a multiprocessing pool
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
-    pool = ctx.Pool(num_cores)
+    # Get a multiprocessing context
+    #ctx = mp.get_context('spawn')
+    pool = mp.Pool(num_cores)
     logger.info('Uploading and processing local REACH JSON files')
     upload_process_pmid_func = \
             functools.partial(upload_process_pmid, output_dir=output_dir,
@@ -218,7 +218,9 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
 
     # Get multiprocessing pool
     logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
-    pool = ctx.Pool(num_cores)
+    # Get a multiprocessing context
+    #ctx = mp.get_context('spawn')
+    pool = mp.Pool(num_cores)
     logger.info('Getting content for PMIDs in parallel')
     download_from_s3_func = functools.partial(download_from_s3,
                                          input_dir=input_dir,
@@ -373,7 +375,8 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     # Create a new multiprocessing pool for processing the REACH JSON
     # files previously cached on S3
     logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
-    pool = ctx.Pool(num_cores)
+    #pool = ctx.Pool(num_cores)
+    pool = mp.Pool(num_cores)
     # Download and process the JSON files on S3
     logger.info('Processing REACH JSON from S3 in parallel')
     res = pool.map(process_reach_from_s3, pmids_read.keys())
