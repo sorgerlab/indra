@@ -729,7 +729,7 @@ class Agent(object):
         if self.mutations:
             json_dict['mutations'] = [mc.to_json() for mc in self.mutations]
         if self.activity is not None:
-            json_dict['activation'] = self.activity.to_json()
+            json_dict['activity'] = self.activity.to_json()
         if self.location is not None:
             json_dict['location'] = self.location
         if self.bound_conditions:
