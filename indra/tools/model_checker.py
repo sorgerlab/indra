@@ -160,7 +160,11 @@ class ModelChecker(object):
             obj_obs = Observable(obs_name, obj_mp, _export=False)
             # Return True for the first valid path we find
             result =  self._find_im_paths(enz_mp, obj_obs, target_polarity)
-            return result
+            # If result for this observable is not False, then we return it;
+            # otherwise, that means there was no path for this observable, so
+            # we have to try the next one
+            if result:
+                return result
         # If we got here, then there was no path for any observable
         return False
 
@@ -233,6 +237,7 @@ class ModelChecker(object):
                                                      obj_obs.name,
                                                      input_rule_set,
                                                      target_polarity):
+                    path.reverse()
                     return path
             else:
                 return True
@@ -282,7 +287,9 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # the path to calculate the overall polarity
         else:
             sign = _path_polarity(im, reversed(path))
-        if (sources is None or node in sources) and sign == polarity:
+        # Don't allow trivial paths consisting only of the target observable
+        if (sources is None or node in sources) and sign == polarity and \
+            len(path) > 1:
             logger.info('Found path: %s' % list(reversed(path)))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, 1):
@@ -329,31 +336,31 @@ def _find_sources(im, target, sources, polarity):
     target_tuple = (target, 1)
     # The queue holds tuples of "parents" (in this case downstream nodes) and
     # their "children" (in this case their upstream influencers)
-    queue = deque([(target_tuple, _get_signed_predecessors(im, target, 1), 1)])
+    queue = deque([(target_tuple, _get_signed_predecessors(im, target, 1), 0)])
     while queue:
         parent, children, path_length = queue[0]
         try:
             # Get the next child in the list
             (child, sign) = next(children)
             # Is this child one of the source nodes we're looking for? If so,
-            # yield it along with path length
+            # yield it along with path length.
             if (sources is None or child in sources) and sign == polarity:
                 logger.info("Found path to %s from %s with desired sign %s "
                             "with length %d" %
-                            (target, child, polarity, path_length))
-                yield (child, sign, path_length)
+                            (target, child, polarity, path_length+1))
+                yield (child, sign, path_length+1)
             # Check this child against the visited list. If we haven't visited
             # it already (accounting for the path to the node), then add it
             # to the queue.
             if (child, sign) not in visited:
                 visited.add((child, sign))
-                queue.append((child, _get_signed_predecessors(im, child, sign),
+                queue.append(((child, sign),
+                              _get_signed_predecessors(im, child, sign),
                               path_length + 1))
         # Once we've finished iterating over the children of the current node,
         # pop the node off and go to the next one in the queue
         except StopIteration:
             queue.popleft()
-            path_length += 1
     # There was no path; this will produce an empty generator
     return
 
