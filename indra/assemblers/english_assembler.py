@@ -70,6 +70,19 @@ class EnglishAssembler(object):
 def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
     agent_str = agent.name
+
+    # Handle mutation conditions
+    if agent.mutations:
+        mut_strs = []
+        for mut in agent.mutations:
+            res_to = mut.residue_to if mut.residue_to else ''
+            res_from = mut.residue_from if mut.residue_from else ''
+            pos = mut.position if mut.position else ''
+            mut_str = '%s%s%s' % (res_from, pos, res_to)
+            mut_strs.append(mut_str)
+        mut_strs = '/'.join(mut_strs)
+        agent_str = '%s-%s' % (agent_str, mut_strs)
+
     # Handle location
     if agent.location is not None:
         agent_str += ' in the ' + agent.location
@@ -118,6 +131,7 @@ def _assemble_agent_str(agent):
                 else:
                     mod_lst.append(m.residue + m.position)
             agent_str += _join_list(mod_lst)
+
 
     # Handle activity conditions
     if agent.activity is not None:

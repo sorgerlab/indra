@@ -245,6 +245,17 @@ def test_agent_loc():
     print(ea._assemble_agent_str(a))
     assert(ea._assemble_agent_str(a) == 'BRAF in the cytoplasm')
 
+def test_agent_mut():
+    a = Agent('BRAF', mutations=[MutCondition('600','V', 'E')])
+    print(ea._assemble_agent_str(a))
+    assert(ea._assemble_agent_str(a) == 'BRAF-V600E')
+
+def test_agent_mut_plus():
+    a = Agent('BRAF', mutations=[MutCondition('600','V', 'E')],
+              location='nucleus')
+    print(ea._assemble_agent_str(a))
+    assert(ea._assemble_agent_str(a) == 'BRAF-V600E in the nucleus')
+
 def test_agent_activity():
     a = Agent('BRAF', activity=ActivityCondition('activity', True))
     print(ea._assemble_agent_str(a))
