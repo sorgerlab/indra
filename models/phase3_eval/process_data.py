@@ -9,11 +9,13 @@ from indra.databases import hgnc_client
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition
 
-data_file = 'data/Korkut et al. Data 01172017.xlsx'
+data_file = 'data/Korkut et al. Data 05122017.xlsx'
 drug_grounding_file = 'data/drug_grounding.csv'
 
-def read_data(fname):
+def read_data(fname=None):
     """Returns the data as a dictionary."""
+    if fname is None:
+        fname = data_file
     if fname.endswith('2017.xlsx'):
         skiprows1 = []
         skiprows2 = []
@@ -21,12 +23,12 @@ def read_data(fname):
         skiprows1 = [0]
         skiprows2 = range(5)
     data = {}
-    data['protein'] = pandas.read_excel(data_file, sheetname='Protein Data',
+    data['protein'] = pandas.read_excel(fname, sheetname='Protein Data',
                                         skiprows=skiprows1, index_col=None)
-    data['phenotype'] = pandas.read_excel(data_file,
+    data['phenotype'] = pandas.read_excel(fname,
                                           sheetname='Phenotype Data',
                                           skiprows=skiprows1, index_col=None)
-    data['antibody'] = pandas.read_excel(data_file,
+    data['antibody'] = pandas.read_excel(fname,
                                           sheetname='Antibody Data',
                                           skiprows=skiprows2, index_col=None)
     return data
@@ -35,11 +37,6 @@ def get_annotated_antibodies(data):
     ab_col = data['antibody']['Protein Data ID']
     ab_annotated = sorted([ab for ab in ab_col if not pandas.isnull(ab)])
     return ab_annotated
-
-def get_annotated_phos_antibodies(data):
-    ab_annotated = get_annotated_antibodies(data)
-    ab_phos = [ab for ab in ab_annotated if ab.find('_p') != -1]
-    return ab_phos
 
 def get_phos_antibodies(data):
     ab_names = data['protein'].columns[2:]
