@@ -263,14 +263,14 @@ def _assemble_ras_gap(stmt):
     """Assemble RasGap statements into text."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' inhibits ' + obj_str
+    stmt_str = subj_str + ' is a Ras GAP for ' + obj_str
     return _make_sentence(stmt_str)
 
 def _assemble_ras_gef(stmt):
     """Assemble RasGef statements into text."""
     subj_str = _assemble_agent_str(stmt.gef)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' activates ' + obj_str
+    stmt_str = subj_str + ' is a Ras GEF for ' + obj_str
     return _make_sentence(stmt_str)
 
 def _make_sentence(txt):
