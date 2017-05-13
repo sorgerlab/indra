@@ -53,23 +53,10 @@ def get_unannotated_antibodies(data):
     ab_unannotated = sorted(list(set(data_abs).difference(set(ab_annotated))))
     return ab_unannotated
 
-def get_unannotated_antibody_genes(data):
-    """Return the gene names corresponding to unannotated ABs."""
-    all_genes = []
-    for k, v in unannotated_ab_map.items():
-        up_ids = v.split(',')
-        for up_id in up_ids:
-            gene_name = uniprot_client.get_gene_name(up_id)
-            all_genes.append(gene_name)
-    return sorted(list(set(all_genes)))
-
 def get_antibody_genes(data, ab_name):
     """Return the UniProt IDs corresponding to a specific antibody."""
-    if ab_name in unannotated_ab_map:
-        up_ids = unannotated_ab_map[ab_name].split(',')
-    else:
-        df_filt = data['antibody'][data['antibody']['Protein Data ID'] == ab_name]
-        up_ids = df_filt['UniProt ID'].values[0].split(',')
+    df_filt = data['antibody'][data['antibody']['Protein Data ID'] == ab_name]
+    up_ids = df_filt['UniProt ID'].values[0].split(',')
     return up_ids
 
 def get_agent_from_upid(up_id):
@@ -114,9 +101,6 @@ def get_all_gene_names(data, out_file='prior_genes.txt'):
         all_genes = all_genes.union(set(names)).union(set(names_from_ids))
     # Finally remove the invalid gene names
     all_genes = list(all_genes.difference(invalid_genes))
-    # Add the unannotated genes
-    unannotated_ab_genes = get_unannotated_antibody_genes(data)
-    all_genes += unannotated_ab_genes
     # Add drug target genes
     drug_targets = get_drug_targets()
     for targets in drug_targets.values():
@@ -255,43 +239,6 @@ def get_max_dev(data):
         dev = numpy.mean(numpy.abs(1-vals))
         devs[data['protein'].columns[i]] = dev
     return devs
-
-# This is a best guess to the target of
-# unannotated antibodies.
-unannotated_ab_map = {
-    '4EBP1_pT37_V': 'Q13541',
-    '4EBP1_pT70': 'Q13541',
-    'AIB1_mouse': 'P40763',
-    'ATR': 'Q13535',
-    'ATRIP': 'Q8WXE1',
-    'BRCA1': 'P38398',
-    'CHK1_pS345': 'O14757',
-    'CaseinKinase_mouse': 'P48730',
-    'Caspase_9': 'P55211',
-    'Caspase_9_clv_Asp315': 'P55211',
-    'Caspase_9_clv_Asp330': 'P55211',
-    'Cofilin_pS3': 'P23528',
-    'Collagenase_VI_V': 'P03956',
-    'CyclinE2_V': 'O96020',
-    'EGFR_pY992_V': 'P00533',
-    'ERa_pS167': 'P03372',
-    'GSK3a_b_pS21': 'P49840,P49841',
-    'IRS1_pS307': 'P35568',
-    'LKB1_mouse': 'Q15831',
-    'MGMT_mouse': 'P16455',
-    'MSH2_mouse': 'P43246',
-    'PAX2': 'Q02962',
-    'PKCa_pS657_V': 'P17252',
-    'SMAD3_pS423': 'P84022',
-    'STAT3_pS727': 'P40763',
-    'STAT5_pY694': 'P42229,P51692',
-    'STAT6_pY641': 'P42226',
-    'TAZ_pS89_C': 'Q9GZV5',
-    'Telomerase_C': 'O14746',
-    'b-Catenin_pS33_C': 'P35222',
-    'c-Myc_pT58': 'P01106',
-    'p90RSK': 'Q15418',
-    'p90RSK_pT359_C': 'Q15418'}
 
 if __name__ == '__main__':
     data = read_data(data_file)
