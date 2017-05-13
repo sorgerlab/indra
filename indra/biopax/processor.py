@@ -678,6 +678,9 @@ class BiopaxProcessor(object):
     @lru_cache(maxsize=1000)
     def _get_element_name(bpe):
         if _is_protein(bpe):
+            # FIXME Deal with case when HGNC entry is not name
+            # Deal with case when multiple Uniprot IDs marked as
+            # primary
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
@@ -690,9 +693,9 @@ class BiopaxProcessor(object):
                     name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
-        #elif _is_rna(bpe):
-        #    logger.info("Rna!")
-        #    name = bpe.getDisplayName()
+        elif _is_rna(bpe):
+            logger.info("Rna!")
+            name = bpe.getDisplayName()
         elif _is_small_molecule(bpe):
             name = bpe.getDisplayName()
         elif _is_physical_entity(bpe):
@@ -782,6 +785,7 @@ class BiopaxProcessor(object):
         if bp_entref is None:
             return None
         xrefs = bp_entref.getXref().toArray()
+        # Check for HGNC IDs
         hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
         hgnc_id = None
         for hgnc_id in hgnc_ids:
@@ -792,6 +796,22 @@ class BiopaxProcessor(object):
                 m = re.match('hgnc:([0-9]+)', hgnc_id.lower())
                 if m:
                     hgnc_id = str(m.groups()[0])
+        # If there is no HGNC ID, check for an HGNC symbol and convert back
+        # to HGNC
+        if False: # not hgnc_id:
+            hgnc_syms = [x.getId() for x in xrefs
+                         if x.getDb().lower() == 'hgnc symbol']
+            # If no symbol and no ID, return None
+            if not hgnc_syms:
+                return None
+            # On the off chance that there is more than one symbol, issue
+            # a log message and choose the first
+            else:
+                if len(hgnc_syms) > 1:
+                    logger.info('More than one HGNC symbol found: %s' %
+                                str(hgnc_syms))
+                hgnc_sym = hgnc_syms[0]
+                hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
         return hgnc_id
 
     @staticmethod
