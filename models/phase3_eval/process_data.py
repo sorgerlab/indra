@@ -29,8 +29,11 @@ def read_data(fname=None):
                                           sheetname='Phenotype Data',
                                           skiprows=skiprows1, index_col=None)
     data['antibody'] = pandas.read_excel(fname,
-                                          sheetname='Antibody Data',
-                                          skiprows=skiprows2, index_col=None)
+                                         sheetname='Antibody Data',
+                                         skiprows=skiprows2, index_col=None)
+    data['prediction'] = pandas.read_excel(fname,
+                                           sheetname='Prediction Targets',
+                                           index_col=None)
     return data
 
 def get_annotated_antibodies(data):
@@ -41,9 +44,12 @@ def get_annotated_antibodies(data):
 def get_phos_antibodies(data):
     ab_names = data['protein'].columns[2:]
     ab_phos = []
+    phospho_aa = ['S', 'T', 'Y']
     for abn in ab_names:
-        if abn.find('_p') != -1:
-            ab_phos.append(abn)
+        for aa in phospho_aa:
+            if abn.find('_p%s' % aa) != -1:
+                ab_phos.append(abn)
+                break
     return ab_phos
 
 def get_unannotated_antibodies(data):

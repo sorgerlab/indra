@@ -21,6 +21,8 @@ DRUG_COL = 'Sample Description (drug abbre. | dose or time-point)'
 stmts = defaultdict(lambda: defaultdict(list))
 values = defaultdict(dict)
 
+import ipdb; ipdb.set_trace()
+
 for tx in drug_tx:
     # Get the drug name
     drug_name = tx.split('|')[0]
