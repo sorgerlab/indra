@@ -444,8 +444,8 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     genes_str = ', '.join(gene_list)
-    logger.info('Filtering %d statements for ones containing: %s...' %
-                (len(stmts_in), genes_str))
+    logger.info('Filtering %d statements for ones containing "%s" of: %s...' %
+                (len(stmts_in), policy, genes_str))
     stmts_out = []
     if policy == 'one':
         for st in stmts_in:
@@ -608,8 +608,8 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    logger.info('Filtering %d statements to evidence source: %s...' %
-                (len(stmts_in), ', '.join(source_apis)))
+    logger.info('Filtering %d statements to evidence source "%s" of: %s...' %
+                (len(stmts_in), policy, ', '.join(source_apis)))
     stmts_out = []
     for st in stmts_in:
         sources = set([ev.source_api for ev in st.evidence])
@@ -645,7 +645,7 @@ def filter_top_level(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    logger.info('Filtering %d statements for top-level' % len(stmts_in))
+    logger.info('Filtering %d statements for top-level...' % len(stmts_in))
     stmts_out = [st for st in stmts_in if not st.supports]
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
@@ -824,7 +824,23 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_enzyme_kinase(stmts_in):
+def filter_enzyme_kinase(stmts_in, **kwargs):
+    """Filter Phosphorylations to ones where the enzyme is a known kinase.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements to remove ' % len(stmts_in) +
+                'phosphorylation by non-kinases...')
     path = os.path.dirname(os.path.abspath(__file__))
     kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
                                     delimiter='\t')
@@ -837,9 +853,29 @@ def filter_enzyme_kinase(stmts_in):
                     stmts_out.append(st)
         else:
             stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_mod_nokinase(stmts_in):
+def filter_mod_nokinase(stmts_in, **kwargs):
+    """Filter non-phospho Modifications to ones with a non-kinase enzyme.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements to remove ' % len(stmts_in) +
+                'non-phospho modifications by kinases...')
     path = os.path.dirname(os.path.abspath(__file__))
     kinase_table = read_unicode_csv(path + '/../resources/kinases.tsv',
                                     delimiter='\t')
@@ -853,9 +889,29 @@ def filter_mod_nokinase(stmts_in):
                     stmts_out.append(st)
         else:
             stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_transcription_factor(stmts_in):
+def filter_transcription_factor(stmts_in, **kwargs):
+    """Filter out RegulateAmounts where subject is not a transcription factor.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements to remove ' % len(stmts_in) +
+                'amount regulations by non-transcription-factors...')
     path = os.path.dirname(os.path.abspath(__file__))
     tf_table = \
         read_unicode_csv(path + '/../resources/transcription_factors.csv')
@@ -868,6 +924,10 @@ def filter_transcription_factor(stmts_in):
                     stmts_out.append(st)
         else:
             stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
 
