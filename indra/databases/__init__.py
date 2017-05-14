@@ -3,6 +3,20 @@ import logging
 logger = logging.getLogger('databases')
 
 def get_identifiers_url(db_name, db_id):
+    """Return an identifiers.org URL for a given database name and ID.
+
+    Parameters
+    ----------
+    db_name : str
+        An internal database name: HGNC, UP, CHEBI, etc.
+    db_id : str
+        An identifier in the given database.
+
+    Returns
+    -------
+    url : str
+        An identifiers.org URL corresponding to the given database name and ID.
+    """
     identifiers_url = 'http://identifiers.org/'
     if db_name == 'UP':
         url = identifiers_url + 'uniprot/%s' % db_id

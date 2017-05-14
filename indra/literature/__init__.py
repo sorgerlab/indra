@@ -71,6 +71,29 @@ def id_lookup(paper_id, idtype):
 
 
 def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
+    """Return the content and the content type of an article.
+
+    This function retreives the content of an article by its PubMed ID,
+    PubMed Central ID, or DOI. It prioritizes full text content when available
+    and returns an abstract from PubMed as a fallback.
+
+    Parameters
+    ----------
+    paper_id : string
+        ID of the article.
+    idtype : 'pmid', 'pmcid', or 'doi
+        Type of the ID.
+    preferred_content_type : Optional[st]r
+        Preference for full-text format, if available. Can be one of
+        'text/xml', 'text/plain', 'application/pdf'. Default: 'text/xml'
+
+    Returns
+    -------
+    content : str
+        The content of the article.
+    content_type : str
+        The content type of the article
+    """
     if preferred_content_type not in \
             ('text/xml', 'text/plain', 'application/pdf'):
         raise ValueError("preferred_content_type must be one of 'text/xml', "

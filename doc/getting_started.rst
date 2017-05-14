@@ -103,7 +103,7 @@ BRAF and MAP2K1.
     stmt = Phosphorylation(braf, map2k1)
 
 Assembling a PySB model and exporting to SBML
-````````````````````````````````````````````
+`````````````````````````````````````````````
 In this example, assume that we have already collected a list of INDRA Statements
 from any of the input sources and that this list is called `stmts`. We will
 instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
