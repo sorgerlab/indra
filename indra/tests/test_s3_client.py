@@ -26,12 +26,6 @@ def test_filter_keys():
     key_list = s3_client.filter_keys(pmid_key)
     assert len(key_list) == 4
 
-def test_check_key():
-    pmid_key = s3_client.get_pmid_key('1001287') + '/abstract'
-    assert s3_client.check_key(pmid_key)
-    pmid_key = s3_client.get_pmid_key('000000') + '/abstract'
-    assert not s3_client.check_key(pmid_key)
-
 def test_get_gz_object():
     # Get XML
     key = 'papers/PMID27297883/fulltext/txt'
@@ -123,4 +117,5 @@ def test_get_upload_content():
     assert ct_type == 'txt'
 
 if __name__ == '__main__':
-    test_get_upload_content()
+    #test_filter_keys()
+    test_check_key()

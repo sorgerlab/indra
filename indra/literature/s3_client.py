@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
 import logging
 import boto3
 import zlib
@@ -32,6 +33,16 @@ def check_pmid(pmid):
         pmid = str(pmid)
     if not pmid.startswith('PMID'):
         pmid = 'PMID' + str(pmid)
+    # As of boto3 1.4.4, there appears to be an incompatibility with the
+    # future newstr string type (which is meant to be unicode-compatible
+    # in Python 2) and the urllib quote function, which boto3 uses to
+    # URL encode keys when making requests to S3. See, for example this
+    # related error:
+    # http://stackoverflow.com/questions/15115588/urllib-quote-throws-keyerror
+    # In Python 2, this can be solved by explicitly convert to either to
+    # unicode or to a Python 2 bytestring (bytes) explicitly.
+    if sys.version_info[0] < 3:
+        pmid = unicode(pmid)
     return pmid
 
 
@@ -46,19 +57,6 @@ def get_reach_key(pmid):
 
 def filter_keys(prefix):
     return list(bucket.objects.filter(Prefix=prefix))
-
-
-def check_key(key):
-    try:
-        s3.Object(bucket_name, key).load()
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] == '404':
-            exists = False
-        else:
-            raise e
-    else:
-        exists = True
-    return exists
 
 
 def get_upload_content(pmid, force_fulltext_lookup=False):
@@ -137,6 +135,7 @@ def get_upload_content(pmid, force_fulltext_lookup=False):
         return (ft_content_s3, ft_content_type_s3)
     # We should always return before we get here
     assert False
+
 
 def get_gz_object(key):
     try:
