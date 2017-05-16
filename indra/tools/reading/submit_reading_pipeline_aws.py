@@ -6,8 +6,6 @@ from indra.literature import elsevier_client as ec
 
 bucket_name = 'bigmech'
 
-# Submit the reading job
-batch_client = boto3.client('batch')
 
 def get_environment():
     # Get AWS credentials
@@ -49,6 +47,7 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
     environment_vars = get_environment()
 
     # Iterate over the list of PMIDs and submit the job in chunks
+    batch_client = boto3.client('batch')
     job_list = []
     for job_start_ix in range(start_ix, end_ix, pmids_per_job):
         job_end_ix = job_start_ix + pmids_per_job
@@ -86,6 +85,7 @@ def submit_combine(basename, job_ids=None):
                                      'memory': 60000, 'vcpus': 1}}
     if job_ids:
         kwargs['dependsOn'] = job_ids
+    batch_client = boto3.client('batch')
     batch_client.submit_job(**kwargs)
 
 
