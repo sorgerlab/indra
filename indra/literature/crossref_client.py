@@ -128,6 +128,9 @@ def doi_query(pmid, search_limit=10):
         logger.error('CrossRef service could not be reached.')
         logger.error(e)
         return None
+    except Exception as e:
+        logger.error('Error accessing CrossRef service: %s' % str(e))
+        return None
     if res.status_code != 200:
         logger.info('PMID%s: no search results from CrossRef, code %d' %
                     (pmid, res.status_code))

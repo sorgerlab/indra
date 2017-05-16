@@ -9,8 +9,8 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('pmc')
 
-pmc_url = 'http://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
-pmid_convert_url = 'http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
+pmc_url = 'https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
+pmid_convert_url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
 
 # Paths to resource files
 pmids_fulltext_path = os.path.join(os.path.dirname(__file__),
@@ -43,7 +43,11 @@ def id_lookup(paper_id, idtype=None):
     data = {'ids': paper_id}
     if idtype is not None:
         data['idtype'] = idtype
-    tree = pubmed_client.send_request(pmid_convert_url, data)
+    try:
+        tree = pubmed_client.send_request(pmid_convert_url, data)
+    except Exception as e:
+        logger.error('Error looking up PMID in PMC: %s' % e)
+        return {}
     if tree is None:
         return {}
     record = tree.find('record')
