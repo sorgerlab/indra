@@ -30,7 +30,7 @@ def get_environment():
 
 
 def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
-                     pmids_per_job=3000):
+                     pmids_per_job=3000, num_tries=2):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -64,7 +64,8 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
                        jobQueue='run_reach_queue',
                        jobDefinition='run_reach_jobdef',
                        containerOverrides={'environment': environment_vars,
-                                           'command': command_list})
+                                           'command': command_list},
+                       retryStrategy={'attempts': num_tries})
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
@@ -114,6 +115,8 @@ if __name__ == '__main__':
         help='Get full text content even if content already on S3.')
     parent_read_parser.add_argument('--pmids_per_job', default=3000, type=int,
         help='Number of PMIDs to read for each AWS Batch job.')
+    parent_read_parser.add_argument('--num_tries', default=2, type=int,
+        help='Maximum number of times to try running job.')
     read_parser = subparsers.add_parser('read', parents=[parent_read_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
