@@ -1,5 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import boto3
+import botocore.session
+from indra.literature import elsevier_client as ec
+
+bucket_name = 'bigmech'
+
+# Submit the reading job
+batch_client = boto3.client('batch')
 
 def get_environment():
     # Get AWS credentials
@@ -60,6 +68,7 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
+
 def submit_combine(basename, job_ids=None):
     # Get environment variables
     environment_vars = get_environment()
@@ -78,18 +87,10 @@ def submit_combine(basename, job_ids=None):
         kwargs['dependsOn'] = job_ids
     batch_client.submit_job(**kwargs)
 
+
 if __name__ == '__main__':
     import sys
     import argparse
-    import boto3
-    import botocore.session
-    from indra.literature import elsevier_client as ec
-
-    bucket_name = 'bigmech'
-    #job_type =sys.argv[1]
-
-    # Submit the reading job
-    batch_client = boto3.client('batch')
 
     # Create the top-level parser
     parser = argparse.ArgumentParser('submit_reading_pipeline_aws.py',
