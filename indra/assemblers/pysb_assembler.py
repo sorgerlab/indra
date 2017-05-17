@@ -1809,6 +1809,9 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    ann = Annotation(obj_active.monomer.name, obj_active.site_conditions,
+                     'has_active_pattern')
+    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
@@ -1891,6 +1894,9 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
+    ann = Annotation(ras_active.monomer.name, ras_active.site_conditions,
+                     'has_active_pattern')
+    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 rasgef_assemble_default = rasgef_assemble_one_step
@@ -1954,6 +1960,9 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
+    ann = Annotation(ras_active.monomer.name, ras_active.site_conditions,
+                     'has_active_pattern')
+    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 rasgap_assemble_default = rasgap_assemble_one_step
