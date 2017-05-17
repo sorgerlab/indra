@@ -464,8 +464,8 @@ def test_check_activation():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == ['A_activates_B_activity', 'B_obs']
-    assert results[1][1] == ['B_deactivates_C_kinase', 'C_obs']
+    assert results[0][1] == ['A_activates_B_activity', 'B_0_obs']
+    assert results[1][1] == ['B_deactivates_C_kinase', 'C_0_obs']
 
 @with_model
 def test_none_phosphorylation_stmt():
@@ -581,10 +581,10 @@ def test_multitype_path():
         Activation(kras_g, braf, 'kinase')
       ]
     check_stmts(stmts1, (['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS_gtpbound', 'KRAS_obs'],
+                          'SOS1_GRB2_activates_KRAS_gtpbound', 'KRAS_0_obs'],
                          ['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS_gtpbound',
-                          'KRAS_activates_BRAF_kinase', 'BRAF_obs']))
+                          'KRAS_activates_BRAF_kinase', 'BRAF_0_obs']))
     # Check without the ActiveForm
     stmts2 = [
         Complex([egfr, grb2]),
@@ -593,10 +593,10 @@ def test_multitype_path():
         Activation(kras_g, braf, 'kinase')
       ]
     check_stmts(stmts2, (['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS', 'KRAS_obs'],
+                          'SOS1_GRB2_activates_KRAS', 'KRAS_0_obs'],
                          ['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS',
-                          'KRAS_activates_BRAF_kinase', 'BRAF_obs']))
+                          'KRAS_activates_BRAF_kinase', 'BRAF_0_obs']))
 
 
 def test_grounded_modified_enzyme():
@@ -664,7 +664,7 @@ def test_rasgef_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['SOS1_activates_KRAS', 'KRAS_obs']
+    assert checks[0][1] == ['SOS1_activates_KRAS', 'KRAS_0_obs']
     # TODO TODO TODO
     """
     # Check that the RasGef is satisfied by the Activation
@@ -697,7 +697,7 @@ def test_rasgef_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1] == ['SOS1_activates_KRAS',
-                            'KRAS_activates_BRAF_kinase', 'BRAF_obs']
+                            'KRAS_activates_BRAF_kinase', 'BRAF_0_obs']
 
 
 def test_rasgef_rasgtp_phos():
@@ -739,7 +739,7 @@ def test_rasgap_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['NF1_deactivates_KRAS', 'KRAS_obs']
+    assert checks[0][1] == ['NF1_deactivates_KRAS', 'KRAS_0_obs']
     # TODO TODO TODO
     """
     # Check that the RasGap is satisfied by the Activation
@@ -774,7 +774,7 @@ def test_rasgap_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1] == ['NF1_deactivates_KRAS',
-                            'KRAS_activates_BRAF_kinase', 'BRAF_obs']
+                            'KRAS_activates_BRAF_kinase', 'BRAF_0_obs']
 
 
 def test_rasgap_rasgtp_phos():
@@ -869,7 +869,7 @@ def test_check_rule_subject_bound_condition():
 def test_activation_subtype():
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
-    stmts =[Activation(sos1, kras, 'gtpbound')]
+    stmts = [Activation(sos1, kras, 'gtpbound')]
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model(policies='one_step')

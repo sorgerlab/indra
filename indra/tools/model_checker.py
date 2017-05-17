@@ -90,20 +90,6 @@ class ModelChecker(object):
                         pass
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
-                obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
-                try:
-                    obj_site_pattern = pa.get_site_pattern(stmt.obj)
-                    obj_site_pattern.update({stmt.obj_activity: 'active'})
-                    obj_monomer = self.model.monomers[stmt.obj.name]
-                    obj_mp = obj_monomer(**obj_site_pattern)
-                    # Associate this statement with this observable
-                    self.stmt_to_obs[stmt].append(obj_obs_name)
-                    obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
-                    self.model.add_component(obj_obs)
-                except Exception as e:
-                    logger.info('Failed to create observables for stmt %s, '
-                                'skipping' % stmt)
-
                 def _get_object_active_patterns(model, obj):
                     patterns = []
                     for ann in self.model.annotations:
@@ -112,6 +98,7 @@ class ModelChecker(object):
                             patterns.append(ann.object)
                     return patterns
 
+                obj_monomer = self.model.monomers[stmt.obj.name]
                 active_patterns = _get_object_active_patterns(self.model, stmt.obj)
                 for obs_ix, pattern in enumerate(active_patterns):
                     obj_obs_name_mod = '%s_%d_obs' % \
