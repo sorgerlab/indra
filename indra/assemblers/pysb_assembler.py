@@ -285,48 +285,6 @@ def get_mod_site_name(mod_type, residue, position):
     return name
 
 
-def get_active_forms(agent, agent_set):
-    '''Returns all the forms (dicts of site states) of an Agent
-    that are known to be active.'''
-    act_forms = agent_set[_n(agent.name)].active_forms
-    if not act_forms:
-        act_forms = [{}]
-    return act_forms
-
-
-def get_active_patterns(agent, agent_set):
-    '''Returns all the patterns (dicts of site states) of an Agent
-    that are known to be active.'''
-    act_forms = get_active_forms(agent, agent_set)
-    act_types = get_activity_types(agent, agent_set)
-    # If there are no active forms then see if there are known activity types.
-    # If there are known activity types then those get instantiated
-    # otherwise no activity pattern is used.
-    if act_forms == [{}]:
-        if act_types:
-            act_patterns = [{at: 'active'} for at in act_types]
-        else:
-            act_patterns = [{}]
-    else:
-        act_patterns = act_forms
-    return act_patterns
-
-
-def get_inactive_forms(agent, agent_set):
-    '''Returns all the forms (dicts of site states) of an Agent
-    that are known to be inactive.'''
-    inact_forms = agent_set[_n(agent.name)].inactive_forms
-    if not inact_forms:
-        inact_forms = [{}]
-    return inact_forms
-
-
-def get_activity_types(agent, agent_set):
-    '''Returns all the activity types an Agent has.'''
-    act_types = agent_set[_n(agent.name)].activity_types
-    return act_types
-
-
 # PySB model elements ##################################################
 
 def get_agent_rule_str(agent):
@@ -1534,7 +1492,6 @@ def demodification_assemble_one_step(stmt, model, agent_set):
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
-    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     enz_pattern = get_monomer_pattern(model, stmt.enz)
 
     unmod_site_state = states[mod_condition_name][0]
@@ -1585,7 +1542,6 @@ def demodification_assemble_two_step(stmt, model, agent_set):
     unmod_site_state = states[mod_condition_name][0]
     mod_site_state = states[mod_condition_name][1]
 
-    enz_act_patterns = get_active_patterns(stmt.enz, agent_set)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     rule_name = '%s_%s_bind_%s_%s' % \
@@ -1819,7 +1775,6 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
 
 
 def regulateactivity_assemble_one_step(stmt, model, agent_set):
-    subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -2025,7 +1980,11 @@ def activeform_assemble_interactions_only(stmt, model, agent_set):
 
 
 def activeform_assemble_one_step(stmt, model, agent_set):
-    pass
+    agent = agent_set.get_create_base_agent(stmt.agent)
+    site_conditions = get_site_pattern(stmt.agent)
+    af = 'has_active_pattern' if stmt.is_active else 'has_inactive_pattern'
+    ann = Annotation(agent.name, site_conditions, af)
+    model.annotations.append(ann)
 
 activeform_assemble_default = activeform_assemble_one_step
 
