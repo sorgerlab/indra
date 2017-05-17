@@ -42,12 +42,6 @@ results = []
 for drug_name, ab_dict in data_stmts.items():
     for ab, stmt_list in ab_dict.items():
         value = data_values[drug_name][ab]
-        if value > 0.5 and value < 1.5:
-            continue
-        #if not (drug_name == 'ZS' and ab == 'S6_pS235_V'):
-        #    continue
-               #(drug_name == 'RO' or \
-               # drug_name == '901' and ab == 'MAPK_pT202'):
         # For each subset, check statements; if any of them checks out, we're
         # good and can move on to the next group
         print("-- Checking the effect of %s on %s --" % (drug_name, ab))

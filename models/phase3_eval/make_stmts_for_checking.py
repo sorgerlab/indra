@@ -86,20 +86,16 @@ def get_eval_drug_ab_combs(data):
     drug_ab_combs = zip(drug_tx, antibodies)
     return drug_ab_combs
 
-if __name__ == '__main__':
+def run(dec_thresh=0.8, inc_thresh=1.2):
     data = pd.read_data(pd.data_file)
     ab_agents = read_phosphosite('sources/annotated_kinases_v5.csv')[1]
-
-    # Set these if filtering based on magnitude is needed
-    DEC_THRESH = 0.8
-    INC_THRESH = 1.2
 
     # If filtering is to be done based on thresholds only,
     # set this to None
     drug_ab_combs = get_eval_drug_ab_combs(data)
 
     stmts, values = make_stmts(data, ab_agents, drug_ab_combs=drug_ab_combs,
-                               thresh=[DEC_THRESH, INC_THRESH])
+                               thresh=[dec_thresh, inc_thresh])
 
     # Now, preassemble the statements to remove duplicates
     pa_dict = preassemble_stmts(stmts)
@@ -107,3 +103,7 @@ if __name__ == '__main__':
     with open('data_stmts.pkl', 'wb') as f:
         pickle.dump((pa_dict, values), f, protocol=2)
 
+    return (stmts, values)
+
+if __name__ == '__main__':
+    run()
