@@ -96,14 +96,31 @@ class ModelChecker(object):
                     obj_site_pattern.update({stmt.obj_activity: 'active'})
                     obj_monomer = self.model.monomers[stmt.obj.name]
                     obj_mp = obj_monomer(**obj_site_pattern)
+                    # Associate this statement with this observable
+                    self.stmt_to_obs[stmt].append(obj_obs_name)
+                    obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
+                    self.model.add_component(obj_obs)
                 except Exception as e:
                     logger.info('Failed to create observables for stmt %s, '
                                 'skipping' % stmt)
-                    continue
-                # Associate this statement with this observable
-                self.stmt_to_obs[stmt].append(obj_obs_name)
-                obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
-                self.model.add_component(obj_obs)
+
+                def _get_object_active_patterns(model, obj):
+                    patterns = []
+                    for ann in self.model.annotations:
+                        if ann.predicate == 'has_active_pattern' and \
+                            ann.subject == stmt.obj.name:
+                            patterns.append(ann.object)
+                    return patterns
+
+                active_patterns = _get_object_active_patterns(self.model, stmt.obj)
+                for obs_ix, pattern in enumerate(active_patterns):
+                    obj_obs_name_mod = '%s_%d_obs' % \
+                            (pa.get_agent_rule_str(stmt.obj), obs_ix)
+                    obj_mp = obj_monomer(**pattern)
+                    self.stmt_to_obs[stmt].append(obj_obs_name_mod)
+                    obj_obs = Observable(obj_obs_name_mod, obj_mp,
+                                         _export=False)
+                    self.model.add_component(obj_obs)
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
