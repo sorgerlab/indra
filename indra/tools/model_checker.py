@@ -11,6 +11,7 @@ from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
+from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
@@ -537,19 +538,14 @@ def _object_agents_from_rule(model, rule_name, stmts):
     # Monomer name through 'is' grounding annotations of identifiers.org
     # URIs to INDRA database names and ids.
     agents = []
-    import ipdb; ipdb.set_trace()
     for obj in rule_objects:
-        agent = Agent(obj)
         db_refs = {}
         for ann in model.annotations:
             if ann.predicate == 'is':
                 # We assume here that the subject is a Monomer
                 if ann.subject.name == obj:
-                    (db_ns, db_id) = pa.parse_identifiers_url(ann.object)
-                    if db_ns and db_id:
-                        db_refs[db_ns] = db_id
-        agent.db_refs = db_refs
-        agents.append(agent)
+                    agent = _agent_from_uri(ann.object)
+                    agents.append(agent)
     # Finally we need to construct an Agent which is in the state
     # induced by the given rule. But for this we need to find the
     # INDRA Statement corresponding to the rule.
@@ -562,8 +558,7 @@ def _object_agents_from_rule(model, rule_name, stmts):
             mod_type = modclass_to_modtype[stmt.__class__]
             mc = ModCondition(mod_type, stmt.residue, stmt.position)
             for i, agent in enumerate(agents):
-                agent.mod_conditions = [mc]
+                agent.mods = [mc]
                 polarities[i] = isinstance(stmt, AddModification)
     return agents, polarities
-
 
