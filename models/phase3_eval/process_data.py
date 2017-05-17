@@ -38,11 +38,6 @@ def read_data(fname=None):
                                            index_col=None)
     return data
 
-def get_annotated_antibodies(data):
-    ab_col = data['antibody']['Protein Data ID']
-    ab_annotated = sorted([ab for ab in ab_col if not pandas.isnull(ab)])
-    return ab_annotated
-
 def get_phos_antibodies(data):
     ab_names = data['protein'].columns[2:]
     ab_phos = []
@@ -53,13 +48,6 @@ def get_phos_antibodies(data):
                 ab_phos.append(abn)
                 break
     return ab_phos
-
-def get_unannotated_antibodies(data):
-    """Get a list of ABs that are not annotated."""
-    ab_annotated = get_annotated_antibodies(data)
-    data_abs = data['protein'].columns[2:]
-    ab_unannotated = sorted(list(set(data_abs).difference(set(ab_annotated))))
-    return ab_unannotated
 
 def get_antibody_genes(data, ab_name):
     """Return the UniProt IDs corresponding to a specific antibody."""
@@ -249,7 +237,29 @@ def get_max_dev(data):
         devs[data['protein'].columns[i]] = dev
     return devs
 
-def get_antibody_map(fname=antibody_map_file):
+def get_antibody_map(data):
+    phos_ab_map = get_phospho_antibody_map()
+    ab_map = {}
+    for _, row in data['antibody'].iterrows():
+        ab_name = row['Protein Data ID']
+        if ab_name in phos_ab_map:
+            continue
+        upids = row['UniProt ID'].split(',')
+        for upid in upids:
+            hgnc_symbol = uniprot_client.get_gene_name(upid)
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
+            target = Agent(hgnc_symbol,
+                           db_refs={'UP': upid,'HGNC': hgnc_id})
+            try:
+                ab_map[ab_name].append(target)
+            except KeyError:
+                ab_map[ab_name] = [target]
+    ab_map.update(phos_ab_map)
+    return ab_map
+
+
+def get_phospho_antibody_map(fname=antibody_map_file):
+    # First gather the annotations for the phosphosites
     df = pandas.read_csv(fname, index_col=None, sep=',', encoding='utf8')
     antibody_map = {}
 
