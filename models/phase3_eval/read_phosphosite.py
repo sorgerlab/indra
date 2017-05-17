@@ -4,14 +4,13 @@ import pandas
 from copy import deepcopy
 from indra.util import unicode_strs
 from indra.databases import hgnc_client, uniprot_client
-from indra.statements import Agent, Phosphorylation, ModCondition, Evidence
+from indra.statements import Agent, Phosphorylation, Evidence
 
 phosphosite_file = 'sources/annotated_kinases_v5.csv'
 
-def read_phosphosite(fname):
+def read_phosphosite(fname=phosphosite_file):
     df = pandas.read_csv(fname, index_col=None, sep='\t', encoding='utf8')
     statements = []
-    antibody_map = {}
     for _, row in df.iterrows():
         sub_upid = row['SUB_ID']
         if not pandas.isnull(sub_upid):
@@ -33,22 +32,7 @@ def read_phosphosite(fname):
         else:
             position = None
 
-        sub_readout = deepcopy(sub)
-        mc = ModCondition('phosphorylation', residue, position)
-        sub_readout.mods = [mc]
         ps = row['phosphosite']
-        if ps in antibody_map:
-            found = False
-            for p in antibody_map[ps]:
-                if p.name == sub.name and p.mods[0].residue == residue and \
-                    p.mods[0].position == position:
-                    found = True
-                    break
-            if not found:
-                antibody_map[ps].append(sub_readout)
-        else:
-            antibody_map[ps] = [sub_readout]
-
         kin_upid = row['KIN_ID']
         if not pandas.isnull(kin_upid):
             if kin_upid.find('-') != -1:
@@ -71,4 +55,4 @@ def read_phosphosite(fname):
         ev = Evidence(source_api='phosphosite')
         st = Phosphorylation(kin, sub, residue, position, evidence = [ev])
         statements.append(st)
-    return statements, antibody_map
+    return statements
