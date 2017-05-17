@@ -362,6 +362,26 @@ def _find_sources(im, target, sources, polarity):
     # There was no path; this will produce an empty generator
     return
 
+def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
+    def _sample_pred(model, stmts, im, target, score_fn):
+        preds = list(_get_signed_predecessors(im, target, 1))
+        pred_agents = []
+        pred_scores = []
+        for pred, sign in preds:
+            agents, polarities = _object_agents_from_rule(model, pred, stmts)
+            # FIXME: for simplicity we start with a single object agent
+            agent = agents[0]
+            polarity = polarities[0]
+            score = score_fn(agent, polarity)
+            pred_agents.append(agent)
+            pred_scores.append(score)
+        # Normalize scores
+        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
+        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
+        pred = preds[pred_idx]
+        return pred
+    pred = _sample_pred(model, stmts, im, target, score_fn)
+    print(pred)
 
 def _get_signed_predecessors(im, node, polarity):
     """Get upstream nodes in the influence map
@@ -512,9 +532,10 @@ def _path_polarity(im, path):
     #return True if path_polarity == 1 else False
     return path_polarity
 
+
+
 def _stmt_from_rule(model, rule_name, stmts):
-    # Return the INDRA Statement corresponding to
-    # a given rule by name
+    """Return the INDRA Statement corresponding to a given rule by name."""
     stmt_uuid = None
     for ann in model.annotations:
         if ann.subject == rule_name:
@@ -527,6 +548,7 @@ def _stmt_from_rule(model, rule_name, stmts):
                 return stmt
 
 def _object_agents_from_rule(model, rule_name, stmts):
+    """Return object agents with state and polarities for a rule."""
     # First we collect all objects (Monomer names) that are annotated
     # to be the objects of the rule. There will typically be 1.
     rule_objects = []
