@@ -829,6 +829,23 @@ def test_object_agents_from_rule():
     assert(len(agent.mods) == 1)
     assert(pols == [True])
 
+def test_activate_via_mod():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    erka = Agent('ERK2', mods=[ModCondition('phosphorylation', 'T', '185')], 
+                 db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(mek, erk, 'T', '185')
+    st2 = ActiveForm(erka, 'activity', True)
+    st3 = Activation(mek, erk)
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2])
+    pa.make_model()
+    mc = ModelChecker(pa.model, [st3])
+    checks = mc.check_model()
+    # Make sure it checks out to True
+    assert(checks[0][1])
+    print(checks)
+
 """
 def test_check_rule_subject_bound_condition():
     braf = Agent('BRAF', db_refs={'HGNC': '1'})
