@@ -1,12 +1,13 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 import logging
+import numbers
 import networkx
 import itertools
 import numpy as np
 from copy import deepcopy
 from collections import deque, defaultdict
-from pysb import kappa
+from pysb import kappa, WILD
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
@@ -77,9 +78,8 @@ class ModelChecker(object):
                     logger.info('Failed to create observables for stmt %s, '
                                 'skipping' % stmt)
                     continue
-                for obs_ix, obj_mp in enumerate(obj_mps):
-                    obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-                    obs_name += '' if len(obj_mps) == 1 else '_%d' % obs_ix
+                for obj_mp in obj_mps:
+                    obs_name = _monomer_pattern_label(obj_mp) + '_obs'
                     # Associate this statement with this observable
                     self.stmt_to_obs[stmt].append(obs_name)
                     # Add the observable
@@ -98,16 +98,20 @@ class ModelChecker(object):
                             patterns.append(ann.object)
                     return patterns
 
+                # FIXME (This should use grounding rather than the name)
                 obj_monomer = self.model.monomers[stmt.obj.name]
-                active_patterns = _get_object_active_patterns(self.model, stmt.obj)
-                for obs_ix, pattern in enumerate(active_patterns):
-                    obj_obs_name_mod = '%s_%d_obs' % \
-                            (pa.get_agent_rule_str(stmt.obj), obs_ix)
+                active_patterns = _get_object_active_patterns(self.model,
+                                                              stmt.obj)
+                for pattern in active_patterns:
                     obj_mp = obj_monomer(**pattern)
-                    self.stmt_to_obs[stmt].append(obj_obs_name_mod)
-                    obj_obs = Observable(obj_obs_name_mod, obj_mp,
+                    obs_name = _monomer_pattern_label(obj_mp) + '_obs'
+                    self.stmt_to_obs[stmt].append(obs_name)
+                    obj_obs = Observable(obs_name, obj_mp,
                                          _export=False)
-                    self.model.add_component(obj_obs)
+                    try:
+                        self.model.add_component(obj_obs)
+                    except ComponentDuplicateNameError as e:
+                        pass
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
@@ -619,4 +623,21 @@ def _object_agents_from_rule(model, rule_name, stmts):
                 agent.mods = [mc]
                 polarities[i] = isinstance(stmt, AddModification)
     return agents, polarities
+
+def _monomer_pattern_label(mp):
+    """Return a string label for a MonomerPattern."""
+    site_strs = []
+    for site, cond in mp.site_conditions.items():
+        if isinstance(cond, tuple) or isinstance(cond, list):
+            assert len(cond) == 2
+            if cond[1] == WILD:
+                site_str = '%s_%s' % (site, cond[0])
+            else:
+                site_str = '%s_%s%s' % (site, cond[0], cond[1])
+        elif isinstance(cond, numbers.Real):
+            continue
+        else:
+            site_str = '%s_%s' % (site, cond)
+        site_strs.append(site_str)
+    return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
 
