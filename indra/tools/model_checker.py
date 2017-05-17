@@ -5,7 +5,7 @@ import networkx
 import itertools
 import numpy as np
 from copy import deepcopy
-from collections import deque
+from collections import deque, defaultdict
 from pysb import kappa
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern
@@ -18,19 +18,24 @@ logger = logging.getLogger('model_checker')
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
 
-    def __init__(self, model, stmts_to_check=None):
+    def __init__(self, model, statements=None, agent_obs=None):
         self.model = model
-        if stmts_to_check:
-            self.statements = stmts_to_check
+        if statements:
+            self.statements = statements
         else:
             self.statements = []
+        if agent_obs:
+            self.agent_obs = agent_obs
+        else:
+            self.agent_obs = []
+        self.stmt_to_obs = defaultdict(list)
         self._im = None
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model."""
         self.statements += stmts
 
-    def get_im(self, force_update=True):
+    def get_im(self, force_update=False):
         """Get the influence map for the model, generating it if necessary.
 
         Parameters
@@ -52,11 +57,35 @@ class ModelChecker(object):
             return self._im
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
-        else:
-            logger.info("Generating influence map")
-            self._im = kappa.influence_map(self.model)
-            self._im.is_multigraph = lambda: False
-            return self._im
+
+        # Create observables for all statements to check, and add to model
+        # Remove any existing observables in the model
+        self.model.observables = ComponentSet([])
+        for stmt in self.statements:
+            mod_condition_name = modclass_to_modtype[stmt.__class__]
+            if isinstance(stmt, RemoveModification):
+                mod_condition_name = modtype_to_inverse[mod_condition_name]
+            # Add modification to substrate agent
+            modified_sub = _add_modification_to_agent(stmt.sub,
+                                mod_condition_name, stmt.residue, stmt.position)
+            obj_mps = list(pa.grounded_monomer_patterns(self.model,
+                                                        modified_sub))
+            if not obj_mps:
+                logger.info('Failed to create observables for stmt %s, '
+                            'skipping' % stmt)
+                continue
+            for obs_ix, obj_mp in enumerate(obj_mps):
+                obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
+                obs_name += '' if len(obj_mps) == 1 else '_%d' % obs_ix
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt].append(obs_name)
+                # Add the observable
+                obj_obs = Observable(obs_name, obj_mp, _export=False)
+                self.model.add_component(obj_obs)
+        logger.info("Generating influence map")
+        self._im = kappa.influence_map(self.model)
+        self._im.is_multigraph = lambda: False
+        return self._im
 
     def check_model(self):
         """Check all the statements added to the ModelChecker.
@@ -90,6 +119,8 @@ class ModelChecker(object):
         boolean
             Whether the model satisfies the statement.
         """
+        # Make sure the influence map is initialized
+        self.get_im()
         if isinstance(stmt, Modification):
             return self._check_modification(stmt)
         elif isinstance(stmt, RegulateActivity):
@@ -141,23 +172,10 @@ class ModelChecker(object):
             enz_mps = [None]
         # Get target polarity
         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
-        # Add modification to substrate agent
-        mod_condition_name = modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, RemoveModification):
-            mod_condition_name = modtype_to_inverse[mod_condition_name]
-        modified_sub = _add_modification_to_agent(stmt.sub, mod_condition_name,
-                                                  stmt.residue, stmt.position)
-        obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-        obj_mps = list(pa.grounded_monomer_patterns(self.model, modified_sub))
-        if not obj_mps:
-            logger.info('Failed to create observable; returning False')
-            return False
-        # Try to find paths between pairs of matching subj and object monomer
-        # patterns
-        for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
-            obj_obs = Observable(obs_name, obj_mp, _export=False)
+        obs_names = self.stmt_to_obs[stmt]
+        for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # Return True for the first valid path we find
-            result =  self._find_im_paths(enz_mp, obj_obs, target_polarity)
+            result =  self._find_im_paths(enz_mp, obs_name, target_polarity)
             # If result for this observable is not False, then we return it;
             # otherwise, that means there was no path for this observable, so
             # we have to try the next one
@@ -166,7 +184,7 @@ class ModelChecker(object):
         # If we got here, then there was no path for any observable
         return False
 
-    def _find_im_paths(self, subj_mp, obj_obs, target_polarity):
+    def _find_im_paths(self, subj_mp, obs_name, target_polarity):
         """Check for a source/target path in the influence map.
 
         Parameters
@@ -174,9 +192,9 @@ class ModelChecker(object):
         subj_mp : pysb.MonomerPattern
             MonomerPattern corresponding to the subject of the Statement
             being checked.
-        obj_obs : pysb.Observable
-            Observable corresponding to the object/target of the Statement
-            being checked.
+        obs_name : string
+            Name of the PySB model Observable corresponding to the
+            object/target of the Statement being checked.
         target_polarity : 1 or -1
             Whether the influence in the Statement is positive (1) or negative
             (-1).
@@ -188,12 +206,10 @@ class ModelChecker(object):
             MonomerPattern to the object Observable with the appropriate
             polarity.
         """
-        # Reset the observables list
-        self.model.observables = ComponentSet([])
-        self.model.add_component(obj_obs)
         # Find rules in the model corresponding to the input
+        obs_mp = self.model.all_components()[obs_name].reaction_pattern
         logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obj_obs, target_polarity))
+                    (subj_mp, obs_mp, target_polarity))
         if subj_mp is None:
             input_rule_set = None
         else:
@@ -224,7 +240,7 @@ class ModelChecker(object):
         num_paths = 0
         path_lengths = []
         for source, polarity, path_length in \
-                    _find_sources(self.get_im(), obj_obs.name, input_rule_set,
+                    _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
             num_paths += 1
             path_lengths.append(path_length)
@@ -232,7 +248,7 @@ class ModelChecker(object):
             if min(path_lengths) <= 5:
                 # Get the first path
                 for path in _find_sources_with_paths(self.get_im(),
-                                                     obj_obs.name,
+                                                     obs_name,
                                                      input_rule_set,
                                                      target_polarity):
                     path.reverse()
@@ -241,6 +257,7 @@ class ModelChecker(object):
                 return True
         else:
             return False
+
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -295,6 +312,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
             new_path.append(predecessor)
             queue.append(new_path)
     return
+
 
 def _find_sources(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.

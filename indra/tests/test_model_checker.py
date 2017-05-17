@@ -1013,8 +1013,7 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 if __name__ == '__main__':
-
-    #test_one_step_phosphorylation()
+    test_one_step_phosphorylation()
     #test_two_step_phosphorylation()
     #test_pysb_assembler_phospho_policies()
     #test_consumption_rule()
@@ -1024,7 +1023,7 @@ if __name__ == '__main__':
     #test_distinguish_path_polarity2()
     #test_check_activation()
     #test_none_phosphorylation_stmt()
-    test_phosphorylation_annotations()
+    #test_phosphorylation_annotations()
     #test_multitype_path()
     #test_grounded_modified_enzyme()
     #test_check_ubiquitination()
