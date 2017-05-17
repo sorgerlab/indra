@@ -139,10 +139,7 @@ class ModelChecker(object):
         else:
             enz_mps = [None]
         # Get target polarity
-        demodify_list = (Dephosphorylation, Dehydroxylation, Desumoylation,
-                         Deacetylation, Deglycosylation, Deribosylation,
-                         Deubiquitination, Defarnesylation)
-        target_polarity = -1 if type(stmt) in demodify_list else 1
+        target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
         # Add modification to substrate agent
         mod_condition_name = modclass_to_modtype[stmt.__class__]
         if isinstance(stmt, RemoveModification):
