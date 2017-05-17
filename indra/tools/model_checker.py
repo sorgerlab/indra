@@ -511,3 +511,59 @@ def _path_polarity(im, path):
     #return True if path_polarity == 1 else False
     return path_polarity
 
+def _stmt_from_rule(model, rule_name, stmts):
+    # Return the INDRA Statement corresponding to
+    # a given rule by name
+    stmt_uuid = None
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+            if ann.predicate == 'from_indra_statement':
+                stmt_uuid = ann.object
+                break
+    if stmt_uuid:
+        for stmt in stmts:
+            if stmt.uuid == stmt_uuid:
+                return stmt
+
+def _object_agents_from_rule(model, rule_name, stmts):
+    # First we collect all objects (Monomer names) that are annotated
+    # to be the objects of the rule. There will typically be 1.
+    rule_objects = []
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+            if ann.predicate == 'rule_has_object':
+                rule_objects.append(ann.object)
+    # Next we construct grounded INDRA Agents working back from the
+    # Monomer name through 'is' grounding annotations of identifiers.org
+    # URIs to INDRA database names and ids.
+    agents = []
+    import ipdb; ipdb.set_trace()
+    for obj in rule_objects:
+        agent = Agent(obj)
+        db_refs = {}
+        for ann in model.annotations:
+            if ann.predicate == 'is':
+                # We assume here that the subject is a Monomer
+                if ann.subject.name == obj:
+                    (db_ns, db_id) = pa.parse_identifiers_url(ann.object)
+                    if db_ns and db_id:
+                        db_refs[db_ns] = db_id
+        agent.db_refs = db_refs
+        agents.append(agent)
+    # Finally we need to construct an Agent which is in the state
+    # induced by the given rule. But for this we need to find the
+    # INDRA Statement corresponding to the rule.
+    # TODO: extend to other Statement types if needed
+    # Here we also need to surface the polarity of the modification
+    polarities = [None for agent in agents]
+    stmt = _stmt_from_rule(model, rule_name, stmts)
+    if stmt is not None:
+        if isinstance(stmt, Modification):
+            mod_type = modclass_to_modtype[stmt.__class__]
+            mc = ModCondition(mod_type, stmt.residue, stmt.position)
+            for i, agent in enumerate(agents):
+                agent.mod_conditions = [mc]
+                polarities[i] = isinstance(stmt, AddModification)
+    return agents, polarities
+
+
