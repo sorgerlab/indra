@@ -8,7 +8,7 @@ from copy import deepcopy
 from collections import deque, defaultdict
 from pysb import kappa
 from pysb import Observable, ComponentSet
-from pysb.core import as_complex_pattern
+from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
@@ -62,26 +62,49 @@ class ModelChecker(object):
         # Remove any existing observables in the model
         self.model.observables = ComponentSet([])
         for stmt in self.statements:
-            mod_condition_name = modclass_to_modtype[stmt.__class__]
-            if isinstance(stmt, RemoveModification):
-                mod_condition_name = modtype_to_inverse[mod_condition_name]
-            # Add modification to substrate agent
-            modified_sub = _add_modification_to_agent(stmt.sub,
-                                mod_condition_name, stmt.residue, stmt.position)
-            obj_mps = list(pa.grounded_monomer_patterns(self.model,
-                                                        modified_sub))
-            if not obj_mps:
-                logger.info('Failed to create observables for stmt %s, '
-                            'skipping' % stmt)
-                continue
-            for obs_ix, obj_mp in enumerate(obj_mps):
-                obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-                obs_name += '' if len(obj_mps) == 1 else '_%d' % obs_ix
+            # Generate observables for Modification statements
+            if isinstance(stmt, Modification):
+                mod_condition_name = modclass_to_modtype[stmt.__class__]
+                if isinstance(stmt, RemoveModification):
+                    mod_condition_name = modtype_to_inverse[mod_condition_name]
+                # Add modification to substrate agent
+                modified_sub = _add_modification_to_agent(stmt.sub,
+                                    mod_condition_name, stmt.residue,
+                                    stmt.position)
+                obj_mps = list(pa.grounded_monomer_patterns(self.model,
+                                                            modified_sub))
+                if not obj_mps:
+                    logger.info('Failed to create observables for stmt %s, '
+                                'skipping' % stmt)
+                    continue
+                for obs_ix, obj_mp in enumerate(obj_mps):
+                    obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
+                    obs_name += '' if len(obj_mps) == 1 else '_%d' % obs_ix
+                    # Associate this statement with this observable
+                    self.stmt_to_obs[stmt].append(obs_name)
+                    # Add the observable
+                    obj_obs = Observable(obs_name, obj_mp, _export=False)
+                    try:
+                        self.model.add_component(obj_obs)
+                    except ComponentDuplicateNameError as e:
+                        pass
+            # Generate observables for Activation/Inhibition statements
+            elif isinstance(stmt, RegulateActivity):
+                obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
+                try:
+                    obj_site_pattern = pa.get_site_pattern(stmt.obj)
+                    obj_site_pattern.update({stmt.obj_activity: 'active'})
+                    obj_monomer = self.model.monomers[stmt.obj.name]
+                    obj_mp = obj_monomer(**obj_site_pattern)
+                except Exception as e:
+                    logger.info('Failed to create observables for stmt %s, '
+                                'skipping' % stmt)
+                    continue
                 # Associate this statement with this observable
-                self.stmt_to_obs[stmt].append(obs_name)
-                # Add the observable
-                obj_obs = Observable(obs_name, obj_mp, _export=False)
+                self.stmt_to_obs[stmt].append(obj_obs_name)
+                obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
                 self.model.add_component(obj_obs)
+
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
         self._im.is_multigraph = lambda: False
@@ -138,22 +161,13 @@ class ModelChecker(object):
         # or 2) the agent is tagged as the enzyme in a rule of the appropriate
         # activity (e.g., a phosphorylation rule) FIXME
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
-
         target_polarity = 1 if stmt.is_activation else -1
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the
         # appropriate type
-        obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
-        try:
-            obj_site_pattern = pa.get_site_pattern(stmt.obj)
-            obj_site_pattern.update({stmt.obj_activity: 'active'})
-            obj_monomer = self.model.monomers[stmt.obj.name]
-            obj_mp = obj_monomer(**obj_site_pattern)
-        except Exception as e:
-            logger.info("Could not create obj monomer pattern: %s" % e)
-            return False
-        obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
-        return self._find_im_paths(subj_mp, obj_obs, target_polarity)
+        obs_names = self.stmt_to_obs[stmt]
+        for obs_name in obs_names:
+            return self._find_im_paths(subj_mp, obs_name, target_polarity)
 
     def _check_modification(self, stmt):
         """Check a Modification statement."""

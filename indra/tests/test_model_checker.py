@@ -539,7 +539,7 @@ def test_phosphorylation_annotations():
     assert results[0][0] == st1
     assert results[0][1] == ['A_phos_B', 'ERK2_phosphoT185_obs']
     assert results[1][0] == st2
-    assert results[1][1] == ['A_phos_B', 'ERK2_phospho_obs']
+    assert results[1][1] == ['A_phos_B', 'ERK2_phospho_obs_0']
     assert results[2][0] == st3
     assert results[2][1] == False
 
@@ -1012,32 +1012,4 @@ def test_check_transphosphorylation():
 #
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
-if __name__ == '__main__':
-    test_one_step_phosphorylation()
-    #test_two_step_phosphorylation()
-    #test_pysb_assembler_phospho_policies()
-    #test_consumption_rule()
-    #test_dephosphorylation()
-    #test_invalid_modification()
-    #test_distinguish_path_polarity1()
-    #test_distinguish_path_polarity2()
-    #test_check_activation()
-    #test_none_phosphorylation_stmt()
-    #test_phosphorylation_annotations()
-    #test_multitype_path()
-    #test_grounded_modified_enzyme()
-    #test_check_ubiquitination()
-    #test_check_rule_subject1()
-    #test_rasgef_activation()
-    #test_rasgef_rasgtp()
-    #test_rasgef_rasgtp_phos()
-    #test_rasgap_activation()
-    #test_rasgap_rasgtp()
-    #test_rasgap_rasgtp_phos()
-    #test_activation_subtype()
-    #test_check_transphosphorylation()
-    #test_check_autophosphorylation()
-    #test_distinguish_path_polarity_none_stmt()
-    #test_ras_220_network()
-    #test_path_polarity()
 
