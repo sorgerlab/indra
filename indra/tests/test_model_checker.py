@@ -856,6 +856,24 @@ def test_activate_via_mod():
     print(checks)
 
 
+def test_observables():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    erkp = Agent('ERK2', mods=[ModCondition('phosphorylation', 'T', '185')], 
+                 db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(mek, erk, 'T', '185')
+    st2 = ActiveForm(erkp, 'activity', True)
+    st3 = Activation(mek, erk)
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2])
+    pa.make_model()
+    mc = ModelChecker(pa.model, [st1, st3], agent_obs=[erkp])
+    checks = mc.check_model()
+    assert checks[0][1]
+    assert checks[1][1]
+    # Only 1 observable should be created
+    assert len(mc.model.observables) == 1
+
 """
 def test_check_rule_subject_bound_condition():
     braf = Agent('BRAF', db_refs={'HGNC': '1'})

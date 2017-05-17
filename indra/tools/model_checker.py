@@ -59,6 +59,23 @@ class ModelChecker(object):
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
 
+        def add_obs_for_agent(agent):
+            obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
+            if not obj_mps:
+                logger.info('Failed to create observables for agent %s, '
+                            'skipping' % agent)
+                return
+            for obj_mp in obj_mps:
+                obs_name = _monomer_pattern_label(obj_mp) + '_obs'
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt].append(obs_name)
+                # Add the observable
+                obj_obs = Observable(obs_name, obj_mp, _export=False)
+                try:
+                    self.model.add_component(obj_obs)
+                except ComponentDuplicateNameError as e:
+                    pass
+
         # Create observables for all statements to check, and add to model
         # Remove any existing observables in the model
         self.model.observables = ComponentSet([])
@@ -72,22 +89,7 @@ class ModelChecker(object):
                 modified_sub = _add_modification_to_agent(stmt.sub,
                                     mod_condition_name, stmt.residue,
                                     stmt.position)
-                obj_mps = list(pa.grounded_monomer_patterns(self.model,
-                                                            modified_sub))
-                if not obj_mps:
-                    logger.info('Failed to create observables for stmt %s, '
-                                'skipping' % stmt)
-                    continue
-                for obj_mp in obj_mps:
-                    obs_name = _monomer_pattern_label(obj_mp) + '_obs'
-                    # Associate this statement with this observable
-                    self.stmt_to_obs[stmt].append(obs_name)
-                    # Add the observable
-                    obj_obs = Observable(obs_name, obj_mp, _export=False)
-                    try:
-                        self.model.add_component(obj_obs)
-                    except ComponentDuplicateNameError as e:
-                        pass
+                add_obs_for_agent(modified_sub)
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
                 def _get_object_active_patterns(model, obj):
@@ -112,6 +114,10 @@ class ModelChecker(object):
                         self.model.add_component(obj_obs)
                     except ComponentDuplicateNameError as e:
                         pass
+
+        # Add observables for each agent
+        for ag in self.agent_obs:
+            add_obs_for_agent(ag)
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
