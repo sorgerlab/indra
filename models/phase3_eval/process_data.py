@@ -3,6 +3,7 @@ from builtins import dict, str
 import numpy
 import pandas
 from copy import copy
+from random import shuffle
 from collections import OrderedDict
 from indra.databases import uniprot_client
 from indra.databases import hgnc_client
@@ -127,6 +128,7 @@ def get_gene_pmids(genes, out_file='pmids.txt'):
         pmids = pubmed_client.get_ids_for_gene(gene)
         all_pmids = all_pmids.union(set(pmids))
     all_pmids = sorted(list(all_pmids))
+    shuffle(all_pmids)
     with open(out_file, 'wb') as fh:
         for pmid in all_pmids:
             fh.write(('%s\n' % pmid).encode('utf-8'))
