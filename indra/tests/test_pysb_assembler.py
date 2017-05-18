@@ -850,7 +850,6 @@ def test_phospho_mod_grounding():
     assert {'S218': ('p', WILD)} in sc
     assert {'S222': ('p', WILD)} in sc
     # Check if we get the doubly phosphorylated MonomerPattern
-    import ipdb; ipdb.set_trace()
     mps = list(pa.grounded_monomer_patterns(model, a))
     assert len(mps) == 1
     assert mps[0].monomer.name == 'MEK1'
@@ -864,7 +863,7 @@ def test_multiple_grounding_mods():
     cbl = Agent('CBL', db_refs={'HGNC': '1541'})
     ub_phos_erk = Agent('ERK2',
             mods=[ModCondition('phosphorylation', None, None),
-                  ModCondition('ubiquitination', None, None)]],
+                  ModCondition('ubiquitination', None, None)],
             db_refs={'HGNC': '6871'})
     st1 = Phosphorylation(mek, erk, 'T', '185')
     st2 = Phosphorylation(mek, erk, 'Y', '187')
@@ -875,10 +874,10 @@ def test_multiple_grounding_mods():
     model = pysb_asmb.make_model()
     mps = list(pa.grounded_monomer_patterns(model, ub_phos_erk))
     assert len(mps) == 4
-    assert mps[0].monomer.name == 'MEK1'
-    assert mps[1].monomer.name == 'MEK1'
-    assert mps[2].monomer.name == 'MEK1'
-    assert mps[3].monomer.name == 'MEK1'
+    assert mps[0].monomer.name == 'ERK2'
+    assert mps[1].monomer.name == 'ERK2'
+    assert mps[2].monomer.name == 'ERK2'
+    assert mps[3].monomer.name == 'ERK2'
 
 
 def _check_mod_assembly(mod_class):
@@ -1056,6 +1055,3 @@ def test_pysb_preassembler_replace_activities3():
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[0].enz.mods)
     assert(ppa.statements[0].enz.bound_conditions)
-
-if __name__ == '__main__':
-    test_phospho_mod_grounding()

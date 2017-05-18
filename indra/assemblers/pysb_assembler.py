@@ -402,15 +402,18 @@ def grounded_monomer_patterns(model, agent):
     if monomer is None:
         logger.info('No monomer found corresponding to agent %s' % agent)
         return
-
     # Now that we have a monomer for the agent, look for site/state
     # combinations corresponding to the state of the agent.  For every one of
     # the modifications specified in the agent signature, check to see if it
     # can be satisfied based on the agent's annotations.  For every one we find
     # that is consistent, we yield it--there may be more than one.
     # FIXME
-    if not agent.mods:
-        yield monomer()
+    # Create a list of tuples, each one representing the site conditions
+    # that can satisfy a particular agent condition. Each entry in the list
+    # will contain a list of dicts associated with a particular mod/activity
+    # condition. Each dict will represent a site/state combination satisfying
+    # the constraints imposed by that mod/activity condition.
+    sc_list = []
     for mod in agent.mods:
         # Find all site/state combinations that have the appropriate
         # modification type
@@ -439,14 +442,27 @@ def grounded_monomer_patterns(model, agent):
             viable_sites = viable_sites.intersection(res_sites)
         if mod.position is not None:
             viable_sites = viable_sites.intersection(pos_sites)
-        # If there are no viable sites, return None
+        # If there are no viable sites annotated in the model matching the
+        # available info in the mod condition, then we won't be able to
+        # satisfy the conditions on this agent
         if not viable_sites:
             return
+        # Otherwise, update the 
         # If there are any sites left after we subject them to residue
         # and position constraints, then return the relevant monomer patterns!
+        pattern_list = []
         for site_name in viable_sites:
-            pattern = {site_name: (mod_sites[site_name], WILD)}
-            yield monomer(**pattern)
+            pattern_list.append({site_name: (mod_sites[site_name], WILD)})
+        sc_list.append(pattern_list)
+    # Now that we've got a list of conditions
+    for pattern_combo in itertools.product(*sc_list):
+        mp_sc = {}
+        for pattern in pattern_combo:
+            mp_sc.update(pattern)
+        if mp_sc:
+            yield monomer(**mp_sc)
+    if not sc_list:
+        yield monomer()
 
 def rules_with_annotation(model, monomer_name, predicate):
     rules = []
