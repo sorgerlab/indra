@@ -10,7 +10,7 @@ from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler, IndexCardAssembler
-from read_phosphosite import read_phosphosite
+import process_data
 
 def assemble_pysb(stmts, data_genes, out_file):
     """Return an assembled PySB model."""
@@ -92,7 +92,8 @@ def generate_equations(model, pkl_cache):
 
 
 def add_observables(model):
-    _, ab_map = read_phosphosite('sources/annotated_kinases_v5.csv')
+    data = process_data.read_data()
+    ab_map = process_data.get_antibody_map(data)
     for ab_name, agents in ab_map.items():
         patterns = []
         for agent in agents:
@@ -169,7 +170,7 @@ def add_observables(model):
 
 def get_mod_whitelist():
     mod_whitelist = {}
-    _, ab_map = read_phosphosite('sources/annotated_kinases_v5.csv')
+    ab_map = process_data.get_phospho_antibody_map()
     for k, v in ab_map.items():
         for agent in v:
             mod = ('phosphorylation', agent.mods[0].residue,

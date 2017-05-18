@@ -14,10 +14,8 @@ data_file = 'data/Korkut et al. Data 05122017.xlsx'
 antibody_map_file = 'data/antibody_site_map.csv'
 drug_grounding_file = 'data/drug_grounding.csv'
 
-def read_data(fname=None):
+def read_data(fname=data_file):
     """Returns the data as a dictionary."""
-    if fname is None:
-        fname = data_file
     if fname.endswith('2017.xlsx'):
         skiprows1 = []
         skiprows2 = []
