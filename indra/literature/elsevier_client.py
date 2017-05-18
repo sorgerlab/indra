@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import logging
+import textwrap
 import xml.etree.ElementTree as ET
 import requests
 # Python3
@@ -244,7 +245,7 @@ def _get_raw_text(full_text_elem):
         return None
     else:
         logger.info("Found rawtext element xocs:doc/xocs:rawtext")
-        return raw_text.text
+        return textwrap.fill(raw_text.text)
 
 
 @lru_cache(maxsize=100)
