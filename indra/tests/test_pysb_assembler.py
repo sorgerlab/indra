@@ -832,7 +832,6 @@ def test_phospho_assemble_grounding():
         check_policy(policy)
 
 def test_phospho_mod_grounding():
-    import ipdb; ipdb.set_trace()
     a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
                             ModCondition('phosphorylation', 'S', '222')],
               db_refs={'HGNC': '6840'})
@@ -851,11 +850,36 @@ def test_phospho_mod_grounding():
     assert {'S218': ('p', WILD)} in sc
     assert {'S222': ('p', WILD)} in sc
     # Check if we get the doubly phosphorylated MonomerPattern
+    import ipdb; ipdb.set_trace()
     mps = list(pa.grounded_monomer_patterns(model, a))
     assert len(mps) == 1
     assert mps[0].monomer.name == 'MEK1'
     assert mps[0].site_conditions == {'S218': ('p', WILD),
                                       'S222': ('p', WILD)}
+
+
+def test_multiple_grounding_mods():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    cbl = Agent('CBL', db_refs={'HGNC': '1541'})
+    ub_phos_erk = Agent('ERK2',
+            mods=[ModCondition('phosphorylation', None, None),
+                  ModCondition('ubiquitination', None, None)]],
+            db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(mek, erk, 'T', '185')
+    st2 = Phosphorylation(mek, erk, 'Y', '187')
+    st3 = Ubiquitination(cbl, erk, 'K', '40')
+    st4 = Ubiquitination(cbl, erk, 'K', '50')
+    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb.add_statements([st1, st2, st3, st4])
+    model = pysb_asmb.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, ub_phos_erk))
+    assert len(mps) == 4
+    assert mps[0].monomer.name == 'MEK1'
+    assert mps[1].monomer.name == 'MEK1'
+    assert mps[2].monomer.name == 'MEK1'
+    assert mps[3].monomer.name == 'MEK1'
+
 
 def _check_mod_assembly(mod_class):
     subj = Agent('KRAS')
