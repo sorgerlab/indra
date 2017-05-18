@@ -448,11 +448,11 @@ def test_distinguish_path_polarity2():
     assert results[2][1] == ['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']
     assert results[3][1] == ['B_dephos_C', 'C_T185_p_obs']
 
-@with_model
+
 def test_check_activation():
-    a = Agent('A')
-    b = Agent('B')
-    c = Agent('C')
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
+    c = Agent('C', db_refs={'HGNC': '3'})
     st1 = Activation(a, b)
     st2 = Inhibition(b, c, 'kinase')
     stmts = [st1, st2]
@@ -466,6 +466,7 @@ def test_check_activation():
     assert isinstance(results[0], tuple)
     assert results[0][1] == ['A_activates_B_activity', 'B_activity_active_obs']
     assert results[1][1] == ['B_deactivates_C_kinase', 'C_kinase_active_obs']
+
 
 @with_model
 def test_none_phosphorylation_stmt():
@@ -564,9 +565,9 @@ def test_activation_annotations():
     # Add agent grounding
     Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
     Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation(B_monomer, {'Thr185':'phos'}, 'has_active_pattern')
     Annotation('A_phos_B', 'A_monomer', 'rule_has_subject')
     Annotation('A_phos_B', 'B_monomer', 'rule_has_object')
-    Annotation('B_monomer', {'Thr185':'phos'}, 'has_active_pattern')
     # Add annotations to the sites/states of the Monomer itself
     B_annot = [
         Annotation('Thr185', 'T', 'is_residue'),
@@ -1086,7 +1087,4 @@ def test_check_transphosphorylation():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 
-
-if __name__ == '__main__':
-    test_activation_annotations()
 

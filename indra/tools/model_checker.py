@@ -92,29 +92,10 @@ class ModelChecker(object):
                 add_obs_for_agent(modified_sub)
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
-                def _get_object_active_patterns(model, obj):
-                    patterns = []
-                    for ann in self.model.annotations:
-                        if ann.predicate == 'has_active_pattern' and \
-                            ann.subject == stmt.obj.name:
-                            patterns.append(ann.object)
-                    return patterns
-
-                # FIXME (This should use grounding rather than the name)
-                obj_monomer = self.model.monomers[stmt.obj.name]
-                active_patterns = _get_object_active_patterns(self.model,
-                                                              stmt.obj)
-                for pattern in active_patterns:
-                    obj_mp = obj_monomer(**pattern)
-                    obs_name = _monomer_pattern_label(obj_mp) + '_obs'
-                    self.stmt_to_obs[stmt].append(obs_name)
-                    obj_obs = Observable(obs_name, obj_mp,
-                                         _export=False)
-                    try:
-                        self.model.add_component(obj_obs)
-                    except ComponentDuplicateNameError as e:
-                        pass
-
+                regulated_sub, polarity = \
+                        _add_activity_to_agent(stmt.obj, stmt.obj_activity,
+                                               stmt.is_activation)
+                add_obs_for_agent(regulated_sub)
         # Add observables for each agent
         for ag in self.agent_obs:
             add_obs_for_agent(ag)
@@ -408,6 +389,7 @@ def _find_sources(im, target, sources, polarity):
     # There was no path; this will produce an empty generator
     return
 
+
 def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
     def _sample_pred(model, stmts, im, target, score_fn):
         preds = list(_get_signed_predecessors(im, target, 1))
@@ -428,6 +410,7 @@ def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
         return pred
     pred = _sample_pred(model, stmts, im, target, score_fn)
     print(pred)
+
 
 def _get_signed_predecessors(im, node, polarity):
     """Get upstream nodes in the influence map
@@ -483,6 +466,18 @@ def _add_modification_to_agent(agent, mod_type, residue, position):
     new_agent = deepcopy(agent)
     new_agent.mods.append(new_mod)
     return new_agent
+
+
+def _add_activity_to_agent(agent, act_type, is_active):
+    # Default to active, and return polarity if it's an inhibition
+    new_act = ActivityCondition(act_type, True)
+    # Check if this state already exists
+    if agent.activity is not None and agent.activity.equals(new_act):
+        return agent
+    new_agent = deepcopy(agent)
+    new_agent.activity = new_act
+    polarity = 1 if is_active else -1
+    return (new_agent, polarity)
 
 
 def _match_lhs(cp, rules):
@@ -579,7 +574,6 @@ def _path_polarity(im, path):
     return path_polarity
 
 
-
 def _stmt_from_rule(model, rule_name, stmts):
     """Return the INDRA Statement corresponding to a given rule by name."""
     stmt_uuid = None
@@ -629,6 +623,7 @@ def _object_agents_from_rule(model, rule_name, stmts):
                 agent.mods = [mc]
                 polarities[i] = isinstance(stmt, AddModification)
     return agents, polarities
+
 
 def _monomer_pattern_label(mp):
     """Return a string label for a MonomerPattern."""
