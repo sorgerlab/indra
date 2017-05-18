@@ -3,16 +3,18 @@ from builtins import dict, str
 import numpy
 import pandas
 from copy import copy
+from random import shuffle
 from collections import OrderedDict
 from indra.databases import uniprot_client
 from indra.databases import hgnc_client
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition
 
-data_file = 'data/Korkut et al. Data 01172017.xlsx'
+data_file = 'data/Korkut et al. Data 05122017.xlsx'
+antibody_map_file = 'data/antibody_site_map.csv'
 drug_grounding_file = 'data/drug_grounding.csv'
 
-def read_data(fname):
+def read_data(fname=data_file):
     """Returns the data as a dictionary."""
     if fname.endswith('2017.xlsx'):
         skiprows1 = []
@@ -21,58 +23,34 @@ def read_data(fname):
         skiprows1 = [0]
         skiprows2 = range(5)
     data = {}
-    data['protein'] = pandas.read_excel(data_file, sheetname='Protein Data',
+    data['protein'] = pandas.read_excel(fname, sheetname='Protein Data',
                                         skiprows=skiprows1, index_col=None)
-    data['phenotype'] = pandas.read_excel(data_file,
+    data['phenotype'] = pandas.read_excel(fname,
                                           sheetname='Phenotype Data',
                                           skiprows=skiprows1, index_col=None)
-    data['antibody'] = pandas.read_excel(data_file,
-                                          sheetname='Antibody Data',
-                                          skiprows=skiprows2, index_col=None)
+    data['antibody'] = pandas.read_excel(fname,
+                                         sheetname='Antibody Data',
+                                         skiprows=skiprows2, index_col=None)
+    data['prediction'] = pandas.read_excel(fname,
+                                           sheetname='Prediction Targets',
+                                           index_col=None)
     return data
-
-def get_annotated_antibodies(data):
-    ab_col = data['antibody']['Protein Data ID']
-    ab_annotated = sorted([ab for ab in ab_col if not pandas.isnull(ab)])
-    return ab_annotated
-
-def get_annotated_phos_antibodies(data):
-    ab_annotated = get_annotated_antibodies(data)
-    ab_phos = [ab for ab in ab_annotated if ab.find('_p') != -1]
-    return ab_phos
 
 def get_phos_antibodies(data):
     ab_names = data['protein'].columns[2:]
     ab_phos = []
+    phospho_aa = ['S', 'T', 'Y']
     for abn in ab_names:
-        if abn.find('_p') != -1:
-            ab_phos.append(abn)
+        for aa in phospho_aa:
+            if abn.find('_p%s' % aa) != -1:
+                ab_phos.append(abn)
+                break
     return ab_phos
-
-def get_unannotated_antibodies(data):
-    """Get a list of ABs that are not annotated."""
-    ab_annotated = get_annotated_antibodies(data)
-    data_abs = data['protein'].columns[2:]
-    ab_unannotated = sorted(list(set(data_abs).difference(set(ab_annotated))))
-    return ab_unannotated
-
-def get_unannotated_antibody_genes(data):
-    """Return the gene names corresponding to unannotated ABs."""
-    all_genes = []
-    for k, v in unannotated_ab_map.items():
-        up_ids = v.split(',')
-        for up_id in up_ids:
-            gene_name = uniprot_client.get_gene_name(up_id)
-            all_genes.append(gene_name)
-    return sorted(list(set(all_genes)))
 
 def get_antibody_genes(data, ab_name):
     """Return the UniProt IDs corresponding to a specific antibody."""
-    if ab_name in unannotated_ab_map:
-        up_ids = unannotated_ab_map[ab_name].split(',')
-    else:
-        df_filt = data['antibody'][data['antibody']['Protein Data ID'] == ab_name]
-        up_ids = df_filt['UniProt ID'].values[0].split(',')
+    df_filt = data['antibody'][data['antibody']['Protein Data ID'] == ab_name]
+    up_ids = df_filt['UniProt ID'].values[0].split(',')
     return up_ids
 
 def get_agent_from_upid(up_id):
@@ -117,9 +95,6 @@ def get_all_gene_names(data, out_file='prior_genes.txt'):
         all_genes = all_genes.union(set(names)).union(set(names_from_ids))
     # Finally remove the invalid gene names
     all_genes = list(all_genes.difference(invalid_genes))
-    # Add the unannotated genes
-    unannotated_ab_genes = get_unannotated_antibody_genes(data)
-    all_genes += unannotated_ab_genes
     # Add drug target genes
     drug_targets = get_drug_targets()
     for targets in drug_targets.values():
@@ -140,6 +115,7 @@ def get_gene_pmids(genes, out_file='pmids.txt'):
         pmids = pubmed_client.get_ids_for_gene(gene)
         all_pmids = all_pmids.union(set(pmids))
     all_pmids = sorted(list(all_pmids))
+    shuffle(all_pmids)
     with open(out_file, 'wb') as fh:
         for pmid in all_pmids:
             fh.write(('%s\n' % pmid).encode('utf-8'))
@@ -259,42 +235,67 @@ def get_max_dev(data):
         devs[data['protein'].columns[i]] = dev
     return devs
 
-# This is a best guess to the target of
-# unannotated antibodies.
-unannotated_ab_map = {
-    '4EBP1_pT37_V': 'Q13541',
-    '4EBP1_pT70': 'Q13541',
-    'AIB1_mouse': 'P40763',
-    'ATR': 'Q13535',
-    'ATRIP': 'Q8WXE1',
-    'BRCA1': 'P38398',
-    'CHK1_pS345': 'O14757',
-    'CaseinKinase_mouse': 'P48730',
-    'Caspase_9': 'P55211',
-    'Caspase_9_clv_Asp315': 'P55211',
-    'Caspase_9_clv_Asp330': 'P55211',
-    'Cofilin_pS3': 'P23528',
-    'Collagenase_VI_V': 'P03956',
-    'CyclinE2_V': 'O96020',
-    'EGFR_pY992_V': 'P00533',
-    'ERa_pS167': 'P03372',
-    'GSK3a_b_pS21': 'P49840,P49841',
-    'IRS1_pS307': 'P35568',
-    'LKB1_mouse': 'Q15831',
-    'MGMT_mouse': 'P16455',
-    'MSH2_mouse': 'P43246',
-    'PAX2': 'Q02962',
-    'PKCa_pS657_V': 'P17252',
-    'SMAD3_pS423': 'P84022',
-    'STAT3_pS727': 'P40763',
-    'STAT5_pY694': 'P42229,P51692',
-    'STAT6_pY641': 'P42226',
-    'TAZ_pS89_C': 'Q9GZV5',
-    'Telomerase_C': 'O14746',
-    'b-Catenin_pS33_C': 'P35222',
-    'c-Myc_pT58': 'P01106',
-    'p90RSK': 'Q15418',
-    'p90RSK_pT359_C': 'Q15418'}
+def get_antibody_map(data):
+    phos_ab_map = get_phospho_antibody_map()
+    ab_map = {}
+    for _, row in data['antibody'].iterrows():
+        ab_name = row['Protein Data ID']
+        if ab_name in phos_ab_map:
+            continue
+        upids = row['UniProt ID'].split(',')
+        for upid in upids:
+            hgnc_symbol = uniprot_client.get_gene_name(upid)
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
+            target = Agent(hgnc_symbol,
+                           db_refs={'UP': upid,'HGNC': hgnc_id})
+            try:
+                ab_map[ab_name].append(target)
+            except KeyError:
+                ab_map[ab_name] = [target]
+    ab_map.update(phos_ab_map)
+    return ab_map
+
+
+def get_phospho_antibody_map(fname=antibody_map_file):
+    # First gather the annotations for the phosphosites
+    df = pandas.read_csv(fname, index_col=None, sep=',', encoding='utf8')
+    antibody_map = {}
+
+    for _, row in df.iterrows():
+        ps = row['phosphosite']
+        sub_upid = row['SUB_ID']
+        if not pandas.isnull(sub_upid):
+            if sub_upid.find('-') != -1:
+                sub_upid = sub_upid.split('-')[0]
+            sub_hgnc_symbol = uniprot_client.get_gene_name(sub_upid)
+            sub_hgnc = hgnc_client.get_hgnc_id(sub_hgnc_symbol)
+        else:
+            sub_hgnc_symbol = row['SUB_GENE']
+            sub_hgnc_id = hgnc_client.get_hgnc_id(sub_hgnc_symbol)
+            sub_upid = hgnc_client.get_uniprot_id(sub_hgnc_id)
+            if sub_upid is None:
+                continue
+        sub = Agent(sub_hgnc_symbol,
+                    db_refs={'UP': sub_upid,'HGNC': sub_hgnc})
+        residue = row['Actual_site'][0]
+        if len(row['Actual_site']) > 1:
+            position = row['Actual_site'][1:]
+        else:
+            position = None
+        mc = ModCondition('phosphorylation', residue, position)
+        sub.mods = [mc]
+        if ps in antibody_map:
+            found = False
+            for p in antibody_map[ps]:
+                if p.name == sub.name and p.mods[0].residue == residue and \
+                    p.mods[0].position == position:
+                    found = True
+                    break
+            if not found:
+                antibody_map[ps].append(sub)
+        else:
+            antibody_map[ps] = [sub]
+    return antibody_map
 
 if __name__ == '__main__':
     data = read_data(data_file)
