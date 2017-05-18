@@ -454,6 +454,20 @@ def grounded_monomer_patterns(model, agent):
         for site_name in viable_sites:
             pattern_list.append({site_name: (mod_sites[site_name], WILD)})
         sc_list.append(pattern_list)
+    # Now check for monomer patterns satisfying the agent's activity condition
+    if agent.activity:
+        # Iterate through annotations with this monomer as the subject
+        # and a has_active_pattern or has_inactive_pattern relationship
+        # FIXME: Currently activity type is not annotated/checked
+        # FIXME act_type = agent.activity.activity_type
+        rel_type = 'has_active_pattern' if agent.activity.is_active \
+                                        else 'has_inactive_pattern'
+        active_form_list = []
+        for ann in model.annotations:
+            if ann.subject == monomer and ann.predicate == rel_type:
+                # The annotation object contains the active/inactive pattern
+                active_form_list.append(ann.object)
+        sc_list.append(active_form_list)
     # Now that we've got a list of conditions
     for pattern_combo in itertools.product(*sc_list):
         mp_sc = {}
@@ -2005,10 +2019,10 @@ def activeform_assemble_interactions_only(stmt, model, agent_set):
 
 
 def activeform_assemble_one_step(stmt, model, agent_set):
-    agent = agent_set.get_create_base_agent(stmt.agent)
-    site_conditions = get_site_pattern(stmt.agent)
+    mp = get_monomer_pattern(model, stmt.agent)
+    #get_site_pattern(stmt.agent)
     af = 'has_active_pattern' if stmt.is_active else 'has_inactive_pattern'
-    ann = Annotation(agent, site_conditions, af)
+    ann = Annotation(mp.monomer, mp.site_conditions, af)
     model.annotations.append(ann)
 
 activeform_assemble_default = activeform_assemble_one_step

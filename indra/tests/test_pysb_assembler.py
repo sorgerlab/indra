@@ -880,6 +880,21 @@ def test_multiple_grounding_mods():
     assert mps[3].monomer.name == 'ERK2'
 
 
+def test_grounded_active_pattern():
+    a = Agent('A', db_refs={'HGNC': '1234'})
+    b = Agent('B', db_refs={'HGNC': '5678'})
+    b_phos = Agent('B', mods=[ModCondition('phosphorylation', 'S', '100')],
+                   db_refs={'HGNC': '5678'})
+    b_act = Agent('B', activity=ActivityCondition('activity', True),
+                   db_refs={'HGNC': '5678'})
+    st1 = Phosphorylation(a, b, 'S', '100')
+    st2 = ActiveForm(b_phos, 'activity', True)
+    pysba = PysbAssembler(policies='one_step')
+    pysba.add_statements([st1, st2])
+    model = pysba.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, b_act))
+
+
 def _check_mod_assembly(mod_class):
     subj = Agent('KRAS')
     obj = Agent('BRAF')
@@ -1026,7 +1041,9 @@ def test_activation_subj4():
 
 def test_pysb_preassembler_replace_activities1():
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
-    st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
+    st2 = Phosphorylation(Agent('a',
+                                activity=ActivityCondition('activity', True)),
+                          Agent('b'))
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
     assert(len(ppa.statements) == 2)
