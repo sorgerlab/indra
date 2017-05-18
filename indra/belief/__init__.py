@@ -2,8 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import numpy
 import networkx
-import indra.preassembler.sitemapper as sm
-
 
 class BeliefEngine(object):
     """Assigns beliefs to INDRA Statements based on supporting evidence."""
@@ -62,9 +60,6 @@ class BeliefEngine(object):
                 neg_prob_prior *= (syst_factors[s] +
                                    numpy.prod(rand_factors[s]))
             prob_prior = 1 - neg_prob_prior
-            vs, _ = sm.default_mapper.map_sites([st])
-            if not vs:
-                prob_prior *= 0.05
             st.belief = prob_prior
 
     def set_hierarchy_probs(self, statements):
