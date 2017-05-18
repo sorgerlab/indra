@@ -361,8 +361,9 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
                 logger.info(line)
         (p_out, p_err) = p.communicate()
         if p.returncode:
-            raise Exception(p_out.decode('utf-8') + '\n' +
-                            p_err.decode('utf-8'))
+            logger.error('Problem running REACH:')
+            logger.error('Stdout: %s' % p_out.decode('utf-8'))
+            logger.error('Stderr: %s' % p_err.decode('utf-8'))
 
         # Process JSON files from local file system, process to INDRA Statements
         # and upload to S3
