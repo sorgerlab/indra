@@ -832,6 +832,7 @@ def test_phospho_assemble_grounding():
         check_policy(policy)
 
 def test_phospho_mod_grounding():
+    import ipdb; ipdb.set_trace()
     a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
                             ModCondition('phosphorylation', 'S', '222')],
               db_refs={'HGNC': '6840'})
@@ -849,6 +850,12 @@ def test_phospho_mod_grounding():
     sc = [mp.site_conditions for mp in mps]
     assert {'S218': ('p', WILD)} in sc
     assert {'S222': ('p', WILD)} in sc
+    # Check if we get the doubly phosphorylated MonomerPattern
+    mps = list(pa.grounded_monomer_patterns(model, a))
+    assert len(mps) == 1
+    assert mps[0].monomer.name == 'MEK1'
+    assert mps[0].site_conditions == {'S218': ('p', WILD),
+                                      'S222': ('p', WILD)}
 
 def _check_mod_assembly(mod_class):
     subj = Agent('KRAS')
@@ -1025,3 +1032,6 @@ def test_pysb_preassembler_replace_activities3():
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[0].enz.mods)
     assert(ppa.statements[0].enz.bound_conditions)
+
+if __name__ == '__main__':
+    test_phospho_mod_grounding()
