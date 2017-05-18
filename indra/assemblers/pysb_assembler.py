@@ -373,7 +373,8 @@ def get_uncond_agent(agent):
 def grounded_monomer_patterns(model, agent):
     """Get monomer patterns for the agent accounting for grounding information.
     """
-    # Iterate over all model annotations
+    # Iterate over all model annotations to identify the monomer associated
+    # with this agent
     monomer = None
     for ann in model.annotations:
         if monomer:
@@ -401,13 +402,12 @@ def grounded_monomer_patterns(model, agent):
     if monomer is None:
         logger.info('No monomer found corresponding to agent %s' % agent)
         return
+
     # Now that we have a monomer for the agent, look for site/state
-    # combinations corresponding to the state of the agent.
-    # For every one of the modifications specified in the agent
-    # signature, check to see if it can be satisfied based on the agent's
-    # annotations.
-    # For every one we find that is consistent, we yield it--there may be
-    # more than one.
+    # combinations corresponding to the state of the agent.  For every one of
+    # the modifications specified in the agent signature, check to see if it
+    # can be satisfied based on the agent's annotations.  For every one we find
+    # that is consistent, we yield it--there may be more than one.
     # FIXME
     if not agent.mods:
         yield monomer()
@@ -1809,7 +1809,7 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(obj_active.monomer.name, obj_active.site_conditions,
+    ann = Annotation(obj_active.monomer, obj_active.site_conditions,
                      'has_active_pattern')
     anns.append(ann)
     add_rule_to_model(model, r, anns)
@@ -1894,7 +1894,7 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(ras_active.monomer.name, ras_active.site_conditions,
+    ann = Annotation(ras_active.monomer, ras_active.site_conditions,
                      'has_active_pattern')
     anns.append(ann)
     add_rule_to_model(model, r, anns)
@@ -1960,7 +1960,7 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(ras_active.monomer.name, ras_active.site_conditions,
+    ann = Annotation(ras_active.monomer, ras_active.site_conditions,
                      'has_active_pattern')
     anns.append(ann)
     add_rule_to_model(model, r, anns)
@@ -1992,7 +1992,7 @@ def activeform_assemble_one_step(stmt, model, agent_set):
     agent = agent_set.get_create_base_agent(stmt.agent)
     site_conditions = get_site_pattern(stmt.agent)
     af = 'has_active_pattern' if stmt.is_active else 'has_inactive_pattern'
-    ann = Annotation(agent.name, site_conditions, af)
+    ann = Annotation(agent, site_conditions, af)
     model.annotations.append(ann)
 
 activeform_assemble_default = activeform_assemble_one_step
