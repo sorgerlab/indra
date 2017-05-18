@@ -761,6 +761,21 @@ class PysbAssembler(object):
                 a = get_annotation(m, db_name, db_ref)
                 if a is not None:
                     self.model.add_annotation(a)
+            # Iterate over the active_forms
+            for af in agent.active_forms:
+                self.model.add_annotation(Annotation(m, af,
+                                                     'has_active_pattern'))
+            for iaf in agent.inactive_forms:
+                self.model.add_annotation(Annotation(m, iaf,
+                                                     'has_inactive_pattern'))
+            for at in agent.activity_types:
+                act_site_cond = {at: 'active'}
+                self.model.add_annotation(Annotation(m, act_site_cond,
+                                                     'has_active_pattern'))
+                inact_site_cond = {at: 'inactive'}
+                self.model.add_annotation(Annotation(m, inact_site_cond,
+                                                     'has_inactive_pattern'))
+
         # Iterate over the statements to generate rules
         self._assemble()
         # Add initial conditions
@@ -1839,9 +1854,6 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(rule_name, obj_active.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(obj_active.monomer, obj_active.site_conditions,
-                     'has_active_pattern')
-    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
@@ -1924,9 +1936,6 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(ras_active.monomer, ras_active.site_conditions,
-                     'has_active_pattern')
-    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 rasgef_assemble_default = rasgef_assemble_one_step
@@ -1990,9 +1999,6 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
                        'rule_has_subject'),
             Annotation(r.name, ras_inactive.monomer.name, 'rule_has_object')]
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
-    ann = Annotation(ras_active.monomer, ras_active.site_conditions,
-                     'has_active_pattern')
-    anns.append(ann)
     add_rule_to_model(model, r, anns)
 
 rasgap_assemble_default = rasgap_assemble_one_step
@@ -2006,7 +2012,6 @@ def activeform_monomers_interactions_only(stmt, agent_set):
 def activeform_monomers_one_step(stmt, agent_set):
     agent = agent_set.get_create_base_agent(stmt.agent)
     site_conditions = get_site_pattern(stmt.agent)
-
     # Add this activity pattern explicitly to the agent's list
     # of active states
     agent.add_activity_form(site_conditions, stmt.is_active)
@@ -2019,11 +2024,7 @@ def activeform_assemble_interactions_only(stmt, model, agent_set):
 
 
 def activeform_assemble_one_step(stmt, model, agent_set):
-    mp = get_monomer_pattern(model, stmt.agent)
-    #get_site_pattern(stmt.agent)
-    af = 'has_active_pattern' if stmt.is_active else 'has_inactive_pattern'
-    ann = Annotation(mp.monomer, mp.site_conditions, af)
-    model.annotations.append(ann)
+    pass
 
 activeform_assemble_default = activeform_assemble_one_step
 
