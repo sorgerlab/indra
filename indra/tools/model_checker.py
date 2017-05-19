@@ -265,9 +265,8 @@ class ModelChecker(object):
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
                 for path_ix, path in path_iter:
-                    path.reverse()
-                    paths.append(path)
-                    print(path)
+                    flipped_path = flip_path(path)
+                    paths.append(flipped_path)
                     if len(paths) >= max_paths:
                         break
                 return paths
@@ -325,7 +324,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.info('Found path: %s' % list(reversed(path)))
+            logger.info('Found path: %s' % flip_path(path))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
@@ -575,6 +574,23 @@ def find_consumption_rules(cp, rules):
     cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
     return cons_rules
 """
+
+def flip_path(path):
+    # Reverse the path and the polarities associated with each node
+    rev = list(reversed(path))
+    flipped_path = []
+    for node_ix, (node, sign) in enumerate(rev):
+        # Currently by definition the effect on the target is positive
+        if node_ix == 0:
+            flipped_path.append((node, 1))
+        # For other nodes, shift the sign over by one node to get the correct
+        # polarity of effect at that node
+        else:
+            prev_node, prev_sign = rev[node_ix - 1]
+            flipped_path.append((node, prev_sign))
+    return flipped_path
+
+
 def _path_polarity(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
