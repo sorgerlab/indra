@@ -307,27 +307,35 @@ def _find_sources_with_paths(im, target, sources, polarity):
     # Adapted from
     # http://stackoverflow.com/questions/8922060/
     #                       how-to-trace-the-path-in-a-breadth-first-search
-    queue = deque([[target]])
+    # FIXME: the sign information for the target should be associated with
+    # the observable itself
+    queue = deque([[(target, 1)]])
     while queue:
         # Get the first path in the queue
         path = queue.popleft()
-        node = path[-1]
+        node, node_sign = path[-1]
         # If there's only one node in the path, it's the observable we're
         # starting from, so the path is positive
-        if len(path) == 1:
-            sign = 1
+        # if len(path) == 1:
+        #    sign = 1
         # Because the path runs from target back to source, we have to reverse
         # the path to calculate the overall polarity
-        else:
-            sign = _path_polarity(im, reversed(path))
+        #else:
+        #    sign = _path_polarity(im, reversed(path))
         # Don't allow trivial paths consisting only of the target observable
-        if (sources is None or node in sources) and sign == polarity and \
-            len(path) > 1:
+        if (sources is None or node in sources) and node_sign == polarity \
+           and len(path) > 1:
             logger.info('Found path: %s' % list(reversed(path)))
             yield path
-        for predecessor, sign in _get_signed_predecessors(im, node, 1):
+        for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
+            # Only add predecessors to the path if it's not already in the
+            # path
+            if (predecessor, sign) in path:
+                continue
+            # Otherwise, the new path is a copy of the old one plus the new
+            # predecessor
             new_path = list(path)
-            new_path.append(predecessor)
+            new_path.append((predecessor, sign))
             queue.append(new_path)
     return
 
@@ -422,7 +430,7 @@ def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
 
 
 def _get_signed_predecessors(im, node, polarity):
-    """Get upstream nodes in the influence map
+    """Get upstream nodes in the influence map.
 
     Return the upstream nodes along with the overall polarity of the path
     to that node by account for the polarity of the path to the given node
