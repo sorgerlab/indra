@@ -105,7 +105,7 @@ class ModelChecker(object):
         self._im.is_multigraph = lambda: False
         return self._im
 
-    def check_model(self):
+    def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
 
         More efficient than check_statement when checking multiple statements
@@ -120,11 +120,11 @@ class ModelChecker(object):
         """
         results = []
         for stmt in self.statements:
-            result = self.check_statement(stmt)
+            result = self.check_statement(stmt, max_paths, max_path_length)
             results.append((stmt, result))
         return results
 
-    def check_statement(self, stmt):
+    def check_statement(self, stmt, max_paths=1, max_path_length=5):
         """Check a single Statement against the model.
 
         Parameters
@@ -140,13 +140,14 @@ class ModelChecker(object):
         # Make sure the influence map is initialized
         self.get_im()
         if isinstance(stmt, Modification):
-            return self._check_modification(stmt)
+            return self._check_modification(stmt, max_paths, max_path_length)
         elif isinstance(stmt, RegulateActivity):
-            return self._check_regulate_activity(stmt)
+            return self._check_regulate_activity(stmt, max_paths,
+                                                 max_path_length)
         else:
             return False
 
-    def _check_regulate_activity(self, stmt):
+    def _check_regulate_activity(self, stmt, max_paths, max_path_length):
         """Check a RegulateActivity statement."""
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
@@ -162,9 +163,10 @@ class ModelChecker(object):
         # appropriate type
         obs_names = self.stmt_to_obs[stmt]
         for obs_name in obs_names:
-            return self._find_im_paths(subj_mp, obs_name, target_polarity)
+            return self._find_im_paths(subj_mp, obs_name, target_polarity,
+                                       max_paths, max_path_length)
 
-    def _check_modification(self, stmt):
+    def _check_modification(self, stmt, max_paths, max_path_length):
         """Check a Modification statement."""
         # Identify the observable we're looking for in the model, which
         # may not exist!
@@ -184,7 +186,8 @@ class ModelChecker(object):
         obs_names = self.stmt_to_obs[stmt]
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # Return True for the first valid path we find
-            result =  self._find_im_paths(enz_mp, obs_name, target_polarity)
+            result = self._find_im_paths(enz_mp, obs_name, target_polarity,
+                                         max_paths, max_path_length)
             # If result for this observable is not False, then we return it;
             # otherwise, that means there was no path for this observable, so
             # we have to try the next one
@@ -193,7 +196,8 @@ class ModelChecker(object):
         # If we got here, then there was no path for any observable
         return False
 
-    def _find_im_paths(self, subj_mp, obs_name, target_polarity):
+    def _find_im_paths(self, subj_mp, obs_name, target_polarity,
+                       max_paths=1, max_path_length=5):
         """Check for a source/target path in the influence map.
 
         Parameters
@@ -210,7 +214,7 @@ class ModelChecker(object):
 
         Returns
         -------
-        boolean
+        boolean or list of str
             Whether there is a path from a rule matching the subject
             MonomerPattern to the object Observable with the appropriate
             polarity.
@@ -253,15 +257,20 @@ class ModelChecker(object):
                                   target_polarity):
             num_paths += 1
             path_lengths.append(path_length)
+        paths = []
         if num_paths > 0:
-            if min(path_lengths) <= 5:
+            if min(path_lengths) <= max_path_length:
                 # Get the first path
-                for path in _find_sources_with_paths(self.get_im(),
-                                                     obs_name,
-                                                     input_rule_set,
-                                                     target_polarity):
+                path_iter = enumerate(_find_sources_with_paths(
+                                           self.get_im(), obs_name,
+                                           input_rule_set, target_polarity))
+                for path_ix, path in path_iter:
                     path.reverse()
-                    return path
+                    paths.append(path)
+                    print(path)
+                    if len(paths) >= max_paths:
+                        break
+                return paths
             else:
                 return True
         else:

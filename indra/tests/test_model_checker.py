@@ -119,7 +119,7 @@ def test_one_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == ['A_phos_B', 'B_T185_p_obs']
+    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
 
 @with_model
 def test_two_step_phosphorylation():
@@ -161,7 +161,7 @@ def test_two_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == ['A_phos_B', 'B_T185_p_obs']
+    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
 
 
 def test_pysb_assembler_phospho_policies():
@@ -177,7 +177,7 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == ['A_phosphorylation_B_T185', 'B_T185_p_obs']
+    assert results[0][1] == [['A_phosphorylation_B_T185', 'B_T185_p_obs']]
     # Try one step
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [st])
@@ -185,7 +185,7 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == ['A_phosphorylation_B_T185', 'B_T185_p_obs']
+    assert results[0][1] == [['A_phosphorylation_B_T185', 'B_T185_p_obs']]
     # Try interactions_only
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [st])
@@ -313,9 +313,9 @@ def test_consumption_rule():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == ['Pvd_binds_DUSP', 'DUSP_binds_MAPK1_phosT185',
+    assert checks[0][1] == [['Pvd_binds_DUSP', 'DUSP_binds_MAPK1_phosT185',
                             'DUSP_dephos_MAPK1_at_T185',
-                            'MAPK1_T185_p_obs']
+                            'MAPK1_T185_p_obs']]
 
 
 def test_dephosphorylation():
@@ -332,10 +332,10 @@ def test_dephosphorylation():
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
         assert checks[0][1] == result
-    check_policy('one_step', ['DUSP6_dephosphorylation_MAPK1_T185',
-                              'MAPK1_T185_p_obs'])
-    check_policy('two_step', ['DUSP6_dephosphorylation_MAPK1_T185',
-                              'MAPK1_T185_p_obs'])
+    check_policy('one_step', [['DUSP6_dephosphorylation_MAPK1_T185',
+                              'MAPK1_T185_p_obs']])
+    check_policy('two_step', [['DUSP6_dephosphorylation_MAPK1_T185',
+                              'MAPK1_T185_p_obs']])
     check_policy('interactions_only', False)
 
 @with_model
@@ -408,9 +408,9 @@ def test_distinguish_path_polarity1():
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == False
-    assert results[1][1] == ['A_activate_B', 'B_dephos_C', 'C_T185_p_obs']
+    assert results[1][1] == [['A_activate_B', 'B_dephos_C', 'C_T185_p_obs']]
     assert results[2][1] == False
-    assert results[3][1] == ['B_dephos_C', 'C_T185_p_obs']
+    assert results[3][1] == [['B_dephos_C', 'C_T185_p_obs']]
 
 @with_model
 def test_distinguish_path_polarity2():
@@ -443,10 +443,10 @@ def test_distinguish_path_polarity2():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == ['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']
+    assert results[0][1] == [['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']]
     assert results[1][1] == False
-    assert results[2][1] == ['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']
-    assert results[3][1] == ['B_dephos_C', 'C_T185_p_obs']
+    assert results[2][1] == [['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']]
+    assert results[3][1] == [['B_dephos_C', 'C_T185_p_obs']]
 
 
 def test_check_activation():
@@ -464,8 +464,9 @@ def test_check_activation():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == ['A_activates_B_activity', 'B_activity_active_obs']
-    assert results[1][1] == ['B_deactivates_C_kinase', 'C_kinase_active_obs']
+    assert results[0][1] == [['A_activates_B_activity',
+                              'B_activity_active_obs']]
+    assert results[1][1] == [['B_deactivates_C_kinase', 'C_kinase_active_obs']]
 
 
 @with_model
@@ -497,7 +498,7 @@ def test_none_phosphorylation_stmt():
     assert len(results) == 2
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == ['A_phos_B', 'B_T185_p_obs']
+    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
     assert results[1][0] == st2
     assert results[1][1] == False
 
@@ -538,9 +539,9 @@ def test_phosphorylation_annotations():
     assert len(results) == 3
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == ['A_phos_B', 'B_monomer_Thr185_phos_obs']
+    assert results[0][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
     assert results[1][0] == st2
-    assert results[1][1] == ['A_phos_B', 'B_monomer_Thr185_phos_obs']
+    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
     assert results[2][0] == st3
     assert results[2][1] == False
 
@@ -583,11 +584,11 @@ def test_activation_annotations():
     assert len(results) == 3
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == ['A_phos_B', 'B_monomer_Thr185_phos_obs']
+    assert results[0][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
     assert results[1][0] == st2
-    assert results[1][1] == ['A_phos_B', 'B_monomer_Thr185_phos_obs']
+    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
     assert results[2][0] == st3
-    assert results[1][1] == ['A_phos_B', 'B_monomer_Thr185_phos_obs']
+    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
 
 
 def test_multitype_path():
@@ -626,13 +627,13 @@ def test_multitype_path():
         Activation(sos1_grb2, kras, 'gtpbound'),
         Activation(kras_g, braf, 'kinase')
       ]
-    check_stmts(stmts1, (['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
+    check_stmts(stmts1, ([['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS_gtpbound',
-                          'KRAS_gtpbound_active_obs'],
-                         ['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
+                          'KRAS_gtpbound_active_obs']],
+                         [['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS_gtpbound',
                           'KRAS_activates_BRAF_kinase',
-                          'BRAF_kinase_active_obs']))
+                          'BRAF_kinase_active_obs']]))
     # Check without the ActiveForm
     stmts2 = [
         Complex([egfr, grb2]),
@@ -640,13 +641,13 @@ def test_multitype_path():
         RasGef(sos1_grb2, kras),
         Activation(kras_g, braf, 'kinase')
       ]
-    check_stmts(stmts2, (['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
+    check_stmts(stmts2, ([['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS',
-                          'KRAS_gtpbound_active_obs'],
-                         ['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
+                          'KRAS_gtpbound_active_obs']],
+                         [['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
                           'SOS1_GRB2_activates_KRAS',
                           'KRAS_activates_BRAF_kinase',
-                          'BRAF_kinase_active_obs']))
+                          'BRAF_kinase_active_obs']]))
 
 
 def test_grounded_modified_enzyme():
@@ -666,8 +667,8 @@ def test_grounded_modified_enzyme():
     results = mc.check_model()
     assert len(results) == 1
     assert results[0][0] == stmt_to_check
-    assert results[0][1] == ['MEK1_phosphoS202_phosphorylation_ERK2_phospho',
-                             'ERK2_phospho_p_obs']
+    assert results[0][1] == [['MEK1_phosphoS202_phosphorylation_ERK2_phospho',
+                              'ERK2_phospho_p_obs']]
 
 
 def test_check_ubiquitination():
@@ -682,7 +683,7 @@ def test_check_ubiquitination():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == ['XIAP_ubiquitination_CASP3_ub', 'CASP3_ub_y_obs']
+    assert checks[0][1] == [['XIAP_ubiquitination_CASP3_ub', 'CASP3_ub_y_obs']]
 
 
 def test_check_rule_subject1():
@@ -714,7 +715,7 @@ def test_rasgef_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['SOS1_activates_KRAS', 'KRAS_gtpbound_active_obs']
+    assert checks[0][1] == [['SOS1_activates_KRAS', 'KRAS_gtpbound_active_obs']]
     # TODO TODO TODO
     """
     # Check that the RasGef is satisfied by the Activation
@@ -746,9 +747,9 @@ def test_rasgef_rasgtp():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['SOS1_activates_KRAS',
-                            'KRAS_activates_BRAF_kinase',
-                            'BRAF_kinase_active_obs']
+    assert checks[0][1] == [['SOS1_activates_KRAS',
+                             'KRAS_activates_BRAF_kinase',
+                             'BRAF_kinase_active_obs']]
 
 
 def test_rasgef_rasgtp_phos():
@@ -772,9 +773,10 @@ def test_rasgef_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1] == ['SOS1_activates_KRAS', 'KRAS_activates_BRAF_kinase',
-                            'BRAF_phosphorylation_MEK_phospho',
-                            'MEK_phospho_p_obs']
+    assert checks[0][1] == [['SOS1_activates_KRAS',
+                             'KRAS_activates_BRAF_kinase',
+                             'BRAF_phosphorylation_MEK_phospho',
+                             'MEK_phospho_p_obs']]
 
 
 def test_rasgap_activation():
@@ -790,7 +792,8 @@ def test_rasgap_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['NF1_deactivates_KRAS', 'KRAS_gtpbound_active_obs']
+    assert checks[0][1] == [['NF1_deactivates_KRAS',
+                             'KRAS_gtpbound_active_obs']]
     # TODO TODO TODO
     """
     # Check that the RasGap is satisfied by the Activation
@@ -824,9 +827,9 @@ def test_rasgap_rasgtp():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == ['NF1_deactivates_KRAS',
-                            'KRAS_activates_BRAF_kinase',
-                            'BRAF_kinase_active_obs']
+    assert checks[0][1] == [['NF1_deactivates_KRAS',
+                             'KRAS_activates_BRAF_kinase',
+                             'BRAF_kinase_active_obs']]
 
 
 def test_rasgap_rasgtp_phos():
@@ -849,10 +852,10 @@ def test_rasgap_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1] == ['NF1_deactivates_KRAS',
-                            'KRAS_activates_BRAF_kinase',
-                            'BRAF_phosphorylation_MEK_phospho',
-                            'MEK_phospho_p_obs']
+    assert checks[0][1] == [['NF1_deactivates_KRAS',
+                             'KRAS_activates_BRAF_kinase',
+                             'BRAF_phosphorylation_MEK_phospho',
+                             'MEK_phospho_p_obs']]
 
 
 def test_stmt_from_rule():
@@ -987,6 +990,37 @@ def test_check_transphosphorylation():
     assert results[1][1] == True
 """
 
+def test_model_check_data():
+    # Create a set of statements
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
+    b_phos = Agent('B', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '2'})
+    c = Agent('C', db_refs={'HGNC': '3'})
+    c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '3'})
+    d = Agent('D', db_refs={'HGNC': '4'})
+
+    # Two paths from A to D: One going through B and another through C
+    st1 = Phosphorylation(a, b)
+    st2 = Phosphorylation(b_phos, d)
+    st3 = Phosphorylation(a, c)
+    st4 = Phosphorylation(c_phos, d)
+    # Check for paths between A and D
+    stmt_to_check = Phosphorylation(a, d)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2, st3, st4])
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [stmt_to_check])
+    results = mc.check_model(max_paths=5)
+    # Create observables
+    assert len(results) == 1
+    assert results[0][1][0:2] == \
+            [['A_phosphorylation_B_phospho',
+              'B_phospho_phosphorylation_D_phospho', 'D_phospho_p_obs'],
+             ['A_phosphorylation_C_phospho',
+              'C_phospho_phosphorylation_D_phospho', 'D_phospho_p_obs']]
 
 
 # TODO Add tests for autophosphorylation
@@ -1088,3 +1122,5 @@ def test_check_transphosphorylation():
 # satisfied by the model.
 
 
+if __name__ == '__main__':
+    test_model_check_data()
