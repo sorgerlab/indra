@@ -1047,7 +1047,7 @@ class Statement(object):
             return node_id
         jd = self.to_json()
         graph = networkx.DiGraph()
-        json_node(graph, jd, ['root'])
+        json_node(graph, jd, ['%s' % self.uuid])
         return graph
 
 @python_2_unicode_compatible
@@ -2386,3 +2386,28 @@ class InvalidLocationError(ValueError):
     """Invalid cellular component name."""
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
+
+def draw_stmt_graph(stmts):
+    try:
+        import matplotlib.pyplot as plt
+    except Exception:
+        logger.error('Could not import matplotlib, not drawing graph.')
+        return
+    try:
+        import pygraphviz
+    except Exception:
+        logger.error('Could not import pygraphviz, not drawing graph.')
+        return
+    g = networkx.compose_all([stmt.to_graph() for stmt in stmts], 'composed_stmts')
+    plt.figure()
+    plt.ion()
+    g.graph['graph'] = {'rankdir': 'LR'}
+    pos = networkx.drawing.nx_agraph.graphviz_layout(g, prog='dot')
+    g = g.to_undirected()
+    networkx.draw(g, pos=pos, node_shape='o', node_color=[0.8, 0.8, 1])
+    node_labels = {n[0]: n[1].get('label') for n in g.nodes(data=True)}
+    edge_labels = {(e[0], e[1]): e[2].get('label') for e in g.edges(data=True)}
+    networkx.draw_networkx_labels(g, pos, labels=node_labels)
+    networkx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels)
+    plt.show()
+
