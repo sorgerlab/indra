@@ -1014,20 +1014,24 @@ def test_model_check_data():
     c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
                    db_refs={'HGNC': '3'})
     d = Agent('D', db_refs={'HGNC': '4'})
+    d_phos = Agent('D', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '4'})
 
     # Two paths from A to D: One going through B and another through C
     st1 = Phosphorylation(a, b)
     st2 = Phosphorylation(b_phos, d)
     st3 = Phosphorylation(a, c)
     st4 = Phosphorylation(c_phos, d)
-    # Check for paths between A and D
+    # Statements/Data agents for checking
     stmt_to_check = Phosphorylation(a, d)
+    agent_obs = [b_phos, c_phos, d_phos]
     # Make model
     pa = PysbAssembler()
     pa.add_statements([st1, st2, st3, st4])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt_to_check])
+    mc = ModelChecker(pa.model, [stmt_to_check], agent_obs)
     results = mc.check_model(max_paths=5)
+    mc.get_im().draw('im.pdf', prog='dot')
     # Create observables
     assert len(results) == 1
     assert results[0][1][0:2] == \
@@ -1037,10 +1041,18 @@ def test_model_check_data():
              [('A_phosphorylation_C_phospho', 1),
               ('C_phospho_phosphorylation_D_phospho', 1),
               ('D_phospho_p_obs', 1)]]
-    # Next, add ability to score paths after search by looking up influences
+    # Now, a vector linking agents with values, expressed at first as
+    # +/- 1
+    # This data should ensure that the path through B should be more highly
+    # ranked than the path through C
+    data = [(b_phos, 1), (c_phos, -1), (d_phos, 1)]
+    paths = [r for r in results if r[1]]
+    scored_paths = mc.score_paths(paths, data)
+
     # of each rule in the path against neighboring observables
-    # This will also require that the paths returned by the model_checker
-    # also have overall polarities at each node--shouldn't be too hard though
+    # Take agents along with values
+    # Need also to be able to map agents to observables
+    # To constrain against data, need to be able to link agents in data
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
@@ -1142,5 +1154,4 @@ def test_model_check_data():
 
 
 if __name__ == '__main__':
-    test_distinguish_path_polarity1()
-    test_distinguish_path_polarity2()
+    test_model_check_data()

@@ -302,6 +302,26 @@ class ModelChecker(object):
             return False
 
 
+    # TODO
+    """
+    def score_paths(self, paths, agents_values, func):
+        # Build up dict mapping observables to values
+        obs_dict = {}
+        for ag, val in agents_values.items():
+            obs_list = self.agent_to_obs[ag]
+            for obs in obs_list:
+                obs_dict[obs] = val
+        # For every path...
+        for path in paths:
+            # Look at every node in the path...
+            for node, sign in path:
+                # ...and for each node check the sign to see if it matches the
+                # data. So the first thing is to look at what's downstream
+                # of the rule
+                affected_obs = self.rule_to_obs[node]
+                # affected_obs is a list of observable names alogn
+    """
+
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
 
