@@ -1072,3 +1072,10 @@ def test_pysb_preassembler_replace_activities3():
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[0].enz.mods)
     assert(ppa.statements[0].enz.bound_conditions)
+
+def test_phos_michaelis_menten():
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='michaelis_menten')
+    pa.save_model('mm_test.py')
