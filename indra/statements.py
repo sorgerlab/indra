@@ -133,6 +133,7 @@ import uuid
 import rdflib
 import logging
 import textwrap
+import networkx
 from collections import namedtuple
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
@@ -1011,6 +1012,43 @@ class Statement(object):
         stmt.uuid = stmt_id
         return stmt
 
+    def to_graph(self):
+        """Return Statement as a networkx graph."""
+        def json_node(graph, element, prefix):
+            if not element:
+                return None
+            node_id = '|'.join(prefix)
+            if isinstance(element, list):
+                graph.add_node(node_id, label='')
+                # Enumerate children and add nodes and connect to anchor node
+                for i, sub_element in enumerate(element):
+                    sub_id = json_node(graph, sub_element, prefix + ['%s' % i])
+                    if sub_id:
+                        graph.add_edge(node_id, sub_id, label='')
+            elif isinstance(element, dict):
+                graph.add_node(node_id, label='')
+                # Add node recursively for each element
+                # Connect to this node with edge label according to key
+                for k, v in element.items():
+                    if k == 'id':
+                        continue
+                    elif k == 'name':
+                        graph.node[node_id]['label'] = v
+                        continue
+                    elif k == 'type':
+                        graph.node[node_id]['label'] = v
+                        continue
+
+                    sub_id = json_node(graph, v, prefix + ['%s' % k])
+                    if sub_id:
+                        graph.add_edge(node_id, sub_id, label=('%s' % k))
+            else:
+                graph.add_node(node_id, label=('%s' % element))
+            return node_id
+        jd = self.to_json()
+        graph = networkx.DiGraph()
+        json_node(graph, jd, ['root'])
+        return graph
 
 @python_2_unicode_compatible
 class Modification(Statement):

@@ -23,24 +23,28 @@ def test_agent_mod_condition():
 def test_modification():
     stmt = Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_selfmodification():
     stmt = Autophosphorylation(Agent('a'), 'Y', '1234', evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_activation():
     stmt = Activation(Agent('a'), Agent('b'), 'kinase', evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_amount():
     stmt = IncreaseAmount(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
@@ -48,30 +52,35 @@ def test_active_form():
     stmt = ActiveForm(Agent('a', location='nucleus'), 'kinase', False,
                       evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_complex():
     stmt = Complex([Agent('a'), Agent('b')], evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_translocation():
     stmt = Translocation(Agent('a'), 'cytoplasm', 'nucleus', evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_rasgap():
     stmt = RasGap(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_rasgef():
     stmt = RasGef(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
+    g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
@@ -94,3 +103,5 @@ def test_supports():
     assert(len(stmts2[1].supported_by) == 1)
     assert(stmts2[0].supports[0] == stmts2[1])
     assert(stmts2[1].supported_by[0] == stmts2[0])
+    g = stmt1.to_graph()
+    g = stmt2.to_graph()
