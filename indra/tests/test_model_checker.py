@@ -470,9 +470,10 @@ def test_check_activation():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == [['A_activates_B_activity',
-                              'B_activity_active_obs']]
-    assert results[1][1] == [['B_deactivates_C_kinase', 'C_kinase_active_obs']]
+    assert results[0][1] == [[('A_activates_B_activity', 1),
+                              ('B_activity_active_obs', 1)]]
+    assert results[1][1] == [[('B_deactivates_C_kinase', 1),
+                              ('C_kinase_active_obs', -1)]]
 
 
 @with_model
@@ -504,7 +505,7 @@ def test_none_phosphorylation_stmt():
     assert len(results) == 2
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
+    assert results[0][1] == [[('A_phos_B', 1), ('B_T185_p_obs', 1)]]
     assert results[1][0] == st2
     assert results[1][1] == False
 
@@ -545,9 +546,11 @@ def test_phosphorylation_annotations():
     assert len(results) == 3
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
+    assert results[0][1] == [[('A_phos_B', 1),
+                              ('B_monomer_Thr185_phos_obs', 1)]]
     assert results[1][0] == st2
-    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
+    assert results[1][1] == [[('A_phos_B', 1),
+                              ('B_monomer_Thr185_phos_obs', 1)]]
     assert results[2][0] == st3
     assert results[2][1] == False
 
@@ -590,11 +593,14 @@ def test_activation_annotations():
     assert len(results) == 3
     assert isinstance(results[0], tuple)
     assert results[0][0] == st1
-    assert results[0][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
+    assert results[0][1] == [[('A_phos_B', 1),
+                               ('B_monomer_Thr185_phos_obs', 1)]]
     assert results[1][0] == st2
-    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
+    assert results[1][1] == [[('A_phos_B', 1),
+                              ('B_monomer_Thr185_phos_obs', 1)]]
     assert results[2][0] == st3
-    assert results[1][1] == [['A_phos_B', 'B_monomer_Thr185_phos_obs']]
+    assert results[1][1] == [[('A_phos_B', 1),
+                              ('B_monomer_Thr185_phos_obs', 1)]]
 
 
 def test_multitype_path():
@@ -633,13 +639,13 @@ def test_multitype_path():
         Activation(sos1_grb2, kras, 'gtpbound'),
         Activation(kras_g, braf, 'kinase')
       ]
-    check_stmts(stmts1, ([['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS_gtpbound',
-                          'KRAS_gtpbound_active_obs']],
-                         [['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS_gtpbound',
-                          'KRAS_activates_BRAF_kinase',
-                          'BRAF_kinase_active_obs']]))
+    check_stmts(stmts1, ([[('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
+                          ('SOS1_GRB2_activates_KRAS_gtpbound', 1),
+                          ('KRAS_gtpbound_active_obs', 1)]],
+                         [[('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
+                           ('SOS1_GRB2_activates_KRAS_gtpbound', 1),
+                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('BRAF_kinase_active_obs', 1)]]))
     # Check without the ActiveForm
     stmts2 = [
         Complex([egfr, grb2]),
@@ -647,13 +653,13 @@ def test_multitype_path():
         RasGef(sos1_grb2, kras),
         Activation(kras_g, braf, 'kinase')
       ]
-    check_stmts(stmts2, ([['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS',
-                          'KRAS_gtpbound_active_obs']],
-                         [['EGFR_GRB2_bind', 'SOS1_GRB2_EGFR_bind',
-                          'SOS1_GRB2_activates_KRAS',
-                          'KRAS_activates_BRAF_kinase',
-                          'BRAF_kinase_active_obs']]))
+    check_stmts(stmts2, ([[('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
+                           ('SOS1_GRB2_activates_KRAS', 1),
+                           ('KRAS_gtpbound_active_obs', 1)]],
+                         [[('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
+                           ('SOS1_GRB2_activates_KRAS', 1),
+                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('BRAF_kinase_active_obs', 1)]]))
 
 
 def test_grounded_modified_enzyme():
@@ -673,8 +679,8 @@ def test_grounded_modified_enzyme():
     results = mc.check_model()
     assert len(results) == 1
     assert results[0][0] == stmt_to_check
-    assert results[0][1] == [['MEK1_phosphoS202_phosphorylation_ERK2_phospho',
-                              'ERK2_phospho_p_obs']]
+    assert results[0][1] == [[('MEK1_phosphoS202_phosphorylation_ERK2_phospho',
+                               1), ('ERK2_phospho_p_obs', 1)]]
 
 
 def test_check_ubiquitination():
@@ -689,7 +695,8 @@ def test_check_ubiquitination():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == [['XIAP_ubiquitination_CASP3_ub', 'CASP3_ub_y_obs']]
+    assert checks[0][1] == [[('XIAP_ubiquitination_CASP3_ub', 1),
+                             ('CASP3_ub_y_obs', 1)]]
 
 
 def test_check_rule_subject1():
@@ -721,7 +728,8 @@ def test_rasgef_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == [['SOS1_activates_KRAS', 'KRAS_gtpbound_active_obs']]
+    assert checks[0][1] == [[('SOS1_activates_KRAS', 1),
+                             ('KRAS_gtpbound_active_obs', 1)]]
     # TODO TODO TODO
     """
     # Check that the RasGef is satisfied by the Activation
@@ -753,9 +761,9 @@ def test_rasgef_rasgtp():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == [['SOS1_activates_KRAS',
-                             'KRAS_activates_BRAF_kinase',
-                             'BRAF_kinase_active_obs']]
+    assert checks[0][1] == [[('SOS1_activates_KRAS', 1),
+                             ('KRAS_activates_BRAF_kinase', 1),
+                             ('BRAF_kinase_active_obs', 1)]]
 
 
 def test_rasgef_rasgtp_phos():
@@ -779,10 +787,10 @@ def test_rasgef_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1] == [['SOS1_activates_KRAS',
-                             'KRAS_activates_BRAF_kinase',
-                             'BRAF_phosphorylation_MEK_phospho',
-                             'MEK_phospho_p_obs']]
+    assert checks[0][1] == [[('SOS1_activates_KRAS', 1),
+                             ('KRAS_activates_BRAF_kinase', 1),
+                             ('BRAF_phosphorylation_MEK_phospho', 1),
+                             ('MEK_phospho_p_obs', 1)]]
 
 
 def test_rasgap_activation():
@@ -798,8 +806,8 @@ def test_rasgap_activation():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == [['NF1_deactivates_KRAS',
-                             'KRAS_gtpbound_active_obs']]
+    assert checks[0][1] == [[('NF1_deactivates_KRAS', 1),
+                             ('KRAS_gtpbound_active_obs', -1)]]
     # TODO TODO TODO
     """
     # Check that the RasGap is satisfied by the Activation
@@ -833,9 +841,9 @@ def test_rasgap_rasgtp():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
-    assert checks[0][1] == [['NF1_deactivates_KRAS',
-                             'KRAS_activates_BRAF_kinase',
-                             'BRAF_kinase_active_obs']]
+    assert checks[0][1] == [[('NF1_deactivates_KRAS', 1),
+                             ('KRAS_activates_BRAF_kinase', -1),
+                             ('BRAF_kinase_active_obs', -1)]]
 
 
 def test_rasgap_rasgtp_phos():
@@ -858,10 +866,10 @@ def test_rasgap_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1] == [['NF1_deactivates_KRAS',
-                             'KRAS_activates_BRAF_kinase',
-                             'BRAF_phosphorylation_MEK_phospho',
-                             'MEK_phospho_p_obs']]
+    assert checks[0][1] == [[('NF1_deactivates_KRAS', 1),
+                             ('KRAS_activates_BRAF_kinase', -1),
+                             ('BRAF_phosphorylation_MEK_phospho', -1),
+                             ('MEK_phospho_p_obs', -1)]]
 
 
 def test_stmt_from_rule():
