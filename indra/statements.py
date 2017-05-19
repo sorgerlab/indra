@@ -134,6 +134,7 @@ import rdflib
 import logging
 import textwrap
 from collections import namedtuple
+from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
@@ -168,8 +169,8 @@ class BoundCondition(object):
         self.is_bound = is_bound
 
     def to_json(self):
-        json_dict = {'agent': self.agent.to_json(),
-                     'is_bound': self.is_bound}
+        json_dict = _o({'agent': self.agent.to_json(),
+                        'is_bound': self.is_bound})
         return json_dict
 
     @classmethod
@@ -228,9 +229,9 @@ class MutCondition(object):
         return (pos_match and residue_from_match and residue_to_match)
 
     def to_json(self):
-        json_dict = {'position': self.position,
-                     'residue_from': self.residue_from,
-                     'residue_to': self.residue_to}
+        json_dict = _o({'position': self.position,
+                        'residue_from': self.residue_from,
+                        'residue_to': self.residue_to})
         return json_dict
 
     @classmethod
@@ -342,7 +343,7 @@ class ModCondition(object):
         return str(self)
 
     def to_json(self):
-        json_dict = {'mod_type': self.mod_type}
+        json_dict = _o({'mod_type': self.mod_type})
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -432,8 +433,8 @@ class ActivityCondition(object):
         return str(key)
 
     def to_json(self):
-        json_dict = {'activity_type': self.activity_type,
-                     'is_active': self.is_active}
+        json_dict = _o({'activity_type': self.activity_type,
+                        'is_active': self.is_active})
         return json_dict
 
     @classmethod
@@ -699,8 +700,8 @@ class Agent(object):
 
     def equals(self, other):
         matches = (self.name == other.name) and\
-                  (self.activity == other.activity) and\
-                  (self.location == other.location) and\
+                  (self.activity == other.activity) and \
+                  (self.location == other.location) and \
                   (self.db_refs == other.db_refs)
         if len(self.mods) == len(other.mods):
             for s, o in zip(self.mods, other.mods):
@@ -714,7 +715,7 @@ class Agent(object):
             return False
         if len(self.bound_conditions) == len(other.bound_conditions):
             for s, o in zip(self.bound_conditions, other.bound_conditions):
-                matches = matches and s.agent.equals(o.agent) and\
+                matches = matches and s.agent.equals(o.agent) and \
                                       s.is_bound == o.is_bound
         else:
             return False
@@ -722,19 +723,19 @@ class Agent(object):
         return matches
 
     def to_json(self):
-        json_dict = {'name': self.name,
-                     'db_refs': self.db_refs}
+        json_dict = _o({'name': self.name})
         if self.mods:
             json_dict['mods'] = [mc.to_json() for mc in self.mods]
         if self.mutations:
             json_dict['mutations'] = [mc.to_json() for mc in self.mutations]
+        if self.bound_conditions:
+            json_dict['bound_conditions'] = [bc.to_json() for bc in
+                                             self.bound_conditions]
         if self.activity is not None:
             json_dict['activity'] = self.activity.to_json()
         if self.location is not None:
             json_dict['location'] = self.location
-        if self.bound_conditions:
-            json_dict['bound_conditions'] = [bc.to_json() for bc in
-                                             self.bound_conditions]
+        json_dict['db_refs'] = self.db_refs
         return json_dict
 
     @classmethod
@@ -845,13 +846,13 @@ class Evidence(object):
         return matches
 
     def to_json(self):
-        json_dict = {}
+        json_dict = _o({})
         if self.source_api:
             json_dict['source_api'] = self.source_api
-        if self.source_id:
-            json_dict['source_id'] = self.source_id
         if self.pmid:
             json_dict['pmid'] = self.pmid
+        if self.source_id:
+            json_dict['source_id'] = self.source_id
         if self.text:
             json_dict['text'] = self.text
         if self.annotations:
@@ -981,11 +982,11 @@ class Statement(object):
             except AttributeError:
                 st.uuid = '%s' % uuid.uuid4()
         ##################
-        json_dict = {'id': '%s' % self.uuid,
-                     'type': stmt_type}
+        json_dict = _o({'type': stmt_type})
         if self.evidence:
             evidence = [ev.to_json() for ev in self.evidence]
             json_dict['evidence'] = evidence
+        json_dict['id'] = '%s' % self.uuid
         if self.supports:
             json_dict['supports'] = \
                 ['%s' % st.uuid for st in self.supports]
@@ -1093,7 +1094,8 @@ class Modification(Statement):
         return matches
 
     def to_json(self):
-        json_dict = super(Modification, self).to_json()
+        generic = super(Modification, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
         if self.sub is not None:
@@ -1102,6 +1104,7 @@ class Modification(Statement):
             json_dict['residue'] = self.residue
         if self.position is not None:
             json_dict['position'] = self.position
+        json_dct = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1206,13 +1209,15 @@ class SelfModification(Statement):
         return matches
 
     def to_json(self):
-        json_dict = super(SelfModification, self).to_json()
+        generic = super(SelfModification, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
             json_dict['position'] = self.position
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1442,13 +1447,15 @@ class RegulateActivity(Statement):
             return False
 
     def to_json(self):
-        json_dict = super(RegulateActivity, self).to_json()
+        generic = super(RegulateActivity, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1619,10 +1626,12 @@ class ActiveForm(Statement):
             return False
 
     def to_json(self):
-        json_dict = super(ActiveForm, self).to_json()
+        generic = super(ActiveForm, self).to_json()
+        json_dict = _o({'type': generic['type']})
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1796,11 +1805,13 @@ class RasGef(Statement):
         return matches
 
     def to_json(self):
-        json_dict = super(RasGef, self).to_json()
+        generic = super(RasGef, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1878,11 +1889,13 @@ class RasGap(Statement):
         return matches
 
     def to_json(self):
-        json_dict = super(RasGap, self).to_json()
+        generic = super(RasGap, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1968,9 +1981,11 @@ class Complex(Statement):
         return matches
 
     def to_json(self):
-        json_dict = super(Complex, self).to_json()
+        generic = super(Complex, self).to_json()
+        json_dict = _o({'type': generic['type']})
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -2046,12 +2061,14 @@ class Translocation(Statement):
         return str(key)
 
     def to_json(self):
-        json_dict = super(Translocation, self).to_json()
+        generic = super(Translocation, self).to_json()
+        json_dict = _o({'type': generic['type']})
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
             json_dict['from_location'] = self.from_location
         if self.to_location is not None:
             json_dict['to_location'] = self.to_location
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -2098,11 +2115,13 @@ class RegulateAmount(Statement):
         self.obj = agent_list[1]
 
     def to_json(self):
-        json_dict = super(RegulateAmount, self).to_json()
+        generic = super(RegulateAmount, self).to_json()
+        json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
+        json_dict = json_dict.update(generic)
         return json_dict
 
     @classmethod
