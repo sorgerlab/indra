@@ -1104,7 +1104,7 @@ class Modification(Statement):
             json_dict['residue'] = self.residue
         if self.position is not None:
             json_dict['position'] = self.position
-        json_dct = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1217,7 +1217,7 @@ class SelfModification(Statement):
             json_dict['residue'] = self.residue
         if self.position is not None:
             json_dict['position'] = self.position
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1455,7 +1455,7 @@ class RegulateActivity(Statement):
             json_dict['obj'] = self.obj.to_json()
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1631,7 +1631,7 @@ class ActiveForm(Statement):
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1811,7 +1811,7 @@ class RasGef(Statement):
             json_dict['gef'] = self.gef.to_json()
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1895,7 +1895,7 @@ class RasGap(Statement):
             json_dict['gap'] = self.gap.to_json()
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -1985,7 +1985,7 @@ class Complex(Statement):
         json_dict = _o({'type': generic['type']})
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -2068,7 +2068,7 @@ class Translocation(Statement):
             json_dict['from_location'] = self.from_location
         if self.to_location is not None:
             json_dict['to_location'] = self.to_location
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
@@ -2121,7 +2121,7 @@ class RegulateAmount(Statement):
             json_dict['subj'] = self.subj.to_json()
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
-        json_dict = json_dict.update(generic)
+        json_dict.update(generic)
         return json_dict
 
     @classmethod
