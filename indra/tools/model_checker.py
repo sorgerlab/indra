@@ -29,9 +29,13 @@ class ModelChecker(object):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
-        self.stmt_to_obs = defaultdict(list)
+        # Influence map
         self._im = None
-        # Need map between rules and downstream observables
+        # Map from statements to associated observables
+        self.stmt_to_obs = {}
+        # Map from agents to associated observables
+        self.agent_to_obs = {}
+        # Map between rules and downstream observables
         self.rule_obs_dict = {}
 
     def add_statements(self, stmts):
@@ -67,16 +71,17 @@ class ModelChecker(object):
                 logger.info('Failed to create observables for agent %s, '
                             'skipping' % agent)
                 return
+            obs_list = []
             for obj_mp in obj_mps:
                 obs_name = _monomer_pattern_label(obj_mp) + '_obs'
-                # Associate this statement with this observable
-                self.stmt_to_obs[stmt].append(obs_name)
                 # Add the observable
                 obj_obs = Observable(obs_name, obj_mp, _export=False)
+                obs_list.append(obj_obs)
                 try:
                     self.model.add_component(obj_obs)
                 except ComponentDuplicateNameError as e:
                     pass
+            return obs_list
 
         # Create observables for all statements to check, and add to model
         # Remove any existing observables in the model
@@ -91,16 +96,21 @@ class ModelChecker(object):
                 modified_sub = _add_modification_to_agent(stmt.sub,
                                     mod_condition_name, stmt.residue,
                                     stmt.position)
-                add_obs_for_agent(modified_sub)
+                obs_list = add_obs_for_agent(modified_sub)
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt] = obs_list
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
                 regulated_sub, polarity = \
                         _add_activity_to_agent(stmt.obj, stmt.obj_activity,
                                                stmt.is_activation)
-                add_obs_for_agent(regulated_sub)
+                obs_list = add_obs_for_agent(regulated_sub)
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
-            add_obs_for_agent(ag)
+            obs_list = add_obs_for_agent(ag)
+            self.agent_to_obs[ag] = obs_list
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
