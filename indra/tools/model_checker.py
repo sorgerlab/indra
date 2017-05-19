@@ -31,6 +31,8 @@ class ModelChecker(object):
             self.agent_obs = []
         self.stmt_to_obs = defaultdict(list)
         self._im = None
+        # Need map between rules and downstream observables
+        self.rule_obs_dict = {}
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model."""
@@ -103,6 +105,20 @@ class ModelChecker(object):
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
         self._im.is_multigraph = lambda: False
+        # Now, for every rule in the model, check if there are any observables
+        # downstream
+        # Alternatively, for every observable in the model, get a list of rules
+        for rule in self.model.rules:
+            obs_list = []
+            # Get successors of the rule node
+            for neighb in self._im.neighbors(rule.name):
+                # Check if the node is an observable
+                if not _is_obs_node(neighb):
+                    continue
+                # Get the edge and check the polarity
+                edge_sign = _get_edge_sign(self._im.get_edge(rule.name, neighb))
+                obs_list.append((neighb.name, edge_sign))
+            self.rule_obs_dict[rule.name] = obs_list
         return self._im
 
     def check_model(self, max_paths=1, max_path_length=5):
@@ -472,6 +488,11 @@ def _get_edge_sign(edge):
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
 
+def _get_obs_for_rule(node):
+    """Get the observable nodes and polarities downstream of a given rule node.
+    """
+    
+
 def _add_modification_to_agent(agent, mod_type, residue, position):
     """Add a modification condition to an Agent."""
     new_mod = ModCondition(mod_type, residue, position)
@@ -673,3 +694,9 @@ def _monomer_pattern_label(mp):
         site_strs.append(site_str)
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
 
+
+def _is_obs_node(node):
+    if node.attr['shape'] == 'ellipse':
+        return True
+    else:
+        return False
