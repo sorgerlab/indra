@@ -119,7 +119,7 @@ def test_one_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
+    assert results[0][1] == [[('A_phos_B', 1), ('B_T185_p_obs', 1)]]
 
 @with_model
 def test_two_step_phosphorylation():
@@ -161,7 +161,7 @@ def test_two_step_phosphorylation():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == [['A_phos_B', 'B_T185_p_obs']]
+    assert results[0][1] == [[('A_phos_B', 1), ('B_T185_p_obs', 1)]]
 
 
 def test_pysb_assembler_phospho_policies():
@@ -177,7 +177,8 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == [['A_phosphorylation_B_T185', 'B_T185_p_obs']]
+    assert results[0][1] == [[('A_phosphorylation_B_T185', 1),
+                              ('B_T185_p_obs', 1)]]
     # Try one step
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [st])
@@ -185,7 +186,8 @@ def test_pysb_assembler_phospho_policies():
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
-    assert results[0][1] == [['A_phosphorylation_B_T185', 'B_T185_p_obs']]
+    assert results[0][1] == [[('A_phosphorylation_B_T185', 1),
+                              ('B_T185_p_obs', 1)]]
     # Try interactions_only
     pa.make_model(policies='interactions_only')
     mc = ModelChecker(pa.model, [st])
@@ -313,9 +315,10 @@ def test_consumption_rule():
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
     assert checks[0][0] == stmt
-    assert checks[0][1] == [['Pvd_binds_DUSP', 'DUSP_binds_MAPK1_phosT185',
-                            'DUSP_dephos_MAPK1_at_T185',
-                            'MAPK1_T185_p_obs']]
+    assert checks[0][1] == [[('Pvd_binds_DUSP', 1),
+                             ('DUSP_binds_MAPK1_phosT185', -1),
+                             ('DUSP_dephos_MAPK1_at_T185', -1),
+                             ('MAPK1_T185_p_obs', 1)]]
 
 
 def test_dephosphorylation():
@@ -332,10 +335,10 @@ def test_dephosphorylation():
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
         assert checks[0][1] == result
-    check_policy('one_step', [['DUSP6_dephosphorylation_MAPK1_T185',
-                              'MAPK1_T185_p_obs']])
-    check_policy('two_step', [['DUSP6_dephosphorylation_MAPK1_T185',
-                              'MAPK1_T185_p_obs']])
+    check_policy('one_step', [[('DUSP6_dephosphorylation_MAPK1_T185', 1),
+                               ('MAPK1_T185_p_obs', -1)]])
+    check_policy('two_step', [[('DUSP6_dephosphorylation_MAPK1_T185', 1),
+                               ('MAPK1_T185_p_obs', -1)]])
     check_policy('interactions_only', False)
 
 @with_model
@@ -408,9 +411,10 @@ def test_distinguish_path_polarity1():
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
     assert results[0][1] == False
-    assert results[1][1] == [['A_activate_B', 'B_dephos_C', 'C_T185_p_obs']]
+    assert results[1][1] == [[('A_activate_B', 1), ('B_dephos_C', 1),
+                              ('C_T185_p_obs', -1)]]
     assert results[2][1] == False
-    assert results[3][1] == [['B_dephos_C', 'C_T185_p_obs']]
+    assert results[3][1] == [[('B_dephos_C', 1), ('C_T185_p_obs', -1)]]
 
 @with_model
 def test_distinguish_path_polarity2():
@@ -443,10 +447,12 @@ def test_distinguish_path_polarity2():
     results = mc.check_model()
     assert len(results) ==  len(stmts)
     assert isinstance(results[0], tuple)
-    assert results[0][1] == [['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']]
+    assert results[0][1] == [[('A_inhibit_B', 1), ('B_dephos_C', -1),
+                               ('C_T185_p_obs', 1)]]
     assert results[1][1] == False
-    assert results[2][1] == [['A_inhibit_B', 'B_dephos_C', 'C_T185_p_obs']]
-    assert results[3][1] == [['B_dephos_C', 'C_T185_p_obs']]
+    assert results[2][1] == [[('A_inhibit_B', 1), ('B_dephos_C', -1),
+                              ('C_T185_p_obs', 1)]]
+    assert results[3][1] == [[('B_dephos_C', 1), ('C_T185_p_obs', -1)]]
 
 
 def test_check_activation():
@@ -1017,11 +1023,16 @@ def test_model_check_data():
     # Create observables
     assert len(results) == 1
     assert results[0][1][0:2] == \
-            [['A_phosphorylation_B_phospho',
-              'B_phospho_phosphorylation_D_phospho', 'D_phospho_p_obs'],
-             ['A_phosphorylation_C_phospho',
-              'C_phospho_phosphorylation_D_phospho', 'D_phospho_p_obs']]
-
+            [[('A_phosphorylation_B_phospho', 1),
+              ('B_phospho_phosphorylation_D_phospho', 1),
+              ('D_phospho_p_obs', 1)],
+             [('A_phosphorylation_C_phospho', 1),
+              ('C_phospho_phosphorylation_D_phospho', 1),
+              ('D_phospho_p_obs', 1)]]
+    # Next, add ability to score paths after search by looking up influences
+    # of each rule in the path against neighboring observables
+    # This will also require that the paths returned by the model_checker
+    # also have overall polarities at each node--shouldn't be too hard though
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
@@ -1123,4 +1134,5 @@ def test_model_check_data():
 
 
 if __name__ == '__main__':
-    test_model_check_data()
+    test_distinguish_path_polarity1()
+    test_distinguish_path_polarity2()

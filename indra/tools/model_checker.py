@@ -265,8 +265,8 @@ class ModelChecker(object):
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
                 for path_ix, path in path_iter:
-                    flipped_path = flip_path(path)
-                    paths.append(flipped_path)
+                    flipped = _flip(self.get_im(), path)
+                    paths.append(flipped)
                     if len(paths) >= max_paths:
                         break
                 return paths
@@ -324,7 +324,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.info('Found path: %s' % flip_path(path))
+            logger.info('Found path: %s' % _flip(im, path))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
@@ -575,36 +575,34 @@ def find_consumption_rules(cp, rules):
     return cons_rules
 """
 
-def flip_path(path):
+def _flip(im, path):
     # Reverse the path and the polarities associated with each node
     rev = list(reversed(path))
-    flipped_path = []
-    for node_ix, (node, sign) in enumerate(rev):
-        # Currently by definition the effect on the target is positive
-        if node_ix == 0:
-            flipped_path.append((node, 1))
-        # For other nodes, shift the sign over by one node to get the correct
-        # polarity of effect at that node
-        else:
-            prev_node, prev_sign = rev[node_ix - 1]
-            flipped_path.append((node, prev_sign))
-    return flipped_path
+    return _path_with_polarities(im, rev)
 
 
-def _path_polarity(im, path):
+def _path_with_polarities(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
     edge_polarities = []
     path_list = list(path)
     edges = zip(path_list[0:-1], path_list[1:])
-    for from_rule, to_rule in edges:
+    for from_tup, to_tup in edges:
+        from_rule = from_tup[0]
+        to_rule = to_tup[0]
         edge = im.get_edge(from_rule, to_rule)
         edge_polarities.append(_get_edge_sign(edge))
     # Compute and return the overall path polarity
-    path_polarity = np.prod(edge_polarities)
-    assert path_polarity == 1 or path_polarity == -1
+    #path_polarity = np.prod(edge_polarities)
+    # Calculate left product of edge polarities return
+    polarities_lprod = [1]
+    for ep_ix, ep in enumerate(edge_polarities):
+        polarities_lprod.append(polarities_lprod[-1] * ep)
+    assert len(path) == len(polarities_lprod)
+    return list(zip([node for node, sign in path], polarities_lprod))
+    #assert path_polarity == 1 or path_polarity == -1
     #return True if path_polarity == 1 else False
-    return path_polarity
+    #return path_polarity
 
 
 def _stmt_from_rule(model, rule_name, stmts):
