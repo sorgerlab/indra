@@ -5,9 +5,9 @@ import logging
 import itertools
 from copy import deepcopy
 
-from pysb import (Model, Monomer, Parameter, Rule, Annotation,
-        ComponentDuplicateNameError, ComplexPattern, ReactionPattern, ANY,
-        WILD, InvalidInitialConditionError)
+from pysb import (Model, Monomer, Parameter, Expression, Observable, Rule,
+        Annotation, ComponentDuplicateNameError, ComplexPattern,
+        ReactionPattern, ANY, WILD, InvalidInitialConditionError)
 from pysb.core import SelfExporter
 import pysb.export
 
@@ -1230,17 +1230,20 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r_fwd)
 
 
-def modification_assemble_one_step(stmt, model, agent_set):
+def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.enz is None:
         return
     mod_condition_name = stmt.__class__.__name__.lower()
-    param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                  stmt.sub.name[0].lower(), mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1e-6)
 
     # See NOTE in monomers_one_step
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
+
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+
     # Remove pre-set activity flag
     enz_pattern = get_monomer_pattern(model, stmt.enz)
     unmod_site_state = states[mod_condition_name][0]
@@ -1250,14 +1253,34 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={mod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+
+    if not rate_law:
+        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
+                                      stmt.sub.name[0].lower(), mod_condition_name)
+        mod_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('Km_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        Km = get_create_parameter(model, param_name, 1e8)
+        param_name = ('kc_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        kcat = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
+        model.add_component(sub_obs)
+        # Note that [E0]*[S] is automatically multiplied into this rate
+        # as the product of the reactants therefore they don't appear
+        # in this expression
+        # v = Vmax*[S]/(Km+[S]) = kcat*[E0]*[S]/(Km + [S])
+        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
+        model.add_component(mod_rate)
+
     r = Rule(rule_name,
             enz_pattern + sub_unmod >>
             enz_pattern + sub_mod,
-            kf_mod)
+            mod_rate)
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
@@ -1526,14 +1549,11 @@ def demodification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def demodification_assemble_one_step(stmt, model, agent_set):
+def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.enz is None:
         return
     demod_condition_name = stmt.__class__.__name__.lower()
     mod_condition_name = demod_condition_name[2:]
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-                stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 1e-6)
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
@@ -1550,9 +1570,30 @@ def demodification_assemble_one_step(stmt, model, agent_set):
     rule_sub_str = get_agent_rule_str(stmt.sub)
     rule_name = '%s_%s_%s_%s' % \
                 (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+
+    if not rate_law:
+        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
+                                     stmt.sub.name[0].lower(),
+                                     demod_condition_name)
+        mod_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('Km_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        Km = get_create_parameter(model, param_name, 1e8)
+        param_name = ('kc_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        kcat = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        sub_obs = Observable(rule_name + '_sub_obs', sub_mod)
+        model.add_component(sub_obs)
+        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
+        model.add_component(mod_rate)
+
     r = Rule(rule_name,
              enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
-             kf_demod)
+             mod_rate)
     anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
@@ -1654,6 +1695,28 @@ for mc, func_type, pol in itertools.product(demod_classes,
                     mc=ist.modclass_to_modtype[mc], func_type=func_type,
                     pol=pol)
     exec(code)
+
+rate_laws = ['michaelis_menten']
+for mc, rate_law in itertools.product(mod_classes, rate_laws):
+    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+    code = '{mc}_assemble_{rate_law} = ' \
+            'lambda a, b, c: modification_assemble_' \
+            'one_step(a, b, c, "{rate_law}")'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+
+for mc, rate_law in itertools.product(demod_classes, rate_laws):
+    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+    code = '{mc}_assemble_{rate_law} = ' \
+            'lambda a, b, c: demodification_assemble_' \
+            'one_step(a, b, c, "{rate_law}")'.format(
+                    mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
@@ -1819,7 +1882,7 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def regulateactivity_assemble_one_step(stmt, model, agent_set):
+def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -1829,11 +1892,6 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     obj_active = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'active'})
 
-    param_name = 'kf_' + stmt.subj.name[0].lower() + \
-        stmt.obj.name[0].lower() + '_act'
-    kf_one_step_activate = \
-        get_create_parameter(model, param_name, 1e-6)
-
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
     polarity_str = 'activates' if stmt.is_activation else 'deactivates'
@@ -1841,14 +1899,31 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
         (rule_subj_str, polarity_str, rule_obj_str,
          stmt.obj_activity)
 
-    if stmt.is_activation:
-        r = Rule(rule_name,
-            subj_pattern() + obj_inactive >> subj_pattern() + obj_active,
-            kf_one_step_activate)
-    else:
-        r = Rule(rule_name,
-            subj_pattern() + obj_active >> subj_pattern() + obj_inactive,
-            kf_one_step_activate)
+    if not rate_law:
+        param_name = 'kf_' + stmt.subj.name[0].lower() + \
+            stmt.obj.name[0].lower() + '_act'
+        act_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('Km_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_act')
+        Km = get_create_parameter(model, param_name, 1e8)
+        param_name = ('kc_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_act')
+        kcat = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        obj_to_observe = obj_active if stmt.is_activation else obj_inactive
+        obj_obs = Observable(rule_name + '_obj_obs', obj_to_observe)
+        model.add_component(obj_obs)
+        act_rate = Expression(rule_name + '_rate', kcat / (Km * obj_obs))
+        model.add_component(act_rate) 
+
+    obj_from, obj_to = (obj_inactive, obj_active) if stmt.is_activation else \
+                       (obj_active, obj_inactive)
+
+    r = Rule(rule_name, subj_pattern() + obj_from >> subj_pattern() + obj_to,
+             act_rate)
 
     anns = [Annotation(rule_name, subj_pattern.monomer.name,
                        'rule_has_subject'),
@@ -1868,6 +1943,10 @@ activation_assemble_one_step = regulateactivity_assemble_one_step
 activation_monomers_default = regulateactivity_monomers_one_step
 activation_assemble_default = regulateactivity_assemble_one_step
 
+activation_monomers_michaelis_menten = regulateactivity_monomers_one_step
+activation_assemble_michaelis_menten = lambda a, b, c: \
+    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
+
 inhibition_monomers_interactions_only = \
                     regulateactivity_monomers_interactions_only
 inhibition_assemble_interactions_only = \
@@ -1876,6 +1955,10 @@ inhibition_monomers_one_step = regulateactivity_monomers_one_step
 inhibition_assemble_one_step = regulateactivity_assemble_one_step
 inhibition_monomers_default = regulateactivity_monomers_one_step
 inhibition_assemble_default = regulateactivity_assemble_one_step
+
+inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
+inhibition_assemble_michaelis_menten = lambda a, b, c: \
+    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
 
 # RASGEF #####################################################
 
@@ -2164,7 +2247,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-def increaseamount_assemble_one_step(stmt, model, agent_set):
+def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
         logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
@@ -2184,27 +2267,48 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
 
     if stmt.subj is None:
+        rule_name = '%s_synthesized' % rule_obj_str
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_synth'
         kf_one_step_synth = get_create_parameter(model, param_name, 2,
-                                                   unique=True)
-        rule_name = '%s_synthesized' % rule_obj_str
+                                                 unique=True)
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
-        param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                            stmt.obj.name[0].lower() + '_synth'
-        # Scale the average apparent increaseamount rate by the default
-        # protein initial condition
-        kf_one_step_synth = get_create_parameter(model, param_name, 2e-4)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        if not rate_law:
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            # Scale the average apparent increaseamount rate by the default
+            # protein initial condition
+            synth_rate = get_create_parameter(model, param_name, 2e-4)
+        if rate_law == 'hill':
+            # k * [subj]**n / (K_A**n + [subj]**n)
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            kf = get_create_parameter(model, param_name, 4)
+            param_name = 'Ka_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            Ka = get_create_parameter(model, param_name, 1e4)
+            param_name = 'n_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            n_hill = get_create_parameter(model, param_name, 1)
+            subj_obs = Observable(rule_name + '_subj_obs', subj_pattern)
+            model.add_component(subj_obs)
+            synth_rate = Expression(rule_name + '_rate',
+                kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
+            model.add_component(synth_rate)
+
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
-                 kf_one_step_synth)
+                 synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
+increaseamount_monomers_hill = increaseamount_monomers_one_step
+increaseamount_assemble_hill = lambda a, b, c: \
+        increaseamount_assemble_one_step(a, b, c, 'hill')
 
 class PysbPreassembler(object):
     def __init__(self, stmts=None):

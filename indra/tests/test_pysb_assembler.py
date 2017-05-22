@@ -1072,3 +1072,33 @@ def test_pysb_preassembler_replace_activities3():
     assert(len(ppa.statements) == 2)
     assert(ppa.statements[0].enz.mods)
     assert(ppa.statements[0].enz.bound_conditions)
+
+def test_phos_michaelis_menten():
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 4)
+
+def test_deubiq_michaelis_menten():
+    stmt = Deubiquitination(Agent('MEK'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 4)
+
+def test_act_michaelis_menten():
+    stmt = Activation(Agent('MEK'), Agent('ERK'))
+    stmt2 = Inhibition(Agent('DUSP'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt, stmt2])
+    pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 7)
+
+def test_increaseamount_hill():
+    stmt = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='hill')
+    pa.save_model()
+    assert(len(pa.model.parameters) == 5)
