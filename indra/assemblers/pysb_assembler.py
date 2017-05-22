@@ -1260,15 +1260,12 @@ def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
         mod_rate = get_create_parameter(model, param_name, 1e-6)
     elif rate_law == 'michaelis_menten':
         # Parameters
-        param_name = ('kf_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_bind')
-        kf_bind = get_create_parameter(model, param_name, 1e-6)
-        param_name = ('kr_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_bind')
-        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('Km_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        Km = get_create_parameter(model, param_name, 1e8)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kf_mod = get_create_parameter(model, param_name, 100)
+        kcat = get_create_parameter(model, param_name, 100)
 
         # We need an observable for the substrate to use in the rate law
         sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
@@ -1276,9 +1273,8 @@ def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
         # Note that [E0]*[S] is automatically multiplied into this rate
         # as the product of the reactants therefore they don't appear
         # in this expression
-        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
-        mod_rate = Expression(rule_name + '_rate',
-                              kf_mod / ((kr_bind/kf_bind) * sub_obs))
+        # v = Vmax*[S]/(Km+[S]) = kcat*[E0]*[S]/(Km + [S])
+        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
         model.add_component(mod_rate)
 
     r = Rule(rule_name,
@@ -1582,25 +1578,17 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
         mod_rate = get_create_parameter(model, param_name, 1e-6)
     elif rate_law == 'michaelis_menten':
         # Parameters
-        param_name = ('kf_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_bind')
-        kf_bind = get_create_parameter(model, param_name, 1e-6)
-        param_name = ('kr_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_bind')
-        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('Km_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        Km = get_create_parameter(model, param_name, 1e8)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kf_demod = get_create_parameter(model, param_name, 100)
+        kcat = get_create_parameter(model, param_name, 100)
 
         # We need an observable for the substrate to use in the rate law
         sub_obs = Observable(rule_name + '_sub_obs', sub_mod)
         model.add_component(sub_obs)
-        # Note that [E0]*[S] is automatically multiplied into this rate
-        # as the product of the reactants therefore they don't appear
-        # in this expression
-        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
-        mod_rate = Expression(rule_name + '_rate',
-                              kf_demod / ((kr_bind/kf_bind) * sub_obs))
+        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
         model.add_component(mod_rate)
 
     r = Rule(rule_name,
@@ -1918,26 +1906,18 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
         act_rate = get_create_parameter(model, param_name, 1e-6)
     elif rate_law == 'michaelis_menten':
         # Parameters
-        param_name = ('kf_' + stmt.subj.name[0].lower() +
-                      stmt.obj.name[0].lower() + '_bind')
-        kf_bind = get_create_parameter(model, param_name, 1e-6)
-        param_name = ('kr_' + stmt.subj.name[0].lower() +
-                      stmt.obj.name[0].lower() + '_bind')
-        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('Km_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_act')
+        Km = get_create_parameter(model, param_name, 1e8)
         param_name = ('kc_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
-        kf_act = get_create_parameter(model, param_name, 100)
+        kcat = get_create_parameter(model, param_name, 100)
 
         # We need an observable for the substrate to use in the rate law
         obj_to_observe = obj_active if stmt.is_activation else obj_inactive
         obj_obs = Observable(rule_name + '_obj_obs', obj_to_observe)
         model.add_component(obj_obs)
-        # Note that [E0]*[S] is automatically multiplied into this rate
-        # as the product of the reactants therefore they don't appear
-        # in this expression
-        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
-        act_rate = Expression(rule_name + '_rate',
-                              kf_act / ((kr_bind/kf_bind) * obj_obs))
+        act_rate = Expression(rule_name + '_rate', kcat / (Km * obj_obs))
         model.add_component(act_rate) 
 
     obj_from, obj_to = (obj_inactive, obj_active) if stmt.is_activation else \
