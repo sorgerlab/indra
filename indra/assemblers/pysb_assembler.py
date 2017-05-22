@@ -1187,8 +1187,6 @@ def modification_monomers_one_step(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition(mod_condition_name,
                                          stmt.residue, stmt.position))
 
-modification_monomers_michaelis_menten = modification_monomers_one_step
-
 
 def modification_monomers_two_step(stmt, agent_set):
     if stmt.enz is None:
@@ -1292,8 +1290,6 @@ def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-modification_assemble_michaelis_menten = \
-        lambda a, b, c: modification_assemble_one_step(a, b, c, 'michaelis_menten')
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
@@ -1520,7 +1516,6 @@ def demodification_monomers_one_step(stmt, agent_set):
     sub.create_mod_site(ist.ModCondition(mod_condition_name,
                                          stmt.residue, stmt.position))
 
-demodification_monomers_michaelis_menten = demodification_monomers_one_step
 
 def demodification_monomers_two_step(stmt, agent_set):
     if stmt.enz is None:
@@ -1590,7 +1585,6 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-demodification_assemble_michaelis_menten = demodification_assemble_one_step
 
 def demodification_assemble_two_step(stmt, model, agent_set):
     if stmt.enz is None:
@@ -1666,8 +1660,7 @@ demodification_assemble_default = demodification_assemble_one_step
 
 # Map specific modification monomer/assembly functions to the generic
 # Modification assembly function
-policies = ['interactions_only', 'one_step', 'michaelis_menten', 'two_step',
-            'default']
+policies = ['interactions_only', 'one_step', 'two_step', 'default']
 
 mod_classes = [cls for cls in ist.AddModification.__subclasses__()]
 for mc, func_type, pol in itertools.product(mod_classes,
@@ -1688,6 +1681,28 @@ for mc, func_type, pol in itertools.product(demod_classes,
                     mc=ist.modclass_to_modtype[mc], func_type=func_type,
                     pol=pol)
     exec(code)
+
+rate_laws = ['michaelis_menten']
+for mc, rate_law in itertools.product(mod_classes, rate_laws):
+    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+    code = '{mc}_assemble_{rate_law} = ' \
+            'lambda a, b, c: modification_assemble_' \
+            'one_step(a, b, c, "{rate_law}")'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+
+for mc, rate_law in itertools.product(demod_classes, rate_laws):
+    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
+                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+    code = '{mc}_assemble_{rate_law} = ' \
+            'lambda a, b, c: demodification_assemble_' \
+            'one_step(a, b, c, "{rate_law}")'.format(
+                    mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
+    exec(code)
+
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
