@@ -76,7 +76,7 @@ class ModelChecker(object):
                 obs_name = _monomer_pattern_label(obj_mp) + '_obs'
                 # Add the observable
                 obj_obs = Observable(obs_name, obj_mp, _export=False)
-                obs_list.append(obj_obs)
+                obs_list.append(obs_name)
                 try:
                     self.model.add_component(obj_obs)
                 except ComponentDuplicateNameError as e:
@@ -301,10 +301,7 @@ class ModelChecker(object):
         else:
             return False
 
-
-    # TODO
-    """
-    def score_paths(self, paths, agents_values, func):
+    def score_paths(self, paths, agents_values):
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
@@ -312,15 +309,31 @@ class ModelChecker(object):
             for obs in obs_list:
                 obs_dict[obs] = val
         # For every path...
+        path_scores = []
         for path in paths:
-            # Look at every node in the path...
-            for node, sign in path:
+            # Look at every node in the path, excluding the final
+            # observable...
+            path_score = 0
+            for node, sign in path[:-1]:
                 # ...and for each node check the sign to see if it matches the
                 # data. So the first thing is to look at what's downstream
                 # of the rule
-                affected_obs = self.rule_to_obs[node]
                 # affected_obs is a list of observable names alogn
-    """
+                for affected_obs, rule_obs_sign in self.rule_obs_dict[node]:
+                    pred_sign = sign * rule_obs_sign
+                    # Check to see if this observable is in the data
+                    logger.info('%s %s: effect %s %s' %
+                                (node, sign, obs, pred_sign))
+                    measured_val = obs_dict.get(affected_obs)
+                    if measured_val:
+                        logger.info('Actual: %s' % measured_val)
+                        path_score += (pred_sign - measured_val) ** 2
+            path_score = path_score / len(path)
+            path_scores.append(path_score)
+        scored_paths = sorted(list(zip(paths, path_scores)),
+                              key=lambda x: x[1])
+        return scored_paths
+
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.

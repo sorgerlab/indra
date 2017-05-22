@@ -1032,7 +1032,7 @@ def test_model_check_data():
     mc = ModelChecker(pa.model, [stmt_to_check], agent_obs)
     results = mc.check_model(max_paths=5)
     mc.get_im().draw('im.pdf', prog='dot')
-    # Create observables
+    # Create observable
     assert len(results) == 1
     assert results[0][1][0:2] == \
             [[('A_phosphorylation_B_phospho', 1),
@@ -1045,10 +1045,12 @@ def test_model_check_data():
     # +/- 1
     # This data should ensure that the path through B should be more highly
     # ranked than the path through C
-    data = [(b_phos, 1), (c_phos, -1), (d_phos, 1)]
-    paths = [r for r in results if r[1]]
+    data = {b_phos: 1, c_phos: -1, d_phos: 1}
+    paths = results[0][1]
     scored_paths = mc.score_paths(paths, data)
-
+    assert scored_paths[0][0] == paths[0]
+    assert scored_paths[0][1] == 0
+    assert scored_paths[1][0] == paths[1]
     # of each rule in the path against neighboring observables
     # Take agents along with values
     # Need also to be able to map agents to observables
