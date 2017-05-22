@@ -1558,9 +1558,6 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
         return
     demod_condition_name = stmt.__class__.__name__.lower()
     mod_condition_name = demod_condition_name[2:]
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-                stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 1e-6)
 
     demod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
@@ -1577,9 +1574,39 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     rule_sub_str = get_agent_rule_str(stmt.sub)
     rule_name = '%s_%s_%s_%s' % \
                 (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
+
+    if not rate_law:
+        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
+                                     stmt.sub.name[0].lower(),
+                                     demod_condition_name)
+        mod_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('kf_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_bind')
+        kf_bind = get_create_parameter(model, param_name, 1e-6)
+        param_name = ('kr_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_bind')
+        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('kc_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        kf_demod = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        sub_obs = Observable(rule_name + '_sub_obs', sub_mod)
+        model.add_component(sub_obs)
+        # Note that [E0]*[S] is automatically multiplied into this rate
+        # as the product of the reactants therefore they don't appear
+        # in this expression
+        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
+        mod_rate = Expression(rule_name + '_rate',
+                              kf_demod / ((kr_bind/kf_bind) * sub_obs))
+        model.add_component(mod_rate)
+
+
     r = Rule(rule_name,
              enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
-             kf_demod)
+             mod_rate)
     anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]

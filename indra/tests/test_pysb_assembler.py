@@ -1078,4 +1078,9 @@ def test_phos_michaelis_menten():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model(policies='michaelis_menten')
-    pa.save_model('mm_test.py')
+
+def test_deubiq_michaelis_menten():
+    stmt = Deubiquitination(Agent('MEK'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='michaelis_menten')
