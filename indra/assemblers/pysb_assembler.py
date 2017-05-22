@@ -1603,7 +1603,6 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
                               kf_demod / ((kr_bind/kf_bind) * sub_obs))
         model.add_component(mod_rate)
 
-
     r = Rule(rule_name,
              enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
              mod_rate)
@@ -1895,7 +1894,8 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def regulateactivity_assemble_one_step(stmt, model, agent_set):
+def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
+    subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -1905,11 +1905,6 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
     obj_active = get_monomer_pattern(model, stmt.obj,
         extra_fields={stmt.obj_activity: 'active'})
 
-    param_name = 'kf_' + stmt.subj.name[0].lower() + \
-        stmt.obj.name[0].lower() + '_act'
-    kf_one_step_activate = \
-        get_create_parameter(model, param_name, 1e-6)
-
     rule_obj_str = get_agent_rule_str(stmt.obj)
     rule_subj_str = get_agent_rule_str(stmt.subj)
     polarity_str = 'activates' if stmt.is_activation else 'deactivates'
@@ -1917,14 +1912,39 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set):
         (rule_subj_str, polarity_str, rule_obj_str,
          stmt.obj_activity)
 
-    if stmt.is_activation:
-        r = Rule(rule_name,
-            subj_pattern() + obj_inactive >> subj_pattern() + obj_active,
-            kf_one_step_activate)
-    else:
-        r = Rule(rule_name,
-            subj_pattern() + obj_active >> subj_pattern() + obj_inactive,
-            kf_one_step_activate)
+    if not rate_law:
+        param_name = 'kf_' + stmt.subj.name[0].lower() + \
+            stmt.obj.name[0].lower() + '_act'
+        act_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('kf_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_bind')
+        kf_bind = get_create_parameter(model, param_name, 1e-6)
+        param_name = ('kr_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_bind')
+        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('kc_' + stmt.subj.name[0].lower() +
+                      stmt.obj.name[0].lower() + '_act')
+        kf_act = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        obj_to_observe = obj_active if stmt.is_activation else obj_inactive
+        obj_obs = Observable(rule_name + '_obj_obs', obj_to_observe)
+        model.add_component(obj_obs)
+        # Note that [E0]*[S] is automatically multiplied into this rate
+        # as the product of the reactants therefore they don't appear
+        # in this expression
+        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
+        act_rate = Expression(rule_name + '_rate',
+                              kf_act / ((kr_bind/kf_bind) * obj_obs))
+        model.add_component(act_rate) 
+
+    obj_from, obj_to = (obj_inactive, obj_active) if stmt.is_activation else \
+                       (obj_active, obj_inactive)
+
+    r = Rule(rule_name, subj_pattern() + obj_from >> subj_pattern() + obj_to,
+             act_rate)
 
     anns = [Annotation(rule_name, subj_pattern.monomer.name,
                        'rule_has_subject'),
@@ -1944,6 +1964,10 @@ activation_assemble_one_step = regulateactivity_assemble_one_step
 activation_monomers_default = regulateactivity_monomers_one_step
 activation_assemble_default = regulateactivity_assemble_one_step
 
+activation_monomers_michaelis_menten = regulateactivity_monomers_one_step
+activation_assemble_michaelis_menten = lambda a, b, c: \
+    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
+
 inhibition_monomers_interactions_only = \
                     regulateactivity_monomers_interactions_only
 inhibition_assemble_interactions_only = \
@@ -1952,6 +1976,10 @@ inhibition_monomers_one_step = regulateactivity_monomers_one_step
 inhibition_assemble_one_step = regulateactivity_assemble_one_step
 inhibition_monomers_default = regulateactivity_monomers_one_step
 inhibition_assemble_default = regulateactivity_assemble_one_step
+
+inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
+inhibition_assemble_michaelis_menten = lambda a, b, c: \
+    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
 
 # RASGEF #####################################################
 

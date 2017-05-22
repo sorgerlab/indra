@@ -1078,9 +1078,19 @@ def test_phos_michaelis_menten():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 5)
 
 def test_deubiq_michaelis_menten():
     stmt = Deubiquitination(Agent('MEK'), Agent('ERK'))
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 5)
+
+def test_act_michaelis_menten():
+    stmt = Activation(Agent('MEK'), Agent('ERK'))
+    stmt2 = Inhibition(Agent('DUSP'), Agent('ERK'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt, stmt2])
+    pa.make_model(policies='michaelis_menten')
+    assert(len(pa.model.parameters) == 9)
