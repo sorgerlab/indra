@@ -815,7 +815,10 @@ class TripsProcessor(object):
             else:
                 agent_id = agent_tag.attrib.get('id')
                 obj_from = self._get_agent_by_id(agent_id, event_id)
-                obj_from = [obj_from]
+                if obj_from is None:
+                    obj_from = []
+                elif isinstance(obj_from, Agent):
+                    obj_from = [obj_from]
             # Get the to agent
             agent_tag = event.find(".//*[@role=':RES']")
             if agent_tag is None:
@@ -823,7 +826,10 @@ class TripsProcessor(object):
             else:
                 agent_id = agent_tag.attrib.get('id')
                 obj_to = self._get_agent_by_id(agent_id, event_id)
-                obj_to = [obj_to]
+                if obj_to is None:
+                    obj_to = []
+                elif isinstance(obj_to, Agent):
+                    obj_to = [obj_to]
             # Get evidence
             ev = self._get_evidence(event)
             st = Conversion(subj, obj_from, obj_to, evidence=ev)

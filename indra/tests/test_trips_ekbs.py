@@ -629,3 +629,29 @@ def test_49():
     assert(gtp.name == 'GTP')
     assert(gdp.name == 'GDP')
 
+def test_50():
+    sentence = 'GTP is converted into GDP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp = st.obj_to[0]
+    assert(ras is None)
+    assert(gtp.name == 'GTP')
+    assert(gdp.name == 'GDP')
+
+def test_51():
+    sentence = 'RAS converts GTP into GDP and GMP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp_gmp = st.obj_to
+    assert(ras.name == 'RAS')
+    assert(gtp.name == 'GTP')
+    assert(gdp_gmp[0].name == 'GDP')
+    assert(gdp_gmp[1].name == 'GMP')

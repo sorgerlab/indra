@@ -2255,7 +2255,7 @@ class Conversion(Statement):
         keys = [type(self)]
         keys += [self.subj.matches_key() if self.subj else None]
         keys += [agent.matches_key() for agent in self.obj_to]
-        keys += [agetn.matches_key() for agent in self.obj_from]
+        keys += [agent.matches_key() for agent in self.obj_from]
         return str(keys)
 
     def agent_list(self):
