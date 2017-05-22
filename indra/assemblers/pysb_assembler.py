@@ -1232,17 +1232,20 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r_fwd)
 
 
-def modification_assemble_one_step(stmt, model, agent_set):
+def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.enz is None:
         return
     mod_condition_name = stmt.__class__.__name__.lower()
-    param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                  stmt.sub.name[0].lower(), mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 1e-6)
 
     # See NOTE in monomers_one_step
     mod_site = get_mod_site_name(mod_condition_name,
                                   stmt.residue, stmt.position)
+
+    rule_enz_str = get_agent_rule_str(stmt.enz)
+    rule_sub_str = get_agent_rule_str(stmt.sub)
+    rule_name = '%s_%s_%s_%s' % \
+        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+
     # Remove pre-set activity flag
     enz_pattern = get_monomer_pattern(model, stmt.enz)
     unmod_site_state = states[mod_condition_name][0]
@@ -1252,71 +1255,45 @@ def modification_assemble_one_step(stmt, model, agent_set):
     sub_mod = get_monomer_pattern(model, stmt.sub,
         extra_fields={mod_site: mod_site_state})
 
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+
+    if not rate_law:
+        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
+                                      stmt.sub.name[0].lower(), mod_condition_name)
+        mod_rate = get_create_parameter(model, param_name, 1e-6)
+    elif rate_law == 'michaelis_menten':
+        # Parameters
+        param_name = ('kf_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_bind')
+        kf_bind = get_create_parameter(model, param_name, 1e-6)
+        param_name = ('kr_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_bind')
+        kr_bind = get_create_parameter(model, param_name, 1e-1)
+        param_name = ('kc_' + stmt.enz.name[0].lower() +
+                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+        kf_mod = get_create_parameter(model, param_name, 100)
+
+        # We need an observable for the substrate to use in the rate law
+        sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
+        model.add_component(sub_obs)
+        # Note that [E0]*[S] is automatically multiplied into this rate
+        # as the product of the reactants therefore they don't appear
+        # in this expression
+        # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
+        mod_rate = Expression(rule_name + '_rate',
+                              kf_mod / ((kr_bind/kf_bind) * sub_obs))
+        model.add_component(mod_rate)
+
     r = Rule(rule_name,
             enz_pattern + sub_unmod >>
             enz_pattern + sub_mod,
-            kf_mod)
+            mod_rate)
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-def modification_assemble_michaelis_menten(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    mod_condition_name = stmt.__class__.__name__.lower()
-
-    # See NOTE in monomers_one_step
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    # Remove pre-set activity flag
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: mod_site_state})
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
-
-    # Parameters
-    param_name = ('kf_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = ('kr_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
-    param_name = ('kc_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_' + mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 100)
-
-    # We need an observable for the substrate to use in the rate law
-    sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
-    model.add_component(sub_obs)
-    # Note that [E0]*[S] is automatically multiplied into this rate
-    # as the product of the reactants therefore they don't appear
-    # in this expression
-    # v = Vmax*[S]/(Kd+[S]) = kcat*[E0]*[S]/((kr/kf)*[S])
-    mod_rate = Expression(rule_name + '_rate',
-                          kf_mod / ((kr_bind/kf_bind) * sub_obs))
-    model.add_component(mod_rate)
-
-    r = Rule(rule_name, enz_pattern + sub_unmod >> enz_pattern + sub_mod,
-             mod_rate)
-
-    anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
+modification_assemble_michaelis_menten = \
+        lambda a, b, c: modification_assemble_one_step(a, b, c, 'michaelis_menten')
 
 def modification_assemble_two_step(stmt, model, agent_set):
     mod_condition_name = stmt.__class__.__name__.lower()
@@ -1581,7 +1558,7 @@ def demodification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def demodification_assemble_one_step(stmt, model, agent_set):
+def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.enz is None:
         return
     demod_condition_name = stmt.__class__.__name__.lower()
