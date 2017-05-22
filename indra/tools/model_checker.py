@@ -1,35 +1,48 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 import logging
+import numbers
 import networkx
 import itertools
 import numpy as np
 from copy import deepcopy
-from collections import deque
-from pysb import kappa
+from collections import deque, defaultdict
+from pysb import kappa, WILD
 from pysb import Observable, ComponentSet
-from pysb.core import as_complex_pattern
+from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
+from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
 
-    def __init__(self, model, stmts_to_check=None):
+    def __init__(self, model, statements=None, agent_obs=None):
         self.model = model
-        if stmts_to_check:
-            self.statements = stmts_to_check
+        if statements:
+            self.statements = statements
         else:
             self.statements = []
+        if agent_obs:
+            self.agent_obs = agent_obs
+        else:
+            self.agent_obs = []
+        # Influence map
         self._im = None
+        # Map from statements to associated observables
+        self.stmt_to_obs = {}
+        # Map from agents to associated observables
+        self.agent_to_obs = {}
+        # Map between rules and downstream observables
+        self.rule_obs_dict = {}
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model."""
         self.statements += stmts
 
-    def get_im(self, force_update=True):
+    def get_im(self, force_update=False):
         """Get the influence map for the model, generating it if necessary.
 
         Parameters
@@ -51,13 +64,74 @@ class ModelChecker(object):
             return self._im
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
-        else:
-            logger.info("Generating influence map")
-            self._im = kappa.influence_map(self.model)
-            self._im.is_multigraph = lambda: False
-            return self._im
 
-    def check_model(self):
+        def add_obs_for_agent(agent):
+            obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
+            if not obj_mps:
+                logger.info('Failed to create observables for agent %s, '
+                            'skipping' % agent)
+                return
+            obs_list = []
+            for obj_mp in obj_mps:
+                obs_name = _monomer_pattern_label(obj_mp) + '_obs'
+                # Add the observable
+                obj_obs = Observable(obs_name, obj_mp, _export=False)
+                obs_list.append(obs_name)
+                try:
+                    self.model.add_component(obj_obs)
+                except ComponentDuplicateNameError as e:
+                    pass
+            return obs_list
+
+        # Create observables for all statements to check, and add to model
+        # Remove any existing observables in the model
+        self.model.observables = ComponentSet([])
+        for stmt in self.statements:
+            # Generate observables for Modification statements
+            if isinstance(stmt, Modification):
+                mod_condition_name = modclass_to_modtype[stmt.__class__]
+                if isinstance(stmt, RemoveModification):
+                    mod_condition_name = modtype_to_inverse[mod_condition_name]
+                # Add modification to substrate agent
+                modified_sub = _add_modification_to_agent(stmt.sub,
+                                    mod_condition_name, stmt.residue,
+                                    stmt.position)
+                obs_list = add_obs_for_agent(modified_sub)
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt] = obs_list
+            # Generate observables for Activation/Inhibition statements
+            elif isinstance(stmt, RegulateActivity):
+                regulated_sub, polarity = \
+                        _add_activity_to_agent(stmt.obj, stmt.obj_activity,
+                                               stmt.is_activation)
+                obs_list = add_obs_for_agent(regulated_sub)
+                # Associate this statement with this observable
+                self.stmt_to_obs[stmt] = obs_list
+        # Add observables for each agent
+        for ag in self.agent_obs:
+            obs_list = add_obs_for_agent(ag)
+            self.agent_to_obs[ag] = obs_list
+
+        logger.info("Generating influence map")
+        self._im = kappa.influence_map(self.model)
+        self._im.is_multigraph = lambda: False
+        # Now, for every rule in the model, check if there are any observables
+        # downstream
+        # Alternatively, for every observable in the model, get a list of rules
+        for rule in self.model.rules:
+            obs_list = []
+            # Get successors of the rule node
+            for neighb in self._im.neighbors(rule.name):
+                # Check if the node is an observable
+                if not _is_obs_node(neighb):
+                    continue
+                # Get the edge and check the polarity
+                edge_sign = _get_edge_sign(self._im.get_edge(rule.name, neighb))
+                obs_list.append((neighb.name, edge_sign))
+            self.rule_obs_dict[rule.name] = obs_list
+        return self._im
+
+    def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
 
         More efficient than check_statement when checking multiple statements
@@ -72,11 +146,11 @@ class ModelChecker(object):
         """
         results = []
         for stmt in self.statements:
-            result = self.check_statement(stmt)
+            result = self.check_statement(stmt, max_paths, max_path_length)
             results.append((stmt, result))
         return results
 
-    def check_statement(self, stmt):
+    def check_statement(self, stmt, max_paths=1, max_path_length=5):
         """Check a single Statement against the model.
 
         Parameters
@@ -89,14 +163,17 @@ class ModelChecker(object):
         boolean
             Whether the model satisfies the statement.
         """
+        # Make sure the influence map is initialized
+        self.get_im()
         if isinstance(stmt, Modification):
-            return self._check_modification(stmt)
+            return self._check_modification(stmt, max_paths, max_path_length)
         elif isinstance(stmt, RegulateActivity):
-            return self._check_regulate_activity(stmt)
+            return self._check_regulate_activity(stmt, max_paths,
+                                                 max_path_length)
         else:
             return False
 
-    def _check_regulate_activity(self, stmt):
+    def _check_regulate_activity(self, stmt, max_paths, max_path_length):
         """Check a RegulateActivity statement."""
         logger.info('Checking stmt: %s' % stmt)
         # FIXME Currently this will match rules with the corresponding monomer
@@ -106,24 +183,16 @@ class ModelChecker(object):
         # or 2) the agent is tagged as the enzyme in a rule of the appropriate
         # activity (e.g., a phosphorylation rule) FIXME
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
-
         target_polarity = 1 if stmt.is_activation else -1
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the
         # appropriate type
-        obj_obs_name = pa.get_agent_rule_str(stmt.obj) + '_obs'
-        try:
-            obj_site_pattern = pa.get_site_pattern(stmt.obj)
-            obj_site_pattern.update({stmt.obj_activity: 'active'})
-            obj_monomer = self.model.monomers[stmt.obj.name]
-            obj_mp = obj_monomer(**obj_site_pattern)
-        except Exception as e:
-            logger.info("Could not create obj monomer pattern: %s" % e)
-            return False
-        obj_obs = Observable(obj_obs_name, obj_mp, _export=False)
-        return self._find_im_paths(subj_mp, obj_obs, target_polarity)
+        obs_names = self.stmt_to_obs[stmt]
+        for obs_name in obs_names:
+            return self._find_im_paths(subj_mp, obs_name, target_polarity,
+                                       max_paths, max_path_length)
 
-    def _check_modification(self, stmt):
+    def _check_modification(self, stmt, max_paths, max_path_length):
         """Check a Modification statement."""
         # Identify the observable we're looking for in the model, which
         # may not exist!
@@ -139,27 +208,12 @@ class ModelChecker(object):
         else:
             enz_mps = [None]
         # Get target polarity
-        demodify_list = (Dephosphorylation, Dehydroxylation, Desumoylation,
-                         Deacetylation, Deglycosylation, Deribosylation,
-                         Deubiquitination, Defarnesylation)
-        target_polarity = -1 if type(stmt) in demodify_list else 1
-        # Add modification to substrate agent
-        mod_condition_name = modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, RemoveModification):
-            mod_condition_name = modtype_to_inverse[mod_condition_name]
-        modified_sub = _add_modification_to_agent(stmt.sub, mod_condition_name,
-                                                  stmt.residue, stmt.position)
-        obs_name = pa.get_agent_rule_str(modified_sub) + '_obs'
-        obj_mps = list(pa.grounded_monomer_patterns(self.model, modified_sub))
-        if not obj_mps:
-            logger.info('Failed to create observable; returning False')
-            return False
-        # Try to find paths between pairs of matching subj and object monomer
-        # patterns
-        for enz_mp, obj_mp in itertools.product(enz_mps, obj_mps):
-            obj_obs = Observable(obs_name, obj_mp, _export=False)
+        target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+        obs_names = self.stmt_to_obs[stmt]
+        for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # Return True for the first valid path we find
-            result =  self._find_im_paths(enz_mp, obj_obs, target_polarity)
+            result = self._find_im_paths(enz_mp, obs_name, target_polarity,
+                                         max_paths, max_path_length)
             # If result for this observable is not False, then we return it;
             # otherwise, that means there was no path for this observable, so
             # we have to try the next one
@@ -168,7 +222,8 @@ class ModelChecker(object):
         # If we got here, then there was no path for any observable
         return False
 
-    def _find_im_paths(self, subj_mp, obj_obs, target_polarity):
+    def _find_im_paths(self, subj_mp, obs_name, target_polarity,
+                       max_paths=1, max_path_length=5):
         """Check for a source/target path in the influence map.
 
         Parameters
@@ -176,26 +231,24 @@ class ModelChecker(object):
         subj_mp : pysb.MonomerPattern
             MonomerPattern corresponding to the subject of the Statement
             being checked.
-        obj_obs : pysb.Observable
-            Observable corresponding to the object/target of the Statement
-            being checked.
+        obs_name : string
+            Name of the PySB model Observable corresponding to the
+            object/target of the Statement being checked.
         target_polarity : 1 or -1
             Whether the influence in the Statement is positive (1) or negative
             (-1).
 
         Returns
         -------
-        boolean
+        boolean or list of str
             Whether there is a path from a rule matching the subject
             MonomerPattern to the object Observable with the appropriate
             polarity.
         """
-        # Reset the observables list
-        self.model.observables = ComponentSet([])
-        self.model.add_component(obj_obs)
         # Find rules in the model corresponding to the input
+        obs_mp = self.model.all_components()[obs_name].reaction_pattern
         logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obj_obs, target_polarity))
+                    (subj_mp, obs_mp, target_polarity))
         if subj_mp is None:
             input_rule_set = None
         else:
@@ -226,23 +279,61 @@ class ModelChecker(object):
         num_paths = 0
         path_lengths = []
         for source, polarity, path_length in \
-                    _find_sources(self.get_im(), obj_obs.name, input_rule_set,
+                    _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
             num_paths += 1
             path_lengths.append(path_length)
+        paths = []
         if num_paths > 0:
-            if min(path_lengths) <= 5:
+            if min(path_lengths) <= max_path_length:
                 # Get the first path
-                for path in _find_sources_with_paths(self.get_im(),
-                                                     obj_obs.name,
-                                                     input_rule_set,
-                                                     target_polarity):
-                    path.reverse()
-                    return path
+                path_iter = enumerate(_find_sources_with_paths(
+                                           self.get_im(), obs_name,
+                                           input_rule_set, target_polarity))
+                for path_ix, path in path_iter:
+                    flipped = _flip(self.get_im(), path)
+                    paths.append(flipped)
+                    if len(paths) >= max_paths:
+                        break
+                return paths
             else:
                 return True
         else:
             return False
+
+    def score_paths(self, paths, agents_values):
+        # Build up dict mapping observables to values
+        obs_dict = {}
+        for ag, val in agents_values.items():
+            obs_list = self.agent_to_obs[ag]
+            for obs in obs_list:
+                obs_dict[obs] = val
+        # For every path...
+        path_scores = []
+        for path in paths:
+            # Look at every node in the path, excluding the final
+            # observable...
+            path_score = 0
+            for node, sign in path[:-1]:
+                # ...and for each node check the sign to see if it matches the
+                # data. So the first thing is to look at what's downstream
+                # of the rule
+                # affected_obs is a list of observable names alogn
+                for affected_obs, rule_obs_sign in self.rule_obs_dict[node]:
+                    pred_sign = sign * rule_obs_sign
+                    # Check to see if this observable is in the data
+                    logger.info('%s %s: effect %s %s' %
+                                (node, sign, obs, pred_sign))
+                    measured_val = obs_dict.get(affected_obs)
+                    if measured_val:
+                        logger.info('Actual: %s' % measured_val)
+                        path_score += (pred_sign - measured_val) ** 2
+            path_score = path_score / len(path)
+            path_scores.append(path_score)
+        scored_paths = sorted(list(zip(paths, path_scores)),
+                              key=lambda x: x[1])
+        return scored_paths
+
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -274,29 +365,38 @@ def _find_sources_with_paths(im, target, sources, polarity):
     # Adapted from
     # http://stackoverflow.com/questions/8922060/
     #                       how-to-trace-the-path-in-a-breadth-first-search
-    queue = deque([[target]])
+    # FIXME: the sign information for the target should be associated with
+    # the observable itself
+    queue = deque([[(target, 1)]])
     while queue:
         # Get the first path in the queue
         path = queue.popleft()
-        node = path[-1]
+        node, node_sign = path[-1]
         # If there's only one node in the path, it's the observable we're
         # starting from, so the path is positive
-        if len(path) == 1:
-            sign = 1
+        # if len(path) == 1:
+        #    sign = 1
         # Because the path runs from target back to source, we have to reverse
         # the path to calculate the overall polarity
-        else:
-            sign = _path_polarity(im, reversed(path))
+        #else:
+        #    sign = _path_polarity(im, reversed(path))
         # Don't allow trivial paths consisting only of the target observable
-        if (sources is None or node in sources) and sign == polarity and \
-            len(path) > 1:
-            logger.info('Found path: %s' % list(reversed(path)))
+        if (sources is None or node in sources) and node_sign == polarity \
+           and len(path) > 1:
+            logger.info('Found path: %s' % _flip(im, path))
             yield path
-        for predecessor, sign in _get_signed_predecessors(im, node, 1):
+        for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
+            # Only add predecessors to the path if it's not already in the
+            # path
+            if (predecessor, sign) in path:
+                continue
+            # Otherwise, the new path is a copy of the old one plus the new
+            # predecessor
             new_path = list(path)
-            new_path.append(predecessor)
+            new_path.append((predecessor, sign))
             queue.append(new_path)
     return
+
 
 def _find_sources(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -365,8 +465,30 @@ def _find_sources(im, target, sources, polarity):
     return
 
 
+def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
+    def _sample_pred(model, stmts, im, target, score_fn):
+        preds = list(_get_signed_predecessors(im, target, 1))
+        pred_agents = []
+        pred_scores = []
+        for pred, sign in preds:
+            agents, polarities = _object_agents_from_rule(model, pred, stmts)
+            # FIXME: for simplicity we start with a single object agent
+            agent = agents[0]
+            polarity = polarities[0]
+            score = score_fn(agent, polarity)
+            pred_agents.append(agent)
+            pred_scores.append(score)
+        # Normalize scores
+        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
+        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
+        pred = preds[pred_idx]
+        return pred
+    pred = _sample_pred(model, stmts, im, target, score_fn)
+    print(pred)
+
+
 def _get_signed_predecessors(im, node, polarity):
-    """Get upstream nodes in the influence map
+    """Get upstream nodes in the influence map.
 
     Return the upstream nodes along with the overall polarity of the path
     to that node by account for the polarity of the path to the given node
@@ -409,6 +531,11 @@ def _get_edge_sign(edge):
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
 
+def _get_obs_for_rule(node):
+    """Get the observable nodes and polarities downstream of a given rule node.
+    """
+    
+
 def _add_modification_to_agent(agent, mod_type, residue, position):
     """Add a modification condition to an Agent."""
     new_mod = ModCondition(mod_type, residue, position)
@@ -419,6 +546,18 @@ def _add_modification_to_agent(agent, mod_type, residue, position):
     new_agent = deepcopy(agent)
     new_agent.mods.append(new_mod)
     return new_agent
+
+
+def _add_activity_to_agent(agent, act_type, is_active):
+    # Default to active, and return polarity if it's an inhibition
+    new_act = ActivityCondition(act_type, True)
+    # Check if this state already exists
+    if agent.activity is not None and agent.activity.equals(new_act):
+        return agent
+    new_agent = deepcopy(agent)
+    new_agent.activity = new_act
+    polarity = 1 if is_active else -1
+    return (new_agent, polarity)
 
 
 def _match_lhs(cp, rules):
@@ -499,18 +638,108 @@ def find_consumption_rules(cp, rules):
     cons_rules = list(lhs_rule_set.difference(rhs_rule_set))
     return cons_rules
 """
-def _path_polarity(im, path):
+
+def _flip(im, path):
+    # Reverse the path and the polarities associated with each node
+    rev = list(reversed(path))
+    return _path_with_polarities(im, rev)
+
+
+def _path_with_polarities(im, path):
     # This doesn't address the effect of the rules themselves on the
     # observables of interest--just the effects of the rules on each other
     edge_polarities = []
     path_list = list(path)
     edges = zip(path_list[0:-1], path_list[1:])
-    for from_rule, to_rule in edges:
+    for from_tup, to_tup in edges:
+        from_rule = from_tup[0]
+        to_rule = to_tup[0]
         edge = im.get_edge(from_rule, to_rule)
         edge_polarities.append(_get_edge_sign(edge))
     # Compute and return the overall path polarity
-    path_polarity = np.prod(edge_polarities)
-    assert path_polarity == 1 or path_polarity == -1
+    #path_polarity = np.prod(edge_polarities)
+    # Calculate left product of edge polarities return
+    polarities_lprod = [1]
+    for ep_ix, ep in enumerate(edge_polarities):
+        polarities_lprod.append(polarities_lprod[-1] * ep)
+    assert len(path) == len(polarities_lprod)
+    return list(zip([node for node, sign in path], polarities_lprod))
+    #assert path_polarity == 1 or path_polarity == -1
     #return True if path_polarity == 1 else False
-    return path_polarity
+    #return path_polarity
 
+
+def _stmt_from_rule(model, rule_name, stmts):
+    """Return the INDRA Statement corresponding to a given rule by name."""
+    stmt_uuid = None
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+            if ann.predicate == 'from_indra_statement':
+                stmt_uuid = ann.object
+                break
+    if stmt_uuid:
+        for stmt in stmts:
+            if stmt.uuid == stmt_uuid:
+                return stmt
+
+def _object_agents_from_rule(model, rule_name, stmts):
+    """Return object agents with state and polarities for a rule."""
+    # First we collect all objects (Monomer names) that are annotated
+    # to be the objects of the rule. There will typically be 1.
+    rule_objects = []
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+            if ann.predicate == 'rule_has_object':
+                rule_objects.append(ann.object)
+    # Next we construct grounded INDRA Agents working back from the
+    # Monomer name through 'is' grounding annotations of identifiers.org
+    # URIs to INDRA database names and ids.
+    agents = []
+    for obj in rule_objects:
+        db_refs = {}
+        for ann in model.annotations:
+            if ann.predicate == 'is':
+                # We assume here that the subject is a Monomer
+                if ann.subject.name == obj:
+                    agent = _agent_from_uri(ann.object)
+                    agents.append(agent)
+    # Finally we need to construct an Agent which is in the state
+    # induced by the given rule. But for this we need to find the
+    # INDRA Statement corresponding to the rule.
+    # TODO: extend to other Statement types if needed
+    # Here we also need to surface the polarity of the modification
+    polarities = [None for agent in agents]
+    stmt = _stmt_from_rule(model, rule_name, stmts)
+    if stmt is not None:
+        if isinstance(stmt, Modification):
+            mod_type = modclass_to_modtype[stmt.__class__]
+            mc = ModCondition(mod_type, stmt.residue, stmt.position)
+            for i, agent in enumerate(agents):
+                agent.mods = [mc]
+                polarities[i] = isinstance(stmt, AddModification)
+    return agents, polarities
+
+
+def _monomer_pattern_label(mp):
+    """Return a string label for a MonomerPattern."""
+    site_strs = []
+    for site, cond in mp.site_conditions.items():
+        if isinstance(cond, tuple) or isinstance(cond, list):
+            assert len(cond) == 2
+            if cond[1] == WILD:
+                site_str = '%s_%s' % (site, cond[0])
+            else:
+                site_str = '%s_%s%s' % (site, cond[0], cond[1])
+        elif isinstance(cond, numbers.Real):
+            continue
+        else:
+            site_str = '%s_%s' % (site, cond)
+        site_strs.append(site_str)
+    return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
+
+
+def _is_obs_node(node):
+    if node.attr['shape'] == 'ellipse':
+        return True
+    else:
+        return False

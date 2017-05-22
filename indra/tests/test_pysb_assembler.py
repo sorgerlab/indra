@@ -849,6 +849,51 @@ def test_phospho_mod_grounding():
     sc = [mp.site_conditions for mp in mps]
     assert {'S218': ('p', WILD)} in sc
     assert {'S222': ('p', WILD)} in sc
+    # Check if we get the doubly phosphorylated MonomerPattern
+    mps = list(pa.grounded_monomer_patterns(model, a))
+    assert len(mps) == 1
+    assert mps[0].monomer.name == 'MEK1'
+    assert mps[0].site_conditions == {'S218': ('p', WILD),
+                                      'S222': ('p', WILD)}
+
+
+def test_multiple_grounding_mods():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    cbl = Agent('CBL', db_refs={'HGNC': '1541'})
+    ub_phos_erk = Agent('ERK2',
+            mods=[ModCondition('phosphorylation', None, None),
+                  ModCondition('ubiquitination', None, None)],
+            db_refs={'HGNC': '6871'})
+    st1 = Phosphorylation(mek, erk, 'T', '185')
+    st2 = Phosphorylation(mek, erk, 'Y', '187')
+    st3 = Ubiquitination(cbl, erk, 'K', '40')
+    st4 = Ubiquitination(cbl, erk, 'K', '50')
+    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb.add_statements([st1, st2, st3, st4])
+    model = pysb_asmb.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, ub_phos_erk))
+    assert len(mps) == 4
+    assert mps[0].monomer.name == 'ERK2'
+    assert mps[1].monomer.name == 'ERK2'
+    assert mps[2].monomer.name == 'ERK2'
+    assert mps[3].monomer.name == 'ERK2'
+
+
+def test_grounded_active_pattern():
+    a = Agent('A', db_refs={'HGNC': '1234'})
+    b = Agent('B', db_refs={'HGNC': '5678'})
+    b_phos = Agent('B', mods=[ModCondition('phosphorylation', 'S', '100')],
+                   db_refs={'HGNC': '5678'})
+    b_act = Agent('B', activity=ActivityCondition('activity', True),
+                   db_refs={'HGNC': '5678'})
+    st1 = Phosphorylation(a, b, 'S', '100')
+    st2 = ActiveForm(b_phos, 'activity', True)
+    pysba = PysbAssembler(policies='one_step')
+    pysba.add_statements([st1, st2])
+    model = pysba.make_model()
+    mps = list(pa.grounded_monomer_patterns(model, b_act))
+
 
 def _check_mod_assembly(mod_class):
     subj = Agent('KRAS')
@@ -996,7 +1041,9 @@ def test_activation_subj4():
 
 def test_pysb_preassembler_replace_activities1():
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
-    st2 = Phosphorylation(Agent('a', activity=ActivityCondition('activity', True)), Agent('b'))
+    st2 = Phosphorylation(Agent('a',
+                                activity=ActivityCondition('activity', True)),
+                          Agent('b'))
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
     assert(len(ppa.statements) == 2)
