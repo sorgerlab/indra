@@ -60,4 +60,5 @@ def process_xml(xml_string):
     tp.get_regulate_amounts()
     tp.get_degradations()
     tp.get_syntheses()
+    tp.get_conversions()
     return tp

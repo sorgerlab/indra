@@ -616,3 +616,16 @@ def test_48():
     assert(p53.name == 'TP53')
     assert(mdm2.name == 'MDM2')
 
+def test_49():
+    sentence = 'Ras converts GTP into GDP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp = st.obj_to[0]
+    assert(ras.name == 'RAS')
+    assert(gtp.name == 'GTP')
+    assert(gdp.name == 'GDP')
+
