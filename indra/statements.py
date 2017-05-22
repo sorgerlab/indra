@@ -994,6 +994,15 @@ class Statement(object):
         if self.supported_by:
             json_dict['supported_by'] = \
                 ['%s' % st.uuid for st in self.supported_by]
+        def get_sbo_term(cls):
+            sbo_term = stmt_sbo_map.get(cls.__name__.lower())
+            while not sbo_term:
+                cls = cls.__bases__[0]
+                sbo_term = stmt_sbo_map.get(cls.__name__.lower())
+            return sbo_term
+        sbo_term = get_sbo_term(self.__class__)
+        json_dict['sbo_definition'] = \
+            'http://identifiers.org/sbo/SBO:%s' % sbo_term
         return json_dict
 
     @classmethod
@@ -2484,6 +2493,34 @@ def _get_mod_inverse_maps():
 
 modtype_to_inverse, modclass_to_inverse = _get_mod_inverse_maps()
 
+stmt_sbo_map = {
+    'acetylation': '0000215',
+    'glycosylation': '0000217',
+    'hydroxylation': '0000233',
+    'methylation': '0000214',
+    'myristoylation': '0000219',
+    'palmitoylation': '0000218',
+    'phosphorylation': '0000216',
+    'farnesylation': '0000222',
+    'geranylgeranylation': '0000223',
+    'ubiquitination': '0000224',
+    'dephosphorylation': '0000330',
+    'addmodification': '0000210', # addition of a chemical group
+    'removemodification': '0000211', # removal of a chemical group
+    'modification': '0000182', # conversion
+    'autophosphorylation': '0000216', # phosphorylation
+    'transphosphorylation': '0000216', # phosphorylation
+    'decreaseamount': '0000179', # degradation
+    'increaseamount': '0000183', # transcription
+    'complex': '0000526', # protein complex formation
+    'translocation': '0000185', # transport reaction
+    'regulateactivity': '0000182', # conversion
+    'activeform': '0000412', # biological activity
+    'rasgef': '0000172', # catalysis
+    'rasgap': '0000172', # catalysis
+    'statement': '0000231' # occuring entity representation
+    }
+
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
@@ -2519,4 +2556,3 @@ def draw_stmt_graph(stmts):
     networkx.draw_networkx_labels(g, pos, labels=node_labels)
     networkx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels)
     plt.show()
-
