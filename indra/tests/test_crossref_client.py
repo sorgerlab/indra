@@ -29,8 +29,9 @@ def test_get_publisher():
 
 def test_get_fulltext_links():
     links = crossref_client.get_fulltext_links(test_doi)
-    assert(links[0]['content-type'] == 'text/plain')
-    assert(links[1]['content-type'] == 'text/xml')
+    content_types = [l.get('content-type') for l in links]
+    assert('text/plain' in content_types)
+    assert('text/xml' in content_types)
     assert unicode_strs(links)
     links = crossref_client.get_fulltext_links('xyz')
     assert(links is None)
