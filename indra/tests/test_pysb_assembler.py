@@ -1094,3 +1094,11 @@ def test_act_michaelis_menten():
     pa.add_statements([stmt, stmt2])
     pa.make_model(policies='michaelis_menten')
     assert(len(pa.model.parameters) == 7)
+
+def test_increaseamount_hill():
+    stmt = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model(policies='hill')
+    pa.save_model()
+    assert(len(pa.model.parameters) == 5)

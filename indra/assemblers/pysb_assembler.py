@@ -2248,7 +2248,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-def increaseamount_assemble_one_step(stmt, model, agent_set):
+def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
         logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
@@ -2268,27 +2268,48 @@ def increaseamount_assemble_one_step(stmt, model, agent_set):
     rule_obj_str = get_agent_rule_str(stmt.obj)
 
     if stmt.subj is None:
+        rule_name = '%s_synthesized' % rule_obj_str
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_synth'
         kf_one_step_synth = get_create_parameter(model, param_name, 2,
-                                                   unique=True)
-        rule_name = '%s_synthesized' % rule_obj_str
+                                                 unique=True)
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
-        param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                            stmt.obj.name[0].lower() + '_synth'
-        # Scale the average apparent increaseamount rate by the default
-        # protein initial condition
-        kf_one_step_synth = get_create_parameter(model, param_name, 2e-4)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        if not rate_law:
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            # Scale the average apparent increaseamount rate by the default
+            # protein initial condition
+            synth_rate = get_create_parameter(model, param_name, 2e-4)
+        if rate_law == 'hill':
+            # k * [subj]**n / (K_A**n + [subj]**n)
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            kf = get_create_parameter(model, param_name, 4)
+            param_name = 'Ka_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            Ka = get_create_parameter(model, param_name, 1e4)
+            param_name = 'n_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            n_hill = get_create_parameter(model, param_name, 1)
+            subj_obs = Observable(rule_name + '_subj_obs', subj_pattern)
+            model.add_component(subj_obs)
+            synth_rate = Expression(rule_name + '_rate',
+                kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
+            model.add_component(synth_rate)
+
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
-                 kf_one_step_synth)
+                 synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
+increaseamount_monomers_hill = increaseamount_monomers_one_step
+increaseamount_assemble_hill = lambda a, b, c: \
+        increaseamount_assemble_one_step(a, b, c, 'hill')
 
 class PysbPreassembler(object):
     def __init__(self, stmts=None):
