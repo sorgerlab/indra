@@ -1421,3 +1421,17 @@ def test_mut_agent_refinement():
     a2 = Agent('a', mutations=[mc4])
     assert(a1.refinement_of(a2, hierarchies))
     assert(not a2.refinement_of(a1, hierarchies))
+
+def test_conversion_init():
+    st = Conversion(Agent('RAS'), Agent('GTP'), Agent('GDP'))
+
+def test_conversion_refinement():
+    ras = Agent('RAS', db_refs={'BE': 'RAS'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    gtp = Agent('GTP')
+    gdp = Agent('GDP')
+    st1 = Conversion(ras, gtp, gdp)
+    st2 = Conversion(hras, gtp, gdp)
+    assert(st2.refinement_of(st1, hierarchies))
+    assert(not st1.refinement_of(st2, hierarchies))
+
