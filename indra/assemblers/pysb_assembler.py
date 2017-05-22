@@ -1883,7 +1883,6 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
 
 
 def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
-    subj_act_patterns = get_active_patterns(stmt.subj, agent_set)
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
