@@ -77,7 +77,8 @@ def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
                 phos_stmts = get_phospho_stmts(target_agent, phosphoforms,
                                                fold_change)
                 stmts[drug_name][ab] += phos_stmts
-                values[drug_name][ab] = fold_change
+                values[drug_name] = {k: list(v.values())[0] for k, v in
+                                     drug_tx_data.to_dict().items()}
     return stmts, values
 
 def get_eval_drug_ab_combs(data):
@@ -88,7 +89,7 @@ def get_eval_drug_ab_combs(data):
 
 def run(dec_thresh=0.8, inc_thresh=1.2):
     data = pd.read_data(pd.data_file)
-    ab_agents = read_phosphosite('sources/annotated_kinases_v5.csv')[1]
+    ab_agents = pd.get_antibody_map(data)
 
     # If filtering is to be done based on thresholds only,
     # set this to None
