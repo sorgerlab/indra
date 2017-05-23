@@ -8,7 +8,7 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
                              Translocation, Activation, Inhibition, \
-                             Deacetylation
+                             Deacetylation, Conversion
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -534,3 +534,16 @@ def test_multiprocessing():
                                   size_cutoff=2)
     assert len(toplevel) == 3
 
+def test_conversion_refinement():
+    ras = Agent('RAS', db_refs={'BE': 'RAS'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    gtp = Agent('GTP')
+    gdp = Agent('GDP')
+    st1 = Conversion(ras, gtp, gdp)
+    st2 = Conversion(hras, gtp, gdp)
+    st3 = Conversion(hras, [gtp, gdp], gdp)
+    st4 = Conversion(hras, [gdp, gtp], gdp)
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
+    toplevel_stmts = pa.combine_related()
+    assert(len(toplevel_stmts) == 2)
+    
