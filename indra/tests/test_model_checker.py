@@ -1036,12 +1036,14 @@ def test_model_check_data():
     assert len(results) == 1
     res = results[0][1][0:2]
     assert len(res) == 2
-    assert [('A_phosphorylation_B_phospho', 1),
-              ('B_phospho_phosphorylation_D_phospho', 1),
-              ('D_phospho_p_obs', 1)] in res
-    assert [('A_phosphorylation_C_phospho', 1),
-              ('C_phospho_phosphorylation_D_phospho', 1),
-              ('D_phospho_p_obs', 1)] in res
+    p1 = [('A_phosphorylation_B_phospho', 1),
+          ('B_phospho_phosphorylation_D_phospho', 1),
+          ('D_phospho_p_obs', 1)]
+    assert p1 in res
+    p2 = [('A_phosphorylation_C_phospho', 1),
+          ('C_phospho_phosphorylation_D_phospho', 1),
+          ('D_phospho_p_obs', 1)]
+    assert p2 in res
     # Now, a vector linking agents with values, expressed at first as
     # +/- 1
     # This data should ensure that the path through B should be more highly
@@ -1049,9 +1051,9 @@ def test_model_check_data():
     data = {b_phos: 1, c_phos: -1, d_phos: 1}
     paths = results[0][1]
     scored_paths = mc.score_paths(paths, data)
-    assert scored_paths[0][0] == paths[0]
+    assert scored_paths[0][0] == p1
     assert scored_paths[0][1] == 0
-    assert scored_paths[1][0] == paths[1]
+    assert scored_paths[1][0] == p2
     # of each rule in the path against neighboring observables
     # Take agents along with values
     # Need also to be able to map agents to observables
