@@ -349,6 +349,15 @@ class Preassembler(object):
                     key = tuple(entities)
                     if stmt_tuple not in stmt_by_group[key]:
                         stmt_by_group[key].append(stmt_tuple)
+                elif stmt_type == Conversion:
+                    # There shouldn't be any statements of the type
+                    # e.g., Complex([Foo, None, Bar])
+                    assert len(entities) > 0
+                    key = (entities[0],
+                           tuple(entities[1:len(stmt.obj_from)+1]),
+                           tuple(entities[-len(stmt.obj_to):]))
+                    if stmt_tuple not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt_tuple)
                 # Now look at all other statement types
                 # All other statements will have one or two entities
                 elif len(entities) == 1:
