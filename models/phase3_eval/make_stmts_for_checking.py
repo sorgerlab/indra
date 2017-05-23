@@ -64,7 +64,7 @@ def get_observed_stmts(target_agent, observed_agent_forms, fold_change):
 def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
     if drug_ab_combs is None:
         drug_tx = pd.get_single_drug_treatments(data)
-        antibodies = pd.get_phos_antibodies(data)
+        antibodies = pd.get_all_antibodies(data)
         drug_ab_combs = itertools.product(drug_tx, antibodies)
 
     dec_thresh, inc_thresh = thresh if thresh is not None else (1, 1)
@@ -104,6 +104,7 @@ def run(dec_thresh=0.8, inc_thresh=1.2):
     # If filtering is to be done based on thresholds only,
     # set this to None
     drug_ab_combs = get_eval_drug_ab_combs(data)
+    #drug_ab_combs = None
 
     stmts, values = make_stmts(data, ab_agents, drug_ab_combs=drug_ab_combs,
                                thresh=[dec_thresh, inc_thresh])
