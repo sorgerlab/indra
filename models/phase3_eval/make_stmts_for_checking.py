@@ -4,7 +4,8 @@ from collections import defaultdict
 import process_data as pd
 from indra.databases import hgnc_client
 from read_phosphosite import read_phosphosite
-from indra.statements import Agent, Dephosphorylation, Phosphorylation
+from indra.statements import Agent, Dephosphorylation, Phosphorylation, \
+                             IncreaseAmount, DecreaseAmount
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
@@ -34,22 +35,30 @@ def preassemble_stmts(stmts):
         pa_dict[drug_name] = pa_ab_dict
     return pa_dict
 
-def get_phospho_stmts(target_agent, phosphoforms, fold_change):
+def get_observed_stmts(target_agent, observed_agent_forms, fold_change):
     stmts = []
-    # Each entry in this list is an Agent with db_refs filled in
-    # and associated mod conditions for the phosphorylated sites
-    for psf in phosphoforms:
-        psf_agent = Agent(psf.name, db_refs=psf.db_refs)
-        for mod in psf.mods:
-            # Create a Phosphorylation statement corresponding to
-            # this drug/Ab pair
+    for obsf in observed_agent_forms:
+        obs_agent = Agent(obsf.name, db_refs=obsf.db_refs)
+        # If the agent has a modification then we make Modification
+        # statements to check
+        if obsf.mods:
+            for mod in obsf.mods:
+                # Create a Phosphorylation statement corresponding to
+                # this drug/Ab pair
+                if fold_change < 1:
+                    stmt = Phosphorylation(target_agent, obs_agent,
+                                           mod.residue, mod.position)
+                else:
+                    stmt = Dephosphorylation(target_agent, obs_agent,
+                                             mod.residue, mod.position)
+        # Otherwise the observed change is in protein amounts so we make
+        # RegulateAmount statements
+        else:
             if fold_change < 1:
-                stmt = Phosphorylation(target_agent, psf_agent,
-                                       mod.residue, mod.position)
+                stmt = IncreaseAmount(target_agent, obs_agent)
             else:
-                stmt = Dephosphorylation(target_agent, psf_agent,
-                                         mod.residue, mod.position)
-            stmts.append(stmt)
+                stmt = DecreaseAmount(target_agent, obs_agent)
+        stmts.append(stmt)
     return stmts
 
 def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
@@ -73,10 +82,11 @@ def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
             target_agent = get_target_agent(target)
             fold_change = drug_tx_data[ab].values[0]
             if fold_change < dec_thresh or fold_change > inc_thresh:
-                phosphoforms = ab_agents[ab]
-                phos_stmts = get_phospho_stmts(target_agent, phosphoforms,
+                observed_agent_forms = ab_agents[ab]
+                obs_stmts = get_observed_stmts(target_agent,
+                                               observed_agent_forms,
                                                fold_change)
-                stmts[drug_name][ab] += phos_stmts
+                stmts[drug_name][ab] += obs_stmts
                 values[drug_name] = {k: list(v.values())[0] for k, v in
                                      drug_tx_data.to_dict().items()}
     return stmts, values
