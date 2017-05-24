@@ -88,7 +88,7 @@ def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
                                                fold_change)
                 stmts[drug_name][ab] += obs_stmts
                 values[drug_name] = {k: list(v.values())[0] for k, v in
-                                     drug_tx_data.to_dict().items()}
+                                     drug_tx_data.iloc[:,2:].to_dict().items()}
     return stmts, values
 
 def get_eval_drug_ab_combs(data):

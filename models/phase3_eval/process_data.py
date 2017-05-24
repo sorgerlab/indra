@@ -37,7 +37,7 @@ def read_data(fname=data_file):
     return data
 
 def get_all_antibodies(data):
-    ab_names = data['protein'].columns[2:]
+    ab_names = list(data['protein'].columns[2:])
     return ab_names
 
 def get_phos_antibodies(data):
