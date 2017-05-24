@@ -1,24 +1,35 @@
 import pickle
-from indra.tools.model_checker import ModelChecker
-#from manual_stmts import stmts as manual_stmts
-from assemble_pysb import set_context, add_observables
-import process_data
+import itertools
 from indra.util import write_unicode_csv
 from indra.assemblers import PysbAssembler
+from indra.tools.model_checker import ModelChecker
+import indra.tools.assemble_corpus as ac
+import process_data
 import make_stmts_for_checking as make_stmts
+from assemble_pysb import set_context, add_observables
 
 print("Processing data")
 
 data = process_data.read_data(process_data.data_file)
 data_genes = process_data.get_all_gene_names(data)
-
+ab_map = process_data.get_antibody_map(data)
 
 print('Loading data statements.')
-data_stmts, data_values = make_stmts.run(dec_thresh=0.5, inc_thresh=1.5)
+data_stmts, data_values = make_stmts.run(dec_thresh=0.8, inc_thresh=1.2)
 
-with open('korkut_stmts_no_ev.pkl', 'rb') as f:
-    print('Loading korkut_model_pysb statements.')
-    base_stmts = pickle.load(f)
+agent_obs = list(itertools.chain.from_iterable(ab_map.values()))
+# Here we need to cross-reference the antbody map with the data values
+agent_data = {}
+for drug_name, values in data_values.items():
+    agent_data[drug_name] = {}
+    for ab_name, value in values.items():
+        agents = ab_map[ab_name]
+        for agent in agents:
+            agent_data[drug_name][agent] = value
+
+import ipdb; ipdb.set_trace()
+
+base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
 
 # Merge the sources of statements
 # stmts = manual_stmts + base_stmts
@@ -36,11 +47,12 @@ model = pa.make_model()
 # Preprocess and assemble the pysb model
 #model = assemble_pysb(combined_stmts, data_genes, '')
 
-mc = ModelChecker(model)
+mc = ModelChecker(model, data_stmts, agent_obs)
 
 # Iterate over each drug/ab statement subset
 results = []
 for drug_name, ab_dict in data_stmts.items():
+    agent_values = agent_data[drug_name]
     for ab, stmt_list in ab_dict.items():
         value = data_values[drug_name][ab]
         # For each subset, check statements; if any of them checks out, we're
@@ -56,6 +68,8 @@ for drug_name, ab_dict in data_stmts.items():
                 print("Path found, skipping rest")
                 path_found = 1
                 path = str(result)
+                # Score paths here TODO
+                scored_result = mc.score_paths(result[1], agent_values)
                 break
             else:
                 print("No path found")
