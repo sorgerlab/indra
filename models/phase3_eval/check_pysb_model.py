@@ -16,6 +16,10 @@ ab_map = process_data.get_antibody_map(data)
 
 print('Loading data statements.')
 data_stmts, data_values = make_stmts.run(dec_thresh=0.8, inc_thresh=1.2)
+all_data_stmts = [values.values() for values in data_stmts.values()]
+all_data_stmts = itertools.chain.from_iterable(all_data_stmts)
+all_data_stmts = list(itertools.chain.from_iterable(all_data_stmts))
+
 
 agent_obs = list(itertools.chain.from_iterable(ab_map.values()))
 # Here we need to cross-reference the antbody map with the data values
@@ -27,7 +31,6 @@ for drug_name, values in data_values.items():
         for agent in agents:
             agent_data[drug_name][agent] = value
 
-import ipdb; ipdb.set_trace()
 
 base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
 
@@ -47,7 +50,7 @@ model = pa.make_model()
 # Preprocess and assemble the pysb model
 #model = assemble_pysb(combined_stmts, data_genes, '')
 
-mc = ModelChecker(model, data_stmts, agent_obs)
+mc = ModelChecker(model, all_data_stmts, agent_obs)
 
 # Iterate over each drug/ab statement subset
 results = []
@@ -69,7 +72,7 @@ for drug_name, ab_dict in data_stmts.items():
                 path_found = 1
                 path = str(result)
                 # Score paths here TODO
-                scored_result = mc.score_paths(result[1], agent_values)
+                scored_result = mc.score_paths(result[0], agent_values)
                 break
             else:
                 print("No path found")
