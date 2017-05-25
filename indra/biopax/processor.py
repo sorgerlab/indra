@@ -643,7 +643,7 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_db_refs(bpe):
         db_refs = {}
-        if _is_protein(bpe):
+        if _is_protein(bpe) or _is_rna(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             # Handle missing HGNC/UP ids
@@ -677,7 +677,7 @@ class BiopaxProcessor(object):
     @staticmethod
     @lru_cache(maxsize=1000)
     def _get_element_name(bpe):
-        if _is_protein(bpe):
+        def get_name(bpe):
             # FIXME Deal with case when HGNC entry is not name
             # Deal with case when multiple Uniprot IDs marked as
             # primary
@@ -693,9 +693,10 @@ class BiopaxProcessor(object):
                     name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
-        elif _is_rna(bpe):
-            logger.info("Rna!")
-            name = bpe.getDisplayName()
+            return name
+        #
+        if _is_protein(bpe) or _is_rna(bpe):
+            name = get_name(bpe)
         elif _is_small_molecule(bpe):
             name = bpe.getDisplayName()
         elif _is_physical_entity(bpe):
@@ -726,12 +727,26 @@ class BiopaxProcessor(object):
                 return None
             # Try to get primary IDs if there are 
             # If there is more than one primary ID then we return the first one
-            if len(primary_ids) > 1:
-                logger.info('More than one primary id: %s' %
-                            ','.join(primary_ids))
+            elif len(primary_ids) > 1:
+                human_upids = [id for id in primary_ids
+                               if uniprot_client.is_human(id)]
+                if not human_upids:
+                    logger.info('More than one primary id but none human, '
+                                'choosing the first: %s'
+                                 % ','.join(primary_ids))
+                    primary_id = primary_ids[0]
+                elif len(human_upids) > 1:
+                    logger.info('More than one human primary id, choosing '
+                                'the first: %s' % ','.join(human_upids))
+                    primary_id = human_upids[0]
+                # Only one, so use it
+                else:
+                    primary_id = human_upids[0]
+            # One primary ID, so use it
+            else:
+                primary_id = primary_ids[0]
             # Make sure it's unicode
-            primary_id = str(primary_ids[0])
-            return primary_id
+            return str(primary_id)
 
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
@@ -798,7 +813,7 @@ class BiopaxProcessor(object):
                     hgnc_id = str(m.groups()[0])
         # If there is no HGNC ID, check for an HGNC symbol and convert back
         # to HGNC
-        if False: # not hgnc_id:
+        if not hgnc_id:
             hgnc_syms = [x.getId() for x in xrefs
                          if x.getDb().lower() == 'hgnc symbol']
             # If no symbol and no ID, return None
@@ -808,8 +823,8 @@ class BiopaxProcessor(object):
             # a log message and choose the first
             else:
                 if len(hgnc_syms) > 1:
-                    logger.info('More than one HGNC symbol found: %s' %
-                                str(hgnc_syms))
+                    logger.info('No HGNC ID, and more than one HGNC symbol '
+                                'found, using 1st: %s' % str(hgnc_syms))
                 hgnc_sym = hgnc_syms[0]
                 hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
         return hgnc_id
