@@ -24,6 +24,11 @@ def assemble_pysb(stmts, data_genes, out_file):
     ac.dump_statements(stmts, '%s_before_pa.pkl' % base_file)
     assemble_index_cards(stmts, 'output/index_cards')
 
+    # Save a version of statements with no evidence for faster loading
+    for s in stmts:
+        s.evidence = []
+    ac.dump_statements(stmts, '%s_no_evidence.pkl' % base_file)
+
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
