@@ -199,6 +199,3 @@ def assert_pmids(stmts):
             if ev.pmid is not None:
                 assert(ev.pmid.isdigit())
 
-if __name__ == '__main__':
-    bp = biopax.process_pc_pathsfromto(['TP53'], ['BBC3'])
-

@@ -649,11 +649,19 @@ class BiopaxProcessor(object):
             # Handle missing HGNC/UP ids
             if hgnc_id and not uniprot_id:
                 uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if uniprot_id and not hgnc_id:
+            elif uniprot_id and not hgnc_id:
                 if uniprot_client.is_human(uniprot_id):
                     hgnc_name = uniprot_client.get_gene_name(uniprot_id, False)
                     if hgnc_name:
                         hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+            # If we have both an HGNC ID and a Uniprot ID, override the 
+            # Uniprot ID with the one associated with the HGNC ID
+            elif uniprot_id and hgnc_id:
+                hgnc_up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if hgnc_up_id != uniprot_id:
+                    logger.info('Uniprot ID %s does not match %s obtained '
+                                'from HGNC ID %s' %
+                                (uniprot_id, hgnc_up_id, hgnc_id))
             if hgnc_id is not None:
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
@@ -694,7 +702,7 @@ class BiopaxProcessor(object):
             else:
                 name = bpe.getDisplayName()
             return name
-        #
+
         if _is_protein(bpe) or _is_rna(bpe):
             name = get_name(bpe)
         elif _is_small_molecule(bpe):
