@@ -31,7 +31,7 @@ for drug_name, values in data_values.items():
         for agent in agents:
             agent_data[drug_name][agent] = value
 
-
+"""
 base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
 
 # Merge the sources of statements
@@ -44,8 +44,14 @@ pa = PysbAssembler()
 pa.add_statements(stmts)
 model = pa.make_model()
 
-#with open('korkut_pysb.pkl', 'wb') as f:
-#    pickle.dump(pa.model, f)
+with open('korkut_pysb.pkl', 'wb') as f:
+    print("Pickling PySB model")
+    pickle.dump(pa.model, f)
+"""
+
+with open('korkut_pysb.pkl', 'rb') as f:
+    print("Unpickling PySB model")
+    model = pickle.load(f)
 
 # Preprocess and assemble the pysb model
 #model = assemble_pysb(combined_stmts, data_genes, '')
@@ -63,19 +69,19 @@ for drug_name, ab_dict in data_stmts.items():
         print("-- Checking the effect of %s on %s --" % (drug_name, ab))
         relation = 'positive' if value > 1 else 'negative'
         path_found = 0
-        path = ''
+        paths = []
         for stmt in stmt_list:
             print("Checking: %s" % stmt)
-            result = mc.check_statement(stmt)
+            result = mc.check_statement(stmt, max_paths=5, max_path_length=5)
             if result:
+                paths += result[1]
                 print("Path found, skipping rest")
                 path_found = 1
-                path = str(result)
                 # Score paths here TODO
-                scored_result = mc.score_paths(result[0], agent_values)
+                #scored_result = mc.score_paths(result[0], agent_values)
                 break
             else:
                 print("No path found")
 
-        results.append((drug_name, ab, relation, value, path_found, path))
-write_unicode_csv('model_check_results.csv', results)
+        results.append((drug_name, ab, relation, value, path_found, paths))
+#write_unicode_csv('model_check_results.csv', results)

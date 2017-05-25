@@ -68,7 +68,7 @@ class ModelChecker(object):
         def add_obs_for_agent(agent):
             obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
             if not obj_mps:
-                logger.info('Failed to create observables for agent %s, '
+                logger.info('No monomer patterns found in model for agent %s, '
                             'skipping' % agent)
                 return
             obs_list = []
@@ -133,10 +133,6 @@ class ModelChecker(object):
 
     def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
-
-        More efficient than check_statement when checking multiple statements
-        because all relevant observables are added before building the
-        influence map, preventing it from being repeatedly generated.
 
         Returns
         -------
@@ -210,6 +206,10 @@ class ModelChecker(object):
         # Get target polarity
         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
         obs_names = self.stmt_to_obs[stmt]
+        if not obs_names:
+            logger.info("No observables for stmt %s, returning False" % stmt)
+            return False
+
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # Return True for the first valid path we find
             result = self._find_im_paths(enz_mp, obs_name, target_polarity,
@@ -296,8 +296,10 @@ class ModelChecker(object):
                     if len(paths) >= max_paths:
                         break
                 return paths
+            # There are no paths shorter than the max path length, so we
+            # don't bother trying to get them
             else:
-                return True
+                return [True, []]
         else:
             return False
 
