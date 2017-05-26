@@ -573,10 +573,13 @@ def filter_no_hypothesis(stmts_in, **kwargs):
     stmts_out = []
     for st in stmts_in:
         all_hypotheses = True
+        ev = None
         for ev in st.evidence:
             if not ev.epistemics.get('hypothesis', False):
                 all_hypotheses = False
                 break
+        if ev is None:
+            all_hypotheses = False
         if not all_hypotheses:
             stmts_out.append(st)
     logger.info('%d statements after filter...' % len(stmts_out))
