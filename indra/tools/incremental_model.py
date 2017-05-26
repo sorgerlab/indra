@@ -102,6 +102,9 @@ class IncrementalModel(object):
         """
         stmts = self.get_statements()
 
+        # Filter out hypotheses
+        stmts = ac.filter_no_hypothesis(stmts)
+
         # Fix grounding
         stmts = ac.map_grounding(stmts)
 
