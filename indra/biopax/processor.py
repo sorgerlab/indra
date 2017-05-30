@@ -643,17 +643,25 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_db_refs(bpe):
         db_refs = {}
-        if _is_protein(bpe):
+        if _is_protein(bpe) or _is_rna(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             # Handle missing HGNC/UP ids
             if hgnc_id and not uniprot_id:
                 uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if uniprot_id and not hgnc_id:
+            elif uniprot_id and not hgnc_id:
                 if uniprot_client.is_human(uniprot_id):
                     hgnc_name = uniprot_client.get_gene_name(uniprot_id, False)
                     if hgnc_name:
                         hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+            # If we have both an HGNC ID and a Uniprot ID, override the 
+            # Uniprot ID with the one associated with the HGNC ID
+            elif uniprot_id and hgnc_id:
+                hgnc_up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if hgnc_up_id != uniprot_id:
+                    logger.info('Uniprot ID %s does not match %s obtained '
+                                'from HGNC ID %s' %
+                                (uniprot_id, hgnc_up_id, hgnc_id))
             if hgnc_id is not None:
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
@@ -677,7 +685,10 @@ class BiopaxProcessor(object):
     @staticmethod
     @lru_cache(maxsize=1000)
     def _get_element_name(bpe):
-        if _is_protein(bpe):
+        def get_name(bpe):
+            # FIXME Deal with case when HGNC entry is not name
+            # Deal with case when multiple Uniprot IDs marked as
+            # primary
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
@@ -690,6 +701,10 @@ class BiopaxProcessor(object):
                     name = bpe.getDisplayName()
             else:
                 name = bpe.getDisplayName()
+            return name
+
+        if _is_protein(bpe) or _is_rna(bpe):
+            name = get_name(bpe)
         elif _is_small_molecule(bpe):
             name = bpe.getDisplayName()
         elif _is_physical_entity(bpe):
@@ -720,12 +735,26 @@ class BiopaxProcessor(object):
                 return None
             # Try to get primary IDs if there are 
             # If there is more than one primary ID then we return the first one
-            if len(primary_ids) > 1:
-                logger.info('More than one primary id: %s' %
-                            ','.join(primary_ids))
+            elif len(primary_ids) > 1:
+                human_upids = [id for id in primary_ids
+                               if uniprot_client.is_human(id)]
+                if not human_upids:
+                    logger.info('More than one primary id but none human, '
+                                'choosing the first: %s'
+                                 % ','.join(primary_ids))
+                    primary_id = primary_ids[0]
+                elif len(human_upids) > 1:
+                    logger.info('More than one human primary id, choosing '
+                                'the first: %s' % ','.join(human_upids))
+                    primary_id = human_upids[0]
+                # Only one, so use it
+                else:
+                    primary_id = human_upids[0]
+            # One primary ID, so use it
+            else:
+                primary_id = primary_ids[0]
             # Make sure it's unicode
-            primary_id = str(primary_ids[0])
-            return primary_id
+            return str(primary_id)
 
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
@@ -779,6 +808,7 @@ class BiopaxProcessor(object):
         if bp_entref is None:
             return None
         xrefs = bp_entref.getXref().toArray()
+        # Check for HGNC IDs
         hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
         hgnc_id = None
         for hgnc_id in hgnc_ids:
@@ -789,6 +819,22 @@ class BiopaxProcessor(object):
                 m = re.match('hgnc:([0-9]+)', hgnc_id.lower())
                 if m:
                     hgnc_id = str(m.groups()[0])
+        # If there is no HGNC ID, check for an HGNC symbol and convert back
+        # to HGNC
+        if not hgnc_id:
+            hgnc_syms = [x.getId() for x in xrefs
+                         if x.getDb().lower() == 'hgnc symbol']
+            # If no symbol and no ID, return None
+            if not hgnc_syms:
+                return None
+            # On the off chance that there is more than one symbol, issue
+            # a log message and choose the first
+            else:
+                if len(hgnc_syms) > 1:
+                    logger.info('No HGNC ID, and more than one HGNC symbol '
+                                'found, using 1st: %s' % str(hgnc_syms))
+                hgnc_sym = hgnc_syms[0]
+                hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
         return hgnc_id
 
     @staticmethod
@@ -899,6 +945,11 @@ def _is_protein(pe):
             isinstance(pe, _bpimpl('Protein')) or \
             isinstance(pe, _bp('ProteinReference')) or \
             isinstance(pe, _bpimpl('ProteinReference'))
+    return val
+
+def _is_rna(pe):
+    """Return True if the element is an RNA"""
+    val = isinstance(pe, _bp('Rna')) or isinstance(pe, _bpimpl('Rna'))
     return val
 
 def _is_small_molecule(pe):

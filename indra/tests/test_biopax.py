@@ -198,3 +198,4 @@ def assert_pmids(stmts):
         for ev in stmt.evidence:
             if ev.pmid is not None:
                 assert(ev.pmid.isdigit())
+
