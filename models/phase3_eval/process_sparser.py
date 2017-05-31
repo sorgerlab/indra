@@ -4,8 +4,8 @@ import os
 import glob
 import json
 from indra import sparser
-from indra.statements import stmts_from_json, get_valid_location, \
-                             get_valid_residue
+from indra.statements import *
+from indra.databases import uniprot_client, hgnc_client
 
 base_folder = os.environ['HOME'] + \
     '/data/darpa/phase3_eval/sources/sparser-20170530'
@@ -53,6 +53,7 @@ def get_file_stmts(fname):
             pass
 
     stmts = stmts_from_json(jd)
+    stmts = fix_stmts(stmts)
     return stmts
 
 def read_stmts(folder):
@@ -63,6 +64,31 @@ def read_stmts(folder):
         all_stmts += st
     return all_stmts
 
+def fix_stmts(stmts):
+    new_stmts = []
+    for stmt in stmts:
+        # Skip if no subject
+        if isinstance(stmt, RegulateActivity):
+            if stmt.subj is None:
+                continue
+        # Skip if no locations
+        if isinstance(stmt, Translocation):
+            if not (stmt.from_location or stmt.to_location):
+                continue
+        for agent in stmt.agent_list():
+            if agent is not None:
+                upid = agent.db_refs.get('UP')
+                if upid:
+                    gene_name = uniprot_client.get_gene_name(upid)
+                    if gene_name:
+                        agent.name = gene_name
+                        if uniprot_client.is_human(upid):
+                            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                            if hgnc_id:
+                                agent.db_refs['hgnc'] = hgnc_id
+
+        new_stmts.append(stmt)
+    return new_stmts
 
 if __name__ == '__main__':
     stmts = read_stmts(base_folder)
