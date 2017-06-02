@@ -266,8 +266,8 @@ class CyJSAssembler(object):
     def _add_regulate_activity(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         edge_id = self._get_new_id()
-        source_id = self._add_node(stmt.subj)
-        target_id = self._add_node(stmt.obj)
+        source_id = self._add_node(stmt.subj, uuid=stmt.uuid)
+        target_id = self._add_node(stmt.obj, uuid=stmt.uuid)
         edge = {'data': {'i': edge_type, 'id': edge_id,
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
@@ -276,8 +276,8 @@ class CyJSAssembler(object):
     def _add_modification(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         edge_id = self._get_new_id()
-        source_id = self._add_node(stmt.enz)
-        target_id = self._add_node(stmt.sub)
+        source_id = self._add_node(stmt.enz, uuid=stmt.uuid)
+        target_id = self._add_node(stmt.sub, uuid=stmt.uuid)
         edge = {'data': {'i': edge_type, 'id': edge_id,
                          'source': source_id, 'target': target_id,
                          'polarity': edge_polarity}}
@@ -286,8 +286,8 @@ class CyJSAssembler(object):
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         for m1, m2 in itertools.combinations(stmt.members, 2):
-            m1_id = self._add_node(m1)
-            m2_id = self._add_node(m2)
+            m1_id = self._add_node(m1, uuid=stmt.uuid)
+            m2_id = self._add_node(m2, uuid=stmt.uuid)
 
             edge_id = self._get_new_id()
             edge = {'data': {'i': edge_type, 'id': edge_id,
@@ -295,10 +295,17 @@ class CyJSAssembler(object):
                              'polarity': edge_polarity}}
             self._edges.append(edge)
 
-    def _add_node(self, agent):
+    def _add_node(self, agent, uuid=None):
         node_key = agent.name
         node_id = self._existing_nodes.get(node_key)
+        # if the node already exists we do not want to add it again
+        # we must however add its uuid
         if node_id is not None:
+            #fetch the appropriate node
+            n = [x for x in self._nodes if x['data']['id'] == node_id][0]
+            uuid_list = n['data']['uuid_list']
+            if uuid not in uuid_list:
+                uuid_list.append(uuid)
             return node_id
         db_refs = _get_db_refs(agent)
         node_id = self._get_new_id()
@@ -323,9 +330,11 @@ class CyJSAssembler(object):
                     }
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
-                         'members': members}}
+                         'members': members, 'uuid_list': [uuid]}}
         self._nodes.append(node)
         return node_id
+
+
 
     def _get_new_id(self):
         ret = self._id_counter
