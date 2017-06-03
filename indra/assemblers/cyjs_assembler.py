@@ -265,35 +265,42 @@ class CyJSAssembler(object):
 
     def _add_regulate_activity(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
-        edge_id = self._get_new_id()
         source_id = self._add_node(stmt.subj, uuid=stmt.uuid)
         target_id = self._add_node(stmt.obj, uuid=stmt.uuid)
-        edge = {'data': {'i': edge_type, 'id': edge_id,
-                         'source': source_id, 'target': target_id,
-                         'polarity': edge_polarity}}
-        self._edges.append(edge)
+        self._add_edge(edge_type, source_id, target_id, edge_polarity,
+                       stmt.uuid)
 
     def _add_modification(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
-        edge_id = self._get_new_id()
         source_id = self._add_node(stmt.enz, uuid=stmt.uuid)
         target_id = self._add_node(stmt.sub, uuid=stmt.uuid)
-        edge = {'data': {'i': edge_type, 'id': edge_id,
-                         'source': source_id, 'target': target_id,
-                         'polarity': edge_polarity}}
-        self._edges.append(edge)
+        self._add_edge(edge_type, source_id, target_id, edge_polarity,
+                       stmt.uuid)
 
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
         for m1, m2 in itertools.combinations(stmt.members, 2):
             m1_id = self._add_node(m1, uuid=stmt.uuid)
             m2_id = self._add_node(m2, uuid=stmt.uuid)
+            self._add_edge(edge_type, m1_id, m2_id, edge_polarity,
+                           stmt.uuid)
 
-            edge_id = self._get_new_id()
-            edge = {'data': {'i': edge_type, 'id': edge_id,
-                             'source': m1_id, 'target': m2_id,
-                             'polarity': edge_polarity}}
-            self._edges.append(edge)
+    def _add_edge(self, edge_type, source, target, edge_polarity, uuid = None):
+        edge = {'data': {'i': edge_type,
+                         'source': source, 'target': target,
+                         'polarity': edge_polarity}}
+        for e in self._edges:
+            e_compare = dict((key,value) for key, value in e.items() \
+                             if key in ['i', 'source', 'target', 'polarity'])
+            if e_compare == edge:
+                uuid_list = e['data']['uuid_list']
+                if uuid not in uuid_list:
+                    uuid_list.append(uuid)
+                return
+        edge['data']['id'] = self._get_new_id()
+        edge['data']['uuid_list'] = [uuid]
+        self._edges.append(edge)
+        return
 
     def _add_node(self, agent, uuid=None):
         node_key = agent.name
@@ -333,8 +340,6 @@ class CyJSAssembler(object):
                          'members': members, 'uuid_list': [uuid]}}
         self._nodes.append(node)
         return node_id
-
-
 
     def _get_new_id(self):
         ret = self._id_counter
