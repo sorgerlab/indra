@@ -5,6 +5,7 @@ import numbers
 import networkx
 import itertools
 import numpy as np
+import scipy.stats
 from copy import deepcopy
 from collections import deque, defaultdict
 from pysb import kappa, WILD
@@ -289,6 +290,7 @@ class ModelChecker(object):
         # TODO: Make it optionally possible to return on the first path?
         num_paths = 0
         path_lengths = []
+        import ipdb; ipdb.set_trace()
         for source, polarity, path_length in \
                     _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
@@ -362,6 +364,55 @@ class ModelChecker(object):
                 if im.has_edge((p1, p2)):
                     im.remove_edge((p1, p2))
 
+def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
+                         agent_to_obs, agents_values):
+
+    '''
+    agent_data = {self.agent_obs[0]: 1, self.agent_obs[1]: -1, self.agent_obs[2]: 1}
+    _find_sources_sample(self.get_im(), obs_name, input_rule_set, target_polarity, self.
+    rule_obs_dict, self.agent_to_obs, agent_data)
+    '''
+
+    # Build up dict mapping observables to values
+    obs_dict = {}
+    for ag, val in agents_values.items():
+        obs_list = agent_to_obs[ag]
+        for obs in obs_list:
+            obs_dict[obs] = val
+
+    sigma = 0.2
+    obs_model = lambda x: scipy.stats.norm(x, sigma)
+
+    def _sample_pred(im, target, rule_obs_dict, obs_model):
+        preds = list(_get_signed_predecessors(im, target, 1))
+        if not preds:
+            return None
+        pred_scores = []
+        for pred, sign in preds:
+            pred_score = 0
+            for affected_obs, rule_obs_sign in rule_obs_dict[pred]:
+                pred_sign = sign * rule_obs_sign
+                # Check to see if this observable is in the data
+                logger.info('%s %s: effect %s %s' %
+                            (pred, sign, affected_obs, pred_sign))
+                measured_val = obs_dict.get(affected_obs)
+                if measured_val:
+                    logger.info('Actual: %s' % measured_val)
+                    # The tail probability of the real value being above 1
+                    tail_prob = obs_model(measured_val).cdf(1)
+                    pred_score += (tail_prob if pred_sign == 1 else
+                                   1-tail_prob)
+            pred_scores.append(pred_score)
+        # Normalize scores
+        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
+        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
+        pred = preds[pred_idx]
+        return pred
+
+    preds = []
+    for i in range(100):
+        pred = _sample_pred(im, target, rule_obs_dict, obs_model)
+        preds.append(pred[0])
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -496,28 +547,6 @@ def _find_sources(im, target, sources, polarity):
             queue.popleft()
     # There was no path; this will produce an empty generator
     return
-
-
-def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
-    def _sample_pred(model, stmts, im, target, score_fn):
-        preds = list(_get_signed_predecessors(im, target, 1))
-        pred_agents = []
-        pred_scores = []
-        for pred, sign in preds:
-            agents, polarities = _object_agents_from_rule(model, pred, stmts)
-            # FIXME: for simplicity we start with a single object agent
-            agent = agents[0]
-            polarity = polarities[0]
-            score = score_fn(agent, polarity)
-            pred_agents.append(agent)
-            pred_scores.append(score)
-        # Normalize scores
-        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
-        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
-        pred = preds[pred_idx]
-        return pred
-    pred = _sample_pred(model, stmts, im, target, score_fn)
-    print(pred)
 
 
 def _get_signed_predecessors(im, node, polarity):
@@ -709,43 +738,6 @@ def _stmt_from_rule(model, rule_name, stmts):
         for stmt in stmts:
             if stmt.uuid == stmt_uuid:
                 return stmt
-
-def _object_agents_from_rule(model, rule_name, stmts):
-    """Return object agents with state and polarities for a rule."""
-    # First we collect all objects (Monomer names) that are annotated
-    # to be the objects of the rule. There will typically be 1.
-    rule_objects = []
-    for ann in model.annotations:
-        if ann.subject == rule_name:
-            if ann.predicate == 'rule_has_object':
-                rule_objects.append(ann.object)
-    # Next we construct grounded INDRA Agents working back from the
-    # Monomer name through 'is' grounding annotations of identifiers.org
-    # URIs to INDRA database names and ids.
-    agents = []
-    for obj in rule_objects:
-        db_refs = {}
-        for ann in model.annotations:
-            if ann.predicate == 'is':
-                # We assume here that the subject is a Monomer
-                if ann.subject.name == obj:
-                    agent = _agent_from_uri(ann.object)
-                    agents.append(agent)
-    # Finally we need to construct an Agent which is in the state
-    # induced by the given rule. But for this we need to find the
-    # INDRA Statement corresponding to the rule.
-    # TODO: extend to other Statement types if needed
-    # Here we also need to surface the polarity of the modification
-    polarities = [None for agent in agents]
-    stmt = _stmt_from_rule(model, rule_name, stmts)
-    if stmt is not None:
-        if isinstance(stmt, Modification):
-            mod_type = modclass_to_modtype[stmt.__class__]
-            mc = ModCondition(mod_type, stmt.residue, stmt.position)
-            for i, agent in enumerate(agents):
-                agent.mods = [mc]
-                polarities[i] = isinstance(stmt, AddModification)
-    return agents, polarities
 
 
 def _monomer_pattern_label(mp):

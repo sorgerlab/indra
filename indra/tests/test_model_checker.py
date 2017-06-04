@@ -7,8 +7,7 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.tools.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
-                                      _stmt_from_rule, \
-                                      _object_agents_from_rule
+                                      _stmt_from_rule
 #from indra.tools.model_checker import _match_rhs, _positive_path
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
@@ -887,22 +886,6 @@ def test_stmt_from_rule():
     assert(stmt == st)
 
 
-def test_object_agents_from_rule():
-    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
-    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
-    st = Phosphorylation(mek, erk, 'T', '185')
-    pa = PysbAssembler()
-    pa.add_statements([st])
-    pa.make_model()
-    rule_name = pa.model.rules[0].name
-    agents, pols = _object_agents_from_rule(pa.model, rule_name, [st])
-    assert(len(agents) == 1)
-    agent = agents[0]
-    assert(agent.name == 'MAPK1')
-    assert(agent.db_refs.get('HGNC') == '6871')
-    assert(len(agent.mods) == 1)
-    assert(pols == [True])
-
 
 def test_activate_via_mod():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
@@ -1006,6 +989,7 @@ def test_check_transphosphorylation():
     assert results[0][1] == True
     assert results[1][1] == True
 """
+
 
 def test_model_check_data():
     # Create a set of statements
