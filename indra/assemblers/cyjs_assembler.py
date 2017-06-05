@@ -371,8 +371,11 @@ class CyJSAssembler(object):
 
     def _group_edges(self):
         # Iterate over edges in a copied edge list
-        edges_to_add = []
+        edges_to_add = [[], []]
         for e in self._edges:
+            new_edge = deepcopy(e)
+            new_edge['data'].pop('id', None)
+            uuid_list = new_edge['data'].pop('uuid_list', [])
             # Check if edge source or target are contained in a parent
             # If source or target in parent edit edge
             # Nodes may only point within their container
@@ -384,29 +387,25 @@ class CyJSAssembler(object):
                            x['data']['id'] == target][0]
             # If the source node is in a group, we change the source of this
             # edge to the group
-            new_edge = None
             if source_node['data']['parent'] != '':
-                new_edge = deepcopy(e)
-                new_edge['data'].pop('id', None)
                 new_edge['data']['source'] = source_node['data']['parent']
                 e['data']['i'] = 'Virtual'
             # If the targete node is in a group, we change the target of this
             # edge to the group
             if target_node['data']['parent'] != '':
-                if new_edge is None:
-                    new_edge = deepcopy(e)
-                    new_edge['data'].pop('id', None)
                 new_edge['data']['target'] = target_node['data']['parent']
                 e['data']['i'] = 'Virtual'
-            if new_edge is not None:
-                if new_edge not in edges_to_add:
-                    edges_to_add.append(new_edge)
-
-        # need to check if there are identical edges in edges to add
-        # identical on everything but id
-        for edge in edges_to_add:
+            if new_edge not in edges_to_add[0]:
+                edges_to_add[0].append(new_edge)
+                edges_to_add[1].append(uuid_list)
+            else:
+                idx = edges_to_add[0].index(new_edge)
+                edges_to_add[1][idx] += uuid_list
+        for ze in zip(*edges_to_add):
+            edge = ze[0]
             new_id = self._get_new_id()
             edge['data']['id'] = new_id
+            edge['data']['uuid_list'] = ze[1]
             self._edges.append(edge)
 
     def _group_nodes(self):
