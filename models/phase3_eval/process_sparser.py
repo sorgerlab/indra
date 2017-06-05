@@ -7,15 +7,14 @@ from indra import sparser
 from indra.statements import *
 from indra.databases import uniprot_client, hgnc_client
 
-base_folder = os.environ['HOME'] + \
-    '/data/darpa/phase3_eval/sources/sparser-20170530'
+base_folder = 'sources/sparser-20170530'
 
 def get_file_names(base_dir):
     fnames = glob.glob(os.path.join(base_dir, '*.json'))
     return fnames
 
 def get_file_stmts(fname):
-    with open(fname, 'rb') as fh:
+    with open(fname, 'rt') as fh:
         print(fname)
         try:
             jd = json.load(fh)
