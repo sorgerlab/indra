@@ -393,6 +393,7 @@ class CyJSAssembler(object):
             else:
                 idx = edges_to_add[0].index(new_edge)
                 edges_to_add[1][idx] += uuid_list
+                edges_to_add[1][idx] = list(set(edges_to_add[1][idx]))
         for ze in zip(*edges_to_add):
             edge = ze[0]
             new_id = self._get_new_id()
