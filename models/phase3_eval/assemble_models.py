@@ -88,4 +88,5 @@ if __name__ == '__main__':
         sif_str = assemble_sif(stmts, data, pjoin(outf, 'PKN-korkut_all_ab.sif'))
     ### CX assembly
     if 'cx' in assemble_models:
-        cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full_high_belief.cx'))
+        for network_type in ('high_belief', 'direct'):
+            cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full'), network_type)
