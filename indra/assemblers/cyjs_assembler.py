@@ -67,11 +67,6 @@ class CyJSAssembler(object):
             If True, the nodes with identical incoming and outgoing edges
             are grouped and the corresponding edges are merged.
 
-        drop_virtual_edges : bool
-            If True, the original edges which have been collected and made
-            virtual are discarded. If these edges are discarded, they are
-            not seen by the cytoscape.js layout algorithms.
-
         Returns
         -------
         cyjs_str : str
@@ -92,8 +87,6 @@ class CyJSAssembler(object):
         if kwargs.get('grouping'):
             self._group_nodes()
             self._group_edges()
-        if kwargs.get('drop_virtual_edges'):
-            self._drop_virtual_edges()
         return self.print_cyjs_graph()
 
 
@@ -420,9 +413,6 @@ class CyJSAssembler(object):
                 if node['data']['id'] in group:
                     node['data']['parent'] = new_group_node['data']['id']
             self._nodes.append(new_group_node)
-
-    def _drop_virtual_edges(self):
-        self._edges = [x for x in self._edges if x['data']['i'] != 'Virtual']
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
