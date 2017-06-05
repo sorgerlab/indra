@@ -169,7 +169,6 @@ class CyJSAssembler(object):
                                 if val <= thr:
                                     binned_dict[n_bins][line][gene] = thr_idx
                                     break
-                        #import pdb; pdb.set_trace();
             return binned_dict
         binned_exp = bin_exp(exp)
         context = {'bin_expression' : binned_exp,
@@ -407,7 +406,13 @@ class CyJSAssembler(object):
             # Make new group node
             new_group_node = {'data': {'id': (self._get_new_id()),
                                        'name': ('Group' + str(group)),
-                                       'parent': ''}}
+                                       'parent': '', 'uuid_list': []}}
+            member_nodes = [x for x in self._nodes if x['data']['id'] in group]
+            for m_node in member_nodes:
+                new_group_node['data']['uuid_list'] += \
+                    m_node['data']['uuid_list']
+                new_group_node['data']['uuid_list'] = \
+                    list(set(new_group_node['data']['uuid_list']))
             # Point the node to its parent
             for node in self._nodes:
                 if node['data']['id'] in group:
