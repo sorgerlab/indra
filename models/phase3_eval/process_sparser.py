@@ -85,7 +85,7 @@ def fix_stmts(stmts):
                         if uniprot_client.is_human(upid):
                             hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                             if hgnc_id:
-                                agent.db_refs['hgnc'] = hgnc_id
+                                agent.db_refs['HGNC'] = hgnc_id
 
         new_stmts.append(stmt)
     return new_stmts
