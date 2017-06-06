@@ -271,18 +271,10 @@ class CyJSAssembler(object):
             self._add_edge(edge_type, m1_id, m2_id, edge_polarity,
                            stmt.uuid)
 
-    def _add_edge(self, edge_type, source, target, edge_polarity, uuid = None):
+    def _add_edge(self, edge_type, source, target, edge_polarity, uuid):
         edge = {'data': {'i': edge_type,
                          'source': source, 'target': target,
                          'polarity': edge_polarity}}
-        for e in self._edges:
-            e_compare = dict((key,value) for key, value in e.items() \
-                             if key in ['i', 'source', 'target', 'polarity'])
-            if e_compare == edge:
-                uuid_list = e['data']['uuid_list']
-                if uuid not in uuid_list:
-                    uuid_list.append(uuid)
-                return
         edge['data']['id'] = self._get_new_id()
         edge['data']['uuid_list'] = [uuid]
         self._edges.append(edge)
