@@ -47,12 +47,13 @@ def test_complex():
     assert(len(set(polarities))==1)
     assert('none' in polarities)
 
-def test_print_cyjs():
+def test_print_cyjs_graph():
     cja = CyJSAssembler()
     cja.add_statements([st_act, st_act2])
     cja.make_model()
-    cyjs_str = cja.print_cyjs()
-    print(cyjs_str)
+    cyjs_str = cja.print_cyjs_graph()
+    # assert output is not empty
+    assert(len(cyjs_str) > len('{\n "edges": [],\n "nodes": []\n}'))
 
 def test_no_grouping():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
