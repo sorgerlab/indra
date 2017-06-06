@@ -324,14 +324,28 @@ class CyJSAssembler(object):
         self._id_counter += 1
         return ret
 
-    def _get_node_key(self, node_dict):
-        s = tuple(sorted(node_dict['sources']))
-        t = tuple(sorted(node_dict['targets']))
+    def _get_node_key(self, node_dict_item):
+        """ Given a value of node_dict, return a tuple of sorted tuples for
+            sources targets
+        """
+        s = tuple(sorted(node_dict_item['sources']))
+        t = tuple(sorted(node_dict_item['targets']))
         return (s, t)
 
     def _get_node_groups(self):
-        # First we construct a dictionary for each node's
-        # source and target edges
+        """ Returns a lists of node id lists that are topologically identical.
+
+            How does it work?
+            -----------------
+            First construct a node_dict which is keyed to the node id and
+            has a value which is a dict with keys 'sources' and 'targets'.
+            The 'sources' and 'targets' each contain a list of tuples
+            (i, polarity, source) edge of the node. node_dict is then processed
+            by _get_node_key() which returns a tuple of (s,t) where s,t are
+            sorted tuples of the ids for the source and target nodes. (s,t) is
+            then used as a key in node_key_dict where the values are the node
+            ids. node_groups is restricted to groups greater than 1 node.
+        """
         node_dict = {node['data']['id']: {'sources': [], 'targets': []}
                      for node in self._nodes}
         for edge in self._edges:
@@ -343,7 +357,6 @@ class CyJSAssembler(object):
             edge_data = (edge['data']['i'], edge['data']['polarity'],
                          edge['data']['target'])
             node_dict[edge['data']['source']]['targets'].append(edge_data)
-
         # Make a dictionary of nodes based on source/target as a key
         node_key_dict = collections.defaultdict(lambda: [])
         for node_id, node_d in node_dict.items():
