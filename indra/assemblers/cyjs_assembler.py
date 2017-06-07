@@ -423,17 +423,17 @@ class CyJSAssembler(object):
             if target_node['data']['parent'] != '':
                 new_edge['data']['target'] = target_node['data']['parent']
                 e['data']['i'] = 'Virtual'
-            if new_edge not in edges_to_add[0]:
-                edges_to_add[0].append(new_edge)
-                edges_to_add[1].append(uuid_list)
-            else:
-                idx = edges_to_add[0].index(new_edge)
-                edges_to_add[1][idx] += uuid_list
-                edges_to_add[1][idx] = list(set(edges_to_add[1][idx]))
+            if e['data']['i'] == 'Virtual':
+                if new_edge not in edges_to_add[0]:
+                    edges_to_add[0].append(new_edge)
+                    edges_to_add[1].append(uuid_list)
+                else:
+                    idx = edges_to_add[0].index(new_edge)
+                    edges_to_add[1][idx] += uuid_list
+                    edges_to_add[1][idx] = list(set(edges_to_add[1][idx]))
         for ze in zip(*edges_to_add):
             edge = ze[0]
-            new_id = self._get_new_id()
-            edge['data']['id'] = new_id
+            edge['data']['id'] = self._get_new_id()
             edge['data']['uuid_list'] = ze[1]
             self._edges.append(edge)
 
