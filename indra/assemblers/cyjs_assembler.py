@@ -368,7 +368,36 @@ class CyJSAssembler(object):
         node_groups = [g for g in node_key_dict.values() if (len(g) > 1)]
         return node_groups
 
+    def _get_edge_dict(self):
+        ''' Make a dict of edges. Keyed tuples of (i, source, target, polarity)
+            with lists of edge ids [id1, id2, ...]
+        '''
+        edge_dict = collections.defaultdict(lambda: [])
+        for e in self._edges:
+            data = e['data']
+            key = tuple([data['i'], data['source'],
+                        data['target'], data['polarity']])
+            edge_dict[key].append(data['id'])
+        return edge_dict
+
     def _group_edges(self):
+        # first, group all edges if they are topologically identical
+        edge_dict = self._get_edge_dict()
+        uuids = collections.defaultdict(lambda: [])
+        for e in self._edges:
+            data = e['data']
+            key = tuple([data['i'], data['source'],
+                        data['target'], data['polarity']])
+            uuids[key] += data['uuid_list']
+        edges_to_remove = []
+        for key, val in edge_dict.items():
+            if len(val) > 1:
+                edges_to_remove += val
+        self._edges = [x for x in self._edges \
+                        if x['data']['id'] not in edges_to_remove]
+        for key, val in edge_dict.items():
+            if len(val) > 1:
+                self._add_edge(key[0], key[1], key[2], key[3], val)
         # Iterate over edges in a copied edge list
         edges_to_add = [[], []]
         for e in self._edges:
