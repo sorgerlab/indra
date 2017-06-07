@@ -276,7 +276,9 @@ class CyJSAssembler(object):
                          'source': source, 'target': target,
                          'polarity': edge_polarity}}
         edge['data']['id'] = self._get_new_id()
-        edge['data']['uuid_list'] = [uuid]
+        if type(uuid) is not list:
+            uuid = [uuid]
+        edge['data']['uuid_list'] = uuid
         self._edges.append(edge)
         return
 
