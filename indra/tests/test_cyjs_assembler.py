@@ -80,9 +80,7 @@ def test_grouping_block_targeting_node():
             assert(parent_b == '')
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
-        assert_element_properties(node)
-    for edge in cja._edges:
-        assert_element_properties(edge)
+    assert_element_properties(cja)
     assert(parent_a == parent_c)
     parent_a_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_a][0]
@@ -109,9 +107,7 @@ def test_grouping_node_targeting_block():
             parent_b = node['data']['parent']
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
-        assert_element_properties(node)
-    for edge in cja._edges:
-        assert_element_properties(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -143,9 +139,7 @@ def test_grouping_node_targeting_block_targeting_node():
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
             assert(parent_d == '')
-        assert_element_properties(node)
-    for edge in cja._edges:
-        assert_element_properties(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -175,9 +169,7 @@ def test_grouping_block_targeting_block():
             parent_c = node['data']['parent']
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
-        assert_element_properties(node)
-    for edge in cja._edges:
-        assert_element_properties(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     assert(parent_a == parent_d)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
@@ -195,9 +187,14 @@ def test_grouping_block_targeting_block():
     assert(len(real_edges) == 1)
 
 def assert_element_properties(element):
+def assert_element_properties(cja):
     # each element needs an id
-    assert(element['data']['id'] is not None), "Element ID is none"
-    assert(element['data']['id'] != ''), "Element ID is blank string!"
-    # each element should also have a list of uuids with at least one uuid
-    assert(element['data']['uuid_list'] is not None), "uuid_list is None"
-    assert(len(element['data']['uuid_list']) >= 1), "uuid_list is empty!"
+    elements = ([n for n in cja._nodes] + [e for e in cja._edges])
+    for element in elements:
+        assert(element['data']['id'] is not None), "Element ID is none"
+        assert(element['data']['id'] != ''), "Element ID is blank string!"
+        # each element should also have a list of uuids with at least one uuid
+        assert(element['data']['uuid_list'] is not None), "uuid_list is None"
+        assert(len(element['data']['uuid_list']) >= 1), "uuid_list is empty!"
+        for uuid in element['data']['uuid_list']:
+            assert(type(uuid) == type('abc')), (str(uuid) + ' is not a string')
