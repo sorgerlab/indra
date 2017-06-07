@@ -106,23 +106,25 @@ def add_observables(model):
                 monomer = model.monomers[agent.name]
             except KeyError:
                 continue
-            mc = agent.mods[0]
-            site_names = ['phospho', mc.residue]
-            if mc.position is not None:
-                site_names.append(mc.residue + mc.position)
-            for site_name in site_names:
-                try:
-                    pattern = monomer(**{site_name: 'p'})
-                    patterns.append(ComplexPattern([pattern], None))
-                except Exception:
-                    pass
+            if agent.mods:
+                mc = agent.mods[0]
+                site_names = ['phospho', mc.residue]
+                if mc.position is not None:
+                    site_names.append(mc.residue + mc.position)
+                for site_name in site_names:
+                    try:
+                        pattern = monomer(**{site_name: 'p'})
+                        patterns.append(ComplexPattern([pattern], None))
+                    except Exception:
+                        pass
+            else:
+                patterns.append(ComplexPattern([monomer()], None))
         if patterns:
             obs_name = ab_name
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
                 obs_name = obs_name.replace('-', '_')
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
                 obs_name = 'p' + obs_name
-            obs_name = obs_name.encode('utf-8')
             o = Observable(obs_name, ReactionPattern(patterns))
             model.add_component(o)
     '''
