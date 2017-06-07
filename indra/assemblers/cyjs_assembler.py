@@ -381,6 +381,11 @@ class CyJSAssembler(object):
         return edge_dict
 
     def _group_edges(self):
+        ''' Groups all edges that are topologically identical, meaning that
+            (i, source, target, polarity) are the same, then sets edges on
+            parent (i.e. - group) nodes to 'Virtual' and creates a new edge to
+            represent all of them.
+        '''
         # first, group all edges if they are topologically identical
         edge_dict = self._get_edge_dict()
         uuids = collections.defaultdict(lambda: [])
@@ -398,8 +403,8 @@ class CyJSAssembler(object):
         for key, val in edge_dict.items():
             if len(val) > 1:
                 self._add_edge(key[0], key[1], key[2], key[3], val)
-        # Iterate over edges in a copied edge list
-        edges_to_add = [[], []]
+        # edit edges on parent nodes and make new edges for them
+        edges_to_add = [[], []] # [group_edges, uuid_lists]
         for e in self._edges:
             new_edge = deepcopy(e)
             new_edge['data'].pop('id', None)
