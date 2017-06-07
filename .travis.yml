@@ -32,8 +32,8 @@ install:
   - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas
   - pip install doctest-ignore-unicode
   # PySB and dependencies
-  - wget "http://www.csb.pitt.edu/Faculty/Faeder/?smd_process_download=1&download_id=142" -O BioNetGen-2.2.6-stable.tar.gz
-  - tar xzf BioNetGen-2.2.6-stable.tar.gz
+  - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz
+  - tar xzf bionetgen.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
   # Kappa
