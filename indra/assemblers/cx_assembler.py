@@ -470,16 +470,15 @@ def _get_agent_type(agent):
     pfam_id = agent.db_refs.get('PF')
     fa_id = agent.db_refs.get('FA')
     chebi_id = agent.db_refs.get('CHEBI')
+    pubchem_id = agent.db_refs.get('PUBCHEM')
     be_id = agent.db_refs.get('BE')
     go_id = agent.db_refs.get('GO')
     if hgnc_id or uniprot_id:
         agent_type = 'protein'
-    elif pfam_id or fa_id:
+    elif pfam_id or fa_id or be_id:
         agent_type = 'proteinfamily'
-    elif chebi_id:
+    elif chebi_id or pubchem_id:
         agent_type = 'chemical'
-    elif be_id:
-        agent_type = 'proteinfamily'
     elif go_id:
         agent_type = 'bioprocess'
     else:
