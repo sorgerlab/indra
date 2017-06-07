@@ -7,6 +7,8 @@ mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})
 dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
+st_phos_Y = Phosphorylation(mek, erk, residue='Y')
+st_phos_T = Phosphorylation(mek, erk, residue='T')
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
 st_act = Activation(mek, erk)
@@ -186,7 +188,17 @@ def test_grouping_block_targeting_block():
                   x['data']['i'] != 'Virtual']
     assert(len(real_edges) == 1)
 
-def assert_element_properties(element):
+def test_edge_grouping_between_nongroup_nodes():
+    cja = CyJSAssembler()
+    cja.add_statements([st_phos_Y, st_phos_T])
+    cja.make_model(grouping=True)
+    assert(len(cja._nodes) == 2)
+    assert(len(cja._edges) == 1)
+    for edge in cja._edges:
+        assert(len(edge['data']['uuid_list']) == 2)
+    for node in cja._nodes:
+        assert(len(node['data']['uuid_list']) == 2)
+
 def assert_element_properties(cja):
     # each element needs an id
     elements = ([n for n in cja._nodes] + [e for e in cja._edges])
