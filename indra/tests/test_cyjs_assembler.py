@@ -7,6 +7,8 @@ mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})
 dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
+st_phos_Y = Phosphorylation(mek, erk, residue='Y')
+st_phos_T = Phosphorylation(mek, erk, residue='T')
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
 st_act = Activation(mek, erk)
@@ -47,12 +49,13 @@ def test_complex():
     assert(len(set(polarities))==1)
     assert('none' in polarities)
 
-def test_print_cyjs():
+def test_print_cyjs_graph():
     cja = CyJSAssembler()
     cja.add_statements([st_act, st_act2])
     cja.make_model()
-    cyjs_str = cja.print_cyjs()
-    print(cyjs_str)
+    cyjs_str = cja.print_cyjs_graph()
+    # assert output is not empty
+    assert(len(cyjs_str) > len('{\n "edges": [],\n "nodes": []\n}'))
 
 def test_no_grouping():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -79,9 +82,7 @@ def test_grouping_block_targeting_node():
             assert(parent_b == '')
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
-        assert_has_id(node)
-    for edge in cja._edges:
-        assert_has_id(edge)
+    assert_element_properties(cja)
     assert(parent_a == parent_c)
     parent_a_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_a][0]
@@ -108,9 +109,7 @@ def test_grouping_node_targeting_block():
             parent_b = node['data']['parent']
         if node['data']['name'] == 'C':
             parent_c = node['data']['parent']
-        assert_has_id(node)
-    for edge in cja._edges:
-        assert_has_id(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -142,9 +141,7 @@ def test_grouping_node_targeting_block_targeting_node():
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
             assert(parent_d == '')
-        assert_has_id(node)
-    for edge in cja._edges:
-        assert_has_id(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
                      x['data']['id']==parent_b][0]
@@ -174,9 +171,7 @@ def test_grouping_block_targeting_block():
             parent_c = node['data']['parent']
         if node['data']['name'] == 'D':
             parent_d = node['data']['parent']
-        assert_has_id(node)
-    for edge in cja._edges:
-        assert_has_id(edge)
+    assert_element_properties(cja)
     assert(parent_b == parent_c)
     assert(parent_a == parent_d)
     parent_b_name = [x['data']['name'] for x in cja._nodes if
@@ -193,7 +188,25 @@ def test_grouping_block_targeting_block():
                   x['data']['i'] != 'Virtual']
     assert(len(real_edges) == 1)
 
-def assert_has_id(element):
-    assert(element['data']['id'] is not None)
-    assert(element['data']['id'] != '')
+def test_edge_grouping_between_nongroup_nodes():
+    cja = CyJSAssembler()
+    cja.add_statements([st_phos_Y, st_phos_T])
+    cja.make_model(grouping=True)
+    assert(len(cja._nodes) == 2)
+    assert(len(cja._edges) == 1)
+    for edge in cja._edges:
+        assert(len(edge['data']['uuid_list']) == 2)
+    for node in cja._nodes:
+        assert(len(node['data']['uuid_list']) == 2)
 
+def assert_element_properties(cja):
+    # each element needs an id
+    elements = ([n for n in cja._nodes] + [e for e in cja._edges])
+    for element in elements:
+        assert(element['data']['id'] is not None), "Element ID is none"
+        assert(element['data']['id'] != ''), "Element ID is blank string!"
+        # each element should also have a list of uuids with at least one uuid
+        assert(element['data']['uuid_list'] is not None), "uuid_list is None"
+        assert(len(element['data']['uuid_list']) >= 1), "uuid_list is empty!"
+        for uuid in element['data']['uuid_list']:
+            assert(type(uuid) == type('abc')), (str(uuid) + ' is not a string')
