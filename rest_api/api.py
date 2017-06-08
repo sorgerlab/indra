@@ -5,7 +5,7 @@ from bottle import route, run, request, default_app, response
 from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-                             CyJSAssembler, SifAssembler
+    CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
 
 logger = logging.getLogger('rest_api')

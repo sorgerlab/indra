@@ -204,11 +204,6 @@ class CyJSAssembler(object):
             The name of the file to save the Cytoscape JS network to.
             Default: model
         """
-        cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        model_dict = {'exp_colorscale': self._exp_colorscale,
-                      'mut_colorscale': self._mut_colorscale,
-                      'model_elements': cyjs_dict,
-                      'context': self._context}
         cyjs_str = self.print_cyjs_graph()
         # outputs the graph
         with open(fname + '.json', 'wt') as fh:
@@ -304,9 +299,7 @@ class CyJSAssembler(object):
                 member_db_refs = _get_db_refs(member_agent)
             else:
                 member_db_refs = {}
-            members[member[1]] = {
-                    'db_refs': member_db_refs
-                    }
+            members[member[1]] = {'db_refs': member_db_refs}
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
                          'members': members, 'uuid_list': [uuid]}}
