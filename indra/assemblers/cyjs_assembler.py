@@ -6,8 +6,6 @@ import logging
 import itertools
 import collections
 import numpy as np
-from matplotlib.colors import LinearSegmentedColormap as colormap
-from matplotlib.colors import rgb2hex, hex2color
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.databases import context_client, get_identifiers_url
@@ -109,7 +107,9 @@ class CyJSAssembler(object):
         gene_names = self._gene_names
         exp = {}
         mut = {}
-        # context_client gives back a dict with genes as keys. prefer lines keys
+
+        # context_client gives back a dict with genes as keys.
+        # prefer lines keys, so this will need to be transposed
         def transpose_context(context_dict):
             d = context_dict
             d_genes = [x for x in d]
@@ -134,6 +134,7 @@ class CyJSAssembler(object):
         # create bins for the exp values
         # because colorbrewer only does 3-9 bins and I don't feel like
         # reinventing color scheme theory, this will only bin 3-9 bins
+
         def bin_exp(expression_dict):
             d = expression_dict
             exp_values = []
@@ -394,7 +395,7 @@ class CyJSAssembler(object):
             if len(val) > 1:
                 self._add_edge(key[0], key[1], key[2], key[3], val)
         # edit edges on parent nodes and make new edges for them
-        edges_to_add = [[], []] # [group_edges, uuid_lists]
+        edges_to_add = [[], []]  # [group_edges, uuid_lists]
         for e in self._edges:
             new_edge = deepcopy(e)
             new_edge['data'].pop('id', None)
