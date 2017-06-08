@@ -74,14 +74,14 @@ for drug_name, ab_dict in data_stmts.items():
             print("Checking: %s" % stmt)
             result = mc.check_statement(stmt, max_paths=5, max_path_length=5)
             if result:
-                paths += result[1]
-                print("Path found, skipping rest")
+                paths += result
                 path_found = 1
-                # Score paths here TODO
-                #scored_result = mc.score_paths(result[0], agent_values)
                 break
             else:
                 print("No path found")
+        #Score paths here TODO
+        #if paths:
+        #    scored_result = mc.score_paths(paths, agent_values)
 
         results.append((drug_name, ab, relation, value, path_found, paths))
 #write_unicode_csv('model_check_results.csv', results)

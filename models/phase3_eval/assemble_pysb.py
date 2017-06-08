@@ -27,6 +27,8 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Save a version of statements with no evidence for faster loading
     for s in stmts:
         s.evidence = []
+        for ss in s.supports + s.supported_by:
+            ss.evidence = []
     ac.dump_statements(stmts, '%s_no_evidence.pkl' % base_file)
 
     # Assemble model
@@ -39,6 +41,8 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Add observables
     add_observables(pa.model)
     pa.save_model(out_file)
+    with open('korkut_pysb.pkl', 'wb') as fh:
+        pickle.dump(pa.model, fh)
     #pa.export_model('kappa', '%s.ka' % base_file)
     return pa.model
 
@@ -120,7 +124,10 @@ def add_observables(model):
             else:
                 patterns.append(ComplexPattern([monomer()], None))
         if patterns:
-            obs_name = ab_name
+            if model.monomers.get(ab_name) is not None:
+                obs_name = ab_name + '_obs'
+            else:
+                obs_name = ab_name
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
                 obs_name = obs_name.replace('-', '_')
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
