@@ -260,16 +260,10 @@ def assemble_cyjs():
     stmts = stmts_from_json(stmts_json)
     cja = CyJSAssembler()
     cja.add_statements(stmts)
-    cja.make_model(grouping=True,
-                   drop_virtual_edges=False,
-                   add_edge_weights=True)
-    line = body.get('line')
-    if line is not None:
-        cja.set_context(cell_type = line,
-                        bin_expression = True,
-                        n_bins = 9)
-    model_str = cja.print_cyjs()
+    cja.make_model(grouping=True)
+    model_str = cja.print_cyjs_graph()
     return model_str
+
 
 @route('/assemblers/sif/loopy', method='POST')
 @allow_cors
