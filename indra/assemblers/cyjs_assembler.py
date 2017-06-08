@@ -89,13 +89,8 @@ class CyJSAssembler(object):
             self._group_edges()
         return self.print_cyjs_graph()
 
-
     def get_gene_names(self):
-        """Get gene names of all nodes and node members
-
-        Parameters
-        ----------
-        """
+        """Gather gene names of all nodes and node members"""
         # Collect all gene names in network
         gene_names = []
         for node in self._nodes:
@@ -109,11 +104,7 @@ class CyJSAssembler(object):
         self._gene_names = gene_names
 
     def set_CCLE_context(self, cell_types):
-        """Get context of all nodes and node members
-
-        Parameters
-        ----------
-        """
+        """Set context of all nodes and node members from CCLE."""
         self.get_gene_names()
         gene_names = self._gene_names
         exp = {}
@@ -123,19 +114,19 @@ class CyJSAssembler(object):
             d = context_dict
             d_genes = [x for x in d]
             d_lines = [x for x in d[d_genes[0]]]
-            transposed = {x:{y:d[y][x] for y in d_genes} for x in d_lines}
+            transposed = {x: {y: d[y][x] for y in d_genes} for x in d_lines}
             return transposed
         # access the context service in chunks of cell types.
         # it will timeout if queried with larger chunks.
         while len(cell_types) > 0:
             cell_types_chunk = cell_types[:10]
             del cell_types[:10]
-            exp_temp = context_client.get_protein_expression(gene_names, \
+            exp_temp = context_client.get_protein_expression(gene_names,
                                                              cell_types_chunk)
             exp_temp = transpose_context(exp_temp)
             for e in exp_temp:
                 exp[e] = exp_temp[e]
-            mut_temp = context_client.get_mutations(gene_names, \
+            mut_temp = context_client.get_mutations(gene_names,
                                                     cell_types_chunk)
             mut_temp = transpose_context(mut_temp)
             for m in mut_temp:
@@ -149,14 +140,14 @@ class CyJSAssembler(object):
             for line in d:
                 for gene in d[line]:
                     val = d[line][gene]
-                    if (val) != None:
+                    if val is not None:
                         exp_values.append(val)
             thr_dict = {}
-            for n_bins in range(3,10):
+            for n_bins in range(3, 10):
                 bin_thr = np.histogram(np.log10(exp_values), n_bins)[1][1:]
                 thr_dict[n_bins] = bin_thr
             # this dict isn't yet binned, that happens in the loop
-            binned_dict = {x:deepcopy(expression_dict) for x in (range(3,10))}
+            binned_dict = {x: deepcopy(expression_dict) for x in range(3, 10)}
             for n_bins in binned_dict:
                 for line in binned_dict[n_bins]:
                     for gene in binned_dict[n_bins][line]:
@@ -171,16 +162,16 @@ class CyJSAssembler(object):
                                     break
             return binned_dict
         binned_exp = bin_exp(exp)
-        context = {'bin_expression' : binned_exp,
-                   'mutation' : mut}
+        context = {'bin_expression': binned_exp,
+                   'mutation': mut}
         self._context['CCLE'] = context
 
     def print_cyjs_graph(self):
         """Return the assembled Cytoscape JS network as a json string.
 
-            Returns
-            -------
-            cyjs_str : str
+        Returns
+        -------
+        cyjs_str : str
             A json string representation of the Cytoscape JS network.
         """
         cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
@@ -190,9 +181,9 @@ class CyJSAssembler(object):
     def print_cyjs_context(self):
         """Return a list of node names and their respective context.
 
-            Returns
-            -------
-            cyjs_str_context : str
+        Returns
+        -------
+        cyjs_str_context : str
             A json string of the context dictionary. e.g. -
             {'CCLE' : {'exp' : {'gene' : 'val'},
                        'mut' : {'gene' : 'val'}
@@ -208,7 +199,7 @@ class CyJSAssembler(object):
 
         Parameters
         ----------
-        file_name : Optional[str]
+        fname : Optional[str]
             The name of the file to save the Cytoscape JS network to.
             Default: model
         """
@@ -216,7 +207,7 @@ class CyJSAssembler(object):
         model_dict = {'exp_colorscale': self._exp_colorscale,
                       'mut_colorscale': self._mut_colorscale,
                       'model_elements': cyjs_dict,
-                      'context' : self._context}
+                      'context': self._context}
         cyjs_str = self.print_cyjs_graph()
         # outputs the graph
         with open(fname + '.json', 'wt') as fh:
@@ -288,7 +279,7 @@ class CyJSAssembler(object):
         # if the node already exists we do not want to add it again
         # we must however add its uuid
         if node_id is not None:
-            #fetch the appropriate node
+            # fetch the appropriate node
             n = [x for x in self._nodes if x['data']['id'] == node_id][0]
             uuid_list = n['data']['uuid_list']
             if uuid not in uuid_list:
@@ -327,26 +318,22 @@ class CyJSAssembler(object):
         return ret
 
     def _get_node_key(self, node_dict_item):
-        """ Given a value of node_dict, return a tuple of sorted tuples for
-            sources targets
-        """
+        """Return a tuple of sorted sources and targets given a node dict."""
         s = tuple(sorted(node_dict_item['sources']))
         t = tuple(sorted(node_dict_item['targets']))
         return (s, t)
 
     def _get_node_groups(self):
-        """ Returns a lists of node id lists that are topologically identical.
+        """Return a list of node id lists that are topologically identical.
 
-            How does it work?
-            -----------------
-            First construct a node_dict which is keyed to the node id and
-            has a value which is a dict with keys 'sources' and 'targets'.
-            The 'sources' and 'targets' each contain a list of tuples
-            (i, polarity, source) edge of the node. node_dict is then processed
-            by _get_node_key() which returns a tuple of (s,t) where s,t are
-            sorted tuples of the ids for the source and target nodes. (s,t) is
-            then used as a key in node_key_dict where the values are the node
-            ids. node_groups is restricted to groups greater than 1 node.
+        First construct a node_dict which is keyed to the node id and
+        has a value which is a dict with keys 'sources' and 'targets'.
+        The 'sources' and 'targets' each contain a list of tuples
+        (i, polarity, source) edge of the node. node_dict is then processed
+        by _get_node_key() which returns a tuple of (s,t) where s,t are
+        sorted tuples of the ids for the source and target nodes. (s,t) is
+        then used as a key in node_key_dict where the values are the node
+        ids. node_groups is restricted to groups greater than 1 node.
         """
         node_dict = {node['data']['id']: {'sources': [], 'targets': []}
                      for node in self._nodes}
@@ -369,9 +356,11 @@ class CyJSAssembler(object):
         return node_groups
 
     def _get_edge_dict(self):
-        ''' Make a dict of edges. Keyed tuples of (i, source, target, polarity)
-            with lists of edge ids [id1, id2, ...]
-        '''
+        """Return a dict of edges.
+
+        Keyed tuples of (i, source, target, polarity)
+        with lists of edge ids [id1, id2, ...]
+        """
         edge_dict = collections.defaultdict(lambda: [])
         for e in self._edges:
             data = e['data']
@@ -381,11 +370,12 @@ class CyJSAssembler(object):
         return edge_dict
 
     def _group_edges(self):
-        ''' Groups all edges that are topologically identical, meaning that
-            (i, source, target, polarity) are the same, then sets edges on
-            parent (i.e. - group) nodes to 'Virtual' and creates a new edge to
-            represent all of them.
-        '''
+        """Group all edges that are topologically identical.
+
+        This means that (i, source, target, polarity) are the same, then sets
+        edges on parent (i.e. - group) nodes to 'Virtual' and creates a new
+        edge to represent all of them.
+        """
         # first, group all edges if they are topologically identical
         edge_dict = self._get_edge_dict()
         uuids = collections.defaultdict(lambda: [])
@@ -398,8 +388,8 @@ class CyJSAssembler(object):
         for key, val in edge_dict.items():
             if len(val) > 1:
                 edges_to_remove += val
-        self._edges = [x for x in self._edges \
-                        if x['data']['id'] not in edges_to_remove]
+        self._edges = [x for x in self._edges
+                       if x['data']['id'] not in edges_to_remove]
         for key, val in edge_dict.items():
             if len(val) > 1:
                 self._add_edge(key[0], key[1], key[2], key[3], val)
@@ -460,6 +450,7 @@ class CyJSAssembler(object):
                 if node['data']['id'] in group:
                     node['data']['parent'] = new_group_node['data']['id']
             self._nodes.append(new_group_node)
+
 
 def _get_db_refs(agent):
     cyjs_db_refs = {}
