@@ -186,8 +186,8 @@ class CyJSAssembler(object):
         -------
         cyjs_str_context : str
             A json string of the context dictionary. e.g. -
-            {'CCLE' : {'exp' : {'gene' : 'val'},
-                       'mut' : {'gene' : 'val'}
+            {'CCLE' : {'bin_expression' : {'cell_line1' : {'gene1':'val1'} },
+                       'bin_expression' : {'cell_line' : {'gene1':'val1'} }
                       }
             }
         """
