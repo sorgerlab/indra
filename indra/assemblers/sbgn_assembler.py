@@ -210,30 +210,13 @@ def remove_agent_mod(agent, mc):
     return agent
 
 def statement_product(stmt):
-    if isinstance(stmt, ist.Phosphorylation):
+    if isinstance(stmt, ist.Modification):
+        modtype = ist.modclass_to_modtype[stmt.__class__]
+        if isinstance(stmt, ist.RemoveModification):
+            modtype = ist.modtype_to_inverse[modtype]
+        mc = ist.ModCondition(modtype, stmt.residue, stmt.position)
         product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
         product.mods.append(mc)
-    elif isinstance(stmt, ist.Dephosphorylation):
-        product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('phosphorylation', stmt.residue, stmt.position)
-        product = remove_agent_mod(product, mc)
-    elif isinstance(stmt, ist.Ubiquitination):
-        product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
-        product.mods.append(mc)
-    elif isinstance(stmt, ist.Deubiquitination):
-        product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('ubiquitination', stmt.residue, stmt.position)
-        product = remove_agent_mod(product, mc)
-    elif isinstance(stmt, ist.Acetylation):
-        product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('acetylation', stmt.residue, stmt.position)
-        product.mods.append(mc)
-    elif isinstance(stmt, ist.Deacetylation):
-        product = copy.deepcopy(stmt.sub)
-        mc = ist.ModCondition('acetylation', stmt.residue, stmt.position)
-        product = remove_agent_mod(product, mc)
     elif isinstance(stmt, ist.Complex):
         product = copy.deepcopy(stmt.members[0])
         for member in stmt.members[1:]:
@@ -254,17 +237,15 @@ def statement_product(stmt):
     return product
 
 def statement_consumed(stmt):
-    if isinstance(stmt, ist.Phosphorylation):
+    if isinstance(stmt, ist.AddModification):
         consumed = [copy.deepcopy(stmt.sub)]
-    elif isinstance(stmt, ist.Ubiquitination):
-        consumed = [copy.deepcopy(stmt.sub)]
-    elif isinstance(stmt, ist.Acetylation):
-        consumed = [copy.deepcopy(stmt.sub)]
-    elif isinstance(stmt, ist.Dephosphorylation):
-        stmt_mc = ist.ModCondition('phosphorylation',
-                                   stmt.residue, stmt.position)
+    elif isinstance(stmt, ist.RemoveModification):
+        modtype = ist.modclass_to_modtype[stmt.__class__]
+        if isinstance(stmt, ist.RemoveModification):
+            modtype = ist.modtype_to_inverse[modtype]
+        mc = ist.ModCondition(modtype, stmt.residue, stmt.position)
         consumed1 = copy.deepcopy(stmt.sub)
-        consumed1.mods.append(stmt_mc)
+        consumed1.mods.append(mc)
         consumed = [consumed1]
     elif isinstance(stmt, ist.Complex):
         consumed = stmt.members
