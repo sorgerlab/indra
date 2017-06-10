@@ -186,3 +186,10 @@ def test_replace_complexes():
     assert(len(ml.statements) == 1)
     print(ml.statements)
 
+def test_gather_mods():
+    phos1 = Phosphorylation(Agent('b'), Agent('a'))
+    phos2 = Phosphorylation(Agent('c'), Agent('a'), 'T')
+    phos3 = Phosphorylation(Agent('d'), Agent('a'), 'T', '143')
+    ml = MechLinker([phos1, phos2, phos3])
+    ml.gather_modifications()
+

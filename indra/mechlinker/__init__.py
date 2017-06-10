@@ -123,6 +123,20 @@ class MechLinker(object):
                     subj_base = self._get_base(stmt.subj)
                     subj_base.add_activity(stmt.j)
 
+    def gather_modifications(self):
+        for stmt in self.statements:
+            if isinstance(stmt, Modification):
+                sub_base = self._get_base(stmt.sub)
+                pol = isinstance(stmt, AddModification)
+                mc = ModCondition(modclass_to_modtype[stmt.__class__],
+                                  stmt.residue, stmt.position, pol)
+                sub_base.add_modification(mc)
+            for agent in stmt.agent_list():
+                if agent is not None:
+                    agent_base = self._get_base(agent)
+                    for mc in agent.mods:
+                        agent_base.add_modification(mc)
+
     def require_active_forms(self):
         """Rewrites Statements with Agents' active forms in active positions.
 
@@ -203,6 +217,16 @@ class MechLinker(object):
                 act_red = agent_base.get_activity_reduction(stmt.activity)
                 if act_red is not None:
                     stmt.activity = act_red
+
+    def reduce_phosphosites(self):
+        for stmt in self.statements:
+            agents = stmt.agent_list()
+            for agent in agents:
+                if agent is not None and agent.mods:
+                    agent_base = self._get_base(agent)
+                    for i, mc in enumerate(agent.mods):
+                        mc_red = agent_base.get_mod_reduction(mc)
+                        agent.mods[i] = mc_red
 
     @staticmethod
     def infer_complexes(stmts):
@@ -543,6 +567,7 @@ class BaseAgent(object):
         self.inactive_states = {}
         self.activity_graph = None
         self.activity_reductions = None
+        self.modifications = []
 
     def get_activity_reduction(self, activity):
         if self.activity_reductions is None:
@@ -597,6 +622,16 @@ class BaseAgent(object):
             return states
         return None
 
+    def add_modification(self, mc):
+        mcc = ModCondition(mc.mod_type, mc.residue, mc.position, True)
+        found = False
+        for mod in self.modifications:
+            if mcc.matches(mod):
+                found = True
+                break
+        if not found:
+            self.modifications.append(mcc)
+
     def __str__(self):
         s = '%s(' % self.name
         if self.activity_types:
@@ -605,6 +640,12 @@ class BaseAgent(object):
             s += '%s: %s' % (k, v)
         s += ')'
         return s
+
+    def make_modification_graph(self):
+        self.modification_graph = networkx.DiGraph()
+        for m1, m2 in itertools.combinations(self.modification, 2):
+            if m1.refinement_of(m2, hierarchies):
+                self.modification_graph.add_edge(m2, m1)
 
     def __repr__(self):
         return str(self)
