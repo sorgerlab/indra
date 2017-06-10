@@ -128,8 +128,10 @@ class MechLinker(object):
             if isinstance(stmt, Modification):
                 sub_base = self._get_base(stmt.sub)
                 pol = isinstance(stmt, AddModification)
-                mc = ModCondition(modclass_to_modtype[stmt.__class__],
-                                  stmt.residue, stmt.position, pol)
+                mod_type = modclass_to_modtype[stmt.__class__]
+                if not pol:
+                    mod_type = modtype_to_inverse[mod_type]
+                mc = ModCondition(mod_type, stmt.residue, stmt.position, pol)
                 sub_base.add_modification(mc)
             for agent in stmt.agent_list():
                 if agent is not None:
@@ -140,8 +142,11 @@ class MechLinker(object):
     def reduce_modifications(self):
         for stmt in self.statements:
             if isinstance(stmt, Modification):
-                mc = ModCondition(modclass_to_modtype[stmt.__class__],
-                                  stmt.residue, stmt.position, True)
+                pol = isinstance(stmt, AddModification)
+                mod_type = modclass_to_modtype[stmt.__class__]
+                if not pol:
+                    mod_type = modtype_to_inverse[mod_type]
+                mc = ModCondition(mod_type, stmt.residue, stmt.position, pol)
                 sub_base = self._get_base(stmt.sub)
                 mc_red = sub_base.get_modification_reduction(mc)
                 stmt.residue = mc_red.residue
@@ -599,6 +604,9 @@ class BaseAgent(object):
         if self.modification_reductions is None:
             self._make_modification_reductions()
         mc_red_tuple = self.modification_reductions.get(_mc_tuple(mc))
+        # This handles the case where there was no reduction
+        if not mc_red_tuple:
+            return mc
         mc = ModCondition(*(list(mc_red_tuple) + [mc.is_modified]))
         return mc
 
@@ -610,9 +618,9 @@ class BaseAgent(object):
     def _make_modification_graph(self):
         self.modification_graph = networkx.DiGraph()
         for m1, m2 in itertools.combinations(self.modifications, 2):
-            if m1.refinement_of(m2, hierarchies):
+            if m1.refinement_of(m2, hierarchies['modification']):
                 self.modification_graph.add_edge(_mc_tuple(m2), _mc_tuple(m1))
-            elif m2.refinement_of(m1, hierarchies):
+            elif m2.refinement_of(m1, hierarchies['modification']):
                 self.modification_graph.add_edge(_mc_tuple(m1), _mc_tuple(m2))
 
     def add_activity(self, activity_type):
