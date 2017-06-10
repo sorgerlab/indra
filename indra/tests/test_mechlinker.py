@@ -186,10 +186,57 @@ def test_replace_complexes():
     assert(len(ml.statements) == 1)
     print(ml.statements)
 
-def test_gather_mods():
+def test_reduce_mods1():
     phos1 = Phosphorylation(Agent('b'), Agent('a'))
     phos2 = Phosphorylation(Agent('c'), Agent('a'), 'T')
     phos3 = Phosphorylation(Agent('d'), Agent('a'), 'T', '143')
     ml = MechLinker([phos1, phos2, phos3])
     ml.gather_modifications()
+    ml.reduce_modifications()
+    assert(len(ml.statements) == 3)
+    for st in ml.statements:
+        assert(st.residue == 'T')
+        assert(st.position == '143')
 
+def test_reduce_mods2():
+    mc1 = ModCondition('phosphorylation', 'S', '123', False)
+    mc2 = ModCondition('phosphorylation', 'S', None, True)
+    mc3 = ModCondition('phosphorylation', 'T')
+    mc4 = ModCondition('phosphorylation', 'T', '111')
+    mc5 = ModCondition('phosphorylation', 'T', '999')
+    mc6 = ModCondition('phosphorylation')
+    mc7 = ModCondition('phosphorylation', None, '999')
+    st1 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc1]))
+    st2 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc2]))
+    st3 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc3]))
+    st4 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc4]))
+    st5 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc5]))
+    st6 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc6]))
+    st7 = Activation(Agent('KRAS'), Agent('BRAF', mods=[mc7]))
+    ml = MechLinker([st1, st2, st3, st4, st5, st6, st7])
+    ml.gather_modifications()
+    ml.reduce_modifications()
+    assert(len(ml.statements) == 7)
+    mc_red1 = ml.statements[0].obj.mods[0]
+    mc_red2 = ml.statements[1].obj.mods[0]
+    mc_red3 = ml.statements[2].obj.mods[0]
+    mc_red4 = ml.statements[3].obj.mods[0]
+    mc_red5 = ml.statements[4].obj.mods[0]
+    mc_red6 = ml.statements[5].obj.mods[0]
+    mc_red7 = ml.statements[6].obj.mods[0]
+    # These ones stay the same because they shouldn't be reduced
+    assert(mc_red1.__dict__ == mc1.__dict__)
+    assert(mc_red3.__dict__ == mc3.__dict__)
+    assert(mc_red4.__dict__ == mc4.__dict__)
+    assert(mc_red5.__dict__ == mc5.__dict__)
+    assert(mc_red6.__dict__ == mc6.__dict__)
+    # mc2 has to be reduced to have position '123'
+    assert(mc_red2.mod_type == 'phosphorylation')
+    assert(mc_red2.residue == 'S')
+    assert(mc_red2.position == '123')
+    assert(mc_red2.is_modified == True)
+    # mc7 has to be reduced to have residue 'T'
+    assert(mc_red7.mod_type == 'phosphorylation')
+    assert(mc_red7.residue == 'T')
+    assert(mc_red7.position == '999')
+    assert(mc_red7.is_modified == True)
