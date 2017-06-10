@@ -41,8 +41,11 @@ states = {
 
 class SBGNAssembler(object):
 
-    def __init__(self, policies=None):
-        self.statements = []
+    def __init__(self, statements=None):
+        if not statements:
+            self.statements = []
+        else:
+            self.statements = statements
         self.agent_set = None
 
     def statement_exists(self, stmt):
@@ -56,12 +59,10 @@ class SBGNAssembler(object):
             if any([a is None for a in stmt.agent_list()]):
                 continue
             stmt = copy.deepcopy(stmt)
-            uppercase_agents(stmt)
             if not self.statement_exists(stmt):
                 self.statements.append(stmt)
 
     def make_model(self):
-
         def make_id(_counter=[0]):
             id_ = 'id_%d' % _counter[0]
             _counter[0] += 1
@@ -275,28 +276,3 @@ def complex_components(agent):
     for bc in agent.bound_conditions:
         agents += complex_components(bc.agent)
     return agents
-
-def uppercase_agents(statement):
-
-    def uppercase_single(agent):
-        agent.name = agent.name.upper()
-        for bc in agent.bound_conditions:
-            uppercase_single(bc.agent)
-
-    for agent in statement.agent_list():
-        uppercase_single(agent)
-
-def text_to_sbgn(text=None, trips_xml=None):
-    if ((text is None and trips_xml is None) or
-        (text is not None and trips_xml is not None)):
-        raise ValueError("Must provide ONE of 'text' or 'trips_xml'")
-    elif text is not None:
-        tp = trips_api.process_text(text)
-    elif trips_xml is not None:
-        tp = trips_api.process_xml(trips_xml)
-    else:
-        raise RuntimeError("Unexpected or impossible combination of arguments")
-    sa = SBGNAssembler()
-    sa.add_statements(tp.statements)
-    sbgn_output = sa.make_model()
-    return sbgn_output
