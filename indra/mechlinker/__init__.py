@@ -137,6 +137,24 @@ class MechLinker(object):
                     for mc in agent.mods:
                         agent_base.add_modification(mc)
 
+    def reduce_modifications(self):
+        for stmt in self.statements:
+            if isinstance(stmt, Modification):
+                mc = ModCondition(modclass_to_modtype[stmt.__class__],
+                                  stmt.residue, stmt.position, True)
+                sub_base = self._get_base(stmt.sub)
+                mc_red = sub_base.get_modification_reduction(mc)
+                stmt.residue = mc_red.residue
+                stmt.position = mc_red.position
+            agents = stmt.agent_list()
+            for agent in agents:
+                if agent is not None and agent.mods:
+                    agent_base = self._get_base(agent)
+                    for i, mc in enumerate(agent.mods):
+                        mc_red = agent_base.get_modification_reduction(mc)
+                        agent.mods[i] = mc_red
+
+
     def require_active_forms(self):
         """Rewrites Statements with Agents' active forms in active positions.
 
@@ -217,16 +235,6 @@ class MechLinker(object):
                 act_red = agent_base.get_activity_reduction(stmt.activity)
                 if act_red is not None:
                     stmt.activity = act_red
-
-    def reduce_phosphosites(self):
-        for stmt in self.statements:
-            agents = stmt.agent_list()
-            for agent in agents:
-                if agent is not None and agent.mods:
-                    agent_base = self._get_base(agent)
-                    for i, mc in enumerate(agent.mods):
-                        mc_red = agent_base.get_mod_reduction(mc)
-                        agent.mods[i] = mc_red
 
     @staticmethod
     def infer_complexes(stmts):
@@ -567,24 +575,45 @@ class BaseAgent(object):
         self.inactive_states = {}
         self.activity_graph = None
         self.activity_reductions = None
+        self.modification_reductions = None
         self.modifications = []
 
     def get_activity_reduction(self, activity):
         if self.activity_reductions is None:
-            self.make_activity_reductions()
+            self._make_activity_reductions()
         return self.activity_reductions.get(activity)
 
-    def make_activity_reductions(self):
-        self.make_activity_graph()
+    def _make_activity_reductions(self):
+        self._make_activity_graph()
         self.activity_reductions = _get_graph_reductions(self.activity_graph)
 
-    def make_activity_graph(self):
+    def _make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
             if hierarchies['activity'].isa('INDRA', a1, 'INDRA', a2):
                 self.activity_graph.add_edge(a2, a1)
             if hierarchies['activity'].isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.add_edge(a1, a2)
+
+    def get_modification_reduction(self, mc):
+        if self.modification_reductions is None:
+            self._make_modification_reductions()
+        mc_red_tuple = self.modification_reductions.get(_mc_tuple(mc))
+        mc = ModCondition(*(list(mc_red_tuple) + [mc.is_modified]))
+        return mc
+
+    def _make_modification_reductions(self):
+        self._make_modification_graph()
+        self.modification_reductions = \
+            _get_graph_reductions(self.modification_graph)
+
+    def _make_modification_graph(self):
+        self.modification_graph = networkx.DiGraph()
+        for m1, m2 in itertools.combinations(self.modifications, 2):
+            if m1.refinement_of(m2, hierarchies):
+                self.modification_graph.add_edge(_mc_tuple(m2), _mc_tuple(m1))
+            elif m2.refinement_of(m1, hierarchies):
+                self.modification_graph.add_edge(_mc_tuple(m1), _mc_tuple(m2))
 
     def add_activity(self, activity_type):
         if activity_type not in self.activity_types:
@@ -640,12 +669,6 @@ class BaseAgent(object):
             s += '%s: %s' % (k, v)
         s += ')'
         return s
-
-    def make_modification_graph(self):
-        self.modification_graph = networkx.DiGraph()
-        for m1, m2 in itertools.combinations(self.modification, 2):
-            if m1.refinement_of(m2, hierarchies):
-                self.modification_graph.add_edge(m2, m1)
 
     def __repr__(self):
         return str(self)
@@ -749,4 +772,7 @@ def _get_graph_reductions(graph):
             if frontiers[i] == frontiers[j]:
                 reductions[n1] = n2
     return reductions
+
+def _mc_tuple(mc):
+    return (mc.mod_type, mc.residue, mc.position)
 
