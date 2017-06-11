@@ -1,41 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import itertools
 import copy
 import logging
-import collections
-import lxml.builder
 import lxml.etree
-from indra.trips import trips_api
+import lxml.builder
 from indra.statements import *
 
 logger = logging.getLogger('sbgn_assembler')
-
-abbrevs = {
-    'phosphorylation': 'phospho',
-    'ubiquitination': 'ub',
-    'farnesylation': 'farnesyl',
-    'hydroxylation': 'hydroxyl',
-    'acetylation': 'acetyl',
-    'sumoylation': 'sumo',
-    'glycosylation': 'glycosyl',
-    'methylation': 'methyl',
-    'modification': 'mod',
-    'activity': 'act',
-    'kinase': 'kin'
-}
-
-states = {
-    'phosphorylation': ['u', 'p'],
-    'ubiquitination': ['n', 'y'],
-    'farnesylation': ['n', 'y'],
-    'hydroxylation': ['n', 'y'],
-    'acetylation': ['n', 'y'],
-    'sumoylation': ['n', 'y'],
-    'glycosylation': ['n', 'y'],
-    'methylation': ['n', 'y'],
-    'modification': ['n', 'y'],
-}
 
 sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
 emaker = lxml.builder.ElementMaker(nsmap={None: sbgn_ns})
@@ -192,80 +163,6 @@ class SBGNAssembler(object):
         self._map.append(glyph)
         return agent_id
 
-        def glyph_for_complex(agent):
-            glyph = E.glyph(
-                E.bbox(x='0', y='0', w='120', h='60'),
-                class_('complex'), id=agent_ids[agent.matches_key()],
-                )
-            for component in complex_components(agent):
-               glyph.append(glyph_for_monomer(component, in_complex=True))
-            return glyph
-
-        E = lxml.builder.ElementMaker(nsmap={None: 'http://sbgn.org/libsbgn/pd/0.1'})
-        root = E.sbgn()
-        map = E.map()
-        root.append(map)
-        base = agents_for_statements(self.statements)
-        transformed = transformed_agents(self.statements)
-        agents = distinct_agents(base + transformed)
-        agent_ids = {a.matches_key(): make_id() for a in agents}
-        for a in agents:
-            if not a.bound_conditions:
-                glyph = glyph_for_monomer(a)
-            else:
-                glyph = glyph_for_complex(a)
-            map.append(glyph)
-        for s in self.statements:
-            if isinstance(s, Modification) or \
-                isinstance(s, RegulateActivity) or \
-                isinstance(s, RegulateAmount) or \
-                isinstance(s, ActiveForm):
-                class_name = 'process'
-            elif isinstance(s, Complex):
-                class_name = 'association'
-            else:
-                logger.warning("WARNING: skipping %s" % type(s))
-                continue
-            consumed = statement_consumed(s)
-            st_prod = statement_product(s)
-            if st_prod is None:
-                logger.warning("WARNING: skipping %s" % type(s))
-                continue
-            produced = [st_prod]
-            map.append(process_glyph)
-            for c in consumed:
-                map.append(
-                    E.arc(class_('consumption'),
-                          source=agent_ids[c.matches_key()],
-                          target=pg_id,
-                          id=make_id(),
-                          )
-                    )
-            for p in produced:
-                map.append(
-                    E.arc(class_('production'),
-                          source=pg_id,
-                          target=agent_ids[p.matches_key()],
-                          id=make_id(),
-                          )
-                    )
-            if isinstance(s, Modification):
-                map.append(
-                    E.arc(class_('catalysis'),
-                          source=agent_ids[s.enz.matches_key()],
-                          target=pg_id,
-                          id=make_id(),
-                          )
-                    )
-            if isinstance(s, RegulateActivity):
-                map.append(
-                    E.arc(class_('catalysis'),
-                          source=agent_ids[s.subj.matches_key()],
-                          target=pg_id,
-                          id=make_id(),
-                          )
-                    )
-
     def _make_id(self):
         element_id = 'id_%d' % self.id_counter
         self.id_counter += 1
@@ -279,96 +176,8 @@ class SBGNAssembler(object):
 
     def add_statements(self, stmts):
         for stmt in stmts:
-            if any([a is None for a in stmt.agent_list()]):
-                continue
-            stmt = copy.deepcopy(stmt)
             if not self.statement_exists(stmt):
                 self.statements.append(stmt)
-
-
-
-def agents_for_statements(statements):
-    return [a for stmt in statements for a in stmt.agent_list()]
-
-def transformed_agents(statements):
-    # Following filter not needed once all statement types are implemented.
-    agents = []
-    for s in statements:
-        cs = statement_consumed(s)
-        if cs is not None:
-            agents += cs
-    agents += [statement_product(s) for s in statements]
-    return [a for a in agents if a is not None]
-
-def remove_agent_mod(agent, mc):
-    agent.mods = []
-    for mod in agent.mods:
-        if not mod.matches(mc):
-            agent.mods.append(mc)
-    return agent
-
-def statement_product(stmt):
-    if isinstance(stmt, Modification):
-        modtype = modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, RemoveModification):
-            modtype = modtype_to_inverse[modtype]
-        mc = ModCondition(modtype, stmt.residue, stmt.position)
-        product = copy.deepcopy(stmt.sub)
-        product.mods.append(mc)
-    elif isinstance(stmt, Complex):
-        product = copy.deepcopy(stmt.members[0])
-        for member in stmt.members[1:]:
-            bc = BoundCondition(member, True)
-            product.bound_conditions.append(bc)
-    elif isinstance(stmt, RegulateActivity):
-        product = copy.deepcopy(stmt.obj)
-        if stmt.is_activation:
-            mc = ModCondition(stmt.obj_activity)
-            product.mods.append(mc)
-    elif isinstance(stmt, IncreaseAmount):
-        product = copy.deepcopy(stmt.obj)
-    elif isinstance(stmt, ActiveForm):
-        product = copy.deepcopy(stmt.agent)
-        mc = ModCondition(stmt.activity)
-        product.mods.append(mc)
-    else:
-        logger.warning("WARNING: skipping %s" % type(stmt))
-        product = None
-    return product
-
-def statement_consumed(stmt):
-    if isinstance(stmt, AddModification):
-        consumed = [copy.deepcopy(stmt.sub)]
-    elif isinstance(stmt, RemoveModification):
-        modtype = modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, RemoveModification):
-            modtype = modtype_to_inverse[modtype]
-        mc = ModCondition(modtype, stmt.residue, stmt.position)
-        consumed1 = copy.deepcopy(stmt.sub)
-        consumed1.mods.append(mc)
-        consumed = [consumed1]
-    elif isinstance(stmt, Complex):
-        consumed = stmt.members
-    elif isinstance(stmt, RegulateActivity):
-        consumed1 = copy.deepcopy(stmt.obj)
-        if not stmt.is_activation:
-            mc = ModCondition(stmt.obj_activity)
-            consumed1.mods.append(mc)
-        consumed = [consumed1]
-    elif isinstance(stmt, DecreaseAmount):
-        consumed = copy.deepcopy(stmt.obj)
-    elif isinstance(stmt, ActiveForm):
-        consumed = [copy.deepcopy(stmt.agent)]
-    else:
-        logger.warning("WARNING: skipping %s" % type(stmt))
-        consumed = None
-    return consumed
-
-def distinct_agents(agents):
-    agents = sorted(agents, key=Agent.matches_key)
-    gb = itertools.groupby(agents, Agent.matches_key)
-    distinct = [next(g[1]) for g in gb]
-    return distinct
 
 def complex_components(agent):
     agent_copy = copy.copy(agent)
@@ -380,3 +189,30 @@ def complex_components(agent):
 
 def class_(name):
     return {'class': name}
+
+abbrevs = {
+    'phosphorylation': 'phospho',
+    'ubiquitination': 'ub',
+    'farnesylation': 'farnesyl',
+    'hydroxylation': 'hydroxyl',
+    'acetylation': 'acetyl',
+    'sumoylation': 'sumo',
+    'glycosylation': 'glycosyl',
+    'methylation': 'methyl',
+    'modification': 'mod',
+    'activity': 'act',
+    'kinase': 'kin'
+}
+
+states = {
+    'phosphorylation': ['u', 'p'],
+    'ubiquitination': ['n', 'y'],
+    'farnesylation': ['n', 'y'],
+    'hydroxylation': ['n', 'y'],
+    'acetylation': ['n', 'y'],
+    'sumoylation': ['n', 'y'],
+    'glycosylation': ['n', 'y'],
+    'methylation': ['n', 'y'],
+    'modification': ['n', 'y'],
+}
+
