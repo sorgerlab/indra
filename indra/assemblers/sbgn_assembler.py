@@ -35,8 +35,6 @@ states = {
     'glycosylation': ['n', 'y'],
     'methylation': ['n', 'y'],
     'modification': ['n', 'y'],
-    'activity': ['i', 'a'],
-    'kinase': ['i', 'a']
 }
 
 sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
@@ -74,8 +72,10 @@ class SBGNAssembler(object):
     def _assemble_modification(self, stmt):
         if not stmt.enz:
             return
+        # Make glyph for enz
         enz_glyph = self._agent_glyph(stmt.enz)
         mc_changed = stmt._get_mod_condition()
+        # Make glyphs for sub
         sub_changed = copy.deepcopy(stmt.sub)
         sub_changed.mods.append(mc_changed)
         sub_in, sub_out = \
@@ -83,11 +83,49 @@ class SBGNAssembler(object):
             (sub_changed, stmt.sub)
         sub_in_glyph = self._agent_glyph(sub_in)
         sub_out_glyph = self._agent_glyph(sub_out)
+        # Make the process glyph
         process_glyph = self._process_glyph('process')
-
+        # Add the arcs
         self._arc('consumption', sub_in_glyph, process_glyph)
         self._arc('production', process_glyph, sub_out_glyph)
         self._arc('catalysis', enz_glyph, process_glyph)
+
+    def _assemble_regulateactivity(self, stmt):
+        # Make glyph for subj
+        subj_glyph = self._agent_glyph(stmt.subj)
+        # Make glyphs for obj
+        obj_act = copy.deepcopy(stmt.obj)
+        obj_inact = copy.deepcopy(stmt.obj)
+        obj_act.activity = ActivityCondition(stmt.obj_activity, True)
+        obj_inact.activity = ActivityCondition(stmt.obj_activity, False)
+        obj_in, obj_out = (obj_inact, obj_act) if stmt.is_activation else \
+                          (obj_act, obj_inact)
+        obj_in_glyph = self._agent_glyph(obj_in)
+        obj_out_glyph = self._agent_glyph(obj_out)
+        # Make the process glyph
+        process_glyph = self._process_glyph('process')
+        # Add the arcs
+        self._arc('consumption', obj_in_glyph, process_glyph)
+        self._arc('production', process_glyph, obj_out_glyph)
+        self._arc('catalysis', subj_glyph, process_glyph)
+
+    def _assemble_regulateamount(self, stmt):
+        # Make glyphs for obj
+        obj_glyph = self._agent_glyph(stmt.obj)
+        obj_none_glyph = self._none_glyph()
+        obj_in_glyph, obj_out_glyph = \
+            (obj_none_glyph, obj_glyph) if \
+            isinstance(stmt, IncreaseAmount) else \
+            (obj_glyph, obj_none_glyph)
+        # Make the process glyph
+        process_glyph = self._process_glyph('process')
+        # Add the arcs
+        self._arc('consumption', obj_in_glyph, process_glyph)
+        self._arc('production', process_glyph, obj_out_glyph)
+        # Make glyph for subj and add arc if needed
+        if stmt.subj:
+            subj_glyph = self._agent_glyph(stmt.subj)
+            self._arc('catalysis', subj_glyph, process_glyph)
 
     def _arc(self, class_name, source, target):
         arc_id = self._make_id()
@@ -98,13 +136,22 @@ class SBGNAssembler(object):
     def _process_glyph(self, class_name):
         process_id = self._make_id()
         process_glyph = emaker.glyph(emaker.bbox(x='0', y='0', w='20', h='20'),
-                                class_(class_name), id=process_id)
+                                     class_(class_name), id=process_id)
         self._map.append(process_glyph)
         return process_id
+
+    def _none_glyph(self):
+        glyph_id = self._make_id()
+        none_glyph = emaker.glyph(emaker.bbox(x='0', y='0', w='20', h='20'),
+                                  class_('source and sink'), id=glyph_id)
+        self._map.append(none_glyph)
+        return glyph_id
 
     def _agent_glyph(self, agent):
         # Make the main glyph for the agent
         # TODO: handle other agent types
+        # TODO: use a dict to map matches keys to simple ids
+        # TODO: handle bound conditions
         agent_id = agent.matches_key()
         glyph = emaker.glyph(
             emaker.label(text=agent.name),
@@ -121,8 +168,7 @@ class SBGNAssembler(object):
         glyph.append(type_glyph)
 
         # Make glyphs for agent state
-        agent_states = []
-        # TODO: handle other agent state
+        # TODO: handle location, mutation
         for m in agent.mods:
             if m.residue is not None:
                 mod = m.residue
@@ -130,13 +176,19 @@ class SBGNAssembler(object):
                 mod = abbrevs[m.mod_type]
             mod_pos = m.position if m.position is not None else ''
             variable = '%s%s' % (mod, mod_pos)
-            value = states[m.mod_type][1].upper()
-            state = {'SBGNState': variable, 'variable_value': value}
+            value = states[m.mod_type][1 if m.is_modified else 0]
+            state = emaker.state(variable=variable, value=value)
             state_glyph = \
-                emaker.glyph(emaker.state(**state),
-                             emaker.bbox(x='1', y='1', w='70', h='30'),
+                emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
                              class_('state variable'), id=self._make_id())
             glyph.append(state_glyph)
+        if agent.activity:
+            value = 'a' if agent.activity.is_active else 'i'
+            state = {'variable': abbrevs[agent.activity.activity_type],
+                     'value': value}
+            state_glyph = \
+                emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
+                             class_('state variable'), id=self._make_id())
         self._map.append(glyph)
         return agent_id
 
