@@ -21,6 +21,7 @@ def _get_parser():
 sbgn_parser = _get_parser()
 
 def _parse_sbgn(sbgn_xml):
+    print(sbgn_xml)
     et = etree.fromstring(sbgn_xml, sbgn_parser)
     return et
 
@@ -58,7 +59,7 @@ def test_inhibition():
     et = _parse_sbgn(sbgn_xml)
     _test_numelements(et, 4, 3)
 
-def test_increaseamoutn():
+def test_increaseamount():
     st = IncreaseAmount(Agent(''), Agent('MAP2K1'))
     sa = SBGNAssembler([st])
     sbgn_xml = sa.make_model()

@@ -21,6 +21,7 @@ class SBGNAssembler(object):
         self.id_counter = 0
         self.sbgn = None
         self._map = None
+        self.agent_ids = {}
 
     def make_model(self):
         self.sbgn = emaker.sbgn()
@@ -121,9 +122,8 @@ class SBGNAssembler(object):
     def _agent_glyph(self, agent):
         # Make the main glyph for the agent
         # TODO: handle other agent types
-        # TODO: use a dict to map matches keys to simple ids
         # TODO: handle bound conditions
-        agent_id = agent.matches_key()
+        agent_id = self._make_agent_id(agent)
         glyph = emaker.glyph(
             emaker.label(text=agent.name),
             emaker.bbox(x='0', y='0', w='140', h='60'),
@@ -167,6 +167,15 @@ class SBGNAssembler(object):
         element_id = 'id_%d' % self.id_counter
         self.id_counter += 1
         return element_id
+
+    def _make_agent_id(self, agent):
+        key = agent.matches_key()
+        mapped_id = self.agent_ids.get(key)
+        if mapped_id:
+            return mapped_id
+        new_id = self._make_id()
+        self.agent_ids[key] = new_id
+        return new_id
 
     def statement_exists(self, stmt):
         for s in self.statements:
