@@ -7,7 +7,7 @@ import collections
 import lxml.builder
 import lxml.etree
 from indra.trips import trips_api
-from indra import statements as ist
+from indra.statements import *
 
 logger = logging.getLogger('sbgn_assembler')
 
@@ -50,32 +50,62 @@ class SBGNAssembler(object):
             self.statements = statements
         self.agent_set = None
         self.id_counter = 0
-        self.tree = None
+        self.sbgn = None
+        self._map = None
 
     def make_model(self):
-        self.tree = emaker.sbgn()
-        map = emaker.map()
-        self.tree.append(map)
+        self.sbgn = emaker.sbgn()
+        self._map = emaker.map()
+        self.sbgn.append(self._map)
         for stmt in self.statements:
-            if isinstance(Modification):
+            if isinstance(stmt, Modification):
                 self._assemble_modification(stmt)
-            elif isinstance(RegulateActivity):
+            elif isinstance(stmt, RegulateActivity):
                 self._assemble_regulateactivity(stmt)
-            elif isinstance(RegulateAmount):
+            elif isinstance(stmt, RegulateAmount):
                 self._assemble_regulateamount(stmt)
-            elif isinstance(Complex):
+            elif isinstance(stmt, Complex):
                 self._assemble_complex(stmt)
             else:
                 logger.warning("Unhandled Statement type %s" % type(s))
                 continue
-        return lxml.etree.tostring(root, pretty_print=True)
+        return lxml.etree.tostring(self.sbgn, pretty_print=True)
 
     def _assemble_modification(self, stmt):
+        if not stmt.enz:
+            return
+        enz_glyph = self._agent_glyph(stmt.enz)
+        mc_changed = stmt._get_mod_condition()
+        sub_changed = copy.deepcopy(stmt.sub)
+        sub_changed.mods.append(mc_changed)
+        sub_in, sub_out = \
+            (stmt.sub, sub_changed) if isinstance(stmt, AddModification) else \
+            (sub_changed, stmt.sub)
+        sub_in_glyph = self._agent_glyph(sub_in)
+        sub_out_glyph = self._agent_glyph(sub_out)
+        process_glyph = self._process_glyph('process')
+
+        self._arc('consumption', sub_in_glyph, process_glyph)
+        self._arc('production', process_glyph, sub_out_glyph)
+        self._arc('catalysis', enz_glyph, process_glyph)
+
+    def _arc(self, class_name, source, target):
+        arc_id = self._make_id()
+        arc = emaker.arc(class_(class_name), source=source, target=target,
+                         id=arc_id)
+        self._map.append(arc)
+
+    def _process_glyph(self, class_name):
+        process_id = self._make_id()
+        process_glyph = emaker.glyph(emaker.bbox(x='0', y='0', w='20', h='20'),
+                                class_(class_name), id=process_id)
+        self._map.append(process_glyph)
+        return process_id
 
     def _agent_glyph(self, agent):
         # Make the main glyph for the agent
         # TODO: handle other agent types
-        agent_id = agent_ids[agent.matches_key()]
+        agent_id = agent.matches_key()
         glyph = emaker.glyph(
             emaker.label(text=agent.name),
             emaker.bbox(x='0', y='0', w='140', h='60'),
@@ -84,14 +114,13 @@ class SBGNAssembler(object):
 
         # Make a glyph for the agent type
         # TODO: handle other agent types
-        type_glyph = emaker.glyph(E.label(text='mt:prot'),
+        type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
                                   class_('unit of information'),
-                                  E.bbox(x='0', y='0', w='53', h='18'),
-                                  id=make_id())
+                                  emaker.bbox(x='0', y='0', w='53', h='18'),
+                                  id=self._make_id())
         glyph.append(type_glyph)
 
         # Make glyphs for agent state
-        SBGNState = collections.namedtuple('SBGNState', 'variable value')
         agent_states = []
         # TODO: handle other agent state
         for m in agent.mods:
@@ -102,19 +131,14 @@ class SBGNAssembler(object):
             mod_pos = m.position if m.position is not None else ''
             variable = '%s%s' % (mod, mod_pos)
             value = states[m.mod_type][1].upper()
-            state = {'SBGNState': variable, 'variable value': value}
+            state = {'SBGNState': variable, 'variable_value': value}
             state_glyph = \
                 emaker.glyph(emaker.state(**state),
                              emaker.bbox(x='1', y='1', w='70', h='30'),
-                             class_('state variable'), id=make_id())
+                             class_('state variable'), id=self._make_id())
             glyph.append(state_glyph)
-        return glyph
-
-
-        def class_(name):
-            return {'class': name}
-
-        def glyph_for_monomer(agent, in_complex=False):
+        self._map.append(glyph)
+        return agent_id
 
         def glyph_for_complex(agent):
             glyph = E.glyph(
@@ -140,12 +164,12 @@ class SBGNAssembler(object):
                 glyph = glyph_for_complex(a)
             map.append(glyph)
         for s in self.statements:
-            if isinstance(s, ist.Modification) or \
-                isinstance(s, ist.RegulateActivity) or \
-                isinstance(s, ist.RegulateAmount) or \
-                isinstance(s, ist.ActiveForm):
+            if isinstance(s, Modification) or \
+                isinstance(s, RegulateActivity) or \
+                isinstance(s, RegulateAmount) or \
+                isinstance(s, ActiveForm):
                 class_name = 'process'
-            elif isinstance(s, ist.Complex):
+            elif isinstance(s, Complex):
                 class_name = 'association'
             else:
                 logger.warning("WARNING: skipping %s" % type(s))
@@ -156,9 +180,6 @@ class SBGNAssembler(object):
                 logger.warning("WARNING: skipping %s" % type(s))
                 continue
             produced = [st_prod]
-            pg_id = make_id()
-            process_glyph = E.glyph(E.bbox(x='0', y='0', w='20', h='20'),
-                                    class_(class_name), id=pg_id)
             map.append(process_glyph)
             for c in consumed:
                 map.append(
@@ -176,7 +197,7 @@ class SBGNAssembler(object):
                           id=make_id(),
                           )
                     )
-            if isinstance(s, ist.Modification):
+            if isinstance(s, Modification):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.enz.matches_key()],
@@ -184,7 +205,7 @@ class SBGNAssembler(object):
                           id=make_id(),
                           )
                     )
-            if isinstance(s, ist.RegulateActivity):
+            if isinstance(s, RegulateActivity):
                 map.append(
                     E.arc(class_('catalysis'),
                           source=agent_ids[s.subj.matches_key()],
@@ -193,7 +214,7 @@ class SBGNAssembler(object):
                           )
                     )
 
-    def _make_id():
+    def _make_id(self):
         element_id = 'id_%d' % self.id_counter
         self.id_counter += 1
         return element_id
@@ -235,28 +256,28 @@ def remove_agent_mod(agent, mc):
     return agent
 
 def statement_product(stmt):
-    if isinstance(stmt, ist.Modification):
-        modtype = ist.modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, ist.RemoveModification):
-            modtype = ist.modtype_to_inverse[modtype]
-        mc = ist.ModCondition(modtype, stmt.residue, stmt.position)
+    if isinstance(stmt, Modification):
+        modtype = modclass_to_modtype[stmt.__class__]
+        if isinstance(stmt, RemoveModification):
+            modtype = modtype_to_inverse[modtype]
+        mc = ModCondition(modtype, stmt.residue, stmt.position)
         product = copy.deepcopy(stmt.sub)
         product.mods.append(mc)
-    elif isinstance(stmt, ist.Complex):
+    elif isinstance(stmt, Complex):
         product = copy.deepcopy(stmt.members[0])
         for member in stmt.members[1:]:
-            bc = ist.BoundCondition(member, True)
+            bc = BoundCondition(member, True)
             product.bound_conditions.append(bc)
-    elif isinstance(stmt, ist.RegulateActivity):
+    elif isinstance(stmt, RegulateActivity):
         product = copy.deepcopy(stmt.obj)
         if stmt.is_activation:
-            mc = ist.ModCondition(stmt.obj_activity)
+            mc = ModCondition(stmt.obj_activity)
             product.mods.append(mc)
-    elif isinstance(stmt, ist.IncreaseAmount):
+    elif isinstance(stmt, IncreaseAmount):
         product = copy.deepcopy(stmt.obj)
-    elif isinstance(stmt, ist.ActiveForm):
+    elif isinstance(stmt, ActiveForm):
         product = copy.deepcopy(stmt.agent)
-        mc = ist.ModCondition(stmt.activity)
+        mc = ModCondition(stmt.activity)
         product.mods.append(mc)
     else:
         logger.warning("WARNING: skipping %s" % type(stmt))
@@ -264,27 +285,27 @@ def statement_product(stmt):
     return product
 
 def statement_consumed(stmt):
-    if isinstance(stmt, ist.AddModification):
+    if isinstance(stmt, AddModification):
         consumed = [copy.deepcopy(stmt.sub)]
-    elif isinstance(stmt, ist.RemoveModification):
-        modtype = ist.modclass_to_modtype[stmt.__class__]
-        if isinstance(stmt, ist.RemoveModification):
-            modtype = ist.modtype_to_inverse[modtype]
-        mc = ist.ModCondition(modtype, stmt.residue, stmt.position)
+    elif isinstance(stmt, RemoveModification):
+        modtype = modclass_to_modtype[stmt.__class__]
+        if isinstance(stmt, RemoveModification):
+            modtype = modtype_to_inverse[modtype]
+        mc = ModCondition(modtype, stmt.residue, stmt.position)
         consumed1 = copy.deepcopy(stmt.sub)
         consumed1.mods.append(mc)
         consumed = [consumed1]
-    elif isinstance(stmt, ist.Complex):
+    elif isinstance(stmt, Complex):
         consumed = stmt.members
-    elif isinstance(stmt, ist.RegulateActivity):
+    elif isinstance(stmt, RegulateActivity):
         consumed1 = copy.deepcopy(stmt.obj)
         if not stmt.is_activation:
-            mc = ist.ModCondition(stmt.obj_activity)
+            mc = ModCondition(stmt.obj_activity)
             consumed1.mods.append(mc)
         consumed = [consumed1]
-    elif isinstance(stmt, ist.DecreaseAmount):
+    elif isinstance(stmt, DecreaseAmount):
         consumed = copy.deepcopy(stmt.obj)
-    elif isinstance(stmt, ist.ActiveForm):
+    elif isinstance(stmt, ActiveForm):
         consumed = [copy.deepcopy(stmt.agent)]
     else:
         logger.warning("WARNING: skipping %s" % type(stmt))
@@ -292,8 +313,8 @@ def statement_consumed(stmt):
     return consumed
 
 def distinct_agents(agents):
-    agents = sorted(agents, key=ist.Agent.matches_key)
-    gb = itertools.groupby(agents, ist.Agent.matches_key)
+    agents = sorted(agents, key=Agent.matches_key)
+    gb = itertools.groupby(agents, Agent.matches_key)
     distinct = [next(g[1]) for g in gb]
     return distinct
 
@@ -304,3 +325,6 @@ def complex_components(agent):
     for bc in agent.bound_conditions:
         agents += complex_components(bc.agent)
     return agents
+
+def class_(name):
+    return {'class': name}

@@ -17,12 +17,14 @@ def test_modification():
     st = Phosphorylation(Agent('BRAF'), Agent('MAP2K1'))
     sa = SBGNAssembler([st])
     sbgn_xml = sa.make_model()
+    print(sbgn_xml)
     _test_numelements(sbgn_xml, 4, 3)
 
 def test_remove_modification():
     st = Deacetylation(Agent('BRAF'), Agent('MAP2K1'))
     sa = SBGNAssembler([st])
     sbgn_xml = sa.make_model()
+    print(sbgn_xml)
     _test_numelements(sbgn_xml, 4, 3)
 
 def test_activation():

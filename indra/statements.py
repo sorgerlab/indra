@@ -1131,6 +1131,14 @@ class Modification(Statement):
                   (self.position == other.position)
         return matches
 
+    def _get_mod_condition(self):
+        """Return a ModCondition corresponding to this Modification."""
+        mod_type = modclass_to_modtype[self.__class__]
+        if isinstance(self, RemoveModification):
+            mod_type = modtype_to_inverse[mod_type]
+        mc = ModCondition(mod_type, self.residue, self.position, True)
+        return mc
+
     def to_json(self):
         generic = super(Modification, self).to_json()
         json_dict = _o({'type': generic['type']})
