@@ -39,64 +39,82 @@ states = {
     'kinase': ['i', 'a']
 }
 
-class SBGNAssembler(object):
+sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
+emaker = lxml.builder.ElementMaker(nsmap={None: sbgn_ns})
 
+class SBGNAssembler(object):
     def __init__(self, statements=None):
         if not statements:
             self.statements = []
         else:
             self.statements = statements
         self.agent_set = None
-
-    def statement_exists(self, stmt):
-        for s in self.statements:
-            if stmt.matches(s):
-                return True
-        return False
-
-    def add_statements(self, stmts):
-        for stmt in stmts:
-            if any([a is None for a in stmt.agent_list()]):
-                continue
-            stmt = copy.deepcopy(stmt)
-            if not self.statement_exists(stmt):
-                self.statements.append(stmt)
+        self.id_counter = 0
+        self.tree = None
 
     def make_model(self):
-        def make_id(_counter=[0]):
-            id_ = 'id_%d' % _counter[0]
-            _counter[0] += 1
-            return id_
+        self.tree = emaker.sbgn()
+        map = emaker.map()
+        self.tree.append(map)
+        for stmt in self.statements:
+            if isinstance(Modification):
+                self._assemble_modification(stmt)
+            elif isinstance(RegulateActivity):
+                self._assemble_regulateactivity(stmt)
+            elif isinstance(RegulateAmount):
+                self._assemble_regulateamount(stmt)
+            elif isinstance(Complex):
+                self._assemble_complex(stmt)
+            else:
+                logger.warning("Unhandled Statement type %s" % type(s))
+                continue
+        return lxml.etree.tostring(root, pretty_print=True)
+
+    def _assemble_modification(self, stmt):
+
+    def _agent_glyph(self, agent):
+        # Make the main glyph for the agent
+        # TODO: handle other agent types
+        agent_id = agent_ids[agent.matches_key()]
+        glyph = emaker.glyph(
+            emaker.label(text=agent.name),
+            emaker.bbox(x='0', y='0', w='140', h='60'),
+            class_('macromolecule'), id=agent_id,
+            )
+
+        # Make a glyph for the agent type
+        # TODO: handle other agent types
+        type_glyph = emaker.glyph(E.label(text='mt:prot'),
+                                  class_('unit of information'),
+                                  E.bbox(x='0', y='0', w='53', h='18'),
+                                  id=make_id())
+        glyph.append(type_glyph)
+
+        # Make glyphs for agent state
+        SBGNState = collections.namedtuple('SBGNState', 'variable value')
+        agent_states = []
+        # TODO: handle other agent state
+        for m in agent.mods:
+            if m.residue is not None:
+                mod = m.residue
+            else:
+                mod = abbrevs[m.mod_type]
+            mod_pos = m.position if m.position is not None else ''
+            variable = '%s%s' % (mod, mod_pos)
+            value = states[m.mod_type][1].upper()
+            state = {'SBGNState': variable, 'variable value': value}
+            state_glyph = \
+                emaker.glyph(emaker.state(**state),
+                             emaker.bbox(x='1', y='1', w='70', h='30'),
+                             class_('state variable'), id=make_id())
+            glyph.append(state_glyph)
+        return glyph
+
 
         def class_(name):
             return {'class': name}
 
         def glyph_for_monomer(agent, in_complex=False):
-            if in_complex:
-                agent_id = make_id()
-            else:
-                agent_id = agent_ids[agent.matches_key()]
-            glyph = E.glyph(
-                E.label(text=agent.name),
-                E.bbox(x='0', y='0', w='140', h='60'),
-                class_('macromolecule'), id=agent_id,
-                )
-            glyph.append(
-                E.glyph(
-                    E.label(text='mt:prot'),
-                    class_('unit of information'),
-                    E.bbox(x='0', y='0', w='53', h='18'),
-                    id=make_id())
-                )
-            for st in sbgn_states_for_agent(agent):
-                glyph.append(
-                    E.glyph(
-                        E.state(**st._asdict()),
-                        E.bbox(x='1', y='1', w='70', h='30'),
-                        class_('state variable'), id=make_id(),
-                        )
-                    )
-            return glyph
 
         def glyph_for_complex(agent):
             glyph = E.glyph(
@@ -174,22 +192,27 @@ class SBGNAssembler(object):
                           id=make_id(),
                           )
                     )
-        return lxml.etree.tostring(root, pretty_print=True)
 
-SBGNState = collections.namedtuple('SBGNState', 'variable value')
+    def _make_id():
+        element_id = 'id_%d' % self.id_counter
+        self.id_counter += 1
+        return element_id
 
-def sbgn_states_for_agent(agent):
-    agent_states = []
-    for m in agent.mods:
-        if m.residue is not None:
-            mod = m.residue
-        else:
-            mod = abbrevs[m.mod_type]
-        mod_pos = m.position if m.position is not None else ''
-        variable = '%s%s' % (mod, mod_pos)
-        value = states[m.mod_type][1].upper()
-        agent_states.append(SBGNState(variable, value))
-    return agent_states
+    def statement_exists(self, stmt):
+        for s in self.statements:
+            if stmt.matches(s):
+                return True
+        return False
+
+    def add_statements(self, stmts):
+        for stmt in stmts:
+            if any([a is None for a in stmt.agent_list()]):
+                continue
+            stmt = copy.deepcopy(stmt)
+            if not self.statement_exists(stmt):
+                self.statements.append(stmt)
+
+
 
 def agents_for_statements(statements):
     return [a for stmt in statements for a in stmt.agent_list()]
