@@ -66,3 +66,10 @@ def test_increaseamount():
     et = _parse_sbgn(sbgn_xml)
     _test_numelements(et, 4, 3)
 
+def test_bound_condition():
+    bc = BoundCondition(Agent('RAF1'), True)
+    st = Phosphorylation(Agent('BRAF', bound_conditions=[bc]), Agent('MAP2K1'))
+    sa = SBGNAssembler([st])
+    sbgn_xml = sa.make_model()
+    et = _parse_sbgn(sbgn_xml)
+    _test_numelements(et, 4, 3)

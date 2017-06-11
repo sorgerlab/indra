@@ -119,16 +119,14 @@ class SBGNAssembler(object):
         self._map.append(none_glyph)
         return glyph_id
 
-    def _agent_glyph(self, agent):
+    def _agent_glyph(self, agent, append=True):
         # Make the main glyph for the agent
-        # TODO: handle other agent types
         # TODO: handle bound conditions
         agent_id = self._make_agent_id(agent)
-        glyph = emaker.glyph(
-            emaker.label(text=agent.name),
-            emaker.bbox(x='0', y='0', w='140', h='60'),
-            class_('macromolecule'), id=agent_id,
-            )
+        agent_type = _get_agent_type(agent)
+        glyph = emaker.glyph(emaker.label(text=agent.name),
+                             emaker.bbox(x='0', y='0', w='140', h='60'),
+                             class_(agent_type), id=agent_id)
 
         # Make a glyph for the agent type
         # TODO: handle other agent types
@@ -160,8 +158,27 @@ class SBGNAssembler(object):
             state_glyph = \
                 emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
                              class_('state variable'), id=self._make_id())
-        self._map.append(glyph)
-        return agent_id
+
+        # Handle bound conditions as complexes
+        if agent.bound_conditions:
+            members = [glyph]
+            for bc in agent.bound_conditions:
+                if bc.is_bound:
+                    member_glyph = self._agent_glyph(bc.agent, append=False)
+                    members.append(member_glyph)
+            # Exclude the case where only negative bound conditions
+            # are given and so members has only 1 element
+            if len(members) > 1:
+                complex_glyph = \
+                    emaker.glyph(emaker.bbox(x='1', y='1', w='70', h='30'),
+                                 class_('complex'), id=self._make_id())
+                for member in members:
+                    complex_glyph.append(member)
+                glyph = complex_glyph
+        if append:
+            self._map.append(glyph)
+            return agent_id
+        return glyph
 
     def _make_id(self):
         element_id = 'id_%d' % self.id_counter
@@ -195,6 +212,16 @@ def complex_components(agent):
     for bc in agent.bound_conditions:
         agents += complex_components(bc.agent)
     return agents
+
+def _get_agent_type(agent):
+    if agent.db_refs.get('UP') or agent.db_refs.get('HGNC') or \
+        agent.db_refs.get('BE') or agent.db_refs.get('PF'):
+        return 'macromolecule'
+    elif agent.db_refs.get('CHEBI') or agent.db_refs.get('PUBCHEM'):
+        return 'simple chemical'
+    elif agent.db_refs.get('GO'):
+        return 'phenotype'
+    return 'unspecified entity'
 
 def class_(name):
     return {'class': name}
