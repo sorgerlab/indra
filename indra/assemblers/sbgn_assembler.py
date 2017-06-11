@@ -124,6 +124,7 @@ class SBGNAssembler(object):
         for s in self.statements:
             if isinstance(s, ist.Modification) or \
                 isinstance(s, ist.RegulateActivity) or \
+                isinstance(s, ist.RegulateAmount) or \
                 isinstance(s, ist.ActiveForm):
                 class_name = 'process'
             elif isinstance(s, ist.Complex):
@@ -228,6 +229,8 @@ def statement_product(stmt):
         if stmt.is_activation:
             mc = ist.ModCondition(stmt.obj_activity)
             product.mods.append(mc)
+    elif isinstance(stmt, ist.IncreaseAmount):
+        product = copy.deepcopy(stmt.obj)
     elif isinstance(stmt, ist.ActiveForm):
         product = copy.deepcopy(stmt.agent)
         mc = ist.ModCondition(stmt.activity)
@@ -256,6 +259,8 @@ def statement_consumed(stmt):
             mc = ist.ModCondition(stmt.obj_activity)
             consumed1.mods.append(mc)
         consumed = [consumed1]
+    elif isinstance(stmt, ist.DecreaseAmount):
+        consumed = copy.deepcopy(stmt.obj)
     elif isinstance(stmt, ist.ActiveForm):
         consumed = [copy.deepcopy(stmt.agent)]
     else:
