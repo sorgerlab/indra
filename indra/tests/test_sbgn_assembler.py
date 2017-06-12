@@ -84,3 +84,11 @@ def test_complex():
     sbgn_xml = sa.make_model()
     et = _parse_sbgn(sbgn_xml)
     _test_numelements(et, 4, 3)
+
+def test_activeform():
+    erk = Agent('MAPK1', mods=[ModCondition('phosphorylation')])
+    st = ActiveForm(erk, 'kinase', True)
+    sa = SBGNAssembler([st])
+    sbgn_xml = sa.make_model()
+    et = _parse_sbgn(sbgn_xml)
+    _test_numelements(et, 3, 2)

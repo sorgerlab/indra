@@ -11,19 +11,66 @@ logger = logging.getLogger('sbgn_assembler')
 sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
 emaker = lxml.builder.ElementMaker(nsmap={None: sbgn_ns})
 
+
 class SBGNAssembler(object):
+    """This class assembles an SBGN model from a set of INDRA Statements.
+
+    The Systems Biology Graphical Notation (SBGN) is a widely used
+    graphical notation standard for systems biology models.
+    This assembler creates SBGN models following the Process Desctiption (PD)
+    standard, documented at:
+    https://github.com/sbgn/process-descriptions/blob/master/UserManual/sbgn_PD-level1-user-public.pdf.
+    For more information on SBGN, see: http://sbgn.github.io/sbgn/
+
+    Parameters
+    ----------
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be assembled.
+
+    Attributes
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements to be assembled.
+    sbgn : lxml.etree.ElementTree
+        The structure of the SBGN model that is assembled, represented as an
+        XML ElementTree.
+    """
     def __init__(self, statements=None):
         if not statements:
             self.statements = []
         else:
             self.statements = statements
-        self.agent_set = None
-        self.id_counter = 0
         self.sbgn = None
+        self._id_counter = 0
         self._map = None
-        self.agent_ids = {}
+        self._agent_ids = {}
+
+    def add_statements(self, stmts):
+        """Add INDRA Statements to the assembler's list of statements.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of :py:class:`indra.statements.Statement`
+            to be added to the statement list of the assembler.
+        """
+        for stmt in stmts:
+            if not self.statement_exists(stmt):
+                self.statements.append(stmt)
 
     def make_model(self):
+        """Assemble the SBGN model from the collected INDRA Statements.
+
+        This method assembles an SBGN model from the set of INDRA Statements.
+        The assembled model is set as the assembler's sbgn attribute (it is
+        represented as an XML ElementTree internally). The model is returned
+        as a serialized XML string.
+
+        Returns
+        -------
+        sbgn_str : str
+            The XML serialized SBGN model.
+        """
         self.sbgn = emaker.sbgn()
         self._map = emaker.map()
         self.sbgn.append(self._map)
@@ -36,10 +83,42 @@ class SBGNAssembler(object):
                 self._assemble_regulateamount(stmt)
             elif isinstance(stmt, Complex):
                 self._assemble_complex(stmt)
+            elif isinstance(stmt, ActiveForm):
+                self._assemble_activeform(stmt)
             else:
                 logger.warning("Unhandled Statement type %s" % type(s))
                 continue
-        return lxml.etree.tostring(self.sbgn, pretty_print=True)
+        sbgn_str = self.print_model()
+        return sbgn_str
+
+    def print_model(self, pretty=True):
+        """Return the assembled SBGN model as an XML string.
+
+        Parameters
+        ----------
+        pretty : Optional[bool]
+            If True, the SBGN string is formatted with indentation (for human
+            viewing) otherwise no indentation is used. Default: True
+
+        Returns
+        -------
+        sbgn_str : str
+            An XML string representation of the SBGN model.
+        """
+        return lxml.etree.tostring(self.sbgn, pretty_print=pretty)
+
+    def save_model(self, file_name='model.sbgn'):
+        """Save the assembled SBGN model in a file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the SBGN network to.
+            Default: model.sbgn
+        """
+        model = self.print_model()
+        with open(file_name, 'wb') as fh:
+            fh.write(model.encode('utf-8'))
 
     def _assemble_modification(self, stmt):
         if not stmt.enz:
@@ -111,7 +190,7 @@ class SBGNAssembler(object):
             bound = [bc.agent for bc in member_tmp.bound_conditions
                      if bc.is_bound]
             member_tmp.bound_conditions = []
-            if i==0:
+            if i == 0:
                 prime_agent = member_tmp
             else:
                 all_members.append(member_tmp)
@@ -126,6 +205,15 @@ class SBGNAssembler(object):
             self._arc('consumption', member_glyph, process_glyph)
         self._arc('production', process_glyph, complex_glyph)
 
+    def _assemble_activeform(self, stmt):
+        agent_glyph = self._agent_glyph(stmt.agent)
+        agent_active = copy.deepcopy(stmt.agent)
+        agent_active.activity = ActivityCondition(stmt.activity,
+                                                  stmt.is_active)
+        agent_active_glyph = self._agent_glyph(agent_active)
+        process_glyph = self._process_glyph('process')
+        self._arc('consumption', agent_glyph, process_glyph)
+        self._arc('production', process_glyph, agent_glyph)
 
     def _arc(self, class_name, source, target):
         arc_id = self._make_id()
@@ -209,17 +297,17 @@ class SBGNAssembler(object):
         return glyph
 
     def _make_id(self):
-        element_id = 'id_%d' % self.id_counter
-        self.id_counter += 1
+        element_id = 'id_%d' % self._id_counter
+        self._id_counter += 1
         return element_id
 
     def _make_agent_id(self, agent):
         key = agent.matches_key()
-        mapped_id = self.agent_ids.get(key)
+        mapped_id = self._agent_ids.get(key)
         if mapped_id:
             return mapped_id
         new_id = self._make_id()
-        self.agent_ids[key] = new_id
+        self._agent_ids[key] = new_id
         return new_id
 
     def statement_exists(self, stmt):
@@ -228,10 +316,6 @@ class SBGNAssembler(object):
                 return True
         return False
 
-    def add_statements(self, stmts):
-        for stmt in stmts:
-            if not self.statement_exists(stmt):
-                self.statements.append(stmt)
 
 def _get_agent_type(agent):
     if agent.db_refs.get('UP') or agent.db_refs.get('HGNC') or \
@@ -243,8 +327,10 @@ def _get_agent_type(agent):
         return 'phenotype'
     return 'unspecified entity'
 
+
 def class_(name):
     return {'class': name}
+
 
 abbrevs = {
     'phosphorylation': 'phospho',
@@ -260,6 +346,7 @@ abbrevs = {
     'kinase': 'kin'
 }
 
+
 states = {
     'phosphorylation': ['u', 'p'],
     'ubiquitination': ['n', 'y'],
@@ -271,4 +358,3 @@ states = {
     'methylation': ['n', 'y'],
     'modification': ['n', 'y'],
 }
-
