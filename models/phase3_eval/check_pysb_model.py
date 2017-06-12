@@ -9,24 +9,27 @@ import make_stmts_for_checking as make_stmts
 from assemble_pysb import set_context, add_observables
 
 def get_path_stmts(results, model, stmts):
-    path_stmts = {}
-    import ipdb; ipdb.set_trace()
+    all_path_stmts = []
     for source, target, polarity, value, found_path, paths in results:
+        path_stmts = {}
         if found_path:
             for path in paths:
-                for rule, sign in path:
+                for path_rule, sign in path:
                     for rule in model.rules:
-                        if rule.name == rule:
-                            stmt = _stmt_from_rule(model, rule, stmts)
+                        if rule.name == path_rule:
+                            stmt = _stmt_from_rule(model, path_rule, stmts)
                             path_stmts[stmt.uuid] = stmt
-    return path_stmts
+                break # This is to include only the first path for now
+        all_path_stmts.append(path_stmts)
+    return all_path_stmts
 
-def get_path_genes(path_stmts):
+def get_path_genes(all_path_stmts):
     path_genes = []
-    for stmt in path_stmts.values():
-        for agent in stmt.agent_list():
-            if agent is not None:
-                path_genes.append(agent.name)
+    for path_stmts in all_path_stmts:
+        for stmt in path_stmts.values():
+            for agent in stmt.agent_list():
+                if agent is not None:
+                    path_genes.append(agent.name)
     path_genes = sorted(list(set(path_genes)))
     return path_genes
 
@@ -34,14 +37,14 @@ def _stmt_from_rule(model, rule_name, stmts):
     """Return the INDRA Statement corresponding to a given rule by name."""
     stmt_uuid = None
     for ann in model.annotations:
-        if ann.subject.name == rule_name:
-            if ann.predicate == 'from_indra_statement':
+        if ann.predicate == 'from_indra_statement':
+            if ann.subject == rule_name:
                 stmt_uuid = ann.object
                 break
-        if stmt_uuid:
-            for stmt in stmts:
-                if stmt.uuid == stmt_uuid:
-                    return stmt
+    if stmt_uuid:
+        for stmt in stmts:
+            if stmt.uuid == stmt_uuid:
+                return stmt
 
 if __name__ == '__main__':
     print("Processing data")
@@ -124,5 +127,5 @@ if __name__ == '__main__':
     #write_unicode_csv('model_check_results.csv', results)
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
-    print(path_genes)
+    path_uuids = [list(path.keys()) for path in path_stmts]
 
