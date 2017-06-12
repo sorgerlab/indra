@@ -60,31 +60,41 @@ def make_cyjs_network(results, model, stmts):
     path_uuids = [list(path.keys()) for path in path_stmts]
     print(json.dumps(path_uuids, indent=1))
     filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
-    ca = CyJSAssembler(filtere_stmts)
+    ca = CyJSAssembler(filtered_stmts)
     cm = ca.make_model()
     ca.set_CCLE_context(['SKMEL28_SKIN'])
     ca.save_json('output/korkut_model')
 
 def make_english_output(results, model, stmts):
     for source, target, polarity, value, found_path, paths in results:
-        print('Path between %s and %s' % (source, target))
-        print('==========================')
+        cond = 'How does treatment with %s %s %s?' % \
+            (source, 'increase' if polarity == 'positive' else
+                     'decrease', target)
+        print(cond)
+        print('=' * len(cond))
         if paths:
             path = paths[0]
             sentences = []
-            for path_rule, sign in path:
+            for i, (path_rule, sign) in enumerate(path):
                 for rule in model.rules:
                     if rule.name == path_rule:
                         stmt = _stmt_from_rule(model, path_rule, stmts)
+                        if i == 0:
+                            sentences.append('%s is a target of %s.' %
+                                             (stmt.agent_list()[0].name, source))
+
                         ea = EnglishAssembler([stmt])
                         sentence = ea.make_model()
                         sentences.append(sentence)
+            sentences[-1] = sentences[-1][:-1] + \
+                ', which is measured by %s.' % target
             text = ' '.join(sentences)
-            print(text)
+            print('INDRA\'s hypothesis: ' + text)
         elif found_path:
-            print('---> Path longer than 5 steps found <----')
+            print('INDRA determined that there exists an explanation but'
+                  ' it is intractable to reconstruct.')
         else:
-            print('---> No path found <----')
+            print('INDRA couldn\'t find an explanation for this observation.')
         print('\n')
 
 if __name__ == '__main__':
@@ -143,6 +153,7 @@ if __name__ == '__main__':
     rerun = True
     if rerun:
         mc = ModelChecker(model, all_data_stmts, agent_obs)
+        mc.prune_influence_map()
 
         # Iterate over each drug/ab statement subset
         results = []
@@ -158,20 +169,12 @@ if __name__ == '__main__':
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=1, max_path_length=5)
+                    result = mc.check_statement(stmt, max_paths=1, max_path_length=7)
                     print(result)
                     if result != False:
                         path_found = 1
                         paths1 = result[1]
                         if paths1:
-                            pst = stmts_for_path(paths1[0], model, base_stmts)
-                            if len(pst) == 2:
-                                if pst[0].agent_list()[1] == pst[1].agent_list()[1]:
-                                    print('=========')
-                                    print(pst)
-                                    print(paths1)
-                                    print('=========')
-                                    continue
                             paths += paths1
                             break
                     else:
@@ -191,4 +194,4 @@ if __name__ == '__main__':
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
     make_english_output(results, model, base_stmts)
-    make_cyjs_network(results, model, stmts)
+    make_cyjs_network(results, model, base_stmts)

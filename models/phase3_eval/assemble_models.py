@@ -53,7 +53,7 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = True
+    reassemble = False
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
     else:
