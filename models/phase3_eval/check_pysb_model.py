@@ -1,7 +1,7 @@
 import pickle
 import itertools
 from indra.util import write_unicode_csv
-from indra.assemblers import PysbAssembler
+from indra.assemblers import PysbAssembler, EnglishAssembler, CyJSAssembler
 from indra.tools.model_checker import ModelChecker
 import indra.tools.assemble_corpus as ac
 import process_data
@@ -46,6 +46,15 @@ def _stmt_from_rule(model, rule_name, stmts):
             if stmt.uuid == stmt_uuid:
                 return stmt
 
+def make_cyjs_network(results, model, stmts):
+    path_stmts = get_path_stmts(results, model, stmts)
+    path_genes = get_path_genes(path_stmts)
+    filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
+    ca = CyJSAssembler(filtere_stmts)
+    cm = ca.make_model()
+    ca.set_CCLE_context(['SKMEL28_SKIN'])
+    ca.save_json('output/korkut_model')
+
 if __name__ == '__main__':
     print("Processing data")
 
@@ -59,6 +68,11 @@ if __name__ == '__main__':
     all_data_stmts = itertools.chain.from_iterable(all_data_stmts)
     all_data_stmts = list(itertools.chain.from_iterable(all_data_stmts))
 
+    print('We will check the following drug-ab combinations:\n============')
+    for drug, stmtd in data_stmts.items():
+        print(drug)
+        for ab in stmtd.keys():
+            print('-'+ ab)
 
     agent_obs = list(itertools.chain.from_iterable(ab_map.values()))
     # Here we need to cross-reference the antbody map with the data values
@@ -111,7 +125,7 @@ if __name__ == '__main__':
             paths = []
             for stmt in stmt_list:
                 print("Checking: %s" % stmt)
-                result = mc.check_statement(stmt, max_paths=3, max_path_length=5)
+                result = mc.check_statement(stmt, max_paths=1, max_path_length=5)
                 if result:
                     path_found = 1
                     if result[1]:
