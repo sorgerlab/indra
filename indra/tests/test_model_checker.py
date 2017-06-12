@@ -7,7 +7,8 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.tools.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
-                                      _stmt_from_rule, _object_agents_from_rule
+                                      _stmt_from_rule, \
+                                      _object_agents_from_rule
 #from indra.tools.model_checker import _match_rhs, _positive_path
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
@@ -1061,6 +1062,21 @@ def test_model_check_data():
     # Need also to be able to map agents to observables
     # To constrain against data, need to be able to link agents in data
 
+def test_prune_influence_map():
+    kin = Agent('Kin', db_refs={'HGNC': '1'})
+    phos = Agent('Phos', db_refs={'HGNC': '2'})
+    subs = Agent('Substrate', db_refs={'HGNC': '3'})
+    st1 = Phosphorylation(kin, subs)
+    st2 = Dephosphorylation(phos, subs)
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2])
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [st1])
+    mc.prune_influence_map()
+    im = mc.get_im()
+    assert len(im.nodes()) == 3
+    assert len(im.edges()) == 2
+
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
 
@@ -1161,4 +1177,4 @@ def test_model_check_data():
 
 
 if __name__ == '__main__':
-    test_model_check_data()
+    test_prune_influence_map()

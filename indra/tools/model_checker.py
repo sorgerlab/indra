@@ -347,6 +347,20 @@ class ModelChecker(object):
                               key=lambda x: x[1])
         return scored_paths
 
+    def prune_influence_map(self):
+        im = self.get_im()
+        remove_im_params(self.model, im)
+        # For every rule in the influence map
+        predecessors = im.predecessors_iter
+        for node in im.nodes():
+            # ...get the parents of the node
+            parents = list(predecessors(node))
+            # Check for edges among the immediate parents of the node...
+            for p1, p2 in itertools.permutations(parents, 2):
+                # If there is an edge, remove it
+                if im.has_edge((p1, p2)):
+                    im.remove_edge((p1, p2))
+
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -409,6 +423,11 @@ def _find_sources_with_paths(im, target, sources, polarity):
             new_path.append((predecessor, sign))
             queue.append(new_path)
     return
+
+
+def remove_im_params(model, im):
+    for param in model.parameters:
+        im.remove_node(param.name)
 
 
 def _find_sources(im, target, sources, polarity):
