@@ -544,11 +544,6 @@ def _get_edge_sign(edge):
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
 
-def _get_obs_for_rule(node):
-    """Get the observable nodes and polarities downstream of a given rule node.
-    """
-    
-
 def _add_modification_to_agent(agent, mod_type, residue, position):
     """Add a modification condition to an Agent."""
     new_mod = ModCondition(mod_type, residue, position)
