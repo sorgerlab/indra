@@ -199,23 +199,28 @@ class CyJSAssembler(object):
         context_str = json.dumps(context, indent=1, sort_keys=True)
         return context_str
 
-    def save_json(self, fname='model'):
+    def save_json(self, fname_prefix='model'):
         """Save the assembled Cytoscape JS network in a json file.
+
+        This method saves two files based on the file name prefix given.
+        It saves one json file with the graph itself, and another json
+        file with the context.
 
         Parameters
         ----------
-        fname : Optional[str]
-            The name of the file to save the Cytoscape JS network to.
+        fname_prefix : Optional[str]
+            The prefix of the files to save the Cytoscape JS network and
+            context to.
             Default: model
         """
         cyjs_str = self.print_cyjs_graph()
         # outputs the graph
-        with open(fname + '.json', 'wt') as fh:
-            fh.write(cyjs_str)
+        with open(fname_prefix + '.json', 'wb') as fh:
+            fh.write(cyjs_str.encode('utf-8'))
         # outputs the context of graph nodes
         context_str = self.print_cyjs_context()
-        with open(fname + '_context' + '.json', 'wt') as fh:
-            fh.write(context_str)
+        with open(fname_prefix + '_context.json', 'wb') as fh:
+            fh.write(context_str.encode('utf-8'))
 
     def save_model(self, fname='model.js'):
         """Save the assembled Cytoscape JS network in a js file.
@@ -237,8 +242,8 @@ class CyJSAssembler(object):
         s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
         s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
         s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
-        with open(fname, 'wt') as fh:
-            fh.write(s)
+        with open(fname, 'wb') as fh:
+            fh.write(s.encode('utf-8'))
 
     def _add_binary_regulation(self, stmt):
         subj, obj = stmt.agent_list()
