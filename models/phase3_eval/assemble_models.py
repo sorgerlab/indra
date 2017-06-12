@@ -25,7 +25,7 @@ def read_extra_sources(out_file):
     r3_stmts = process_r3.read_stmts(process_r3.active_forms_files[0])
     trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     phosphosite_stmts = \
-        read_phosphosite.read_phosphosite(read_phosphosite.phosphosite_file)
+        read_phosphosite.read_phosphosite_owl(read_phosphosite.phosphosite_owl_file)
     stmts = trips_stmts + sparser_stmts + r3_stmts + phosphosite_stmts
     ac.dump_statements(stmts, out_file)
     return stmts

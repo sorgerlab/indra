@@ -2,11 +2,20 @@ from __future__ import print_function, absolute_import, unicode_literals
 from builtins import dict, str
 import pandas
 from copy import deepcopy
+from indra import biopax
 from indra.util import unicode_strs
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence
 
 phosphosite_file = 'sources/annotated_kinases_v5.csv'
+phosphosite_owl_file = 'sources/Kinase_substrates.owl'
+
+def read_phosphosite_owl(fname=phosphosite_owl_file):
+    bp = biopax.process_owl(fname)
+    for stmt in bp.statements:
+        for ev in stmt.evidence:
+            ev.source_api = 'phosphosite'
+    return bp.statements
 
 def read_phosphosite(fname=phosphosite_file):
     df = pandas.read_csv(fname, index_col=None, sep='\t', encoding='utf8')
