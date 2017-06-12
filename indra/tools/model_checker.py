@@ -400,7 +400,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
-            # path
+            # path--prevents loops
             if (predecessor, sign) in path:
                 continue
             # Otherwise, the new path is a copy of the old one plus the new
@@ -529,7 +529,7 @@ def _get_signed_predecessors(im, node, polarity):
     predecessors = im.predecessors_iter
     for pred in predecessors(node):
         pred_edge = im.get_edge(pred, node)
-        yield (pred, _get_edge_sign(pred_edge) * polarity)
+        yield (pred.name, _get_edge_sign(pred_edge) * polarity)
 
 
 def _get_edge_sign(edge):
