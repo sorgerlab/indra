@@ -57,7 +57,7 @@ def update_kinases():
     logger.info('--Updating kinase list------')
     url = 'http://www.uniprot.org/uniprot/?' + \
         'sort=entry_name&desc=no&compress=no&query=database:(type:' + \
-        'interpro%20ipr000719)%20AND%20reviewed:yes%20AND%20organism:' + \
+        'interpro%20ipr011009)%20AND%20reviewed:yes%20AND%20organism:' + \
         '%22Homo%20sapiens%20(Human)%20[9606]%22&fil=&force=no' + \
         '&format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
     fname = os.path.join(path, 'kinases.tsv')
