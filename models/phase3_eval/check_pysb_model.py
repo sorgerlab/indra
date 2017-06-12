@@ -13,16 +13,23 @@ def get_path_stmts(results, model, stmts):
     all_path_stmts = []
     for source, target, polarity, value, found_path, paths in results:
         path_stmts = {}
-        if found_path:
-            for path in paths:
-                for path_rule, sign in path:
-                    for rule in model.rules:
-                        if rule.name == path_rule:
-                            stmt = _stmt_from_rule(model, path_rule, stmts)
-                            path_stmts[stmt.uuid] = stmt
-                break # This is to include only the first path for now
+        #for path in paths:
+        if paths:
+            path = paths[0]
+            path_stmts1 = stmts_for_path(path, model, stmts)
+            for ps in path_stmts1:
+                path_stmts[ps.uuid] = ps
         all_path_stmts.append(path_stmts)
     return all_path_stmts
+
+def stmts_for_path(path, model, stmts):
+    path_stmts = []
+    for path_rule, sign in path:
+        for rule in model.rules:
+            if rule.name == path_rule:
+                stmt = _stmt_from_rule(model, path_rule, stmts)
+                path_stmts.append(stmt)
+    return path_stmts
 
 def get_path_genes(all_path_stmts):
     path_genes = []
@@ -133,7 +140,7 @@ if __name__ == '__main__':
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
-    rerun = False
+    rerun = True
     if rerun:
         mc = ModelChecker(model, all_data_stmts, agent_obs)
 
@@ -152,10 +159,20 @@ if __name__ == '__main__':
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
                     result = mc.check_statement(stmt, max_paths=1, max_path_length=5)
+                    print(result)
                     if result != False:
                         path_found = 1
-                        if result[0] != True:
-                            paths += result
+                        paths1 = result[1]
+                        if paths1:
+                            pst = stmts_for_path(paths1[0], model, base_stmts)
+                            if len(pst) == 2:
+                                if pst[0].agent_list()[1] == pst[1].agent_list()[1]:
+                                    print('=========')
+                                    print(pst)
+                                    print(paths1)
+                                    print('=========')
+                                    continue
+                            paths += paths1
                             break
                     else:
                         print("No path found")
