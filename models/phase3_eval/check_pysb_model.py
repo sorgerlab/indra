@@ -1,3 +1,4 @@
+import json
 import pickle
 import itertools
 from indra.util import write_unicode_csv
@@ -49,11 +50,35 @@ def _stmt_from_rule(model, rule_name, stmts):
 def make_cyjs_network(results, model, stmts):
     path_stmts = get_path_stmts(results, model, stmts)
     path_genes = get_path_genes(path_stmts)
+    path_uuids = [list(path.keys()) for path in path_stmts]
+    print(json.dumps(path_uuids, indent=1))
     filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
     ca = CyJSAssembler(filtere_stmts)
     cm = ca.make_model()
     ca.set_CCLE_context(['SKMEL28_SKIN'])
     ca.save_json('output/korkut_model')
+
+def make_english_output(results, model, stmts):
+    for source, target, polarity, value, found_path, paths in results:
+        print('Path between %s and %s' % (source, target))
+        print('==========================')
+        if paths:
+            path = paths[0]
+            sentences = []
+            for path_rule, sign in path:
+                for rule in model.rules:
+                    if rule.name == path_rule:
+                        stmt = _stmt_from_rule(model, path_rule, stmts)
+                        ea = EnglishAssembler([stmt])
+                        sentence = ea.make_model()
+                        sentences.append(sentence)
+            text = ' '.join(sentences)
+            print(text)
+        elif found_path:
+            print('---> Path longer than 5 steps found <----')
+        else:
+            print('---> No path found <----')
+        print('\n')
 
 if __name__ == '__main__':
     print("Processing data")
@@ -108,38 +133,45 @@ if __name__ == '__main__':
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
+    rerun = False
+    if rerun:
+        mc = ModelChecker(model, all_data_stmts, agent_obs)
 
-    mc = ModelChecker(model, all_data_stmts, agent_obs)
+        # Iterate over each drug/ab statement subset
+        results = []
+        for drug_name, ab_dict in data_stmts.items():
+            agent_values = agent_data[drug_name]
+            for ab, stmt_list in ab_dict.items():
+                value = data_values[drug_name][ab]
+                # For each subset, check statements; if any of them checks out, we're
+                # good and can move on to the next group
+                print("-- Checking the effect of %s on %s --" % (drug_name, ab))
+                relation = 'positive' if value > 1 else 'negative'
+                path_found = 0
+                paths = []
+                for stmt in stmt_list:
+                    print("Checking: %s" % stmt)
+                    result = mc.check_statement(stmt, max_paths=1, max_path_length=5)
+                    if result != False:
+                        path_found = 1
+                        if result[0] != True:
+                            paths += result
+                            break
+                    else:
+                        print("No path found")
+                #Score paths here TODO
+                #if paths:
+                #    scored_result = mc.score_paths(paths, agent_values)
 
-    # Iterate over each drug/ab statement subset
-    results = []
-    for drug_name, ab_dict in data_stmts.items():
-        agent_values = agent_data[drug_name]
-        for ab, stmt_list in ab_dict.items():
-            value = data_values[drug_name][ab]
-            # For each subset, check statements; if any of them checks out, we're
-            # good and can move on to the next group
-            print("-- Checking the effect of %s on %s --" % (drug_name, ab))
-            relation = 'positive' if value > 1 else 'negative'
-            path_found = 0
-            paths = []
-            for stmt in stmt_list:
-                print("Checking: %s" % stmt)
-                result = mc.check_statement(stmt, max_paths=1, max_path_length=5)
-                if result:
-                    path_found = 1
-                    if result[1]:
-                        paths += result
-                        break
-                else:
-                    print("No path found")
-            #Score paths here TODO
-            #if paths:
-            #    scored_result = mc.score_paths(paths, agent_values)
+                results.append((drug_name, ab, relation, value, path_found, paths))
+        with open('pathfinding_results.pkl', 'wb') as fh:
+            pickle.dump(results, fh)
+    else:
+        with open('pathfinding_results.pkl', 'rb') as fh:
+            results = pickle.load(fh)
 
-            results.append((drug_name, ab, relation, value, path_found, paths))
     #write_unicode_csv('model_check_results.csv', results)
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
-    path_uuids = [list(path.keys()) for path in path_stmts]
-
+    make_english_output(results, model, base_stmts)
+    make_cyjs_network(results, model, stmts)

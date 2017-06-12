@@ -34,7 +34,7 @@ def assemble_pysb(stmts, data_genes, out_file):
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    pa.make_model(reverse_effects=True)
+    pa.make_model(reverse_effects=False)
     #ac.dump_statements(pa.statements, '%s_after_pa.pkl' % base_file)
     # Set context
     set_context(pa)
