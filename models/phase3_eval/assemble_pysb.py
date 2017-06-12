@@ -62,6 +62,8 @@ def preprocess_stmts(stmts, data_genes):
     ml = MechLinker(stmts)
     ml.gather_explicit_activities()
     ml.reduce_activities()
+    ml.gather_modifications()
+    ml.reduce_modifications()
     af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
     non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
     af_stmts = ac.run_preassembly(af_stmts)
