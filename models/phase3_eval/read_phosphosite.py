@@ -15,6 +15,7 @@ def read_phosphosite_owl(fname=phosphosite_owl_file):
     for stmt in bp.statements:
         for ev in stmt.evidence:
             ev.source_api = 'phosphosite'
+            ev.epistemics = {'direct': True}
     return bp.statements
 
 def read_phosphosite(fname=phosphosite_file):
