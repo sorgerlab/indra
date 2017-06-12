@@ -73,12 +73,16 @@ class CyJSAssembler(object):
         for stmt in self.statements:
             if isinstance(stmt, RegulateActivity):
                 self._add_regulate_activity(stmt)
-            elif isinstance(stmt, Inhibition):
-                self._add_activation(stmt)
-            elif isinstance(stmt, Complex):
-                self._add_complex(stmt)
+            elif isinstance(stmt, RegulateAmount):
+                self._add_regulate_amount(stmt)
             elif isinstance(stmt, Modification):
                 self._add_modification(stmt)
+            elif isinstance(stmt, RasGef):
+                self._add_rasgef(stmt)
+            elif isinstance(stmt, RasGap):
+                self._add_rasgap(stmt)
+            elif isinstance(stmt, Complex):
+                self._add_complex(stmt)
             else:
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
@@ -236,19 +240,21 @@ class CyJSAssembler(object):
         with open(fname, 'wt') as fh:
             fh.write(s)
 
-    def _add_regulate_activity(self, stmt):
+    def _add_binary_regulation(self, stmt):
+        subj, obj = stmt.agent_list()
+        if subj is None:
+            return
         edge_type, edge_polarity = _get_stmt_type(stmt)
-        source_id = self._add_node(stmt.subj, uuid=stmt.uuid)
-        target_id = self._add_node(stmt.obj, uuid=stmt.uuid)
+        source_id = self._add_node(subj, uuid=stmt.uuid)
+        target_id = self._add_node(obj, uuid=stmt.uuid)
         self._add_edge(edge_type, source_id, target_id, edge_polarity,
                        stmt.uuid)
 
-    def _add_modification(self, stmt):
-        edge_type, edge_polarity = _get_stmt_type(stmt)
-        source_id = self._add_node(stmt.enz, uuid=stmt.uuid)
-        target_id = self._add_node(stmt.sub, uuid=stmt.uuid)
-        self._add_edge(edge_type, source_id, target_id, edge_polarity,
-                       stmt.uuid)
+    _add_regulate_activity = _add_binary_regulation
+    _add_regulate_amount = _add_binary_regulation
+    _add_modification = _add_binary_regulation
+    _add_rasgef = _add_binary_regulation
+    _add_rasgap = _add_binary_regulation
 
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
@@ -490,6 +496,12 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, Inhibition):
         edge_type = 'Inhibition'
         edge_polarity = 'negative'
+    elif isinstance(stmt, DecreaseAmount):
+        edge_type = 'DecreaseAmount'
+        edge_polarity = 'negative'
+    elif isinstance(stmt, IncreaseAmount):
+        edge_type = 'IncreaseAmount'
+        edge_polarity = 'positive'
     elif isinstance(stmt, RasGef):
         edge_type = 'RasGef'
         edge_polarity = 'positive'
