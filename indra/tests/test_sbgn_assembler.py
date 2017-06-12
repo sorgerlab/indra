@@ -73,3 +73,14 @@ def test_bound_condition():
     sbgn_xml = sa.make_model()
     et = _parse_sbgn(sbgn_xml)
     _test_numelements(et, 4, 3)
+
+def test_complex():
+    egfr1 = Agent('EGFR',
+                  bound_conditions=[BoundCondition(Agent('EGF'), True)])
+    egfr2 = Agent('EGFR',
+                  bound_conditions=[BoundCondition(Agent('EGF'), True)])
+    st = Complex([egfr1, egfr2])
+    sa = SBGNAssembler([st])
+    sbgn_xml = sa.make_model()
+    et = _parse_sbgn(sbgn_xml)
+    _test_numelements(et, 4, 3)

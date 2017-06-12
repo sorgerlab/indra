@@ -99,6 +99,34 @@ class SBGNAssembler(object):
             subj_glyph = self._agent_glyph(stmt.subj)
             self._arc('catalysis', subj_glyph, process_glyph)
 
+    def _assemble_complex(self, stmt):
+        # Make glyph for individual members
+        member_glyphs = [self._agent_glyph(m) for m in stmt.members]
+        # Make glyph for complex
+        # First we need to unroll all members and their bound conditions
+        # into a single list with a single prime agent
+        all_members = []
+        for i, member in enumerate(stmt.members):
+            member_tmp = copy.deepcopy(member)
+            bound = [bc.agent for bc in member_tmp.bound_conditions
+                     if bc.is_bound]
+            member_tmp.bound_conditions = []
+            if i==0:
+                prime_agent = member_tmp
+            else:
+                all_members.append(member_tmp)
+            all_members += bound
+        # Now we set all the other members as bound conditions on the prime
+        # agent
+        prime_agent.bound_conditions = \
+            [BoundCondition(m, True) for m in all_members]
+        complex_glyph = self._agent_glyph(prime_agent)
+        process_glyph = self._process_glyph('association')
+        for member_glyph in member_glyphs:
+            self._arc('consumption', member_glyph, process_glyph)
+        self._arc('production', process_glyph, complex_glyph)
+
+
     def _arc(self, class_name, source, target):
         arc_id = self._make_id()
         arc = emaker.arc(class_(class_name), source=source, target=target,
@@ -204,14 +232,6 @@ class SBGNAssembler(object):
         for stmt in stmts:
             if not self.statement_exists(stmt):
                 self.statements.append(stmt)
-
-def complex_components(agent):
-    agent_copy = copy.copy(agent)
-    agent_copy.bound_conditions = []
-    agents = [agent_copy]
-    for bc in agent.bound_conditions:
-        agents += complex_components(bc.agent)
-    return agents
 
 def _get_agent_type(agent):
     if agent.db_refs.get('UP') or agent.db_refs.get('HGNC') or \
