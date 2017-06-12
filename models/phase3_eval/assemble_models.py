@@ -20,8 +20,8 @@ def build_prior(genes, out_file):
 
 def read_extra_sources(out_file):
     sparser_stmts = process_sparser.read_stmts(process_sparser.base_folder)
-    sparser_stmts += \
-        process_sparser.read_stmts(process_sparser.sentences_folder)
+    #sparser_stmts += \
+    #    process_sparser.read_stmts(process_sparser.sentences_folder)
     r3_stmts = process_r3.read_stmts(process_r3.active_forms_files[0])
     trips_stmts = process_trips.read_stmts(process_trips.base_folder)
     phosphosite_stmts = \
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     outf = 'output/'
     data = process_data.read_data(process_data.data_file)
     data_genes = process_data.get_all_gene_names(data)
-    reassemble = False
+    reassemble = True
     if not reassemble:
         stmts = ac.load_statements(pjoin(outf, 'preassembled.pkl'))
     else:
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         extra_stmts = read_extra_sources(pjoin(outf, 'extra_stmts.pkl'))
         reading_stmts = reach_stmts + extra_stmts
         reading_stmts = ac.map_grounding(reading_stmts,
-                                         save=pjoin(outf, 'gmapped_reading.pkl'))
+                                        save=pjoin(outf, 'gmapped_reading.pkl'))
         stmts = prior_stmts + reading_stmts + extra_stmts
 
         stmts = ac.filter_grounded_only(stmts)
@@ -76,8 +76,10 @@ if __name__ == '__main__':
         stmts = ac.expand_families(stmts)
         stmts = ac.filter_gene_list(stmts, data_genes, 'one')
         stmts = ac.map_sequence(stmts, save=pjoin(outf, 'smapped.pkl'))
+        #stmts = ac.load_statements(pjoin(outf, 'smapped.pkl'))
         stmts = ac.run_preassembly(stmts, return_toplevel=False,
-                                   save=pjoin(outf, 'preassembled.pkl'))
+                                   save=pjoin(outf, 'preassembled.pkl'),
+                                   poolsize=4)
 
     ### PySB assembly
     if 'pysb' in assemble_models:
@@ -85,7 +87,8 @@ if __name__ == '__main__':
                                    pjoin(outf, 'korkut_model_pysb.py'))
     ### SIF assembly
     if 'sif' in assemble_models:
-        sif_str = assemble_sif(stmts, data, pjoin(outf, 'PKN-korkut_all_ab.sif'))
+        sif_str = assemble_sif(stmts, data,
+                               pjoin(outf, 'PKN-korkut_all_ab.sif'))
     ### CX assembly
     if 'cx' in assemble_models:
         for network_type in ('high_belief', 'direct'):
