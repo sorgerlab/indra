@@ -31,9 +31,22 @@ for drug_name, values in data_values.items():
         for agent in agents:
             agent_data[drug_name][agent] = value
 
-"""
 base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
 
+def _stmt_from_rule(model, rule_name, stmts):
+    """Return the INDRA Statement corresponding to a given rule by name."""
+    stmt_uuid = None
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+             if ann.predicate == 'from_indra_statement':
+                 stmt_uuid = ann.object
+             break
+         if stmt_uuid:
+             for stmt in stmts:
+                 if stmt.uuid == stmt_uuid:
+                     return stmt
+
+"""
 # Merge the sources of statements
 # stmts = manual_stmts + base_stmts
 stmts = base_stmts
@@ -72,11 +85,12 @@ for drug_name, ab_dict in data_stmts.items():
         paths = []
         for stmt in stmt_list:
             print("Checking: %s" % stmt)
-            result = mc.check_statement(stmt, max_paths=5, max_path_length=5)
+            result = mc.check_statement(stmt, max_paths=3, max_path_length=5)
             if result:
-                paths += result
                 path_found = 1
-                break
+                if result[1]:
+                    paths += result
+                    break
             else:
                 print("No path found")
         #Score paths here TODO
@@ -85,3 +99,24 @@ for drug_name, ab_dict in data_stmts.items():
 
         results.append((drug_name, ab, relation, value, path_found, paths))
 #write_unicode_csv('model_check_results.csv', results)
+
+def get_path_stmts(results, model, stmts):
+    path_stmts = {}
+    for source, target, polarity, value, found_path, paths in results:
+        if found_path:
+            for path in paths:
+                for rule, sign in path:
+                    for rule in model.rules:
+                        if rule.name == rule:
+                            stmt = _stmt_from_rule(model, rule, stmts)
+                            path_stmts[stmt.uuid] = stmt
+    return path_stmts
+
+def get_path_genes(path_stmts):
+    path_genes = []
+    for stmt in path_stmts.values():
+        for agent in stmt.agent_list():
+            if agent is not None:
+                path_genes.append(agent.name)
+    path_genes = sorted(list(set(path_genes)))
+    return path_genes
