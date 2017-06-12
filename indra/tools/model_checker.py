@@ -16,6 +16,16 @@ from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
+class PathMetric(object):
+    pass
+
+class PathResult(object):
+    """Describes results of running the ModelChecker on a single Statement."""
+    def __init__(self, path_found, result_code):
+        self.path_found = path_found
+        self.result_code = result_code
+        self.paths = []
+
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
 
@@ -167,6 +177,7 @@ class ModelChecker(object):
             return self._check_regulate_activity(stmt, max_paths,
                                                  max_path_length)
         else:
+            # Statement type not handled FIXME
             return False
 
     def _check_regulate_activity(self, stmt, max_paths, max_path_length):
@@ -295,7 +306,7 @@ class ModelChecker(object):
                     paths.append(flipped)
                     if len(paths) >= max_paths:
                         break
-                return paths
+                return [True, paths]
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
             else:
