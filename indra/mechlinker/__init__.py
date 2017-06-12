@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+import uuid
 import logging
 import networkx
 import itertools
@@ -190,6 +191,7 @@ class MechLinker(object):
                 else:
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
+                        new_stmt.uuid = str(uuid.uuid4())
                         af.apply_to(new_stmt.enz)
                         new_stmts.append(new_stmt)
             elif isinstance(stmt, RegulateAmount) or \
@@ -204,6 +206,7 @@ class MechLinker(object):
                 else:
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
+                        new_stmt.uuid = str(uuid.uuid4())
                         af.apply_to(new_stmt.subj)
                         new_stmts.append(new_stmt)
             else:
