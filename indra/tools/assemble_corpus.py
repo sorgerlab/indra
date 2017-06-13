@@ -934,6 +934,36 @@ def filter_transcription_factor(stmts_in, **kwargs):
     return stmts_out
 
 
+def filter_uuid_list(stmts_in, uuids, **kwargs):
+    """Filter to Statements corresponding to given UUIDs
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    uuids : list[str]
+        A list of UUIDs to filter for.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements for %d UUID%s...' %
+                (len(stmts_in), len(uuids), 's' if len(uuids) > 1 else ''))
+    stmts_out = []
+    for st in stmts_in:
+        if st.uuid in uuids:
+            stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
 def expand_families(stmts_in, **kwargs):
     """Expand Bioentities Agents to individual genes.
 
@@ -983,6 +1013,7 @@ def reduce_activities(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def strip_agent_context(stmts_in, **kwargs):
     """Strip any context on agents within each statement.

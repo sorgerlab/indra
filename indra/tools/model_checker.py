@@ -16,6 +16,16 @@ from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
+class PathMetric(object):
+    pass
+
+class PathResult(object):
+    """Describes results of running the ModelChecker on a single Statement."""
+    def __init__(self, path_found, result_code):
+        self.path_found = path_found
+        self.result_code = result_code
+        self.paths = []
+
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
 
@@ -68,7 +78,7 @@ class ModelChecker(object):
         def add_obs_for_agent(agent):
             obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
             if not obj_mps:
-                logger.info('Failed to create observables for agent %s, '
+                logger.info('No monomer patterns found in model for agent %s, '
                             'skipping' % agent)
                 return
             obs_list = []
@@ -134,10 +144,6 @@ class ModelChecker(object):
     def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
 
-        More efficient than check_statement when checking multiple statements
-        because all relevant observables are added before building the
-        influence map, preventing it from being repeatedly generated.
-
         Returns
         -------
         list of (Statement, bool)
@@ -171,6 +177,7 @@ class ModelChecker(object):
             return self._check_regulate_activity(stmt, max_paths,
                                                  max_path_length)
         else:
+            # Statement type not handled FIXME
             return False
 
     def _check_regulate_activity(self, stmt, max_paths, max_path_length):
@@ -210,6 +217,10 @@ class ModelChecker(object):
         # Get target polarity
         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
         obs_names = self.stmt_to_obs[stmt]
+        if not obs_names:
+            logger.info("No observables for stmt %s, returning False" % stmt)
+            return False
+
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # Return True for the first valid path we find
             result = self._find_im_paths(enz_mp, obs_name, target_polarity,
@@ -295,9 +306,11 @@ class ModelChecker(object):
                     paths.append(flipped)
                     if len(paths) >= max_paths:
                         break
-                return paths
+                return [True, paths]
+            # There are no paths shorter than the max path length, so we
+            # don't bother trying to get them
             else:
-                return True
+                return [True, []]
         else:
             return False
 
@@ -333,6 +346,20 @@ class ModelChecker(object):
         scored_paths = sorted(list(zip(paths, path_scores)),
                               key=lambda x: x[1])
         return scored_paths
+
+    def prune_influence_map(self):
+        im = self.get_im()
+        remove_im_params(self.model, im)
+        # For every rule in the influence map
+        predecessors = im.predecessors_iter
+        for node in im.nodes():
+            # ...get the parents of the node
+            parents = list(predecessors(node))
+            # Check for edges among the immediate parents of the node...
+            for p1, p2 in itertools.permutations(parents, 2):
+                # If there is an edge, remove it
+                if im.has_edge((p1, p2)):
+                    im.remove_edge((p1, p2))
 
 
 def _find_sources_with_paths(im, target, sources, polarity):
@@ -387,7 +414,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
-            # path
+            # path--prevents loops
             if (predecessor, sign) in path:
                 continue
             # Otherwise, the new path is a copy of the old one plus the new
@@ -396,6 +423,11 @@ def _find_sources_with_paths(im, target, sources, polarity):
             new_path.append((predecessor, sign))
             queue.append(new_path)
     return
+
+
+def remove_im_params(model, im):
+    for param in model.parameters:
+        im.remove_node(param.name)
 
 
 def _find_sources(im, target, sources, polarity):
@@ -516,7 +548,7 @@ def _get_signed_predecessors(im, node, polarity):
     predecessors = im.predecessors_iter
     for pred in predecessors(node):
         pred_edge = im.get_edge(pred, node)
-        yield (pred, _get_edge_sign(pred_edge) * polarity)
+        yield (pred.name, _get_edge_sign(pred_edge) * polarity)
 
 
 def _get_edge_sign(edge):
@@ -530,11 +562,6 @@ def _get_edge_sign(edge):
     else:
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
 
-
-def _get_obs_for_rule(node):
-    """Get the observable nodes and polarities downstream of a given rule node.
-    """
-    
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
     """Add a modification condition to an Agent."""

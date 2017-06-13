@@ -24,16 +24,25 @@ def assemble_pysb(stmts, data_genes, out_file):
     ac.dump_statements(stmts, '%s_before_pa.pkl' % base_file)
     assemble_index_cards(stmts, 'output/index_cards')
 
+    # Save a version of statements with no evidence for faster loading
+    for s in stmts:
+        s.evidence = []
+        for ss in s.supports + s.supported_by:
+            ss.evidence = []
+    ac.dump_statements(stmts, '%s_no_evidence.pkl' % base_file)
+
     # Assemble model
     pa = PysbAssembler()
     pa.add_statements(stmts)
-    pa.make_model(reverse_effects=True)
+    pa.make_model(reverse_effects=False)
     #ac.dump_statements(pa.statements, '%s_after_pa.pkl' % base_file)
     # Set context
     set_context(pa)
     # Add observables
     add_observables(pa.model)
     pa.save_model(out_file)
+    with open('korkut_pysb.pkl', 'wb') as fh:
+        pickle.dump(pa.model, fh)
     #pa.export_model('kappa', '%s.ka' % base_file)
     return pa.model
 
@@ -53,6 +62,8 @@ def preprocess_stmts(stmts, data_genes):
     ml = MechLinker(stmts)
     ml.gather_explicit_activities()
     ml.reduce_activities()
+    ml.gather_modifications()
+    ml.reduce_modifications()
     af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
     non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
     af_stmts = ac.run_preassembly(af_stmts)
@@ -101,23 +112,28 @@ def add_observables(model):
                 monomer = model.monomers[agent.name]
             except KeyError:
                 continue
-            mc = agent.mods[0]
-            site_names = ['phospho', mc.residue]
-            if mc.position is not None:
-                site_names.append(mc.residue + mc.position)
-            for site_name in site_names:
-                try:
-                    pattern = monomer(**{site_name: 'p'})
-                    patterns.append(ComplexPattern([pattern], None))
-                except Exception:
-                    pass
+            if agent.mods:
+                mc = agent.mods[0]
+                site_names = ['phospho', mc.residue]
+                if mc.position is not None:
+                    site_names.append(mc.residue + mc.position)
+                for site_name in site_names:
+                    try:
+                        pattern = monomer(**{site_name: 'p'})
+                        patterns.append(ComplexPattern([pattern], None))
+                    except Exception:
+                        pass
+            else:
+                patterns.append(ComplexPattern([monomer()], None))
         if patterns:
-            obs_name = ab_name
+            if model.monomers.get(ab_name) is not None:
+                obs_name = ab_name + '_obs'
+            else:
+                obs_name = ab_name
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
                 obs_name = obs_name.replace('-', '_')
             if not re.match(r'[_a-z][_a-z0-9]*\Z', obs_name, re.IGNORECASE):
                 obs_name = 'p' + obs_name
-            obs_name = obs_name.encode('utf-8')
             o = Observable(obs_name, ReactionPattern(patterns))
             model.add_component(o)
     '''

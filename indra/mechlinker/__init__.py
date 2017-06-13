@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+import uuid
 import logging
 import networkx
 import itertools
@@ -123,6 +124,43 @@ class MechLinker(object):
                     subj_base = self._get_base(stmt.subj)
                     subj_base.add_activity(stmt.j)
 
+    def gather_modifications(self):
+        for stmt in self.statements:
+            if isinstance(stmt, Modification):
+                sub_base = self._get_base(stmt.sub)
+                pol = isinstance(stmt, AddModification)
+                mod_type = modclass_to_modtype[stmt.__class__]
+                if not pol:
+                    mod_type = modtype_to_inverse[mod_type]
+                mc = ModCondition(mod_type, stmt.residue, stmt.position, pol)
+                sub_base.add_modification(mc)
+            for agent in stmt.agent_list():
+                if agent is not None:
+                    agent_base = self._get_base(agent)
+                    for mc in agent.mods:
+                        agent_base.add_modification(mc)
+
+    def reduce_modifications(self):
+        for stmt in self.statements:
+            if isinstance(stmt, Modification):
+                pol = isinstance(stmt, AddModification)
+                mod_type = modclass_to_modtype[stmt.__class__]
+                if not pol:
+                    mod_type = modtype_to_inverse[mod_type]
+                mc = ModCondition(mod_type, stmt.residue, stmt.position, pol)
+                sub_base = self._get_base(stmt.sub)
+                mc_red = sub_base.get_modification_reduction(mc)
+                stmt.residue = mc_red.residue
+                stmt.position = mc_red.position
+            agents = stmt.agent_list()
+            for agent in agents:
+                if agent is not None and agent.mods:
+                    agent_base = self._get_base(agent)
+                    for i, mc in enumerate(agent.mods):
+                        mc_red = agent_base.get_modification_reduction(mc)
+                        agent.mods[i] = mc_red
+
+
     def require_active_forms(self):
         """Rewrites Statements with Agents' active forms in active positions.
 
@@ -153,6 +191,7 @@ class MechLinker(object):
                 else:
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
+                        new_stmt.uuid = str(uuid.uuid4())
                         af.apply_to(new_stmt.enz)
                         new_stmts.append(new_stmt)
             elif isinstance(stmt, RegulateAmount) or \
@@ -167,6 +206,7 @@ class MechLinker(object):
                 else:
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
+                        new_stmt.uuid = str(uuid.uuid4())
                         af.apply_to(new_stmt.subj)
                         new_stmts.append(new_stmt)
             else:
@@ -543,23 +583,48 @@ class BaseAgent(object):
         self.inactive_states = {}
         self.activity_graph = None
         self.activity_reductions = None
+        self.modification_reductions = None
+        self.modifications = []
 
     def get_activity_reduction(self, activity):
         if self.activity_reductions is None:
-            self.make_activity_reductions()
+            self._make_activity_reductions()
         return self.activity_reductions.get(activity)
 
-    def make_activity_reductions(self):
-        self.make_activity_graph()
+    def _make_activity_reductions(self):
+        self._make_activity_graph()
         self.activity_reductions = _get_graph_reductions(self.activity_graph)
 
-    def make_activity_graph(self):
+    def _make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
             if hierarchies['activity'].isa('INDRA', a1, 'INDRA', a2):
                 self.activity_graph.add_edge(a2, a1)
             if hierarchies['activity'].isa('INDRA', a2, 'INDRA', a1):
                 self.activity_graph.add_edge(a1, a2)
+
+    def get_modification_reduction(self, mc):
+        if self.modification_reductions is None:
+            self._make_modification_reductions()
+        mc_red_tuple = self.modification_reductions.get(_mc_tuple(mc))
+        # This handles the case where there was no reduction
+        if not mc_red_tuple:
+            return mc
+        mc = ModCondition(*(list(mc_red_tuple) + [mc.is_modified]))
+        return mc
+
+    def _make_modification_reductions(self):
+        self._make_modification_graph()
+        self.modification_reductions = \
+            _get_graph_reductions(self.modification_graph)
+
+    def _make_modification_graph(self):
+        self.modification_graph = networkx.DiGraph()
+        for m1, m2 in itertools.combinations(self.modifications, 2):
+            if m1.refinement_of(m2, hierarchies['modification']):
+                self.modification_graph.add_edge(_mc_tuple(m2), _mc_tuple(m1))
+            elif m2.refinement_of(m1, hierarchies['modification']):
+                self.modification_graph.add_edge(_mc_tuple(m1), _mc_tuple(m2))
 
     def add_activity(self, activity_type):
         if activity_type not in self.activity_types:
@@ -596,6 +661,16 @@ class BaseAgent(object):
                 states += v
             return states
         return None
+
+    def add_modification(self, mc):
+        mcc = ModCondition(mc.mod_type, mc.residue, mc.position, True)
+        found = False
+        for mod in self.modifications:
+            if mcc.matches(mod):
+                found = True
+                break
+        if not found:
+            self.modifications.append(mcc)
 
     def __str__(self):
         s = '%s(' % self.name
@@ -708,4 +783,7 @@ def _get_graph_reductions(graph):
             if frontiers[i] == frontiers[j]:
                 reductions[n1] = n2
     return reductions
+
+def _mc_tuple(mc):
+    return (mc.mod_type, mc.residue, mc.position)
 

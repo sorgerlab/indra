@@ -2427,8 +2427,21 @@ class PysbPreassembler(object):
         # TODO: what can we do about semantic conflicts here like the same
         # bound condition with True/False is_bound appearing in the
         # two contexts?
-        to_agent.bound_conditions += from_agent.bound_conditions
-        to_agent.mods += from_agent.mods
-        to_agent.mutations += from_agent.mutations
+        def add_no_duplicate(from_lst, to_lst):
+            for fm in from_lst:
+                found = False
+                for tm in to_lst:
+                    if fm.matches(tm):
+                        found = True
+                        break
+                if not found:
+                    to_lst.append(fm)
+            return to_lst
+        to_agent.bound_conditions = \
+            add_no_duplicate(to_agent.bound_conditions,
+                             from_agent.bound_conditions)
+        to_agent.mods = add_no_duplicate(to_agent.mods, from_agent.mods)
+        to_agent.mutations = add_no_duplicate(to_agent.mutations,
+                                              from_agent.mutations)
         to_agent.location = from_agent.location
         to_agent.activity = from_agent.activity

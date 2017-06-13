@@ -4,8 +4,7 @@ import os
 import glob
 from indra import trips
 
-base_folder = os.path.join(os.environ['HOME'],
-                           'data/darpa/phase3_eval/sources/trips-20170206')
+base_folder = 'sources/trips-20170206'
 
 def get_file_names(base_dir):
     fnames = glob.glob(os.path.join(base_dir, '*.ekb'))

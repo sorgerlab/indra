@@ -39,6 +39,7 @@ class IndexCardAssembler(object):
             else:
                 continue
             if card is not None:
+                card.card['meta'] = {'id': stmt.uuid}
                 if self.pmc_override is not None:
                     card.card['pmc_id'] = self.pmc_override
                 else:

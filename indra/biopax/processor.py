@@ -770,7 +770,9 @@ class BiopaxProcessor(object):
         # If the URI is not a UniProt reference then we look through xrefs
         xrefs = bp_entref.getXref().toArray()
         uniprot_refs = [x for x in xrefs if
-                        x.getDb().lower() == 'uniprot knowledgebase']
+                        (x.getDb() is not None and
+                         x.getDb().lower() in ('uniprot knowledgebase',
+                                               'uniprotkb'))]
         if not uniprot_refs:
             return None
         uniprot_ids = [r.getId() for r in uniprot_refs]
@@ -809,7 +811,8 @@ class BiopaxProcessor(object):
             return None
         xrefs = bp_entref.getXref().toArray()
         # Check for HGNC IDs
-        hgnc_ids = [x.getId() for x in xrefs if x.getDb().lower() == 'hgnc']
+        hgnc_ids = [x.getId() for x in xrefs if
+                    (x.getDb() is not None and x.getDb().lower() == 'hgnc')]
         hgnc_id = None
         for hgnc_id in hgnc_ids:
             m = re.match('([0-9]+)', hgnc_id)
@@ -823,7 +826,8 @@ class BiopaxProcessor(object):
         # to HGNC
         if not hgnc_id:
             hgnc_syms = [x.getId() for x in xrefs
-                         if x.getDb().lower() == 'hgnc symbol']
+                         if (x.getDb() is not None and
+                             x.getDb().lower() == 'hgnc symbol')]
             # If no symbol and no ID, return None
             if not hgnc_syms:
                 return None
