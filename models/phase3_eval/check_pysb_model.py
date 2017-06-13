@@ -173,20 +173,25 @@ if __name__ == '__main__':
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=3, max_path_length=6)
+                    result = mc.check_statement(stmt, max_paths=5, max_path_length=6)
                     print(result)
                     if result != False:
                         path_found = 1
                         paths1 = result[1]
                         if paths1:
                             paths += paths1
-                            break
                     else:
                         print("No path found")
-                paths = sorted(paths, key=lambda x:len(x))
                 if paths:
+                    print('===========================')
+                    print('Scoring a total of %d paths' % len(paths))
                     scored_result = mc.score_paths(paths, agent_values)
+                    for res in scored_result:
+                        print(res[1])
+                        for link in res[0]:
+                            print('--->', link[0], link[1])
                     paths = [s[0] for s in scored_result]
+                    print('===========================')
 
                 results.append((drug_name, ab, relation, value, path_found, paths))
         with open('pathfinding_results.pkl', 'wb') as fh:
