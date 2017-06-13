@@ -69,7 +69,10 @@ def make_cyjs_network(results, model, stmts):
     ca.set_CCLE_context(['SKMEL28_SKIN'])
     ca.save_json('output/korkut_model')
 
+
 def make_english_output(results, model, stmts):
+    citations = {}
+    citation_count = 1
     for source, target, polarity, value, found_path, paths in results:
         cond = 'How does treatment with %s %s %s?' % \
             (source, 'increase' if polarity == 'positive' else
@@ -87,8 +90,25 @@ def make_english_output(results, model, stmts):
                             sentences.append('%s is a target of %s.' %
                                              (stmt.agent_list()[0].name, source))
 
+                        # Make citations
+                        pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
+                        cit_nums = []
+                        for pmid in pmids:
+                            cit_num = citations.get(pmid)
+                            if cit_num is None:
+                                citations[pmid] = citation_count
+                                cit_num = citation_count
+                                citation_count += 1
+                            cit_nums.append(cit_num)
+                        if cit_nums:
+                            cit_nums = sorted(list(set(cit_nums)))
+                            cit_str = ' [%s]' % (','.join([str(c) for c
+                                                          in cit_nums]))
+                        else:
+                            cit_str = ''
                         ea = EnglishAssembler([stmt])
                         sentence = ea.make_model()
+                        sentence = sentence[:-1] + cit_str + '.'
                         sentences.append(sentence)
             sentences[-1] = sentences[-1][:-1] + \
                 ', which is measured by %s.' % target
@@ -100,6 +120,10 @@ def make_english_output(results, model, stmts):
         else:
             print('INDRA couldn\'t find an explanation for this observation.')
         print('\n')
+    references = 'References\n==========\n'
+    for k, v in sorted(citations.items(), key=lambda x: x[1]):
+        references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
+    print(references)
 
 if __name__ == '__main__':
     print("Processing data")
@@ -130,7 +154,7 @@ if __name__ == '__main__':
             for agent in agents:
                 agent_data[drug_name][agent] = value
 
-    base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
+    base_stmts = ac.load_statements('output/korkut_model_pysb_before_pa.pkl')
 
     """
     # Merge the sources of statements
