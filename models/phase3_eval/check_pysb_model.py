@@ -58,8 +58,12 @@ def make_cyjs_network(results, model, stmts):
     path_stmts = get_path_stmts(results, model, stmts)
     path_genes = get_path_genes(path_stmts)
     path_uuids = [list(path.keys()) for path in path_stmts]
+    all_path_uuids = []
+    for p in path_uuids:
+        all_path_uuids += p
     print(json.dumps(path_uuids, indent=1))
-    filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
+    #filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
+    filtered_stmts = ac.filter_uuid_list(stmts, all_path_uuids)
     ca = CyJSAssembler(filtered_stmts)
     cm = ca.make_model()
     ca.set_CCLE_context(['SKMEL28_SKIN'])
@@ -150,7 +154,7 @@ if __name__ == '__main__':
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
-    rerun = True
+    rerun = False
     if rerun:
         mc = ModelChecker(model, all_data_stmts, agent_obs)
         mc.prune_influence_map()
@@ -169,7 +173,7 @@ if __name__ == '__main__':
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=1, max_path_length=7)
+                    result = mc.check_statement(stmt, max_paths=3, max_path_length=6)
                     print(result)
                     if result != False:
                         path_found = 1
@@ -179,6 +183,7 @@ if __name__ == '__main__':
                             break
                     else:
                         print("No path found")
+                paths = sorted(paths, key=lambda x:len(x))
                 #Score paths here TODO
                 #if paths:
                 #    scored_result = mc.score_paths(paths, agent_values)
