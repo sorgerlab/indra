@@ -21,6 +21,7 @@ st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
                                               text='MEK phosphorylates ERK'))
 st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',
                                               text='MEK phosphorylates ERK'))
+st_selfmod = Autophosphorylation(Agent('AKT1'), 'S', '473')
 
 def test_act():
     cja = CyJSAssembler()
@@ -63,6 +64,15 @@ def test_ras():
     assert('positive' in polarities)
     assert('negative' in polarities)
 
+def test_selfmod():
+    cja = CyJSAssembler()
+    cja.add_statements([st_selfmod])
+    cja.make_model()
+    assert(len(cja._nodes) == 1)
+    assert(len(cja._edges) == 1)
+    polarities = [edge['data']['polarity'] for edge in cja._edges]
+    assert(len(polarities) == 1)
+    assert(polarities[0] == 'positive')
 
 def test_complex():
     cja = CyJSAssembler()

@@ -77,6 +77,8 @@ class CyJSAssembler(object):
                 self._add_regulate_amount(stmt)
             elif isinstance(stmt, Modification):
                 self._add_modification(stmt)
+            elif isinstance(stmt, SelfModification):
+                self._add_selfmodification(stmt)
             elif isinstance(stmt, RasGef):
                 self._add_rasgef(stmt)
             elif isinstance(stmt, RasGap):
@@ -260,6 +262,12 @@ class CyJSAssembler(object):
     _add_modification = _add_binary_regulation
     _add_rasgef = _add_binary_regulation
     _add_rasgap = _add_binary_regulation
+
+    def _add_selfmodification(self, stmt):
+        edge_type, edge_polarity = _get_stmt_type(stmt)
+        source_id = self._add_node(stmt.enz, uuid=stmt.uuid)
+        self._add_edge(edge_type, source_id, source_id, edge_polarity,
+                       stmt.uuid)
 
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
