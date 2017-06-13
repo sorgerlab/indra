@@ -94,8 +94,15 @@ class SifAssembler(object):
                 self.graph[s][t]['weight'] = \
                     1.0 / attr[attribute]
 
-    def print_model(self):
-        """Return a SIF string of the assembled model."""
+    def print_model(self, include_unsigned_edges=False):
+        """Return a SIF string of the assembled model.
+
+        Parameters
+        ----------
+        include_unsigned_edges : bool
+            If True, includes edges with an unknown activating/inactivating
+            relationship (e.g., most PTMs). Default is False.
+        """
         sif_str = ''
         for edge in self.graph.edges_iter(data=True):
             n1 = edge[0]
@@ -106,6 +113,8 @@ class SifAssembler(object):
                 rel = '-1'
             elif polarity == 'positive':
                 rel = '1'
+            elif include_unsigned_edges:
+                rel = '0'
             else:
                 continue
             sif_str += '%s %s %s\n' % (n1, rel, n2)
