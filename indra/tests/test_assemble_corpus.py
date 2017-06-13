@@ -53,6 +53,10 @@ def test_filter_grounded_only():
     st_out = ac.filter_grounded_only([st3])
     assert len(st_out) == 0
 
+def test_filter_uuid_list():
+    st_out = ac.filter_uuid_list([st1, st4], [st1.uuid])
+    assert len(st_out) == 1
+
 def test_filter_genes_only():
     st_out = ac.filter_genes_only([st1, st5])
     assert len(st_out) == 2
