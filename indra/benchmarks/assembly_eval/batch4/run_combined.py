@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import csv
+import uuid
 import pickle
 import rasmodel
 from indra import trips, reach
@@ -34,6 +35,8 @@ if __name__ == '__main__':
         rasmodel_stmts = rasmodel.get_statements()
         # Combine all statements
         all_statements = tp.statements + reach_stmts_for_pmcid
+        for stmt in all_statements:
+            stmt.uuid = str(uuid.uuid4())
         # Run assembly
         run_assembly(all_statements, 'combined', pmcid,
                      background_assertions=rasmodel_stmts)
