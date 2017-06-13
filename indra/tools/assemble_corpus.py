@@ -443,8 +443,9 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
     """
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
-    genes_str = ', '.join(gene_list)
-    logger.info('Filtering %d statements for ones containing "%s" of: %s...' %
+    else:
+        genes_str = ', '.join(gene_list)
+        logger.info('Filtering %d statements for ones containing "%s" of: %s...' %
                 (len(stmts_in), policy, genes_str))
     stmts_out = []
     if policy == 'one':
@@ -467,6 +468,8 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
                         break
             if found_genes:
                 stmts_out.append(st)
+    else:
+        stmts_out = stmts_in
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:

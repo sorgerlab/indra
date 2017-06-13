@@ -80,6 +80,8 @@ def test_filter_gene_list_one():
     assert(len(st_out) == 0)
     st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'all')
     assert(len(st_out) == 1)
+    st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'invalid')
+    assert(len(st_out) == 2)
 
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
