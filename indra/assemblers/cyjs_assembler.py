@@ -6,8 +6,6 @@ import logging
 import itertools
 import collections
 import numpy as np
-from matplotlib.colors import LinearSegmentedColormap as colormap
-from matplotlib.colors import rgb2hex, hex2color
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.databases import context_client, get_identifiers_url
@@ -75,12 +73,16 @@ class CyJSAssembler(object):
         for stmt in self.statements:
             if isinstance(stmt, RegulateActivity):
                 self._add_regulate_activity(stmt)
-            elif isinstance(stmt, Inhibition):
-                self._add_activation(stmt)
-            elif isinstance(stmt, Complex):
-                self._add_complex(stmt)
+            elif isinstance(stmt, RegulateAmount):
+                self._add_regulate_amount(stmt)
             elif isinstance(stmt, Modification):
                 self._add_modification(stmt)
+            elif isinstance(stmt, RasGef):
+                self._add_rasgef(stmt)
+            elif isinstance(stmt, RasGap):
+                self._add_rasgap(stmt)
+            elif isinstance(stmt, Complex):
+                self._add_complex(stmt)
             else:
                 logger.warning('Unhandled statement type: %s' %
                                stmt.__class__.__name__)
@@ -109,7 +111,9 @@ class CyJSAssembler(object):
         gene_names = self._gene_names
         exp = {}
         mut = {}
-        # context_client gives back a dict with genes as keys. prefer lines keys
+
+        # context_client gives back a dict with genes as keys.
+        # prefer lines keys, so this will need to be transposed
         def transpose_context(context_dict):
             d = context_dict
             d_genes = [x for x in d]
@@ -134,6 +138,7 @@ class CyJSAssembler(object):
         # create bins for the exp values
         # because colorbrewer only does 3-9 bins and I don't feel like
         # reinventing color scheme theory, this will only bin 3-9 bins
+
         def bin_exp(expression_dict):
             d = expression_dict
             exp_values = []
@@ -185,8 +190,8 @@ class CyJSAssembler(object):
         -------
         cyjs_str_context : str
             A json string of the context dictionary. e.g. -
-            {'CCLE' : {'exp' : {'gene' : 'val'},
-                       'mut' : {'gene' : 'val'}
+            {'CCLE' : {'bin_expression' : {'cell_line1' : {'gene1':'val1'} },
+                       'bin_expression' : {'cell_line' : {'gene1':'val1'} }
                       }
             }
         """
@@ -194,28 +199,28 @@ class CyJSAssembler(object):
         context_str = json.dumps(context, indent=1, sort_keys=True)
         return context_str
 
-    def save_json(self, fname='model'):
+    def save_json(self, fname_prefix='model'):
         """Save the assembled Cytoscape JS network in a json file.
+
+        This method saves two files based on the file name prefix given.
+        It saves one json file with the graph itself, and another json
+        file with the context.
 
         Parameters
         ----------
-        fname : Optional[str]
-            The name of the file to save the Cytoscape JS network to.
+        fname_prefix : Optional[str]
+            The prefix of the files to save the Cytoscape JS network and
+            context to.
             Default: model
         """
-        cyjs_dict = {'edges': self._edges, 'nodes': self._nodes}
-        model_dict = {'exp_colorscale': self._exp_colorscale,
-                      'mut_colorscale': self._mut_colorscale,
-                      'model_elements': cyjs_dict,
-                      'context': self._context}
         cyjs_str = self.print_cyjs_graph()
         # outputs the graph
-        with open(fname + '.json', 'wt') as fh:
-            fh.write(cyjs_str)
+        with open(fname_prefix + '.json', 'wb') as fh:
+            fh.write(cyjs_str.encode('utf-8'))
         # outputs the context of graph nodes
         context_str = self.print_cyjs_context()
-        with open(fname + '_context' + '.json', 'wt') as fh:
-            fh.write(context_str)
+        with open(fname_prefix + '_context.json', 'wb') as fh:
+            fh.write(context_str.encode('utf-8'))
 
     def save_model(self, fname='model.js'):
         """Save the assembled Cytoscape JS network in a js file.
@@ -237,22 +242,24 @@ class CyJSAssembler(object):
         s += 'var exp_colorscale = %s;\n' % model_dict['exp_colorscale_str']
         s += 'var mut_colorscale = %s;\n' % model_dict['mut_colorscale_str']
         s += 'var model_elements = %s;\n' % model_dict['model_elements_str']
-        with open(fname, 'wt') as fh:
-            fh.write(s)
+        with open(fname, 'wb') as fh:
+            fh.write(s.encode('utf-8'))
 
-    def _add_regulate_activity(self, stmt):
+    def _add_binary_regulation(self, stmt):
+        subj, obj = stmt.agent_list()
+        if subj is None:
+            return
         edge_type, edge_polarity = _get_stmt_type(stmt)
-        source_id = self._add_node(stmt.subj, uuid=stmt.uuid)
-        target_id = self._add_node(stmt.obj, uuid=stmt.uuid)
+        source_id = self._add_node(subj, uuid=stmt.uuid)
+        target_id = self._add_node(obj, uuid=stmt.uuid)
         self._add_edge(edge_type, source_id, target_id, edge_polarity,
                        stmt.uuid)
 
-    def _add_modification(self, stmt):
-        edge_type, edge_polarity = _get_stmt_type(stmt)
-        source_id = self._add_node(stmt.enz, uuid=stmt.uuid)
-        target_id = self._add_node(stmt.sub, uuid=stmt.uuid)
-        self._add_edge(edge_type, source_id, target_id, edge_polarity,
-                       stmt.uuid)
+    _add_regulate_activity = _add_binary_regulation
+    _add_regulate_amount = _add_binary_regulation
+    _add_modification = _add_binary_regulation
+    _add_rasgef = _add_binary_regulation
+    _add_rasgap = _add_binary_regulation
 
     def _add_complex(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
@@ -303,9 +310,7 @@ class CyJSAssembler(object):
                 member_db_refs = _get_db_refs(member_agent)
             else:
                 member_db_refs = {}
-            members[member[1]] = {
-                    'db_refs': member_db_refs
-                    }
+            members[member[1]] = {'db_refs': member_db_refs}
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
                          'members': members, 'uuid_list': [uuid]}}
@@ -394,7 +399,7 @@ class CyJSAssembler(object):
             if len(val) > 1:
                 self._add_edge(key[0], key[1], key[2], key[3], val)
         # edit edges on parent nodes and make new edges for them
-        edges_to_add = [[], []] # [group_edges, uuid_lists]
+        edges_to_add = [[], []]  # [group_edges, uuid_lists]
         for e in self._edges:
             new_edge = deepcopy(e)
             new_edge['data'].pop('id', None)
@@ -496,6 +501,12 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, Inhibition):
         edge_type = 'Inhibition'
         edge_polarity = 'negative'
+    elif isinstance(stmt, DecreaseAmount):
+        edge_type = 'DecreaseAmount'
+        edge_polarity = 'negative'
+    elif isinstance(stmt, IncreaseAmount):
+        edge_type = 'IncreaseAmount'
+        edge_polarity = 'positive'
     elif isinstance(stmt, RasGef):
         edge_type = 'RasGef'
         edge_polarity = 'positive'

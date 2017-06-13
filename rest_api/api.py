@@ -5,13 +5,14 @@ from bottle import route, run, request, default_app, response
 from indra import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-                             CyJSAssembler, SifAssembler
+    CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
 
-### ALLOW CORS ###
+
+#   ALLOW CORS   #
 def allow_cors(func):
     """This is a decorator which enable CORS for the specified endpoint."""
     def wrapper(*args, **kwargs):
@@ -19,9 +20,10 @@ def allow_cors(func):
         return func(*args, **kwargs)
     return wrapper
 
-###### INPUT PROCESSING #######
+#     INPUT PROCESSING     #
 
-### TRIPS ###
+
+#   TRIPS   #
 @route('/trips/process_text', method='POST')
 @allow_cors
 def trips_process_text():
@@ -37,6 +39,7 @@ def trips_process_text():
     else:
         res = {'statements': []}
     return res
+
 
 @route('/trips/process_xml', method='POST')
 @allow_cors
@@ -55,7 +58,8 @@ def trips_process_xml():
     return res
 ################
 
-### REACH ###
+
+#   REACH   #
 @route('/reach/process_text', method='POST')
 @allow_cors
 def reach_process_text():
@@ -72,6 +76,7 @@ def reach_process_text():
         res = {'statements': []}
     return res
 
+
 @route('/reach/process_json', method='POST')
 @allow_cors
 def reach_process_json():
@@ -87,6 +92,7 @@ def reach_process_json():
     else:
         res = {'statements': []}
     return res
+
 
 @route('/reach/process_pmc', method='POST')
 @allow_cors
@@ -105,7 +111,8 @@ def reach_process_pmc():
     return res
 ##################
 
-### BEL ###
+
+#   BEL   #
 @route('/bel/process_ndex_neighborhood', method='POST')
 @allow_cors
 def bel_process_ndex_neighborhood():
@@ -121,6 +128,7 @@ def bel_process_ndex_neighborhood():
     else:
         res = {'statements': []}
     return res
+
 
 @route('/bel/process_belrdf', method='POST')
 @allow_cors
@@ -138,7 +146,8 @@ def bel_process_belrdf():
         res = {'statements': []}
     return res
 
-### BioPAX ###
+
+#   BioPAX   #
 @route('/biopax/process_pc_pathsbetween', method='POST')
 @allow_cors
 def biopax_process_pc_pathsbetween():
@@ -154,6 +163,7 @@ def biopax_process_pc_pathsbetween():
     else:
         res = {'statements': []}
     return res
+
 
 @route('/biopax/process_pc_pathsfromto', method='POST')
 @allow_cors
@@ -172,6 +182,7 @@ def biopax_process_pc_pathsfromto():
         res = {'statements': []}
     return res
 
+
 @route('/biopax/process_pc_neighborhood', method='POST')
 @allow_cors
 def biopax_process_pc_neighborhood():
@@ -188,10 +199,10 @@ def biopax_process_pc_neighborhood():
         res = {'statements': []}
     return res
 
-### OUTPUT ASSEMBLY ####################
+#   OUTPUT ASSEMBLY   #
 
-### PYSB ###
 
+#   PYSB   #
 @route('/assemblers/pysb', method='POST')
 @allow_cors
 def assemble_pysb():
@@ -207,8 +218,8 @@ def assemble_pysb():
     res = {'model': model_str}
     return res
 
-### CX ###
 
+#   CX   #
 @route('/assemblers/cx', method='POST')
 @allow_cors
 def assemble_cx():
@@ -222,8 +233,8 @@ def assemble_cx():
     res = {'model': model_str}
     return res
 
-### GRAPH ###
 
+#  GRAPH   #
 @route('/assemblers/graph', method='POST')
 @allow_cors
 def assemble_graph():
@@ -237,8 +248,8 @@ def assemble_graph():
     res = {'model': model_str}
     return res
 
-### CyJS ###
 
+#   CyJS   #
 @route('/assemblers/cyjs', method='POST')
 @allow_cors
 def assemble_cyjs():
@@ -249,16 +260,10 @@ def assemble_cyjs():
     stmts = stmts_from_json(stmts_json)
     cja = CyJSAssembler()
     cja.add_statements(stmts)
-    cja.make_model(grouping=True,
-                   drop_virtual_edges=False,
-                   add_edge_weights=True)
-    line = body.get('line')
-    if line is not None:
-        cja.set_context(cell_type = line,
-                        bin_expression = True,
-                        n_bins = 9)
-    model_str = cja.print_cyjs()
+    cja.make_model(grouping=True)
+    model_str = cja.print_cyjs_graph()
     return model_str
+
 
 @route('/assemblers/sif/loopy', method='POST')
 @allow_cors
@@ -273,6 +278,7 @@ def assemble_loopy():
     model_str = sa.print_loopy(as_url=True)
     res = {'loopy_url': model_str}
     return res
+
 
 @route('/preassembly/map_grounding', method='POST')
 @allow_cors
@@ -291,6 +297,7 @@ def map_grounding():
         res = {'statements': []}
     return res
 
+
 @route('/preassembly/map_sequence', method='POST')
 @allow_cors
 def map_grounding():
@@ -308,6 +315,7 @@ def map_grounding():
         res = {'statements': []}
     return res
 
+
 @route('/preassembly/run_preassembly', method='POST')
 @allow_cors
 def run_preassembly():
@@ -324,6 +332,7 @@ def run_preassembly():
     else:
         res = {'statements': []}
     return res
+
 
 @route('/preassembly/filter_by_type', method='POST')
 @allow_cors
@@ -345,6 +354,7 @@ def filter_by_type():
         res = {'statements': []}
     return res
 
+
 @route('/preassembly/filter_grounded_only', method='POST')
 @allow_cors
 def filter_grounded_only():
@@ -362,7 +372,7 @@ def filter_grounded_only():
         res = {'statements': []}
     return res
 
+
 if __name__ == '__main__':
     app = default_app()
     run(app, host='0.0.0.0', port='8080')
-

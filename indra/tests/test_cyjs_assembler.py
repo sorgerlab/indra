@@ -14,6 +14,8 @@ st_complex = Complex([mek, erk, dusp])
 st_act = Activation(mek, erk)
 st_rasgef = RasGef(Agent('SOS1'), Agent('HRAS'))
 st_rasgap = RasGap(Agent('RASA1'), Agent('HRAS'))
+st_incamount = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
+st_decamount = DecreaseAmount(Agent('MDM2'), Agent('TP53'))
 st_act2 = Inhibition(dusp, erk)
 st_cited = Phosphorylation(mek, erk, evidence=Evidence(pmid='12345',
                                               text='MEK phosphorylates ERK'))
@@ -38,6 +40,29 @@ def test_act():
             assert(node['data']['db_refs'].get('UniProt'))
         if node['data']['name'] == 'DUSP4':
             assert(not node['data']['db_refs'])
+
+def test_regamount():
+    cja = CyJSAssembler()
+    cja.add_statements([st_incamount, st_decamount])
+    cja.make_model()
+    assert(len(cja._nodes) == 2)
+    assert(len(cja._edges) == 2)
+    polarities = [edge['data']['polarity'] for edge in cja._edges]
+    assert(len(set(polarities))==2)
+    assert('positive' in polarities)
+    assert('negative' in polarities)
+
+def test_ras():
+    cja = CyJSAssembler()
+    cja.add_statements([st_rasgef, st_rasgap])
+    cja.make_model()
+    assert(len(cja._nodes) == 3)
+    assert(len(cja._edges) == 2)
+    polarities = [edge['data']['polarity'] for edge in cja._edges]
+    assert(len(set(polarities))==2)
+    assert('positive' in polarities)
+    assert('negative' in polarities)
+
 
 def test_complex():
     cja = CyJSAssembler()
