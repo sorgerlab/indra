@@ -282,8 +282,10 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    logger.info('Filtering %d statements...' % len(stmts_in))
     invert = kwargs.get('invert', False)
+    logger.info('Filtering %d statements for type %s%s...' %
+                (len(stmts_in), 'not ' if invert else '',
+                 stmt_type.__name__))
     if not invert:
         stmts_out = [st for st in stmts_in if isinstance(st, stmt_type)]
     else:
