@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
-    rerun = False
+    rerun = True
     if rerun:
         mc = ModelChecker(model, all_data_stmts, agent_obs)
         mc.prune_influence_map()
@@ -184,9 +184,9 @@ if __name__ == '__main__':
                     else:
                         print("No path found")
                 paths = sorted(paths, key=lambda x:len(x))
-                #Score paths here TODO
-                #if paths:
-                #    scored_result = mc.score_paths(paths, agent_values)
+                if paths:
+                    scored_result = mc.score_paths(paths, agent_values)
+                    paths = [s[0] for s in scored_result]
 
                 results.append((drug_name, ab, relation, value, path_found, paths))
         with open('pathfinding_results.pkl', 'wb') as fh:

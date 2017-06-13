@@ -319,8 +319,9 @@ class ModelChecker(object):
         obs_dict = {}
         for ag, val in agents_values.items():
             obs_list = self.agent_to_obs[ag]
-            for obs in obs_list:
-                obs_dict[obs] = val
+            if obs_list is not None:
+                for obs in obs_list:
+                    obs_dict[obs] = val
         # For every path...
         path_scores = []
         for path in paths:
