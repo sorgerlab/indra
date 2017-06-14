@@ -29,6 +29,12 @@ class PathResult(object):
     path_found : bool
     result_code : string
         STATEMENT_TYPE_NOT_HANDLED
+        SUBJECT_MONOMERS_NOT_FOUND
+        OBSERVABLES_NOT_FOUND
+        NO_PATHS_FOUND
+        MAX_PATH_LENGTH_EXCEEDED
+        PATHS_FOUND
+        INPUT_RULES_NOT_FOUND
 
     Attributes
     ----------
@@ -224,11 +230,6 @@ class ModelChecker(object):
             return self._find_im_paths(subj_mp, obs_name, target_polarity,
                                        max_paths, max_path_length)
 
-SUBJECT_MONOMERS_NOT_FOUND
-OBSERVABLES_NOT_FOUND
-NO_PATHS_FOUND
-MAX_PATH_LENGTH_EXCEEDED
-
     def _check_modification(self, stmt, max_paths, max_path_length):
         """Check a Modification statement."""
         # Identify the observable we're looking for in the model, which
@@ -316,7 +317,8 @@ MAX_PATH_LENGTH_EXCEEDED
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
             if not input_rule_set:
-                return False
+                return PathResult(False, 'INPUT_RULES_NOT_FOUND',
+                                  max_paths, max_path_length)
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?
         path_lengths = []
