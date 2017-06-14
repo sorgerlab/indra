@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import logging
 import numbers
 import networkx
@@ -17,9 +18,23 @@ from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
-PathMetric = namedtuple('PathMetric', ['source_node', 'target_node',
-                                       'polarity', 'length'])
 
+class PathMetric(object):
+    """Describes results of simple path search (path existence)."""
+    def __init__(self, source_node, target_node, polarity, length):
+        self.source_node = source_node
+        self.target_node = target_node
+        self.polarity = polarity
+        self.length = length
+
+    def __repr__(self):
+        return str(self)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return ('source_node: %s, target_node: %s, polarity: %s, length: %d' %
+                (self.source_node, self.target_node, self.polarity,
+                 self.length))
 
 class PathResult(object):
     """Describes results of running the ModelChecker on a single Statement.
@@ -48,6 +63,9 @@ class PathResult(object):
     def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
         self.result_code = result_code
+        self.max_paths = max_paths
+        self.max_path_length = max_path_length
+        self.path_metrics = []
         self.paths = []
 
     def add_path(self, path):
@@ -56,6 +74,28 @@ class PathResult(object):
     def add_metric(self, path_metric):
         self.path_metrics.append(path_metric)
 
+    @python_2_unicode_compatible
+    def __str__(self):
+        summary = textwrap.dedent("""
+            PathResult:
+                path_found: {path_found}
+                result_code: {result_code}
+                path_metrics: {path_metrics}
+                paths: {paths}
+                max_paths: {max_paths}
+                max_path_length: {max_path_length}""")
+        ws = '\n        '
+        return summary.format(path_found=self.path_found,
+                       result_code=self.result_code,
+                       max_paths=self.max_paths,
+                       max_path_length=self.max_path_length,
+                       path_metrics=ws + ws.join(['%d: %s' % (pm_ix, pm)
+                              for pm_ix, pm in enumerate(self.path_metrics)]),
+                       paths=ws + ws.join(['%d: %s' % (p_ix, p)
+                              for p_ix, p in enumerate(self.paths)]))
+
+    def __repr__(self):
+        return str(self)
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
