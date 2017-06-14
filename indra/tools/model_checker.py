@@ -7,7 +7,7 @@ import itertools
 import numpy as np
 import scipy.stats
 from copy import deepcopy
-from collections import deque, defaultdict
+from collections import deque, defaultdict, namedtuple
 from pysb import kappa, WILD
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
@@ -17,15 +17,39 @@ from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
-class PathMetric(object):
-    pass
+PathMetric = namedtuple('PathMetric', ['source_node', 'target_node',
+                                       'polarity', 'length'])
+
 
 class PathResult(object):
-    """Describes results of running the ModelChecker on a single Statement."""
-    def __init__(self, path_found, result_code):
+    """Describes results of running the ModelChecker on a single Statement.
+
+    Parameters
+    ----------
+    path_found : bool
+    result_code : string
+        STATEMENT_TYPE_NOT_HANDLED
+
+    Attributes
+    ----------
+    path_found : boolean
+    result_code : string
+    path_metrics : list of PathMetric
+    paths : list of paths
+    max_paths :
+    max_path_length :
+    """
+    def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
         self.result_code = result_code
         self.paths = []
+
+    def add_path(self, path):
+        self.paths.append(path)
+
+    def add_metric(self, path_metric):
+        self.path_metrics.append(path_metric)
+
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
@@ -147,9 +171,9 @@ class ModelChecker(object):
 
         Returns
         -------
-        list of (Statement, bool)
+        list of (Statement, PathResult)
             Each tuple contains the Statement checked against the model and
-            a boolean value indicating whether the model can satisfies it.
+            a PathResult object describing the results of model checking.
         """
         results = []
         for stmt in self.statements:
@@ -178,8 +202,8 @@ class ModelChecker(object):
             return self._check_regulate_activity(stmt, max_paths,
                                                  max_path_length)
         else:
-            # Statement type not handled FIXME
-            return False
+            return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
+                              max_paths, max_path_length)
 
     def _check_regulate_activity(self, stmt, max_paths, max_path_length):
         """Check a RegulateActivity statement."""
@@ -200,6 +224,11 @@ class ModelChecker(object):
             return self._find_im_paths(subj_mp, obs_name, target_polarity,
                                        max_paths, max_path_length)
 
+SUBJECT_MONOMERS_NOT_FOUND
+OBSERVABLES_NOT_FOUND
+NO_PATHS_FOUND
+MAX_PATH_LENGTH_EXCEEDED
+
     def _check_modification(self, stmt, max_paths, max_path_length):
         """Check a Modification statement."""
         # Identify the observable we're looking for in the model, which
@@ -212,7 +241,8 @@ class ModelChecker(object):
             if not enz_mps:
                 logger.info('No monomers found corresponding to agent %s' %
                              stmt.enz)
-                return False
+                return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
+                                  max_paths, max_path_length)
         else:
             enz_mps = [None]
         # Get target polarity
@@ -220,19 +250,20 @@ class ModelChecker(object):
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
             logger.info("No observables for stmt %s, returning False" % stmt)
-            return False
+            return PathResult(False, 'OBSERVABLES_NOT_FOUND')
 
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
-            # Return True for the first valid path we find
+            # FIXME Returns on the path found for the first enz_mp/obs combo
             result = self._find_im_paths(enz_mp, obs_name, target_polarity,
                                          max_paths, max_path_length)
             # If result for this observable is not False, then we return it;
             # otherwise, that means there was no path for this observable, so
             # we have to try the next one
-            if result:
+            if result.path_found:
                 return result
         # If we got here, then there was no path for any observable
-        return False
+        return PathResult(False, 'NO_PATHS_FOUND',
+                          max_paths, max_path_length)
 
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
@@ -288,33 +319,40 @@ class ModelChecker(object):
                 return False
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?
-        num_paths = 0
         path_lengths = []
-        import ipdb; ipdb.set_trace()
+        path_metrics = []
         for source, polarity, path_length in \
                     _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
-            num_paths += 1
+            pm = PathMetric(source, obs_name, polarity, path_length)
+            path_metrics.append(pm)
             path_lengths.append(path_length)
+        # Now, look for paths
         paths = []
-        if num_paths > 0:
+        if path_metrics:
             if min(path_lengths) <= max_path_length:
+                pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
+                pr.path_metrics = path_metrics
                 # Get the first path
                 path_iter = enumerate(_find_sources_with_paths(
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
                 for path_ix, path in path_iter:
                     flipped = _flip(self.get_im(), path)
-                    paths.append(flipped)
-                    if len(paths) >= max_paths:
+                    pr.add_path(flipped)
+                    if len(pr.paths) >= max_paths:
                         break
-                return [True, paths]
+                return pr
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
             else:
-                return [True, []]
+                pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
+                                max_paths, max_path_length)
+                pr.path_metrics = path_metrics
+                return pr
         else:
-            return False
+            return PathResult(False, 'NO_PATHS_FOUND',
+                              max_paths, max_path_length)
 
     def score_paths(self, paths, agents_values):
         # Build up dict mapping observables to values
