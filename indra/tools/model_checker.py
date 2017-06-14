@@ -291,7 +291,8 @@ class ModelChecker(object):
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
             logger.info("No observables for stmt %s, returning False" % stmt)
-            return PathResult(False, 'OBSERVABLES_NOT_FOUND')
+            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
+                              max_paths, max_path_length)
 
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
             # FIXME Returns on the path found for the first enz_mp/obs combo
@@ -396,7 +397,8 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
-    def score_paths(self, paths, agents_values):
+    def score_paths(self, paths, agents_values, loss_of_function=False,
+                    sigma=0.15):
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
@@ -407,6 +409,9 @@ class ModelChecker(object):
         # For every path...
         path_scores = []
         for path in paths:
+            logger.info('------')
+            logger.info("Scoring path:")
+            logger.info(path)
             # Look at every node in the path, excluding the final
             # observable...
             path_score = 0
@@ -416,18 +421,34 @@ class ModelChecker(object):
                 # of the rule
                 # affected_obs is a list of observable names alogn
                 for affected_obs, rule_obs_sign in self.rule_obs_dict[node]:
-                    pred_sign = sign * rule_obs_sign
+                    flip_polarity = -1 if loss_of_function else 1
+                    pred_sign = sign * rule_obs_sign * flip_polarity
                     # Check to see if this observable is in the data
                     logger.info('%s %s: effect %s %s' %
-                                (node, sign, obs, pred_sign))
+                                (node, sign, affected_obs, pred_sign))
                     measured_val = obs_dict.get(affected_obs)
                     if measured_val:
-                        logger.info('Actual: %s' % measured_val)
-                        path_score += (pred_sign - measured_val) ** 2
-            path_score = path_score / len(path)
+                        obs_model = lambda x: scipy.stats.norm(x, sigma)
+                        prob_true_decrease = obs_model(measured_val).logcdf(0)
+                        prob_true_increase = 1 - prob_true_decrease
+                        if pred_sign <= 0:
+                            prob_correct = prob_true_decrease
+                        else:
+                            prob_correct = prob_true_increase
+                        logger.info('Actual: %s, Log Probability: %s' %
+                                    (measured_val, prob_correct))
+                        path_score += prob_correct
+            # Normalized path
+            #path_score = path_score / len(path)
+            logger.info("Path score: %s" % path_score)
             path_scores.append(path_score)
-        scored_paths = sorted(list(zip(paths, path_scores)),
-                              key=lambda x: x[1])
+        path_tuples = list(zip(paths, path_scores))
+        # Sort first by path length
+        sorted_by_length = sorted(path_tuples, key=lambda x: len(x[0]))
+        # Sort by probability; sort in reverse order to large values
+        # (higher probabilities) are ranked higher
+        scored_paths = sorted(sorted_by_length, key=lambda x: x[1],
+                              reverse=True)
         return scored_paths
 
     def prune_influence_map(self):
