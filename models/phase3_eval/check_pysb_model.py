@@ -88,7 +88,7 @@ def make_english_output(results, model, stmts):
                         stmt = _stmt_from_rule(model, path_rule, stmts)
                         if i == 0:
                             sentences.append('%s is a target of %s.' %
-                                             (stmt.agent_list()[0].name, source))
+                                            (stmt.agent_list()[0].name, source))
 
                         # Make citations
                         pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
@@ -175,7 +175,6 @@ if __name__ == '__main__':
     with open('korkut_pysb.pkl', 'rb') as f:
         print("Unpickling PySB model")
         model = pickle.load(f)
-    import ipdb; ipdb.set_trace()
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
@@ -210,14 +209,14 @@ if __name__ == '__main__':
                 if paths:
                     print('===========================')
                     print('Scoring a total of %d paths' % len(paths))
-                    scored_result = mc.score_paths(paths, agent_values)
+                    scored_result = mc.score_paths(paths, agent_values,
+                                                   loss_of_function=True)
                     for res in scored_result:
                         print(res[1])
                         for link in res[0]:
                             print('--->', link[0], link[1])
                     paths = [s[0] for s in scored_result]
                     print('===========================')
-
                 results.append((drug_name, ab, relation, value, path_found,
                                 paths))
         with open('pathfinding_results.pkl', 'wb') as fh:
