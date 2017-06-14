@@ -175,6 +175,7 @@ if __name__ == '__main__':
     with open('korkut_pysb.pkl', 'rb') as f:
         print("Unpickling PySB model")
         model = pickle.load(f)
+    import ipdb; ipdb.set_trace()
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
@@ -189,21 +190,21 @@ if __name__ == '__main__':
             agent_values = agent_data[drug_name]
             for ab, stmt_list in ab_dict.items():
                 value = data_values[drug_name][ab]
-                # For each subset, check statements; if any of them checks out, we're
-                # good and can move on to the next group
+                # For each subset, check statements; if any of them checks
+                # out, we're good and can move on to the next group
                 print("-- Checking the effect of %s on %s --" % (drug_name, ab))
                 relation = 'positive' if value > 1 else 'negative'
                 path_found = 0
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=5, max_path_length=6)
+                    result = mc.check_statement(stmt, max_paths=5,
+                                                max_path_length=6)
                     print(result)
-                    if result != False:
+                    if result.path_found:
                         path_found = 1
-                        paths1 = result[1]
-                        if paths1:
-                            paths += paths1
+                        if result.paths:
+                            paths += result.paths
                     else:
                         print("No path found")
                 if paths:
@@ -217,7 +218,8 @@ if __name__ == '__main__':
                     paths = [s[0] for s in scored_result]
                     print('===========================')
 
-                results.append((drug_name, ab, relation, value, path_found, paths))
+                results.append((drug_name, ab, relation, value, path_found,
+                                paths))
         with open('pathfinding_results.pkl', 'wb') as fh:
             pickle.dump(results, fh)
     else:
