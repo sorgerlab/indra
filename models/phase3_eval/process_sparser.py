@@ -66,6 +66,9 @@ def read_stmts(folder):
 def fix_stmts(stmts):
     new_stmts = []
     for stmt in stmts:
+        for ev in stmt.evidence:
+            if ev.pmid and ev.pmid.startswith('PMID'):
+                ev.pmid = ev.pmid[:-4]
         # Skip if no subject
         if isinstance(stmt, RegulateActivity):
             if stmt.subj is None:

@@ -1,12 +1,14 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import logging
 import numbers
 import networkx
 import itertools
 import numpy as np
+import scipy.stats
 from copy import deepcopy
-from collections import deque, defaultdict
+from collections import deque, defaultdict, namedtuple
 from pysb import kappa, WILD
 from pysb import Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
@@ -16,15 +18,98 @@ from indra.tools.expand_families import _agent_from_uri
 
 logger = logging.getLogger('model_checker')
 
+
 class PathMetric(object):
-    pass
+    """Describes results of simple path search (path existence)."""
+    def __init__(self, source_node, target_node, polarity, length):
+        self.source_node = source_node
+        self.target_node = target_node
+        self.polarity = polarity
+        self.length = length
+
+    def __repr__(self):
+        return str(self)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return ('source_node: %s, target_node: %s, polarity: %s, length: %d' %
+                (self.source_node, self.target_node, self.polarity,
+                 self.length))
 
 class PathResult(object):
-    """Describes results of running the ModelChecker on a single Statement."""
-    def __init__(self, path_found, result_code):
+    """Describes results of running the ModelChecker on a single Statement.
+
+    Parameters
+    ----------
+    path_found : bool
+    result_code : string
+        STATEMENT_TYPE_NOT_HANDLED
+        SUBJECT_MONOMERS_NOT_FOUND
+        OBSERVABLES_NOT_FOUND
+        NO_PATHS_FOUND
+        MAX_PATH_LENGTH_EXCEEDED
+        PATHS_FOUND
+        INPUT_RULES_NOT_FOUND
+
+    Attributes
+    ----------
+    path_found : boolean
+    result_code : string
+    path_metrics : list of PathMetric
+    paths : list of paths
+    max_paths :
+    max_path_length :
+    """
+    def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
         self.result_code = result_code
+        self.max_paths = max_paths
+        self.max_path_length = max_path_length
+        self.path_metrics = []
         self.paths = []
+
+    def add_path(self, path):
+        self.paths.append(path)
+
+    def add_metric(self, path_metric):
+        self.path_metrics.append(path_metric)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        summary = textwrap.dedent("""
+            PathResult:
+                path_found: {path_found}
+                result_code: {result_code}
+                path_metrics: {path_metrics}
+                paths: {paths}
+                max_paths: {max_paths}
+                max_path_length: {max_path_length}""")
+        ws = '\n        '
+        # String representation of path metrics
+        if not self.path_metrics:
+            pm_str = str(self.path_metrics)
+        else:
+            pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
+                                            enumerate(self.path_metrics)])
+        def format_path(path, num_spaces=11):
+            path_ws = '\n' + (' ' * num_spaces)
+            return path_ws.join([str(p) for p in path])
+
+        # String representation of paths
+        if not self.paths:
+            path_str = str(self.paths)
+        else:
+            path_str = ws + ws.join(['%d: %s' % (p_ix, format_path(p))
+                                     for p_ix, p in enumerate(self.paths)])
+
+        return summary.format(path_found=self.path_found,
+                       result_code=self.result_code,
+                       max_paths=self.max_paths,
+                       max_path_length=self.max_path_length,
+                       path_metrics=pm_str, paths=path_str)
+
+    def __repr__(self):
+        return str(self)
 
 class ModelChecker(object):
     """Check a PySB model against a set of INDRA statements."""
@@ -78,7 +163,7 @@ class ModelChecker(object):
         def add_obs_for_agent(agent):
             obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
             if not obj_mps:
-                logger.info('No monomer patterns found in model for agent %s, '
+                logger.debug('No monomer patterns found in model for agent %s, '
                             'skipping' % agent)
                 return
             obs_list = []
@@ -146,9 +231,9 @@ class ModelChecker(object):
 
         Returns
         -------
-        list of (Statement, bool)
+        list of (Statement, PathResult)
             Each tuple contains the Statement checked against the model and
-            a boolean value indicating whether the model can satisfies it.
+            a PathResult object describing the results of model checking.
         """
         results = []
         for stmt in self.statements:
@@ -177,8 +262,8 @@ class ModelChecker(object):
             return self._check_regulate_activity(stmt, max_paths,
                                                  max_path_length)
         else:
-            # Statement type not handled FIXME
-            return False
+            return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
+                              max_paths, max_path_length)
 
     def _check_regulate_activity(self, stmt, max_paths, max_path_length):
         """Check a RegulateActivity statement."""
@@ -209,29 +294,32 @@ class ModelChecker(object):
         if stmt.enz is not None:
             enz_mps = list(pa.grounded_monomer_patterns(self.model, stmt.enz))
             if not enz_mps:
-                logger.info('No monomers found corresponding to agent %s' %
+                logger.debug('No monomers found corresponding to agent %s' %
                              stmt.enz)
-                return False
+                return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
+                                  max_paths, max_path_length)
         else:
             enz_mps = [None]
         # Get target polarity
         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
-            logger.info("No observables for stmt %s, returning False" % stmt)
-            return False
+            logger.debug("No observables for stmt %s, returning False" % stmt)
+            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
+                              max_paths, max_path_length)
 
         for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
-            # Return True for the first valid path we find
+            # FIXME Returns on the path found for the first enz_mp/obs combo
             result = self._find_im_paths(enz_mp, obs_name, target_polarity,
                                          max_paths, max_path_length)
             # If result for this observable is not False, then we return it;
             # otherwise, that means there was no path for this observable, so
             # we have to try the next one
-            if result:
+            if result.path_found:
                 return result
         # If we got here, then there was no path for any observable
-        return False
+        return PathResult(False, 'NO_PATHS_FOUND',
+                          max_paths, max_path_length)
 
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
@@ -264,8 +352,8 @@ class ModelChecker(object):
             input_rule_set = None
         else:
             input_rules = _match_lhs(subj_mp, self.model.rules)
-            logger.info('Found %s input rules matching %s' %
-                        (len(input_rules), str(subj_mp)))
+            logger.debug('Found %s input rules matching %s' %
+                         (len(input_rules), str(subj_mp)))
             # Filter to include only rules where the subj_mp is actually the
             # subject (i.e., don't pick up upstream rules where the subject
             # is itself a substrate/object)
@@ -275,55 +363,69 @@ class ModelChecker(object):
             subj_rules = pa.rules_with_annotation(self.model,
                                                   subj_mp.monomer.name,
                                                   'rule_has_subject')
-            logger.info('%d rules with %s as subject' %
-                        (len(subj_rules), subj_mp.monomer.name))
+            logger.debug('%d rules with %s as subject' %
+                         (len(subj_rules), subj_mp.monomer.name))
             input_rule_set = set([r.name for r in input_rules]).intersection(
                                  set([r.name for r in subj_rules]))
-            logger.info('Final input rule set contains %d rules' %
-                        len(input_rule_set))
+            logger.debug('Final input rule set contains %d rules' %
+                         len(input_rule_set))
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
             if not input_rule_set:
-                return False
+                return PathResult(False, 'INPUT_RULES_NOT_FOUND',
+                                  max_paths, max_path_length)
         # Generate the predecessors to our observable and count the paths
         # TODO: Make it optionally possible to return on the first path?
-        num_paths = 0
         path_lengths = []
+        path_metrics = []
         for source, polarity, path_length in \
                     _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
-            num_paths += 1
+            pm = PathMetric(source, obs_name, polarity, path_length)
+            path_metrics.append(pm)
             path_lengths.append(path_length)
+        # Now, look for paths
         paths = []
-        if num_paths > 0:
+        if path_metrics:
             if min(path_lengths) <= max_path_length:
+                pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
+                pr.path_metrics = path_metrics
                 # Get the first path
                 path_iter = enumerate(_find_sources_with_paths(
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
                 for path_ix, path in path_iter:
                     flipped = _flip(self.get_im(), path)
-                    paths.append(flipped)
-                    if len(paths) >= max_paths:
+                    pr.add_path(flipped)
+                    if len(pr.paths) >= max_paths:
                         break
-                return [True, paths]
+                return pr
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
             else:
-                return [True, []]
+                pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
+                                max_paths, max_path_length)
+                pr.path_metrics = path_metrics
+                return pr
         else:
-            return False
+            return PathResult(False, 'NO_PATHS_FOUND',
+                              max_paths, max_path_length)
 
-    def score_paths(self, paths, agents_values):
+    def score_paths(self, paths, agents_values, loss_of_function=False,
+                    sigma=0.15):
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
             obs_list = self.agent_to_obs[ag]
-            for obs in obs_list:
-                obs_dict[obs] = val
+            if obs_list is not None:
+                for obs in obs_list:
+                    obs_dict[obs] = val
         # For every path...
         path_scores = []
         for path in paths:
+            logger.info('------')
+            logger.info("Scoring path:")
+            logger.info(path)
             # Look at every node in the path, excluding the final
             # observable...
             path_score = 0
@@ -333,18 +435,37 @@ class ModelChecker(object):
                 # of the rule
                 # affected_obs is a list of observable names alogn
                 for affected_obs, rule_obs_sign in self.rule_obs_dict[node]:
-                    pred_sign = sign * rule_obs_sign
+                    flip_polarity = -1 if loss_of_function else 1
+                    pred_sign = sign * rule_obs_sign * flip_polarity
                     # Check to see if this observable is in the data
                     logger.info('%s %s: effect %s %s' %
-                                (node, sign, obs, pred_sign))
+                                (node, sign, affected_obs, pred_sign))
                     measured_val = obs_dict.get(affected_obs)
                     if measured_val:
-                        logger.info('Actual: %s' % measured_val)
-                        path_score += (pred_sign - measured_val) ** 2
-            path_score = path_score / len(path)
+                        obs_model = lambda x: scipy.stats.norm(x, sigma)
+                        # For negative predictions use CDF (prob that given
+                        # measured value, true value lies below 0)
+                        if pred_sign <= 0:
+                            prob_correct = obs_model(measured_val).logcdf(0)
+                        # For positive predictions, use log survival function
+                        # (SF = 1 - CDF, i.e., prob that true value is
+                        # above 0)
+                        else:
+                            prob_correct = obs_model(measured_val).logsf(0) 
+                        logger.info('Actual: %s, Log Probability: %s' %
+                                    (measured_val, prob_correct))
+                        path_score += prob_correct
+            # Normalized path
+            #path_score = path_score / len(path)
+            logger.info("Path score: %s" % path_score)
             path_scores.append(path_score)
-        scored_paths = sorted(list(zip(paths, path_scores)),
-                              key=lambda x: x[1])
+        path_tuples = list(zip(paths, path_scores))
+        # Sort first by path length
+        sorted_by_length = sorted(path_tuples, key=lambda x: len(x[0]))
+        # Sort by probability; sort in reverse order to large values
+        # (higher probabilities) are ranked higher
+        scored_paths = sorted(sorted_by_length, key=lambda x: x[1],
+                              reverse=True)
         return scored_paths
 
     def prune_influence_map(self):
@@ -361,6 +482,55 @@ class ModelChecker(object):
                 if im.has_edge((p1, p2)):
                     im.remove_edge((p1, p2))
 
+def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
+                         agent_to_obs, agents_values):
+
+    '''
+    agent_data = {self.agent_obs[0]: 1, self.agent_obs[1]: -1, self.agent_obs[2]: 1}
+    _find_sources_sample(self.get_im(), obs_name, input_rule_set, target_polarity, self.
+    rule_obs_dict, self.agent_to_obs, agent_data)
+    '''
+
+    # Build up dict mapping observables to values
+    obs_dict = {}
+    for ag, val in agents_values.items():
+        obs_list = agent_to_obs[ag]
+        for obs in obs_list:
+            obs_dict[obs] = val
+
+    sigma = 0.2
+    obs_model = lambda x: scipy.stats.norm(x, sigma)
+
+    def _sample_pred(im, target, rule_obs_dict, obs_model):
+        preds = list(_get_signed_predecessors(im, target, 1))
+        if not preds:
+            return None
+        pred_scores = []
+        for pred, sign in preds:
+            pred_score = 0
+            for affected_obs, rule_obs_sign in rule_obs_dict[pred]:
+                pred_sign = sign * rule_obs_sign
+                # Check to see if this observable is in the data
+                logger.info('%s %s: effect %s %s' %
+                            (pred, sign, affected_obs, pred_sign))
+                measured_val = obs_dict.get(affected_obs)
+                if measured_val:
+                    logger.info('Actual: %s' % measured_val)
+                    # The tail probability of the real value being above 1
+                    tail_prob = obs_model(measured_val).cdf(1)
+                    pred_score += (tail_prob if pred_sign == 1 else
+                                   1-tail_prob)
+            pred_scores.append(pred_score)
+        # Normalize scores
+        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
+        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
+        pred = preds[pred_idx]
+        return pred
+
+    preds = []
+    for i in range(100):
+        pred = _sample_pred(im, target, rule_obs_dict, obs_model)
+        preds.append(pred[0])
 
 def _find_sources_with_paths(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
@@ -410,7 +580,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.info('Found path: %s' % _flip(im, path))
+            logger.debug('Found path: %s' % _flip(im, path))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
@@ -477,9 +647,9 @@ def _find_sources(im, target, sources, polarity):
             # Is this child one of the source nodes we're looking for? If so,
             # yield it along with path length.
             if (sources is None or child in sources) and sign == polarity:
-                logger.info("Found path to %s from %s with desired sign %s "
-                            "with length %d" %
-                            (target, child, polarity, path_length+1))
+                logger.debug("Found path to %s from %s with desired sign %s "
+                             "with length %d" %
+                             (target, child, polarity, path_length+1))
                 yield (child, sign, path_length+1)
             # Check this child against the visited list. If we haven't visited
             # it already (accounting for the path to the node), then add it
@@ -495,28 +665,6 @@ def _find_sources(im, target, sources, polarity):
             queue.popleft()
     # There was no path; this will produce an empty generator
     return
-
-
-def _find_sources_sample(model, stmts, im, target, sources, polarity, score_fn):
-    def _sample_pred(model, stmts, im, target, score_fn):
-        preds = list(_get_signed_predecessors(im, target, 1))
-        pred_agents = []
-        pred_scores = []
-        for pred, sign in preds:
-            agents, polarities = _object_agents_from_rule(model, pred, stmts)
-            # FIXME: for simplicity we start with a single object agent
-            agent = agents[0]
-            polarity = polarities[0]
-            score = score_fn(agent, polarity)
-            pred_agents.append(agent)
-            pred_scores.append(score)
-        # Normalize scores
-        pred_scores = np.array(pred_scores) / np.sum(pred_scores)
-        pred_idx = np.random.choice(range(len(preds)), p=pred_scores)
-        pred = preds[pred_idx]
-        return pred
-    pred = _sample_pred(model, stmts, im, target, score_fn)
-    print(pred)
 
 
 def _get_signed_predecessors(im, node, polarity):
@@ -708,43 +856,6 @@ def _stmt_from_rule(model, rule_name, stmts):
         for stmt in stmts:
             if stmt.uuid == stmt_uuid:
                 return stmt
-
-def _object_agents_from_rule(model, rule_name, stmts):
-    """Return object agents with state and polarities for a rule."""
-    # First we collect all objects (Monomer names) that are annotated
-    # to be the objects of the rule. There will typically be 1.
-    rule_objects = []
-    for ann in model.annotations:
-        if ann.subject == rule_name:
-            if ann.predicate == 'rule_has_object':
-                rule_objects.append(ann.object)
-    # Next we construct grounded INDRA Agents working back from the
-    # Monomer name through 'is' grounding annotations of identifiers.org
-    # URIs to INDRA database names and ids.
-    agents = []
-    for obj in rule_objects:
-        db_refs = {}
-        for ann in model.annotations:
-            if ann.predicate == 'is':
-                # We assume here that the subject is a Monomer
-                if ann.subject.name == obj:
-                    agent = _agent_from_uri(ann.object)
-                    agents.append(agent)
-    # Finally we need to construct an Agent which is in the state
-    # induced by the given rule. But for this we need to find the
-    # INDRA Statement corresponding to the rule.
-    # TODO: extend to other Statement types if needed
-    # Here we also need to surface the polarity of the modification
-    polarities = [None for agent in agents]
-    stmt = _stmt_from_rule(model, rule_name, stmts)
-    if stmt is not None:
-        if isinstance(stmt, Modification):
-            mod_type = modclass_to_modtype[stmt.__class__]
-            mc = ModCondition(mod_type, stmt.residue, stmt.position)
-            for i, agent in enumerate(agents):
-                agent.mods = [mc]
-                polarities[i] = isinstance(stmt, AddModification)
-    return agents, polarities
 
 
 def _monomer_pattern_label(mp):

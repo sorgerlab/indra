@@ -69,7 +69,10 @@ def make_cyjs_network(results, model, stmts):
     ca.set_CCLE_context(['SKMEL28_SKIN'])
     ca.save_json('output/korkut_model')
 
+
 def make_english_output(results, model, stmts):
+    citations = {}
+    citation_count = 1
     for source, target, polarity, value, found_path, paths in results:
         cond = 'How does treatment with %s %s %s?' % \
             (source, 'increase' if polarity == 'positive' else
@@ -85,10 +88,27 @@ def make_english_output(results, model, stmts):
                         stmt = _stmt_from_rule(model, path_rule, stmts)
                         if i == 0:
                             sentences.append('%s is a target of %s.' %
-                                             (stmt.agent_list()[0].name, source))
+                                            (stmt.agent_list()[0].name, source))
 
+                        # Make citations
+                        pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
+                        cit_nums = []
+                        for pmid in pmids:
+                            cit_num = citations.get(pmid)
+                            if cit_num is None:
+                                citations[pmid] = citation_count
+                                cit_num = citation_count
+                                citation_count += 1
+                            cit_nums.append(cit_num)
+                        if cit_nums:
+                            cit_nums = sorted(list(set(cit_nums)))
+                            cit_str = ' [%s]' % (','.join([str(c) for c
+                                                          in cit_nums]))
+                        else:
+                            cit_str = ''
                         ea = EnglishAssembler([stmt])
                         sentence = ea.make_model()
+                        sentence = sentence[:-1] + cit_str + '.'
                         sentences.append(sentence)
             sentences[-1] = sentences[-1][:-1] + \
                 ', which is measured by %s.' % target
@@ -100,6 +120,10 @@ def make_english_output(results, model, stmts):
         else:
             print('INDRA couldn\'t find an explanation for this observation.')
         print('\n')
+    references = 'References\n==========\n'
+    for k, v in sorted(citations.items(), key=lambda x: x[1]):
+        references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
+    print(references)
 
 if __name__ == '__main__':
     print("Processing data")
@@ -130,7 +154,7 @@ if __name__ == '__main__':
             for agent in agents:
                 agent_data[drug_name][agent] = value
 
-    base_stmts = ac.load_statements('output/korkut_model_pysb_no_evidence.pkl')
+    base_stmts = ac.load_statements('output/korkut_model_pysb_before_pa.pkl')
 
     """
     # Merge the sources of statements
@@ -154,7 +178,7 @@ if __name__ == '__main__':
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
-    rerun = False
+    rerun = True
     if rerun:
         mc = ModelChecker(model, all_data_stmts, agent_obs)
         mc.prune_influence_map()
@@ -165,30 +189,36 @@ if __name__ == '__main__':
             agent_values = agent_data[drug_name]
             for ab, stmt_list in ab_dict.items():
                 value = data_values[drug_name][ab]
-                # For each subset, check statements; if any of them checks out, we're
-                # good and can move on to the next group
+                # For each subset, check statements; if any of them checks
+                # out, we're good and can move on to the next group
                 print("-- Checking the effect of %s on %s --" % (drug_name, ab))
                 relation = 'positive' if value > 1 else 'negative'
                 path_found = 0
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=3, max_path_length=6)
+                    result = mc.check_statement(stmt, max_paths=5,
+                                                max_path_length=6)
                     print(result)
-                    if result != False:
+                    if result.path_found:
                         path_found = 1
-                        paths1 = result[1]
-                        if paths1:
-                            paths += paths1
-                            break
+                        if result.paths:
+                            paths += result.paths
                     else:
                         print("No path found")
-                paths = sorted(paths, key=lambda x:len(x))
-                #Score paths here TODO
-                #if paths:
-                #    scored_result = mc.score_paths(paths, agent_values)
-
-                results.append((drug_name, ab, relation, value, path_found, paths))
+                if paths:
+                    print('===========================')
+                    print('Scoring a total of %d paths' % len(paths))
+                    scored_result = mc.score_paths(paths, agent_values,
+                                                   loss_of_function=True)
+                    for res in scored_result:
+                        print(res[1])
+                        for link in res[0]:
+                            print('--->', link[0], link[1])
+                    paths = [s[0] for s in scored_result]
+                    print('===========================')
+                results.append((drug_name, ab, relation, value, path_found,
+                                paths))
         with open('pathfinding_results.pkl', 'wb') as fh:
             pickle.dump(results, fh)
     else:

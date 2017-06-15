@@ -2,6 +2,7 @@ import pickle
 import itertools
 from collections import defaultdict
 import process_data as pd
+import numpy as np
 from indra.databases import hgnc_client
 from read_phosphosite import read_phosphosite
 from indra.statements import Agent, Dephosphorylation, Phosphorylation, \
@@ -80,14 +81,15 @@ def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
         for target in targets:
             # Create an agent for the drug target
             target_agent = get_target_agent(target)
-            fold_change = drug_tx_data[ab].values[0]
+            fold_change = np.log2(drug_tx_data[ab].values[0])
             if fold_change < dec_thresh or fold_change > inc_thresh:
                 observed_agent_forms = ab_agents[ab]
                 obs_stmts = get_observed_stmts(target_agent,
                                                observed_agent_forms,
                                                fold_change)
                 stmts[drug_name][ab] += obs_stmts
-                values[drug_name] = {k: list(v.values())[0] for k, v in
+                values[drug_name] = {k: np.log2(list(v.values())[0])
+                                     for k, v in
                                      drug_tx_data.iloc[:,2:].to_dict().items()}
     return stmts, values
 
@@ -97,7 +99,7 @@ def get_eval_drug_ab_combs(data):
     drug_ab_combs = zip(drug_tx, antibodies)
     return drug_ab_combs
 
-def run(dec_thresh=0.8, inc_thresh=1.2):
+def run(dec_thresh=-1, inc_thresh=1):
     data = pd.read_data(pd.data_file)
     ab_agents = pd.get_antibody_map(data)
 
