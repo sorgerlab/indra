@@ -1,13 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from os.path import join as pjoin
+from indra.tools import assemble_corpus as ac
+from collections import OrderedDict, Counter
+from indra.preassembler.sitemapper import SiteMapper, default_site_map
+from indra.util import write_unicode_csv, read_unicode_csv
 
-if __name__ == '__main__':
-    from os.path import join as pjoin
-    from indra.tools import assemble_corpus as ac
-    from collections import OrderedDict, Counter
-    from indra.preassembler.sitemapper import SiteMapper, default_site_map
-    from indra.util import write_unicode_csv
-
+def get_incorrect_sites():
     outf = '../phase3_eval/output'
 
     prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
@@ -45,3 +44,11 @@ if __name__ == '__main__':
         rows.append([gene, res, pos, freq, mapped])
     rows = sorted(rows, key=lambda x: x[3], reverse=True)
     write_unicode_csv('incorrect_sites.csv', rows)
+
+def load_incorrect_sites():
+    rows = read_unicode_csv('incorrect_sites.csv')
+    return rows
+
+if __name__ == '__main__':
+    sites = load_incorrect_sites()
+
