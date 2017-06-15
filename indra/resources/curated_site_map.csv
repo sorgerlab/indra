@@ -46,8 +46,16 @@ AR,S,578,S,579,off by 1
 AR,Y,534,Y,535,off by 1
 AR,S,210,S,215,numbering from deprecated sequence GenBank A39248
 AR,S,791,S,792,off by 1
+AR,S,81,S,83,off by 2
+AR,S,308,S,310,off by 2
+AR,K,630,K,631,off by 1
+AR,Y,267,Y,269,off by 2
+AR,Y,363,Y,365,off by 2
 BAD,S,112,S,75,numbering from mouse sequence
 BAD,S,136,S,99,numbering from mouse sequence
+BAD,S,155,S,118,numbering from mouse sequence
+BAD,T,201,,,site present in mouse but not in human sequence (corresponds to human A165)
+BAD,S,119,S,118,numbering from bovine sequence
 BLK,Y,388,Y,389,off by 1
 BRAF,S,445,S,446,off by 1
 CAV1,Y,13,Y,14,off by 1
@@ -58,6 +66,12 @@ EGFR,Y,1173,Y,1197,numbering after 24-residue signaling peptide removed
 EGFR,T,654,T,678,numbering after 24-residue signaling peptide removed
 EGFR,Y,845,Y,869,numbering after 24-residue signaling peptide removed
 EGFR,Y,1086,Y,1110,numbering after 24-residue signaling peptide removed
+EGFR,Y,1068,Y,1092,numbering after 24-residue signaling peptide removed
+EGFR,S,1046,S,1070,numbering after 24-residue signaling peptide removed
+EGFR,S,1047,S,1071,numbering after 24-residue signaling peptide removed
+EGFR,Y,1101,Y,1125,numbering after 24-residue signaling peptide removed
+EGFR,T,669,T,693,numbering after 24-residue signaling peptide removed
+EGFR,R,1175,R,1199,numbering after 24-residue signaling peptide removed
 EIF4EBP1,S,11,S,12,off by 1 (methionine removed)
 FOXO4,S,142,S,197,numbering from isoform zeta
 FOXO4,S,207,S,262,numbering from isoform zeta
@@ -82,3 +96,10 @@ SHC1,Y,240,Y,350,numbering from isoform p52
 SRC,Y,416,Y,419,off by 3
 SRC,Y,418,Y,418,off by 1
 SRC,Y,215,Y,216,off by 1
+PRKCD,Y,311,Y,313,off by 2
+BCL2L11,S,65,S,69,numbering from mouse sequence
+SRC,Y,527,Y,530,numbering from chicken sequence
+PTPN11,Y,542,Y,546,off by 4
+PTPN11,Y,580,Y,584,off by 4
+ULK1,S,757,S,758,numbering from mouse sequence
+KSR1,S,392,S,406,numbering from mouse sequence
