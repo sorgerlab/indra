@@ -115,6 +115,40 @@ def get_hgnc_id(hgnc_name):
     """
     return hgnc_ids.get(hgnc_name)
 
+def get_hgnc_from_mouse(mgi_id):
+    """Return the HGNC ID corresponding to the given MGI mouse gene ID.
+
+    Parameters
+    ----------
+    mgi_id : str
+        The MGI ID to be converted. Example: "2444934"
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given MGI ID.
+    """
+    if not mgi_id.startswith('MGI:'):
+        mgi_id = 'MGI:' + mgi_id
+    return mouse_map.get(mgi_id)
+
+def get_hgnc_from_rat(rgd_id):
+    """Return the HGNC ID corresponding to the given RGD rat gene ID.
+
+    Parameters
+    ----------
+    rgd_id : str
+        The RGD ID to be converted. Example: "1564928"
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given RGD ID.
+    """
+    if not rgd_id.startswith('RGD:'):
+        rgd_id = 'RGD:' + rgd_id
+    return rat_map.get(rgd_id)
+
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
     """Return the HGNC entry for the given HGNC ID from the web service.
