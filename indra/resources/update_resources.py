@@ -49,7 +49,7 @@ def save_from_http(url, fname):
 
 def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
-    url = 'http://tinyurl.com/gnv32vh'
+    url = 'http://tinyurl.com/y83dx5s6'
     fname = os.path.join(path, 'hgnc_entries.tsv')
     save_from_http(url, fname)
 
