@@ -1,11 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from future.utils import python_2_unicode_compatible
 import os
-from collections import namedtuple
+import textwrap
 from copy import deepcopy
-from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 from indra.util import read_unicode_csv
+from indra.databases import uniprot_client, hgnc_client
 # Python 2
 try:
     basestring
@@ -34,6 +35,25 @@ class MappedStatement(object):
         self.original_stmt = original_stmt
         self.mapped_mods = mapped_mods
         self.mapped_stmt = mapped_stmt
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        if not self.mapped_mods:
+            mm_str = str(self.mapped_mods)
+        else:
+            mm_ws = '\n' + (' ' * 17)
+            mm_str = mm_ws.join([str(mm) for mm in self.mapped_mods])
+
+        summary = textwrap.dedent("""
+            MappedStatement:
+                original_stmt: {0}
+                mapped_mods: {1}
+                mapped_stmt: {2}
+            """)
+        return summary.format(self.original_stmt, mm_str, self.mapped_stmt)
+
+    def __repr__(self):
+        return str(self)
 
 
 class SiteMapper(object):
