@@ -206,11 +206,15 @@ def _read_hgnc_maps():
         # Mouse
         mgi_id = row[7]
         if mgi_id:
-            mouse_map[mgi_id] = hgnc_id
+            mgi_ids = mgi_id.split(', ')
+            for mgi_id in mgi_ids:
+                mouse_map[mgi_id] = hgnc_id
         # Rat
         rgd_id = row[8]
         if rgd_id:
-            rat_map[rgd_id] = hgnc_id
+            rgd_ids = rgd_id.split(', ')
+            for rgd_id in rgd_ids:
+                rat_map[rgd_id] = hgnc_id
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, mouse_map, rat_map)
 
