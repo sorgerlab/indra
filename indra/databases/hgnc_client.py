@@ -148,6 +148,8 @@ def _read_hgnc_maps():
     hgnc_withdrawn = []
     uniprot_ids = {}
     entrez_ids = {}
+    mouse_map = {}
+    rat_map = {}
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -167,7 +169,17 @@ def _read_hgnc_maps():
         # Entrez
         entrez_id = row[5]
         entrez_ids[hgnc_id] = entrez_id
-    return (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids)
+        # Mouse
+        mgi_id = row[7]
+        if mgi_id:
+            mouse_map[mgi_id] = hgnc_id
+        # Rat
+        rgd_id = row[8]
+        if rgd_id:
+            rat_map[rgd_id] = hgnc_id
+    return (hgnc_names, hgnc_ids, hgnc_withdrawn,
+            uniprot_ids, entrez_ids, mouse_map, rat_map)
 
-hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids = \
-        _read_hgnc_maps()
+(hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
+ mouse_map, rat_map) = \
+    _read_hgnc_maps()
