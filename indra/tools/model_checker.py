@@ -91,12 +91,16 @@ class PathResult(object):
         else:
             pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
                                             enumerate(self.path_metrics)])
+        def format_path(path, num_spaces=11):
+            path_ws = '\n' + (' ' * num_spaces)
+            return path_ws.join([str(p) for p in path])
+
         # String representation of paths
         if not self.paths:
             path_str = str(self.paths)
         else:
-            path_str = ws + ws.join(['%d: %s' % (p_ix, p) for p_ix, p in
-                                                enumerate(self.paths)])
+            path_str = ws + ws.join(['%d: %s' % (p_ix, format_path(p))
+                                     for p_ix, p in enumerate(self.paths)])
 
         return summary.format(path_found=self.path_found,
                        result_code=self.result_code,
@@ -159,7 +163,7 @@ class ModelChecker(object):
         def add_obs_for_agent(agent):
             obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
             if not obj_mps:
-                logger.info('No monomer patterns found in model for agent %s, '
+                logger.debug('No monomer patterns found in model for agent %s, '
                             'skipping' % agent)
                 return
             obs_list = []
@@ -290,7 +294,7 @@ class ModelChecker(object):
         if stmt.enz is not None:
             enz_mps = list(pa.grounded_monomer_patterns(self.model, stmt.enz))
             if not enz_mps:
-                logger.info('No monomers found corresponding to agent %s' %
+                logger.debug('No monomers found corresponding to agent %s' %
                              stmt.enz)
                 return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
                                   max_paths, max_path_length)
@@ -300,7 +304,7 @@ class ModelChecker(object):
         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
-            logger.info("No observables for stmt %s, returning False" % stmt)
+            logger.debug("No observables for stmt %s, returning False" % stmt)
             return PathResult(False, 'OBSERVABLES_NOT_FOUND',
                               max_paths, max_path_length)
 
@@ -348,8 +352,8 @@ class ModelChecker(object):
             input_rule_set = None
         else:
             input_rules = _match_lhs(subj_mp, self.model.rules)
-            logger.info('Found %s input rules matching %s' %
-                        (len(input_rules), str(subj_mp)))
+            logger.debug('Found %s input rules matching %s' %
+                         (len(input_rules), str(subj_mp)))
             # Filter to include only rules where the subj_mp is actually the
             # subject (i.e., don't pick up upstream rules where the subject
             # is itself a substrate/object)
@@ -359,12 +363,12 @@ class ModelChecker(object):
             subj_rules = pa.rules_with_annotation(self.model,
                                                   subj_mp.monomer.name,
                                                   'rule_has_subject')
-            logger.info('%d rules with %s as subject' %
-                        (len(subj_rules), subj_mp.monomer.name))
+            logger.debug('%d rules with %s as subject' %
+                         (len(subj_rules), subj_mp.monomer.name))
             input_rule_set = set([r.name for r in input_rules]).intersection(
                                  set([r.name for r in subj_rules]))
-            logger.info('Final input rule set contains %d rules' %
-                        len(input_rule_set))
+            logger.debug('Final input rule set contains %d rules' %
+                         len(input_rule_set))
             # If we have enzyme information but there are no input rules
             # matching the enzyme, then there is no path
             if not input_rule_set:
@@ -576,7 +580,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.info('Found path: %s' % _flip(im, path))
+            logger.debug('Found path: %s' % _flip(im, path))
             yield path
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
@@ -643,9 +647,9 @@ def _find_sources(im, target, sources, polarity):
             # Is this child one of the source nodes we're looking for? If so,
             # yield it along with path length.
             if (sources is None or child in sources) and sign == polarity:
-                logger.info("Found path to %s from %s with desired sign %s "
-                            "with length %d" %
-                            (target, child, polarity, path_length+1))
+                logger.debug("Found path to %s from %s with desired sign %s "
+                             "with length %d" %
+                             (target, child, polarity, path_length+1))
                 yield (child, sign, path_length+1)
             # Check this child against the visited list. If we haven't visited
             # it already (accounting for the path to the node), then add it
