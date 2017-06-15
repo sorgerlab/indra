@@ -85,14 +85,24 @@ class PathResult(object):
                 max_paths: {max_paths}
                 max_path_length: {max_path_length}""")
         ws = '\n        '
+        # String representation of path metrics
+        if not self.path_metrics:
+            pm_str = str(self.path_metrics)
+        else:
+            pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
+                                            enumerate(self.path_metrics)])
+        # String representation of paths
+        if not self.paths:
+            path_str = str(self.paths)
+        else:
+            path_str = ws + ws.join(['%d: %s' % (p_ix, p) for p_ix, p in
+                                                enumerate(self.paths)])
+
         return summary.format(path_found=self.path_found,
                        result_code=self.result_code,
                        max_paths=self.max_paths,
                        max_path_length=self.max_path_length,
-                       path_metrics=ws + ws.join(['%d: %s' % (pm_ix, pm)
-                              for pm_ix, pm in enumerate(self.path_metrics)]),
-                       paths=ws + ws.join(['%d: %s' % (p_ix, p)
-                              for p_ix, p in enumerate(self.paths)]))
+                       path_metrics=pm_str, paths=path_str)
 
     def __repr__(self):
         return str(self)
@@ -429,12 +439,15 @@ class ModelChecker(object):
                     measured_val = obs_dict.get(affected_obs)
                     if measured_val:
                         obs_model = lambda x: scipy.stats.norm(x, sigma)
-                        prob_true_decrease = obs_model(measured_val).logcdf(0)
-                        prob_true_increase = 1 - prob_true_decrease
+                        # For negative predictions use CDF (prob that given
+                        # measured value, true value lies below 0)
                         if pred_sign <= 0:
-                            prob_correct = prob_true_decrease
+                            prob_correct = obs_model(measured_val).logcdf(0)
+                        # For positive predictions, use log survival function
+                        # (SF = 1 - CDF, i.e., prob that true value is
+                        # above 0)
                         else:
-                            prob_correct = prob_true_increase
+                            prob_correct = obs_model(measured_val).logsf(0) 
                         logger.info('Actual: %s, Log Probability: %s' %
                                     (measured_val, prob_correct))
                         path_score += prob_correct
