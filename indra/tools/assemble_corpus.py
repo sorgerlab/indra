@@ -112,6 +112,12 @@ def map_sequence(stmts_in, **kwargs):
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to map.
+    do_methionine_offset : boolean
+        Whether to check for off-by-one errors in site position (possibly)
+        attributable to site numbering based on mature proteins after
+        cleavage of the initial methionine. If True, checks the reference
+        sequence for the given residue at 1 site position greater;
+        if the residue is valid at this position, creates the mapping.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -121,8 +127,12 @@ def map_sequence(stmts_in, **kwargs):
         A list of mapped statements.
     """
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
+    do_methionine_offset = kwargs.get('do_methionine_offset')
+    if do_methionine_offset is None:
+        do_methionine_offset = False
     sm = SiteMapper(default_site_map)
-    valid, mapped = sm.map_sites(stmts_in)
+    valid, mapped = sm.map_sites(stmts_in,
+                                 do_methionine_offset=do_methionine_offset)
     correctly_mapped_stmts = []
     for ms in mapped:
         if all([True if mm[1] is not None else False
