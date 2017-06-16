@@ -65,31 +65,46 @@ def load_incorrect_sites():
     rows = read_unicode_csv('incorrect_sites.csv')
     return [SiteInfo(*row) for row in rows]
 
-def make_bar_plot(site_info, num_genes=30):
+def make_bar_plot(site_info, num_genes=60):
+    # Build a dict based on gene name
     # Get counts summed across gene names
     gene_counts = defaultdict(lambda: 0)
+    site_counts = defaultdict(list)
     for site in site_info:
-        gene_counts[site.gene] += site.freq
+        gene_counts[site.gene] += int(site.freq)
+        site_counts[site.gene].append((int(site.freq), int(site.mapped)))
+    # Sort the individual site counts by frequency
+    for gene, freq_list in site_counts.items():
+        site_counts[gene] = sorted(freq_list, key=lambda x: x[0], reverse=True)
     gene_counts = sorted([(k, v) for k, v in gene_counts.items()],
                           key=lambda x: x[1], reverse=True)
-    gene_counts = gene_counts[0:num_genes]
-    gene_names = [x[0] for x in gene_counts]
-    site_counts = [x[1] for x in gene_counts]
+    gene_counts = gene_counts[5:num_genes]
 
     plt.ion()
     ind = range(len(gene_counts))
-    plt.figure(figsize=(4, 2), dpi=150)
-    width = 0.5
-    plt.bar(ind, site_counts)
-    plt.xticks(ind, gene_names, rotation='vertical')
-    plt.ylabel('Num. invalid sites')
-    ax = plt.gca()
-    pf.format_axis(ax)
-    plt.subplots_adjust(bottom=0.31)
-    plt.show()
+    def plot_sites(gene_count_subset):
+        plt.figure(figsize=(7, 2), dpi=150)
+        width = 0.5
+        for ix, (gene, freq) in enumerate(gene_counts):
+            # Plot the stacked bars
+            bottom = 0
+            for site_freq, mapped in site_counts[gene]:
+                if mapped:
+                    color = 'r'
+                else:
+                    color = 'b'
+                plt.bar(ix, site_freq, bottom=bottom, color=color,
+                        linewidth=0.5)
+                bottom += site_freq
+        plt.xticks(ind, [x[0] for x in gene_counts], rotation='vertical')
+        plt.ylabel('Num. invalid sites')
+        ax = plt.gca()
+        pf.format_axis(ax)
+        plt.subplots_adjust(bottom=0.31)
+        plt.show()
     return gene_counts
 
 if __name__ == '__main__':
-    #sites = load_incorrect_sites()
-    sites = get_incorrect_sites(do_methionine_offset=True)
+    sites = load_incorrect_sites()
+    #sites = get_incorrect_sites(do_methionine_offset=True)
     gene_counts = make_bar_plot(sites)

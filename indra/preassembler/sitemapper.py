@@ -276,14 +276,12 @@ class SiteMapper(object):
                 continue
             # First check for methionine offset
             if do_methionine_offset:
-                logger.info('Checking off by one error: %s' % str(site_key))
                 offset_pos = str(int(old_mod.position) + 1)
                 site_valid_plus_one = uniprot_client.verify_location(
                                         up_id, old_mod.residue, offset_pos)
                 # If it's valid at the offset position, create the mapping
                 # and continue
                 if site_valid_plus_one:
-                    logger.info('Found off by one: %s' % str(site_key))
                     mapped_site = (old_mod.residue, offset_pos,
                                    'INFERRED_METHIONINE_CLEAVAGE')
                     invalid_sites.append((site_key, mapped_site))
