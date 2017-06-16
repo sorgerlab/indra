@@ -435,6 +435,72 @@ def is_rat(protein_id):
     """
     return _is_organism(protein_id, 'RAT')
 
+def get_mouse_id(protein_id):
+    """Return the MGI ID given the protein id of a mouse protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the mouse protein
+
+    Returns
+    -------
+    mgi_id : str
+        MGI ID of the mouse protein
+    """
+    return uniprot_mgi.get(protein_id)
+
+def get_rat_id(protein_id):
+    """Return the RGD ID given the protein id of a rat protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the rat protein
+
+    Returns
+    -------
+    rgd_id : str
+        RGD ID of the rat protein
+    """
+    return uniprot_rgd.get(protein_id)
+
+def get_id_from_mouse(mgi_id):
+    """Return the UniProt ID given the MGI ID of a mouse protein.
+
+    Parameters
+    ----------
+    mgi_id : str
+        The MGI ID of the mouse protein.
+
+    Returns
+    -------
+    up_id : str
+        The UniProt ID of the mouse protein.
+    """
+    for up, mgi in uniprot_mgi.items():
+        if mgi == mgi_id:
+            return up
+    return None
+
+def get_id_from_rat(rgd_id):
+    """Return the UniProt ID given the RGD ID of a rat protein.
+
+    Parameters
+    ----------
+    rgd_id : str
+        The RGD ID of the rat protein.
+
+    Returns
+    -------
+    up_id : str
+        The UniProt ID of the rat protein.
+    """
+    for up, rgd in uniprot_rgd.items():
+        if rgd == rgd_id:
+            return up
+    return None
+
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
