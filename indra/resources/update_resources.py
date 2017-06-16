@@ -22,7 +22,6 @@ from indra.preassembler.make_activity_hierarchy import \
 from indra.preassembler.make_modification_hierarchy import \
     main as make_mod_hierarchy
 
-
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
@@ -67,19 +66,20 @@ def update_uniprot_entries():
     logger.info('--Updating UniProt entries--')
     url = 'http://www.uniprot.org/uniprot/?' + \
         'sort=id&desc=no&compress=no&query=reviewed:yes&' + \
-        'fil=&force=no&format=tab&columns=id,genes(PREFERRED),organism-id,' + \
-        'entry%20name'
+        'format=tab&columns=id,genes(PREFERRED),' + \
+        'entry%20name,database(RGD),database(MGI)'
     reviewed_entries = load_from_http(url)
     url = 'http://www.uniprot.org/uniprot/?' + \
         'sort=id&desc=no&compress=no&query=reviewed:no&fil=organism:' + \
-        '%22Homo%20sapiens%20(Human)%20[9606]%22&force=no&' + \
-        'format=tab&columns=id,genes(PREFERRED),organism-id,entry%20name'
+        '%22Homo%20sapiens%20(Human)%20[9606]%22&' + \
+        'format=tab&columns=id,genes(PREFERRED),entry%20name,' + \
+        'database(RGD),database(MGI)'
     unreviewed_human_entries = load_from_http(url)
     if not((reviewed_entries is not None) and
             (unreviewed_human_entries is not None)):
             return
-    lines = reviewed_entries.strip().split('\n')
-    lines += unreviewed_human_entries.strip().split('\n')[1:]
+    lines = reviewed_entries.strip('\n').split('\n')
+    lines += unreviewed_human_entries.strip('\n').split('\n')[1:]
     # At this point, we need to clean up the gene names.
     logging.info('Processing UniProt entries list.')
     for i, line in enumerate(lines):
