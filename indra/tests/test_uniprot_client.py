@@ -122,3 +122,9 @@ def test_rat_from_up():
 
 def test_up_from_rat():
     assert(uniprot_client.get_id_from_rgd('620003') == 'O08773')
+
+def test_mouse_from_human():
+    assert(uniprot_client.get_mouse_id('P15056') == 'P28028')
+
+def test_rat_from_human():
+    assert(uniprot_client.get_rat_id('P04049') == 'P11345')

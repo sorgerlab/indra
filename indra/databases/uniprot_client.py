@@ -495,6 +495,36 @@ def get_id_from_rgd(rgd_id):
     """
     return uniprot_rgd_reverse.get(rgd_id)
 
+def get_mouse_id(human_protein_id):
+    """Return the mouse UniProt ID given a human UniProt ID.
+
+    Parameters
+    ----------
+    human_protein_id : str
+        The UniProt ID of a human protein.
+
+    Returns
+    -------
+    mouse_protein_id : str
+        The UniProt ID of a mouse protein orthologous to the given human protein
+    """
+    return uniprot_human_mouse.get(human_protein_id)
+
+def get_rat_id(human_protein_id):
+    """Return the rat UniProt ID given a human UniProt ID.
+
+    Parameters
+    ----------
+    human_protein_id : str
+        The UniProt ID of a human protein.
+
+    Returns
+    -------
+    rat_protein_id : str
+        The UniProt ID of a rat protein orthologous to the given human protein
+    """
+    return uniprot_human_rat.get(human_protein_id)
+
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
