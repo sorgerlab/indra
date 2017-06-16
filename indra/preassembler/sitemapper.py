@@ -97,7 +97,7 @@ class SiteMapper(object):
     def __init__(self, site_map):
         self.site_map = site_map
 
-    def map_sites(self, stmts, save_fname=None):
+    def map_sites(self, stmts, save_fname=None, do_methionine_offset=False):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -164,7 +164,8 @@ class SiteMapper(object):
                                              stmt.position)]
                 # Figure out if this site is invalid
                 stmt_invalid_sites = \
-                        self._check_agent_mod(agent_to_check, old_mod_list)
+                        self._check_agent_mod(agent_to_check, old_mod_list,
+                                     do_methionine_offset=do_methionine_offset)
                 # Add to our list of invalid sites
                 invalid_sites += stmt_invalid_sites
                 # Get the updated list of ModCondition objects
@@ -224,7 +225,7 @@ class SiteMapper(object):
         new_agent.mods = new_mod_list
         return (invalid_sites, new_agent)
 
-    def _check_agent_mod(self, agent, mods):
+    def _check_agent_mod(self, agent, mods, do_methionine_offset=False):
         """Check an agent for invalid sites and look for mappings.
 
         Look up each modification site on the agent in Uniprot and then the
@@ -236,6 +237,12 @@ class SiteMapper(object):
             Agent to check for invalid modification sites.
         mods : list of :py:class:`indra.statements.ModCondition`
             Modifications to check for validity and map.
+        do_methionine_offset : boolean
+            Whether to check for off-by-one errors in site position (possibly)
+            attributable to site numbering from mature proteins after
+            cleavage of the initial methionine. If True, checks the reference
+            sequence for the given residue at 1 site position greater;
+            if the residue is valid at this position, creates the mapping.
 
         Returns
         -------
@@ -262,8 +269,20 @@ class SiteMapper(object):
                                                         old_mod.residue,
                                                         old_mod.position)
             # If it's not found in Uniprot, then look it up in the site map
-            if not site_valid:
-                site_key = (agent.name, old_mod.residue, old_mod.position)
+            site_key = (agent.name, old_mod.residue, old_mod.position)
+            if not site_valid and do_methionine_offset:
+                logger.info('Checking off by one error: %s' % str(site_key))
+                offset_pos = str(int(old_mod.position) + 1)
+                site_valid_plus_one = uniprot_client.verify_location(
+                                        up_id, old_mod.residue, offset_pos)
+                # If it's valid at the offset position, create the mapping
+                if site_valid_plus_one:
+                    logger.info('Found off by one: %s' % str(site_key))
+                    mapped_site = (old_mod.residue, offset_pos,
+                                   'OFF_BY_ONE - possibly due to methionine ' +
+                                   'cleavage')
+                    invalid_sites.append((site_key, mapped_site))
+            elif not site_valid:
                 mapped_site = self.site_map.get(site_key, None)
                 # We found an entry in the site map!
                 if mapped_site is not None:
