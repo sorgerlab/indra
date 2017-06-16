@@ -128,8 +128,8 @@ def get_hgnc_from_mouse(mgi_id):
     hgnc_id : str
         The HGNC ID corresponding to the given MGI ID.
     """
-    if not mgi_id.startswith('MGI:'):
-        mgi_id = 'MGI:' + mgi_id
+    if mgi_id.startswith('MGI:'):
+        mgi_id = mgi_id[4:]
     return mouse_map.get(mgi_id)
 
 def get_hgnc_from_rat(rgd_id):
@@ -145,8 +145,8 @@ def get_hgnc_from_rat(rgd_id):
     hgnc_id : str
         The HGNC ID corresponding to the given RGD ID.
     """
-    if not rgd_id.startswith('RGD:'):
-        rgd_id = 'RGD:' + rgd_id
+    if rgd_id.startswith('RGD:'):
+        rgd_id = rgd_id[4:]
     return rat_map.get(rgd_id)
 
 
@@ -243,12 +243,16 @@ def _read_hgnc_maps():
         if mgi_id:
             mgi_ids = mgi_id.split(', ')
             for mgi_id in mgi_ids:
+                if mgi_id.startswith('MGI:'):
+                    mgi_id = mgi_id[4:]
                 mouse_map[mgi_id] = hgnc_id
         # Rat
         rgd_id = row[8]
         if rgd_id:
             rgd_ids = rgd_id.split(', ')
             for rgd_id in rgd_ids:
+                if rgd_id.startswith('RGD:'):
+                    rgd_id = rgd_id[4:]
                 rat_map[rgd_id] = hgnc_id
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, mouse_map, rat_map)
