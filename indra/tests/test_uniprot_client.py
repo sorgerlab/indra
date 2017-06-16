@@ -112,13 +112,13 @@ def test_get_primary_id_secondary_nohuman():
            ['P0A5M5', 'P9WIU6', 'P9WIU7'])
 
 def test_mouse_from_up():
-    assert(uniprot_client.get_mouse_id('P28028') == '88190')
+    assert(uniprot_client.get_mgi_id('P28028') == '88190')
 
 def test_up_from_mouse():
-    assert(uniprot_client.get_id_from_mouse('88190') == 'P28028')
+    assert(uniprot_client.get_id_from_mgi('88190') == 'P28028')
 
 def test_rat_from_up():
-    assert(uniprot_client.get_rat_id('O08773') == '620003')
+    assert(uniprot_client.get_rgd_id('O08773') == '620003')
 
 def test_up_from_rat():
-    assert(uniprot_client.get_id_from_rat('620003') == 'O08773')
+    assert(uniprot_client.get_id_from_rgd('620003') == 'O08773')

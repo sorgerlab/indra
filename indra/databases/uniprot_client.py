@@ -435,7 +435,7 @@ def is_rat(protein_id):
     """
     return _is_organism(protein_id, 'RAT')
 
-def get_mouse_id(protein_id):
+def get_mgi_id(protein_id):
     """Return the MGI ID given the protein id of a mouse protein.
 
     Parameters
@@ -450,7 +450,7 @@ def get_mouse_id(protein_id):
     """
     return uniprot_mgi.get(protein_id)
 
-def get_rat_id(protein_id):
+def get_rgd_id(protein_id):
     """Return the RGD ID given the protein id of a rat protein.
 
     Parameters
@@ -465,7 +465,7 @@ def get_rat_id(protein_id):
     """
     return uniprot_rgd.get(protein_id)
 
-def get_id_from_mouse(mgi_id):
+def get_id_from_mgi(mgi_id):
     """Return the UniProt ID given the MGI ID of a mouse protein.
 
     Parameters
@@ -478,12 +478,9 @@ def get_id_from_mouse(mgi_id):
     up_id : str
         The UniProt ID of the mouse protein.
     """
-    for up, mgi in uniprot_mgi.items():
-        if mgi == mgi_id:
-            return up
-    return None
+    return uniprot_mgi_reverse.get(mgi_id)
 
-def get_id_from_rat(rgd_id):
+def get_id_from_rgd(rgd_id):
     """Return the UniProt ID given the RGD ID of a rat protein.
 
     Parameters
@@ -496,10 +493,7 @@ def get_id_from_rat(rgd_id):
     up_id : str
         The UniProt ID of the rat protein.
     """
-    for up, rgd in uniprot_rgd.items():
-        if rgd == rgd_id:
-            return up
-    return None
+    return uniprot_rgd_reverse.get(rgd_id)
 
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
@@ -509,6 +503,8 @@ def _build_uniprot_entries():
     uniprot_mnemonic_reverse = {}
     uniprot_mgi = {}
     uniprot_rgd = {}
+    uniprot_mgi_reverse = {}
+    uniprot_rgd_reverse = {}
     try:
         csv_rows = read_unicode_csv(up_entries_file, delimiter='\t')
         # Skip the header row
@@ -522,31 +518,43 @@ def _build_uniprot_entries():
                 mgi_ids = mgi.split(';')
                 if mgi_ids:
                     uniprot_mgi[up_id] = mgi_ids[0]
+                    uniprot_mgi_reverse[mgi_ids[0]] = up_id
             if rgd:
                 rgd_ids = rgd.split(';')
                 if rgd_ids:
                     uniprot_rgd[up_id] = rgd_ids[0]
+                    uniprot_rgd_reverse[rgd_ids[0]] = up_id
     except IOError:
         pass
     return (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse, \
-            uniprot_mgi, uniprot_rgd)
+            uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse)
 
-def _build_uniprot_hgnc():
+def _build_human_mouse_rat():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-                '/../resources/hgnc_entries.txt'
-    try:
-        csv_rows = read_unicode_csv(hgnc_file, delimiter='\t')
-        # Skip the header row
-        next(csv_rows)
-        uniprot_hgnc = {}
-        for row in csv_rows:
-            hgnc_name = row[1]
-            uniprot_id = row[6]
-            if uniprot_id:
-                uniprot_hgnc[uniprot_id] = hgnc_name
-    except IOError:
-        uniprot_hgnc = {}
-    return uniprot_hgnc
+                '/../resources/hgnc_entries.tsv'
+    csv_rows = read_unicode_csv(hgnc_file, delimiter='\t')
+    # Skip the header row
+    next(csv_rows)
+    uniprot_mouse = {}
+    uniprot_rat = {}
+    for row in csv_rows:
+        human_id, mgi_id, rgd_id = row[6:9]
+        if human_id:
+            if mgi_id:
+                mgi_id = mgi_id.split(', ')[0]
+                if mgi_id.startswith('MGI:'):
+                    mgi_id = mgi_id[4:]
+                mouse_id = uniprot_mgi_reverse.get(mgi_id)
+                if mouse_id:
+                    uniprot_mouse[human_id] = mouse_id
+            if rgd_id:
+                rgd_id = rgd_id.split(', ')[0]
+                if rgd_id.startswith('RGD:'):
+                    rgd_id = rgd_id[4:]
+                rat_id = uniprot_rgd_reverse.get(rgd_id)
+                if rat_id:
+                    uniprot_rat[human_id] = rat_id
+    return uniprot_mouse, uniprot_rat
 
 def _build_uniprot_sec():
     # File containing secondary accession numbers mapped
@@ -587,6 +595,8 @@ def _build_uniprot_subcell_loc():
     return subcell_loc
 
 (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
- uniprot_mgi, uniprot_rgd) = _build_uniprot_entries()
+ uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
+ _build_uniprot_entries()
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
+uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
