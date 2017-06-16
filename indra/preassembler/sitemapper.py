@@ -138,7 +138,8 @@ class SiteMapper(object):
             for agent in stmt.agent_list():
                 if agent is not None:
                     (agent_invalid_sites, new_agent) = \
-                        self._map_agent_sites(agent)
+                        self._map_agent_sites(agent,
+                                    do_methionine_offset=do_methionine_offset)
                     invalid_sites += agent_invalid_sites
                     new_agent_list.append(new_agent)
                 else:
@@ -188,7 +189,7 @@ class SiteMapper(object):
 
         return (valid_statements, mapped_statements)
 
-    def _map_agent_sites(self, agent):
+    def _map_agent_sites(self, agent, do_methionine_offset=False):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
@@ -215,7 +216,8 @@ class SiteMapper(object):
         # copy of the agent
         if not agent.mods:
             return ([], new_agent)
-        invalid_sites = self._check_agent_mod(agent, agent.mods)
+        invalid_sites = self._check_agent_mod(agent, agent.mods,
+                                    do_methionine_offset=do_methionine_offset)
         # The agent is valid, so return the agent unchanged
         if not invalid_sites:
             return ([], new_agent)
@@ -270,26 +272,30 @@ class SiteMapper(object):
                                                         old_mod.position)
             # If it's not found in Uniprot, then look it up in the site map
             site_key = (agent.name, old_mod.residue, old_mod.position)
-            if not site_valid and do_methionine_offset:
+            if site_valid:
+                continue
+            # First check for methionine offset
+            if do_methionine_offset:
                 logger.info('Checking off by one error: %s' % str(site_key))
                 offset_pos = str(int(old_mod.position) + 1)
                 site_valid_plus_one = uniprot_client.verify_location(
                                         up_id, old_mod.residue, offset_pos)
                 # If it's valid at the offset position, create the mapping
+                # and continue
                 if site_valid_plus_one:
                     logger.info('Found off by one: %s' % str(site_key))
                     mapped_site = (old_mod.residue, offset_pos,
-                                   'OFF_BY_ONE - possibly due to methionine ' +
-                                   'cleavage')
+                                   'INFERRED_METHIONINE_CLEAVAGE')
                     invalid_sites.append((site_key, mapped_site))
-            elif not site_valid:
-                mapped_site = self.site_map.get(site_key, None)
-                # We found an entry in the site map!
-                if mapped_site is not None:
-                    invalid_sites.append((site_key, mapped_site))
-                # No entry in the site map--set site info to None
-                else:
-                    invalid_sites.append((site_key, None))
+                    continue
+            # If we haven't found a valid site, look in the site map
+            mapped_site = self.site_map.get(site_key, None)
+            # We found an entry in the site map!
+            if mapped_site is not None:
+                invalid_sites.append((site_key, mapped_site))
+            # No entry in the site map--set site info to None
+            else:
+                invalid_sites.append((site_key, None))
         return invalid_sites
 
 
