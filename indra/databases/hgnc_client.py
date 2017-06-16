@@ -149,6 +149,41 @@ def get_hgnc_from_rat(rgd_id):
         rgd_id = 'RGD:' + rgd_id
     return rat_map.get(rgd_id)
 
+
+def get_rat_id(hgnc_id):
+    """Return the RGD rat ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Example: ""
+
+    Returns
+    -------
+    rgd_id : str
+        The RGD ID corresponding to the given HGNC ID.
+    """
+    for k, v in rat_map.items():
+        if v == hgnc_id:
+            return k
+
+def get_mouse_id(hgnc_id):
+    """Return the MGI mouse ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Example: ""
+
+    Returns
+    -------
+    mgi_id : str
+        The MGI ID corresponding to the given HGNC ID.
+    """
+    for k, v in mouse_map.items():
+        if v == hgnc_id:
+            return k
+
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
     """Return the HGNC entry for the given HGNC ID from the web service.
