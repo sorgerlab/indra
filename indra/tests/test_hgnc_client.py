@@ -36,3 +36,19 @@ def test_entrez_hgnc_none():
     entrez_id = 'xxx'
     hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
     assert(hgnc_id is None)
+
+def test_mouse_map():
+    hgnc_id1 = hgnc_client.get_hgnc_from_mouse('109599')
+    hgnc_id2 = hgnc_client.get_hgnc_from_mouse('MGI:109599')
+    assert(hgnc_id1 == '4820')
+    assert(hgnc_id2 == '4820')
+    hgnc_id = hgnc_client.get_hgnc_from_mouse('xxx')
+    assert(hgnc_id is None)
+
+def test_rat_map():
+    hgnc_id1 = hgnc_client.get_hgnc_from_rat('6496784')
+    hgnc_id2 = hgnc_client.get_hgnc_from_rat('RGD:6496784')
+    assert(hgnc_id1 == '44155')
+    assert(hgnc_id2 == '44155')
+    hgnc_id = hgnc_client.get_hgnc_from_rat('xxx')
+    assert(hgnc_id is None)

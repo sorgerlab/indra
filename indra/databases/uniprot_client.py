@@ -385,6 +385,14 @@ def verify_modification(protein_id, residue, location=None):
                 return True
         return False
 
+def _is_organism(protein_id, organism_suffix):
+    mnemonic = get_mnemonic(protein_id)
+    if mnemonic is None:
+        return False
+    if mnemonic.endswith(organism_suffix):
+        return True
+    return False
+
 def is_human(protein_id):
     """Return True if the given protein id corresponds to a human protein.
 
@@ -397,12 +405,125 @@ def is_human(protein_id):
     -------
     True if the protein_id corresponds to a human protein, otherwise False.
     """
-    mnemonic = get_mnemonic(protein_id)
-    if mnemonic is None:
-        return False
-    if mnemonic.endswith('HUMAN'):
-        return True
-    return False
+    return _is_organism(protein_id, 'HUMAN')
+
+def is_mouse(protein_id):
+    """Return True if the given protein id corresponds to a mouse protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein
+
+    Returns
+    -------
+    True if the protein_id corresponds to a mouse protein, otherwise False.
+    """
+    return _is_organism(protein_id, 'MOUSE')
+
+def is_rat(protein_id):
+    """Return True if the given protein id corresponds to a rat protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the protein
+
+    Returns
+    -------
+    True if the protein_id corresponds to a rat protein, otherwise False.
+    """
+    return _is_organism(protein_id, 'RAT')
+
+def get_mgi_id(protein_id):
+    """Return the MGI ID given the protein id of a mouse protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the mouse protein
+
+    Returns
+    -------
+    mgi_id : str
+        MGI ID of the mouse protein
+    """
+    return uniprot_mgi.get(protein_id)
+
+def get_rgd_id(protein_id):
+    """Return the RGD ID given the protein id of a rat protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of the rat protein
+
+    Returns
+    -------
+    rgd_id : str
+        RGD ID of the rat protein
+    """
+    return uniprot_rgd.get(protein_id)
+
+def get_id_from_mgi(mgi_id):
+    """Return the UniProt ID given the MGI ID of a mouse protein.
+
+    Parameters
+    ----------
+    mgi_id : str
+        The MGI ID of the mouse protein.
+
+    Returns
+    -------
+    up_id : str
+        The UniProt ID of the mouse protein.
+    """
+    return uniprot_mgi_reverse.get(mgi_id)
+
+def get_id_from_rgd(rgd_id):
+    """Return the UniProt ID given the RGD ID of a rat protein.
+
+    Parameters
+    ----------
+    rgd_id : str
+        The RGD ID of the rat protein.
+
+    Returns
+    -------
+    up_id : str
+        The UniProt ID of the rat protein.
+    """
+    return uniprot_rgd_reverse.get(rgd_id)
+
+def get_mouse_id(human_protein_id):
+    """Return the mouse UniProt ID given a human UniProt ID.
+
+    Parameters
+    ----------
+    human_protein_id : str
+        The UniProt ID of a human protein.
+
+    Returns
+    -------
+    mouse_protein_id : str
+        The UniProt ID of a mouse protein orthologous to the given human protein
+    """
+    return uniprot_human_mouse.get(human_protein_id)
+
+def get_rat_id(human_protein_id):
+    """Return the rat UniProt ID given a human UniProt ID.
+
+    Parameters
+    ----------
+    human_protein_id : str
+        The UniProt ID of a human protein.
+
+    Returns
+    -------
+    rat_protein_id : str
+        The UniProt ID of a rat protein orthologous to the given human protein
+    """
+    return uniprot_human_rat.get(human_protein_id)
 
 def _build_uniprot_entries():
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
@@ -410,37 +531,60 @@ def _build_uniprot_entries():
     uniprot_gene_name = {}
     uniprot_mnemonic = {}
     uniprot_mnemonic_reverse = {}
+    uniprot_mgi = {}
+    uniprot_rgd = {}
+    uniprot_mgi_reverse = {}
+    uniprot_rgd_reverse = {}
     try:
         csv_rows = read_unicode_csv(up_entries_file, delimiter='\t')
         # Skip the header row
         next(csv_rows)
         for row in csv_rows:
-            up_id = row[0]
-            gene_name = row[1]
-            up_mnemonic = row[3]
+            up_id, gene_name, up_mnemonic, rgd, mgi = row
             uniprot_gene_name[up_id] = gene_name
             uniprot_mnemonic[up_id] = up_mnemonic
             uniprot_mnemonic_reverse[up_mnemonic] = up_id
+            if mgi:
+                mgi_ids = mgi.split(';')
+                if mgi_ids:
+                    uniprot_mgi[up_id] = mgi_ids[0]
+                    uniprot_mgi_reverse[mgi_ids[0]] = up_id
+            if rgd:
+                rgd_ids = rgd.split(';')
+                if rgd_ids:
+                    uniprot_rgd[up_id] = rgd_ids[0]
+                    uniprot_rgd_reverse[rgd_ids[0]] = up_id
     except IOError:
         pass
-    return uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse
+    return (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse, \
+            uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse)
 
-def _build_uniprot_hgnc():
+def _build_human_mouse_rat():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
-                '/../resources/hgnc_entries.txt'
-    try:
-        csv_rows = read_unicode_csv(hgnc_file, delimiter='\t')
-        # Skip the header row
-        next(csv_rows)
-        uniprot_hgnc = {}
-        for row in csv_rows:
-            hgnc_name = row[1]
-            uniprot_id = row[6]
-            if uniprot_id:
-                uniprot_hgnc[uniprot_id] = hgnc_name
-    except IOError:
-        uniprot_hgnc = {}
-    return uniprot_hgnc
+                '/../resources/hgnc_entries.tsv'
+    csv_rows = read_unicode_csv(hgnc_file, delimiter='\t')
+    # Skip the header row
+    next(csv_rows)
+    uniprot_mouse = {}
+    uniprot_rat = {}
+    for row in csv_rows:
+        human_id, mgi_id, rgd_id = row[6:9]
+        if human_id:
+            if mgi_id:
+                mgi_id = mgi_id.split(', ')[0]
+                if mgi_id.startswith('MGI:'):
+                    mgi_id = mgi_id[4:]
+                mouse_id = uniprot_mgi_reverse.get(mgi_id)
+                if mouse_id:
+                    uniprot_mouse[human_id] = mouse_id
+            if rgd_id:
+                rgd_id = rgd_id.split(', ')[0]
+                if rgd_id.startswith('RGD:'):
+                    rgd_id = rgd_id[4:]
+                rat_id = uniprot_rgd_reverse.get(rgd_id)
+                if rat_id:
+                    uniprot_rat[human_id] = rat_id
+    return uniprot_mouse, uniprot_rat
 
 def _build_uniprot_sec():
     # File containing secondary accession numbers mapped
@@ -480,7 +624,9 @@ def _build_uniprot_subcell_loc():
         subcell_loc = {}
     return subcell_loc
 
-uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse = \
-    _build_uniprot_entries()
+(uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
+ uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
+ _build_uniprot_entries()
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
+uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()

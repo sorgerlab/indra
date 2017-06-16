@@ -115,6 +115,75 @@ def get_hgnc_id(hgnc_name):
     """
     return hgnc_ids.get(hgnc_name)
 
+def get_hgnc_from_mouse(mgi_id):
+    """Return the HGNC ID corresponding to the given MGI mouse gene ID.
+
+    Parameters
+    ----------
+    mgi_id : str
+        The MGI ID to be converted. Example: "2444934"
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given MGI ID.
+    """
+    if mgi_id.startswith('MGI:'):
+        mgi_id = mgi_id[4:]
+    return mouse_map.get(mgi_id)
+
+def get_hgnc_from_rat(rgd_id):
+    """Return the HGNC ID corresponding to the given RGD rat gene ID.
+
+    Parameters
+    ----------
+    rgd_id : str
+        The RGD ID to be converted. Example: "1564928"
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given RGD ID.
+    """
+    if rgd_id.startswith('RGD:'):
+        rgd_id = rgd_id[4:]
+    return rat_map.get(rgd_id)
+
+
+def get_rat_id(hgnc_id):
+    """Return the RGD rat ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Example: ""
+
+    Returns
+    -------
+    rgd_id : str
+        The RGD ID corresponding to the given HGNC ID.
+    """
+    for k, v in rat_map.items():
+        if v == hgnc_id:
+            return k
+
+def get_mouse_id(hgnc_id):
+    """Return the MGI mouse ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Example: ""
+
+    Returns
+    -------
+    mgi_id : str
+        The MGI ID corresponding to the given HGNC ID.
+    """
+    for k, v in mouse_map.items():
+        if v == hgnc_id:
+            return k
+
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
     """Return the HGNC entry for the given HGNC ID from the web service.
@@ -148,6 +217,8 @@ def _read_hgnc_maps():
     hgnc_withdrawn = []
     uniprot_ids = {}
     entrez_ids = {}
+    mouse_map = {}
+    rat_map = {}
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -167,7 +238,25 @@ def _read_hgnc_maps():
         # Entrez
         entrez_id = row[5]
         entrez_ids[hgnc_id] = entrez_id
-    return (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids)
+        # Mouse
+        mgi_id = row[7]
+        if mgi_id:
+            mgi_ids = mgi_id.split(', ')
+            for mgi_id in mgi_ids:
+                if mgi_id.startswith('MGI:'):
+                    mgi_id = mgi_id[4:]
+                mouse_map[mgi_id] = hgnc_id
+        # Rat
+        rgd_id = row[8]
+        if rgd_id:
+            rgd_ids = rgd_id.split(', ')
+            for rgd_id in rgd_ids:
+                if rgd_id.startswith('RGD:'):
+                    rgd_id = rgd_id[4:]
+                rat_map[rgd_id] = hgnc_id
+    return (hgnc_names, hgnc_ids, hgnc_withdrawn,
+            uniprot_ids, entrez_ids, mouse_map, rat_map)
 
-hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids = \
-        _read_hgnc_maps()
+(hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
+ mouse_map, rat_map) = \
+    _read_hgnc_maps()
