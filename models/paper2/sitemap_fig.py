@@ -7,9 +7,11 @@ from indra.preassembler.sitemapper import SiteMapper, default_site_map
 from indra.util import write_unicode_csv, read_unicode_csv
 from indra.util import plot_formatting as pf
 
+import numpy as np
+from matplotlib import pyplot as plt
+
 pf.set_fig_params()
 
-from matplotlib import pyplot as plt
 
 SiteInfo = namedtuple('SiteInfo', ['gene', 'res', 'pos', 'freq', 'mapped',
                                    'mapped_res', 'mapped_pos', 'explanation'])
@@ -72,36 +74,50 @@ def make_bar_plot(site_info, num_genes=60):
     site_counts = defaultdict(list)
     for site in site_info:
         gene_counts[site.gene] += int(site.freq)
-        site_counts[site.gene].append((int(site.freq), int(site.mapped)))
+        site_counts[site.gene].append((int(site.freq), int(site.mapped),
+                                       site.explanation))
     # Sort the individual site counts by frequency
     for gene, freq_list in site_counts.items():
         site_counts[gene] = sorted(freq_list, key=lambda x: x[0], reverse=True)
     gene_counts = sorted([(k, v) for k, v in gene_counts.items()],
                           key=lambda x: x[1], reverse=True)
-    gene_counts = gene_counts[5:num_genes]
 
     plt.ion()
-    ind = range(len(gene_counts))
-    def plot_sites(gene_count_subset):
-        plt.figure(figsize=(7, 2), dpi=150)
-        width = 0.5
-        for ix, (gene, freq) in enumerate(gene_counts):
+    def plot_sites(gene_count_subset, figsize, subplot_params):
+        ind = np.array(range(len(gene_count_subset)))
+        plt.figure(figsize=figsize, dpi=150)
+        width = 0.8
+        handle_dict = {}
+        for ix, (gene, freq) in enumerate(gene_count_subset):
             # Plot the stacked bars
             bottom = 0
-            for site_freq, mapped in site_counts[gene]:
-                if mapped:
-                    color = 'r'
-                else:
+            for site_freq, mapped, explanation in site_counts[gene]:
+                if mapped and \
+                        explanation.startswith('INFERRED_METHIONINE_CLEAVAGE'):
                     color = 'b'
-                plt.bar(ix, site_freq, bottom=bottom, color=color,
-                        linewidth=0.5)
+                    handle_key = 'meth'
+                elif mapped:
+                    color = 'g'
+                    handle_key = 'manual'
+                else:
+                    color = 'white'
+                    handle_key = 'unmapped'
+                handle_dict[handle_key] = plt.bar(ix, site_freq, bottom=bottom,                                                   color=color,
+                                                  linewidth=0.5, width=width)
                 bottom += site_freq
-        plt.xticks(ind, [x[0] for x in gene_counts], rotation='vertical')
+        plt.xticks(ind + (width / 2.), [x[0] for x in gene_count_subset],
+                   rotation='vertical')
         plt.ylabel('Num. invalid sites')
         ax = plt.gca()
         pf.format_axis(ax)
-        plt.subplots_adjust(bottom=0.31)
+        plt.subplots_adjust(**subplot_params)
+        plt.legend(loc='upper right', handles=list(handle_dict.values()),
+                   labels=list(handle_dict.keys()), fontsize=pf.fontsize,
+                   frameon=False)
         plt.show()
+    plot_sites(gene_counts[0:2], (1, 2), {'bottom': 0.31})
+    plot_sites(gene_counts[2:num_genes], (7,2),
+               {'bottom': 0.31, 'left': 0.06, 'right':0.96})
     return gene_counts
 
 if __name__ == '__main__':
