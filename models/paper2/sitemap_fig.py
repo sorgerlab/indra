@@ -16,7 +16,7 @@ pf.set_fig_params()
 SiteInfo = namedtuple('SiteInfo', ['gene', 'res', 'pos', 'freq', 'mapped',
                                    'mapped_res', 'mapped_pos', 'explanation'])
 
-def get_incorrect_sites(do_methionine_offset=False):
+def get_incorrect_sites(do_methionine_offset=False, do_orthology_mapping=False):
     outf = '../phase3_eval/output'
 
     prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
@@ -28,7 +28,8 @@ def get_incorrect_sites(do_methionine_offset=False):
     def get_inc_sites(stmts):
         sm = SiteMapper(default_site_map)
         valid, mapped = sm.map_sites(stmts,
-                                     do_methionine_offset=do_methionine_offset)
+                                     do_methionine_offset=do_methionine_offset,
+                                     do_orthology_mapping=do_orthology_mapping)
         # Collect stats on most frequently occurring site errors
         mapped_sites = []
         unmapped_sites = []
@@ -83,7 +84,7 @@ def make_bar_plot(site_info, num_genes=60):
                           key=lambda x: x[1], reverse=True)
 
     plt.ion()
-    def plot_sites(gene_count_subset, figsize, subplot_params):
+    def plot_sites(gene_count_subset, figsize, subplot_params, do_legend=True):
         ind = np.array(range(len(gene_count_subset)))
         plt.figure(figsize=figsize, dpi=150)
         width = 0.8
@@ -95,32 +96,43 @@ def make_bar_plot(site_info, num_genes=60):
                 if mapped and \
                         explanation.startswith('INFERRED_METHIONINE_CLEAVAGE'):
                     color = 'b'
-                    handle_key = 'meth'
+                    handle_key = 'Methione'
+                elif mapped and \
+                        explanation.startswith('INFERRED_MOUSE_SITE'):
+                    color = 'r'
+                    handle_key = 'Mouse'
+                elif mapped and \
+                        explanation.startswith('INFERRED_RAT_SITE'):
+                    color = 'purple'
+                    handle_key = 'Rat'
                 elif mapped:
                     color = 'g'
-                    handle_key = 'manual'
+                    handle_key = 'Manual'
                 else:
                     color = 'white'
-                    handle_key = 'unmapped'
+                    handle_key = 'Unmapped'
                 handle_dict[handle_key] = plt.bar(ix, site_freq, bottom=bottom,                                                   color=color,
                                                   linewidth=0.5, width=width)
                 bottom += site_freq
         plt.xticks(ind + (width / 2.), [x[0] for x in gene_count_subset],
                    rotation='vertical')
         plt.ylabel('Num. invalid sites')
+        plt.xlim((0, max(ind)+1))
         ax = plt.gca()
         pf.format_axis(ax)
         plt.subplots_adjust(**subplot_params)
-        plt.legend(loc='upper right', handles=list(handle_dict.values()),
-                   labels=list(handle_dict.keys()), fontsize=pf.fontsize,
-                   frameon=False)
+        if do_legend:
+            plt.legend(loc='upper right', handles=list(handle_dict.values()),
+                       labels=list(handle_dict.keys()), fontsize=pf.fontsize,
+                       frameon=False)
         plt.show()
-    plot_sites(gene_counts[0:2], (1, 2), {'bottom': 0.31})
-    plot_sites(gene_counts[2:num_genes], (7,2),
+    plot_sites(gene_counts[0:4], (1, 2), {'bottom': 0.31}, do_legend=False)
+    plot_sites(gene_counts[4:num_genes], (7, 2),
                {'bottom': 0.31, 'left': 0.06, 'right':0.96})
     return gene_counts
 
 if __name__ == '__main__':
-    sites = load_incorrect_sites()
-    #sites = get_incorrect_sites(do_methionine_offset=True)
+    #sites = load_incorrect_sites()
+    sites = get_incorrect_sites(do_methionine_offset=True,
+                                do_orthology_mapping=True)
     gene_counts = make_bar_plot(sites)

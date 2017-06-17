@@ -97,7 +97,8 @@ class SiteMapper(object):
     def __init__(self, site_map):
         self.site_map = site_map
 
-    def map_sites(self, stmts, save_fname=None, do_methionine_offset=False):
+    def map_sites(self, stmts, save_fname=None, do_methionine_offset=False,
+                  do_orthology_mapping=False):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -115,6 +116,12 @@ class SiteMapper(object):
         ----------
         stmts : list of :py:class:`indra.statement.Statement`
             The statements to check for site errors.
+        do_methionine_offset : boolean
+            Whether to check for off-by-one errors in site position (possibly)
+            attributable to site numbering based on mature proteins after
+            cleavage of the initial methionine. If True, checks the reference
+            sequence for the given residue at 1 site position greater;
+            if the residue is valid at this position, creates the mapping.
 
         Returns
         -------
@@ -139,7 +146,8 @@ class SiteMapper(object):
                 if agent is not None:
                     (agent_invalid_sites, new_agent) = \
                         self._map_agent_sites(agent,
-                                    do_methionine_offset=do_methionine_offset)
+                                    do_methionine_offset=do_methionine_offset,
+                                    do_orthology_mapping=do_orthology_mapping)
                     invalid_sites += agent_invalid_sites
                     new_agent_list.append(new_agent)
                 else:
@@ -166,7 +174,8 @@ class SiteMapper(object):
                 # Figure out if this site is invalid
                 stmt_invalid_sites = \
                         self._check_agent_mod(agent_to_check, old_mod_list,
-                                     do_methionine_offset=do_methionine_offset)
+                                     do_methionine_offset=do_methionine_offset,
+                                     do_orthology_mapping=do_orthology_mapping)
                 # Add to our list of invalid sites
                 invalid_sites += stmt_invalid_sites
                 # Get the updated list of ModCondition objects
@@ -189,13 +198,20 @@ class SiteMapper(object):
 
         return (valid_statements, mapped_statements)
 
-    def _map_agent_sites(self, agent, do_methionine_offset=False):
+    def _map_agent_sites(self, agent, do_methionine_offset=False,
+                         do_orthology_mapping=False):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
         ----------
         agent : :py:class:`indra.statements.Agent`
             Agent to check for invalid modification sites.
+        do_methionine_offset : boolean
+            Whether to check for off-by-one errors in site position (possibly)
+            attributable to site numbering based on mature proteins after
+            cleavage of the initial methionine. If True, checks the reference
+            sequence for the given residue at 1 site position greater;
+            if the residue is valid at this position, creates the mapping.
 
         Returns
         -------
@@ -208,6 +224,7 @@ class SiteMapper(object):
             the sites have been correct (if mappings were found in the site
             map). If mappings were not found in the site map, the original
             (incorrect) agent is returned.
+
         """
         if agent is None:
             return ([], agent)
@@ -227,7 +244,8 @@ class SiteMapper(object):
         new_agent.mods = new_mod_list
         return (invalid_sites, new_agent)
 
-    def _check_agent_mod(self, agent, mods, do_methionine_offset=False):
+    def _check_agent_mod(self, agent, mods, do_methionine_offset=False,
+                         do_orthology_mapping=False):
         """Check an agent for invalid sites and look for mappings.
 
         Look up each modification site on the agent in Uniprot and then the
@@ -274,6 +292,11 @@ class SiteMapper(object):
             site_key = (agent.name, old_mod.residue, old_mod.position)
             if site_valid:
                 continue
+            mapped_site = self.site_map.get(site_key, None)
+            # We found an entry in the site map!
+            if mapped_site is not None:
+                invalid_sites.append((site_key, mapped_site))
+                continue
             # First check for methionine offset
             if do_methionine_offset:
                 offset_pos = str(int(old_mod.position) + 1)
@@ -286,14 +309,37 @@ class SiteMapper(object):
                                    'INFERRED_METHIONINE_CLEAVAGE')
                     invalid_sites.append((site_key, mapped_site))
                     continue
-            # If we haven't found a valid site, look in the site map
-            mapped_site = self.site_map.get(site_key, None)
-            # We found an entry in the site map!
-            if mapped_site is not None:
-                invalid_sites.append((site_key, mapped_site))
+            # If methionine offset correction didn't work, try looking for
+            # rat or mouse sequence
+            if do_orthology_mapping:
+                # Check the agent for a Uniprot ID
+                up_id = agent.db_refs.get('UP')
+                hgnc_id = agent.db_refs.get('HGNC')
+                # For now, only map human proteins to mouse
+                if up_id and hgnc_id:
+                    # Get the mouse ID for this protein
+                    up_mouse = uniprot_client.get_mouse_id(up_id)
+                    # Get mouse sequence
+                    mouse_site_valid = uniprot_client.verify_location(
+                            up_mouse, old_mod.residue, old_mod.position)
+                    if mouse_site_valid:
+                        logger.info("Mouse site valid!!!")
+                        mapped_site = (old_mod.residue, old_mod.position,
+                                       'INFERRED_MOUSE_SITE')
+                        invalid_sites.append((site_key, mapped_site))
+                        continue
+                    # Try the rat sequence
+                    up_rat = uniprot_client.get_rat_id(up_id)
+                    rat_site_valid = uniprot_client.verify_location(
+                            up_rat, old_mod.residue, old_mod.position)
+                    if rat_site_valid:
+                        logger.info("Rat site valid!!!")
+                        mapped_site = (old_mod.residue, old_mod.position,
+                                       'INFERRED_RAT_SITE')
+                        invalid_sites.append((site_key, mapped_site))
+                        continue
             # No entry in the site map--set site info to None
-            else:
-                invalid_sites.append((site_key, None))
+            invalid_sites.append((site_key, None))
         return invalid_sites
 
 
