@@ -57,7 +57,7 @@ def decode_obj(obj, encoding='utf-8'):
 
 def read_unicode_csv(filename, delimiter=',', quotechar='"',
                      quoting=csv.QUOTE_MINIMAL, lineterminator='\n',
-                     encoding='utf-8'):
+                     encoding='utf-8', skiprows=0):
     # Python 3 version
     if sys.version_info[0] >= 3:
         # Open the file in text mode with given encoding
@@ -67,6 +67,9 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
             csv_reader = csv.reader(f, delimiter=delimiter, quotechar=quotechar,
                                  quoting=quoting, lineterminator=lineterminator)
             # Now, return the (already decoded) unicode csv_reader generator
+            # Skip rows if necessary
+            for skip_ix in range(skiprows):
+                next(csv_reader)
             for row in csv_reader:
                 yield row
     # Python 2 version
@@ -79,6 +82,9 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
                                  quotechar=quotechar.encode(encoding),
                                  quoting=quoting, lineterminator=lineterminator)
             # Iterate over the file and decode each string into unicode
+            # Skip rows if necessary
+            for skip_ix in range(skiprows):
+                next(csv_reader)
             for row in csv_reader:
                 yield [cell.decode(encoding) for cell in row]
 
