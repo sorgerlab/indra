@@ -587,6 +587,8 @@ class BiopaxProcessor(object):
         mf_type_terms = mf_type.getTerm().toArray()
         known_mf_type = None
         for t in mf_type_terms:
+            if t.startswith('MOD_RES '):
+                t = t[8:]
             mf_type_indra = _mftype_dict.get(t)
             if mf_type_indra is not None:
                 known_mf_type = mf_type_indra
@@ -900,16 +902,18 @@ _mftype_dict = {
     'n4glycoasn': ('glycosylation', 'N'),
     'O-glycosyl-L-threonine': ('glycosylation', 'T'),
     'S-palmitoyl-L-cysteine': ('palmitoylation', 'C'),
+    'N6-acetyllysine': ('acetylation', 'K'),
     'N6-acetyl-L-lysine' : ('acetylation', 'K'),
     'n6aclys': ('acetylation', 'K'),
     'naclys': ('acetylation', 'K'),
-    'N-acetylmethionine': ('acetylation', 'M'),
-    'N-acetyl-L-methionine': ('acetylation', 'M'),
-    'N-acetyl-L-alanine': ('acetylation', 'A'),
-    'N-acetylmethionine': ('acetylation', 'M'),
-    'O-acetyl-L-serine': ('acetylation', 'S'),
     'N-acetylated L-lysine': ('acetylation', 'K'),
+    'N-acetylglycine': ('acetylation', 'G'),
+    'N-acetylmethionine': ('acetylation', 'M'),
+    'Hydroxyproline': ('hydroxylation', 'P'),
     'hydroxylated proline': ('hydroxylation', 'P'),
+    '3-hydroxyproline': ('hydroxylation', 'P'),
+    '4-hydroxyproline': ('hydroxylation', 'P'),
+    '5-hydroxylysine': ('hydroxylation', 'K'),
     'N-myristoylglycine': ('myristoylation', 'G'),
     'N-myristoyl-glycine': ('myristoylation', 'G'),
     'sumoylated lysine': ('sumoylation', 'K'),
@@ -922,6 +926,25 @@ _mftype_dict = {
     'ubiquitination': ('ubiquitination', None),
     'ubiquitinylated lysine': ('ubiquitination', 'K'),
     'ubiquitination signature tetrapeptidyl lysine': ('ubiquitination', 'K'),
+    'Phosphoserine': ('phosphorylation', 'S'),
+    'Phosphothreonine': ('phosphorylation', 'T'),
+    'Phosphotyrosine': ('phosphorylation', 'Y'),
+    'N-acetylalanine': ('acetylation', 'A'),
+    'N-acetylserine': ('acetylation', 'S'),
+    'N-acetylthreonine': ('acetylation', 'T'),
+    'N-acetylvaline': ('acetylation', 'V'),
+    'Omega-N-methylarginine': ('methylation', 'R'),
+    'N6-methyllysine': ('methylation', 'K'),
+    'Dimethylated arginine': ('methylation', 'R'),
+    'Asymmetric dimethylarginine': ('methylation', 'R'),
+    'Omega-N-methylated arginine': ('methylation', 'R'),
+    'N6,N6-dimethyllysine': ('methylation', 'K'),
+    'N6,N6,N6-trimethyllysine': ('methylation', 'K'),
+    'Symmetric dimethylarginine': ('methylation', 'R'),
+    'ADP-ribosylarginine': ('ribosylation', 'R'),
+    'ADP-ribosylcysteine': ('ribosylation', 'C'),
+    'ADP-ribosylasparagine': ('ribosylation', 'N'),
+    'PolyADP-ribosyl glutamic acid': ('ribosylation', 'E'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
