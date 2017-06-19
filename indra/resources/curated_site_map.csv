@@ -27,7 +27,6 @@ RPS6KA6,S,221,S,232,numbering from RPS6KA1
 RPS6KA6,S,363,S,372,numbering from RPS6KA1
 RPS6KA6,S,380,S,389,numbering from RPS6KA1
 RPS6KA6,T,573,T,581,numbering from RPS6KA1
-RPS6KB1,T,389,,,numbering from isoform alpha 2
 SDC2,Y,180,Y,179,off by one
 SHC1,Y,194,Y,349,numbering from isoform p46
 SHC1,Y,195,Y,350,numbering from isoform p46
@@ -103,3 +102,37 @@ PTPN11,Y,542,Y,546,off by 4
 PTPN11,Y,580,Y,584,off by 4
 ULK1,S,757,S,758,numbering from mouse sequence
 KSR1,S,392,S,406,numbering from mouse sequence
+JAK2,E,47,,,E47 confused with alias for gene TCF3
+JAK2,Y,485,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,468,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,504,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,489,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,426,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,456,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,454,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,368,,,Wrong gene; binding site for JAK2 on EPOR
+RPS6KB1,T,389,T,412,numbering from isoform alpha 2
+RPS6KB1,S,424,S,447,numbering from isoform alpha 2
+RPS6KB1,S,371,S,394,numbering from isoform alpha 2
+RPS6KB1,T,421,T,444,numbering from isoform alpha 2
+RPS6KB1,T,229,T,252,numbering from isoform alpha 2
+RPS6KB1,E,4,,,incorrect
+RPS6KB1,S,473,,,probable reading error: AKT S473
+RPS6KB1,S,389,T,412,numbering from isoform alpha 2; wrong residue
+RPS6KB1,S,65,,,incorrect
+RPS6KB1,S,411,S,434,numbering from isoform alpha 2
+RPS6KB1,A,549,,,probable reading error: cell line A549
+RPS6KB1,S,2448,,,probable reading error: site on MTOR
+RPS6KB1,H,358,,,incorrect
+RPS6KB1,S,757,,,incorrect
+RPS6KB1,G,1,,,probable reading error: cell cycle
+RPS6KB1,S,308,,,probable reading error: AKT T308
+RPS6KB1,S,6,,,probable reading error: gene name S6
+RPS6KB1,T,424,S,447,probable wrong residue; numbering from isoform alpha 2
+RPS6KB1,T,308,,,probable reading error: AKT T308
+RB1,D,1,,,probable reading error: cyclin D1
+RB1,G,1,,,probable reading error: cell cycle G1
+RB1,Y,79,,,probable reading error: cell line Y79
+RB1,G,0,,,probable reading error: cell cycle G0
+RB1,T,160,,,probable reading error: site T160 on CDK2
+RB1,S,81,,,incorrect
