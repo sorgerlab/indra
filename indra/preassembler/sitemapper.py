@@ -2,17 +2,20 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
+import logging
 import textwrap
 from copy import deepcopy
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import uniprot_client, hgnc_client, phosphosite_client
 # Python 2
 try:
     basestring
 # Python 3
 except:
     basestring = str
+
+logger = logging.getLogger('sitemapper')
 
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
@@ -234,7 +237,8 @@ class SiteMapper(object):
         if not agent.mods:
             return ([], new_agent)
         invalid_sites = self._check_agent_mod(agent, agent.mods,
-                                    do_methionine_offset=do_methionine_offset)
+                                    do_methionine_offset=do_methionine_offset,
+                                    do_orthology_mapping=do_orthology_mapping)
         # The agent is valid, so return the agent unchanged
         if not invalid_sites:
             return ([], new_agent)
@@ -292,52 +296,50 @@ class SiteMapper(object):
             site_key = (agent.name, old_mod.residue, old_mod.position)
             if site_valid:
                 continue
-            mapped_site = self.site_map.get(site_key, None)
-            # We found an entry in the site map!
-            if mapped_site is not None:
-                invalid_sites.append((site_key, mapped_site))
-                continue
-            # First check for methionine offset
-            if do_methionine_offset:
+            # Check the agent for a Uniprot ID
+            up_id = agent.db_refs.get('UP')
+            hgnc_id = agent.db_refs.get('HGNC')
+            # Try looking for rat or mouse sites
+            if do_orthology_mapping and up_id and hgnc_id:
+                # Get the mouse ID for this protein
+                up_mouse = uniprot_client.get_mouse_id(up_id)
+                # Get mouse sequence
+                human_pos = phosphosite_client.map_to_human_site(
+                              up_mouse, old_mod.residue, old_mod.position)
+                if human_pos:
+                    mapped_site = (old_mod.residue, human_pos,
+                                   'INFERRED_MOUSE_SITE')
+                    invalid_sites.append((site_key, mapped_site))
+                    continue
+                # Try the rat sequence
+                up_rat = uniprot_client.get_rat_id(up_id)
+                human_pos = phosphosite_client.map_to_human_site(
+                              up_rat, old_mod.residue, old_mod.position)
+                if human_pos:
+                    logger.info("Rat site valid!!!")
+                    mapped_site = (old_mod.residue, human_pos,
+                                   'INFERRED_RAT_SITE')
+                    invalid_sites.append((site_key, mapped_site))
+                    continue
+            # Check for methionine offset (off by one)
+            if do_methionine_offset and up_id and hgnc_id:
                 offset_pos = str(int(old_mod.position) + 1)
-                site_valid_plus_one = uniprot_client.verify_location(
-                                        up_id, old_mod.residue, offset_pos)
+                #site_valid_plus_one = uniprot_client.verify_location(
+                #                        up_id, old_mod.residue, offset_pos)
+                human_pos = phosphosite_client.map_to_human_site(
+                              up_id, old_mod.residue, offset_pos)
                 # If it's valid at the offset position, create the mapping
                 # and continue
-                if site_valid_plus_one:
-                    mapped_site = (old_mod.residue, offset_pos,
+                if human_pos:
+                    mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_METHIONINE_CLEAVAGE')
                     invalid_sites.append((site_key, mapped_site))
                     continue
-            # If methionine offset correction didn't work, try looking for
-            # rat or mouse sequence
-            if do_orthology_mapping:
-                # Check the agent for a Uniprot ID
-                up_id = agent.db_refs.get('UP')
-                hgnc_id = agent.db_refs.get('HGNC')
-                # For now, only map human proteins to mouse
-                if up_id and hgnc_id:
-                    # Get the mouse ID for this protein
-                    up_mouse = uniprot_client.get_mouse_id(up_id)
-                    # Get mouse sequence
-                    mouse_site_valid = uniprot_client.verify_location(
-                            up_mouse, old_mod.residue, old_mod.position)
-                    if mouse_site_valid:
-                        logger.info("Mouse site valid!!!")
-                        mapped_site = (old_mod.residue, old_mod.position,
-                                       'INFERRED_MOUSE_SITE')
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
-                    # Try the rat sequence
-                    up_rat = uniprot_client.get_rat_id(up_id)
-                    rat_site_valid = uniprot_client.verify_location(
-                            up_rat, old_mod.residue, old_mod.position)
-                    if rat_site_valid:
-                        logger.info("Rat site valid!!!")
-                        mapped_site = (old_mod.residue, old_mod.position,
-                                       'INFERRED_RAT_SITE')
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
+            # Now check the site map
+            mapped_site = self.site_map.get(site_key, None)
+            if mapped_site is not None:
+                invalid_sites.append((site_key, mapped_site))
+                continue
             # No entry in the site map--set site info to None
             invalid_sites.append((site_key, None))
         return invalid_sites
