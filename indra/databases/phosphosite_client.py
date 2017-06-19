@@ -42,6 +42,8 @@ def map_to_human_site(up_id, mod_res, mod_pos):
     if sites_for_up is None:
         return None
     site_info = sites_for_up.get('%s%s' % (mod_res, mod_pos))
+    if not site_info:
+        return None
     # Lookup site group
     site_grp_list = data_by_site_grp.get(site_info.SITE_GRP_ID)
     # If an empty list, then return None (is unlikely to happen)
@@ -56,8 +58,9 @@ def map_to_human_site(up_id, mod_res, mod_pos):
                     (up_id, site_info.SITE_GRP_ID))
     human_site = human_sites[0].MOD_RSD.split('-')[0]
     human_res = human_site[0]
+    assert human_res == mod_res
     human_pos = human_site[1:]
-    return (human_res, human_pos)
+    return human_pos
 
 if __name__ == '__main__':
     (data_by_up, data_by_site_grp) = _read_phospho_site_dataset()
