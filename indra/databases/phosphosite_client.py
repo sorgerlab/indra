@@ -64,11 +64,11 @@ def map_to_human_site(up_id, mod_res, mod_pos):
             logger.debug('\tSite info: acc_id %s, site_grp_id %s' %
                         (si.ACC_ID, si.SITE_GRP_ID))
             if si.ACC_ID == up_id:
-                logger.debug('\tFound entry matching reference acc id')
+                logger.info('\tFound entry matching reference acc id')
                 ref_site_info = si
-        if ref_site_info is not None:
+        if ref_site_info is None:
             site_info = site_info_list[0]
-            logger.debug('Reference sequence match not found, choosing first '
+            logger.info('Reference sequence match not found, choosing first '
                          'entry, acc_id %s site_grp %s' %
                          (site_info.ACC_ID, site_info.SITE_GRP_ID))
         else:
@@ -90,8 +90,15 @@ def map_to_human_site(up_id, mod_res, mod_pos):
         # only one of these will be the reference sequence (with no hyphen)
         base_id_sites = [site for site in human_sites
                          if site.ACC_ID.find('-') == -1]
-        assert len(base_id_sites) == 1, 'Should only be one human ref seq'
-        human_site = base_id_sites[0]
+        if base_id_sites:
+            assert len(base_id_sites) == 1, 'Should only be one human ref seq'
+            human_site = base_id_sites[0]
+        # There is no base ID site, i.e., all mapped sites are for specific
+        # isoforms only, so skip it!
+        else:
+            logger.info('Human isoform matches, but no human ref seq match '
+                        'for %s %s %s; not mapping' % (up_id, mod_res, mod_pos))
+            return None
     # If there is only one human site, take it
     else:
         human_site = human_sites[0]
