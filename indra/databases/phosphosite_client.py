@@ -24,12 +24,13 @@ def _read_phospho_site_dataset():
         reader = read_unicode_csv(phosphosite_data_file, delimiter='\t',
                                   skiprows=4)
         # Build up a dict by protein
-        data_by_up = defaultdict(dict)
+        data_by_up = defaultdict(lambda: defaultdict(list))
         data_by_site_grp = defaultdict(list)
         for row in reader:
             site = PhosphoSite(*row)
             res_pos = site.MOD_RSD.split('-')[0]
-            data_by_up[site.ACC_ID][res_pos] = site
+            base_acc_id = site.ACC_ID.split('-')[0]
+            data_by_up[base_acc_id][res_pos].append(site)
             data_by_site_grp[site.SITE_GRP_ID].append(site)
         _data_by_up = data_by_up
         _data_by_site_grp = data_by_site_grp
@@ -39,11 +40,39 @@ def map_to_human_site(up_id, mod_res, mod_pos):
     (data_by_up, data_by_site_grp) = _read_phospho_site_dataset()
     sites_for_up = data_by_up.get(up_id)
     # No info in Phosphosite for this Uniprot ID
-    if sites_for_up is None:
+    if not sites_for_up:
         return None
-    site_info = sites_for_up.get('%s%s' % (mod_res, mod_pos))
-    if not site_info:
+    site_info_list = sites_for_up.get('%s%s' % (mod_res, mod_pos))
+    # If this site doesn't exist for this protein, will return an empty list
+    if not site_info_list:
         return None
+    # At this point site_info_list contains a list of PhosphoSite objects
+    # for the given protein with an entry for the given site, however, they
+    # may be different isoforms; they may also not contain the reference
+    # isoform; or they may only contain a single isoform
+    # If it's a single isoform, take it!
+    if len(site_info_list) == 1:
+        site_info = site_info_list[0]
+    # If there is more than one entry for this site, take the one from the
+    # reference sequence, if it's in there (for example, a site that is present
+    # in a mouse isoform as well as the mouse reference sequence)
+    elif len(site_info_list) > 0:
+        logger.debug('More than one entry in PhosphoSite for %s, site %s%s' %
+                    (up_id, mod_res, mod_pos))
+        ref_site_info = None
+        for si in site_info_list:
+            logger.debug('\tSite info: acc_id %s, site_grp_id %s' %
+                        (si.ACC_ID, si.SITE_GRP_ID))
+            if si.ACC_ID == up_id:
+                logger.debug('\tFound entry matching reference acc id')
+                ref_site_info = si
+        if ref_site_info is not None:
+            site_info = site_info_list[0]
+            logger.debug('Reference sequence match not found, choosing first '
+                         'entry, acc_id %s site_grp %s' %
+                         (site_info.ACC_ID, site_info.SITE_GRP_ID))
+        else:
+            site_info = ref_site_info
     # Lookup site group
     site_grp_list = data_by_site_grp.get(site_info.SITE_GRP_ID)
     # If an empty list, then return None (is unlikely to happen)
@@ -61,7 +90,7 @@ def map_to_human_site(up_id, mod_res, mod_pos):
         # only one of these will be the reference sequence (with no hyphen)
         base_id_sites = [site for site in human_sites
                          if site.ACC_ID.find('-') == -1]
-        assert len(base_id_sites) == 1
+        assert len(base_id_sites) == 1, 'Should only be one human ref seq'
         human_site = base_id_sites[0]
     # If there is only one human site, take it
     else:
