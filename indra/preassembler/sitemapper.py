@@ -101,7 +101,7 @@ class SiteMapper(object):
         self.site_map = site_map
 
     def map_sites(self, stmts, save_fname=None, do_methionine_offset=False,
-                  do_orthology_mapping=False):
+                  do_orthology_mapping=False, do_isoform_mapping=False):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -150,7 +150,8 @@ class SiteMapper(object):
                     (agent_invalid_sites, new_agent) = \
                         self._map_agent_sites(agent,
                                     do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping)
+                                    do_orthology_mapping=do_orthology_mapping,
+                                    do_isoform_mapping=do_isoform_mapping)
                     invalid_sites += agent_invalid_sites
                     new_agent_list.append(new_agent)
                 else:
@@ -178,7 +179,8 @@ class SiteMapper(object):
                 stmt_invalid_sites = \
                         self._check_agent_mod(agent_to_check, old_mod_list,
                                      do_methionine_offset=do_methionine_offset,
-                                     do_orthology_mapping=do_orthology_mapping)
+                                     do_orthology_mapping=do_orthology_mapping,
+                                     do_isoform_mapping=do_isoform_mapping)
                 # Add to our list of invalid sites
                 invalid_sites += stmt_invalid_sites
                 # Get the updated list of ModCondition objects
@@ -202,7 +204,8 @@ class SiteMapper(object):
         return (valid_statements, mapped_statements)
 
     def _map_agent_sites(self, agent, do_methionine_offset=False,
-                         do_orthology_mapping=False):
+                         do_orthology_mapping=False,
+                         do_isoform_mapping=False):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
@@ -238,7 +241,8 @@ class SiteMapper(object):
             return ([], new_agent)
         invalid_sites = self._check_agent_mod(agent, agent.mods,
                                     do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping)
+                                    do_orthology_mapping=do_orthology_mapping,
+                                    do_isoform_mapping=do_isoform_mapping)
         # The agent is valid, so return the agent unchanged
         if not invalid_sites:
             return ([], new_agent)
@@ -249,7 +253,8 @@ class SiteMapper(object):
         return (invalid_sites, new_agent)
 
     def _check_agent_mod(self, agent, mods, do_methionine_offset=False,
-                         do_orthology_mapping=False):
+                         do_orthology_mapping=False,
+                         do_isoform_mapping=False):
         """Check an agent for invalid sites and look for mappings.
 
         Look up each modification site on the agent in Uniprot and then the
@@ -299,6 +304,16 @@ class SiteMapper(object):
             # Check the agent for a Uniprot ID
             up_id = agent.db_refs.get('UP')
             hgnc_id = agent.db_refs.get('HGNC')
+            # First, look for other entries in phosphosite for this protein
+            # where this sequence position is legit (i.e., other isoforms)
+            if do_isoform_mapping and up_id and hgnc_id:
+                human_pos = phosphosite_client.map_to_human_site(
+                              up_id, old_mod.residue, old_mod.position)
+                if human_pos:
+                    mapped_site = (old_mod.residue, human_pos,
+                                   'INFERRED_ALTERNATIVE_ISOFORM')
+                    invalid_sites.append((site_key, mapped_site))
+                    continue
             # Try looking for rat or mouse sites
             if do_orthology_mapping and up_id and hgnc_id:
                 # Get the mouse ID for this protein
