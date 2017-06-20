@@ -53,13 +53,23 @@ def map_to_human_site(up_id, mod_res, mod_pos):
     human_sites = [s for s in site_grp_list if s.ORGANISM == 'human']
     if not human_sites:
         return None
+    # If there are multiple isoforms, choose the base one
+    # (no hyphen in the accession ID)
     if len(human_sites) > 1:
-        logger.info("More than one human site found for %s, site group %s" %
-                    (up_id, site_info.SITE_GRP_ID))
-    human_site = human_sites[0].MOD_RSD.split('-')[0]
-    human_res = human_site[0]
+        # We assume that multiple human sites only arise from multiple isoforms
+        # of the same protein, which will share an accession ID, and that
+        # only one of these will be the reference sequence (with no hyphen)
+        base_id_sites = [site for site in human_sites
+                         if site.ACC_ID.find('-') == -1]
+        assert len(base_id_sites) == 1
+        human_site = base_id_sites[0]
+    # If there is only one human site, take it
+    else:
+        human_site = human_sites[0]
+    human_site_str = human_site.MOD_RSD.split('-')[0]
+    human_res = human_site_str[0]
     assert human_res == mod_res
-    human_pos = human_site[1:]
+    human_pos = human_site_str[1:]
     return human_pos
 
 if __name__ == '__main__':
