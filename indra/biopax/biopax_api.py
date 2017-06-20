@@ -131,11 +131,7 @@ def process_model(model):
     """
     bp = BiopaxProcessor(model)
     # bproc.get_complexes()
-    bp.get_phosphorylation()
-    bp.get_dephosphorylation()
-    bp.get_acetylation()
-    bp.get_palmitoylation()
-    bp.get_ubiquitination()
+    bp.get_modifications()
     bp.get_activity_modification()
     bp.get_regulate_amounts()
     return bp

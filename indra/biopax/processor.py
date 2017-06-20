@@ -95,47 +95,26 @@ class BiopaxProcessor(object):
                     self.statements.append(decode_obj(Complex(c, ev),
                                                       encoding='utf-8'))
 
-    def get_phosphorylation(self):
-        """Extract INDRA Phosphorylation statements from the model."""
-        stmts = self._get_generic_modification('phospho')
-        for s in stmts:
-            self.statements.append(decode_obj(Phosphorylation(*s),
-                                              encoding='utf-8'))
-
-    def get_dephosphorylation(self):
-        """Extract INDRA Dephosphorylation statements from the model."""
-        stmts = self._get_generic_modification('phospho', mod_gain=False)
-        for s in stmts:
-            self.statements.append(decode_obj(Dephosphorylation(*s),
-                                              encoding='utf-8'))
-
-    def get_acetylation(self):
-        """Extract INDRA Acetylation statements from the model."""
-        stmts = self._get_generic_modification('acetyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Acetylation(*s),
-                                              encoding='utf-8'))
-
-    def get_glycosylation(self):
-        """Extract INDRA Glycosylation statements from the model."""
-        stmts = self._get_generic_modification('glycosyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Glycosylation(*s),
-                                              encoding='utf-8'))
-
-    def get_palmitoylation(self):
-        """Extract INDRA Palmitoylation statements from the model."""
-        stmts = self._get_generic_modification('palmitoyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Palmitoylation(*s),
-                                              encoding='utf-8'))
-
-    def get_ubiquitination(self):
-        """Extract INDRA Ubiquitination statements from the model."""
-        stmts = self._get_generic_modification('ubiq')
-        for s in stmts:
-            self.statements.append(decode_obj(Ubiquitination(*s),
-                                              encoding='utf-8'))
+    def get_modifications(self):
+        """Extract INDRA Modification statements from model."""
+        mod_pattern_abbrevs = {m: m[:5] for m in modtype_conditions}
+        for mod_type, abbrev in mod_pattern_abbrevs.items():
+            # TODO: we could possibly try to also extract generic
+            # modifications here
+            if mod_type == 'modification':
+                continue
+            # Get AddModification of this type
+            mod_class_add = modtype_to_modclass[mod_type]
+            stmt_args = self._get_generic_modification(abbrev, mod_gain=True)
+            for stmt_arg in stmt_args:
+                stmt = mod_class_add(*stmt_arg)
+                self.statements.append(decode_obj(stmt, encoding='utf-8'))
+            # Get RemoveModification of this type
+            mod_class_remove = modclass_to_inverse[mod_class_add]
+            stmt_args = self._get_generic_modification(abbrev, mod_gain=False)
+            for stmt_arg in stmt_args:
+                stmt = mod_class_remove(*stmt_arg)
+                self.statements.append(decode_obj(stmt, encoding='utf-8'))
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the model."""
