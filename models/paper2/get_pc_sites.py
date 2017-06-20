@@ -4,7 +4,12 @@ from indra.biopax import processor as bpc
 from indra.biopax import pathway_commons_client as pcc
 
 owl_pattern = '/home/bmg16/data/pathwaycommons/PathwayCommons9.%s.BIOPAX.owl'
-dbs = ['psp', 'pid', 'reactome', 'kegg', 'panther']
+dbs = ['psp', 'pid', 'reactome', 'kegg', 'panther', 'hprd', 'ctd']
+
+def get_proteins(mod_feature):
+    # Assume it's a physical entity feature
+    pe = obj.getFeatureOf().toArray()
+    return pe
 
 for db in dbs:
     owl_file = owl_pattern % db
@@ -28,18 +33,16 @@ for db in dbs:
         mod_type, residue, position = res
         if not residue or not position:
             continue
-        er  = obj.getEntityFeatureOf()
-        if not er:
+
+        proteins = get_proteins(obj)
+        if not proteins:
             continue
-        pe = er.getEntityReferenceOf().toArray()
-        if not pe:
-            continue
-        protein = pe[0]
-        name = bpc.BiopaxProcessor._get_element_name(protein)
-        db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
-        agent = Agent(name, mods=[ModCondition(mod_type, residue, position)],
-                      db_refs=db_refs)
-        agents.append(agent)
+        for protein in proteins:
+            name = bpc.BiopaxProcessor._get_element_name(protein)
+            db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
+            agent = Agent(name, mods=[ModCondition(mod_type, residue, position)],
+                          db_refs=db_refs)
+            agents.append(agent)
 
     with open('pc_%s_modified_agents.pkl' % db, 'wb') as fh:
         pickle.dump(agents, fh)
