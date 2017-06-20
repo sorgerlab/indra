@@ -99,6 +99,7 @@ class SiteMapper(object):
     """
     def __init__(self, site_map):
         self.site_map = site_map
+        self._cache = {}
 
     def map_sites(self, stmts, save_fname=None, do_methionine_offset=False,
                   do_orthology_mapping=False, do_isoform_mapping=False):
@@ -286,24 +287,39 @@ class SiteMapper(object):
         up_id = _get_uniprot_id(agent)
         # If the uniprot entry is not found, let it pass
         if not up_id:
-            return invalid_sites # empty list
+            logger.info("No uniprot ID for %s" % agent.name)
+            return [] # empty list
         # Look up all of the modifications in uniprot, and add them to the list
         # of invalid sites if they are missing
         for old_mod in mods:
             # If no site information for this residue, skip
             if old_mod.position is None or old_mod.residue is None:
                 continue
+            site_key = (agent.name, old_mod.residue, old_mod.position)
+            # First, check the cache to potentially avoid a costly sequence
+            # lookup
+            cached_site = self._cache.get(site_key)
+            if cached_site is not None:
+                if cached_site == 'VALID':
+                    pass
+                else:
+                    invalid_sites.append((site_key, cached_site))
+                continue
+            # If not cached, continue
             # Look up the residue/position in uniprot
             site_valid = uniprot_client.verify_location(up_id,
                                                         old_mod.residue,
                                                         old_mod.position)
             # If it's not found in Uniprot, then look it up in the site map
-            site_key = (agent.name, old_mod.residue, old_mod.position)
             if site_valid:
+                self._cache[site_key] = 'VALID'
                 continue
-            # Check the agent for a Uniprot ID
+            # Check the age     if nt for a Uniprot ID
             up_id = agent.db_refs.get('UP')
             hgnc_id = agent.db_refs.get('HGNC')
+            if not hgnc_id:
+                logger.info("No HGNC ID for %s, only curated sites will be "
+                            "mapped" % agent.name)
             # First, look for other entries in phosphosite for this protein
             # where this sequence position is legit (i.e., other isoforms)
             if do_isoform_mapping and up_id and hgnc_id:
@@ -312,6 +328,7 @@ class SiteMapper(object):
                 if human_pos:
                     mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_ALTERNATIVE_ISOFORM')
+                    self._cache[site_key] = mapped_site
                     invalid_sites.append((site_key, mapped_site))
                     continue
             # Try looking for rat or mouse sites
@@ -324,6 +341,7 @@ class SiteMapper(object):
                 if human_pos:
                     mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_MOUSE_SITE')
+                    self._cache[site_key] = mapped_site
                     invalid_sites.append((site_key, mapped_site))
                     continue
                 # Try the rat sequence
@@ -334,6 +352,7 @@ class SiteMapper(object):
                     logger.info("Rat site valid!!!")
                     mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_RAT_SITE')
+                    self._cache[site_key] = mapped_site
                     invalid_sites.append((site_key, mapped_site))
                     continue
             # Check for methionine offset (off by one)
@@ -348,15 +367,19 @@ class SiteMapper(object):
                 if human_pos:
                     mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_METHIONINE_CLEAVAGE')
+                    self._cache[site_key] = mapped_site
                     invalid_sites.append((site_key, mapped_site))
                     continue
             # Now check the site map
             mapped_site = self.site_map.get(site_key, None)
-            if mapped_site is not None:
+            if mapped_site is None:
+                # No entry in the site map--set site info to None
+                self._cache[site_key] = None
+                invalid_sites.append((site_key, None))
+            # Manually mapped in the site map
+            else:
+                self._cache[site_key] = mapped_site
                 invalid_sites.append((site_key, mapped_site))
-                continue
-            # No entry in the site map--set site info to None
-            invalid_sites.append((site_key, None))
         return invalid_sites
 
 
