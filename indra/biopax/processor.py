@@ -73,17 +73,7 @@ class BiopaxProcessor(object):
             bpe = _cast_biopax_element(obj)
             if not _is_complex(bpe):
                 continue
-            citations = self._get_citations(bpe)
-            source_id = bpe.getUri()
-            if not citations:
-                ev = Evidence(source_api='biopax',
-                               pmid=None,
-                               source_id=source_id)
-            else:
-                ev = [Evidence(source_api='biopax',
-                               pmid=cit,
-                               source_id=source_id)
-                      for cit in citations]
+            ev = self._get_evidence(bpe)
 
             members = self._get_complex_members(bpe)
             if members is not None:
@@ -136,7 +126,6 @@ class BiopaxProcessor(object):
 
             for r in res_array:
                 reaction = r[p.indexOf('Conversion')]
-                citations = self._get_citations(reaction)
                 activity = 'activity'
                 input_spe = r[p.indexOf('input simple PE')]
                 output_spe = r[p.indexOf('output simple PE')]
@@ -151,17 +140,7 @@ class BiopaxProcessor(object):
                 gained_mods = set(mod_out).difference(set(mod_in))
 
                 # Here we get the evidence for the BiochemicalReaction
-                source_id = reaction.getUri()
-                citations = BiopaxProcessor._get_citations(reaction)
-                if not citations:
-                    ev = Evidence(source_api='biopax',
-                                  pmid=None,
-                                  source_id=source_id)
-                else:
-                    ev = [Evidence(source_api='biopax',
-                                   pmid=cit,
-                                   source_id=source_id)
-                          for cit in citations]
+                ev = self._get_evidence(reaction)
 
                 monomers = self._get_agents_from_entity(output_spe)
                 for monomer in _listify(monomers):
@@ -184,6 +163,7 @@ class BiopaxProcessor(object):
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
+
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount statements from the model."""
         pb = _bpp('PatternBox')
@@ -247,13 +227,7 @@ class BiopaxProcessor(object):
             control_type = control.getControlType()
             if control_type:
                 control_type = control_type.name()
-            citations = BiopaxProcessor._get_citations(control)
-            source_id = control.getUri()
-            if not citations:
-                citations = [None]
-            ev = [Evidence(source_api='biopax', pmid=cit,
-                           source_id=source_id)
-                  for cit in citations]
+            ev = self._get_evidence(control)
             for subj, obj in itertools.product(_listify(controller),
                                                _listify(controlled)):
                 subj_act = ActivityCondition('transcription', True)
@@ -267,6 +241,7 @@ class BiopaxProcessor(object):
                     continue
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
+
 
     @staticmethod
     def _get_complex_members(cplx):
@@ -420,20 +395,7 @@ class BiopaxProcessor(object):
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
                 continue
-            # TODO: should this be the citation for the control?
-            # Sometimes there is an xref within Catalysis which refers to
-            # a pubmed article in a bp:PublicationXref tag.
-            citations = BiopaxProcessor._get_citations(control)
-            source_id = control.getUri()
-            if not citations:
-                ev = Evidence(source_api='biopax',
-                               pmid=None,
-                               source_id=source_id)
-            else:
-                ev = [Evidence(source_api='biopax',
-                               pmid=cit,
-                               source_id=source_id)
-                      for cit in citations]
+            ev = self._get_evidence(control)
 
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
@@ -461,26 +423,6 @@ class BiopaxProcessor(object):
                     stmt = (enz, sub, m[1], m[2], ev)
                     stmts.append(stmt)
         return stmts
-
-    @staticmethod
-    def _get_citations(bpe):
-        xrefs = bpe.getXref().toArray()
-        refs = []
-        for xr in xrefs:
-            db_name = xr.getDb()
-            if db_name is not None and db_name.upper() == 'PUBMED':
-                refs.append(xr.getId())
-        # TODO: handle non-pubmed evidence
-        return refs
-
-    @staticmethod
-    def _get_evidence(bpe):
-        ev = bpe.getEvidence().toArray()
-        for e in ev:
-            xrefs =  e.getXref().toArray()
-            # There are also evidence codes that we could extract.
-            # ev_codes = e.getEvidenceCode().toArray()
-        return xrefs
 
     @staticmethod
     def _construct_modification_pattern():
@@ -618,6 +560,29 @@ class BiopaxProcessor(object):
             mod_pos = None
         mc = (mod_type, residue, mod_pos)
         return mc
+
+    @staticmethod
+    def _get_evidence(bpe):
+        citations = BiopaxProcessor._get_citations(bpe)
+        source_id = bpe.getUri()
+        if not citations:
+            citations = [None]
+        ev = [Evidence(source_api='biopax', pmid=cit,
+                       source_id=source_id)
+              for cit in citations]
+        return ev
+
+    @staticmethod
+    def _get_citations(bpe):
+        xrefs = bpe.getXref().toArray()
+        refs = []
+        for xr in xrefs:
+            db_name = xr.getDb()
+            if db_name is not None and db_name.upper() == 'PUBMED':
+                refs.append(xr.getId())
+        # TODO: handle non-pubmed evidence
+        # TODO: do we need to look at bpe.getEvidence()
+        return refs
 
     @staticmethod
     def _get_db_refs(bpe):
