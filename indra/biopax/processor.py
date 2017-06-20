@@ -120,25 +120,21 @@ class BiopaxProcessor(object):
                 output_spe = r[p.indexOf('output simple PE')]
 
                 # Get the modifications
-                mod_in =\
+                mod_in = \
                     BiopaxProcessor._get_entity_mods(input_spe)
-                mod_out =\
+                mod_out = \
                     BiopaxProcessor._get_entity_mods(output_spe)
 
-                mod_shared = set(mod_in).intersection(set(mod_out))
-                gained_mods = set(mod_out).difference(set(mod_in))
+                mod_shared = _get_mod_intersection(mod_in, mod_out)
+                gained_mods = _get_mod_difference(mod_out, mod_in)
 
                 # Here we get the evidence for the BiochemicalReaction
                 ev = self._get_evidence(reaction)
 
-                monomers = self._get_agents_from_entity(output_spe)
-                for monomer in _listify(monomers):
-                    static_mods =\
-                        set(monomer.mods).difference(gained_mods)
-
-                    mods = [m for m in gained_mods
-                            if m[0] not in ['active', 'inactive']]
-                    mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
+                agents = self._get_agents_from_entity(output_spe)
+                for agent in _listify(agents):
+                    static_mods = _get_mod_difference(agent.mods,
+                                                      gained_mods)
                     # NOTE: with the ActiveForm representation we cannot
                     # separate static_mods and gained_mods. We assume here
                     # that the static_mods are inconsequential and therefore
@@ -146,9 +142,9 @@ class BiopaxProcessor(object):
                     # don't care don't write semantics. Therefore only the
                     # gained_mods are listed in the ActiveForm as Agent
                     # conditions.
-                    monomer.mods = mcs
-                    if mods:
-                        stmt = ActiveForm(monomer, activity, is_active,
+                    if gained_mods:
+                        agent.mods = gained_mods
+                        stmt = ActiveForm(agent, activity, is_active,
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
