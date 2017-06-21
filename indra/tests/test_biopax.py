@@ -137,9 +137,9 @@ def test_get_mod_feature():
             'ModificationFeature_bd27a53570fb9a5094bb5929bd973217')
     mf = cast(bpc._bp('ModificationFeature'), bpe)
     mc = bpc.BiopaxProcessor._extract_mod_from_feature(mf)
-    assert(mc[0] == 'phosphorylation')
-    assert(mc[1] == 'T')
-    assert(mc[2] == '274')
+    assert(mc.mod_type == 'phosphorylation')
+    assert(mc.residue == 'T')
+    assert(mc.position == '274')
 
 def test_get_entity_mods():
     bpe = bp.model.getByID(uri_prefix +\
@@ -147,11 +147,11 @@ def test_get_entity_mods():
     protein = cast(bpc._bp('Protein'), bpe)
     mods = bpc.BiopaxProcessor._get_entity_mods(protein)
     assert(len(mods) == 5)
-    mod_types = set([m[0] for m in mods])
+    mod_types = set([m.mod_type for m in mods])
     assert(mod_types == set(['phosphorylation']))
-    residues = set([m[1] for m in mods])
+    residues = set([m.residue for m in mods])
     assert(residues == set(['Y']))
-    mod_pos = set([m[2] for m in mods])
+    mod_pos = set([m.position for m in mods])
     assert(mod_pos == set(['1035', '1056', '1128', '1188', '1242']))
 
 def test_pathsfromto():

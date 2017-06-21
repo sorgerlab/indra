@@ -73,17 +73,7 @@ class BiopaxProcessor(object):
             bpe = _cast_biopax_element(obj)
             if not _is_complex(bpe):
                 continue
-            citations = self._get_citations(bpe)
-            source_id = bpe.getUri()
-            if not citations:
-                ev = Evidence(source_api='biopax',
-                               pmid=None,
-                               source_id=source_id)
-            else:
-                ev = [Evidence(source_api='biopax',
-                               pmid=cit,
-                               source_id=source_id)
-                      for cit in citations]
+            ev = self._get_evidence(bpe)
 
             members = self._get_complex_members(bpe)
             if members is not None:
@@ -95,47 +85,15 @@ class BiopaxProcessor(object):
                     self.statements.append(decode_obj(Complex(c, ev),
                                                       encoding='utf-8'))
 
-    def get_phosphorylation(self):
-        """Extract INDRA Phosphorylation statements from the model."""
-        stmts = self._get_generic_modification('phospho')
-        for s in stmts:
-            self.statements.append(decode_obj(Phosphorylation(*s),
-                                              encoding='utf-8'))
-
-    def get_dephosphorylation(self):
-        """Extract INDRA Dephosphorylation statements from the model."""
-        stmts = self._get_generic_modification('phospho', mod_gain=False)
-        for s in stmts:
-            self.statements.append(decode_obj(Dephosphorylation(*s),
-                                              encoding='utf-8'))
-
-    def get_acetylation(self):
-        """Extract INDRA Acetylation statements from the model."""
-        stmts = self._get_generic_modification('acetyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Acetylation(*s),
-                                              encoding='utf-8'))
-
-    def get_glycosylation(self):
-        """Extract INDRA Glycosylation statements from the model."""
-        stmts = self._get_generic_modification('glycosyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Glycosylation(*s),
-                                              encoding='utf-8'))
-
-    def get_palmitoylation(self):
-        """Extract INDRA Palmitoylation statements from the model."""
-        stmts = self._get_generic_modification('palmitoyl')
-        for s in stmts:
-            self.statements.append(decode_obj(Palmitoylation(*s),
-                                              encoding='utf-8'))
-
-    def get_ubiquitination(self):
-        """Extract INDRA Ubiquitination statements from the model."""
-        stmts = self._get_generic_modification('ubiq')
-        for s in stmts:
-            self.statements.append(decode_obj(Ubiquitination(*s),
-                                              encoding='utf-8'))
+    def get_modifications(self):
+        """Extract INDRA Modification statements from model."""
+        for modclass, modtype in modclass_to_modtype.items():
+            # TODO: we could possibly try to also extract generic
+            # modifications here
+            if modtype == 'modification':
+                continue
+            stmts = self._get_generic_modification(modclass)
+            self.statements += stmts
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the model."""
@@ -144,10 +102,7 @@ class BiopaxProcessor(object):
         mod_filter = 'residue modification, active'
         for is_active in [True, False]:
             p = self._construct_modification_pattern()
-            if is_active:
-                rel = mcct.GAIN
-            else:
-                rel = mcct.LOSS
+            rel = mcct.GAIN if is_active else mcct.LOSS
             p.add(mcc(rel, mod_filter),
                   "input simple PE", "output simple PE")
 
@@ -157,41 +112,26 @@ class BiopaxProcessor(object):
 
             for r in res_array:
                 reaction = r[p.indexOf('Conversion')]
-                citations = self._get_citations(reaction)
                 activity = 'activity'
                 input_spe = r[p.indexOf('input simple PE')]
                 output_spe = r[p.indexOf('output simple PE')]
 
                 # Get the modifications
-                mod_in =\
+                mod_in = \
                     BiopaxProcessor._get_entity_mods(input_spe)
-                mod_out =\
+                mod_out = \
                     BiopaxProcessor._get_entity_mods(output_spe)
 
-                mod_shared = set(mod_in).intersection(set(mod_out))
-                gained_mods = set(mod_out).difference(set(mod_in))
+                mod_shared = _get_mod_intersection(mod_in, mod_out)
+                gained_mods = _get_mod_difference(mod_out, mod_in)
 
                 # Here we get the evidence for the BiochemicalReaction
-                source_id = reaction.getUri()
-                citations = BiopaxProcessor._get_citations(reaction)
-                if not citations:
-                    ev = Evidence(source_api='biopax',
-                                  pmid=None,
-                                  source_id=source_id)
-                else:
-                    ev = [Evidence(source_api='biopax',
-                                   pmid=cit,
-                                   source_id=source_id)
-                          for cit in citations]
+                ev = self._get_evidence(reaction)
 
-                monomers = self._get_agents_from_entity(output_spe)
-                for monomer in _listify(monomers):
-                    static_mods =\
-                        set(monomer.mods).difference(gained_mods)
-
-                    mods = [m for m in gained_mods
-                            if m[0] not in ['active', 'inactive']]
-                    mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
+                agents = self._get_agents_from_entity(output_spe)
+                for agent in _listify(agents):
+                    static_mods = _get_mod_difference(agent.mods,
+                                                      gained_mods)
                     # NOTE: with the ActiveForm representation we cannot
                     # separate static_mods and gained_mods. We assume here
                     # that the static_mods are inconsequential and therefore
@@ -199,12 +139,79 @@ class BiopaxProcessor(object):
                     # don't care don't write semantics. Therefore only the
                     # gained_mods are listed in the ActiveForm as Agent
                     # conditions.
-                    monomer.mods = mcs
-                    if mods:
-                        stmt = ActiveForm(monomer, activity, is_active,
+                    if gained_mods:
+                        agent.mods = gained_mods
+                        stmt = ActiveForm(agent, activity, is_active,
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
+
+    def get_regulate_activities(self):
+        """Get RegulateActivity Statements."""
+        mcc = _bpp('constraint.ModificationChangeConstraint')
+        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
+        mod_filter = 'residue modification, active'
+        # Start with a generic modification pattern
+        p = BiopaxProcessor._construct_modification_pattern()
+        stmts = []
+        for act_class, gain_loss in zip([Activation, Inhibition],
+                                        [mcct.GAIN, mcct.LOSS]):
+            p.add(mcc(gain_loss, mod_filter),
+                      "input simple PE", "output simple PE")
+            s = _bpp('Searcher')
+            res = s.searchPlain(self.model, p)
+            res_array = [_match_to_array(m) for m in res.toArray()]
+            for r in res_array:
+                controller_pe = r[p.indexOf('controller PE')]
+                input_pe = r[p.indexOf('input PE')]
+                input_spe = r[p.indexOf('input simple PE')]
+                output_spe = r[p.indexOf('output simple PE')]
+                reaction = r[p.indexOf('Conversion')]
+                control = r[p.indexOf('Control')]
+
+                if not _is_catalysis(control):
+                    continue
+                cat_dir = control.getCatalysisDirection()
+                if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
+                    logger.info('Unexpected catalysis direction: %s.' % \
+                        control.getCatalysisDirection())
+                    continue
+
+                subjs = BiopaxProcessor._get_primary_controller(controller_pe)
+                if not subjs:
+                    continue
+
+                '''
+                if _is_complex(input_pe):
+                    # TODO: It is possible to find which member of the complex
+                    # is actually activated. That member will be the substrate
+                    # and all other members of the complex will be bound to it.
+                    logger.info('Cannot handle complex subjects.')
+                    continue
+                '''
+                objs = BiopaxProcessor._get_agents_from_entity(input_spe,
+                                                               expand_pe=False)
+
+                ev = self._get_evidence(control)
+                for subj, obj in itertools.product(_listify(subjs),
+                                                   _listify(objs)):
+                    # Get the modifications
+                    mod_in = \
+                        BiopaxProcessor._get_entity_mods(input_spe)
+                    mod_out = \
+                        BiopaxProcessor._get_entity_mods(output_spe)
+
+                    # We assume if modifications change then this is not really
+                    # a pure activation event
+                    gained_mods = _get_mod_difference(mod_out, mod_in)
+                    lost_mods = _get_mod_difference(mod_in, mod_out)
+                    if gained_mods or lost_mods:
+                        continue
+
+                    stmt = act_class(subj, obj, 'activity', evidence=ev)
+                    self.statements.append(decode_obj(stmt, encoding='utf-8'))
+
+
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount statements from the model."""
         pb = _bpp('PatternBox')
@@ -268,13 +275,7 @@ class BiopaxProcessor(object):
             control_type = control.getControlType()
             if control_type:
                 control_type = control_type.name()
-            citations = BiopaxProcessor._get_citations(control)
-            source_id = control.getUri()
-            if not citations:
-                citations = [None]
-            ev = [Evidence(source_api='biopax', pmid=cit,
-                           source_id=source_id)
-                  for cit in citations]
+            ev = self._get_evidence(control)
             for subj, obj in itertools.product(_listify(controller),
                                                _listify(controlled)):
                 subj_act = ActivityCondition('transcription', True)
@@ -288,6 +289,7 @@ class BiopaxProcessor(object):
                     continue
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
+
 
     @staticmethod
     def _get_complex_members(cplx):
@@ -330,34 +332,36 @@ class BiopaxProcessor(object):
         return members
 
     @staticmethod
-    def _get_entity_mods(bpe, get_activity=True):
+    def _get_entity_mods(bpe):
         """Get all the modifications of an entity in INDRA format"""
-        feats = [f for f in bpe.getFeature().toArray() if _is_modification(f)]
+        if _is_entity(bpe):
+            features = bpe.getFeature().toArray()
+        else:
+            features = bpe.getEntityFeature().toArray()
         mods = []
-        for f in feats:
-            mc = BiopaxProcessor._extract_mod_from_feature(f)
+        for feature in features:
+            if not _is_modification(feature):
+                continue
+            mc = BiopaxProcessor._extract_mod_from_feature(feature)
             if mc is not None:
-                if not get_activity and mc[0] in ['active', 'inactive']:
-                    # Skip activity as a modification state for now
-                    continue
                 mods.append(mc)
         return mods
 
-    def _get_generic_modification(self, mod_filter=None, mod_gain=True):
-        """Get all modification reactions given a filter."""
+    def _get_generic_modification(self, mod_class):
+        """Get all modification reactions given a Modification class."""
         mcc = _bpp('constraint.ModificationChangeConstraint')
         mcct = _bpp('constraint.ModificationChangeConstraint$Type')
+        mod_type = modclass_to_modtype[mod_class]
+        if issubclass(mod_class, RemoveModification):
+            mod_gain_const = mcct.LOSS
+            mod_type = modtype_to_inverse[mod_type]
+        else:
+            mod_gain_const = mcct.GAIN
+        mod_filter = mod_type[:5]
         # Start with a generic modification pattern
         p = BiopaxProcessor._construct_modification_pattern()
-        # The modification type should contain the filter string
-        if mod_filter is not None:
-            if mod_gain:
-                mod_gain_const = mcct.GAIN
-            else:
-                mod_gain_const = mcct.LOSS
-            p.add(mcc(mod_gain_const, mod_filter),
-                      "input simple PE", "output simple PE")
-
+        p.add(mcc(mod_gain_const, mod_filter),
+                  "input simple PE", "output simple PE")
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [_match_to_array(m) for m in res.toArray()]
@@ -377,137 +381,117 @@ class BiopaxProcessor(object):
                 logger.info('Unexpected catalysis direction: %s.' % \
                     control.getCatalysisDirection())
                 continue
-            if _is_complex(controller_pe):
-                # Identifying the "real" enzyme in a complex may not always be
-                # possible.
-                # One heuristic here could be to find the member which is
-                # active and if it is the only active member then
-                # set this as the enzyme to which all other members of the
-                # complex are bound.
-                # Get complex members
-                members = self._get_complex_members(controller_pe)
-                if members is None:
-                    continue
-                # Separate out protein and non-protein members
-                protein_members = []
-                non_protein_members = []
-                for m in members:
-                    if isinstance(m, Agent):
-                        if m.db_refs.get('UP') or \
-                            m.db_refs.get('HGNC'):
-                            protein_members.append(m)
-                        else:
-                            non_protein_members.append(m)
-                    else:
-                        all_protein = True
-                        for subm in m:
-                            if not (subm.db_refs.get('UP') or \
-                                    subm.db_refs.get('HGNC')):
-                                all_protein = False
-                                break
-                        if all_protein:
-                            protein_members.append(m)
-                        else:
-                            non_protein_members.append(m)
-                # If there is only one protein member, we can assume that
-                # it is the enzyme, and everything else is just bound
-                # to it.
-                if len(protein_members) == 1:
-                    enzs = protein_members[0]
-                    # Iterate over non-protein members
-                    for bound in non_protein_members:
-                        if isinstance(bound, Agent):
-                            bc = BoundCondition(bound, True)
-                            if isinstance(enzs, Agent):
-                                enzs.bound_conditions.append(bc)
-                            else:
-                                for enz in enzs:
-                                    enz.bound_conditions.append(bc)
-                        else:
-                            msg = 'Cannot handle complex enzymes with ' + \
-                                    'aggregate non-protein binding partners.'
-                            logger.info(msg)
-                            continue
-                else:
-                    msg = 'Cannot handle complex enzymes with ' + \
-                            'multiple protein members.'
-                    logger.info(msg)
-                    continue
-            else:
-                enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+
+            enzs = BiopaxProcessor._get_primary_controller(controller_pe)
+            if not enzs:
+                continue
+            '''
             if _is_complex(input_pe):
-                # It is possible to find which member of the complex is
+                sub_members_in = self._get_complex_members(input_pe)
+                sub_members_out = self._get_complex_members(output_pe)
+                # TODO: It is possible to find which member of the complex is
                 # actually modified. That member will be the substrate and
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
+                import ipdb; ipdb.set_trace()
                 continue
-            # TODO: should this be the citation for the control?
-            # Sometimes there is an xref within Catalysis which refers to
-            # a pubmed article in a bp:PublicationXref tag.
-            citations = BiopaxProcessor._get_citations(control)
-            source_id = control.getUri()
-            if not citations:
-                ev = Evidence(source_api='biopax',
-                               pmid=None,
-                               source_id=source_id)
-            else:
-                ev = [Evidence(source_api='biopax',
-                               pmid=cit,
-                               source_id=source_id)
-                      for cit in citations]
-
+            '''
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
+ 
+            ev = self._get_evidence(control)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
                 # Get the modifications
-                mod_in =\
-                    BiopaxProcessor._get_entity_mods(input_spe, False)
-                mod_out =\
-                    BiopaxProcessor._get_entity_mods(output_spe, False)
+                mod_in = \
+                    BiopaxProcessor._get_entity_mods(input_spe)
+                mod_out = \
+                    BiopaxProcessor._get_entity_mods(output_spe)
 
-                mod_shared = set(mod_in).intersection(set(mod_out))
+                sub.mods = _get_mod_intersection(mod_in, mod_out)
 
-                sub.mods = [ModCondition(m[0], m[1], m[2], True) for
-                            m in list(mod_shared)]
-
-                if mod_gain:
-                    gained_mods = set(mod_out).difference(set(mod_in))
+                if issubclass(mod_class, AddModification):
+                    gained_mods = _get_mod_difference(mod_out, mod_in)
                 else:
-                    gained_mods = set(mod_in).difference(set(mod_out))
+                    gained_mods = _get_mod_difference(mod_in, mod_out)
 
-                for m in gained_mods:
-                    if m[0]  in ['active', 'inactive']:
-                        # Skip activity as a modification state
+                for mod in gained_mods:
+                    # Is it guaranteed that these are all modifications
+                    # of the type we are extracting?
+                    if mod.mod_type not in (mod_type,
+                                            modtype_to_inverse[mod_type]):
                         continue
-                    stmt = (enz, sub, m[1], m[2], ev)
-                    stmts.append(stmt)
+                    stmt = mod_class(enz, sub, mod.residue, mod.position,
+                                     evidence=ev)
+                    stmts.append(decode_obj(stmt, encoding='utf-8'))
         return stmts
 
     @staticmethod
-    def _get_citations(bpe):
-        xrefs = bpe.getXref().toArray()
-        refs = []
-        for xr in xrefs:
-            db_name = xr.getDb()
-            if db_name is not None and db_name.upper() == 'PUBMED':
-                refs.append(xr.getId())
-        # TODO: handle non-pubmed evidence
-        return refs
+    def _get_primary_controller(controller_pe):
+        # If it's not a complex, just return the corresponding agent
+        if not _is_complex(controller_pe):
+            enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+            return enzs
 
-    @staticmethod
-    def _get_evidence(bpe):
-        ev = bpe.getEvidence().toArray()
-        for e in ev:
-            xrefs =  e.getXref().toArray()
-            # There are also evidence codes that we could extract.
-            # ev_codes = e.getEvidenceCode().toArray()
-        return xrefs
+        # Identifying the "real" enzyme in a complex may not always be
+        # possible.
+        # One heuristic here could be to find the member which is
+        # active and if it is the only active member then
+        # set this as the enzyme to which all other members of the
+        # complex are bound.
+        # Get complex members
+        members = BiopaxProcessor._get_complex_members(controller_pe)
+        if members is None:
+            return None
+        # Separate out protein and non-protein members
+        protein_members = []
+        non_protein_members = []
+        for m in members:
+            if isinstance(m, Agent):
+                if m.db_refs.get('UP') or \
+                    m.db_refs.get('HGNC'):
+                    protein_members.append(m)
+                else:
+                    non_protein_members.append(m)
+            else:
+                all_protein = True
+                for subm in m:
+                    if not (subm.db_refs.get('UP') or \
+                            subm.db_refs.get('HGNC')):
+                        all_protein = False
+                        break
+                if all_protein:
+                    protein_members.append(m)
+                else:
+                    non_protein_members.append(m)
+        # If there is only one protein member, we can assume that
+        # it is the enzyme, and everything else is just bound
+        # to it.
+        if len(protein_members) == 1:
+            enzs = protein_members[0]
+            # Iterate over non-protein members
+            for bound in non_protein_members:
+                if isinstance(bound, Agent):
+                    bc = BoundCondition(bound, True)
+                    if isinstance(enzs, Agent):
+                        enzs.bound_conditions.append(bc)
+                    else:
+                        for enz in enzs:
+                            enz.bound_conditions.append(bc)
+                else:
+                    msg = 'Cannot handle complex enzymes with ' + \
+                            'aggregate non-protein binding partners.'
+                    logger.info(msg)
+                    continue
+            return enzs
+        else:
+            msg = 'Cannot handle complex enzymes with ' + \
+                    'multiple protein members.'
+            logger.info(msg)
+            return None
 
     @staticmethod
     def _construct_modification_pattern():
-        '''
-        Constructs the BioPAX pattern to extract modification reactions
-        '''
+        """Construct the BioPAX pattern to extract modification reactions."""
         pb = _bpp('PatternBox')
         cb = _bpp('constraint.ConBox')
         flop = _bpp('constraint.Field$Operation')
@@ -521,7 +505,7 @@ class BiopaxProcessor(object):
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation().
         p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
-                           'controller PE')
+                            'controller PE')
         # Getting the control itself
         p.add(cb.peToControl(), "controller PE", "Control")
         # Link the control to the conversion that it controls
@@ -545,7 +529,8 @@ class BiopaxProcessor(object):
         p.add(cb.linkToSpecific(), "output PE", "output simple PE")
         # Link to ER
         p.add(cb.peToER(), "output simple PE", "output simple ER")
-        p.add(_bpp('constraint.Equality')(True), "input simple ER", "output simple ER")
+        p.add(_bpp('constraint.Equality')(True), "input simple ER",
+              "output simple ER")
         # Make sure the output is a Protein
         p.add(tp(_bpimpl('Protein')().getModelInterface()), "output simple PE")
         p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
@@ -553,6 +538,17 @@ class BiopaxProcessor(object):
         p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
               "output PE", "input simple PE")
         return p
+
+    @staticmethod
+    def _get_agent_from_entity(bpe):
+        name = BiopaxProcessor._get_element_name(bpe)
+        db_refs = BiopaxProcessor._get_db_refs(bpe)
+        if _is_protein(bpe):
+            mcs = BiopaxProcessor._get_entity_mods(bpe)
+        else:
+            mcs = []
+        agent = Agent(name, db_refs=db_refs, mods=mcs)
+        return agent
 
     @staticmethod
     def _get_agents_from_entity(bpe, expand_pe=True, expand_er=True):
@@ -572,9 +568,6 @@ class BiopaxProcessor(object):
 
         # If the entity has a reference which has members, we iterate
         # over them.
-        mods = BiopaxProcessor._get_entity_mods(bpe, get_activity=False)
-        mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
-
         if expand_er:
             er = BiopaxProcessor._get_entref(bpe)
             if er is not None:
@@ -582,15 +575,14 @@ class BiopaxProcessor(object):
                 if members:
                     agents = []
                     for m in members:
-                        name = BiopaxProcessor._get_element_name(m)
-                        db_refs = BiopaxProcessor._get_db_refs(m)
-                        agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                        agent = BiopaxProcessor._get_agent_from_entity(m)
+                        # For entity references, we remove context
+                        agent.mods = []
+                        agents.append(agent)
                     return agents
         # If it is a single entity, we get its name and database
         # references
-        name = BiopaxProcessor._get_element_name(bpe)
-        db_refs = BiopaxProcessor._get_db_refs(bpe)
-        agent = Agent(name, db_refs=db_refs, mods=mcs)
+        agent = BiopaxProcessor._get_agent_from_entity(bpe)
         return agent
 
     @staticmethod
@@ -604,16 +596,18 @@ class BiopaxProcessor(object):
         mf_type_terms = mf_type.getTerm().toArray()
         known_mf_type = None
         for t in mf_type_terms:
-            mf_type_indra = BiopaxProcessor._mftype_dict.get(t)
-            if mf_type_indra is None:
-                logger.info('Unknown modification type term: %s' % t)
-            else:
+            if t.startswith('MOD_RES '):
+                t = t[8:]
+            mf_type_indra = _mftype_dict.get(t)
+            if mf_type_indra is not None:
                 known_mf_type = mf_type_indra
+                break
         if not known_mf_type:
-            logger.info('Ignored modification type %s' % mf_type_terms[0])
+            logger.info('Skipping modification with unknown terms: %s' %
+                        ', '.join(mf_type_terms))
             return None
-        else:
-            mod_type, residue = known_mf_type
+
+        mod_type, residue = known_mf_type
 
         # getFeatureLocation returns SequenceLocation, which is the
         # generic parent class of SequenceSite and SequenceInterval.
@@ -624,21 +618,46 @@ class BiopaxProcessor(object):
             # If it is not a SequenceSite we can't handle it
             if not mf_pos.modelInterface.getName() == \
                 'org.biopax.paxtools.model.level3.SequenceSite':
-                return None
-            mf_site = cast(_bp('SequenceSite'), mf_pos)
-            mf_pos_status = mf_site.getPositionStatus()
-            if mf_pos_status is None:
                 mod_pos = None
-            elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
-                logger.info('Modification site position is %s' %
-                            mf_pos_status.toString())
             else:
-                mod_pos = mf_site.getSequencePosition()
-                mod_pos = '%s' % mod_pos
+                mf_site = cast(_bp('SequenceSite'), mf_pos)
+                mf_pos_status = mf_site.getPositionStatus()
+                if mf_pos_status is None:
+                    mod_pos = None
+                elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
+                    logger.info('Modification site position is %s' %
+                                mf_pos_status.toString())
+                else:
+                    mod_pos = mf_site.getSequencePosition()
+                    mod_pos = '%s' % mod_pos
         else:
             mod_pos = None
-        mc = (mod_type, residue, mod_pos)
+        mc = ModCondition(mod_type, residue, mod_pos, True)
         return mc
+
+    @staticmethod
+    def _get_evidence(bpe):
+        citations = BiopaxProcessor._get_citations(bpe)
+        source_id = bpe.getUri()
+        if not citations:
+            citations = [None]
+        epi = {'direct': True}
+        ev = [Evidence(source_api='biopax', pmid=cit,
+                       source_id=source_id, epistemics=epi)
+              for cit in citations]
+        return ev
+
+    @staticmethod
+    def _get_citations(bpe):
+        xrefs = bpe.getXref().toArray()
+        refs = []
+        for xr in xrefs:
+            db_name = xr.getDb()
+            if db_name is not None and db_name.upper() == 'PUBMED':
+                refs.append(xr.getId())
+        # TODO: handle non-pubmed evidence
+        # TODO: do we need to look at bpe.getEvidence()
+        return refs
 
     @staticmethod
     def _get_db_refs(bpe):
@@ -795,6 +814,8 @@ class BiopaxProcessor(object):
                     chebi_ids.append('15996')
                 elif xr.getId() == '24696-26-2':
                     chebi_ids.append('17761')
+                elif xr.getId() == '23261-20-3':
+                    chebi_ids.append('18035')
                 else:
                     logging.info('Unknown cas id: %s' % xr.getId())
         if not chebi_ids:
@@ -859,44 +880,85 @@ class BiopaxProcessor(object):
         else:
             return bpe
 
-    _mftype_dict = {
-        'phosres': ('phosphorylation', None),
-        'phosphorylation': ('phosphorylation', None),
-        'phosphorylated residue': ('phosphorylation', None),
-        'phosphorylated': ('phosphorylation', None),
-        'O-phospho-L-serine': ('phosphorylation', 'S'),
-        'O-phosphopantetheine-L-serine': ('phosphorylation', 'S'),
-        'opser': ('phosphorylation', 'S'),
-        'O-phospho-L-threonine': ('phosphorylation', 'T'),
-        'opthr': ('phosphorylation', 'T'),
-        'O-phospho-L-tyrosine': ('phosphorylation', 'Y'),
-        'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
-        'optyr': ('phosphorylation', 'Y'),
-        'ubiquitinated lysine': ('ubiquitination', 'K'),
-        'residue modification, active': ('active', None),
-        'residue modification, inactive': ('inactive', None),
-        'N4-glycosyl-L-asparagine': ('glycosylation', 'N'),
-        'n4glycoasn': ('glycosylation', 'N'),
-        'O-glycosyl-L-threonine': ('glycosylation', 'T'),
-        'S-palmitoyl-L-cysteine': ('palmitoylation', 'C'),
-        'N6-acetyl-L-lysine' : ('acetylation', 'K'),
-        'n6aclys': ('acetylation', 'K'),
-        'naclys': ('acetylation', 'K'),
-        'N-acetylated L-lysine': ('acetylation', 'K'),
-        'hydroxylated proline': ('hydroxylation', 'P'),
-        'N-myristoylglycine': ('myristoylation', 'G'),
-        'N-myristoyl-glycine': ('myristoylation', 'G'),
-        'sumoylated lysine': ('sumoylation', 'K'),
-        'mearg': ('methylation', 'R'),
-        'methylated L-arginine': ('methylation', 'R'),
-        'methylated arginine': ('methylation', 'R'),
-        'melys' : ('methylation', 'K'),
-        'methylated lysine' : ('methylation', 'K'),
-        'methylated L-lysine' : ('methylation', 'K'),
-        'ubiquitination': ('ubiquitination', None),
-        'ubiquitinylated lysine': ('ubiquitination', 'K'),
-        'ubiquitination signature tetrapeptidyl lysine': ('ubiquitination', 'K'),
-        }
+    def get_coverage(self):
+        uids = set()
+        objs = self.model.getObjects()
+        for obj in objs.toArray():
+            if isinstance(obj, _bpimpl('Catalysis')):
+                uids.add(obj.getUri())
+        stmt_uids = set()
+        for stmt in self.statements:
+            for ev in stmt.evidence:
+                stmt_uids.add(ev.source_id)
+
+        uids_not_covered = uids.difference(stmt_uids)
+        print('Total in model: %d' % len(uids))
+        print('Total covered: %d' % len(stmt_uids))
+        print('%.2f%% coverage' % (100.0*len(stmt_uids)/len(uids)))
+
+_mftype_dict = {
+    'phosres': ('phosphorylation', None),
+    'phosphorylation': ('phosphorylation', None),
+    'phosphorylated residue': ('phosphorylation', None),
+    'phosphorylated': ('phosphorylation', None),
+    'O-phospho-L-serine': ('phosphorylation', 'S'),
+    'O-phosphopantetheine-L-serine': ('phosphorylation', 'S'),
+    'opser': ('phosphorylation', 'S'),
+    'O-phospho-L-threonine': ('phosphorylation', 'T'),
+    'opthr': ('phosphorylation', 'T'),
+    'O-phospho-L-tyrosine': ('phosphorylation', 'Y'),
+    'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
+    'optyr': ('phosphorylation', 'Y'),
+    'ubiquitinated lysine': ('ubiquitination', 'K'),
+    'N4-glycosyl-L-asparagine': ('glycosylation', 'N'),
+    'n4glycoasn': ('glycosylation', 'N'),
+    'O-glycosyl-L-threonine': ('glycosylation', 'T'),
+    'S-palmitoyl-L-cysteine': ('palmitoylation', 'C'),
+    'N6-acetyllysine': ('acetylation', 'K'),
+    'N6-acetyl-L-lysine' : ('acetylation', 'K'),
+    'n6aclys': ('acetylation', 'K'),
+    'naclys': ('acetylation', 'K'),
+    'N-acetylated L-lysine': ('acetylation', 'K'),
+    'N-acetylglycine': ('acetylation', 'G'),
+    'N-acetylmethionine': ('acetylation', 'M'),
+    'Hydroxyproline': ('hydroxylation', 'P'),
+    'hydroxylated proline': ('hydroxylation', 'P'),
+    '3-hydroxyproline': ('hydroxylation', 'P'),
+    '4-hydroxyproline': ('hydroxylation', 'P'),
+    '5-hydroxylysine': ('hydroxylation', 'K'),
+    'N-myristoylglycine': ('myristoylation', 'G'),
+    'N-myristoyl-glycine': ('myristoylation', 'G'),
+    'sumoylated lysine': ('sumoylation', 'K'),
+    'mearg': ('methylation', 'R'),
+    'methylated L-arginine': ('methylation', 'R'),
+    'methylated arginine': ('methylation', 'R'),
+    'melys' : ('methylation', 'K'),
+    'methylated lysine' : ('methylation', 'K'),
+    'methylated L-lysine' : ('methylation', 'K'),
+    'ubiquitination': ('ubiquitination', None),
+    'ubiquitinylated lysine': ('ubiquitination', 'K'),
+    'ubiquitination signature tetrapeptidyl lysine': ('ubiquitination', 'K'),
+    'Phosphoserine': ('phosphorylation', 'S'),
+    'Phosphothreonine': ('phosphorylation', 'T'),
+    'Phosphotyrosine': ('phosphorylation', 'Y'),
+    'N-acetylalanine': ('acetylation', 'A'),
+    'N-acetylserine': ('acetylation', 'S'),
+    'N-acetylthreonine': ('acetylation', 'T'),
+    'N-acetylvaline': ('acetylation', 'V'),
+    'Omega-N-methylarginine': ('methylation', 'R'),
+    'N6-methyllysine': ('methylation', 'K'),
+    'Dimethylated arginine': ('methylation', 'R'),
+    'Asymmetric dimethylarginine': ('methylation', 'R'),
+    'Omega-N-methylated arginine': ('methylation', 'R'),
+    'N6,N6-dimethyllysine': ('methylation', 'K'),
+    'N6,N6,N6-trimethyllysine': ('methylation', 'K'),
+    'Symmetric dimethylarginine': ('methylation', 'R'),
+    'ADP-ribosylarginine': ('ribosylation', 'R'),
+    'ADP-ribosylcysteine': ('ribosylation', 'C'),
+    'ADP-ribosylasparagine': ('ribosylation', 'N'),
+    'PolyADP-ribosyl glutamic acid': ('ribosylation', 'E'),
+    'O-acetylserine': ('acetylation', 'S'),
+    }
 
 # Functions for accessing frequently used java classes with shortened path
 def _bp(path):
@@ -967,14 +1029,30 @@ def _is_small_molecule(pe):
 def _is_physical_entity(pe):
     """Return True if the element is a physical entity"""
     val = isinstance(pe, _bp('PhysicalEntity')) or \
-           isinstance(pe, _bpimpl('PhysicalEntity'))
+            isinstance(pe, _bpimpl('PhysicalEntity'))
     return val
 
-def _is_modification(fe):
+def _is_modification(feature):
+    return (_is_modification_or_activity(feature) == 'modification')
+
+def _is_activity(feature):
+    return (_is_modification_or_activity(feature) == 'activity')
+
+def _is_modification_or_activity(feature):
     """Return True if the feature is a modification"""
-    val = isinstance(fe, _bp('ModificationFeature')) or \
-            isinstance(fe, _bpimpl('ModificationFeature'))
-    return val
+    if not (isinstance(feature, _bp('ModificationFeature')) or \
+            isinstance(feature, _bpimpl('ModificationFeature'))):
+        return None
+    mf_type = feature.getModificationType()
+    if mf_type is None:
+        return None
+    mf_type_terms = mf_type.getTerm().toArray()
+    for term in mf_type_terms:
+        if term in ('residue modification, active',
+                    'residue modification, inactive',
+                    'active', 'inactive'):
+            return 'activity'
+    return 'modification'
 
 def _is_reference(bpe):
     """Return True if the element is an entity reference."""
@@ -982,6 +1060,8 @@ def _is_reference(bpe):
         isinstance(bpe, _bpimpl('ProteinReference')) or \
         isinstance(bpe, _bp('SmallMoleculeReference')) or \
         isinstance(bpe, _bpimpl('SmallMoleculeReference')) or \
+        isinstance(bpe, _bp('RnaReference')) or \
+        isinstance(bpe, _bpimpl('RnaReference')) or \
         isinstance(bpe, _bp('EntityReference')) or \
         isinstance(bpe, _bpimpl('EntityReference')):
         return True
@@ -994,6 +1074,14 @@ def _is_entity(bpe):
         isinstance(bpe, _bpimpl('Protein')) or \
         isinstance(bpe, _bp('SmallMolecule')) or \
         isinstance(bpe, _bpimpl('SmallMolecule')) or \
+        isinstance(bpe, _bp('Complex')) or \
+        isinstance(bpe, _bpimpl('Complex')) or \
+        isinstance(bpe, _bp('Rna')) or \
+        isinstance(bpe, _bpimpl('Rna')) or \
+        isinstance(bpe, _bp('RnaRegion')) or \
+        isinstance(bpe, _bpimpl('RnaRegion')) or \
+        isinstance(bpe, _bp('DnaRegion')) or \
+        isinstance(bpe, _bpimpl('DnaRegion')) or \
         isinstance(bpe, _bp('PhysicalEntity')) or \
         isinstance(bpe, _bpimpl('PhysicalEntity')):
         return True
@@ -1031,3 +1119,27 @@ def _list_listify(lst):
 
 def _get_combinations(lst):
     return itertools.product(*_list_listify(lst))
+
+def _get_mod_intersection(mods1, mods2):
+    shared_mods = []
+    for m1 in mods1:
+        found = False
+        for m2 in mods2:
+            if m1.matches(m2):
+                found = True
+                break
+        if found:
+            shared_mods.append(m1)
+    return shared_mods
+
+def _get_mod_difference(mods1, mods2):
+    difference_mods = []
+    for m1 in mods1:
+        found = False
+        for m2 in mods2:
+            if m1.matches(m2):
+                found = True
+                break
+        if not found:
+            difference_mods.append(m1)
+    return difference_mods
