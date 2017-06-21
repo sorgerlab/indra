@@ -130,8 +130,9 @@ def process_model(model):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     bp = BiopaxProcessor(model)
-    # bproc.get_complexes()
+    bp.get_regulate_activities()
     bp.get_modifications()
     bp.get_activity_modification()
     bp.get_regulate_amounts()
+    # bproc.get_complexes()
     return bp

@@ -102,10 +102,7 @@ class BiopaxProcessor(object):
         mod_filter = 'residue modification, active'
         for is_active in [True, False]:
             p = self._construct_modification_pattern()
-            if is_active:
-                rel = mcct.GAIN
-            else:
-                rel = mcct.LOSS
+            rel = mcct.GAIN if is_active else mcct.LOSS
             p.add(mcc(rel, mod_filter),
                   "input simple PE", "output simple PE")
 
@@ -148,6 +145,70 @@ class BiopaxProcessor(object):
                                           evidence=ev)
                         self.statements.append(decode_obj(stmt,
                                                           encoding='utf-8'))
+
+    def get_regulate_activities(self):
+        """Get RegulateActivity Statements."""
+        mcc = _bpp('constraint.ModificationChangeConstraint')
+        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
+        mod_filter = 'residue modification, active'
+        # Start with a generic modification pattern
+        p = BiopaxProcessor._construct_modification_pattern()
+        stmts = []
+        for act_class, gain_loss in zip([Activation, Inhibition],
+                                        [mcct.GAIN, mcct.LOSS]):
+            p.add(mcc(gain_loss, mod_filter),
+                      "input simple PE", "output simple PE")
+            s = _bpp('Searcher')
+            res = s.searchPlain(self.model, p)
+            res_array = [_match_to_array(m) for m in res.toArray()]
+            for r in res_array:
+                controller_pe = r[p.indexOf('controller PE')]
+                input_pe = r[p.indexOf('input PE')]
+                input_spe = r[p.indexOf('input simple PE')]
+                output_spe = r[p.indexOf('output simple PE')]
+                reaction = r[p.indexOf('Conversion')]
+                control = r[p.indexOf('Control')]
+
+                if not _is_catalysis(control):
+                    continue
+                cat_dir = control.getCatalysisDirection()
+                if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
+                    logger.info('Unexpected catalysis direction: %s.' % \
+                        control.getCatalysisDirection())
+                    continue
+
+                subjs = BiopaxProcessor._get_primary_controller(controller_pe)
+                if not subjs:
+                    continue
+
+                if _is_complex(input_pe):
+                    # TODO: It is possible to find which member of the complex
+                    # is actually activated. That member will be the substrate
+                    # and all other members of the complex will be bound to it.
+                    logger.info('Cannot handle complex subjects.')
+                    continue
+                objs = BiopaxProcessor._get_agents_from_entity(input_spe,
+                                                               expand_pe=False)
+
+                ev = self._get_evidence(control)
+                for subj, obj in itertools.product(_listify(subjs),
+                                                   _listify(objs)):
+                    # Get the modifications
+                    mod_in = \
+                        BiopaxProcessor._get_entity_mods(input_spe)
+                    mod_out = \
+                        BiopaxProcessor._get_entity_mods(output_spe)
+
+                    # We assume if modifications change then this is not really
+                    # a pure activation event
+                    gained_mods = _get_mod_difference(mod_out, mod_in)
+                    lost_mods = _get_mod_difference(mod_in, mod_out)
+                    if gained_mods or lost_mods:
+                        continue
+
+                    stmt = act_class(subj, obj, 'activity', evidence=ev)
+                    self.statements.append(decode_obj(stmt, encoding='utf-8'))
+
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount statements from the model."""
