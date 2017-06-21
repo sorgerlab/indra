@@ -181,12 +181,14 @@ class BiopaxProcessor(object):
                 if not subjs:
                     continue
 
+                '''
                 if _is_complex(input_pe):
                     # TODO: It is possible to find which member of the complex
                     # is actually activated. That member will be the substrate
                     # and all other members of the complex will be bound to it.
                     logger.info('Cannot handle complex subjects.')
                     continue
+                '''
                 objs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                                expand_pe=False)
 
@@ -383,13 +385,17 @@ class BiopaxProcessor(object):
             enzs = BiopaxProcessor._get_primary_controller(controller_pe)
             if not enzs:
                 continue
-
+            '''
             if _is_complex(input_pe):
+                sub_members_in = self._get_complex_members(input_pe)
+                sub_members_out = self._get_complex_members(output_pe)
                 # TODO: It is possible to find which member of the complex is
                 # actually modified. That member will be the substrate and
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
+                import ipdb; ipdb.set_trace()
                 continue
+            '''
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
  
