@@ -290,6 +290,154 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
+    def _rasgef_rasgap_base(self):
+        pb = _bpp('PatternBox')
+        cb = _bpp('constraint.ConBox')
+        rt = _bpp('util.RelType')
+        tp = _bpp('constraint.Type')
+        cs = _bpp('constraint.ConversionSide')
+        cst = _bpp('constraint.ConversionSide$Type')
+        pt = _bpp('constraint.Participant')
+
+        # The following constraints were pieced together based on the
+        # following two higher level constrains: pb.controlsStateChange(),
+        # pb.controlsPhosphorylation().
+        p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
+                            'controller PE')
+        # Getting the control itself
+        p.add(cb.peToControl(), "controller PE", "Control")
+        # Link the control to the conversion that it controls
+        p.add(cb.controlToConv(), "Control", "Conversion")
+        # The controller shouldn't be a participant of the conversion
+        p.add(_bpp('constraint.NOT')(cb.participant()),
+              "Conversion", "controller PE")
+        # Get the input participant of the conversion
+        p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
+        # Get the specific PhysicalEntity
+        p.add(cb.linkToSpecific(), "input PE", "input simple PE")
+        # Link to ER
+        p.add(cb.peToER(), "input simple PE", "input simple ER")
+        # Make sure the participant is a protein
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "input simple PE")
+        # Make sure the controller is a protein
+        # TODO: possibly allow Complex too
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "controller PE")
+        # Link to the other side of the conversion
+        p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
+        # Make sure the two sides are not the same
+        p.add(_bpp('constraint.Equality')(False), "input PE", "output PE")
+        # Get the specific PhysicalEntity
+        p.add(cb.linkToSpecific(), "output PE", "output simple PE")
+        # Link to ER
+        p.add(cb.peToER(), "output simple PE", "output simple ER")
+        p.add(_bpp('constraint.Equality')(True), "input simple ER",
+              "output simple ER")
+        # Make sure the output is a Protein
+        p.add(tp(_bpimpl('Complex')().getModelInterface()), "output PE")
+        p.add(tp(_bpimpl('Complex')().getModelInterface()), "input PE")
+        return p
+
+    def get_rasgef(self):
+        p = self._rasgef_rasgap_base()
+        s = _bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [_match_to_array(m) for m in res.toArray()]
+        for r in res_array:
+            controller_pe = r[p.indexOf('controller PE')]
+            input_pe = r[p.indexOf('input PE')]
+            input_spe = r[p.indexOf('input simple PE')]
+            output_pe = r[p.indexOf('output PE')]
+            output_spe = r[p.indexOf('output simple PE')]
+            reaction = r[p.indexOf('Conversion')]
+            control = r[p.indexOf('Control')]
+
+            # Make sure the GEF is not a complex
+            # TODO: it could be possible to extract certain complexes here, for
+            # instance ones that only have a single protein
+            if _is_complex(controller_pe):
+                continue
+
+            members_in = self._get_complex_members(input_pe)
+            members_out = self._get_complex_members(output_pe)
+            if not (members_in or members_out):
+                continue
+            # Make sure the outgoing complex has exactly 2 members
+            # TODO: by finding matching proteins on either side, in principle
+            # it would be possible to find RasGef relationships in complexes
+            # with more members
+            if len(members_out) != 2:
+                continue
+            # Make sure complex starts with GDP that becomes GTP
+            gdp_in = False
+            for member in members_in:
+                if isinstance(member, Agent) and member.name == 'GDP':
+                    gdp_in = True
+            gtp_out = False
+            for member in members_out:
+                if isinstance(member, Agent) and member.name == 'GTP':
+                    gtp_out = True
+            if not (gdp_in and gtp_out):
+                continue
+            ras_list = self._get_agents_from_entity(input_spe)
+            gef_list = self._get_agents_from_entity(controller_pe)
+            ev = self._get_evidence(control)
+            for gef, ras in itertools.product(_listify(gef_list),
+                                               _listify(ras_list)):
+                st = RasGef(gef, ras, evidence=ev)
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
+
+    def get_rasgap(self):
+        p = self._rasgef_rasgap_base()
+        s = _bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [_match_to_array(m) for m in res.toArray()]
+        for r in res_array:
+            controller_pe = r[p.indexOf('controller PE')]
+            input_pe = r[p.indexOf('input PE')]
+            input_spe = r[p.indexOf('input simple PE')]
+            output_pe = r[p.indexOf('output PE')]
+            output_spe = r[p.indexOf('output simple PE')]
+            reaction = r[p.indexOf('Conversion')]
+            control = r[p.indexOf('Control')]
+
+            # Make sure the GAP is not a complex
+            # TODO: it could be possible to extract certain complexes here, for
+            # instance ones that only have a single protein
+            if _is_complex(controller_pe):
+                continue
+
+            members_in = self._get_complex_members(input_pe)
+            members_out = self._get_complex_members(output_pe)
+            if not (members_in or members_out):
+                continue
+            # Make sure the outgoing complex has exactly 2 members
+            # TODO: by finding matching proteins on either side, in principle
+            # it would be possible to find RasGef relationships in complexes
+            # with more members
+            if len(members_out) != 2:
+                continue
+            # Make sure complex starts with GDP that becomes GTP
+            gtp_in = False
+            for member in members_in:
+                if isinstance(member, Agent) and member.name == 'GTP':
+                    gtp_in = True
+            gdp_out = False
+            for member in members_out:
+                if isinstance(member, Agent) and member.name == 'GDP':
+                    gdp_out = True
+            if not (gtp_in and gdp_out):
+                continue
+            ras_list = self._get_agents_from_entity(input_spe)
+            gap_list = self._get_agents_from_entity(controller_pe)
+            ev = self._get_evidence(control)
+            for gap, ras in itertools.product(_listify(gap_list),
+                                               _listify(ras_list)):
+                st = RasGap(gap, ras, evidence=ev)
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
+
+
 
     @staticmethod
     def _get_complex_members(cplx):
@@ -494,7 +642,6 @@ class BiopaxProcessor(object):
         """Construct the BioPAX pattern to extract modification reactions."""
         pb = _bpp('PatternBox')
         cb = _bpp('constraint.ConBox')
-        flop = _bpp('constraint.Field$Operation')
         rt = _bpp('util.RelType')
         tp = _bpp('constraint.Type')
         cs = _bpp('constraint.ConversionSide')
@@ -812,12 +959,19 @@ class BiopaxProcessor(object):
                 # Special handling of common entities
                 if xr.getId() == '86-01-1':
                     chebi_ids.append('15996')
+                elif xr.getId() == '86527-72-2':
+                    chebi_ids.append('15996')
                 elif xr.getId() == '24696-26-2':
                     chebi_ids.append('17761')
                 elif xr.getId() == '23261-20-3':
                     chebi_ids.append('18035')
+                elif xr.getId() == '146-91-8':
+                    chebi_ids.append('17552')
+                elif xr.getId() == '165689-82-7':
+                    chebi_ids.append('16618')
                 else:
-                    logging.info('Unknown cas id: %s' % xr.getId())
+                    logger.info('Unknown cas id: %s (%s)' %
+                                 (xr.getId(), bpe.getDisplayName()))
         if not chebi_ids:
             return None
         elif len(chebi_ids) == 1:
@@ -884,7 +1038,8 @@ class BiopaxProcessor(object):
         uids = set()
         objs = self.model.getObjects()
         for obj in objs.toArray():
-            if isinstance(obj, _bpimpl('Catalysis')):
+            if isinstance(obj, _bpimpl('Catalysis')) or \
+                isinstance(obj, _bpimpl('TemplateReactionRegulation')):
                 uids.add(obj.getUri())
         stmt_uids = set()
         for stmt in self.statements:
@@ -894,7 +1049,7 @@ class BiopaxProcessor(object):
         uids_not_covered = uids.difference(stmt_uids)
         print('Total in model: %d' % len(uids))
         print('Total covered: %d' % len(stmt_uids))
-        print('%.2f%% coverage' % (100.0*len(stmt_uids)/len(uids)))
+        print('%.2f%% coverage' % (100.0*(len(uids)-len(uids_not_covered))/len(uids)))
 
 _mftype_dict = {
     'phosres': ('phosphorylation', None),
@@ -958,6 +1113,19 @@ _mftype_dict = {
     'ADP-ribosylasparagine': ('ribosylation', 'N'),
     'PolyADP-ribosyl glutamic acid': ('ribosylation', 'E'),
     'O-acetylserine': ('acetylation', 'S'),
+    'O-acetyl-L-serine': ('acetylation', 'S'),
+    'N-acetyl-L-alanine': ('acetylation', 'A'),
+    'omega-N-methyl-L-arginine': ('methylation', 'R'),
+    'symmetric dimethyl-L-arginine': ('methylation', 'R'),
+    'N-acetylproline': ('acetylation', 'P'),
+    'acetylated': ('acetylation', None),
+    'acetylation': ('acetylation', None),
+    '(3R)-3-hydroxyaspartate': ('hydroxylation', 'D'),
+    '(3R)-3-hydroxyasparagine': ('hydroxylation', 'N'),
+    'Tele-methylhistidine': ('methylation', 'H'),
+    'N-acetylglutamate': ('acetylation', 'E'),
+    'N-acetylaspartate': ('acetylation', 'D'),
+    'n6me2lys': ('methylation', 'K'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
