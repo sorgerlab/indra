@@ -271,10 +271,15 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_entity_mods(bpe):
         """Get all the modifications of an entity in INDRA format"""
-        feats = [f for f in bpe.getFeature().toArray() if _is_modification(f)]
+        if _is_entity(bpe):
+            features = bpe.getFeature().toArray()
+        else:
+            features = bpe.getEntityFeature().toArray()
         mods = []
-        for f in feats:
-            mc = BiopaxProcessor._extract_mod_from_feature(f)
+        for feature in features:
+            if not _is_modification(feature):
+                continue
+            mc = BiopaxProcessor._extract_mod_from_feature(feature)
             if mc is not None:
                 mods.append(mc)
         return mods
@@ -460,15 +465,11 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_agent_from_entity(bpe):
-        if bpe.getMemberPhysicalEntity().toArray():
-            raise ValueError('Not a single entity.')
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
-        mods = BiopaxProcessor._get_entity_mods(bpe, get_activity=False)
-        mcs = [ModCondition(m[0], m[1], m[2], True) for m in mods]
+        mcs = BiopaxProcessor._get_entity_mods(bpe)
         agent = Agent(name, db_refs=db_refs, mods=mcs)
-        
-        
+        return agent
 
     @staticmethod
     def _get_agents_from_entity(bpe, expand_pe=True, expand_er=True):
@@ -488,8 +489,6 @@ class BiopaxProcessor(object):
 
         # If the entity has a reference which has members, we iterate
         # over them.
-        mcs = BiopaxProcessor._get_entity_mods(bpe)
-
         if expand_er:
             er = BiopaxProcessor._get_entref(bpe)
             if er is not None:
@@ -497,15 +496,14 @@ class BiopaxProcessor(object):
                 if members:
                     agents = []
                     for m in members:
-                        name = BiopaxProcessor._get_element_name(m)
-                        db_refs = BiopaxProcessor._get_db_refs(m)
-                        agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                        agent = BiopaxProcessor._get_agent_from_entity(m)
+                        # For entity references, we remove context
+                        agent.mods = []
+                        agents.append(agent)
                     return agents
         # If it is a single entity, we get its name and database
         # references
-        name = BiopaxProcessor._get_element_name(bpe)
-        db_refs = BiopaxProcessor._get_db_refs(bpe)
-        agent = Agent(name, db_refs=db_refs, mods=mcs)
+        agent = BiopaxProcessor._get_agent_from_entity(bpe)
         return agent
 
     @staticmethod
@@ -907,7 +905,7 @@ def _is_small_molecule(pe):
 def _is_physical_entity(pe):
     """Return True if the element is a physical entity"""
     val = isinstance(pe, _bp('PhysicalEntity')) or \
-           isinstance(pe, _bpimpl('PhysicalEntity'))
+            isinstance(pe, _bpimpl('PhysicalEntity'))
     return val
 
 def _is_modification(feature):
@@ -949,6 +947,8 @@ def _is_entity(bpe):
         isinstance(bpe, _bpimpl('Protein')) or \
         isinstance(bpe, _bp('SmallMolecule')) or \
         isinstance(bpe, _bpimpl('SmallMolecule')) or \
+        isinstance(bpe, _bp('Complex')) or \
+        isinstance(bpe, _bpimpl('Complex')) or \
         isinstance(bpe, _bp('PhysicalEntity')) or \
         isinstance(bpe, _bpimpl('PhysicalEntity')):
         return True
