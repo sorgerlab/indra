@@ -346,10 +346,9 @@ class BiopaxProcessor(object):
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
 
-            # Make sure the input simple PE is not a family
-            if input_spe.getMemberPhysicalEntity().toArray():
-                continue
             # Make sure the GEF is not a complex
+            # TODO: it could be possible to extract certain complexes here, for
+            # instance ones that only have a single protein
             if _is_complex(controller_pe):
                 continue
 
@@ -372,9 +371,14 @@ class BiopaxProcessor(object):
                     gtp_out = True
             if not (gdp_in and gtp_out):
                 continue
-            ras_list = self._get_agent_from_entity(input_spe)
-            gef_list = self._get_agent_from_entity(controller_pe)
-            print(gef_list, ras_list)
+            ras_list = self._get_agents_from_entity(input_spe)
+            gef_list = self._get_agents_from_entity(controller_pe)
+            ev = self._get_evidence(control)
+            for gef, ras in itertools.product(_listify(gef_list),
+                                               _listify(ras_list)):
+                st = RasGef(gef, ras, evidence=ev)
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
 
 
     @staticmethod
