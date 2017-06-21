@@ -527,12 +527,11 @@ class BiopaxProcessor(object):
         known_mf_type = None
         for t in mf_type_terms:
             mf_type_indra = _mftype_dict.get(t)
-            if mf_type_indra is None:
-                logger.info('Unknown modification type term: %s' % t)
-            else:
+            if mf_type_indra is not None:
                 known_mf_type = mf_type_indra
+                break
         if not known_mf_type:
-            logger.info('Ignored modification with terms: %s' %
+            logger.info('Skipping modification with unknown terms: %s' %
                         ', '.join(mf_type_terms))
             return None
 
@@ -820,8 +819,6 @@ _mftype_dict = {
     'O4\'-phospho-L-tyrosine': ('phosphorylation', 'Y'),
     'optyr': ('phosphorylation', 'Y'),
     'ubiquitinated lysine': ('ubiquitination', 'K'),
-    'residue modification, active': ('active', None),
-    'residue modification, inactive': ('inactive', None),
     'N4-glycosyl-L-asparagine': ('glycosylation', 'N'),
     'n4glycoasn': ('glycosylation', 'N'),
     'O-glycosyl-L-threonine': ('glycosylation', 'T'),
@@ -829,6 +826,11 @@ _mftype_dict = {
     'N6-acetyl-L-lysine' : ('acetylation', 'K'),
     'n6aclys': ('acetylation', 'K'),
     'naclys': ('acetylation', 'K'),
+    'N-acetylmethionine': ('acetylation', 'M'),
+    'N-acetyl-L-methionine': ('acetylation', 'M'),
+    'N-acetyl-L-alanine': ('acetylation', 'A'),
+    'N-acetylmethionine': ('acetylation', 'M'),
+    'O-acetyl-L-serine': ('acetylation', 'S'),
     'N-acetylated L-lysine': ('acetylation', 'K'),
     'hydroxylated proline': ('hydroxylation', 'P'),
     'N-myristoylglycine': ('myristoylation', 'G'),
@@ -934,7 +936,8 @@ def _is_modification_or_activity(feature):
     mf_type_terms = mf_type.getTerm().toArray()
     for term in mf_type_terms:
         if term in ('residue modification, active',
-                    'residue modification, inactive'):
+                    'residue modification, inactive',
+                    'active', 'inactive'):
             return 'activity'
     return 'modification'
 
