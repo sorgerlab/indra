@@ -543,7 +543,10 @@ class BiopaxProcessor(object):
     def _get_agent_from_entity(bpe):
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
-        mcs = BiopaxProcessor._get_entity_mods(bpe)
+        if _is_protein(bpe):
+            mcs = BiopaxProcessor._get_entity_mods(bpe)
+        else:
+            mcs = []
         agent = Agent(name, db_refs=db_refs, mods=mcs)
         return agent
 
@@ -638,8 +641,9 @@ class BiopaxProcessor(object):
         source_id = bpe.getUri()
         if not citations:
             citations = [None]
+        epi = {'direct': True}
         ev = [Evidence(source_api='biopax', pmid=cit,
-                       source_id=source_id)
+                       source_id=source_id, epistemics=epi)
               for cit in citations]
         return ev
 
@@ -810,6 +814,8 @@ class BiopaxProcessor(object):
                     chebi_ids.append('15996')
                 elif xr.getId() == '24696-26-2':
                     chebi_ids.append('17761')
+                elif xr.getId() == '23261-20-3':
+                    chebi_ids.append('18035')
                 else:
                     logging.info('Unknown cas id: %s' % xr.getId())
         if not chebi_ids:
@@ -951,6 +957,7 @@ _mftype_dict = {
     'ADP-ribosylcysteine': ('ribosylation', 'C'),
     'ADP-ribosylasparagine': ('ribosylation', 'N'),
     'PolyADP-ribosyl glutamic acid': ('ribosylation', 'E'),
+    'O-acetylserine': ('acetylation', 'S'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
@@ -1053,6 +1060,8 @@ def _is_reference(bpe):
         isinstance(bpe, _bpimpl('ProteinReference')) or \
         isinstance(bpe, _bp('SmallMoleculeReference')) or \
         isinstance(bpe, _bpimpl('SmallMoleculeReference')) or \
+        isinstance(bpe, _bp('RnaReference')) or \
+        isinstance(bpe, _bpimpl('RnaReference')) or \
         isinstance(bpe, _bp('EntityReference')) or \
         isinstance(bpe, _bpimpl('EntityReference')):
         return True
@@ -1067,6 +1076,12 @@ def _is_entity(bpe):
         isinstance(bpe, _bpimpl('SmallMolecule')) or \
         isinstance(bpe, _bp('Complex')) or \
         isinstance(bpe, _bpimpl('Complex')) or \
+        isinstance(bpe, _bp('Rna')) or \
+        isinstance(bpe, _bpimpl('Rna')) or \
+        isinstance(bpe, _bp('RnaRegion')) or \
+        isinstance(bpe, _bpimpl('RnaRegion')) or \
+        isinstance(bpe, _bp('DnaRegion')) or \
+        isinstance(bpe, _bpimpl('DnaRegion')) or \
         isinstance(bpe, _bp('PhysicalEntity')) or \
         isinstance(bpe, _bpimpl('PhysicalEntity')):
         return True
