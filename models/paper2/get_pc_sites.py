@@ -4,7 +4,7 @@ from indra.biopax import processor as bpc
 from indra.biopax import pathway_commons_client as pcc
 
 owl_pattern = '/home/bmg16/data/pathwaycommons/PathwayCommons9.%s.BIOPAX.owl'
-dbs = ['psp', 'pid', 'reactome', 'kegg', 'panther', 'hprd', 'ctd']
+dbs = ['psp', 'pid', 'reactome', 'kegg', 'panther', 'hprd']
 
 def get_proteins(mod_feature):
     # Assume it's a physical entity feature
@@ -24,25 +24,24 @@ for db in dbs:
         if not isinstance(obj, mf_class):
             continue
         try:
-            res = bpc.BiopaxProcessor._extract_mod_from_feature(obj)
+            mc = bpc.BiopaxProcessor._extract_mod_from_feature(obj)
         except Exception as e:
             print('ERROR: ' + str(e))
             continue
-        if not res:
-            continue
-        mod_type, residue, position = res
-        if not residue or not position:
+        if not mc or not mc.residue or not mc.position:
             continue
 
         proteins = get_proteins(obj)
         if not proteins:
             continue
         for protein in proteins:
-            name = bpc.BiopaxProcessor._get_element_name(protein)
-            db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
-            agent = Agent(name, mods=[ModCondition(mod_type, residue, position)],
-                          db_refs=db_refs)
-            agents.append(agent)
+            reactions = protein.getParticipantOf().toArray()
+            for reaction in reactions:
+                for contr in reaction.getControlledOf().toArray():
+                    name = bpc.BiopaxProcessor._get_element_name(protein)
+                    db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
+                    agent = Agent(name, mods=[mc], db_refs=db_refs)
+                    agents.append(agent)
 
     with open('pc_%s_modified_agents.pkl' % db, 'wb') as fh:
         pickle.dump(agents, fh)
