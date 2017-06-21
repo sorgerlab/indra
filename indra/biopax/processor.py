@@ -866,6 +866,22 @@ class BiopaxProcessor(object):
         else:
             return bpe
 
+    def get_coverage(self):
+        uids = set()
+        objs = self.model.getObjects()
+        for obj in objs.toArray():
+            if isinstance(obj, _bpimpl('Catalysis')):
+                uids.add(obj.getUri())
+        stmt_uids = set()
+        for stmt in self.statements:
+            for ev in stmt.evidence:
+                stmt_uids.add(ev.source_id)
+
+        uids_not_covered = uids.difference(stmt_uids)
+        print('Total in model: %d' % len(uids))
+        print('Total covered: %d' % len(stmt_uids))
+        print('%.2f%% coverage' % (100.0*len(stmt_uids)/len(uids)))
+
 _mftype_dict = {
     'phosres': ('phosphorylation', None),
     'phosphorylation': ('phosphorylation', None),
