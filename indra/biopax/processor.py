@@ -359,6 +359,8 @@ class BiopaxProcessor(object):
 
             members_in = self._get_complex_members(input_pe)
             members_out = self._get_complex_members(output_pe)
+            if not (members_in or members_out):
+                continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
             # it would be possible to find RasGef relationships in complexes
@@ -407,6 +409,8 @@ class BiopaxProcessor(object):
 
             members_in = self._get_complex_members(input_pe)
             members_out = self._get_complex_members(output_pe)
+            if not (members_in or members_out):
+                continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
             # it would be possible to find RasGef relationships in complexes
@@ -955,14 +959,19 @@ class BiopaxProcessor(object):
                 # Special handling of common entities
                 if xr.getId() == '86-01-1':
                     chebi_ids.append('15996')
+                elif xr.getId() == '86527-72-2':
+                    chebi_ids.append('15996')
                 elif xr.getId() == '24696-26-2':
                     chebi_ids.append('17761')
                 elif xr.getId() == '23261-20-3':
                     chebi_ids.append('18035')
                 elif xr.getId() == '146-91-8':
                     chebi_ids.append('17552')
+                elif xr.getId() == '165689-82-7':
+                    chebi_ids.append('16618')
                 else:
-                    logging.info('Unknown cas id: %s' % xr.getId())
+                    logger.info('Unknown cas id: %s (%s)' %
+                                 (xr.getId(), bpe.getDisplayName()))
         if not chebi_ids:
             return None
         elif len(chebi_ids) == 1:
@@ -1104,6 +1113,19 @@ _mftype_dict = {
     'ADP-ribosylasparagine': ('ribosylation', 'N'),
     'PolyADP-ribosyl glutamic acid': ('ribosylation', 'E'),
     'O-acetylserine': ('acetylation', 'S'),
+    'O-acetyl-L-serine': ('acetylation', 'S'),
+    'N-acetyl-L-alanine': ('acetylation', 'A'),
+    'omega-N-methyl-L-arginine': ('methylation', 'R'),
+    'symmetric dimethyl-L-arginine': ('methylation', 'R'),
+    'N-acetylproline': ('acetylation', 'P'),
+    'acetylated': ('acetylation', None),
+    'acetylation': ('acetylation', None),
+    '(3R)-3-hydroxyaspartate': ('hydroxylation', 'D'),
+    '(3R)-3-hydroxyasparagine': ('hydroxylation', 'N'),
+    'Tele-methylhistidine': ('methylation', 'H'),
+    'N-acetylglutamate': ('acetylation', 'E'),
+    'N-acetylaspartate': ('acetylation', 'D'),
+    'n6me2lys': ('methylation', 'K'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
