@@ -318,75 +318,21 @@ class BiopaxProcessor(object):
                 logger.info('Unexpected catalysis direction: %s.' % \
                     control.getCatalysisDirection())
                 continue
-            if _is_complex(controller_pe):
-                # Identifying the "real" enzyme in a complex may not always be
-                # possible.
-                # One heuristic here could be to find the member which is
-                # active and if it is the only active member then
-                # set this as the enzyme to which all other members of the
-                # complex are bound.
-                # Get complex members
-                members = self._get_complex_members(controller_pe)
-                if members is None:
-                    continue
-                # Separate out protein and non-protein members
-                protein_members = []
-                non_protein_members = []
-                for m in members:
-                    if isinstance(m, Agent):
-                        if m.db_refs.get('UP') or \
-                            m.db_refs.get('HGNC'):
-                            protein_members.append(m)
-                        else:
-                            non_protein_members.append(m)
-                    else:
-                        all_protein = True
-                        for subm in m:
-                            if not (subm.db_refs.get('UP') or \
-                                    subm.db_refs.get('HGNC')):
-                                all_protein = False
-                                break
-                        if all_protein:
-                            protein_members.append(m)
-                        else:
-                            non_protein_members.append(m)
-                # If there is only one protein member, we can assume that
-                # it is the enzyme, and everything else is just bound
-                # to it.
-                if len(protein_members) == 1:
-                    enzs = protein_members[0]
-                    # Iterate over non-protein members
-                    for bound in non_protein_members:
-                        if isinstance(bound, Agent):
-                            bc = BoundCondition(bound, True)
-                            if isinstance(enzs, Agent):
-                                enzs.bound_conditions.append(bc)
-                            else:
-                                for enz in enzs:
-                                    enz.bound_conditions.append(bc)
-                        else:
-                            msg = 'Cannot handle complex enzymes with ' + \
-                                    'aggregate non-protein binding partners.'
-                            logger.info(msg)
-                            continue
-                else:
-                    msg = 'Cannot handle complex enzymes with ' + \
-                            'multiple protein members.'
-                    logger.info(msg)
-                    continue
-            else:
-                enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+
+            enzs = BiopaxProcessor._get_primary_controller(controller_pe)
+            if not enzs:
+                continue
+
             if _is_complex(input_pe):
-                # It is possible to find which member of the complex is
+                # TODO: It is possible to find which member of the complex is
                 # actually modified. That member will be the substrate and
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
                 continue
-            ev = self._get_evidence(control)
-
-
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
+ 
+            ev = self._get_evidence(control)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
                 # Get the modifications
                 mod_in = \
@@ -413,10 +359,72 @@ class BiopaxProcessor(object):
         return stmts
 
     @staticmethod
+    def _get_primary_controller(controller_pe):
+        # If it's not a complex, just return the corresponding agent
+        if not _is_complex(controller_pe):
+            enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+            return enzs
+
+        # Identifying the "real" enzyme in a complex may not always be
+        # possible.
+        # One heuristic here could be to find the member which is
+        # active and if it is the only active member then
+        # set this as the enzyme to which all other members of the
+        # complex are bound.
+        # Get complex members
+        members = BiopaxProcessor._get_complex_members(controller_pe)
+        if members is None:
+            return None
+        # Separate out protein and non-protein members
+        protein_members = []
+        non_protein_members = []
+        for m in members:
+            if isinstance(m, Agent):
+                if m.db_refs.get('UP') or \
+                    m.db_refs.get('HGNC'):
+                    protein_members.append(m)
+                else:
+                    non_protein_members.append(m)
+            else:
+                all_protein = True
+                for subm in m:
+                    if not (subm.db_refs.get('UP') or \
+                            subm.db_refs.get('HGNC')):
+                        all_protein = False
+                        break
+                if all_protein:
+                    protein_members.append(m)
+                else:
+                    non_protein_members.append(m)
+        # If there is only one protein member, we can assume that
+        # it is the enzyme, and everything else is just bound
+        # to it.
+        if len(protein_members) == 1:
+            enzs = protein_members[0]
+            # Iterate over non-protein members
+            for bound in non_protein_members:
+                if isinstance(bound, Agent):
+                    bc = BoundCondition(bound, True)
+                    if isinstance(enzs, Agent):
+                        enzs.bound_conditions.append(bc)
+                    else:
+                        for enz in enzs:
+                            enz.bound_conditions.append(bc)
+                else:
+                    msg = 'Cannot handle complex enzymes with ' + \
+                            'aggregate non-protein binding partners.'
+                    logger.info(msg)
+                    continue
+            return enzs
+        else:
+            msg = 'Cannot handle complex enzymes with ' + \
+                    'multiple protein members.'
+            logger.info(msg)
+            return None
+
+    @staticmethod
     def _construct_modification_pattern():
-        '''
-        Constructs the BioPAX pattern to extract modification reactions
-        '''
+        """Construct the BioPAX pattern to extract modification reactions."""
         pb = _bpp('PatternBox')
         cb = _bpp('constraint.ConBox')
         flop = _bpp('constraint.Field$Operation')
@@ -430,7 +438,7 @@ class BiopaxProcessor(object):
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation().
         p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
-                           'controller PE')
+                            'controller PE')
         # Getting the control itself
         p.add(cb.peToControl(), "controller PE", "Control")
         # Link the control to the conversion that it controls
@@ -454,7 +462,8 @@ class BiopaxProcessor(object):
         p.add(cb.linkToSpecific(), "output PE", "output simple PE")
         # Link to ER
         p.add(cb.peToER(), "output simple PE", "output simple ER")
-        p.add(_bpp('constraint.Equality')(True), "input simple ER", "output simple ER")
+        p.add(_bpp('constraint.Equality')(True), "input simple ER",
+              "output simple ER")
         # Make sure the output is a Protein
         p.add(tp(_bpimpl('Protein')().getModelInterface()), "output simple PE")
         p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
