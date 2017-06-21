@@ -290,10 +290,9 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
-    def get_rasgef(self):
+    def _rasgef_rasgap_base(self):
         pb = _bpp('PatternBox')
         cb = _bpp('constraint.ConBox')
-        flop = _bpp('constraint.Field$Operation')
         rt = _bpp('util.RelType')
         tp = _bpp('constraint.Type')
         cs = _bpp('constraint.ConversionSide')
@@ -320,6 +319,9 @@ class BiopaxProcessor(object):
         p.add(cb.peToER(), "input simple PE", "input simple ER")
         # Make sure the participant is a protein
         p.add(tp(_bpimpl('Protein')().getModelInterface()), "input simple PE")
+        # Make sure the controller is a protein
+        # TODO: possibly allow Complex too
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "controller PE")
         # Link to the other side of the conversion
         p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
         # Make sure the two sides are not the same
@@ -333,10 +335,13 @@ class BiopaxProcessor(object):
         # Make sure the output is a Protein
         p.add(tp(_bpimpl('Complex')().getModelInterface()), "output PE")
         p.add(tp(_bpimpl('Complex')().getModelInterface()), "input PE")
+        return p
+
+    def get_rasgef(self):
+        p = self._rasgef_rasgap_base()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [_match_to_array(m) for m in res.toArray()]
-
         for r in res_array:
             controller_pe = r[p.indexOf('controller PE')]
             input_pe = r[p.indexOf('input PE')]
@@ -379,6 +384,55 @@ class BiopaxProcessor(object):
                 st = RasGef(gef, ras, evidence=ev)
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
+
+    def get_rasgap(self):
+        p = self._rasgef_rasgap_base()
+        s = _bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [_match_to_array(m) for m in res.toArray()]
+        for r in res_array:
+            controller_pe = r[p.indexOf('controller PE')]
+            input_pe = r[p.indexOf('input PE')]
+            input_spe = r[p.indexOf('input simple PE')]
+            output_pe = r[p.indexOf('output PE')]
+            output_spe = r[p.indexOf('output simple PE')]
+            reaction = r[p.indexOf('Conversion')]
+            control = r[p.indexOf('Control')]
+
+            # Make sure the GAP is not a complex
+            # TODO: it could be possible to extract certain complexes here, for
+            # instance ones that only have a single protein
+            if _is_complex(controller_pe):
+                continue
+
+            members_in = self._get_complex_members(input_pe)
+            members_out = self._get_complex_members(output_pe)
+            # Make sure the outgoing complex has exactly 2 members
+            # TODO: by finding matching proteins on either side, in principle
+            # it would be possible to find RasGef relationships in complexes
+            # with more members
+            if len(members_out) != 2:
+                continue
+            # Make sure complex starts with GDP that becomes GTP
+            gtp_in = False
+            for member in members_in:
+                if isinstance(member, Agent) and member.name == 'GTP':
+                    gtp_in = True
+            gdp_out = False
+            for member in members_out:
+                if isinstance(member, Agent) and member.name == 'GDP':
+                    gdp_out = True
+            if not (gtp_in and gdp_out):
+                continue
+            ras_list = self._get_agents_from_entity(input_spe)
+            gap_list = self._get_agents_from_entity(controller_pe)
+            ev = self._get_evidence(control)
+            for gap, ras in itertools.product(_listify(gap_list),
+                                               _listify(ras_list)):
+                st = RasGap(gap, ras, evidence=ev)
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
+
 
 
     @staticmethod
@@ -584,7 +638,6 @@ class BiopaxProcessor(object):
         """Construct the BioPAX pattern to extract modification reactions."""
         pb = _bpp('PatternBox')
         cb = _bpp('constraint.ConBox')
-        flop = _bpp('constraint.Field$Operation')
         rt = _bpp('util.RelType')
         tp = _bpp('constraint.Type')
         cs = _bpp('constraint.ConversionSide')
@@ -976,7 +1029,8 @@ class BiopaxProcessor(object):
         uids = set()
         objs = self.model.getObjects()
         for obj in objs.toArray():
-            if isinstance(obj, _bpimpl('Catalysis')):
+            if isinstance(obj, _bpimpl('Catalysis')) or \
+                isinstance(obj, _bpimpl('TemplateReactionRegulation')):
                 uids.add(obj.getUri())
         stmt_uids = set()
         for stmt in self.statements:
@@ -986,7 +1040,7 @@ class BiopaxProcessor(object):
         uids_not_covered = uids.difference(stmt_uids)
         print('Total in model: %d' % len(uids))
         print('Total covered: %d' % len(stmt_uids))
-        print('%.2f%% coverage' % (100.0*len(stmt_uids)/len(uids)))
+        print('%.2f%% coverage' % (100.0*(len(uids)-len(uids_not_covered))/len(uids)))
 
 _mftype_dict = {
     'phosres': ('phosphorylation', None),
