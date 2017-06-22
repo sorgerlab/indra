@@ -47,9 +47,9 @@ def run_assembly(stmts, save_file):
     stmts = ac.map_grounding(stmts)
     stmts = ac.filter_grounded_only(stmts)
     stmts = ac.filter_human_only(stmts)
-    stmts = ac.map_sequence(stmts)
     stmts = ac.expand_families(stmts)
     stmts = ac.filter_gene_list(stmts, gene_names, 'one')
+    stmts = ac.map_sequence(stmts)
     stmts = ac.run_preassembly(stmts, return_toplevel=False)
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
@@ -60,7 +60,7 @@ def run_assembly(stmts, save_file):
 
 def assemble_cx(stmts, save_file):
     cxa = CxAssembler(stmts)
-    cxa.make_model()
+    cxa.make_model(add_indra_json=False)
     cxa.save_model(save_file)
     return cxa
 
