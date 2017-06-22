@@ -370,7 +370,7 @@ class ReachProcessor(object):
                 if be_id:
                     db_refs['BE'] = be_id
                     agent_name = be_id
-                db_refs['IPR'] = xr['id']
+                db_refs['IP'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
             elif ns == 'pubchem':
