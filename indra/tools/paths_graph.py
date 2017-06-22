@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 15 10:28:25 2017
-
-@author: thiagu
-
-junk
-"""
-
 import random
 import itertools
+import logging
 import networkx as nx
+
+logger = logging.getLogger('paths_graph')
 
 def get_edges(sif_file):
     edges = []
@@ -24,9 +18,12 @@ def get_edges(sif_file):
     g.add_edges_from(edges)
     return g
 
-""" We can now construct for any chosen length l , a graph that contains all paths of length l from 
-source to target. l is the number of edges encountered onhe path. We assume 2 <= l <= depth. The idea is to sample for paths using this graph. Once a path has been sampled we can prune cycles from it.
-We can also inject polrities onto the edges of the path and thus compute the parities of the nodes encountered on the path. """ 
+""" We can now construct for any chosen length l , a graph that contains all
+paths of length l from source to target. l is the number of edges encountered
+onhe path. We assume 2 <= l <= depth. The idea is to sample for paths using
+this graph. Once a path has been sampled we can prune cycles from it.  We can
+also inject polrities onto the edges of the path and thus compute the parities
+of the nodes encountered on the path. """ 
 
 def paths_graph(g, source, target, target_polarity, length, f_level, b_level):
     level = {}
@@ -70,34 +67,45 @@ def paths_graph(g, source, target, target_polarity, length, f_level, b_level):
         E_gop |= X
     path_graph = nx.DiGraph()
     path_graph.add_edges_from(E_gop)
-
     return path_graph
 
-def pre_7(v):
-    X = []
-    for u in N:
-        if (u,v) in A:
-            X.append(u)
-    return X
 
-def sample_next(current):
-    X = pre_7(current)
-    c = random.randint(0,len(X) - 1)
-    new = X[c]
-    return new
-
-def sample_path(g, source, target, length, f_level, b_level):
+def sample_path(g, source, target, length):
     path = []
-    path.append((0, source))
-    while len(path) < length:
-        current_new = path[-1]
-        u = sample_next(current_new)
-        path.append(u)
-    path.append((length, target))
-    path_pruned = []
-    for i in range(len(path)):
-        path_pruned.append(path[i][1])
-    return path_pruned
+    source_node = (length, (source, 0))
+    path.append(source_node)
+    assert source_node in g
+    for i in range(length):
+        current_node = path[-1]
+        succs = g.successors(current_node)
+        v = random.choice(succs)
+        path.append(v)
+    return path
+
+
+def get_reach_sets(g, max_depth=10):
+    logger.info("Computing forward and back reach sets")
+    # Backward level sets
+    b_level = {}
+    b_level[0] = set([(target, 0)])
+    # Forward level sets
+    f_level = {}
+    f_level[0] = set([(source, 0)])
+
+    directions = ((f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
+                  (b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
+    for level, edge_func in directions:
+        for i in range(1, max_depth):
+            reachable_set = set()
+            for node, node_polarity in level[i-1]:
+                for (u, v), reachable_node in edge_func(node):
+                    edge_polarity = g.get_edge_data(u, v)['polarity']
+                    cum_polarity = (node_polarity + edge_polarity) % 2
+                    reachable_set.add((reachable_node, cum_polarity))
+            if not reachable_set:
+                break
+            level[i] = reachable_set
+    return (f_level, b_level)
 
 
 if __name__ == '__main__':
@@ -107,67 +115,27 @@ if __name__ == '__main__':
     target = 'EIF4EBP1_T37_p_obs'
     #source = 'A'
     #target = 'D'
-    target_polarity = 1
+    target_polarity = 0
 
     # fix the maximuma dpth to which we want to explore backwards from the
     # traget and forwaards from the source
     print("Computing forward and backward reach sets...")
     max_depth = 10
-
-    # Compute backward level sets
-    b_level = {}
-    b_level[0] = set([(target, 0)])
-
-    for i in range(1, max_depth):
-        X = []
-        for v, node_polarity in b_level[i-1]:
-            preds = g.predecessors(v)
-            for u in preds:
-                edge_polarity = g.get_edge_data(u, v)['polarity']
-                cum_polarity = (node_polarity + edge_polarity) % 2
-                X.append((u, cum_polarity))
-        if not X:
-            break
-        b_level[i] = set(X)
-
-    # Compute forward level sets
-    f_level = {}
-    f_level[0] = set([(source, 0)])
-
-    for i in range(1, max_depth):
-        X = []
-        for u, node_polarity in f_level[i-1]:
-            succs = g.successors(u)
-            for v in succs:
-                edge_polarity = g.get_edge_data(u, v)['polarity']
-                cum_polarity = (node_polarity + edge_polarity) % 2
-                X.append((v, cum_polarity))
-        if not X:
-            break
-        f_level[i] = set(X)
+    f_level, b_level = get_reach_sets(g, max_depth)
 
     # Compute path graph for a specific path length
-    length = 10
+    length = 6
     print("Computing path graph of length %d" % length)
     pg = paths_graph(g, source, target, target_polarity, length, f_level,
                      b_level)
     print("Drawing Graphviz graph")
     ag = nx.nx_agraph.to_agraph(pg)
     ag.draw('gop.pdf', prog='dot')
-    # -----
-    """
-    Paths = []
-    while len(Paths) < 10:
-        p = sample_path(g, source, target, length, f_level, b_level)
-        Paths.append(p)
 
+    paths = []
+    while len(paths) < 10:
+        p = sample_path(pg, source, target, length)
+        paths.append(p)
 
-    g = open('Paths_7.txt', 'w')
+    print(paths)
 
-    for i in range(10):
-        print >> g, 'Paths_7[',i,'] =' 
-        for j in range(len(Paths[i])): 
-            print >> g, Paths[i][j]
-        print >> g, ""
-    g.close()
-    """
