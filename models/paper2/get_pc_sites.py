@@ -35,12 +35,19 @@ for db in dbs:
         if not proteins:
             continue
         for protein in proteins:
+            name = bpc.BiopaxProcessor._get_element_name(protein)
+            db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
+            agent = Agent(name, mods=[mc], db_refs=db_refs)
             reactions = protein.getParticipantOf().toArray()
+            if not reactions:
+                upstream = protein.getMemberPhysicalEntityOf().toArray()
+                for u in upstream:
+                    reactions += u.getParticipantOf().toArray()
             for reaction in reactions:
-                for contr in reaction.getControlledOf().toArray():
-                    name = bpc.BiopaxProcessor._get_element_name(protein)
-                    db_refs = bpc.BiopaxProcessor._get_db_refs(protein)
-                    agent = Agent(name, mods=[mc], db_refs=db_refs)
+                controls = reaction.getControlledOf().toArray()
+                if not controls:
+                    agents.append(agent)
+                for contr in controls:
                     agents.append(agent)
 
     with open('pc_%s_modified_agents.pkl' % db, 'wb') as fh:
