@@ -75,17 +75,24 @@ class CxAssembler(object):
         for stmt in stmts:
             self.statements.append(stmt)
 
-    def make_model(self):
+    def make_model(self, add_indra_json=True):
         """Assemble the CX network from the collected INDRA Statements.
 
         This method assembles a CX network from the set of INDRA Statements.
         The assembled network is set as the assembler's cx argument.
+
+        Parameters
+        ----------
+        add_indra_json : Optional[bool]
+            If True, the INDRA Statement JSON annotation is added to each
+            edge in the network. Default: True
 
         Returns
         -------
         cx_str : str
             The json serialized CX model.
         """
+        self.add_indra_json = add_indra_json
         for stmt in self.statements:
             if isinstance(stmt, Modification):
                 self._add_modification(stmt)
@@ -365,11 +372,13 @@ class CxAssembler(object):
                           'n': 'INDRA statement',
                           'v': indra_stmt_str}
         self.cx['edgeAttributes'].append(edge_attribute)
-        indra_stmt_json = json.dumps(stmt.to_json())
-        edge_attribute = {'po': edge_id,
-                          'n': 'INDRA json',
-                          'v': indra_stmt_json}
-        self.cx['edgeAttributes'].append(edge_attribute)
+        # Add INDRA JSON
+        if self.add_indra_json:
+            indra_stmt_json = json.dumps(stmt.to_json())
+            edge_attribute = {'po': edge_id,
+                              'n': 'INDRA json',
+                              'v': indra_stmt_json}
+            self.cx['edgeAttributes'].append(edge_attribute)
         # Add the type of statement as the edge type
         stmt_type, stmt_polarity = _get_stmt_type(stmt)
         edge_attribute = {'po': edge_id,
@@ -433,6 +442,7 @@ class CxAssembler(object):
         stmt_dict = stmt.to_json()
         edge_attribute = {'po': edge_id, 'n': 'indra', 'v': stmt_dict}
         self.cx['edgeAttributes'].append(edge_attribute)
+
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, AddModification):
