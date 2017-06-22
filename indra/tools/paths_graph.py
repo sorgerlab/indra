@@ -6,10 +6,12 @@ import networkx as nx
 logger = logging.getLogger('paths_graph')
 
 def get_edges(sif_file):
+    """Load edges from a SIF file with lines of the form 'u polarity v'"""
     edges = []
     with open(sif_file, 'rt') as f:
         for line in f.readlines():
             u, polarity, v = line.strip().split(' ')
+            # Eliminate self-loops
             if u == v:
                 pass
             else:
@@ -18,73 +20,34 @@ def get_edges(sif_file):
     g.add_edges_from(edges)
     return g
 
-""" We can now construct for any chosen length l , a graph that contains all
-paths of length l from source to target. l is the number of edges encountered
-onhe path. We assume 2 <= l <= depth. The idea is to sample for paths using
-this graph. Once a path has been sampled we can prune cycles from it.  We can
-also inject polrities onto the edges of the path and thus compute the parities
-of the nodes encountered on the path. """ 
 
-def paths_graph(g, source, target, target_polarity, length, f_level, b_level):
-    level = {}
-    level[0] = set([(target, target_polarity)])
-    level[length] = set([(source, 0)])
-    # If the target polarity (from source to target) is odd, flip the polarity
-    # of all nodes in the graph
-    if target_polarity == 1:
-        b_level_polar = {}
-        for i in range(0, len(b_level)):
-            polar_set = set()
-            for (u, w) in b_level[i]:
-                w_flipped = (w + 1) % 2
-                polar_set.add((u, w_flipped))
-            b_level_polar[i] = polar_set
-    else:
-        b_level_polar = b_level
+def get_reachable_sets(g, source, target, max_depth=10):
+    """Get sets of nodes reachable from source and target at different depths.
 
-    for i in range(1, length):
-        b_reach_set = b_level_polar[i]
-        f_reach_set = f_level[length - i]
-        Z = set(f_reach_set) & set(b_reach_set)
-        level[i] = Z
-    V_gop = {}
-    for i in range(0,length+1):
-        V_gop[i] = list(itertools.product([i], level[i])) 
-    E_gop = set()
-    for i in range(0, length):
-        X = set() # list of edges at this level
-        for u, v in itertools.product(V_gop[i+1], V_gop[i]):
-            u_name, u_pol = u[1]
-            v_name, v_pol = v[1]
-            if (u_name, v_name) in g.edges():
-                edge_polarity = g.get_edge_data(u_name, v_name)['polarity']
-                # Look for an edge the flips or doesn't flip the polarity
-                # of the path depending on what we see in the cumulative
-                # polarities
-                if (u_pol == v_pol and edge_polarity == 0) or \
-                   (u_pol != v_pol and edge_polarity == 1):
-                    X.add((u, v))
-        E_gop |= X
-    path_graph = nx.DiGraph()
-    path_graph.add_edges_from(E_gop)
-    return path_graph
+    Parameters
+    ----------
+    g : nx.DiGraph
+        The underlying graph used for computing reachable node sets.
+    source : str
+        Name of source node.
+    target : target
+        Name of target node.
+    max_depth : int
+        Maximum depth over which to compute reachable sets.
 
-
-def sample_path(g, source, target, length):
-    path = []
-    source_node = (length, (source, 0))
-    path.append(source_node)
-    assert source_node in g
-    for i in range(length):
-        current_node = path[-1]
-        succs = g.successors(current_node)
-        v = random.choice(succs)
-        path.append(v)
-    return path
-
-
-def get_reach_sets(g, max_depth=10):
-    logger.info("Computing forward and back reach sets")
+    Returns
+    -------
+    tuple
+        The first item in the tuple represents the nodes reachable from the
+        source in the forward direction; the second represents the nodes
+        reachable from the target in the backward direction. Each reachable
+        set takes the form of a dict with integers representing different
+        depths as keys, and sets of nodes as values. The nodes themselves
+        consist of tuples (u, w), where u is the name of the node and w is the
+        cumulative polarity, forwards or backwards, from the source or target,
+        respectively.
+    """
+    print("Computing forward and back reach sets")
     # Backward level sets
     b_level = {}
     b_level[0] = set([(target, 0)])
@@ -92,6 +55,7 @@ def get_reach_sets(g, max_depth=10):
     f_level = {}
     f_level[0] = set([(source, 0)])
 
+    # A bit of trickery to avoid a duplicated for loop--may be too much!
     directions = ((f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
                   (b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
     for level, edge_func in directions:
@@ -108,34 +72,146 @@ def get_reach_sets(g, max_depth=10):
     return (f_level, b_level)
 
 
+def paths_graph(g, source, target, target_polarity, length, f_level, b_level):
+    """Generate a graph where all nodes lie on a path of the given length.
+
+    Nodes in the graph account for the cumulative polarity from the source
+    to the target, so that any path found from the source to the target will
+    have the overall polarity as specified by the target_polarity argument.
+
+    The function uses the forward and backward reach sets provided as arguments
+    to efficiently identify the subset of nodes that are reachable from both
+    the forward and backward directions. Pairs of nodes at neighboring levels
+    are then checked against the original graph to determine which nodes are
+    connected by edges with the appropriate direction and polarity. These
+    nodes are then used to create a new graph, the "paths graph," which
+    consists solely of these nodes and edges. This graph represents the
+    superset of all possible paths from source to target of a given legnth
+    and target polarity. Specific paths can then be obtained by sampling.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        The underlying graph on which paths will be generated.
+    source : str
+        Name of the source node.
+    target : str
+        Name of the target node.
+    target_polarity : int
+        Whether the desired path from source to target is positive (0)
+        or negative (1).
+    length : int
+        Length of paths to compute.
+    f_level : dict of sets
+        Sets of nodes reachable from the source node at different depths.
+        Generated by get_reachable_sets.
+    b_level : dict of sets
+        Sets of nodes reachable (backwards) from the target node at different
+        depths. Generated by get_reachable_sets.
+
+    Returns
+    -------
+    nx.DiGraph
+        Graph representing paths from source to target with a given length
+        and overall polarity.
+    """
+    level = {}
+    level[0] = set([(target, target_polarity)])
+    level[length] = set([(source, 0)])
+    # If the target polarity is even (positive/neutral), then the cumulative
+    # polarities in the forward direction will match those in the reverse
+    # direction; if the target polarity is odd, then the polarities will
+    # be opposite at each matching node. Thus we check the target polarity and
+    # flip the polarities of the backward reach set if appropriate.
+    if target_polarity == 1:
+        b_level_polar = {}
+        for i in range(0, len(b_level)):
+            polar_set = set()
+            for (u, w) in b_level[i]:
+                w_flipped = (w + 1) % 2
+                polar_set.add((u, w_flipped))
+            b_level_polar[i] = polar_set
+    else:
+        b_level_polar = b_level
+    # Next we calculate the subset of nodes at each level that are reachable
+    # from both the forward and backward directions. Because the polarities
+    # have already been set appropriately, we can do this with a simple
+    # set intersection.
+    for i in range(1, length):
+        b_reach_set = b_level_polar[i]
+        f_reach_set = f_level[length - i]
+        path_nodes = set(f_reach_set) & set(b_reach_set)
+        level[i] = path_nodes
+    # Next we explicitly enumerate the path graph nodes by tagging each node
+    # with its level in the path
+    pg_nodes = {}
+    for i in range(0,length+1):
+        pg_nodes[i] = list(itertools.product([i], level[i])) 
+    # Finally we add edges between these nodes if they are found in the original
+    # graph. Note that we have to check for an edge of the appropriate polarity.
+    pg_edges = set()
+    for i in range(0, length):
+        edges_at_this_level = set()
+        for u, v in itertools.product(pg_nodes[i+1], pg_nodes[i]):
+            u_name, u_pol = u[1]
+            v_name, v_pol = v[1]
+            if (u_name, v_name) in g.edges():
+                edge_polarity = g.get_edge_data(u_name, v_name)['polarity']
+                # Look for an edge that flips or doesn't flip the polarity
+                # of the path depending on what we see in the cumulative
+                # polarities
+                if (u_pol == v_pol and edge_polarity == 0) or \
+                   (u_pol != v_pol and edge_polarity == 1):
+                    edges_at_this_level.add((u, v))
+        pg_edges |= edges_at_this_level
+    path_graph = nx.DiGraph()
+    path_graph.add_edges_from(pg_edges)
+    return path_graph
+
+
+def sample_path(g, source, target):
+    """Sample a path from the paths graph."""
+    path = []
+    source_node = (length, (source, 0))
+    path.append(source_node)
+    assert source_node in g
+    while True:
+        current_node = path[-1]
+        succs = g.successors(current_node)
+        if succs:
+            v = random.choice(succs)
+            path.append(v)
+        else:
+            break
+    # Remove the prepended node levels
+    return tuple([u[1] for u in path])
+
+
 if __name__ == '__main__':
     g = get_edges('korkut_im.sif')
-    #g = get_edges('test_graph.sif')
     source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
     target = 'EIF4EBP1_T37_p_obs'
-    #source = 'A'
-    #target = 'D'
     target_polarity = 0
 
-    # fix the maximuma dpth to which we want to explore backwards from the
-    # traget and forwaards from the source
     print("Computing forward and backward reach sets...")
     max_depth = 10
-    f_level, b_level = get_reach_sets(g, max_depth)
+    f_level, b_level = get_reachable_sets(g, source, target, max_depth)
 
     # Compute path graph for a specific path length
-    length = 6
-    print("Computing path graph of length %d" % length)
+    length = 10
+    print("Computing paths graph of length %d" % length)
     pg = paths_graph(g, source, target, target_polarity, length, f_level,
                      b_level)
+
     print("Drawing Graphviz graph")
     ag = nx.nx_agraph.to_agraph(pg)
     ag.draw('gop.pdf', prog='dot')
 
+    # Sample paths from the graph (with replacement)
+    num_paths = 1000
     paths = []
-    while len(paths) < 10:
-        p = sample_path(pg, source, target, length)
+    while len(paths) < num_paths:
+        p = sample_path(pg, source, target)
         paths.append(p)
-
-    print(paths)
+    paths = list(set(paths))
 
