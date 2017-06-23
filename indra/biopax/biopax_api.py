@@ -134,7 +134,7 @@ def process_model(model):
     bp.get_regulate_activities()
     bp.get_regulate_amounts()
     bp.get_activity_modification()
-    bp.get_rasgef()
-    bp.get_rasgap()
+    bp.get_gef()
+    bp.get_gap()
     # bproc.get_complexes()
     return bp

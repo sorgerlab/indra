@@ -614,7 +614,7 @@ def test_activation_annotations():
 
 
 def test_multitype_path():
-    """Test causal chain involving Complex, RasGef, Activation"""
+    """Test causal chain involving Complex, Gef, Activation"""
     egfr = Agent('EGFR', db_refs={'HGNC':'3236'})
     grb2 = Agent('GRB2', db_refs={'HGNC': '4566'})
     grb2_egfr = Agent('GRB2', bound_conditions=[BoundCondition(egfr)],
@@ -660,7 +660,7 @@ def test_multitype_path():
     stmts2 = [
         Complex([egfr, grb2]),
         Complex([sos1, grb2_egfr]),
-        RasGef(sos1_grb2, kras),
+        Gef(sos1_grb2, kras),
         Activation(kras_g, braf, 'kinase')
       ]
     check_stmts(stmts2, ([[('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
@@ -726,14 +726,14 @@ def test_check_rule_subject1():
     assert checks[0][1].paths == []
 
 
-def test_rasgef_activation():
+def test_gef_activation():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
-    rasgef_stmt = RasGef(sos, ras)
+    gef_stmt = Gef(sos, ras)
     act_stmt = Activation(sos, ras, 'gtpbound')
-    # Check that the activation is satisfied by the RasGef
+    # Check that the activation is satisfied by the Gef
     pysba = PysbAssembler()
-    pysba.add_statements([rasgef_stmt])
+    pysba.add_statements([gef_stmt])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
@@ -743,30 +743,30 @@ def test_rasgef_activation():
                              ('KRAS_gtpbound_active_obs', 1)]]
     # TODO TODO TODO
     """
-    # Check that the RasGef is satisfied by the Activation
-    # This currently doesn't work because RasGef statements aren't checked
+    # Check that the Gef is satisfied by the Activation
+    # This currently doesn't work because Gef statements aren't checked
     pysba = PysbAssembler()
     pysba.add_statements([act_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [rasgef_stmt])
+    mc = ModelChecker(pysba.model, [gef_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
-    assert checks[0][0] == rasgef_stmt
+    assert checks[0][0] == gef_stmt
     assert checks[0][1] == True
     """
 
 
-def test_rasgef_rasgtp():
+def test_gef_rasgtp():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                 db_refs={'HGNC':'2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
-    rasgef_stmt = RasGef(sos, ras)
-    rasgtp_stmt = RasGtpActivation(ras, raf, 'kinase')
+    gef_stmt = Gef(sos, ras)
+    rasgtp_stmt = GtpActivation(ras, raf, 'kinase')
     act_stmt = Activation(sos, raf, 'kinase')
-    # Check that the activation is satisfied by the RasGef
+    # Check that the activation is satisfied by the Gef
     pysba = PysbAssembler()
-    pysba.add_statements([rasgef_stmt, rasgtp_stmt])
+    pysba.add_statements([gef_stmt, rasgtp_stmt])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
@@ -777,7 +777,7 @@ def test_rasgef_rasgtp():
                                    ('BRAF_kinase_active_obs', 1)]]
 
 
-def test_rasgef_rasgtp_phos():
+def test_gef_rasgtp_phos():
     sos = Agent('SOS1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
     ras_a = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
@@ -786,13 +786,13 @@ def test_rasgef_rasgtp_phos():
     raf_a = Agent('BRAF', activity=ActivityCondition('kinase', True),
                   db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
-    rasgef_stmt = RasGef(sos, ras)
-    rasgtp_stmt = RasGtpActivation(ras_a, raf, 'kinase')
+    gef_stmt = Gef(sos, ras)
+    rasgtp_stmt = GtpActivation(ras_a, raf, 'kinase')
     phos = Phosphorylation(raf_a, mek)
     stmt_to_check = Phosphorylation(sos, mek)
     # Assemble and check
     pysba = PysbAssembler()
-    pysba.add_statements([rasgef_stmt, rasgtp_stmt, phos])
+    pysba.add_statements([gef_stmt, rasgtp_stmt, phos])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
@@ -804,14 +804,14 @@ def test_rasgef_rasgtp_phos():
                                    ('MEK_phospho_p_obs', 1)]]
 
 
-def test_rasgap_activation():
+def test_gap_activation():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
-    rasgap_stmt = RasGap(nf1, ras)
+    gap_stmt = Gap(nf1, ras)
     act_stmt = Inhibition(nf1, ras, 'gtpbound')
-    # Check that the activation is satisfied by the RasGap
+    # Check that the activation is satisfied by the Gap
     pysba = PysbAssembler()
-    pysba.add_statements([rasgap_stmt])
+    pysba.add_statements([gap_stmt])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
@@ -821,32 +821,32 @@ def test_rasgap_activation():
                                    ('KRAS_gtpbound_active_obs', -1)]]
     # TODO TODO TODO
     """
-    # Check that the RasGap is satisfied by the Activation
-    # This currently doesn't work because RasGap statements aren't checked by
+    # Check that the Gap is satisfied by the Activation
+    # This currently doesn't work because Gap statements aren't checked by
     # the ModelChecker
     pysba = PysbAssembler()
     pysba.add_statements([act_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [rasgap_stmt])
+    mc = ModelChecker(pysba.model, [gap_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
-    assert checks[0][0] == rasgap_stmt
+    assert checks[0][0] == gap_stmt
     assert checks[0][1] == True
     """
 
 
-def test_rasgap_rasgtp():
+def test_gap_rasgtp():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
     ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                  db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC':'3'})
-    rasgap_stmt = RasGap(nf1, ras)
-    rasgtp_stmt = RasGtpActivation(ras_g, raf, 'kinase')
+    gap_stmt = Gap(nf1, ras)
+    rasgtp_stmt = GtpActivation(ras_g, raf, 'kinase')
     act_stmt = Inhibition(nf1, raf, 'kinase')
-    # Check that the activation is satisfied by the RasGap
+    # Check that the activation is satisfied by the Gap
     pysba = PysbAssembler()
-    pysba.add_statements([rasgap_stmt, rasgtp_stmt])
+    pysba.add_statements([gap_stmt, rasgtp_stmt])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
@@ -857,7 +857,7 @@ def test_rasgap_rasgtp():
                                    ('BRAF_kinase_active_obs', -1)]]
 
 
-def test_rasgap_rasgtp_phos():
+def test_gap_rasgtp_phos():
     nf1 = Agent('NF1', db_refs={'HGNC':'1'})
     ras = Agent('KRAS', db_refs={'HGNC':'2'})
     ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
@@ -865,13 +865,13 @@ def test_rasgap_rasgtp_phos():
     raf = Agent('BRAF', activity=ActivityCondition('kinase', True),
                 db_refs={'HGNC':'3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
-    rasgap_stmt = RasGap(nf1, ras)
-    rasgtp_stmt = RasGtpActivation(ras_g, raf, 'kinase')
+    gap_stmt = Gap(nf1, ras)
+    rasgtp_stmt = GtpActivation(ras_g, raf, 'kinase')
     phos = Phosphorylation(raf, mek)
     stmt_to_check = Dephosphorylation(nf1, mek)
     # Assemble and check
     pysba = PysbAssembler()
-    pysba.add_statements([rasgap_stmt, rasgtp_stmt, phos])
+    pysba.add_statements([gap_stmt, rasgtp_stmt, phos])
     pysba.make_model(policies='one_step')
     mc = ModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
@@ -1139,7 +1139,7 @@ def test_prune_influence_map():
 # Complex information was specified.
 # Can probably handle all modifications in a generic function.
 # Then need to handle: Complex, Dephosphorylation.
-# Then RasGef/RasGap?
+# Then Gef/Gap?
 # Then Activation/ActiveForm.
 # Get the stuff from databases involving the canonical proteins,
 # and show that a simple model satisfies it.

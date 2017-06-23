@@ -1838,7 +1838,7 @@ class Gef(Statement):
 
     >>> sos = Agent('SOS1')
     >>> kras = Agent('KRAS')
-    >>> rasgef = Gef(sos, kras)
+    >>> gef = Gef(sos, kras)
     """
     def __init__(self, gef, ras, evidence=None):
         super(Gef, self).__init__(evidence)
@@ -1926,7 +1926,7 @@ class Gap(Statement):
 
     >>> rasa1 = Agent('RASA1')
     >>> kras = Agent('KRAS')
-    >>> rasgap = Gap(rasa1, kras)
+    >>> gap = Gap(rasa1, kras)
     """
     def __init__(self, gap, ras, evidence=None):
         super(Gap, self).__init__(evidence)

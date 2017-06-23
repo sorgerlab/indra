@@ -162,19 +162,19 @@ def test_site_map_selfmodification():
 
 def test_site_map_complex():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGef(mapk1_invalid, mapk3_invalid)
+    st1 = Complex([mapk1_invalid, mapk3_invalid])
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
-def test_site_map_rasgef():
+def test_site_map_gef():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGef(mapk1_invalid, mapk3_invalid)
+    st1 = Gef(mapk1_invalid, mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 
-def test_site_map_rasgap():
+def test_site_map_gap():
     (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
-    st1 = RasGap(mapk1_invalid, mapk3_invalid)
+    st1 = Gap(mapk1_invalid, mapk3_invalid)
     res = sm.map_sites([st1])
     check_validated_mapks(res, st1)
 

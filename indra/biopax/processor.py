@@ -363,8 +363,7 @@ class BiopaxProcessor(object):
             reaction_extracted.add(control.getUri())
             print(st)
 
-    def _rasgef_rasgap_base(self):
-
+    def _gef_gap_base(self):
         # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation().
@@ -403,8 +402,8 @@ class BiopaxProcessor(object):
         p.add(tp(_bpimpl('Complex')().getModelInterface()), "input PE")
         return p
 
-    def get_rasgef(self):
-        p = self._rasgef_rasgap_base()
+    def get_gef(self):
+        p = self._gef_gap_base()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [_match_to_array(m) for m in res.toArray()]
@@ -453,8 +452,8 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
-    def get_rasgap(self):
-        p = self._rasgef_rasgap_base()
+    def get_gap(self):
+        p = self._gef_gap_base()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
         res_array = [_match_to_array(m) for m in res.toArray()]

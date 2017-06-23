@@ -205,20 +205,20 @@ def test_pysb_assembler_dephos2():
     assert(len(model.rules)==1)
     assert(len(model.monomers)==3)
 
-def test_pysb_assembler_rasgef1():
+def test_pysb_assembler_gef1():
     gef = Agent('SOS1')
     ras = Agent('HRAS')
-    stmt = RasGef(gef, ras)
+    stmt = Gef(gef, ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
     assert(len(model.rules)==1)
     assert(len(model.monomers)==2)
 
-def test_pysb_assembler_rasgap1():
+def test_pysb_assembler_gap1():
     gap = Agent('NF1')
     ras = Agent('HRAS')
-    stmt = RasGap(gap, ras)
+    stmt = Gap(gap, ras)
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
@@ -954,8 +954,8 @@ def test_rule_annotation():
     stmt = Activation(a, b)
     check_rule_annotation(stmt, 'one_step')
     #Skip Autophosphorylation and Transphosphorylation for now
-    #RasGef
-    #RasGap
+    #Gef
+    #Gap
 
 def test_activeform_site():
     a = Agent('A', db_refs={'HGNC': '1234'})
