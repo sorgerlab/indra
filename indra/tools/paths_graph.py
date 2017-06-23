@@ -47,7 +47,6 @@ def get_reachable_sets(g, source, target, max_depth=10):
         cumulative polarity, forwards or backwards, from the source or target,
         respectively.
     """
-    print("Computing forward and back reach sets")
     # Backward level sets
     b_level = {}
     b_level[0] = set([(target, 0)])
@@ -198,7 +197,7 @@ if __name__ == '__main__':
     f_level, b_level = get_reachable_sets(g, source, target, max_depth)
 
     # Compute path graph for a specific path length
-    length = 10
+    length = 7
     print("Computing paths graph of length %d" % length)
     pg = paths_graph(g, source, target, target_polarity, length, f_level,
                      b_level)
@@ -207,11 +206,27 @@ if __name__ == '__main__':
     ag = nx.nx_agraph.to_agraph(pg)
     ag.draw('gop.pdf', prog='dot')
 
-    # Sample paths from the graph (with replacement)
-    num_paths = 1000
+    num_paths = 100
+    print("Sampling %d paths" % num_paths)
     paths = []
     while len(paths) < num_paths:
         p = sample_path(pg, source, target)
         paths.append(p)
     paths = list(set(paths))
 
+    # Convert to graphillion compatible graph
+    from graphillion import GraphSet
+    edges = []
+    for e in pg.edges():
+        new_edge = tuple([str(v[1][0]) for v in e])
+        if new_edge in edges or tuple([new_edge[1], new_edge[0]]) in edges:
+            continue
+        else:
+            edges.append(new_edge)
+
+    GraphSet.set_universe(edges)
+
+    # Getting paths from graphillion
+    print("Getting paths from graphillion")
+    gs_paths = GraphSet.paths(source, target)
+    blocking = gs_paths.blocking().minimal()
