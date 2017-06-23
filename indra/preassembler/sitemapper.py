@@ -288,8 +288,8 @@ class SiteMapper(object):
         up_id = _get_uniprot_id(agent)
         # If the uniprot entry is not found, let it pass
         if not up_id:
-            logger.info("No uniprot ID for %s" % agent.name)
-            return [] # empty list
+            logger.debug("No uniprot ID for %s" % agent.name)
+            return [] # Same effect as valid sites
         # Look up all of the modifications in uniprot, and add them to the list
         # of invalid sites if they are missing
         for old_mod in mods:
@@ -321,7 +321,7 @@ class SiteMapper(object):
             up_id = agent.db_refs.get('UP')
             hgnc_id = agent.db_refs.get('HGNC')
             if not hgnc_id:
-                logger.info("No HGNC ID for %s, only curated sites will be "
+                logger.debug("No HGNC ID for %s, only curated sites will be "
                             "mapped" % agent.name)
             # First, look for other entries in phosphosite for this protein
             # where this sequence position is legit (i.e., other isoforms)
