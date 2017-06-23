@@ -100,6 +100,7 @@ class SiteMapper(object):
     def __init__(self, site_map):
         self.site_map = site_map
         self._cache = {}
+        self._sitecount = {}
 
     def map_sites(self, stmts, save_fname=None, do_methionine_offset=False,
                   do_orthology_mapping=False, do_isoform_mapping=False):
@@ -296,6 +297,8 @@ class SiteMapper(object):
             if old_mod.position is None or old_mod.residue is None:
                 continue
             site_key = (agent.name, old_mod.residue, old_mod.position)
+            # Increase our count for this site
+            self._sitecount[site_key] = self._sitecount.get(site_key, 0) + 1
             # First, check the cache to potentially avoid a costly sequence
             # lookup
             cached_site = self._cache.get(site_key)
@@ -349,7 +352,6 @@ class SiteMapper(object):
                 human_pos = phosphosite_client.map_to_human_site(
                               up_rat, old_mod.residue, old_mod.position)
                 if human_pos:
-                    logger.info("Rat site valid!!!")
                     mapped_site = (old_mod.residue, human_pos,
                                    'INFERRED_RAT_SITE')
                     self._cache[site_key] = mapped_site
