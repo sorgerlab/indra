@@ -79,10 +79,10 @@ class CyJSAssembler(object):
                 self._add_modification(stmt)
             elif isinstance(stmt, SelfModification):
                 self._add_selfmodification(stmt)
-            elif isinstance(stmt, RasGef):
-                self._add_rasgef(stmt)
-            elif isinstance(stmt, RasGap):
-                self._add_rasgap(stmt)
+            elif isinstance(stmt, Gef):
+                self._add_gef(stmt)
+            elif isinstance(stmt, Gap):
+                self._add_gap(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
             else:
@@ -260,8 +260,8 @@ class CyJSAssembler(object):
     _add_regulate_activity = _add_binary_regulation
     _add_regulate_amount = _add_binary_regulation
     _add_modification = _add_binary_regulation
-    _add_rasgef = _add_binary_regulation
-    _add_rasgap = _add_binary_regulation
+    _add_gef = _add_binary_regulation
+    _add_gap = _add_binary_regulation
 
     def _add_selfmodification(self, stmt):
         edge_type, edge_polarity = _get_stmt_type(stmt)
@@ -515,11 +515,11 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, IncreaseAmount):
         edge_type = 'IncreaseAmount'
         edge_polarity = 'positive'
-    elif isinstance(stmt, RasGef):
-        edge_type = 'RasGef'
+    elif isinstance(stmt, Gef):
+        edge_type = 'Gef'
         edge_polarity = 'positive'
-    elif isinstance(stmt, RasGap):
-        edge_type = 'RasGap'
+    elif isinstance(stmt, Gap):
+        edge_type = 'Gap'
         edge_polarity = 'negative'
     else:
         edge_type = stmt.__class__.__str__()

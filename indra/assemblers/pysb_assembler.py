@@ -33,7 +33,7 @@ SelfExporter.do_export = False
 # policy implemented to assemble that type of statement.
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.RegulateActivity, ist.ActiveForm,
-                       ist.RasGef, ist.RasGap, ist.Translocation,
+                       ist.Gef, ist.Gap, ist.Translocation,
                        ist.IncreaseAmount, ist.DecreaseAmount,
                        ist.Conversion]
 
@@ -1961,16 +1961,16 @@ inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
 inhibition_assemble_michaelis_menten = lambda a, b, c: \
     regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
 
-# RASGEF #####################################################
+# GEF #####################################################
 
-def rasgef_monomers_interactions_only(stmt, agent_set):
+def gef_monomers_interactions_only(stmt, agent_set):
     gef = agent_set.get_create_base_agent(stmt.gef)
     gef.create_site('gef_site')
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('p_loop')
 
 
-def rasgef_monomers_one_step(stmt, agent_set):
+def gef_monomers_one_step(stmt, agent_set):
     # Gef
     gef = agent_set.get_create_base_agent(stmt.gef)
     # Ras
@@ -1979,10 +1979,10 @@ def rasgef_monomers_one_step(stmt, agent_set):
     ras.add_activity_form({'gtpbound': 'active'}, True)
     ras.add_activity_form({'gtpbound': 'inactive'}, False)
 
-rasgef_monomers_default = rasgef_monomers_one_step
+gef_monomers_default = gef_monomers_one_step
 
 
-def rasgef_assemble_interactions_only(stmt, model, agent_set):
+def gef_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
@@ -1998,7 +1998,7 @@ def rasgef_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def rasgef_assemble_one_step(stmt, model, agent_set):
+def gef_assemble_one_step(stmt, model, agent_set):
     gef_pattern = get_monomer_pattern(model, stmt.gef)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -2022,18 +2022,18 @@ def rasgef_assemble_one_step(stmt, model, agent_set):
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-rasgef_assemble_default = rasgef_assemble_one_step
+gef_assemble_default = gef_assemble_one_step
 
-# RASGAP ####################################################
+# GAP ####################################################
 
-def rasgap_monomers_interactions_only(stmt, agent_set):
+def gap_monomers_interactions_only(stmt, agent_set):
     gap = agent_set.get_create_base_agent(stmt.gap)
     gap.create_site('gap_site')
     ras = agent_set.get_create_base_agent(stmt.ras)
     ras.create_site('gtp_site')
 
 
-def rasgap_monomers_one_step(stmt, agent_set):
+def gap_monomers_one_step(stmt, agent_set):
     # Gap
     gap = agent_set.get_create_base_agent(stmt.gap)
     # Ras
@@ -2042,10 +2042,10 @@ def rasgap_monomers_one_step(stmt, agent_set):
     ras.add_activity_form({'gtpbound': 'active'}, True)
     ras.add_activity_form({'gtpbound': 'inactive'}, False)
 
-rasgap_monomers_default = rasgap_monomers_one_step
+gap_monomers_default = gap_monomers_one_step
 
 
-def rasgap_assemble_interactions_only(stmt, model, agent_set):
+def gap_assemble_interactions_only(stmt, model, agent_set):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
@@ -2061,7 +2061,7 @@ def rasgap_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def rasgap_assemble_one_step(stmt, model, agent_set):
+def gap_assemble_one_step(stmt, model, agent_set):
     gap_pattern = get_monomer_pattern(model, stmt.gap)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -2085,7 +2085,7 @@ def rasgap_assemble_one_step(stmt, model, agent_set):
     anns += [Annotation(r.name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-rasgap_assemble_default = rasgap_assemble_one_step
+gap_assemble_default = gap_assemble_one_step
 
 # ACTIVEFORM ############################################
 
