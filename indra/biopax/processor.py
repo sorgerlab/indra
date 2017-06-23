@@ -429,7 +429,7 @@ class BiopaxProcessor(object):
                 continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
-            # it would be possible to find RasGef relationships in complexes
+            # it would be possible to find Gef relationships in complexes
             # with more members
             if len(members_out) != 2:
                 continue
@@ -449,7 +449,7 @@ class BiopaxProcessor(object):
             ev = self._get_evidence(control)
             for gef, ras in itertools.product(_listify(gef_list),
                                                _listify(ras_list)):
-                st = RasGef(gef, ras, evidence=ev)
+                st = Gef(gef, ras, evidence=ev)
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
@@ -479,7 +479,7 @@ class BiopaxProcessor(object):
                 continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
-            # it would be possible to find RasGef relationships in complexes
+            # it would be possible to find Gap relationships in complexes
             # with more members
             if len(members_out) != 2:
                 continue
@@ -499,7 +499,7 @@ class BiopaxProcessor(object):
             ev = self._get_evidence(control)
             for gap, ras in itertools.product(_listify(gap_list),
                                                _listify(ras_list)):
-                st = RasGap(gap, ras, evidence=ev)
+                st = Gap(gap, ras, evidence=ev)
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 

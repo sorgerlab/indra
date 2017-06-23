@@ -101,7 +101,7 @@ class MechLinker(object):
                     enz_base = self._get_base(stmt.enz)
                     enz_base.add_activity('catalytic')
                     enz_base.add_active_state('catalytic', stmt.enz.mods)
-            elif isinstance(stmt, RasGef):
+            elif isinstance(stmt, Gef):
                 if stmt.gef is not None:
                     gef_base = self._get_base(stmt.gef)
                     gef_base.add_activity('gef')
@@ -110,7 +110,7 @@ class MechLinker(object):
                     else:
                         act = 'activity'
                     gef_base.add_active_state(act, stmt.gef.mods)
-            elif isinstance(stmt, RasGap):
+            elif isinstance(stmt, Gap):
                 if stmt.gap is not None:
                     gap_base = self._get_base(stmt.gap)
                     gap_base.add_activity('gap')
