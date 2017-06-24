@@ -102,8 +102,8 @@ class SiteMapper(object):
         self._cache = {}
         self._sitecount = {}
 
-    def map_sites(self, stmts, save_fname=None, do_methionine_offset=False,
-                  do_orthology_mapping=False, do_isoform_mapping=False):
+    def map_sites(self, stmts, do_methionine_offset=True,
+                  do_orthology_mapping=True, do_isoform_mapping=True):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -123,10 +123,21 @@ class SiteMapper(object):
             The statements to check for site errors.
         do_methionine_offset : boolean
             Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering based on mature proteins after
+            attributable to site numbering from mature proteins after
             cleavage of the initial methionine. If True, checks the reference
-            sequence for the given residue at 1 site position greater;
-            if the residue is valid at this position, creates the mapping.
+            sequence for a known modification at 1 site position greater
+            than the given one; if there exists such a site, creates the
+            mapping. Default is True.
+        do_orthology_mapping : boolean
+            Whether to check sequence positions for known modification sites
+            in mouse or rat sequences (based on PhosphoSitePlus data). If a
+            mouse/rat site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
+        do_isoform_mapping : boolean
+            Whether to check sequence positions for known modifications
+            in other human isoforms of the protein (based on PhosphoSitePlus
+            data). If a site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
@@ -205,9 +216,9 @@ class SiteMapper(object):
 
         return (valid_statements, mapped_statements)
 
-    def _map_agent_sites(self, agent, do_methionine_offset=False,
-                         do_orthology_mapping=False,
-                         do_isoform_mapping=False):
+    def _map_agent_sites(self, agent, do_methionine_offset=True,
+                         do_orthology_mapping=True,
+                         do_isoform_mapping=True):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
@@ -216,10 +227,21 @@ class SiteMapper(object):
             Agent to check for invalid modification sites.
         do_methionine_offset : boolean
             Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering based on mature proteins after
+            attributable to site numbering from mature proteins after
             cleavage of the initial methionine. If True, checks the reference
-            sequence for the given residue at 1 site position greater;
-            if the residue is valid at this position, creates the mapping.
+            sequence for a known modification at 1 site position greater
+            than the given one; if there exists such a site, creates the
+            mapping. Default is True.
+        do_orthology_mapping : boolean
+            Whether to check sequence positions for known modification sites
+            in mouse or rat sequences (based on PhosphoSitePlus data). If a
+            mouse/rat site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
+        do_isoform_mapping : boolean
+            Whether to check sequence positions for known modifications
+            in other human isoforms of the protein (based on PhosphoSitePlus
+            data). If a site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
@@ -254,9 +276,9 @@ class SiteMapper(object):
         new_agent.mods = new_mod_list
         return (invalid_sites, new_agent)
 
-    def _check_agent_mod(self, agent, mods, do_methionine_offset=False,
-                         do_orthology_mapping=False,
-                         do_isoform_mapping=False):
+    def _check_agent_mod(self, agent, mods, do_methionine_offset=True,
+                         do_orthology_mapping=True,
+                         do_isoform_mapping=True):
         """Check an agent for invalid sites and look for mappings.
 
         Look up each modification site on the agent in Uniprot and then the
@@ -272,8 +294,19 @@ class SiteMapper(object):
             Whether to check for off-by-one errors in site position (possibly)
             attributable to site numbering from mature proteins after
             cleavage of the initial methionine. If True, checks the reference
-            sequence for the given residue at 1 site position greater;
-            if the residue is valid at this position, creates the mapping.
+            sequence for a known modification at 1 site position greater
+            than the given one; if there exists such a site, creates the
+            mapping. Default is True.
+        do_orthology_mapping : boolean
+            Whether to check sequence positions for known modification sites
+            in mouse or rat sequences (based on PhosphoSitePlus data). If a
+            mouse/rat site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
+        do_isoform_mapping : boolean
+            Whether to check sequence positions for known modifications
+            in other human isoforms of the protein (based on PhosphoSitePlus
+            data). If a site is found that is linked to a site in the human
+            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
