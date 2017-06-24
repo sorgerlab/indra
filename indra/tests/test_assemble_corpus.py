@@ -130,11 +130,14 @@ def test_filter_source():
     assert(len(st_out) == 1)
     st_out = ac.filter_evidence_source([st1, st2, st3], ['reach'], 'all')
     assert (len(st_out) == 2)
-    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'], 'one')
+    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'],
+                                       'one')
     assert (len(st_out) == 2)
-    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'], 'all')
+    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'],
+                                       'all')
     assert (len(st_out) == 1)
-    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'], 'none')
+    st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'],
+                                       'none')
     assert (len(st_out) == 1)
 
 def test_map_grounding():
