@@ -25,6 +25,9 @@ from indra.preassembler.sitemapper import SiteMapper, default_site_map
 logger = logging.getLogger('assemble_corpus')
 indra_logger = logging.getLogger('indra').setLevel(logging.DEBUG)
 
+def _filter(kwargs, arg_list):
+    return dict(filter(lambda x: x[0] in arg_list, kwargs.items()))
+
 def dump_statements(stmts, fname):
     """Dump a list of statements into a pickle file.
 
@@ -114,10 +117,21 @@ def map_sequence(stmts_in, **kwargs):
         A list of statements to map.
     do_methionine_offset : boolean
         Whether to check for off-by-one errors in site position (possibly)
-        attributable to site numbering based on mature proteins after
+        attributable to site numbering from mature proteins after
         cleavage of the initial methionine. If True, checks the reference
-        sequence for the given residue at 1 site position greater;
-        if the residue is valid at this position, creates the mapping.
+        sequence for a known modification at 1 site position greater
+        than the given one; if there exists such a site, creates the
+        mapping. Default is True.
+    do_orthology_mapping : boolean
+        Whether to check sequence positions for known modification sites
+        in mouse or rat sequences (based on PhosphoSitePlus data). If a
+        mouse/rat site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
+    do_isoform_mapping : boolean
+        Whether to check sequence positions for known modifications
+        in other human isoforms of the protein (based on PhosphoSitePlus
+        data). If a site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -127,12 +141,10 @@ def map_sequence(stmts_in, **kwargs):
         A list of mapped statements.
     """
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
-    do_methionine_offset = kwargs.get('do_methionine_offset')
-    if do_methionine_offset is None:
-        do_methionine_offset = False
+    kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
+                  'do_isoform_mapping']
     sm = SiteMapper(default_site_map)
-    valid, mapped = sm.map_sites(stmts_in,
-                                 do_methionine_offset=do_methionine_offset)
+    valid, mapped = sm.map_sites(stmts_in, **_filter(kwargs, kwarg_list))
     correctly_mapped_stmts = []
     for ms in mapped:
         if all([True if mm[1] is not None else False
