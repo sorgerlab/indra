@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
 import glob
 import pickle
 from os.path import join as pjoin
@@ -19,57 +20,87 @@ SiteInfo = namedtuple('SiteInfo', ['gene', 'res', 'pos', 'valid', 'mapped',
                                    'mapped_res', 'mapped_pos', 'explanation',
                                    'freq', 'source'])
 
-def get_incorrect_sites(do_methionine_offset=False, do_orthology_mapping=False,
-                        do_isoform_mapping=False):
-    outf = '../phase3_eval/output'
 
-    #prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
-    #reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
-    #stmts = prior_stmts
-    #stmts = reach_stmts
-    #stmts = ac.map_grounding(stmts, save=pjoin(outf, 'gmapped_stmts.pkl'))
-    stmts = ac.load_statements(pjoin(outf, 'gmapped_stmts.pkl'))
-
+def map_statements(stmts, source, outfile=None):
+    """Tabulate valid, invalid, and mapped sites from a set of Statements."""
     # Look for errors in database statements
-    def get_inc_sites(stmts):
-        sm = SiteMapper(default_site_map)
-        valid, mapped = sm.map_sites(stmts,
-                                     do_methionine_offset=do_methionine_offset,
-                                     do_orthology_mapping=do_orthology_mapping,
-                                     do_isoform_mapping=do_isoform_mapping)
-        # Collect stats on most frequently occurring site errors
-        mapped_sites = []
-        unmapped_sites = []
-        for ms in mapped:
-            for mm in ms.mapped_mods:
-                if mm[1]:
-                    mapped_sites.append(mm)
-                else:
-                    unmapped_sites.append(mm)
-        unmapped_count = Counter(unmapped_sites)
-        unmapped_sites = sorted([(k, v) for k, v in unmapped_count.items()],
-                                 key=lambda x: x[1], reverse=True)
-        mapped_count = Counter(mapped_sites)
-        mapped_sites = sorted([(k, v) for k, v in mapped_count.items()],
-                              key=lambda x: x[1], reverse=True)
-        return (valid, unmapped_sites, mapped_sites, sm)
-
-    (valid, db_inc, db_map, sm) = get_inc_sites(stmts)
-
-    rows = []
-    for mm, freq in db_inc + db_map:
-        gene, res, pos = mm[0]
-        if mm[1]:
-            mapped = 1
-            (mapped_res, mapped_pos, explanation) = mm[1]
+    sm = SiteMapper(default_site_map)
+    valid_stmts, mapped_stmts = sm.map_sites(stmts)
+    # Collect stats from SiteMapper itself
+    sites = []
+    for site_key, mapping in sm._cache.items():
+        gene, res, pos = site_key
+        freq = sm._sitecount[site_key]
+        if mapping == 'VALID':
+            valid, mapped, mapped_res, mapped_pos, explanation = \
+                                                      (1, 0, None, None, None)
         else:
-            mapped = 0
-            mapped_res = mapped_pos = explanation = ''
-        rows.append([gene, res, pos, freq, mapped, mapped_res, mapped_pos,
-                     explanation])
-    rows = sorted(rows, key=lambda x: x[3], reverse=True)
-    write_unicode_csv('incorrect_sites.csv', rows)
-    return (valid, [SiteInfo(*row) for row in rows], sm)
+            valid = 0
+            # Not mapped
+            if mapping is None:
+                mapped, mapped_res, mapped_pos, explanation = \
+                                                    (0, None, None, None)
+            # Mapped!
+            else:
+                mapped_res, mapped_pos, explanation = mapping
+                mapped = 1 if mapped_pos else 0
+        si = SiteInfo(gene, res, pos, valid, mapped, mapped_res, mapped_pos,
+                      explanation, freq, source)
+        sites.append(si)
+    # Write to CSV file
+    if outfile:
+        header = [[field.upper() for field in si._asdict().keys()]]
+        rows = header + replace_nones(sites)
+        write_unicode_csv(outfile, rows)
+    return sites
+
+
+def map_agents(mod_agents_file, sm, source, save_csv=True):
+    """Tabulate valid, invalid, and mapped sites from a set of Agents."""
+    # Load the agents
+    with open(mod_agents_file, 'rb') as f:
+        mod_agents = pickle.load(f)
+    print("Mapping %s" % mod_agents_file)
+    sites = []
+    for ag_ix, ag in enumerate(mod_agents):
+        #if ag_ix % 1000 == 0:
+        #    print('%d of %d' % (ag_ix, len(mod_agents)))
+        invalid_sites = sm._check_agent_mod(ag, ag.mods, True, True, True)
+        # Valid
+        if not invalid_sites:
+            valid, mapped, mapped_res, mapped_pos, explanation = \
+                                                      (1, 0, None, None, None)
+        else:
+            assert len(invalid_sites) == 1
+            mapping = invalid_sites[0][1]
+            valid = 0
+            # Not mapped
+            if mapping is None:
+                mapped, mapped_res, mapped_pos, explanation = \
+                                                    (0, None, None, None)
+            # Mapped!
+            else:
+                mapped_res, mapped_pos, explanation = mapping
+                mapped = 1 if mapped_pos else 0
+        si = SiteInfo(ag.name, ag.mods[0].residue, ag.mods[0].position, valid,
+                      mapped, mapped_res, mapped_pos, explanation, None, source)
+        sites.append(si)
+    # Now that we've collected a list of all the sites, tabulate frequencies
+    site_counter = Counter(sites)
+    sites_with_freq = []
+    for site, site_freq in site_counter.items():
+        site_args = site._asdict()
+        site_args.update({'freq': site_freq})
+        si = SiteInfo(**site_args)
+        sites_with_freq.append(si)
+    # Write to CSV file
+    if save_csv:
+        header = [field.upper() for field in si._asdict().keys()]
+        rows = header + replace_nones(sites)
+        write_unicode_csv(agent_file.split('.')[0] + '.csv', rows)
+    return sites_with_freq
+
+# ------------------------------------------------------------
 
 def load_incorrect_sites():
     rows = read_unicode_csv('incorrect_sites.csv')
@@ -149,49 +180,6 @@ def make_bar_plot(site_info, num_genes=120):
     return gene_counts
 
 # ---------------------
-def map_agents(mod_agents_file, sm, source, save_csv=True):
-    # Load the agents
-    with open(mod_agents_file, 'rb') as f:
-        mod_agents = pickle.load(f)
-    print("Mapping %s" % mod_agents_file)
-    sites = []
-    for ag_ix, ag in enumerate(mod_agents):
-        #if ag_ix % 100 == 0:
-        #    print('%d of %d' % (ag_ix, len(mod_agents)))
-        invalid_sites = sm._check_agent_mod(ag, ag.mods, True, True, True)
-        # Valid
-        if not invalid_sites:
-            valid, mapped, mapped_res, mapped_pos, explanation = \
-                                                      (1, 0, None, None, None)
-        else:
-            assert len(invalid_sites) == 1
-            mapping = invalid_sites[0][1]
-            valid = 0
-            # Not mapped
-            if mapping is None:
-                mapped, mapped_res, mapped_pos, explanation = \
-                                                    (0, None, None, None)
-            # Mapped!
-            else:
-                mapped_res, mapped_pos, explanation = mapping
-                mapped = 1 if mapped_pos else 0
-        si = SiteInfo(ag.name, ag.mods[0].residue, ag.mods[0].position, valid,
-                      mapped, mapped_res, mapped_pos, explanation, None, source)
-        sites.append(si)
-    # Now that we've collected a list of all the sites, tabulate frequencies
-    site_counter = Counter(sites)
-    sites_with_freq = []
-    for site, site_freq in site_counter.items():
-        site_args = site._asdict()
-        site_args.update({'freq': site_freq})
-        si = SiteInfo(**site_args)
-        sites_with_freq.append(si)
-    # Write to CSV file
-    if save_csv:
-        header = [field.upper() for field in si._asdict().keys()]
-        rows = header + replace_nones(sites)
-        write_unicode_csv(agent_file.split('.')[0] + '.csv', rows)
-    return sites_with_freq
 
 
 def replace_nones(rows):
@@ -264,7 +252,18 @@ def print_stats(sites):
     # Sample 100 invalid-mapped (by unique sites)
 
 if __name__ == '__main__':
-    #sites = load_incorrect_sites()
+    outf = '../phase3_eval/output'
+    prior_stmts = ac.load_statements(pjoin(outf, 'prior.pkl'))
+    site_info = map_statements(prior_stmts, source='prior',
+                               outfile='prior_sites.csv')
+
+    #reach_stmts = ac.load_statements(pjoin(outf, 'phase3_stmts.pkl'))
+    #stmts = prior_stmts
+    #stmts = reach_stmts
+    #stmts = ac.map_grounding(stmts, save=pjoin(outf, 'gmapped_stmts.pkl'))
+    #stmts = ac.load_statements(pjoin(outf, 'gmapped_stmts.pkl'))
+
+    sys.exit()
     """
     valid, sites, sm = get_incorrect_sites(do_methionine_offset=True,
                                  do_orthology_mapping=True,
@@ -309,4 +308,6 @@ if __name__ == '__main__':
     plot_pc_pe_mods(all_sites)
     #with open('smcache.pkl', 'wb') as f:
     #    pickle.dump((sm._cache, sm._sitecount), f)
+
+
 
