@@ -97,8 +97,6 @@ class BiopaxProcessor(object):
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the model."""
-        mcc = _bpp('constraint.ModificationChangeConstraint')
-        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         mod_filter = 'residue modification, active'
         for is_active in [True, False]:
             p = self._construct_modification_pattern()
@@ -214,8 +212,6 @@ class BiopaxProcessor(object):
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount statements from the model."""
-        pb = _bpp('PatternBox')
-
         p = pb.controlsExpressionWithTemplateReac()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
@@ -290,14 +286,84 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
+    def get_conversions(self):
+        # NOTE: The pattern below gets all reactions in which a protein is the
+        # controller and chemicals are converted. But with this pattern only
+        # a single chemical is extracted from each side. This can be misleading
+        # since we want to capture all inputs and all outputs of the
+        # conversion. So we need to step back to the conversion itself and
+        # enumerate all inputs/outputs, make sure they constitute the kind
+        # of conversion we can capture here and then extract as a Conversion
+        # Statement. Another issue here is that the same reaction will be
+        # extracted multiple times if there is more then one input or output.
+        # Therefore we need to cache the ID of the reactions that have already
+        # been handled.
+        p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
+                            'controller PE')
+        # Getting the control itself
+        p.add(cb.peToControl(), "controller PE", "Control")
+        # Make sure the controller is a protein
+        # TODO: possibly allow Complex too
+        p.add(tp(_bpimpl('Protein')().getModelInterface()), "controller PE")
+        # Link the control to the conversion that it controls
+        p.add(cb.controlToConv(), "Control", "Conversion")
+        # Make sure this is a BiochemicalRection (as opposed to, for instance,
+        # ComplexAssembly)
+        p.add(tp(_bpimpl('BiochemicalReaction')().getModelInterface()),
+                         "Conversion")
+        # The controller shouldn't be a participant of the conversion
+        p.add(_bpp('constraint.NOT')(cb.participant()),
+              "Conversion", "controller PE")
+        # Get the input participant of the conversion
+        p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
+        # Link to the other side of the conversion
+        p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
+        # Make sure the two sides are not the same
+        p.add(_bpp('constraint.Equality')(False), "input PE", "output PE")
+        # Make sure the input/output is a chemical
+        p.add(tp(_bpimpl('SmallMolecule')().getModelInterface()), "input PE")
+        p.add(tp(_bpimpl('SmallMolecule')().getModelInterface()), "output PE")
+
+        s = _bpp('Searcher')
+        res = s.searchPlain(self.model, p)
+        res_array = [_match_to_array(m) for m in res.toArray()]
+        stmts = []
+        reaction_extracted = set()
+        for r in res_array:
+            controller_pe = r[p.indexOf('controller PE')]
+            reaction = r[p.indexOf('Conversion')]
+            control = r[p.indexOf('Control')]
+            input_pe = r[p.indexOf('input PE')]
+            output_pe = r[p.indexOf('output PE')]
+            if control.getUri() in reaction_extracted:
+                continue
+            # Get controller
+            subj_list = self._get_agents_from_entity(controller_pe)
+            # Get inputs and outputs
+            left = reaction.getLeft().toArray()
+            right = reaction.getRight().toArray()
+            # Skip this if not all participants are chemicals
+            if any([not _is_small_molecule(e) for e in left]):
+                continue
+            if any([not _is_small_molecule(e) for e in right]):
+                continue
+            obj_left = []
+            obj_right = []
+            for participant in left:
+                agent = self._get_agents_from_entity(participant)
+                obj_left.append(agent)
+            for participant in right:
+                agent = self._get_agents_from_entity(participant)
+                obj_right.append(agent)
+            ev = self._get_evidence(control)
+            for subj in _listify(subj_list):
+                st = Conversion(subj, obj_left, obj_right, evidence=ev)
+                st_dec = decode_obj(st, encoding='utf-8')
+                self.statements.append(st_dec)
+            reaction_extracted.add(control.getUri())
+            print(st)
+
     def _rasgef_rasgap_base(self):
-        pb = _bpp('PatternBox')
-        cb = _bpp('constraint.ConBox')
-        rt = _bpp('util.RelType')
-        tp = _bpp('constraint.Type')
-        cs = _bpp('constraint.ConversionSide')
-        cst = _bpp('constraint.ConversionSide$Type')
-        pt = _bpp('constraint.Participant')
 
         # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
@@ -332,7 +398,7 @@ class BiopaxProcessor(object):
         p.add(cb.peToER(), "output simple PE", "output simple ER")
         p.add(_bpp('constraint.Equality')(True), "input simple ER",
               "output simple ER")
-        # Make sure the output is a Protein
+        # Make sure the input/output is a Complex
         p.add(tp(_bpimpl('Complex')().getModelInterface()), "output PE")
         p.add(tp(_bpimpl('Complex')().getModelInterface()), "input PE")
         return p
@@ -497,8 +563,6 @@ class BiopaxProcessor(object):
 
     def _get_generic_modification(self, mod_class):
         """Get all modification reactions given a Modification class."""
-        mcc = _bpp('constraint.ModificationChangeConstraint')
-        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         mod_type = modclass_to_modtype[mod_class]
         if issubclass(mod_class, RemoveModification):
             mod_gain_const = mcct.LOSS
@@ -640,14 +704,6 @@ class BiopaxProcessor(object):
     @staticmethod
     def _construct_modification_pattern():
         """Construct the BioPAX pattern to extract modification reactions."""
-        pb = _bpp('PatternBox')
-        cb = _bpp('constraint.ConBox')
-        rt = _bpp('util.RelType')
-        tp = _bpp('constraint.Type')
-        cs = _bpp('constraint.ConversionSide')
-        cst = _bpp('constraint.ConversionSide$Type')
-        pt = _bpp('constraint.Participant')
-
         # The following constraints were pieced together based on the
         # following two higher level constrains: pb.controlsStateChange(),
         # pb.controlsPhosphorylation().
@@ -1311,3 +1367,15 @@ def _get_mod_difference(mods1, mods2):
         if not found:
             difference_mods.append(m1)
     return difference_mods
+
+
+# Some BioPAX Pattern classes as shorthand
+pb = _bpp('PatternBox')
+cb = _bpp('constraint.ConBox')
+rt = _bpp('util.RelType')
+tp = _bpp('constraint.Type')
+cs = _bpp('constraint.ConversionSide')
+cst = _bpp('constraint.ConversionSide$Type')
+pt = _bpp('constraint.Participant')
+mcc = _bpp('constraint.ModificationChangeConstraint')
+mcct = _bpp('constraint.ModificationChangeConstraint$Type')
