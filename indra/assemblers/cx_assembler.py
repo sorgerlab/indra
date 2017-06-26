@@ -130,17 +130,25 @@ class CxAssembler(object):
         json_str : str
             A json formatted string representation of the CX network.
         """
+        def _get_aspect_metadata(aspect):
+            count = len(self.cx.get(aspect)) if self.cx.get(aspect) else 0
+            if not count:
+                return None
+            data = {'name': aspect,
+                    'idCounter': self._id_counter,
+                    'consistencyGroup': 1,
+                    'elementCount': count}
+            return data
         full_cx = OrderedDict()
         full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
-        full_cx['metaData'] = [{'idCounter': self._id_counter,
-                                'name': 'nodes'},
-                               {'idCounter': self._id_counter,
-                                'name': 'edges'},
-                               {'idCounter': self._id_counter,
-                                'name': 'supports'},
-                               {'idCounter': self._id_counter,
-                                'name': 'citations'}
-                               ]
+        aspects = ['nodes', 'edges', 'supports', 'citations', 'edgeAttributes',
+                   'edgeCitations', 'edgeSupports', 'networkAttributes',
+                   'nodeAttributes']
+        full_cx['metaData'] = []
+        for aspect in aspects:
+            metadata = _get_aspect_metadata(aspect)
+            if metadata:
+                full_cx['metaData'].append(metadata)
         for k, v in self.cx.items():
             full_cx[k] = v
         full_cx['status'] = [{'error': '', 'success': True}]

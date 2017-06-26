@@ -83,6 +83,7 @@ def test_cited():
     assert(citation.get('dc:identifier') == 'pmid:12345')
     cid = citation.get('@id')
     assert(cxa.cx['edgeCitations'][0]['citations'][0] == cid)
+    print(cxa.print_cx())
 
 def test_invalid_cited():
     cxa = CxAssembler()
