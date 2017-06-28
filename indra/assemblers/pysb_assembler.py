@@ -2310,6 +2310,91 @@ increaseamount_monomers_hill = increaseamount_monomers_one_step
 increaseamount_assemble_hill = lambda a, b, c: \
         increaseamount_assemble_one_step(a, b, c, 'hill')
 
+def conversion_monomers_one_step(stmt, agent_set):
+    # Skip statements with more than one from object due to complications
+    # with rate law
+    if len(stmt.obj_from) > 1:
+        return
+    if stmt.subj is not None:
+        agent_set.get_create_base_agent(stmt.subj)
+    for obj in obj_from:
+        agent_set.get_create_base_agent(obj)
+    for obj in obj_to:
+        agent_set.get_create_base_agent(obj)
+
+
+def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
+    # Skip statements with more than one from object due to complications
+    # with rate law
+    if len(stmt.obj_from) != 1:
+        return
+
+    # Create pieces needed for from object
+    obj_from = stmt.obj_from[0]
+    obj_from_pattern = get_monomer_pattern(model, obj)
+    obj_from_monomer = obj_from_pattern.monomer
+    rule_obj_from_str = get_agent_rule_str(obj_from)
+
+    obj_to_monomers = [get_monomer_pattern(model, o).monomer for
+                       o in stmt.obj_to]
+
+    # Create pieces needed for to object
+    # The obj Monomer needs to be synthesized in its "base" state
+    # but it needs a fully specified monomer pattern
+    obj_to_patterns = []
+    for obj_to_monomer in obj_to_monomers:
+        sites_dict = {}
+        for site in obj_to_monomer.sites:
+            if site in obj_to_monomer.site_states:
+                sites_dict[site] = obj_to_monomer.site_states[site][0]
+            else:
+                sites_dict[site] = None
+        obj_to_pattern = obj_to_monomer(**sites_dict)
+        obj_to_patterns.append(obj_to_pattern)
+
+    obj_to_pattern = ReactionPattern(obj_to_patterns)
+    rule_obj_to_str = '_'.join([get_agent_rule_str(o) for o in stmt.obj_to])
+
+    if stmt.subj is None:
+        rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
+        param_name = 'kf_' + stmt.obj.name[0].lower() + '_convert'
+        kf_one_step_convert = get_create_parameter(model, param_name, 2,
+                                                   unique=True)
+        r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
+                 kf_one_step_convert)
+    else:
+        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
+        rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        if not rate_law:
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            # Scale the average apparent increaseamount rate by the default
+            # protein initial condition
+            synth_rate = get_create_parameter(model, param_name, 2e-4)
+        if rate_law == 'hill':
+            # k * [subj]**n / (K_A**n + [subj]**n)
+            param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            kf = get_create_parameter(model, param_name, 4)
+            param_name = 'Ka_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            Ka = get_create_parameter(model, param_name, 1e4)
+            param_name = 'n_' + stmt.subj.name[0].lower() + \
+                                stmt.obj.name[0].lower() + '_synth'
+            n_hill = get_create_parameter(model, param_name, 1)
+            subj_obs = Observable(rule_name + '_subj_obs', subj_pattern)
+            model.add_component(subj_obs)
+            synth_rate = Expression(rule_name + '_rate',
+                kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
+            model.add_component(synth_rate)
+
+        r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
+                 synth_rate)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
+    
+
 class PysbPreassembler(object):
     def __init__(self, stmts=None):
         if not stmts:
@@ -2339,6 +2424,9 @@ class PysbPreassembler(object):
         new_stmts = []
         # Iterate over all statements
         for stmt in self.statements:
+            # TODO: implement Conversions here with proper set_agent
+            if isinstance(stmt, Conversion):
+                continue
             stmt_agents = stmt.agent_list()
             num_agents = len(stmt_agents)
             # Make a list with an empty list for each Agent so that later
