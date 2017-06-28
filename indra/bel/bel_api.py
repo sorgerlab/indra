@@ -97,6 +97,7 @@ def process_belrdf(rdf_str, print_output=True):
     bp.get_composite_activating_mods()
     bp.get_transcription()
     bp.get_activation()
+    bp.get_conversions()
 
     # Print some output about the process
     if print_output:

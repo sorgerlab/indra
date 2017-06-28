@@ -623,15 +623,30 @@ class BelProcessor(object):
         stmt_map = collections.defaultdict(list)
         for stmt in res:
             stmt_map[stmt[-1]].append(stmt)
-        for stmt_key, stmts in stmt_map.items():
+        for stmts in stmt_map.values():
             # First we get the shared part of the Statement
             stmt = stmts[0]
             subj = self.get_agent(stmt[1], stmt[0])
             evidence = self.get_evidence(stmt[-1])
             stmt_str = strip_statement(stmt[-1])
             # Now we collect the participants
-            obj_from = []
-            obj_to = []
+            obj_from_map = {}
+            obj_to_map = {}
+            for stmt in stmts:
+                reactant_name = stmt[6]
+                product_name = stmt[4]
+                if reactant_name not in obj_from_map:
+                    obj_from_map[reactant_name] = \
+                        self.get_agent(stmt[6], stmt[5])
+                if product_name not in obj_to_map:
+                    obj_to_map[product_name] = \
+                        self.get_agent(stmt[4], stmt[3])
+            obj_from = list(obj_from_map.values())
+            obj_to = list(obj_to_map.values())
+            st = Conversion(subj, obj_from, obj_to, evidence=evidence)
+            # If we've matched a pattern, mark this as a converted statement
+            self.statements.append(st)
+            self.converted_direct_stmts.append(stmt_str)
 
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
