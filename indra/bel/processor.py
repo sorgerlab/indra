@@ -590,6 +590,49 @@ class BelProcessor(object):
                         self.indirect_stmts.append(stmt)
                         self.converted_indirect_stmts.append(stmt_str)
 
+    def get_conversions(self):
+        """Extract Conversion Statements."""
+        query = prefixes + """
+            SELECT DISTINCT ?controller ?controllerName ?controllerActivity ?product
+                ?productName ?reactant ?reactantName ?stmt
+            WHERE {
+                ?stmt a belvoc:Statement .
+                ?stmt belvoc:hasRelationship ?rel .
+                ?stmt belvoc:hasSubject ?subject .
+                ?stmt belvoc:hasObject ?rxn .
+                ?subject a belvoc:AbundanceActivity .
+                ?subject belvoc:hasActivityType ?controllerActivity .
+                ?subject belvoc:hasChild ?controller .
+                ?controller belvoc:hasConcept ?controllerName .
+                ?rxn a belvoc:Reaction .
+                ?rxn belvoc:hasChild ?reactants .
+                ?reactants rdfs:label ?reactLabel .
+                FILTER (regex(?reactLabel, "^reactants.*"))
+                ?rxn belvoc:hasChild ?products .
+                ?products rdfs:label ?prodLabel .
+                FILTER (regex(?prodLabel, "^products.*"))
+                ?reactants belvoc:hasChild ?reactant .
+                ?products belvoc:hasChild ?product .
+                ?reactant belvoc:hasConcept ?reactantName .
+                ?product belvoc:hasConcept ?productName .
+            }
+            """
+        res = self.g.query(query)
+        # We need to collect all pieces of the same statement so that we can
+        # collect multiple reactants and products
+        stmt_map = collections.defaultdict(list)
+        for stmt in res:
+            stmt_map[stmt[-1]].append(stmt)
+        for stmt_key, stmts in stmt_map.items():
+            # First we get the shared part of the Statement
+            stmt = stmts[0]
+            subj = self.get_agent(stmt[1], stmt[0])
+            evidence = self.get_evidence(stmt[-1])
+            stmt_str = strip_statement(stmt[-1])
+            # Now we collect the participants
+            obj_from = []
+            obj_to = []
+
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
