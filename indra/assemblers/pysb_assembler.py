@@ -34,7 +34,8 @@ SelfExporter.do_export = False
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.RegulateActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation,
-                       ist.IncreaseAmount, ist.DecreaseAmount]
+                       ist.IncreaseAmount, ist.DecreaseAmount,
+                       ist.Conversion]
 
 def _n(name):
     """Return valid PySB name."""
@@ -2317,9 +2318,9 @@ def conversion_monomers_one_step(stmt, agent_set):
         return
     if stmt.subj is not None:
         agent_set.get_create_base_agent(stmt.subj)
-    for obj in obj_from:
+    for obj in stmt.obj_from:
         agent_set.get_create_base_agent(obj)
-    for obj in obj_to:
+    for obj in stmt.obj_to:
         agent_set.get_create_base_agent(obj)
 
 
@@ -2331,7 +2332,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
 
     # Create pieces needed for from object
     obj_from = stmt.obj_from[0]
-    obj_from_pattern = get_monomer_pattern(model, obj)
+    obj_from_pattern = get_monomer_pattern(model, obj_from)
     obj_from_monomer = obj_from_pattern.monomer
     rule_obj_from_str = get_agent_rule_str(obj_from)
 
@@ -2357,7 +2358,8 @@ def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
 
     if stmt.subj is None:
         rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
-        param_name = 'kf_' + stmt.obj.name[0].lower() + '_convert'
+        param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
+                                          obj_to_monomers[0].name[0])
         kf_one_step_convert = get_create_parameter(model, param_name, 2,
                                                    unique=True)
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
@@ -2393,7 +2395,9 @@ def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
                  synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
-    
+
+conversion_monomers_default = conversion_monomers_one_step
+conversion_assemble_default = conversion_assemble_one_step
 
 class PysbPreassembler(object):
     def __init__(self, stmts=None):
@@ -2425,7 +2429,8 @@ class PysbPreassembler(object):
         # Iterate over all statements
         for stmt in self.statements:
             # TODO: implement Conversions here with proper set_agent
-            if isinstance(stmt, Conversion):
+            if isinstance(stmt, ist.Conversion):
+                new_stmts.append(stmt)
                 continue
             stmt_agents = stmt.agent_list()
             num_agents = len(stmt_agents)

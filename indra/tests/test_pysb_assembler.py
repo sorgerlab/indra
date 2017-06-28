@@ -1102,3 +1102,13 @@ def test_increaseamount_hill():
     pa.make_model(policies='hill')
     pa.save_model()
     assert(len(pa.model.parameters) == 5)
+
+def test_convert_nosubj():
+    stmt = Conversion(None, [Agent('PIP2')], [Agent('PIP3')])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model()
+    assert(len(pa.model.parameters) == 3)
+    assert(len(pa.model.rules) == 1)
+    assert(len(pa.model.monomers) == 2)
+
