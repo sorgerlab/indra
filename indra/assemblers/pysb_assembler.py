@@ -2324,7 +2324,7 @@ def conversion_monomers_one_step(stmt, agent_set):
         agent_set.get_create_base_agent(obj)
 
 
-def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def conversion_assemble_one_step(stmt, model, agent_set):
     # Skip statements with more than one from object due to complications
     # with rate law
     if len(stmt.obj_from) != 1:
@@ -2359,40 +2359,28 @@ def conversion_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is None:
         rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
         param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
-                                          obj_to_monomers[0].name[0])
+                                          obj_to_monomers[0].name[0].lower())
         kf_one_step_convert = get_create_parameter(model, param_name, 2,
                                                    unique=True)
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
+        result_pattern = obj_to_pattern
+        result_pattern.complex_patterns.insert(0, subj_pattern)
         rule_subj_str = get_agent_rule_str(stmt.subj)
-        rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
-        if not rate_law:
-            param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                                stmt.obj.name[0].lower() + '_synth'
-            # Scale the average apparent increaseamount rate by the default
-            # protein initial condition
-            synth_rate = get_create_parameter(model, param_name, 2e-4)
-        if rate_law == 'hill':
-            # k * [subj]**n / (K_A**n + [subj]**n)
-            param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                                stmt.obj.name[0].lower() + '_synth'
-            kf = get_create_parameter(model, param_name, 4)
-            param_name = 'Ka_' + stmt.subj.name[0].lower() + \
-                                stmt.obj.name[0].lower() + '_synth'
-            Ka = get_create_parameter(model, param_name, 1e4)
-            param_name = 'n_' + stmt.subj.name[0].lower() + \
-                                stmt.obj.name[0].lower() + '_synth'
-            n_hill = get_create_parameter(model, param_name, 1)
-            subj_obs = Observable(rule_name + '_subj_obs', subj_pattern)
-            model.add_component(subj_obs)
-            synth_rate = Expression(rule_name + '_rate',
-                kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
-            model.add_component(synth_rate)
+        rule_name = '%s_catalyzes_%s_converted_to_%s' % \
+            (rule_subj_str, rule_obj_from_str, rule_obj_to_str)
+        param_name = 'kf_%s%s%s_convert' % \
+            (stmt.subj.name[0].lower(), obj_from.name[0].lower(),
+             obj_to_monomers[0].name[0].lower())
+        # Scale the average apparent increaseamount rate by the default
+        # protein initial condition
+        kf_one_step_convert = get_create_parameter(model, param_name, 2e-4)
 
-        r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
-                 synth_rate)
+        r = Rule(rule_name, subj_pattern + obj_from_pattern >>
+                            result_pattern,
+                 kf_one_step_convert)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 

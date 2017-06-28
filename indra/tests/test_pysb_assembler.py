@@ -1112,3 +1112,12 @@ def test_convert_nosubj():
     assert(len(pa.model.rules) == 1)
     assert(len(pa.model.monomers) == 2)
 
+def test_convert_subj():
+    stmt = Conversion(Agent('PIK3CA'), [Agent('PIP2')], [Agent('PIP3')])
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model()
+    assert(len(pa.model.parameters) == 4)
+    assert(len(pa.model.rules) == 1)
+    assert(len(pa.model.monomers) == 3)
+
