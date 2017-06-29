@@ -801,13 +801,7 @@ class TripsProcessor(object):
             event_id = event.attrib['id']
             if event_id in self._static_events:
                 continue
-            # Get the subject agent
-            agent_tag = event.find(".//*[@role=':AGENT']")
-            if agent_tag is None:
-                subj = None
-            else:
-                agent_id = agent_tag.attrib.get('id')
-                subj = self._get_agent_by_id(agent_id, event_id)
+
             # Get the from agent
             agent_tag = event.find(".//*[@role=':AFFECTED']")
             if agent_tag is None:
@@ -821,6 +815,7 @@ class TripsProcessor(object):
                     obj_from = [obj_from]
             if not obj_from:
                 continue
+
             # Get the to agent
             agent_tag = event.find(".//*[@role=':RES']")
             if agent_tag is None:
@@ -834,6 +829,25 @@ class TripsProcessor(object):
                     obj_to = [obj_to]
             if not obj_to:
                 continue
+
+            # Get the subject agent
+            agent_tag = event.find(".//*[@role=':AGENT']")
+            if agent_tag is None:
+                subj = None
+                # Try to look for CATALYZE parent event
+                pattern = \
+                    "EVENT/[type='ONT::CATALYZE']/*[@id='%s']/.." % event_id
+                cat_event = self.tree.find(pattern)
+                if cat_event is not None:
+                    cat_event_id = cat_event.attrib['id']
+                    agent_tag = cat_event.find(".//*[@role=':AGENT']")
+                    if agent_tag is not None:
+                        agent_id = agent_tag.attrib.get('id')
+                        subj = self._get_agent_by_id(agent_id, cat_event_id)
+                        event = cat_event
+            else:
+                agent_id = agent_tag.attrib.get('id')
+                subj = self._get_agent_by_id(agent_id, event_id)
             # Get evidence
             ev = self._get_evidence(event)
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
