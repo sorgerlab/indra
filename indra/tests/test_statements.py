@@ -1435,3 +1435,19 @@ def test_conversion_refinement():
     assert(st2.refinement_of(st1, hierarchies))
     assert(not st1.refinement_of(st2, hierarchies))
 
+def test_conversion_set_agent_list():
+    ag = [Agent('A%d' % i) for i in range(5)]
+    st1 = Conversion(None, [ag[0]], [ag[1]])
+    st2 = Conversion(ag[0], [ag[1], ag[2]], [ag[3]])
+    st3 = Conversion(ag[0], [ag[1]], [ag[2], ag[3]])
+    st1.set_agent_list([None] + ag[:2])
+    st2.set_agent_list(ag[:4])
+    st3.set_agent_list(ag[:4])
+    assert(st1.subj is None)
+    assert(len(st1.obj_from) == 1)
+    assert(len(st1.obj_to) == 1)
+    assert(len(st2.obj_from) == 2)
+    assert(len(st2.obj_to) == 1)
+    assert(len(st3.obj_from) == 1)
+    assert(len(st3.obj_to) == 2)
+

@@ -2416,10 +2416,6 @@ class PysbPreassembler(object):
         new_stmts = []
         # Iterate over all statements
         for stmt in self.statements:
-            # TODO: implement Conversions here with proper set_agent
-            if isinstance(stmt, ist.Conversion):
-                new_stmts.append(stmt)
-                continue
             stmt_agents = stmt.agent_list()
             num_agents = len(stmt_agents)
             # Make a list with an empty list for each Agent so that later

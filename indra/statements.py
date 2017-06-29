@@ -2262,7 +2262,14 @@ class Conversion(Statement):
         return [self.subj] + self.obj_from + self.obj_to
 
     def set_agent_list(self, agent_list):
-        raise Exception('Setting agent list not implemented.')
+        num_obj_from = len(self.obj_from)
+        num_obj_to = len(self.obj_to)
+        if len(agent_list) != 1 + num_obj_from + num_obj_to:
+            raise Exception('Conversion agent number must be preserved '
+                            'when setting agent list.')
+        self.subj = agent_list[0]
+        self.obj_from = agent_list[1:num_obj_from+1]
+        self.obj_to = agent_list[num_obj_from+1:]
 
     def to_json(self):
         generic = super(Conversion, self).to_json()
