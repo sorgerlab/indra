@@ -2325,8 +2325,16 @@ class Conversion(Statement):
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
+            json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000013' # catalyst
         json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
+        for of in json_dict['obj_from']:
+            of['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000010' # reactant
         json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
+        for ot in json_dict['obj_to']:
+            ot['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000011' # product
         json_dict.update(generic)
         return json_dict
 
@@ -2548,6 +2556,7 @@ stmt_sbo_map = {
     'addmodification': '0000210', # addition of a chemical group
     'removemodification': '0000211', # removal of a chemical group
     'modification': '0000182', # conversion
+    'conversion': '0000182', # conversion
     'autophosphorylation': '0000216', # phosphorylation
     'transphosphorylation': '0000216', # phosphorylation
     'decreaseamount': '0000179', # degradation
