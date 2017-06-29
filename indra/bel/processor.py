@@ -422,12 +422,15 @@ class BelProcessor(object):
                    ?stmt ?subj ?obj
             WHERE {
                 ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasSubject ?subj .
-                ?stmt belvoc:hasObject ?obj .
                 ?stmt belvoc:hasRelationship ?rel .
-                ?subj belvoc:hasActivityType ?subjActType .
-                ?subj belvoc:hasChild ?subjProt .
-                ?subjProt belvoc:hasConcept ?subjName .
+                ?stmt belvoc:hasSubject ?subj .
+                {?subj belvoc:hasActivityType ?subjActType .
+                 ?subj belvoc:hasChild ?subjProt .
+                 ?subjProt belvoc:hasConcept ?subjName .}
+                UNION
+                {?subj a belvoc:Abundance .
+                 ?subj belvoc:hasConcept ?subjName .}
+                ?stmt belvoc:hasObject ?obj .
                 ?obj belvoc:hasActivityType ?objActType .
                 ?obj belvoc:hasChild ?objProt .
                 ?objProt belvoc:hasConcept ?objName .
@@ -440,8 +443,10 @@ class BelProcessor(object):
         for stmt in res_stmts:
             evidence = self.get_evidence(stmt[5])
             subj = self.get_agent(stmt[0], stmt[6])
-            subj_activity = term_from_uri(stmt[1]).lower()
-            subj.activity = ActivityCondition(subj_activity, True)
+            subj_activity = stmt[1]
+            if subj_activity:
+                subj_activity = term_from_uri(stmt[1]).lower()
+                subj.activity = ActivityCondition(subj_activity, True)
             rel = term_from_uri(stmt[2])
             if rel == 'DirectlyDecreases':
                 is_activation = False
@@ -971,7 +976,7 @@ class BelProcessor(object):
         if mod.startswith('Phosphorylation'):
             mc = ModCondition('phosphorylation')
         else:
-            mc = ModCondition(mod)
+            mc = ModCondition(mod.lower())
         mc.residue = BelProcessor._get_residue(mod)
         mc.position = mod_pos
         return mc
