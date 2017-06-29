@@ -994,6 +994,15 @@ class Statement(object):
         if self.supported_by:
             json_dict['supported_by'] = \
                 ['%s' % st.uuid for st in self.supported_by]
+        def get_sbo_term(cls):
+            sbo_term = stmt_sbo_map.get(cls.__name__.lower())
+            while not sbo_term:
+                cls = cls.__bases__[0]
+                sbo_term = stmt_sbo_map.get(cls.__name__.lower())
+            return sbo_term
+        sbo_term = get_sbo_term(self.__class__)
+        json_dict['sbo_definition'] = \
+            'http://identifiers.org/sbo/SBO:%s' % sbo_term
         return json_dict
 
     @classmethod
@@ -1144,8 +1153,12 @@ class Modification(Statement):
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
+            json_dict['enz']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000460' # enzymatic catalyst
         if self.sub is not None:
             json_dict['sub'] = self.sub.to_json()
+            json_dict['sub']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000015' # substrate
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1259,6 +1272,8 @@ class SelfModification(Statement):
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
+            json_dict['enz']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000460' # enzymatic catalyst
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1497,8 +1512,20 @@ class RegulateActivity(Statement):
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
+            if self.is_activation:
+                json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000459' # stimulator
+            else:
+                json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000020' # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
+            if self.is_activation:
+                json_dict['obj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000643' # stimulated
+            else:
+                json_dict['obj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000642' # inhibited
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
         json_dict.update(generic)
@@ -1677,6 +1704,8 @@ class ActiveForm(Statement):
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
+        json_dict['agent']['sbo_definition'] = \
+            'http://identifiers.org/sbo/SBO:0000644' # modified
         json_dict.update(generic)
         return json_dict
 
@@ -1855,8 +1884,12 @@ class RasGef(Statement):
         json_dict = _o({'type': generic['type']})
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
+            json_dict['gef']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000013' # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
+            json_dict['ras']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000015' # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -1939,8 +1972,12 @@ class RasGap(Statement):
         json_dict = _o({'type': generic['type']})
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
+            json_dict['gap']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000013' # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
+            json_dict['ras']['sbo_definition'] = \
+                'http://identifiers.org/sbo/SBO:0000015' # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -2165,8 +2202,20 @@ class RegulateAmount(Statement):
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
+            if isinstance(self, IncreaseAmount):
+                json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000459' # stimulator
+            else:
+                json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000020' # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
+            if isinstance(self, IncreaseAmount):
+                json_dict['obj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000011' # product
+            else:
+                json_dict['obj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000010' # reactant
         json_dict.update(generic)
         return json_dict
 
@@ -2276,8 +2325,16 @@ class Conversion(Statement):
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
+            json_dict['subj']['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000013' # catalyst
         json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
+        for of in json_dict['obj_from']:
+            of['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000010' # reactant
         json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
+        for ot in json_dict['obj_to']:
+            ot['sbo_definition'] = \
+                    'http://identifiers.org/sbo/SBO:0000011' # product
         json_dict.update(generic)
         return json_dict
 
@@ -2484,6 +2541,35 @@ def _get_mod_inverse_maps():
 
 modtype_to_inverse, modclass_to_inverse = _get_mod_inverse_maps()
 
+stmt_sbo_map = {
+    'acetylation': '0000215',
+    'glycosylation': '0000217',
+    'hydroxylation': '0000233',
+    'methylation': '0000214',
+    'myristoylation': '0000219',
+    'palmitoylation': '0000218',
+    'phosphorylation': '0000216',
+    'farnesylation': '0000222',
+    'geranylgeranylation': '0000223',
+    'ubiquitination': '0000224',
+    'dephosphorylation': '0000330',
+    'addmodification': '0000210', # addition of a chemical group
+    'removemodification': '0000211', # removal of a chemical group
+    'modification': '0000182', # conversion
+    'conversion': '0000182', # conversion
+    'autophosphorylation': '0000216', # phosphorylation
+    'transphosphorylation': '0000216', # phosphorylation
+    'decreaseamount': '0000179', # degradation
+    'increaseamount': '0000183', # transcription
+    'complex': '0000526', # protein complex formation
+    'translocation': '0000185', # transport reaction
+    'regulateactivity': '0000182', # conversion
+    'activeform': '0000412', # biological activity
+    'rasgef': '0000172', # catalysis
+    'rasgap': '0000172', # catalysis
+    'statement': '0000231' # occuring entity representation
+    }
+
 
 class InvalidResidueError(ValueError):
     """Invalid residue (amino acid) name."""
@@ -2519,4 +2605,3 @@ def draw_stmt_graph(stmts):
     networkx.draw_networkx_labels(g, pos, labels=node_labels)
     networkx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels)
     plt.show()
-
