@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01246_IO-1026190" id="paragraph1245">PTEN catalyzes the conversion of PIP3 to PIP2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1257" pid="paragraph1245">PTEN catalyzes the conversion of PIP3 to PIP2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="45" id="V1026197" lisp="(ONT::EVENT ONT::V1026197 ONT::CATALYZE :AGENT ONT::V1026193 :AFFECTED ONT::V1026207 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph1245" rule="-RULE50_4_AGENT_AFFECTED" start="0" uttnum="1257">
+		<type>ONT::CATALYZE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="45" id="V1026197" start="0">
+			<type>ONT::CATALYZE</type>
+			<text>PTEN catalyzes the conversion of PIP3 to PIP2</text>
+		</predicate>
+		<arg1 end="5" id="V1026193" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">PTEN</text>
+		</arg1>
+		<arg2 end="45" id="V1026207" role=":AFFECTED" start="15">
+			<type>ONT::TRANSFORM</type>
+			<text normalization="">the conversion of PIP3 to PIP2</text>
+		</arg2>
+		<text>PTEN catalyzes the conversion of PIP3 to PIP2</text>
+	</EVENT>
+	<TERM dbid="NCIT:C18181|UP:P60484|NCIT:C52906|HGNC:9588|GO:0051800" end="5" id="V1026193" lisp="(ONT::TERM ONT::V1026193 ONT::GENE-PROTEIN :NAME W::PTEN :DRUM ((:DRUM (TERM :ID HGNC::|9588| :NAME &quot;phosphatase and tensin homolog&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;PTEN&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P60484) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52906 :NAME &quot;PTEN&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;PTEN&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C18181 :NAME &quot;PTEN tyrosine phosphatase&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;PTEN&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID GO::|0051800| :NAME &quot;phosphatidylinositol-3,4-bisphosphate 3-phosphatase activity&quot; :SCORE 0.48571 :MATCHES ((MATCH :SCORE 0.48571 :MATCHED &quot;PTEN&quot; :STATUS &quot;BROAD synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph1245" rule="-SIMPLE-REF" start="0" uttnum="1257">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>PTEN</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:9588" match-score="1.0" matched-name="PTEN" name="phosphatase and tensin homolog">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P60484"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52906" match-score="1.0" matched-name="PTEN" name="PTEN">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C18181" match-score="0.82857" matched-name="PTEN" name="PTEN tyrosine phosphatase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="GO:0051800" match-score="0.48571" matched-name="PTEN" name="phosphatidylinositol-3,4-bisphosphate 3-phosphatase activity">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>PTEN</text>
+	</TERM>
+	<EVENT end="45" id="V1026207" lisp="(ONT::EVENT ONT::V1026207 ONT::TRANSFORM :RES ONT::V1026289 :AFFECTED ONT::V1026237)" paragraph="paragraph1245" rule="-RESULT1,-RULE5_1_AFFECTED_AFFECTED1-AFFECTED" start="15" uttnum="1257">
+		<type>ONT::TRANSFORM</type>
+		<predicate end="45" id="V1026207" start="15">
+			<type>ONT::TRANSFORM</type>
+			<text>the conversion of PIP3 to PIP2</text>
+		</predicate>
+		<arg1 end="38" id="V1026237" role=":AFFECTED" start="30">
+			<type>ONT::CHEMICAL</type>
+			<text normalization="">of PIP3</text>
+		</arg1>
+		<arg2 end="45" id="V1026289" role=":RES" start="41">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">PIP2</text>
+		</arg2>
+		<text>the conversion of PIP3 to PIP2</text>
+	</EVENT>
+	<TERM dbid="CHEBI:16618" end="38" id="V1026237" lisp="(ONT::TERM ONT::V1026237 ONT::CHEMICAL :NAME W::PIP-3 :DRUM ((:DRUM (TERM :ID CHEBI::|16618| :NAME &quot;1-phosphatidyl-1D-myo-inositol 3,4,5-trisphosphate&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;PIP3&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1245" rule="-SIMPLE-REF" start="30" uttnum="1257">
+		<type>ONT::CHEMICAL</type>
+		<name>PIP-3</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:16618" match-score="0.65714" matched-name="PIP3" name="1-phosphatidyl-1D-myo-inositol 3,4,5-trisphosphate">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>of PIP3</text>
+	</TERM>
+	<TERM dbid="CHEBI:18348" end="45" id="V1026289" lisp="(ONT::TERM ONT::V1026289 ONT::MOLECULE :NAME W::PIP-2 :DRUM ((:DRUM (TERM :ID CHEBI::|18348| :NAME &quot;1-phosphatidyl-1D-myo-inositol 4,5-bisphosphate&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;PIP2&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1245" rule="-SIMPLE-REF" start="41" uttnum="1257">
+		<type>ONT::MOLECULE</type>
+		<name>PIP-2</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:18348" match-score="0.65714" matched-name="PIP2" name="1-phosphatidyl-1D-myo-inositol 4,5-bisphosphate">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>PIP2</text>
+	</TERM>
+</ekb>

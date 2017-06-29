@@ -655,3 +655,19 @@ def test_51():
     assert(gtp.name == 'GTP')
     assert(gdp_gmp[0].name == 'GDP')
     assert(gdp_gmp[1].name == 'GMP')
+
+def test_52():
+    sentence = 'PTEN catalyzes the conversion of PIP3 to PIP2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    pten = st.subj
+    pip3 = st.obj_from[0]
+    pip2 = st.obj_to[0]
+    assert(pten.name == 'PTEN')
+    assert(pip2.name.startswith('PIP'))
+    assert(pip2.name.endswith('2'))
+    assert(pip3.name.startswith('PIP'))
+    assert(pip3.name.endswith('3'))
+
