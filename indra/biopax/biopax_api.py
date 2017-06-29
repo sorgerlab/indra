@@ -136,5 +136,6 @@ def process_model(model):
     bp.get_activity_modification()
     bp.get_gef()
     bp.get_gap()
-    # bproc.get_complexes()
+    bp.get_conversions()
+    # bp.get_complexes()
     return bp

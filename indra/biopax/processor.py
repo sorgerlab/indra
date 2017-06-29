@@ -361,7 +361,6 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
             reaction_extracted.add(control.getUri())
-            print(st)
 
     def _gef_gap_base(self):
         # The following constraints were pieced together based on the
@@ -1101,10 +1100,11 @@ class BiopaxProcessor(object):
             for ev in stmt.evidence:
                 stmt_uids.add(ev.source_id)
 
-        uids_not_covered = uids.difference(stmt_uids)
+        uids_not_covered = uids - stmt_uids
         print('Total in model: %d' % len(uids))
-        print('Total covered: %d' % len(stmt_uids))
-        print('%.2f%% coverage' % (100.0*(len(uids)-len(uids_not_covered))/len(uids)))
+        print('Total covered: %d' % len(uids & stmt_uids))
+        print('%.2f%% coverage' % (100.0*len(uids & stmt_uids)/len(uids)))
+        return len(uids), len(uids & stmt_uids)
 
 _mftype_dict = {
     'phosres': ('phosphorylation', None),
