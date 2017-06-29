@@ -1181,6 +1181,10 @@ _mftype_dict = {
     'N-acetylglutamate': ('acetylation', 'E'),
     'N-acetylaspartate': ('acetylation', 'D'),
     'n6me2lys': ('methylation', 'K'),
+    'Phosphohistidine': ('phosphorylation', 'H'),
+    'S-farnesyl-L-cysteine': ('farnesylation', 'C'),
+    'modified glycine residue': ('modification', 'G'),
+    'N-acetyl-L-methionine': ('acetylation', 'M'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
