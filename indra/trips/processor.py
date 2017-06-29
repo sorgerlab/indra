@@ -794,6 +794,67 @@ class TripsProcessor(object):
                 self.statements.append(st)
             self._add_extracted('ONT::TRANSLOCATE', event.attrib['id'])
 
+    def get_conversions(self):
+        conversion_events = \
+            self.tree.findall("EVENT/[type='ONT::TRANSFORM']")
+        for event in conversion_events:
+            event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
+
+            # Get the from agent
+            agent_tag = event.find(".//*[@role=':AFFECTED']")
+            if agent_tag is None:
+                obj_from = []
+            else:
+                agent_id = agent_tag.attrib.get('id')
+                obj_from = self._get_agent_by_id(agent_id, event_id)
+                if obj_from is None:
+                    obj_from = []
+                elif isinstance(obj_from, Agent):
+                    obj_from = [obj_from]
+            if not obj_from:
+                continue
+
+            # Get the to agent
+            agent_tag = event.find(".//*[@role=':RES']")
+            if agent_tag is None:
+                obj_to = []
+            else:
+                agent_id = agent_tag.attrib.get('id')
+                obj_to = self._get_agent_by_id(agent_id, event_id)
+                if obj_to is None:
+                    obj_to = []
+                elif isinstance(obj_to, Agent):
+                    obj_to = [obj_to]
+            if not obj_to:
+                continue
+
+            # Get the subject agent
+            agent_tag = event.find(".//*[@role=':AGENT']")
+            if agent_tag is None:
+                subj = None
+                # Try to look for CATALYZE parent event
+                pattern = \
+                    "EVENT/[type='ONT::CATALYZE']/*[@id='%s']/.." % event_id
+                cat_event = self.tree.find(pattern)
+                if cat_event is not None:
+                    cat_event_id = cat_event.attrib['id']
+                    agent_tag = cat_event.find(".//*[@role=':AGENT']")
+                    if agent_tag is not None:
+                        agent_id = agent_tag.attrib.get('id')
+                        subj = self._get_agent_by_id(agent_id, cat_event_id)
+                        event = cat_event
+            else:
+                agent_id = agent_tag.attrib.get('id')
+                subj = self._get_agent_by_id(agent_id, event_id)
+            # Get evidence
+            ev = self._get_evidence(event)
+            st = Conversion(subj, obj_from, obj_to, evidence=ev)
+            location = self._get_event_location(event)
+            _stmt_location_to_agents(st, location)
+            self.statements.append(st)
+
     def _get_cell_loc_by_id(self, term_id):
         term = self.tree.find("TERM/[@id='%s']" % term_id)
         if term is None:

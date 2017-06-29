@@ -616,3 +616,58 @@ def test_48():
     assert(p53.name == 'TP53')
     assert(mdm2.name == 'MDM2')
 
+def test_49():
+    sentence = 'Ras converts GTP into GDP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp = st.obj_to[0]
+    assert(ras.name == 'RAS')
+    assert(gtp.name == 'GTP')
+    assert(gdp.name == 'GDP')
+
+def test_50():
+    sentence = 'GTP is converted into GDP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp = st.obj_to[0]
+    assert(ras is None)
+    assert(gtp.name == 'GTP')
+    assert(gdp.name == 'GDP')
+
+def test_51():
+    sentence = 'RAS converts GTP into GDP and GMP.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    ras = st.subj
+    gtp = st.obj_from[0]
+    gdp_gmp = st.obj_to
+    assert(ras.name == 'RAS')
+    assert(gtp.name == 'GTP')
+    assert(gdp_gmp[0].name == 'GDP')
+    assert(gdp_gmp[1].name == 'GMP')
+
+def test_52():
+    sentence = 'PTEN catalyzes the conversion of PIP3 to PIP2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Conversion))
+    pten = st.subj
+    pip3 = st.obj_from[0]
+    pip2 = st.obj_to[0]
+    assert(pten.name == 'PTEN')
+    assert(pip2.name.startswith('PIP'))
+    assert(pip2.name.endswith('2'))
+    assert(pip3.name.startswith('PIP'))
+    assert(pip3.name.endswith('3'))
+

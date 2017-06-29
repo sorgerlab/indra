@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01667_IO-1381855" id="paragraph1666">GTP is converted into GDP.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1889" pid="paragraph1666">GTP is converted into GDP.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="25" id="V1381886" lisp="(ONT::EVENT ONT::V1381886 ONT::TRANSFORM :RES ONT::V1381903 :AFFECTED ONT::V1381861 :FORCE ONT::TRUE :TENSE W::PRES :PASSIVE +)" paragraph="paragraph1666" rule="-RESULT1,-RULE5_1_AFFECTED_AFFECTED1-AFFECTED" start="0" uttnum="1889">
+		<type>ONT::TRANSFORM</type>
+		<force>ONT::TRUE</force>
+		<predicate end="25" id="V1381886" start="0">
+			<type>ONT::TRANSFORM</type>
+			<text>GTP is converted into GDP</text>
+		</predicate>
+		<arg1 end="4" id="V1381861" role=":AFFECTED" start="0">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GTP</text>
+		</arg1>
+		<arg2 end="25" id="V1381903" role=":RES" start="22">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GDP</text>
+		</arg2>
+		<text>GTP is converted into GDP</text>
+	</EVENT>
+	<TERM dbid="CHEBI:15996|CHEBI:37565" end="4" id="V1381861" lisp="(ONT::TERM ONT::V1381861 ONT::MOLECULE :NAME W::GTP :DRUM ((:DRUM (TERM :ID CHEBI::|15996| :NAME &quot;GTP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GTP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|37565| :NAME &quot;GTP(4-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GTP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1666" rule="-SIMPLE-REF" start="0" uttnum="1889">
+		<type>ONT::MOLECULE</type>
+		<name>GTP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:15996" match-score="1.0" matched-name="GTP" name="GTP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:37565" match-score="0.65714" matched-name="GTP" name="GTP(4-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GTP</text>
+	</TERM>
+	<TERM dbid="CHEBI:17552|CHEBI:58189" end="25" id="V1381903" lisp="(ONT::TERM ONT::V1381903 ONT::MOLECULE :NAME W::GDP :DRUM ((:DRUM (TERM :ID CHEBI::|17552| :NAME &quot;GDP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GDP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|58189| :NAME &quot;GDP(3-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GDP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1666" rule="-SIMPLE-REF" start="22" uttnum="1889">
+		<type>ONT::MOLECULE</type>
+		<name>GDP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:17552" match-score="1.0" matched-name="GDP" name="GDP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:58189" match-score="0.65714" matched-name="GDP" name="GDP(3-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GDP</text>
+	</TERM>
+</ekb>

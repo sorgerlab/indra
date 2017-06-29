@@ -85,8 +85,8 @@ def process_belrdf(rdf_str, print_output=True):
     g = rdflib.Graph()
     try:
         g.parse(data=rdf_str, format='nt')
-    except ParseError:
-        logger.error('Could not parse rdf.')
+    except ParseError as e:
+        logger.error('Could not parse rdf: %s' % e)
         return None
     # Build INDRA statements from RDF
     bp = BelProcessor(g)
@@ -97,6 +97,7 @@ def process_belrdf(rdf_str, print_output=True):
     bp.get_composite_activating_mods()
     bp.get_transcription()
     bp.get_activation()
+    bp.get_conversions()
 
     # Print some output about the process
     if print_output:

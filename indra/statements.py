@@ -2239,6 +2239,107 @@ class IncreaseAmount(RegulateAmount):
     """
     pass
 
+
+class Conversion(Statement):
+    def __init__(self, subj, obj_from=None, obj_to=None, evidence=None):
+        super(Conversion, self).__init__(evidence)
+        self.subj = subj
+        self.obj_from = obj_from if obj_from is not None else []
+        if isinstance(obj_from, Agent):
+            self.obj_from = [obj_from]
+        self.obj_to = obj_to if obj_to is not None else []
+        if isinstance(obj_to, Agent):
+            self.obj_to = [obj_to]
+
+    def matches_key(self):
+        keys = [type(self)]
+        keys += [self.subj.matches_key() if self.subj else None]
+        keys += [agent.matches_key() for agent in self.obj_to]
+        keys += [agent.matches_key() for agent in self.obj_from]
+        return str(keys)
+
+    def agent_list(self):
+        return [self.subj] + self.obj_from + self.obj_to
+
+    def set_agent_list(self, agent_list):
+        num_obj_from = len(self.obj_from)
+        num_obj_to = len(self.obj_to)
+        if len(agent_list) != 1 + num_obj_from + num_obj_to:
+            raise Exception('Conversion agent number must be preserved '
+                            'when setting agent list.')
+        self.subj = agent_list[0]
+        self.obj_from = agent_list[1:num_obj_from+1]
+        self.obj_to = agent_list[num_obj_from+1:]
+
+    def to_json(self):
+        generic = super(Conversion, self).to_json()
+        json_dict = _o({'type': generic['type']})
+        if self.subj is not None:
+            json_dict['subj'] = self.subj.to_json()
+        json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
+        json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
+        json_dict.update(generic)
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj_from = json_dict.get('obj_from')
+        obj_to = json_dict.get('obj_to')
+        evidence = json_dict.get('evidence')
+        if subj:
+            subj = Agent._from_json(subj)
+        if obj_from:
+            obj_from = [Agent._from_json(o) for o in obj_from]
+        if obj_to:
+            obj_to = [Agent._from_json(o) for o in obj_to]
+        stmt = cls(subj, obj_from, obj_to)
+        return stmt
+
+    def refinement_of(self, other, hierarchies):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        if self.subj is None and other.subj is None:
+            subj_refinement = True
+        elif self.subj is None and other.subj is not None:
+            subj_refinement = False
+        elif self.subj is not None and other.subj is None:
+            subj_refinement = True
+        else:
+            subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
+
+        def refinement_agents(lst1, lst2):
+            if len(lst1) != len(lst2):
+                return False
+            # Check that every agent in other is refined in self, but only once!
+            self_match_indices = set([])
+            for other_agent in lst2:
+                for self_agent_ix, self_agent in enumerate(lst1):
+                    if self_agent_ix in self_match_indices:
+                        continue
+                    if self_agent.refinement_of(other_agent, hierarchies):
+                        self_match_indices.add(self_agent_ix)
+                        break
+            if len(self_match_indices) != len(lst2):
+                return False
+            return True
+
+        obj_from_refinement = refinement_agents(self.obj_from, other.obj_from)
+        obj_to_refinement = refinement_agents(self.obj_to, other.obj_to)
+
+        return (subj_refinement and obj_from_refinement and obj_to_refinement)
+
+    def equals(self, other):
+        matches = super(Conversion, self).equals(other)
+        return matches
+
+    def __str__(self):
+        s = ("%s(%s, %s, %s)" % (type(self).__name__, self.subj, self.obj_from,
+                                 self.obj_to))
+        return s
+
 def stmts_from_json(json_in):
     if not isinstance(json_in, list):
         st = Statement._from_json(json_in)

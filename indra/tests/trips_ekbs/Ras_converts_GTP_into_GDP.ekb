@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01659_IO-1379442" id="paragraph1658">Ras converts GTP into GDP
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1881" pid="paragraph1658">Ras converts GTP into GDP</sentence>
+		</sentences>
+	</input>
+	<EVENT end="25" id="V1379465" lisp="(ONT::EVENT ONT::V1379465 ONT::TRANSFORM :RES ONT::V1379491 :AGENT ONT::V1379445 :AFFECTED ONT::V1379473 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph1658" rule="-RESULT1,-RULE5_1_AGENT_AFFECTED" start="0" uttnum="1881">
+		<type>ONT::TRANSFORM</type>
+		<force>ONT::TRUE</force>
+		<predicate end="25" id="V1379465" start="0">
+			<type>ONT::TRANSFORM</type>
+			<text>Ras converts GTP into GDP</text>
+		</predicate>
+		<arg1 end="4" id="V1379445" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Ras</text>
+		</arg1>
+		<arg2 end="17" id="V1379473" role=":AFFECTED" start="13">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GTP</text>
+		</arg2>
+		<arg3 end="25" id="V1379491" role=":RES" start="22">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GDP</text>
+		</arg3>
+		<text>Ras converts GTP into GDP</text>
+	</EVENT>
+	<TERM dbid="BE:RAS|NCIT:C17061|FA:03663" end="4" id="V1379445" lisp="(ONT::TERM ONT::V1379445 ONT::GENE-PROTEIN :NAME W::RAS :DRUM ((:DRUM (TERM :ID FA::|03663| :NAME &quot;ras family&quot; :SCORE 0.99761 :MATCHES ((MATCH :SCORE 0.99761 :MATCHED &quot;ras&quot; :STATUS &quot;ID&quot; :SENTENCE-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID BE::RAS :NAME &quot;RAS&quot; :SCORE 0.99587 :MATCHES ((MATCH :SCORE 0.99587 :MATCHED &quot;RAS&quot; :STATUS &quot;name&quot; :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C17061 :NAME &quot;RAS family oncogene&quot; :SCORE 0.82444 :MATCHES ((MATCH :SCORE 0.82444 :MATCHED &quot;RAS&quot; :STATUS &quot;synonym&quot; :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (SPECIALIST :EUI E0005049 :CITATION-FORM &quot;RAS&quot; :MATCHES ((MATCH :SCORE 0.93692 :MATCHED &quot;RA-s&quot; :NO-DASH-DASH 1 :EXACT 1 :SENTENCE-CAP-ALL-CAPS 1)) :ACRONYM-OF ((SPECIALIST :CITATION-FORM &quot;right arm, sitting&quot;))) (SPECIALIST :EUI E0005048 :CITATION-FORM &quot;RAS&quot; :MATCHES ((MATCH :SCORE 0.85529 :MATCHED &quot;RAS&quot; :SENTENCE-CAP-ALL-CAPS 1)) :ACRONYM-OF ((SPECIALIST :EUI E0051995 :CITATION-FORM &quot;rapid atrial stimulation&quot;) (SPECIALIST :EUI E0052324 :CITATION-FORM &quot;recurrent apthous stomatitis&quot;) (SPECIALIST :EUI E0052443 :CITATION-FORM &quot;reflex-activating stimulus&quot;) (SPECIALIST :EUI E0052715 :CITATION-FORM &quot;renal artery stenosis&quot;) (SPECIALIST :EUI E0053141 :CITATION-FORM &quot;reticular activating system&quot;) (SPECIALIST :EUI E0314686 :CITATION-FORM &quot;rheumatoid arthritis serum&quot;) (SPECIALIST :EUI E0239007 :CITATION-FORM &quot;renin angiotensin system&quot;) (SPECIALIST :EUI E0708060 :CITATION-FORM &quot;retinoic acid syndrome&quot;))) (SPECIALIST :EUI E0563378 :CITATION-FORM &quot;Ras&quot; :MATCHES ((MATCH :SCORE 0.85529 :MATCHED &quot;Ras&quot; :SENTENCE-CAP-INITIAL-CAP 1))))))" paragraph="paragraph1658" rule="-SIMPLE-REF" start="0" uttnum="1881">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>RAS</name>
+		<drum-terms>
+			<drum-term dbid="FA:03663" match-score="0.99761" matched-name="ras" name="ras family">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="BE:RAS" match-score="0.99587" matched-name="RAS" name="RAS">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17061" match-score="0.82444" matched-name="RAS" name="RAS family oncogene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Ras</text>
+	</TERM>
+	<TERM dbid="CHEBI:15996|CHEBI:37565" end="17" id="V1379473" lisp="(ONT::TERM ONT::V1379473 ONT::MOLECULE :NAME W::GTP :DRUM ((:DRUM (TERM :ID CHEBI::|15996| :NAME &quot;GTP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GTP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|37565| :NAME &quot;GTP(4-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GTP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1658" rule="-SIMPLE-REF" start="13" uttnum="1881">
+		<type>ONT::MOLECULE</type>
+		<name>GTP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:15996" match-score="1.0" matched-name="GTP" name="GTP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:37565" match-score="0.65714" matched-name="GTP" name="GTP(4-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GTP</text>
+	</TERM>
+	<TERM dbid="CHEBI:17552|CHEBI:58189" end="25" id="V1379491" lisp="(ONT::TERM ONT::V1379491 ONT::MOLECULE :NAME W::GDP :DRUM ((:DRUM (TERM :ID CHEBI::|17552| :NAME &quot;GDP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GDP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|58189| :NAME &quot;GDP(3-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GDP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1658" rule="-SIMPLE-REF" start="22" uttnum="1881">
+		<type>ONT::MOLECULE</type>
+		<name>GDP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:17552" match-score="1.0" matched-name="GDP" name="GDP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:58189" match-score="0.65714" matched-name="GDP" name="GDP(3-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GDP</text>
+	</TERM>
+</ekb>

@@ -34,7 +34,8 @@ SelfExporter.do_export = False
 statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.RegulateActivity, ist.ActiveForm,
                        ist.RasGef, ist.RasGap, ist.Translocation,
-                       ist.IncreaseAmount, ist.DecreaseAmount]
+                       ist.IncreaseAmount, ist.DecreaseAmount,
+                       ist.Conversion]
 
 def _n(name):
     """Return valid PySB name."""
@@ -2309,6 +2310,82 @@ increaseamount_assemble_default = increaseamount_assemble_one_step
 increaseamount_monomers_hill = increaseamount_monomers_one_step
 increaseamount_assemble_hill = lambda a, b, c: \
         increaseamount_assemble_one_step(a, b, c, 'hill')
+
+def conversion_monomers_one_step(stmt, agent_set):
+    # Skip statements with more than one from object due to complications
+    # with rate law
+    if len(stmt.obj_from) > 1:
+        return
+    if stmt.subj is not None:
+        agent_set.get_create_base_agent(stmt.subj)
+    for obj in stmt.obj_from:
+        agent_set.get_create_base_agent(obj)
+    for obj in stmt.obj_to:
+        agent_set.get_create_base_agent(obj)
+
+
+def conversion_assemble_one_step(stmt, model, agent_set):
+    # Skip statements with more than one from object due to complications
+    # with rate law
+    if len(stmt.obj_from) != 1:
+        return
+
+    # Create pieces needed for from object
+    obj_from = stmt.obj_from[0]
+    obj_from_pattern = get_monomer_pattern(model, obj_from)
+    obj_from_monomer = obj_from_pattern.monomer
+    rule_obj_from_str = get_agent_rule_str(obj_from)
+
+    obj_to_monomers = [get_monomer_pattern(model, o).monomer for
+                       o in stmt.obj_to]
+
+    # Create pieces needed for to object
+    # The obj Monomer needs to be synthesized in its "base" state
+    # but it needs a fully specified monomer pattern
+    obj_to_patterns = []
+    for obj_to_monomer in obj_to_monomers:
+        sites_dict = {}
+        for site in obj_to_monomer.sites:
+            if site in obj_to_monomer.site_states:
+                sites_dict[site] = obj_to_monomer.site_states[site][0]
+            else:
+                sites_dict[site] = None
+        obj_to_pattern = obj_to_monomer(**sites_dict)
+        obj_to_patterns.append(obj_to_pattern)
+
+    obj_to_pattern = ReactionPattern(obj_to_patterns)
+    rule_obj_to_str = '_'.join([get_agent_rule_str(o) for o in stmt.obj_to])
+
+    if stmt.subj is None:
+        rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
+        param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
+                                          obj_to_monomers[0].name[0].lower())
+        kf_one_step_convert = get_create_parameter(model, param_name, 2,
+                                                   unique=True)
+        r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
+                 kf_one_step_convert)
+    else:
+        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        result_pattern = obj_to_pattern
+        result_pattern.complex_patterns.insert(0, subj_pattern)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
+        rule_name = '%s_catalyzes_%s_converted_to_%s' % \
+            (rule_subj_str, rule_obj_from_str, rule_obj_to_str)
+        param_name = 'kf_%s%s%s_convert' % \
+            (stmt.subj.name[0].lower(), obj_from.name[0].lower(),
+             obj_to_monomers[0].name[0].lower())
+        # Scale the average apparent increaseamount rate by the default
+        # protein initial condition
+        kf_one_step_convert = get_create_parameter(model, param_name, 2e-4)
+
+        r = Rule(rule_name, subj_pattern + obj_from_pattern >>
+                            result_pattern,
+                 kf_one_step_convert)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    add_rule_to_model(model, r, anns)
+
+conversion_monomers_default = conversion_monomers_one_step
+conversion_assemble_default = conversion_assemble_one_step
 
 class PysbPreassembler(object):
     def __init__(self, stmts=None):

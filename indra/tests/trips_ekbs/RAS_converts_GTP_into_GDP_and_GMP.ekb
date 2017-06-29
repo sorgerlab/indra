@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01668_IO-1382318" id="paragraph1667">RAS converts GTP into GDP and GMP.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1890" pid="paragraph1667">RAS converts GTP into GDP and GMP.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="33" id="V1382341" lisp="(ONT::EVENT ONT::V1382341 ONT::TRANSFORM :RES ONT::V1382372 :AGENT ONT::V1382321 :AFFECTED ONT::V1382346 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph1667" rule="-RESULT1,-RULE5_1_AGENT_AFFECTED" start="0" uttnum="1890">
+		<type>ONT::TRANSFORM</type>
+		<force>ONT::TRUE</force>
+		<predicate end="33" id="V1382341" start="0">
+			<type>ONT::TRANSFORM</type>
+			<text>RAS converts GTP into GDP and GMP</text>
+		</predicate>
+		<arg1 end="4" id="V1382321" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">RAS</text>
+		</arg1>
+		<arg2 end="17" id="V1382346" role=":AFFECTED" start="13">
+			<type>ONT::CHEMICAL</type>
+			<text normalization="">GTP</text>
+		</arg2>
+		<arg3 end="33" id="V1382372" role=":RES" start="22">
+			<type>ONT::CHEMICAL</type>
+			<text normalization="">GDP and GMP</text>
+		</arg3>
+		<text>RAS converts GTP into GDP and GMP</text>
+	</EVENT>
+	<TERM dbid="BE:RAS|NCIT:C17061|FA:03663" end="4" id="V1382321" lisp="(ONT::TERM ONT::V1382321 ONT::GENE-PROTEIN :NAME W::RAS :DRUM ((:DRUM (TERM :ID BE::RAS :NAME &quot;RAS&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;RAS&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID FA::|03663| :NAME &quot;ras family&quot; :SCORE 0.98155 :MATCHES ((MATCH :SCORE 0.98155 :MATCHED &quot;ras&quot; :STATUS &quot;ID&quot; :ALL-CAPS-NO-CAPS 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C17061 :NAME &quot;RAS family oncogene&quot; :SCORE 0.82857 :MATCHES ((MATCH :SCORE 0.82857 :MATCHED &quot;RAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph1667" rule="-SIMPLE-REF" start="0" uttnum="1890">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>RAS</name>
+		<drum-terms>
+			<drum-term dbid="BE:RAS" match-score="1.0" matched-name="RAS" name="RAS">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="FA:03663" match-score="0.98155" matched-name="ras" name="ras family">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17061" match-score="0.82857" matched-name="RAS" name="RAS family oncogene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>RAS</text>
+	</TERM>
+	<TERM dbid="CHEBI:15996|CHEBI:37565" end="17" id="V1382346" lisp="(ONT::TERM ONT::V1382346 ONT::CHEMICAL :NAME W::GTP :DRUM ((:DRUM (TERM :ID CHEBI::|15996| :NAME &quot;GTP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GTP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|37565| :NAME &quot;GTP(4-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GTP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1667" rule="-SIMPLE-REF" start="13" uttnum="1890">
+		<type>ONT::CHEMICAL</type>
+		<name>GTP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:15996" match-score="1.0" matched-name="GTP" name="GTP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:37565" match-score="0.65714" matched-name="GTP" name="GTP(4-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GTP</text>
+	</TERM>
+	<TERM end="33" id="V1382372" paragraph="paragraph1667" rule="-LOGICALOP-REF" start="22" uttnum="1890">
+		<type>ONT::CHEMICAL</type>
+		<aggregate operator="AND">
+			<member id="V1382364"/>
+			<member id="V1382383"/>
+		</aggregate>
+		<text normalization="">GDP and GMP</text>
+	</TERM>
+	<TERM dbid="CHEBI:17552|CHEBI:58189" end="26" id="V1382364" lisp="(ONT::TERM ONT::V1382364 ONT::CHEMICAL :NAME W::GDP :DRUM ((:DRUM (TERM :ID CHEBI::|17552| :NAME &quot;GDP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GDP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|58189| :NAME &quot;GDP(3-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GDP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1667" rule="-SIMPLE-REF" start="22" uttnum="1890">
+		<type>ONT::CHEMICAL</type>
+		<name>GDP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:17552" match-score="1.0" matched-name="GDP" name="GDP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:58189" match-score="0.65714" matched-name="GDP" name="GDP(3-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GDP</text>
+	</TERM>
+	<TERM dbid="CHEBI:17345|CHEBI:58115" end="33" id="V1382383" lisp="(ONT::TERM ONT::V1382383 ONT::CHEMICAL :NAME W::GMP :DRUM ((:DRUM (TERM :ID CHEBI::|17345| :NAME &quot;GMP&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;GMP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|58115| :NAME &quot;GMP(2-)&quot; :SCORE 0.65714 :MATCHES ((MATCH :SCORE 0.65714 :MATCHED &quot;GMP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1667" rule="-SIMPLE-REF" start="30" uttnum="1890">
+		<type>ONT::CHEMICAL</type>
+		<name>GMP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:17345" match-score="1.0" matched-name="GMP" name="GMP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:58115" match-score="0.65714" matched-name="GMP" name="GMP(2-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>GMP</text>
+	</TERM>
+</ekb>
