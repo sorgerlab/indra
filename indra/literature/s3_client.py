@@ -155,7 +155,21 @@ def get_gz_object(key):
     return content.decode('utf8')
 
 
-def get_full_text(pmid):
+def get_object_metadata(key):
+    try:
+        metadata = client.head_object(Bucket=bucket_name, Key=key)
+    # Handle a missing object gracefully
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] =='NoSuchKey':
+            logger.debug('key %s not in S3' % key)
+            return None
+        # If there was some other kind of problem, re-raise the exception
+        else:
+            raise e
+    return metadata
+
+
+def get_full_text(pmid, metadata=False):
     pmid = check_pmid(pmid)
     # Check for Open Access nxml source
     ft_prefix = get_pmid_key(pmid) + '/fulltext/'
@@ -172,7 +186,10 @@ def get_full_text(pmid):
                 continue
             # We have this type of full text, so get it and return
             else:
-                content = get_gz_object(ft_key)
+                if not metadata:
+                    content = get_gz_object(ft_key)
+                else:
+                    content = get_object_metadata(ft_key)
                 if content:
                     logger.info('%s: found %s on S3' % (pmid, content_type))
                     return (content, content_type)
@@ -188,7 +205,10 @@ def get_full_text(pmid):
     else:
         logger.debug('%s: no full texts found on S3, trying abstract' % pmid)
         abstract_key = get_pmid_key(pmid) + '/abstract'
-        abstract = get_gz_object(abstract_key)
+        if not metadata:
+            abstract = get_gz_object(abstract_key)
+        else:
+            abstract = get_object_metadata(abstract_key)
         if abstract is None:
             logger.info('%s: no full text or abstract found on S3' % pmid)
             return (None, None)
