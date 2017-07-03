@@ -34,7 +34,11 @@ def wait_for_success():
               (total_time, not_done, failed, done))
 
         if failed > 0:
-            return -1
+            # TODO: the issue here is that failures stick around for a long
+            # time and so returning here is not desirable. This should be done
+            # based on specific job ids.
+            #return -1
+            pass
         if not_done == 0 and done > 0:
             return 0
         sleep(sleep_time)
