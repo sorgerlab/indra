@@ -424,7 +424,7 @@ class BiopaxProcessor(object):
 
             members_in = self._get_complex_members(input_pe)
             members_out = self._get_complex_members(output_pe)
-            if not (members_in or members_out):
+            if not (members_in and members_out):
                 continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
@@ -474,7 +474,7 @@ class BiopaxProcessor(object):
 
             members_in = self._get_complex_members(input_pe)
             members_out = self._get_complex_members(output_pe)
-            if not (members_in or members_out):
+            if not (members_in and members_out):
                 continue
             # Make sure the outgoing complex has exactly 2 members
             # TODO: by finding matching proteins on either side, in principle
