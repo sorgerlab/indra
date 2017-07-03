@@ -6,7 +6,9 @@ import sys
 import yaml
 import time
 import json
+import pytz
 import shutil
+import tzlocal
 import logging
 import datetime
 import argparse
@@ -21,10 +23,13 @@ from indra.assemblers import CxAssembler
 from indra.tools.incremental_model import IncrementalModel
 
 try:
+    import boto3
     from indra.tools.reading.submit_reading_pipeline_aws import \
         submit_run_reach, wait_for_success
     # Try to make a client
     client = boto3.client('batch')
+    from indra.literature.s3_client import \
+        get_reach_json_str, get_full_text
     aws_available = True
 except Exception:
     aws_available = False
@@ -283,6 +288,7 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
 if __name__ == '__main__':
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
+    start_time_local = datetime.datetime.now(tzlocal.get_localzone())
 
     if len(sys.argv) < 2:
         logger.error('Model name argument missing')
@@ -423,8 +429,27 @@ if __name__ == '__main__':
                 fh.write('%s\n' % pmid)
         # Submit reading
         job_list = submit_run_reach('rasmachine', pmid_fname)
+
         # Wait for reading to complete
-        wait_for_success()
+        reading_res = wait_for_success()
+
+        # Process PMIDs
+        pmid_stmts = {}
+        current_time_local = datetime.datetime.now(tzlocal.get_localzone())
+        dt_script = current_time_local - start_time_local
+        for pmid in all_pmids:
+            logger.info('Processing %s from AWS' % pmid)
+            metadata, content_type = get_full_text(pmid, metadata=True)
+            last_mod_remote = metadata['LastModified']
+            dt = (current_time_local - last_mod_remote)
+            # If it was modified since the script started
+            if dt <= dt_script:
+                logger.info('Downloading %s output from AWS' % pmid)
+                reach_json_str = get_reach_json_str(pmid)
+                if not reach_json_str:
+                    logger.info('Could not get output.')
+                    continue
+                pmid_stmts[pmid] = reach.process_json_str(reach_json_str)
 
 
     # Load the model
