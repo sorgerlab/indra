@@ -20,6 +20,15 @@ from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler
 from indra.tools.incremental_model import IncrementalModel
 
+try:
+    from indra.tools.reading.submit_reading_pipeline_aws import \
+        submit_run_reach, wait_for_success
+    # Try to make a client
+    client = boto3.client('batch')
+    aws_available = True
+except Exception:
+    aws_available = False
+
 model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one', 'human_only']
 
@@ -398,6 +407,24 @@ if __name__ == '__main__':
         logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
         pmids = _extend_dict(pmids, pmids_gene)
     '''
+    date = datetime.datetime.today()
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+
+    # Save PMIDs in file
+    if aws_available:
+        pmid_fname = 'pmids-%s.txt' % date_str
+        all_pmids = []
+        for v in pmids.values():
+            all_pmids += v
+        all_pmids = list(set(all_pmids))
+
+        with open(pmid_fname, 'wt') as fh:
+            for pmid in all_pmids:
+                fh.write('%s\n' % pmid)
+        # Submit reading
+        job_list = submit_run_reach('rasmachine', pmid_fname)
+        # Wait for reading to complete
+        wait_for_success()
 
 
     # Load the model
@@ -449,8 +476,6 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
 
     # Save a time stamped version of the pickle for backup/diagnostic purposes
-    date = datetime.datetime.today()
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
     inc_model_bkp_file = os.path.join(model_path, model_name,
                                       'model-%s.pkl' % date_str)
     model.save(inc_model_bkp_file)
