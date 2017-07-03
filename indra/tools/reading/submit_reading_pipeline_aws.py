@@ -2,9 +2,44 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import boto3
 import botocore.session
+from time import sleep
 from indra.literature import elsevier_client as ec
 
 bucket_name = 'bigmech'
+
+def wait_for_success():
+    """Return when all jobs in queue SUCCEEDED or some FAILED."""
+    # This is a simple implementation in which a single queue is monitored
+    # for a full clearance of jobs or a single failure. Job IDs are not
+    # individually tracked. So this is adequate when a single reading task is
+    # being performed, not multiple independent ones.
+    def get_num_jobs(status):
+        res = batch_client.list_jobs(jobQueue='run_reach_queue',
+                                     jobStatus=status)
+        jobs = res.get('jobSummaryList', [])
+        return len(jobs)
+
+    batch_client = boto3.client('batch')
+
+    sleep_time =  10
+    total_time = 0
+    while True:
+        not_done = sum([get_num_jobs(s) for s in
+                        ('SUBMITTED', 'PENDING', 'RUNNABLE',
+                         'STARTING', 'RUNNING')])
+        failed = get_num_jobs('FAILED')
+        done = get_num_jobs('SUCCEEDED')
+
+        print('(%d s)=(not done: %d, failed: %d, done: %d)' %
+              (total_time, not_done, failed, done))
+
+        if failed > 0:
+            return -1
+        if not_done == 0 and done > 0:
+            return 0
+        sleep(sleep_time)
+        total_time += sleep_time
+
 
 
 def get_environment():
