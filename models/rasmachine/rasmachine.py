@@ -114,6 +114,24 @@ def process_paper(model_name, pmid):
         check_pmids(rp.statements)
     return rp, txt_format
 
+def process_paper_aws(pmid):
+    metadata, content_type = get_full_text(pmid, metadata=True)
+    logger.info('Downloading %s output from AWS' % pmid)
+    reach_json_str = get_reach_json_str(pmid)
+    if not reach_json_str:
+        logger.info('Could not get output.')
+        return None, content_type
+    rp = reach.process_json_str(reach_json_str)
+
+    current_time_local = datetime.datetime.now(tzlocal.get_localzone())
+    dt_script = current_time_local - start_time_local
+    last_mod_remote = metadata['LastModified']
+    dt = (current_time_local - last_mod_remote)
+    # If it was not modified since the script started
+    if dt > dt_script:
+        content_type = 'existing_json'
+    return rp, content_type
+
 def make_status_message(stats):
     ndiff = (stats['new_final'] - stats['orig_final'])
     msg_str = None
@@ -143,7 +161,7 @@ def make_status_message(stats):
                     (abstr_str, mech_str)
     return msg_str
 
-def extend_model(model_name, model, pmids):
+def extend_model(model_name, model, pmids, aws_available=False):
     npapers = 0
     nabstracts = 0
     nexisting = 0
@@ -157,7 +175,10 @@ def extend_model(model_name, model, pmids):
             if model.stmts.get(pmid) is None:
                 logger.info('Processing %s for search term %s' % \
                             (pmid, search_term))
-                rp, txt_format = process_paper(model_name, pmid)
+                if not aws_available:
+                    rp, txt_format = process_paper(model_name, pmid)
+                else:
+                    rp, txt_format = process_paper_aws(pmid)
                 if rp is not None:
                     if txt_format == 'abstract':
                         nabstracts += 1
@@ -416,7 +437,7 @@ if __name__ == '__main__':
     date = datetime.datetime.today()
     date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
 
-    # Save PMIDs in file
+    # Save PMIDs in file and send for remote reading
     if aws_available:
         pmid_fname = 'pmids-%s.txt' % date_str
         all_pmids = []
@@ -432,25 +453,6 @@ if __name__ == '__main__':
 
         # Wait for reading to complete
         reading_res = wait_for_success()
-
-        # Process PMIDs
-        pmid_stmts = {}
-        current_time_local = datetime.datetime.now(tzlocal.get_localzone())
-        dt_script = current_time_local - start_time_local
-        for pmid in all_pmids:
-            logger.info('Processing %s from AWS' % pmid)
-            metadata, content_type = get_full_text(pmid, metadata=True)
-            last_mod_remote = metadata['LastModified']
-            dt = (current_time_local - last_mod_remote)
-            # If it was modified since the script started
-            if dt <= dt_script:
-                logger.info('Downloading %s output from AWS' % pmid)
-                reach_json_str = get_reach_json_str(pmid)
-                if not reach_json_str:
-                    logger.info('Could not get output.')
-                    continue
-                pmid_stmts[pmid] = reach.process_json_str(reach_json_str)
-
 
     # Load the model
     logger.info(time.strftime('%c'))
@@ -479,7 +481,7 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
-                            extend_model(model_name, model, pmids)
+                            extend_model(model_name, model, pmids, aws_available)
     # Having added new statements, we preassemble the model
     model.preassemble(filters=global_filters)
 
