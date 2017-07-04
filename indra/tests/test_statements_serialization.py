@@ -70,23 +70,23 @@ def test_translocation():
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
-def test_rasgap():
-    stmt = RasGap(Agent('a'), Agent('b'), evidence=[ev])
+def test_gap():
+    stmt = Gap(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
     g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
-def test_rasgef():
-    stmt = RasGef(Agent('a'), Agent('b'), evidence=[ev])
+def test_gef():
+    stmt = Gef(Agent('a'), Agent('b'), evidence=[ev])
     jd = stmt.to_json()
     g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert(jd == jd2)
 
 def test_supports():
-    stmt1 = RasGap(Agent('B'), Agent('B'), evidence=[ev])
-    stmt2 = RasGap(Agent('a'), Agent('b'), evidence=[ev])
+    stmt1 = Gap(Agent('B'), Agent('B'), evidence=[ev])
+    stmt2 = Gap(Agent('a'), Agent('b'), evidence=[ev])
     stmt1.supports = [stmt2]
     stmt2.supported_by = [stmt1]
     jd1 = stmt1.to_json()

@@ -12,8 +12,8 @@ the next level in the hierarchy are the following classes:
 - :py:class:`RegulateAmount`
 - :py:class:`ActiveForm`
 - :py:class:`Translocation`
-- :py:class:`RasGef`
-- :py:class:`RasGap`
+- :py:class:`Gef`
+- :py:class:`Gap`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
@@ -1632,7 +1632,7 @@ class Activation(RegulateActivity):
         self.is_activation = True
 
 
-class RasGtpActivation(Activation):
+class GtpActivation(Activation):
     pass
 
 
@@ -1819,18 +1819,18 @@ class HasActivity(Statement):
 
 
 @python_2_unicode_compatible
-class RasGef(Statement):
-    """Exchange of GTP for GDP on a Ras-family protein mediated by a GEF.
+class Gef(Statement):
+    """Exchange of GTP for GDP on a small GTPase protein mediated by a GEF.
 
     Represents the generic process by which a guanosine exchange factor (GEF)
-    catalyzes nucleotide exchange on a particular Ras superfamily protein.
+    catalyzes nucleotide exchange on a GTPase protein.
 
     Parameters
     ----------
     gef : :py:class:`Agent`
         The guanosine exchange factor.
     ras : :py:class:`Agent`
-        The Ras superfamily protein.
+        The GTPase protein.
 
     Examples
     --------
@@ -1838,10 +1838,10 @@ class RasGef(Statement):
 
     >>> sos = Agent('SOS1')
     >>> kras = Agent('KRAS')
-    >>> rasgef = RasGef(sos, kras)
+    >>> gef = Gef(sos, kras)
     """
     def __init__(self, gef, ras, evidence=None):
-        super(RasGef, self).__init__(evidence)
+        super(Gef, self).__init__(evidence)
         self.gef = gef
         self.ras = ras
 
@@ -1855,12 +1855,12 @@ class RasGef(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
-            raise ValueError("RasGef has two agents.")
+            raise ValueError("Gef has two agents.")
         self.gef = agent_list[0]
         self.ras = agent_list[1]
 
     def __str__(self):
-        s = ("RasGef(%s, %s)" %
+        s = ("Gef(%s, %s)" %
                 (self.gef.name, self.ras.name))
         return s
 
@@ -1876,11 +1876,11 @@ class RasGef(Statement):
             return False
 
     def equals(self, other):
-        matches = super(RasGef, self).equals(other)
+        matches = super(Gef, self).equals(other)
         return matches
 
     def to_json(self):
-        generic = super(RasGef, self).to_json()
+        generic = super(Gef, self).to_json()
         json_dict = _o({'type': generic['type']})
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
@@ -1907,18 +1907,18 @@ class RasGef(Statement):
 
 
 @python_2_unicode_compatible
-class RasGap(Statement):
-    """Acceleration of a Ras protein's GTP hydrolysis rate by a GAP.
+class Gap(Statement):
+    """Acceleration of a GTPase protein's GTP hydrolysis rate by a GAP.
 
     Represents the generic process by which a GTPase activating protein (GAP)
-    catalyzes GTP hydrolysis by a particular Ras superfamily protein.
+    catalyzes GTP hydrolysis by a particular small GTPase protein.
 
     Parameters
     ----------
     gap : :py:class:`Agent`
         The GTPase activating protein.
     ras : :py:class:`Agent`
-        The Ras superfamily protein.
+        The GTPase protein.
 
     Examples
     --------
@@ -1926,10 +1926,10 @@ class RasGap(Statement):
 
     >>> rasa1 = Agent('RASA1')
     >>> kras = Agent('KRAS')
-    >>> rasgap = RasGap(rasa1, kras)
+    >>> gap = Gap(rasa1, kras)
     """
     def __init__(self, gap, ras, evidence=None):
-        super(RasGap, self).__init__(evidence)
+        super(Gap, self).__init__(evidence)
         self.gap = gap
         self.ras = ras
 
@@ -1943,7 +1943,7 @@ class RasGap(Statement):
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
-            raise ValueError("RasGap has two agents.")
+            raise ValueError("Gap has two agents.")
         self.gap = agent_list[0]
         self.ras = agent_list[1]
 
@@ -1959,16 +1959,16 @@ class RasGap(Statement):
             return False
 
     def __str__(self):
-        s = ("RasGap(%s, %s)" %
+        s = ("Gap(%s, %s)" %
                 (self.gap.name, self.ras.name))
         return s
 
     def equals(self, other):
-        matches = super(RasGap, self).equals(other)
+        matches = super(Gap, self).equals(other)
         return matches
 
     def to_json(self):
-        generic = super(RasGap, self).to_json()
+        generic = super(Gap, self).to_json()
         json_dict = _o({'type': generic['type']})
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()

@@ -10,8 +10,8 @@ st_phos = Phosphorylation(mek, erk)
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
 st_act = Activation(mek, erk)
-st_rasgef = RasGef(Agent('SOS1'), Agent('HRAS'))
-st_rasgap = RasGap(Agent('RASA1'), Agent('HRAS'))
+st_gef = Gef(Agent('SOS1'), Agent('HRAS'))
+st_gap = Gap(Agent('RASA1'), Agent('HRAS'))
 st_act2 = Inhibition(dusp, erk)
 st_not_cited = Phosphorylation(mek, erk, evidence=[Evidence()])
 st_cited = Phosphorylation(mek, erk, evidence=[Evidence(pmid='12345',
@@ -47,16 +47,16 @@ def test_act():
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 2)
 
-def test_rasgef():
+def test_gef():
     cxa = CxAssembler()
-    cxa.add_statements([st_rasgef])
+    cxa.add_statements([st_gef])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 2)
     assert(len(cxa.cx['edges']) == 1)
 
-def test_rasgap():
+def test_gap():
     cxa = CxAssembler()
-    cxa.add_statements([st_rasgap])
+    cxa.add_statements([st_gap])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 2)
     assert(len(cxa.cx['edges']) == 1)

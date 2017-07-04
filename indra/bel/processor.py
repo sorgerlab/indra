@@ -458,25 +458,25 @@ class BelProcessor(object):
             # Mark this as a converted statement
             self.converted_direct_stmts.append(stmt_str)
 
-            # Distinguish the case when the activator is a RasGTPase
+            # Distinguish the case when the activator is a GTPase
             # (since this may involve unique and stereotyped mechanisms)
             if subj_activity == 'gtpbound':
                 if not is_activation:
-                    logger.warning('RasGtpActivation only handles positive '
+                    logger.warning('GtpActivation only handles positive '
                                    'activation.')
                     continue
                 self.statements.append(
-                     RasGtpActivation(subj, obj, obj_activity, evidence))
-            # If the object is a Ras-like GTPase, and the subject *increases*
-            # its GtpBound activity, then the subject is a RasGEF
+                     GtpActivation(subj, obj, obj_activity, evidence))
+            # If the object is a GTPase, and the subject *increases*
+            # its GtpBound activity, then the subject is a GEF
             elif obj_activity == 'gtpbound' and rel == 'DirectlyIncreases':
                 self.statements.append(
-                        RasGef(subj, obj, evidence))
-            # If the object is a Ras-like GTPase, and the subject *decreases*
-            # its GtpBound activity, then the subject is a RasGAP
+                        Gef(subj, obj, evidence))
+            # If the object is a GTPase, and the subject *decreases*
+            # its GtpBound activity, then the subject is a GAP
             elif obj_activity == 'gtpbound' and rel == 'DirectlyDecreases':
                 self.statements.append(
-                        RasGap(subj, obj, evidence))
+                        Gap(subj, obj, evidence))
             # Otherwise, create a generic Activity->Activity statement
             else:
                 if rel == 'DirectlyDecreases':

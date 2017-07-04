@@ -193,7 +193,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     # Print the English-assembled model for debugging purposes
     ea = EnglishAssembler(top_stmts)
     print('=======================')
-    print(ea.make_model())
+    print(ea.make_model().encode('utf-8'))
     print('=======================')
 
     # Print the statement graph

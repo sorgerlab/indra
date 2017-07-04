@@ -104,10 +104,10 @@ class CxAssembler(object):
                 self._add_inhibition(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
-            elif isinstance(stmt, RasGef):
-                self._add_rasgef(stmt)
-            elif isinstance(stmt, RasGap):
-                self._add_rasgap(stmt)
+            elif isinstance(stmt, Gef):
+                self._add_gef(stmt)
+            elif isinstance(stmt, Gap):
+                self._add_gap(stmt)
         network_description = ''
         self.cx['networkAttributes'].append({'n': 'name',
                                              'v': self.network_name})
@@ -299,13 +299,13 @@ class CxAssembler(object):
         obj_id = self._add_node(stmt.obj)
         self._add_edge(subj_id, obj_id, 'Inhibition', stmt)
 
-    def _add_rasgef(self, stmt):
+    def _add_gef(self, stmt):
         gef_id = self._add_node(stmt.gef)
         ras_id = self._add_node(stmt.ras)
         stmt_type = stmt.__class__.__name__
         self._add_edge(gef_id, ras_id, stmt_type, stmt)
 
-    def _add_rasgap(self, stmt):
+    def _add_gap(self, stmt):
         gap_id = self._add_node(stmt.gap)
         ras_id = self._add_node(stmt.ras)
         stmt_type = stmt.__class__.__name__
@@ -498,11 +498,11 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, Inhibition):
         edge_type = 'Inhibition'
         edge_polarity = 'negative'
-    elif isinstance(stmt, RasGef):
-        edge_type = 'RasGef'
+    elif isinstance(stmt, Gef):
+        edge_type = 'Gef'
         edge_polarity = 'positive'
-    elif isinstance(stmt, RasGap):
-        edge_type = 'RasGap'
+    elif isinstance(stmt, Gap):
+        edge_type = 'Gap'
         edge_polarity = 'negative'
     else:
         edge_type = stmt.__class__.__str__()

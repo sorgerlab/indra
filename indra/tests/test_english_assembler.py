@@ -293,18 +293,18 @@ def test_translocation():
     s = e.make_model()
     assert(s == 'FOXO3A translocates from the cytoplasm to the nucleus.')
 
-def test_ras_gef():
-    st = RasGef(Agent('SOS1'), Agent('KRAS'))
+def test_gef():
+    st = Gef(Agent('SOS1'), Agent('KRAS'))
     e = ea.EnglishAssembler()
     e.add_statements([st])
     s = e.make_model()
     print(s)
-    assert(s == 'SOS1 is a Ras GEF for KRAS.')
+    assert(s == 'SOS1 is a GEF for KRAS.')
 
-def test_ras_gap():
-    st = RasGap(Agent('RASA1'), Agent('KRAS'))
+def test_gap():
+    st = Gap(Agent('RASA1'), Agent('KRAS'))
     e = ea.EnglishAssembler()
     e.add_statements([st])
     s = e.make_model()
     print(s)
-    assert(s == 'RASA1 is a Ras GAP for KRAS.')
+    assert(s == 'RASA1 is a GAP for KRAS.')

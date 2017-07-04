@@ -347,32 +347,32 @@ def test_matches_activatingsub():
     assert(not st3.matches(st5)) # Differ only in activity
     assert unicode_strs((st1, st2, st3, st4, st5))
 
-def test_matches_rasgef():
+def test_matches_gef():
     """Test matching of entities only."""
     sos1 = Agent('SOS1', db_refs = {'HGNC': 'sos1'})
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, nras1,
+    st1 = Gef(sos1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos1, nras1,
+    st2 = Gef(sos1, nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGef(sos2, nras2,
+    st3 = Gef(sos2, nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
     assert unicode_strs((st1, st2, st3))
 
-def test_matches_rasgap():
+def test_matches_gap():
     rasa1 = Agent('RASA1', db_refs = {'HGNC': 'rasa1'})
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, nras1,
+    st1 = Gap(rasa1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa1, nras1,
+    st2 = Gap(rasa1, nras1,
                  evidence=Evidence(text='bar'))
-    st3 = RasGap(rasa2, nras2,
+    st3 = Gap(rasa2, nras2,
                  evidence=Evidence(text='bar'))
     assert(st1.matches(st2))
     assert(not st1.matches(st3))
@@ -484,7 +484,7 @@ def test_entities_match_activatingsub():
     assert(not st1.entities_match(st3))
     assert unicode_strs((st1, st2, st3))
 
-def test_entities_match_rasgef():
+def test_entities_match_gef():
     """Test matching of entities only, entities match on name and grounding."""
     sos1 = Agent('SOS1', db_refs = {'HGNC': 'sos1'})
     sos2 = Agent('SOS1', db_refs = {'HGNC': 'sos2'})
@@ -492,26 +492,26 @@ def test_entities_match_rasgef():
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras3 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGef(sos1, nras1,
+    st1 = Gef(sos1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGef(sos2, nras2,
+    st2 = Gef(sos2, nras2,
                  evidence=Evidence(text='bar'))
-    st3 = RasGef(sos1, nras2,
+    st3 = Gef(sos1, nras2,
                  evidence=Evidence(text='bar'))
     assert(not st1.entities_match(st2))
     assert(not st2.entities_match(st3))
     assert(st1.entities_match(st3))
     assert unicode_strs((st1, st2, st3))
 
-def test_entities_match_rasgap():
+def test_entities_match_gap():
     """Test matching of entities only, entities match on name and grounding."""
     rasa1 = Agent('RASA1', db_refs = {'HGNC': 'rasa1'})
     rasa2 = Agent('RASA1', db_refs = {'HGNC': 'rasa2'})
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs = {'HGNC': 'dummy'})
-    st1 = RasGap(rasa1, nras1,
+    st1 = Gap(rasa1, nras1,
                  evidence=Evidence(text='foo'))
-    st2 = RasGap(rasa2, nras2,
+    st2 = Gap(rasa2, nras2,
                  evidence=Evidence(text='bar'))
     assert(not st1.entities_match(st2))
 
@@ -932,7 +932,7 @@ def test_activatingsub_family_refinement():
     assert not st2.refinement_of(st4, hierarchies)
     assert not st3.refinement_of(st4, hierarchies)
 
-def test_rasgef_family_refinement():
+def test_gef_family_refinement():
     sos = Agent('SOS', db_refs={'BE':'SOS'})
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     sos1_a = Agent('SOS1', activity=ActivityCondition('activity', True),
@@ -942,12 +942,12 @@ def test_rasgef_family_refinement():
     ras = Agent('RAS', db_refs={'BE':'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     # Statements
-    st1 = RasGef(sos, ras)
-    st2 = RasGef(sos1, ras)
-    st3 = RasGef(sos, kras)
-    st4 = RasGef(sos1, kras)
-    st5 = RasGef(sos1_a, kras)
-    st6 = RasGef(sos1_c, kras)
+    st1 = Gef(sos, ras)
+    st2 = Gef(sos1, ras)
+    st3 = Gef(sos, kras)
+    st4 = Gef(sos1, kras)
+    st5 = Gef(sos1_a, kras)
+    st6 = Gef(sos1_c, kras)
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
@@ -981,7 +981,7 @@ def test_rasgef_family_refinement():
     # st6
     assert not st5.refinement_of(st6, hierarchies)
 
-def test_rasgap_family_refinement():
+def test_gap_family_refinement():
     rasa = Agent('RASA', db_refs={'BE':'RASA'})
     rasa1 = Agent('RASA1', db_refs={'HGNC':'9871'})
     ras = Agent('RAS', db_refs={'BE':'RAS'})
@@ -991,12 +991,12 @@ def test_rasgap_family_refinement():
     rasa1_c = Agent('RASA1', activity=ActivityCondition('catalytic', True),
                     db_refs={'HGNC': '9871'})
     # Statements
-    st1 = RasGap(rasa, ras)
-    st2 = RasGap(rasa1, ras)
-    st3 = RasGap(rasa, kras)
-    st4 = RasGap(rasa1, kras)
-    st5 = RasGap(rasa1_a, kras)
-    st6 = RasGap(rasa1_c, kras)
+    st1 = Gap(rasa, ras)
+    st2 = Gap(rasa1, ras)
+    st3 = Gap(rasa, kras)
+    st4 = Gap(rasa1, kras)
+    st5 = Gap(rasa1_a, kras)
+    st6 = Gap(rasa1_c, kras)
     # st1
     assert st2.refinement_of(st1, hierarchies)
     assert st3.refinement_of(st1, hierarchies)
@@ -1365,11 +1365,11 @@ def test_unicode_str_methods():
     print(st)
     print(repr(st))
 
-    st = RasGef(ag, ag, evidence=ev)
+    st = Gef(ag, ag, evidence=ev)
     print(st)
     print(repr(st))
 
-    st = RasGap(ag, ag, evidence=ev)
+    st = Gap(ag, ag, evidence=ev)
     print(st)
     print(repr(st))
 

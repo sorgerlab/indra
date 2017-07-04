@@ -39,7 +39,15 @@ class EnglishAssembler(object):
         self.statements += stmts
 
     def make_model(self):
-        """Assemble text from the set of collected INDRA Statements."""
+        """Assemble text from the set of collected INDRA Statements.
+
+        Returns
+        -------
+        stmt_strs : str
+            Return the assembled text as unicode string. By default, the text
+            is a single string consisting of one or more sentences with
+            periods at the end.
+        """
         stmt_strs = []
         for stmt in self.statements:
             if isinstance(stmt, ist.Modification):
@@ -56,10 +64,10 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_activeform(stmt))
             elif isinstance(stmt, ist.Translocation):
                 stmt_strs.append(_assemble_translocation(stmt))
-            elif isinstance(stmt, ist.RasGef):
-                stmt_strs.append(_assemble_ras_gef(stmt))
-            elif isinstance(stmt, ist.RasGap):
-                stmt_strs.append(_assemble_ras_gap(stmt))
+            elif isinstance(stmt, ist.Gef):
+                stmt_strs.append(_assemble_gef(stmt))
+            elif isinstance(stmt, ist.Gap):
+                stmt_strs.append(_assemble_gap(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         if stmt_strs:
@@ -259,18 +267,18 @@ def _assemble_translocation(stmt):
         stmt_str += ' to the ' + stmt.to_location
     return _make_sentence(stmt_str)
 
-def _assemble_ras_gap(stmt):
-    """Assemble RasGap statements into text."""
+def _assemble_gap(stmt):
+    """Assemble Gap statements into text."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a Ras GAP for ' + obj_str
+    stmt_str = subj_str + ' is a GAP for ' + obj_str
     return _make_sentence(stmt_str)
 
-def _assemble_ras_gef(stmt):
-    """Assemble RasGef statements into text."""
+def _assemble_gef(stmt):
+    """Assemble Gef statements into text."""
     subj_str = _assemble_agent_str(stmt.gef)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a Ras GEF for ' + obj_str
+    stmt_str = subj_str + ' is a GEF for ' + obj_str
     return _make_sentence(stmt_str)
 
 def _make_sentence(txt):
