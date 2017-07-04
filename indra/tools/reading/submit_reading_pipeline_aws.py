@@ -7,44 +7,53 @@ from indra.literature import elsevier_client as ec
 
 bucket_name = 'bigmech'
 
-def wait_for_success():
-    """Return when all jobs in queue SUCCEEDED or some FAILED."""
-    # This is a simple implementation in which a single queue is monitored
-    # for a full clearance of jobs or a single failure. Job IDs are not
-    # individually tracked. So this is adequate when a single reading task is
-    # being performed, not multiple independent ones.
-    def get_num_jobs(status):
+def wait_for_complete(job_list, poll_interval=10):
+    """Return when all jobs in the given list finished.
+
+    If not job list is given, return when all jobs in queue finished.
+
+    Parameters
+    ----------
+    job_list : Optional[list(dict)]
+        A list of jobID-s in a dict, as returned by the submit function.
+        Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
+        If not given, this function will return if all jobs completed.
+    poll_interval : Optional[int]
+        The time delay between API calls to check the job statuses.
+    """
+    def get_jobs_by_status(status, job_filter=None):
         res = batch_client.list_jobs(jobQueue='run_reach_queue',
                                      jobStatus=status)
-        jobs = res.get('jobSummaryList', [])
-        return len(jobs)
+        ids = [job['jobId'] for job in res['jobSummaryList']]
+        if job_filter:
+            ids = [job_id for job_id in ids if job_id in job_filter]
+        return ids
+
+    job_list = [job['jobId'] for job in job_list]
 
     batch_client = boto3.client('batch')
 
-    sleep_time =  10
     total_time = 0
     while True:
-        not_done = sum([get_num_jobs(s) for s in
-                        ('SUBMITTED', 'PENDING', 'RUNNABLE',
-                         'STARTING', 'RUNNING')])
-        failed = get_num_jobs('FAILED')
-        done = get_num_jobs('SUCCEEDED')
+        not_done = []
+        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING',
+                       'RUNNING'):
+            not_done += get_jobs_by_status(status, job_list)
+        failed = get_jobs_by_status('FAILED', job_list)
+        done = get_jobs_by_status('SUCCEEDED', job_list)
 
         print('(%d s)=(not done: %d, failed: %d, done: %d)' %
-              (total_time, not_done, failed, done))
+              (total_time, len(not_done), len(failed), len(done)))
 
-        if failed > 0:
-            # TODO: the issue here is that failures stick around for a long
-            # time and so returning here is not desirable. This should be done
-            # based on specific job ids.
-            #return -1
-            pass
-        if not_done == 0 and done > 0:
-            return 0
-        sleep(sleep_time)
-        total_time += sleep_time
+        if job_list:
+            if (len(failed) + len(done)) == len(job_list):
+                return 0
+        else:
+            if (len(failed) + len(done) > 0) and (len(not_done) == 0):
+                return 0
 
-
+        sleep(poll_interval)
+        total_time += poll_interval
 
 def get_environment():
     # Get AWS credentials
