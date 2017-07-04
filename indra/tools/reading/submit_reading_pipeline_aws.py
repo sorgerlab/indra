@@ -2,10 +2,58 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import boto3
 import botocore.session
+from time import sleep
 from indra.literature import elsevier_client as ec
 
 bucket_name = 'bigmech'
 
+def wait_for_complete(job_list, poll_interval=10):
+    """Return when all jobs in the given list finished.
+
+    If not job list is given, return when all jobs in queue finished.
+
+    Parameters
+    ----------
+    job_list : Optional[list(dict)]
+        A list of jobID-s in a dict, as returned by the submit function.
+        Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
+        If not given, this function will return if all jobs completed.
+    poll_interval : Optional[int]
+        The time delay between API calls to check the job statuses.
+    """
+    def get_jobs_by_status(status, job_filter=None):
+        res = batch_client.list_jobs(jobQueue='run_reach_queue',
+                                     jobStatus=status)
+        ids = [job['jobId'] for job in res['jobSummaryList']]
+        if job_filter:
+            ids = [job_id for job_id in ids if job_id in job_filter]
+        return ids
+
+    job_list = [job['jobId'] for job in job_list]
+
+    batch_client = boto3.client('batch')
+
+    total_time = 0
+    while True:
+        not_done = []
+        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING',
+                       'RUNNING'):
+            not_done += get_jobs_by_status(status, job_list)
+        failed = get_jobs_by_status('FAILED', job_list)
+        done = get_jobs_by_status('SUCCEEDED', job_list)
+
+        print('(%d s)=(not done: %d, failed: %d, done: %d)' %
+              (total_time, len(not_done), len(failed), len(done)))
+
+        if job_list:
+            if (len(failed) + len(done)) == len(job_list):
+                return 0
+        else:
+            if (len(failed) + len(done) > 0) and (len(not_done) == 0):
+                return 0
+
+        sleep(poll_interval)
+        total_time += poll_interval
 
 def get_environment():
     # Get AWS credentials

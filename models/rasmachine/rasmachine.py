@@ -6,7 +6,9 @@ import sys
 import yaml
 import time
 import json
+import pytz
 import shutil
+import tzlocal
 import logging
 import datetime
 import argparse
@@ -19,6 +21,17 @@ from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler
 from indra.tools.incremental_model import IncrementalModel
+
+try:
+    import boto3
+    from indra.tools.reading.submit_reading_pipeline_aws import \
+        submit_run_reach, wait_for_complete
+    # Try to make a client
+    client = boto3.client('batch')
+    from indra.literature.s3_client import get_reach_json_str, get_full_text
+    aws_available = True
+except Exception:
+    aws_available = False
 
 model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one', 'human_only']
@@ -100,6 +113,28 @@ def process_paper(model_name, pmid):
         check_pmids(rp.statements)
     return rp, txt_format
 
+def process_paper_aws(pmid):
+    try:
+        metadata, content_type = get_full_text(pmid, metadata=True)
+    except Exception as e:
+        logger.error('Could not get content from S3: %s' % e)
+        return None, None
+    logger.info('Downloading %s output from AWS' % pmid)
+    reach_json_str = get_reach_json_str(pmid)
+    if not reach_json_str:
+        logger.info('Could not get output.')
+        return None, content_type
+    rp = reach.process_json_str(reach_json_str)
+
+    current_time_local = datetime.datetime.now(tzlocal.get_localzone())
+    dt_script = current_time_local - start_time_local
+    last_mod_remote = metadata['LastModified']
+    dt = (current_time_local - last_mod_remote)
+    # If it was not modified since the script started
+    if dt > dt_script:
+        content_type = 'existing_json'
+    return rp, content_type
+
 def make_status_message(stats):
     ndiff = (stats['new_final'] - stats['orig_final'])
     msg_str = None
@@ -129,7 +164,7 @@ def make_status_message(stats):
                     (abstr_str, mech_str)
     return msg_str
 
-def extend_model(model_name, model, pmids):
+def extend_model(model_name, model, pmids, aws_available=False):
     npapers = 0
     nabstracts = 0
     nexisting = 0
@@ -143,7 +178,10 @@ def extend_model(model_name, model, pmids):
             if model.stmts.get(pmid) is None:
                 logger.info('Processing %s for search term %s' % \
                             (pmid, search_term))
-                rp, txt_format = process_paper(model_name, pmid)
+                if not aws_available:
+                    rp, txt_format = process_paper(model_name, pmid)
+                else:
+                    rp, txt_format = process_paper_aws(pmid)
                 if rp is not None:
                     if txt_format == 'abstract':
                         nabstracts += 1
@@ -274,6 +312,7 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
 if __name__ == '__main__':
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
+    start_time_local = datetime.datetime.now(tzlocal.get_localzone())
 
     if len(sys.argv) < 2:
         logger.error('Model name argument missing')
@@ -398,7 +437,25 @@ if __name__ == '__main__':
         logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
         pmids = _extend_dict(pmids, pmids_gene)
     '''
+    date = datetime.datetime.today()
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
 
+    # Save PMIDs in file and send for remote reading
+    if aws_available:
+        pmid_fname = 'pmids-%s.txt' % date_str
+        all_pmids = []
+        for v in pmids.values():
+            all_pmids += v
+        all_pmids = list(set(all_pmids))
+
+        with open(pmid_fname, 'wt') as fh:
+            for pmid in all_pmids:
+                fh.write('%s\n' % pmid)
+        # Submit reading
+        job_list = submit_run_reach('rasmachine', pmid_fname)
+
+        # Wait for reading to complete
+        reading_res = wait_for_complete(job_list)
 
     # Load the model
     logger.info(time.strftime('%c'))
@@ -427,7 +484,7 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
-                            extend_model(model_name, model, pmids)
+                            extend_model(model_name, model, pmids, aws_available)
     # Having added new statements, we preassemble the model
     model.preassemble(filters=global_filters)
 
@@ -449,8 +506,6 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
 
     # Save a time stamped version of the pickle for backup/diagnostic purposes
-    date = datetime.datetime.today()
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
     inc_model_bkp_file = os.path.join(model_path, model_name,
                                       'model-%s.pkl' % date_str)
     model.save(inc_model_bkp_file)
