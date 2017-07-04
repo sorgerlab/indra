@@ -39,7 +39,15 @@ class EnglishAssembler(object):
         self.statements += stmts
 
     def make_model(self):
-        """Assemble text from the set of collected INDRA Statements."""
+        """Assemble text from the set of collected INDRA Statements.
+
+        Returns
+        -------
+        stmt_strs : str
+            Return the assembled text as unicode string. By default, the text
+            is a single string consisting of one or more sentences with
+            periods at the end.
+        """
         stmt_strs = []
         for stmt in self.statements:
             if isinstance(stmt, ist.Modification):
