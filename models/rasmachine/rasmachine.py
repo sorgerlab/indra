@@ -25,11 +25,10 @@ from indra.tools.incremental_model import IncrementalModel
 try:
     import boto3
     from indra.tools.reading.submit_reading_pipeline_aws import \
-        submit_run_reach, wait_for_success
+        submit_run_reach, wait_for_complete
     # Try to make a client
     client = boto3.client('batch')
-    from indra.literature.s3_client import \
-        get_reach_json_str, get_full_text
+    from indra.literature.s3_client import get_reach_json_str, get_full_text
     aws_available = True
 except Exception:
     aws_available = False
@@ -115,7 +114,11 @@ def process_paper(model_name, pmid):
     return rp, txt_format
 
 def process_paper_aws(pmid):
-    metadata, content_type = get_full_text(pmid, metadata=True)
+    try:
+        metadata, content_type = get_full_text(pmid, metadata=True)
+    except Exception as e:
+        logger.error('Could not get content from S3: %s' % e)
+        return None, None
     logger.info('Downloading %s output from AWS' % pmid)
     reach_json_str = get_reach_json_str(pmid)
     if not reach_json_str:
@@ -452,7 +455,7 @@ if __name__ == '__main__':
         job_list = submit_run_reach('rasmachine', pmid_fname)
 
         # Wait for reading to complete
-        reading_res = wait_for_success()
+        reading_res = wait_for_complete(job_list)
 
     # Load the model
     logger.info(time.strftime('%c'))
