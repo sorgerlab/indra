@@ -15,12 +15,23 @@ PhosphoSite = namedtuple('PhosphoSite',
 _data_by_up = None
 _data_by_site_grp = None
 
+phosphosite_data_file = join(dirname(abspath(__file__)),
+                             '../resources/Phosphorylation_site_dataset.tsv')
+
+
 def _read_phospho_site_dataset():
+    """Read phosphosite data into dicts keyed by Uniprot ID and by site group.
+
+    Returns
+    -------
+    tuple
+        The first element of the tuple contains the PhosphoSite data keyed
+        by Uniprot ID, the second element contains data keyed by site group.
+        Both dicts have instances of the PhosphoSite namedtuple as values.
+    """
     global _data_by_up
     global _data_by_site_grp
     if _data_by_up is None or _data_by_site_grp is None:
-        phosphosite_data_file = join(dirname(abspath(__file__)),
-                                '../resources/Phosphorylation_site_dataset.tsv')
         reader = read_unicode_csv(phosphosite_data_file, delimiter='\t',
                                   skiprows=4)
         # Build up a dict by protein
@@ -36,7 +47,25 @@ def _read_phospho_site_dataset():
         _data_by_site_grp = data_by_site_grp
     return (_data_by_up, _data_by_site_grp)
 
+
 def map_to_human_site(up_id, mod_res, mod_pos):
+    """Find site on human ref seq corresponding to (possibly non-human) site.
+
+    Parameters
+    ----------
+    up_id : str
+        Uniprot ID of the modified protein (generally human, rat, or mouse).
+    mod_res : str
+        Modified amino acid residue.
+    mod_pos : str
+        Amino acid sequence position.
+
+    Returns
+    -------
+    str
+        Returns amino acid position on the human reference sequence
+        corresponding to the site on the given protein.
+    """
     (data_by_up, data_by_site_grp) = _read_phospho_site_dataset()
     sites_for_up = data_by_up.get(up_id)
     # No info in Phosphosite for this Uniprot ID
@@ -73,7 +102,7 @@ def map_to_human_site(up_id, mod_res, mod_pos):
                          (site_info.ACC_ID, site_info.SITE_GRP_ID))
         else:
             site_info = ref_site_info
-    # Lookup site group
+    # Look up site group
     site_grp_list = data_by_site_grp.get(site_info.SITE_GRP_ID)
     # If an empty list, then return None (is unlikely to happen)
     if not site_grp_list:
@@ -107,8 +136,4 @@ def map_to_human_site(up_id, mod_res, mod_pos):
     assert human_res == mod_res
     human_pos = human_site_str[1:]
     return human_pos
-
-if __name__ == '__main__':
-    (data_by_up, data_by_site_grp) = _read_phospho_site_dataset()
-
 
