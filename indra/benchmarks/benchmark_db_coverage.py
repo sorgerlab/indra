@@ -38,7 +38,7 @@ if __name__ == '__main__':
     all_genes = \
         OrderedDict({'signaling': ['MAPK1', 'AKT1', 'JAK1', 'GNAS', 'CTNNB1'],
                      'genereg': ['MYC', 'TP53', 'STAT3', 'FOXO3', 'JUN'],
-                     'metabolism': ['IDH1', 'PFKL', 'DHFR', 'GLUL', 'NOS1']}
+                     'metabolism': ['IDH1', 'PFKL', 'DHFR', 'GLUL', 'NOS1']})
 
     stats = {group: {g: {} for g in genes}
              for group, genes in all_genes.items()}
@@ -55,6 +55,6 @@ if __name__ == '__main__':
             stats[group][gene]['biopax'] = (num_all, num_extracted)
 
     with open('db_coverage_stats.json', 'w') as fh:
-        json.dump(fh, stats)
+        json.dump(stats, fh)
 
     print_stats(stats)
