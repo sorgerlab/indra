@@ -98,10 +98,9 @@ class CxAssembler(object):
                 self._add_modification(stmt)
             if isinstance(stmt, SelfModification):
                 self._add_self_modification(stmt)
-            elif isinstance(stmt, Activation):
-                self._add_activation(stmt)
-            elif isinstance(stmt, Inhibition):
-                self._add_inhibition(stmt)
+            elif isinstance(stmt, RegulateActivity) or \
+                isinstance(stmt, RegulateAmount):
+                self._add_regulation(stmt)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt)
             elif isinstance(stmt, Gef):
@@ -289,15 +288,13 @@ class CxAssembler(object):
             m2_id = self._add_node(m2)
             self._add_edge(m1_id, m2_id, 'Complex', stmt)
 
-    def _add_activation(self, stmt):
+    def _add_regulation(self, stmt):
+        if stmt.subj is None:
+            return
         subj_id = self._add_node(stmt.subj)
         obj_id = self._add_node(stmt.obj)
-        self._add_edge(subj_id, obj_id, 'Activation', stmt)
-
-    def _add_inhibition(self, stmt):
-        subj_id = self._add_node(stmt.subj)
-        obj_id = self._add_node(stmt.obj)
-        self._add_edge(subj_id, obj_id, 'Inhibition', stmt)
+        stmt_type = stmt.__class__.__name__
+        self._add_edge(subj_id, obj_id, stmt_type, stmt)
 
     def _add_gef(self, stmt):
         gef_id = self._add_node(stmt.gef)
@@ -498,6 +495,12 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, Inhibition):
         edge_type = 'Inhibition'
         edge_polarity = 'negative'
+    elif isinstance(stmt, DecreaseAmount):
+        edge_type = 'DecreaseAmount'
+        edge_polarity = 'negative'
+    elif isinstance(stmt, IncreaseAmount):
+        edge_type = 'IncreaseAmount'
+        edge_polarity = 'positive'
     elif isinstance(stmt, Gef):
         edge_type = 'Gef'
         edge_polarity = 'positive'
