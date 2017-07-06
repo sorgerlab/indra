@@ -4,10 +4,10 @@ BRAF,T,151,S,151,wrong residue
 BRAF,S,578,S,579,wrong residue
 BRAF,S,753,T,753,wrong residue
 GAB1,Y,527,Y,627,off by 100
-KSR1,T,260,,,mouse sequence
-KSR1,S,320,,,mouse sequence
+KSR1,T,260,T,274,mouse sequence
+KSR1,S,320,S,334,mouse sequence
 KSR1,S,404,S,406,off by two
-KSR1,S,443,,,mouse sequence
+KSR1,S,443,S,458,mouse sequence
 MAP2K1,S,217,S,218,off by one
 MAP2K1,S,221,S,222,off by one
 MAPK1,T,182,T,185,off by three
@@ -27,7 +27,6 @@ RPS6KA6,S,221,S,232,numbering from RPS6KA1
 RPS6KA6,S,363,S,372,numbering from RPS6KA1
 RPS6KA6,S,380,S,389,numbering from RPS6KA1
 RPS6KA6,T,573,T,581,numbering from RPS6KA1
-RPS6KB1,T,389,,,numbering from isoform alpha 2
 SDC2,Y,180,Y,179,off by one
 SHC1,Y,194,Y,349,numbering from isoform p46
 SHC1,Y,195,Y,350,numbering from isoform p46
@@ -46,8 +45,16 @@ AR,S,578,S,579,off by 1
 AR,Y,534,Y,535,off by 1
 AR,S,210,S,215,numbering from deprecated sequence GenBank A39248
 AR,S,791,S,792,off by 1
+AR,S,81,S,83,off by 2
+AR,S,308,S,310,off by 2
+AR,K,630,K,631,off by 1
+AR,Y,267,Y,269,off by 2
+AR,Y,363,Y,365,off by 2
 BAD,S,112,S,75,numbering from mouse sequence
 BAD,S,136,S,99,numbering from mouse sequence
+BAD,S,155,S,118,numbering from mouse sequence
+BAD,T,201,,,site present in mouse but not in human sequence (corresponds to human A165)
+BAD,S,119,S,118,numbering from bovine sequence
 BLK,Y,388,Y,389,off by 1
 BRAF,S,445,S,446,off by 1
 CAV1,Y,13,Y,14,off by 1
@@ -58,6 +65,12 @@ EGFR,Y,1173,Y,1197,numbering after 24-residue signaling peptide removed
 EGFR,T,654,T,678,numbering after 24-residue signaling peptide removed
 EGFR,Y,845,Y,869,numbering after 24-residue signaling peptide removed
 EGFR,Y,1086,Y,1110,numbering after 24-residue signaling peptide removed
+EGFR,Y,1068,Y,1092,numbering after 24-residue signaling peptide removed
+EGFR,S,1046,S,1070,numbering after 24-residue signaling peptide removed
+EGFR,S,1047,S,1071,numbering after 24-residue signaling peptide removed
+EGFR,Y,1101,Y,1125,numbering after 24-residue signaling peptide removed
+EGFR,T,669,T,693,numbering after 24-residue signaling peptide removed
+EGFR,R,1175,R,1199,numbering after 24-residue signaling peptide removed
 EIF4EBP1,S,11,S,12,off by 1 (methionine removed)
 FOXO4,S,142,S,197,numbering from isoform zeta
 FOXO4,S,207,S,262,numbering from isoform zeta
@@ -82,3 +95,49 @@ SHC1,Y,240,Y,350,numbering from isoform p52
 SRC,Y,416,Y,419,off by 3
 SRC,Y,418,Y,418,off by 1
 SRC,Y,215,Y,216,off by 1
+PRKCD,Y,311,Y,313,off by 2
+BCL2L11,S,65,S,69,numbering from mouse sequence
+SRC,Y,527,Y,530,numbering from chicken sequence
+PTPN11,Y,542,Y,546,off by 4
+PTPN11,Y,580,Y,584,off by 4
+ULK1,S,757,S,758,numbering from mouse sequence
+KSR1,S,392,S,406,numbering from mouse sequence
+JAK2,E,47,,,E47 confused with alias for gene TCF3
+JAK2,Y,485,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,468,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,504,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,489,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,426,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,456,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,454,,,Wrong gene; binding site for JAK2 on EPOR
+JAK2,Y,368,,,Wrong gene; binding site for JAK2 on EPOR
+RPS6KB1,T,389,T,412,numbering from isoform alpha 2
+RPS6KB1,S,424,S,447,numbering from isoform alpha 2
+RPS6KB1,S,371,S,394,numbering from isoform alpha 2
+RPS6KB1,T,421,T,444,numbering from isoform alpha 2
+RPS6KB1,T,229,T,252,numbering from isoform alpha 2
+RPS6KB1,E,4,,,incorrect
+RPS6KB1,S,473,,,probable reading error: AKT S473
+RPS6KB1,S,389,T,412,numbering from isoform alpha 2; wrong residue
+RPS6KB1,S,65,,,incorrect
+RPS6KB1,S,411,S,434,numbering from isoform alpha 2
+RPS6KB1,A,549,,,probable reading error: cell line A549
+RPS6KB1,S,2448,,,probable reading error: site on MTOR
+RPS6KB1,H,358,,,incorrect
+RPS6KB1,S,757,,,incorrect
+RPS6KB1,G,1,,,probable reading error: cell cycle
+RPS6KB1,S,308,,,probable reading error: AKT T308
+RPS6KB1,S,6,,,probable reading error: gene name S6
+RPS6KB1,T,424,S,447,probable wrong residue; numbering from isoform alpha 2
+RPS6KB1,T,308,,,probable reading error: AKT T308
+RB1,D,1,,,probable reading error: cyclin D1
+RB1,G,1,,,probable reading error: cell cycle G1
+RB1,Y,79,,,probable reading error: cell line Y79
+RB1,G,0,,,probable reading error: cell cycle G0
+RB1,T,160,,,probable reading error: site T160 on CDK2
+RB1,S,81,,,incorrect
+TP53,S,389,S,392,numbering from off-by-one mouse sequence
+RPS6,T,389,,,probable reading error: site on RPS6KB1
+RPS6,S,473,,,probable reading error: AKT S473
+RPS6,T,412,,,probable reading error: site on RPS6KB1
+RPS6,S,2448,,,probable reading error: site on MTOR
