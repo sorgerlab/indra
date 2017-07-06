@@ -18,6 +18,7 @@ _has_data = None
 
 phosphosite_data_file = join(dirname(abspath(__file__)),
                              '../resources/Phosphorylation_site_dataset.tsv')
+
 def has_data():
     """Check if the PhosphoSite data is available and can be loaded.
 
