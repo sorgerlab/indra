@@ -13,9 +13,9 @@ before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh --nv;
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh -nv;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh --nv;
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh -nv;
     fi
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -31,9 +31,9 @@ install:
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
   - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas
   - pip install doctest-ignore-unicode
-  - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ --nv
+  - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
   # PySB and dependencies
-  - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz --nv
+  - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz -nv
   - tar xzf bionetgen.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
@@ -57,10 +57,10 @@ install:
   - git submodule update --remote
   - pip install .
   - cd indra/benchmarks/assembly_eval/batch4
-  - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz --nv
+  - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
-  - wget http://sorger.med.harvard.edu/data/bachman/reach-gordo-1.3.3-SNAPSHOT.jar --nv
+  - wget http://sorger.med.harvard.edu/data/bachman/reach-gordo-1.3.3-SNAPSHOT.jar -nv
 script:
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-gordo-1.3.3-SNAPSHOT.jar
