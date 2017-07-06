@@ -14,12 +14,33 @@ PhosphoSite = namedtuple('PhosphoSite',
 
 _data_by_up = None
 _data_by_site_grp = None
+_has_data = None
 
 phosphosite_data_file = join(dirname(abspath(__file__)),
                              '../resources/Phosphorylation_site_dataset.tsv')
+def has_data():
+    """Check if the PhosphoSite data is available and can be loaded.
+
+    Returns
+    -------
+    bool
+        True if the data can be loaded, False otherwise.
+    """
+    global _has_data
+    if _has_data is None:
+        try:
+            _read_phospho_site_dataset()
+            # If we succeeded without exception, then we set _has_data to True
+            _has_data = True
+        except Exception as e:
+            logger.info("Could not load PhosphoSite data from file %s" %
+                         phosphosite_data_file)
+            logger.info("Source Exception: %s" % e)
+            _has_data = False
+    return _has_data
 
 
-def _read_phospho_site_dataset():
+def _get_phospho_site_dataset():
     """Read phosphosite data into dicts keyed by Uniprot ID and by site group.
 
     Returns
@@ -28,10 +49,12 @@ def _read_phospho_site_dataset():
         The first element of the tuple contains the PhosphoSite data keyed
         by Uniprot ID, the second element contains data keyed by site group.
         Both dicts have instances of the PhosphoSite namedtuple as values.
+        If the PhosphoSite data file cannot be loaded, returns (None, None).
     """
     global _data_by_up
     global _data_by_site_grp
     if _data_by_up is None or _data_by_site_grp is None:
+        # Get the csv reader generator
         reader = read_unicode_csv(phosphosite_data_file, delimiter='\t',
                                   skiprows=4)
         # Build up a dict by protein
@@ -66,7 +89,7 @@ def map_to_human_site(up_id, mod_res, mod_pos):
         Returns amino acid position on the human reference sequence
         corresponding to the site on the given protein.
     """
-    (data_by_up, data_by_site_grp) = _read_phospho_site_dataset()
+    (data_by_up, data_by_site_grp) = _get_phospho_site_dataset()
     sites_for_up = data_by_up.get(up_id)
     # No info in Phosphosite for this Uniprot ID
     if not sites_for_up:
