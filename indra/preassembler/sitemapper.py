@@ -87,7 +87,7 @@ class SiteMapper(object):
     >>> (valid, mapped) = default_mapper.map_sites([stmt])
     >>> valid
     []
-    >>> mapped
+    >>> mapped  # doctest:+IGNORE_UNICODE
     [
     MappedStatement:
         original_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
