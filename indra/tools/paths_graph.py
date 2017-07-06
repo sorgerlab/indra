@@ -1,7 +1,8 @@
 import random
 import itertools
-import logging
+from indra import logging
 import networkx as nx
+import graphillion
 
 logger = logging.getLogger('paths_graph')
 
@@ -168,7 +169,7 @@ def paths_graph(g, source, target, target_polarity, length, f_level, b_level):
     return path_graph
 
 
-def sample_path(g, source, target):
+def sample_single_path(g, source, target, length):
     """Sample a path from the paths graph."""
     path = []
     source_node = (length, (source, 0))
@@ -186,47 +187,80 @@ def sample_path(g, source, target):
     return tuple([u[1] for u in path])
 
 
+def sample_paths(g, source, target, target_polarity, max_depth=10,
+                 samples_per_length=100, draw_graphs=False):
+    logger.info("Computing forward and backward reach sets...")
+    f_level, b_level = get_reachable_sets(g, source, target, max_depth)
+    # Compute path graph for a specific path length
+    paths_by_length = {}
+    pg_by_length = {}
+    for path_length in range(1, max_depth + 1):
+        logger.info("Length %d: computing paths graph" % path_length)
+        pg = paths_graph(g, source, target, target_polarity, path_length,
+                         f_level, b_level)
+
+        # If there are no paths of this length, the graph will be empty
+        if len(pg) == 0:
+            logger.info("Length %d: no paths" % path_length)
+            continue
+        # Optionally draw the paths graph for paths of this length
+        if draw_graphs:
+            logger.info("Length %d: drawing Graphviz graph" % path_length)
+            ag = nx.nx_agraph.to_agraph(pg)
+            ag.draw('paths_graph_%d.pdf' % path_length, prog='dot')
+        # Sample a given number of paths for this path length
+        num_paths = 100
+        logger.info("Length %d: Sampling %d paths" %
+                    (path_length, samples_per_length))
+        paths_for_length = []
+        while len(paths_for_length) < num_paths:
+            p = sample_single_path(pg, source, target, path_length)
+            paths_for_length.append(p)
+        # Remove redundant paths
+        paths_by_length[path_length] = list(set(paths_for_length))
+        pg_by_length[path_length] = pg
+    return (paths_by_length, pg_by_length)
+
+
+def paths_to_graphset(paths_dict, pg_dict):
+    # Construct the universe
+    edges = []
+    nodes = set([])
+    for path_length, pg in pg_dict.items():
+        for e in pg.edges():
+            # Putting in the depth seemed to cause problems
+            #new_edge = tuple([str(v[1][0]) for v in e])
+            new_edge = tuple([str(v[1]) for v in e])
+            nodes |= set(new_edge)
+            if new_edge in edges or tuple([new_edge[1], new_edge[0]]) in edges:
+                continue
+            else:
+                edges.append(new_edge)
+    # Set the graphset
+    graphillion.GraphSet.set_universe(edges)
+    # Create a graphset from the paths in paths_dict
+    all_paths = []
+    for path_length, path_list in paths_dict.items():
+        for path in path_list:
+            new_path = []
+            for node_ix in range(len(path) - 1):
+                from_node = str(path[node_ix])
+                to_node = str(path[node_ix + 1])
+                assert from_node in nodes
+                assert to_node in nodes
+                new_path.append((from_node, to_node))
+            all_paths.append(new_path)
+    gs = graphillion.GraphSet(all_paths)
+    return gs
+
+
 if __name__ == '__main__':
     g = get_edges('korkut_im.sif')
     source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
     target = 'EIF4EBP1_T37_p_obs'
     target_polarity = 0
+    logger.info("Testing the logger.")
+    (paths_dict, pg_dict) = sample_paths(g, source, target, target_polarity,
+                                         draw_graphs=True, max_depth=8)
+    gs = paths_to_graphset(paths_dict, pg_dict)
 
-    print("Computing forward and backward reach sets...")
-    max_depth = 10
-    f_level, b_level = get_reachable_sets(g, source, target, max_depth)
-
-    # Compute path graph for a specific path length
-    length = 7
-    print("Computing paths graph of length %d" % length)
-    pg = paths_graph(g, source, target, target_polarity, length, f_level,
-                     b_level)
-
-    print("Drawing Graphviz graph")
-    ag = nx.nx_agraph.to_agraph(pg)
-    ag.draw('gop.pdf', prog='dot')
-
-    num_paths = 100
-    print("Sampling %d paths" % num_paths)
-    paths = []
-    while len(paths) < num_paths:
-        p = sample_path(pg, source, target)
-        paths.append(p)
-    paths = list(set(paths))
-
-    # Convert to graphillion compatible graph
-    from graphillion import GraphSet
-    edges = []
-    for e in pg.edges():
-        new_edge = tuple([str(v[1][0]) for v in e])
-        if new_edge in edges or tuple([new_edge[1], new_edge[0]]) in edges:
-            continue
-        else:
-            edges.append(new_edge)
-
-    GraphSet.set_universe(edges)
-
-    # Getting paths from graphillion
-    print("Getting paths from graphillion")
-    gs_paths = GraphSet.paths(source, target)
-    blocking = gs_paths.blocking().minimal()
