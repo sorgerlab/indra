@@ -87,8 +87,15 @@ class SiteMapper(object):
     >>> (valid, mapped) = default_mapper.map_sites([stmt])
     >>> valid
     []
-    >>> mapped # doctest:+ELLIPSIS
-    [<indra.preassembler.sitemapper.MappedStatement object at ...
+    >>> mapped
+    [
+    MappedStatement:
+        original_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
+        mapped_mods: (('MAP2K1', 'S', '217'), ('S', '218', 'off by one'))
+                     (('MAP2K1', 'S', '221'), ('S', '222', 'off by one'))
+                     (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))
+        mapped_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
+    ]
     >>> ms = mapped[0]
     >>> ms.original_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)

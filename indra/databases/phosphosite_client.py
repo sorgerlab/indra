@@ -30,7 +30,7 @@ def has_data():
     global _has_data
     if _has_data is None:
         try:
-            _read_phospho_site_dataset()
+            _get_phospho_site_dataset()
             # If we succeeded without exception, then we set _has_data to True
             _has_data = True
         except Exception as e:
