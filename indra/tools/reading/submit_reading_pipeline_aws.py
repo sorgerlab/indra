@@ -1,11 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import boto3
+import logging
 import botocore.session
 from time import sleep
 from indra.literature import elsevier_client as ec
 
 bucket_name = 'bigmech'
+
+logger = logging.getLogger('aws_reading')
 
 def wait_for_complete(job_list, poll_interval=10):
     """Return when all jobs in the given list finished.
@@ -42,7 +45,7 @@ def wait_for_complete(job_list, poll_interval=10):
         failed = get_jobs_by_status('FAILED', job_list)
         done = get_jobs_by_status('SUCCEEDED', job_list)
 
-        print('(%d s)=(not done: %d, failed: %d, done: %d)' %
+        logger.info('(%d s)=(not done: %d, failed: %d, done: %d)' %
               (total_time, len(not_done), len(failed), len(done)))
 
         if job_list:
