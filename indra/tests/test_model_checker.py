@@ -1048,12 +1048,9 @@ def test_model_check_data():
     paths = results[0][1].paths
     scored_paths = mc.score_paths(paths, data)
     assert scored_paths[0][0] == p1
-    assert scored_paths[0][1] == 0
     assert scored_paths[1][0] == p2
-    # of each rule in the path against neighboring observables
-    # Take agents along with values
-    # Need also to be able to map agents to observables
-    # To constrain against data, need to be able to link agents in data
+    assert scored_paths[0][1] > scored_paths[1][1]
+
 
 def test_prune_influence_map():
     kin = Agent('Kin', db_refs={'HGNC': '1'})
@@ -1132,8 +1129,6 @@ def test_prune_influence_map():
 # Does this mean that we need a PySB ComplexPattern -> Agent mapping, that
 # we can subsequently use for refinements?
 
-# Why is
-
 # Need to handle complex statements. Would show that one_step approach
 # would not satisfy constraint, but two-step approach could, where the
 # Complex information was specified.
@@ -1168,6 +1163,3 @@ def test_prune_influence_map():
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
 
-
-if __name__ == '__main__':
-    test_distinguish_path_polarity1()
