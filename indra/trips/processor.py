@@ -1281,7 +1281,9 @@ class TripsProcessor(object):
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
-        epi = {'section_type': sec}
+        epi = {}
+        if sec:
+            epi['section_type'] = sec
         ev = Evidence(source_api='trips', text=text, pmid=self.doc_id,
                       epistemics=epi)
         return ev
