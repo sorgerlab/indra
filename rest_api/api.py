@@ -17,6 +17,10 @@ def allow_cors(func):
     """This is a decorator which enable CORS for the specified endpoint."""
     def wrapper(*args, **kwargs):
         response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = \
+            'PUT, GET, POST, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = \
+            'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
         return func(*args, **kwargs)
     return wrapper
 
@@ -24,10 +28,12 @@ def allow_cors(func):
 
 
 #   TRIPS   #
-@route('/trips/process_text', method='POST')
+@route('/trips/process_text', method=['POST', 'OPTIONS'])
 @allow_cors
 def trips_process_text():
     """Process text with TRIPS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
