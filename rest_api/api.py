@@ -17,6 +17,10 @@ def allow_cors(func):
     """This is a decorator which enable CORS for the specified endpoint."""
     def wrapper(*args, **kwargs):
         response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = \
+            'PUT, GET, POST, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = \
+            'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
         return func(*args, **kwargs)
     return wrapper
 
@@ -24,10 +28,12 @@ def allow_cors(func):
 
 
 #   TRIPS   #
-@route('/trips/process_text', method='POST')
+@route('/trips/process_text', method=['POST', 'OPTIONS'])
 @allow_cors
 def trips_process_text():
     """Process text with TRIPS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
@@ -41,10 +47,12 @@ def trips_process_text():
     return res
 
 
-@route('/trips/process_xml', method='POST')
+@route('/trips/process_xml', method=['POST', 'OPTIONS'])
 @allow_cors
 def trips_process_xml():
     """Process TRIPS EKB XML and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     xml_str = body.get('xml_str')
@@ -60,10 +68,12 @@ def trips_process_xml():
 
 
 #   REACH   #
-@route('/reach/process_text', method='POST')
+@route('/reach/process_text', method=['POST', 'OPTIONS'])
 @allow_cors
 def reach_process_text():
     """Process text with REACH and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
@@ -77,10 +87,12 @@ def reach_process_text():
     return res
 
 
-@route('/reach/process_json', method='POST')
+@route('/reach/process_json', method=['POST', 'OPTIONS'])
 @allow_cors
 def reach_process_json():
     """Process REACH json and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     json_str = body.get('json')
@@ -94,10 +106,12 @@ def reach_process_json():
     return res
 
 
-@route('/reach/process_pmc', method='POST')
+@route('/reach/process_pmc', method=['POST', 'OPTIONS'])
 @allow_cors
 def reach_process_pmc():
     """Process PubMedCentral article and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
@@ -113,10 +127,12 @@ def reach_process_pmc():
 
 
 #   BEL   #
-@route('/bel/process_ndex_neighborhood', method='POST')
+@route('/bel/process_ndex_neighborhood', method=['POST', 'OPTIONS'])
 @allow_cors
 def bel_process_ndex_neighborhood():
     """Process BEL Large Corpus neighborhood and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -130,10 +146,12 @@ def bel_process_ndex_neighborhood():
     return res
 
 
-@route('/bel/process_belrdf', method='POST')
+@route('/bel/process_belrdf', method=['POST', 'OPTIONS'])
 @allow_cors
 def bel_process_belrdf():
     """Process BEL RDF and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     belrdf = body.get('belrdf')
@@ -148,10 +166,12 @@ def bel_process_belrdf():
 
 
 #   BioPAX   #
-@route('/biopax/process_pc_pathsbetween', method='POST')
+@route('/biopax/process_pc_pathsbetween', method=['POST', 'OPTIONS'])
 @allow_cors
 def biopax_process_pc_pathsbetween():
     """Process PathwayCommons paths between genes, return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -165,10 +185,12 @@ def biopax_process_pc_pathsbetween():
     return res
 
 
-@route('/biopax/process_pc_pathsfromto', method='POST')
+@route('/biopax/process_pc_pathsfromto', method=['POST', 'OPTIONS'])
 @allow_cors
 def biopax_process_pc_pathsfromto():
     """Process PathwayCommons paths from-to genes, return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     source = body.get('source')
@@ -183,10 +205,12 @@ def biopax_process_pc_pathsfromto():
     return res
 
 
-@route('/biopax/process_pc_neighborhood', method='POST')
+@route('/biopax/process_pc_neighborhood', method=['POST', 'OPTIONS'])
 @allow_cors
 def biopax_process_pc_neighborhood():
     """Process PathwayCommons neighborhood, return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
@@ -203,10 +227,12 @@ def biopax_process_pc_neighborhood():
 
 
 #   PYSB   #
-@route('/assemblers/pysb', method='POST')
+@route('/assemblers/pysb', method=['POST', 'OPTIONS'])
 @allow_cors
 def assemble_pysb():
     """Assemble INDRA Statements and return PySB model string."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -220,10 +246,12 @@ def assemble_pysb():
 
 
 #   CX   #
-@route('/assemblers/cx', method='POST')
+@route('/assemblers/cx', method=['POST', 'OPTIONS'])
 @allow_cors
 def assemble_cx():
     """Assemble INDRA Statements and return CX network json."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -235,10 +263,12 @@ def assemble_cx():
 
 
 #  GRAPH   #
-@route('/assemblers/graph', method='POST')
+@route('/assemblers/graph', method=['POST', 'OPTIONS'])
 @allow_cors
 def assemble_graph():
     """Assemble INDRA Statements and return Graphviz graph dot string."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -250,10 +280,12 @@ def assemble_graph():
 
 
 #   CyJS   #
-@route('/assemblers/cyjs', method='POST')
+@route('/assemblers/cyjs', method=['POST', 'OPTIONS'])
 @allow_cors
 def assemble_cyjs():
     """Assemble INDRA Statements and return Cytoscape JS network."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -265,10 +297,12 @@ def assemble_cyjs():
     return model_str
 
 
-@route('/assemblers/sif/loopy', method='POST')
+@route('/assemblers/sif/loopy', method=['POST', 'OPTIONS'])
 @allow_cors
 def assemble_loopy():
     """Assemble INDRA Statements into a Loopy model using SIF Assembler."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -280,10 +314,12 @@ def assemble_loopy():
     return res
 
 
-@route('/preassembly/map_grounding', method='POST')
+@route('/preassembly/map_grounding', method=['POST', 'OPTIONS'])
 @allow_cors
 def map_grounding():
     """Map grounding on a list of INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -298,10 +334,12 @@ def map_grounding():
     return res
 
 
-@route('/preassembly/map_sequence', method='POST')
+@route('/preassembly/map_sequence', method=['POST', 'OPTIONS'])
 @allow_cors
 def map_grounding():
     """Map sequence on a list of INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -316,10 +354,12 @@ def map_grounding():
     return res
 
 
-@route('/preassembly/run_preassembly', method='POST')
+@route('/preassembly/run_preassembly', method=['POST', 'OPTIONS'])
 @allow_cors
 def run_preassembly():
     """Run preassembly on a list of INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -334,10 +374,12 @@ def run_preassembly():
     return res
 
 
-@route('/preassembly/filter_by_type', method='POST')
+@route('/preassembly/filter_by_type', method=['POST', 'OPTIONS'])
 @allow_cors
 def filter_by_type():
     """Filter to a given INDRA Statement type."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
@@ -355,10 +397,12 @@ def filter_by_type():
     return res
 
 
-@route('/preassembly/filter_grounded_only', method='POST')
+@route('/preassembly/filter_grounded_only', method=['POST', 'OPTIONS'])
 @allow_cors
 def filter_grounded_only():
     """Filter to grounded Statements only."""
+    if request.method == 'OPTIONS':
+        return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
