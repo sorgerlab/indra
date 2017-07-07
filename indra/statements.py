@@ -2290,6 +2290,19 @@ class IncreaseAmount(RegulateAmount):
 
 
 class Conversion(Statement):
+    """Conversion of molecular species mediated by a controller protein.
+
+    Parameters
+    ----------
+    subj : :py:class`indra.statement.Agent`
+        The protein mediating the conversion.
+    obj_from : list of :py:class:`indra.statement.Agent`
+        The list of molecular species being consumed by the conversion.
+    obj_to : list of :py:class:`indra.statement.Agent`
+        The list of molecular species being created by the conversion.
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the synthesis statement.
+    """
     def __init__(self, subj, obj_from=None, obj_to=None, evidence=None):
         super(Conversion, self).__init__(evidence)
         self.subj = subj
