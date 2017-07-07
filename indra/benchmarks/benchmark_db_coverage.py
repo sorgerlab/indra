@@ -38,7 +38,9 @@ if __name__ == '__main__':
     all_genes = \
         OrderedDict({'signaling': ['MAPK1', 'AKT1', 'JAK1', 'GNAS', 'CTNNB1'],
                      'genereg': ['MYC', 'TP53', 'STAT3', 'FOXO3', 'JUN'],
-                     'metabolism': ['IDH1', 'PFKL', 'DHFR', 'GLUL', 'NOS1']})
+                     'metabolism': ['IDH1', 'PFKL', 'DHFR', 'GLUL', 'NOS1',
+                                    'CHEBI:20506', 'CHEBI:28300', 'CHEBI:16084',
+                                    'CHEBI:32816', 'CHEBI:16480']})
 
     stats = {group: {g: {} for g in genes}
              for group, genes in all_genes.items()}
@@ -49,7 +51,11 @@ if __name__ == '__main__':
             num_all, num_extracted = get_bel_statistics(belp)
             stats[group][gene]['bel'] = (num_all, num_extracted)
             print(num_all, num_extracted)
-            biopp = biopax.process_pc_neighborhood([gene])
+            if gene.startswith('CHEBI:'):
+                bpx_query = 'http://identifiers.org/chebi/' + gene
+            else:
+                bpx_query = gene
+            biopp = biopax.process_pc_neighborhood([bpx_query])
             num_all, num_extracted = get_biopax_statistics(biopp)
             print(num_all, num_extracted)
             stats[group][gene]['biopax'] = (num_all, num_extracted)
