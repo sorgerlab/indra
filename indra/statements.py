@@ -1052,6 +1052,9 @@ class Statement(object):
                     if sub_id:
                         graph.add_edge(node_id, sub_id, label=('%s' % k))
             else:
+                if isinstance(element, basestring) and \
+                    element.startswith('http'):
+                    element = element.split('/')[-1]
                 graph.add_node(node_id, label=('%s' % element))
             return node_id
         jd = self.to_json()
