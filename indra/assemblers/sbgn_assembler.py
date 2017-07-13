@@ -91,7 +91,7 @@ class SBGNAssembler(object):
         sbgn_str = self.print_model()
         return sbgn_str
 
-    def print_model(self, pretty=True):
+    def print_model(self, pretty=True, encoding='utf8'):
         """Return the assembled SBGN model as an XML string.
 
         Parameters
@@ -102,10 +102,11 @@ class SBGNAssembler(object):
 
         Returns
         -------
-        sbgn_str : str
+        sbgn_str : bytes (str in Python 2)
             An XML string representation of the SBGN model.
         """
-        return lxml.etree.tostring(self.sbgn, pretty_print=pretty)
+        return lxml.etree.tostring(self.sbgn, pretty_print=pretty,
+                                   encoding=encoding)
 
     def save_model(self, file_name='model.sbgn'):
         """Save the assembled SBGN model in a file.
@@ -118,7 +119,7 @@ class SBGNAssembler(object):
         """
         model = self.print_model()
         with open(file_name, 'wb') as fh:
-            fh.write(model.encode('utf-8'))
+            fh.write(model)
 
     def _assemble_modification(self, stmt):
         if not stmt.enz:
