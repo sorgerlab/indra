@@ -5,7 +5,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from indra import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers import PysbAssembler, SBGNAssembler
 from indra.util.plot_formatting import *
 from pysb import Observable, Parameter
 from pysb.integrate import Solver
@@ -85,6 +85,13 @@ def assemble_model(model_name, reread=False):
         print('%d: %s' % (i, st))
     print('----------------------')
 
+    # SBGN assembly
+    sa = SBGNAssembler()
+    sa.add_statements(tp.statements)
+    sa.make_model()
+    sa.save_model('%s_sbgn.xml' % model_name)
+
+    # Pysb assembly
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
     ts = time.time()
@@ -132,6 +139,7 @@ def export_pomi(model, formats):
 
 if __name__ == '__main__':
     reread = False
+    """
     model_names = ['ATR_v1',
                    'ATR_v2',
                    'ATR_v3',
@@ -140,6 +148,8 @@ if __name__ == '__main__':
                    'ATM_v3',
                    'ATM_v4a',
                    'ATM_v4b']
+    """
+    model_names = ['ATM_v4b']
     for model_name in model_names:
         model = assemble_model(model_name, reread=reread)
         ts, solver = run_model(model)
