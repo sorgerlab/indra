@@ -5,6 +5,7 @@ import logging
 import lxml.etree
 import lxml.builder
 from indra.statements import *
+from indra.assemblers.pysb_assembler import PysbPreassembler
 
 logger = logging.getLogger('sbgn_assembler')
 
@@ -71,6 +72,9 @@ class SBGNAssembler(object):
         sbgn_str : str
             The XML serialized SBGN model.
         """
+        ppa = PysbPreassembler(self.statements)
+        ppa.replace_activities()
+        self.statements = ppa.statements
         self.sbgn = emaker.sbgn()
         self._map = emaker.map()
         self.sbgn.append(self._map)
@@ -84,7 +88,8 @@ class SBGNAssembler(object):
             elif isinstance(stmt, Complex):
                 self._assemble_complex(stmt)
             elif isinstance(stmt, ActiveForm):
-                self._assemble_activeform(stmt)
+                #self._assemble_activeform(stmt)
+                pass
             else:
                 logger.warning("Unhandled Statement type %s" % type(s))
                 continue
@@ -214,7 +219,7 @@ class SBGNAssembler(object):
         agent_active_glyph = self._agent_glyph(agent_active)
         process_glyph = self._process_glyph('process')
         self._arc('consumption', agent_glyph, process_glyph)
-        self._arc('production', process_glyph, agent_glyph)
+        self._arc('production', process_glyph, agent_active_glyph)
 
     def _arc(self, class_name, source, target):
         arc_id = self._make_id()
