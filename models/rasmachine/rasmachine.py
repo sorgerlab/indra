@@ -15,6 +15,7 @@ import argparse
 import gmail_client
 import twitter_client
 import ndex.client
+import ndex.networkn
 from indra import reach
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
@@ -210,9 +211,10 @@ def _increment_ndex_ver(ver_str):
     return new_ver
 
 def upload_to_ndex(stmts, ndex_cred):
-    nd = ndex.client.Ndex('http://public.ndexbio.org',
-                          username=ndex_cred.get('user'),
-                          password=ndex_cred.get('password'))
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+    nd = ndex.client.Ndex(server, username, password)
     network_id = ndex_cred.get('network')
 
     ca = CxAssembler()
@@ -229,6 +231,7 @@ def upload_to_ndex(stmts, ndex_cred):
         logger.error(e)
         return
 
+    # Update network content
     try:
         logger.info('Updating network...')
         cx_stream = io.BytesIO(cx_str.encode('utf-8'))
@@ -239,6 +242,8 @@ def upload_to_ndex(stmts, ndex_cred):
         logger.error('Could not update NDEx network.')
         logger.error(e)
         return
+
+    # Update network profile
     ver_str = summary.get('version')
     new_ver = _increment_ndex_ver(ver_str)
     profile = {'name': summary.get('name'),
@@ -256,6 +261,25 @@ def upload_to_ndex(stmts, ndex_cred):
         except Exception as e:
             logger.error('Could not update NDEx network profile.')
             logger.error(e)
+
+    # Update network style
+    import ndex.beta.toolbox as toolbox
+    template_uuid = "feecdc30-5dbc-11e7-8f50-0ac135e8bacf"
+
+    d_edge_types = ["Activation", "Inhibition",
+                    "Modification", "SelfModification",
+                    "Gap", "Gef", "IncreaseAmount",
+                    "DecreaseAmount"]
+
+    source_network = ndex.networkn.NdexGraph(server=server, username=username,
+                                             password=password,
+                                             uuid=network_id)
+
+    toolbox.apply_template(source_network, template_uuid, server=server,
+                           username=username, password=password)
+
+    source_network.update_to(network_id, server=server, username=username,
+                             password=password)
 
 class InvalidConfigurationError(Exception):
     pass
