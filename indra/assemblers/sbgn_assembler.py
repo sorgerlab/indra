@@ -270,11 +270,12 @@ class SBGNAssembler(object):
             glyph.append(state_glyph)
         if agent.activity:
             value = 'a' if agent.activity.is_active else 'i'
-            state = {'variable': abbrevs[agent.activity.activity_type],
-                     'value': value}
+            state = emaker.state(variable=abbrevs[agent.activity.activity_type],
+                                 value=value)
             state_glyph = \
                 emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
                              class_('state variable'), id=self._make_id())
+            glyph.append(state_glyph)
 
         # Handle bound conditions as complexes
         if agent.bound_conditions:
