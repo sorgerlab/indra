@@ -2,3 +2,4 @@
 *.owl linguist-vendored
 *.rdf linguist-vendored
 *.bel linguist-vendored
+*.ipynb linguist-vendored
