@@ -586,32 +586,37 @@ def set_base_initial_condition(model, monomer, value):
         model.add_component(p)
         model.initial(mp, p)
 
-def set_extended_initial_condition(model, monomer, value=0):
+def set_extended_initial_condition(model, monomer=None, value=0):
     """Set an initial condition for monomers in "modified" state.
 
     This is useful when using downstream analysis that relies on reactions
     being active in the model. One example is BioNetGen-based reaction network
     diagram generation.
     """
-    # Build up monomer pattern dict for default state
-    sites_dict = {}
-    for site in monomer.sites:
-        if site in monomer.site_states:
-            sites_dict[site] = monomer.site_states[site][-1]
-        else:
-            sites_dict[site] = None
-    mp = monomer(**sites_dict)
-    pname = monomer.name + '_0_mod'
-    try:
-        p = model.parameters[pname]
-        p.value = value
-    except KeyError:
-        p = Parameter(pname, value)
-        model.add_component(p)
+    if not monomer:
+        monomers = model.monomers
+    else:
+        monomers = [monomer]
+    for monomer in monomers:
+        # Build up monomer pattern dict for default state
+        sites_dict = {}
+        for site in monomer.sites:
+            if site in monomer.site_states:
+                sites_dict[site] = monomer.site_states[site][-1]
+            else:
+                sites_dict[site] = None
+        mp = monomer(**sites_dict)
+        pname = monomer.name + '_0_mod'
         try:
-            model.initial(mp, p)
-        except InvalidInitialConditionError:
-            pass
+            p = model.parameters[pname]
+            p.value = value
+        except KeyError:
+            p = Parameter(pname, value)
+            model.add_component(p)
+            try:
+                model.initial(mp, p)
+            except InvalidInitialConditionError:
+                pass
 
 def get_annotation(component, db_name, db_ref):
     """Construct model Annotations for each component.
