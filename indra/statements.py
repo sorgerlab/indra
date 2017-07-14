@@ -142,6 +142,13 @@ import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
 
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
+
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
 
@@ -2609,7 +2616,8 @@ def draw_stmt_graph(stmts):
     except Exception:
         logger.error('Could not import pygraphviz, not drawing graph.')
         return
-    g = networkx.compose_all([stmt.to_graph() for stmt in stmts], 'composed_stmts')
+    g = networkx.compose_all([stmt.to_graph() for stmt in stmts],
+                             'composed_stmts')
     plt.figure()
     plt.ion()
     g.graph['graph'] = {'rankdir': 'LR'}
