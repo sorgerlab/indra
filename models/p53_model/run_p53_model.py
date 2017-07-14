@@ -5,7 +5,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from indra import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers import PysbAssembler, SBGNAssembler
 from indra.util.plot_formatting import *
 from pysb import Observable, Parameter
 from pysb.integrate import Solver
@@ -63,7 +63,7 @@ def set_parameters(model):
         model.initial(atm_atr_m(phospho='p'),
                       model.parameters['%sa_0' % atm_atr])
 
-def assemble_model(model_name, reread=False):
+def read_model(model_name, reread=False):
     xml_fname = model_name + '.xml'
     if not reread:
         print('Processing %s' % xml_fname)
@@ -84,9 +84,12 @@ def assemble_model(model_name, reread=False):
     for i, st in enumerate(tp.statements):
         print('%d: %s' % (i, st))
     print('----------------------')
+    return tp.statements
 
+def assemble_model(model_name, statements):
+    # Pysb assembly
     pa = PysbAssembler()
-    pa.add_statements(tp.statements)
+    pa.add_statements(statements)
     ts = time.time()
     model = pa.make_model()
     te = time.time()
@@ -100,6 +103,13 @@ def assemble_model(model_name, reread=False):
     pa.model = model
     pa.save_model('%s.py' % model_name)
     return model
+
+def assemble_sbgn(model_name, statements):
+    # SBGN assembly
+    sa = SBGNAssembler()
+    sa.add_statements(statements)
+    sa.make_model()
+    sa.save_model('%s_sbgn.xml' % model_name)
 
 def run_model(model):
     sim_hours = 20
@@ -141,7 +151,8 @@ if __name__ == '__main__':
                    'ATM_v4a',
                    'ATM_v4b']
     for model_name in model_names:
-        model = assemble_model(model_name, reread=reread)
+        statements = read_model(model_name, reread=reread)
+        model = assemble_model(model_name, statements)
         ts, solver = run_model(model)
         if model_name == 'ATM_v4b':
             formats = ['sbml', 'bngl', 'kappa', 'pysb_flat']

@@ -5,6 +5,7 @@ import logging
 import lxml.etree
 import lxml.builder
 from indra.statements import *
+from indra.assemblers.pysb_assembler import PysbPreassembler
 
 logger = logging.getLogger('sbgn_assembler')
 
@@ -71,6 +72,9 @@ class SBGNAssembler(object):
         sbgn_str : str
             The XML serialized SBGN model.
         """
+        ppa = PysbPreassembler(self.statements)
+        ppa.replace_activities()
+        self.statements = ppa.statements
         self.sbgn = emaker.sbgn()
         self._map = emaker.map()
         self.sbgn.append(self._map)
@@ -84,14 +88,15 @@ class SBGNAssembler(object):
             elif isinstance(stmt, Complex):
                 self._assemble_complex(stmt)
             elif isinstance(stmt, ActiveForm):
-                self._assemble_activeform(stmt)
+                #self._assemble_activeform(stmt)
+                pass
             else:
                 logger.warning("Unhandled Statement type %s" % type(s))
                 continue
         sbgn_str = self.print_model()
         return sbgn_str
 
-    def print_model(self, pretty=True):
+    def print_model(self, pretty=True, encoding='utf8'):
         """Return the assembled SBGN model as an XML string.
 
         Parameters
@@ -102,10 +107,11 @@ class SBGNAssembler(object):
 
         Returns
         -------
-        sbgn_str : str
+        sbgn_str : bytes (str in Python 2)
             An XML string representation of the SBGN model.
         """
-        return lxml.etree.tostring(self.sbgn, pretty_print=pretty)
+        return lxml.etree.tostring(self.sbgn, pretty_print=pretty,
+                                   encoding=encoding)
 
     def save_model(self, file_name='model.sbgn'):
         """Save the assembled SBGN model in a file.
@@ -118,7 +124,7 @@ class SBGNAssembler(object):
         """
         model = self.print_model()
         with open(file_name, 'wb') as fh:
-            fh.write(model.encode('utf-8'))
+            fh.write(model)
 
     def _assemble_modification(self, stmt):
         if not stmt.enz:
@@ -126,12 +132,16 @@ class SBGNAssembler(object):
         # Make glyph for enz
         enz_glyph = self._agent_glyph(stmt.enz)
         mc_changed = stmt._get_mod_condition()
+        mc_unchanged = stmt._get_mod_condition()
+        mc_unchanged.is_modified = not mc_unchanged.is_modified
         # Make glyphs for sub
         sub_changed = copy.deepcopy(stmt.sub)
         sub_changed.mods.append(mc_changed)
+        sub_unchanged = copy.deepcopy(stmt.sub)
+        sub_unchanged.mods.append(mc_unchanged)
         sub_in, sub_out = \
-            (stmt.sub, sub_changed) if isinstance(stmt, AddModification) else \
-            (sub_changed, stmt.sub)
+            (sub_unchanged, sub_changed) if isinstance(stmt, AddModification) else \
+            (sub_changed, sub_unchanged)
         sub_in_glyph = self._agent_glyph(sub_in)
         sub_out_glyph = self._agent_glyph(sub_out)
         # Make the process glyph
@@ -213,7 +223,7 @@ class SBGNAssembler(object):
         agent_active_glyph = self._agent_glyph(agent_active)
         process_glyph = self._process_glyph('process')
         self._arc('consumption', agent_glyph, process_glyph)
-        self._arc('production', process_glyph, agent_glyph)
+        self._arc('production', process_glyph, agent_active_glyph)
 
     def _arc(self, class_name, source, target):
         arc_id = self._make_id()
@@ -269,11 +279,12 @@ class SBGNAssembler(object):
             glyph.append(state_glyph)
         if agent.activity:
             value = 'a' if agent.activity.is_active else 'i'
-            state = {'variable': abbrevs[agent.activity.activity_type],
-                     'value': value}
+            state = emaker.state(variable=abbrevs[agent.activity.activity_type],
+                                 value=value)
             state_glyph = \
                 emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
                              class_('state variable'), id=self._make_id())
+            glyph.append(state_glyph)
 
         # Handle bound conditions as complexes
         if agent.bound_conditions:
