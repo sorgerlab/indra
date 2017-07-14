@@ -132,12 +132,16 @@ class SBGNAssembler(object):
         # Make glyph for enz
         enz_glyph = self._agent_glyph(stmt.enz)
         mc_changed = stmt._get_mod_condition()
+        mc_unchanged = stmt._get_mod_condition()
+        mc_unchanged.is_modified = not mc_unchanged.is_modified
         # Make glyphs for sub
         sub_changed = copy.deepcopy(stmt.sub)
         sub_changed.mods.append(mc_changed)
+        sub_unchanged = copy.deepcopy(stmt.sub)
+        sub_unchanged.mods.append(mc_unchanged)
         sub_in, sub_out = \
-            (stmt.sub, sub_changed) if isinstance(stmt, AddModification) else \
-            (sub_changed, stmt.sub)
+            (sub_unchanged, sub_changed) if isinstance(stmt, AddModification) else \
+            (sub_changed, sub_unchanged)
         sub_in_glyph = self._agent_glyph(sub_in)
         sub_out_glyph = self._agent_glyph(sub_out)
         # Make the process glyph
