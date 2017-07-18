@@ -187,10 +187,10 @@ class BelProcessor(object):
 
             for stmt in res_phospho:
                 # Parse out the elements of the query
-                evidence = self.get_evidence(stmt[4])
-                enz = self.get_agent(stmt[0], stmt[5])
+                evidence = self._get_evidence(stmt[4])
+                enz = self._get_agent(stmt[0], stmt[5])
                 #act_type = name_from_uri(stmt[1])
-                sub = self.get_agent(stmt[1], stmt[6])
+                sub = self._get_agent(stmt[1], stmt[6])
                 mod = term_from_uri(stmt[2])
                 residue = self._get_residue(mod)
                 mod_pos = term_from_uri(stmt[3])
@@ -273,9 +273,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[7])
+            evidence = self._get_evidence(stmt[7])
             # Parse out the elements of the query
-            species = self.get_agent(stmt[0], stmt[8])
+            species = self._get_agent(stmt[0], stmt[8])
             act_type = term_from_uri(stmt[1]).lower()
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
@@ -332,9 +332,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[5])
+            evidence = self._get_evidence(stmt[5])
             # Parse out the elements of the query
-            species = self.get_agent(stmt[0], stmt[6])
+            species = self._get_agent(stmt[0], stmt[6])
             act_type = term_from_uri(stmt[1]).lower()
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
@@ -395,10 +395,10 @@ class BelProcessor(object):
         cmplx_ev = {}
         for stmt in res_cmplx:
             stmt_uri = stmt[3]
-            ev = self.get_evidence(stmt_uri)
+            ev = self._get_evidence(stmt_uri)
             cmplx_name = term_from_uri(stmt[0])
             cmplx_id = stmt_uri + '#' + cmplx_name
-            child = self.get_agent(stmt[1], stmt[2])
+            child = self._get_agent(stmt[1], stmt[2])
             cmplx_dict[cmplx_id].append(child)
             # This might be written multiple times but with the same
             # evidence
@@ -456,9 +456,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[4])
+            evidence = self._get_evidence(stmt[4])
             # Parse out the elements of the query
-            enz = self.get_agent(stmt[0], stmt[5])
+            enz = self._get_agent(stmt[0], stmt[5])
             sub_expr = term_from_uri(stmt[1])
             act_type = term_from_uri(stmt[2]).lower()
             # Parse the WT and substituted residues from the node label.
@@ -550,8 +550,8 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
-            evidence = self.get_evidence(stmt[5])
-            subj = self.get_agent(stmt[0], stmt[6])
+            evidence = self._get_evidence(stmt[5])
+            subj = self._get_agent(stmt[0], stmt[6])
             subj_activity = stmt[1]
             if subj_activity:
                 subj_activity = term_from_uri(stmt[1]).lower()
@@ -561,7 +561,7 @@ class BelProcessor(object):
                 is_activation = False
             else:
                 is_activation = True
-            obj = self.get_agent(stmt[3], stmt[7])
+            obj = self._get_agent(stmt[3], stmt[7])
             obj_activity = term_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
@@ -674,7 +674,7 @@ class BelProcessor(object):
             for stmt in res_tscript:
                 # Get modifications on the subject, if any
                 if q_tscript == q_tscript1:
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                     tf.activity = ActivityCondition('transcription', True)
                 elif q_tscript == q_tscript3:
                     mod = term_from_uri(stmt[6])
@@ -682,13 +682,13 @@ class BelProcessor(object):
                     mc = self._get_mod_condition(mod, mod_pos)
                     if mc is None:
                         continue
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                     tf.mods = mods=[mc]
                 else:
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                 # Parse out the elements of the query
-                evidence = self.get_evidence(stmt[2])
-                target = self.get_agent(stmt[1], stmt[4])
+                evidence = self._get_evidence(stmt[2])
+                target = self._get_agent(stmt[1], stmt[4])
                 stmt_str = strip_statement(stmt[2])
                 # Get the relationship (increases/decreases, etc.)
                 rel = term_from_uri(stmt[5])
@@ -762,8 +762,8 @@ class BelProcessor(object):
         for stmts in stmt_map.values():
             # First we get the shared part of the Statement
             stmt = stmts[0]
-            subj = self.get_agent(stmt[1], stmt[0])
-            evidence = self.get_evidence(stmt[-1])
+            subj = self._get_agent(stmt[1], stmt[0])
+            evidence = self._get_evidence(stmt[-1])
             stmt_str = strip_statement(stmt[-1])
             # Now we collect the participants
             obj_from_map = {}
@@ -773,10 +773,10 @@ class BelProcessor(object):
                 product_name = stmt[4]
                 if reactant_name not in obj_from_map:
                     obj_from_map[reactant_name] = \
-                        self.get_agent(stmt[6], stmt[5])
+                        self._get_agent(stmt[6], stmt[5])
                 if product_name not in obj_to_map:
                     obj_to_map[product_name] = \
-                        self.get_agent(stmt[4], stmt[3])
+                        self._get_agent(stmt[4], stmt[3])
             obj_from = list(obj_from_map.values())
             obj_to = list(obj_to_map.values())
             st = Conversion(subj, obj_from, obj_to, evidence=evidence)
@@ -968,7 +968,7 @@ class BelProcessor(object):
             logger.info("%s: %s" % (i, stmt))
 
     @staticmethod
-    def get_agent(concept, entity):
+    def _get_agent(concept, entity):
         name = term_from_uri(concept)
         namespace = namespace_from_uri(entity)
         db_refs = {}
@@ -1042,7 +1042,7 @@ class BelProcessor(object):
         agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
-    def get_evidence(self, statement):
+    def _get_evidence(self, statement):
         evidence = None
         citation = None
         annotations = []
