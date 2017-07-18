@@ -595,7 +595,34 @@ class BelProcessor(object):
                 self.statements.append(st)
 
     def get_transcription(self):
-        """Extract Increase/DecreaseAmount INDRA Statements."""
+        """Extract Increase/DecreaseAmount INDRA Statements from BEL.
+
+        Two distinct SPARQL patterns are used to extract amount
+        regulations from BEL.
+
+        - q_tscript1 searches for a subject which is a Transcription
+          ActivityType of a ProteinAbundance and an object which is
+          an RNAAbundance that is either increased or decreased.
+
+        Example:
+
+            transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+            directlyIncreases
+            rnaAbundance(HGNC:SYK)
+
+            transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+            directlyDecreases
+            rnaAbundance(HGNC:CALCRL)
+
+        - q_tscript2 searches for a subject which is a ProteinAbundance
+          and an object which is an RNAAbundance. Note that this pattern
+          typically exists in an indirect form (i.e. increases/decreases).
+
+        Example:
+
+            proteinAbundance(HGNC:MTF1) directlyIncreases
+            rnaAbundance(HGNC:LCN1)
+        """
         q_tscript1 = prefixes + """
             SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
             WHERE {
@@ -685,10 +712,25 @@ class BelProcessor(object):
                         self.converted_indirect_stmts.append(stmt_str)
 
     def get_conversions(self):
-        """Extract Conversion Statements."""
+        """Extract Conversion INDRA Statements from BEL.
+
+
+        The SPARQL query used to extract Conversions searches for
+        a subject (controller) which is an AbundanceActivity
+        which directlyIncreases a Reaction with a given list of
+        Reactants and Products.
+
+        Examples:
+
+            catalyticActivity(proteinAbundance(HGNC:HMOX1))
+            directlyIncreases
+            reaction(reactants(abundance(CHEBI:heme)),
+            products(abundance(SCHEM:Biliverdine),
+            abundance(CHEBI:"carbon monoxide")))
+        """
         query = prefixes + """
-            SELECT DISTINCT ?controller ?controllerName ?controllerActivity ?product
-                ?productName ?reactant ?reactantName ?stmt
+            SELECT DISTINCT ?controller ?controllerName ?controllerActivity
+                ?product ?productName ?reactant ?reactantName ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
