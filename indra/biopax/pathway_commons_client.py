@@ -14,7 +14,7 @@ logger = logging.getLogger('biopax')
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
-def graph_query(kind, source, target=None, neighbor_limit=1):
+def graph_query(kind, source, target=None, neighbor_limit=1, database_filter=None):
     """Perform a graph query on PathwayCommons.
 
     For more information on these queries, see
@@ -39,9 +39,21 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
     model : org.biopax.paxtools.model.Model
         A BioPAX model (java object).
     """
+
+    default_databases = ['wp', 'smpdb', 'reconx', 'reactome', 'psp', 'pid'
+                         'panther', 'netpath', 'msigdb', 'mirtarbase', 'kegg',
+                         'intact', 'inoh', 'humancyc', 'hprd',
+                         'drugbank', 'dip', 'corum']
+    if not database_filter:
+        query_databases = default_databases
+    else:
+        query_databases = database_filter
+    # excluded: ctd
+
     params = {}
     params['format'] = 'BIOPAX'
     params['organism'] = '9606'
+    params['datasource'] = query_databases
     # Get the "kind" string
     kind_str = kind.lower()
     if kind not in ['neighborhood', 'pathsbetween', 'pathsfromto']:
@@ -66,6 +78,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1):
         else:
             target_str = ','.join(target)
         params['target'] = target_str
+    print(params)
 
     logger.info('Sending Pathway Commons query...')
     res = requests.get(pc2_url + 'graph', params=params)
