@@ -264,7 +264,7 @@ def upload_to_ndex(stmts, ndex_cred):
 
     # Update network style
     import ndex.beta.toolbox as toolbox
-    template_uuid = "feecdc30-5dbc-11e7-8f50-0ac135e8bacf"
+    template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
     d_edge_types = ["Activation", "Inhibition",
                     "Modification", "SelfModification",
