@@ -603,7 +603,6 @@ class BiopaxProcessor(object):
                 # actually modified. That member will be the substrate and
                 # all other members of the complex will be bound to it.
                 logger.info('Cannot handle complex substrates.')
-                import ipdb; ipdb.set_trace()
                 continue
             '''
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
@@ -1185,6 +1184,10 @@ _mftype_dict = {
     'S-farnesyl-L-cysteine': ('farnesylation', 'C'),
     'modified glycine residue': ('modification', 'G'),
     'N-acetyl-L-methionine': ('acetylation', 'M'),
+    '4-hydroxy-L-proline': ('hydroxylation', 'P'),
+    '4hypro': ('hydroxylation', 'P'),
+    '3-hydroxy-L-proline': ('hydroxylation', 'P'),
+    '5-hydroxy-L-lysine': ('hydroxylation', 'K'),
     }
 
 # Functions for accessing frequently used java classes with shortened path
