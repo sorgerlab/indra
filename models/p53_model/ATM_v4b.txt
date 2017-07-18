@@ -1,4 +1,4 @@
-Active ATM phosphorylates ATM, and phosphorylated ATM is active.
+Active ATM phosphorylates another ATM molecule, and phosphorylated ATM is active.
 Active ATM activates p53.
 p53 is transcribed and active p53 transcribes MDM2.
 MDM2 is degraded.
