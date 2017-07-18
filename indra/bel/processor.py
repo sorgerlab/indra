@@ -114,7 +114,26 @@ class BelProcessor(object):
         self.all_indirect_stmts = []
 
     def get_modifications(self):
-        """Extract INDRA Modification Statements from BEL."""
+        """Extract INDRA Modification Statements from BEL.
+
+        Two SPARQL patterns are used for extracting Modifications from BEL:
+        - q_phospho1 assumes that the subject is an AbundanceActivity, which
+          increases/decreases a ModifiedProteinAbundance. For instance
+
+          1. kinaseActivity(proteinAbundance(HGNC:IKBKE)) directlyIncreases
+                proteinAbundance(HGNC:IRF3,proteinModification(P,S,385))
+          2. phosphataseActivity(proteinAbundance(HGNC:DUSP4))
+                directlyDecreases
+                proteinAbundance(HGNC:MAPK1,proteinModification(P,T,185))
+
+        - q_phospho2 assumes that the subject is a ProteinAbundance which
+          increases/decreases a ModifiedProteinAbundance. For instance
+
+          1. proteinAbundance(HGNC:NGF) increases
+                proteinAbundance(HGNC:NFKBIA,proteinModification(P,Y,42))
+          2. proteinAbundance(HGNC:FGF1) decreases
+                proteinAbundance(HGNC:RB1,proteinModification(P))
+        """
 
         # Get statements where the subject is an activity
         q_phospho1 = prefixes + """
@@ -195,7 +214,19 @@ class BelProcessor(object):
         return
 
     def get_composite_activating_mods(self):
-        """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
+        """Extract INDRA ActiveForm Statements with multiple mods from BEL.
+
+        The SPARQL pattern used for extraction from BEL looks for a
+        CompositeAbundance as subject where two constituents of the composite
+        are both ModifiedProteinAbundances. The object has to be a
+        Activity of a ProteinAbundance. An example is below:
+
+        compositeAbundance(
+            proteinAbundance(PFH:"AKT Family",proteinModification(P,S,473)),
+            proteinAbundance(PFH:"AKT Family",proteinModification(P,T,308)))
+            directlyIncreases
+            kinaseActivity(proteinAbundance(PFH:"AKT Family"))
+        """
         # To eliminate multiple matches, we use pos1 < pos2 but this will
         # only work if the pos is given, otherwise multiple matches of
         # the same mod combination may appear in the result
@@ -255,7 +286,16 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_activating_mods(self):
-        """Extract INDRA ActiveForm Statements with a single mod from BEL."""
+        """Extract INDRA ActiveForm Statements with a single mod from BEL.
+
+        The SPARQL pattern used for extraction from BEL looks for a
+        ModifiedProteinAbundance as subject and an Activiy of a
+        ProteinAbundance as object. An example is below:
+
+            proteinAbundance(HGNC:INSR,proteinModification(P,Y))
+            directlyIncreases
+            kinaseActivity(proteinAbundance(HGNC:INSR))
+        """
         q_mods = prefixes + """
             SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt ?species
             WHERE {
