@@ -117,22 +117,30 @@ class BelProcessor(object):
         """Extract INDRA Modification Statements from BEL.
 
         Two SPARQL patterns are used for extracting Modifications from BEL:
-        - q_phospho1 assumes that the subject is an AbundanceActivity, which
-          increases/decreases a ModifiedProteinAbundance. For instance
 
-          1. kinaseActivity(proteinAbundance(HGNC:IKBKE)) directlyIncreases
-                proteinAbundance(HGNC:IRF3,proteinModification(P,S,385))
-          2. phosphataseActivity(proteinAbundance(HGNC:DUSP4))
-                directlyDecreases
-                proteinAbundance(HGNC:MAPK1,proteinModification(P,T,185))
+        - q_phospho1 assumes that the subject is an AbundanceActivity, which
+          increases/decreases a ModifiedProteinAbundance.
+
+          Examples:
+
+              kinaseActivity(proteinAbundance(HGNC:IKBKE))
+              directlyIncreases
+              proteinAbundance(HGNC:IRF3,proteinModification(P,S,385))
+
+              phosphataseActivity(proteinAbundance(HGNC:DUSP4))
+              directlyDecreases
+              proteinAbundance(HGNC:MAPK1,proteinModification(P,T,185))
 
         - q_phospho2 assumes that the subject is a ProteinAbundance which
-          increases/decreases a ModifiedProteinAbundance. For instance
+          increases/decreases a ModifiedProteinAbundance.
 
-          1. proteinAbundance(HGNC:NGF) increases
-                proteinAbundance(HGNC:NFKBIA,proteinModification(P,Y,42))
-          2. proteinAbundance(HGNC:FGF1) decreases
-                proteinAbundance(HGNC:RB1,proteinModification(P))
+          Examples:
+
+              proteinAbundance(HGNC:NGF) increases
+              proteinAbundance(HGNC:NFKBIA,proteinModification(P,Y,42))
+
+              proteinAbundance(HGNC:FGF1) decreases
+              proteinAbundance(HGNC:RB1,proteinModification(P))
         """
 
         # Get statements where the subject is an activity
@@ -219,9 +227,11 @@ class BelProcessor(object):
         The SPARQL pattern used for extraction from BEL looks for a
         CompositeAbundance as subject where two constituents of the composite
         are both ModifiedProteinAbundances. The object has to be a
-        Activity of a ProteinAbundance. An example is below:
+        Activity of a ProteinAbundance.
 
-        compositeAbundance(
+        Examples:
+
+            compositeAbundance(
             proteinAbundance(PFH:"AKT Family",proteinModification(P,S,473)),
             proteinAbundance(PFH:"AKT Family",proteinModification(P,T,308)))
             directlyIncreases
@@ -290,7 +300,9 @@ class BelProcessor(object):
 
         The SPARQL pattern used for extraction from BEL looks for a
         ModifiedProteinAbundance as subject and an Activiy of a
-        ProteinAbundance as object. An example is below:
+        ProteinAbundance as object.
+
+        Examples:
 
             proteinAbundance(HGNC:INSR,proteinModification(P,Y))
             directlyIncreases
@@ -340,7 +352,20 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_complexes(self):
-        """Extract INDRA Complex Statements from BEL."""
+        """Extract INDRA Complex Statements from BEL.
+
+        The SPARQL query used to extract Complexes looks for ComplexAbundance
+        terms and their constituents. This pattern is distinct from other
+        patterns in this processor in that it queries for terms, not
+        full statements.
+
+        Examples:
+
+            complexAbundance(proteinAbundance(HGNC:PPARG),
+            proteinAbundance(HGNC:RXRA))
+            decreases
+            biologicalProcess(MESHPP:"Insulin Resistance")
+        """
         q_cmplx = prefixes + """
             SELECT ?complexTerm ?childName ?child ?stmt
             WHERE {
@@ -390,10 +415,24 @@ class BelProcessor(object):
                                                evidence=cmplx_ev[cmplx_id]))
 
     def get_activating_subs(self):
-        """Extract INDRA ActiveForm Statements based on a mutation from BEL."""
-        #p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
-        #p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
-        #p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
+        """Extract INDRA ActiveForm Statements based on a mutation from BEL.
+
+        The SPARQL pattern used to extract ActiveForms due to mutations look
+        for a ProteinAbundance as a subject which has a child encoding the
+        amino acid substitution. The object of the statement is an
+        ActivityType of the same ProteinAbundance, which is either increased
+        or decreased.
+
+        Examples:
+
+            proteinAbundance(HGNC:NRAS,substitution(Q,61,K))
+            directlyIncreases
+            gtpBoundActivity(proteinAbundance(HGNC:NRAS))
+
+            proteinAbundance(HGNC:TP53,substitution(F,134,I))
+            directlyDecreases
+            transcriptionalActivity(proteinAbundance(HGNC:TP53))
+        """
         q_mods = prefixes + """
             SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt ?subject
             WHERE {
@@ -453,10 +492,40 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_activation(self):
-        """Extract INDRA Activation Statements from BEL."""
-        # Query for all statements where the activity of one protein
-        # directlyIncreases the activity of another protein, without reference
-        # to a modification.
+        """Extract INDRA Inhibition/Activation Statements from BEL.
+
+        The SPARQL query used to extract Activation Statements looks for
+        patterns in which the subject is is an ActivityType
+        (of a ProtainAbundance) or an Abundance (of a small molecule).
+        The object has to be the ActivityType (typically of a
+        ProteinAbundance) which is either increased or decreased.
+
+        Examples:
+
+            abundance(CHEBI:gefitinib) directlyDecreases
+            kinaseActivity(proteinAbundance(HGNC:EGFR))
+
+            kinaseActivity(proteinAbundance(HGNC:MAP3K5))
+            directlyIncreases kinaseActivity(proteinAbundance(HGNC:MAP2K7))
+
+        This pattern covers the extraction of Gap/Gef and GtpActivation
+        Statements, which are recognized by the object activty or the
+        subject activity, respectively, being `gtpbound`.
+
+        Examples:
+
+            catalyticActivity(proteinAbundance(HGNC:RASA1))
+            directlyDecreases
+            gtpBoundActivity(proteinAbundance(PFH:"RAS Family"))
+
+            catalyticActivity(proteinAbundance(HGNC:SOS1))
+            directlyIncreases
+            gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+
+            gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+            directlyIncreases
+            catalyticActivity(proteinAbundance(HGNC:TIAM1))
+        """
         q_stmts = prefixes + """
             SELECT ?subjName ?subjActType ?rel ?objName ?objActType
                    ?stmt ?subj ?obj
@@ -525,28 +594,8 @@ class BelProcessor(object):
                     st = Activation(subj, obj, obj_activity, evidence)
                 self.statements.append(st)
 
-            """
-            #print "--------------------------------"
-            print stmt_str
-            print("This statement says that:")
-            print("%s activity increases activity of %s" %
-                  (subj_name, obj_name))
-            print "It doesn't specify the site."
-            act_mods = []
-            for bps in self.statements:
-                if type(bps) == ActivatingModification and \
-                   bps.monomer_name == obj_name:
-                    act_mods.append(bps)
-            # If we know about an activation modification...
-            if act_mods:
-                print "However, I happen to know about the following"
-                print "activating modifications for %s:" % obj_name
-                for act_mod in act_mods:
-                    print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
-        """
-
     def get_transcription(self):
-        """Get statements of the form tscript(X) inc/dec r(Y)."""
+        """Extract Increase/DecreaseAmount INDRA Statements."""
         q_tscript1 = prefixes + """
             SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
             WHERE {
