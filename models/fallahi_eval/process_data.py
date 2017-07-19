@@ -46,3 +46,12 @@ def find_extremes(data, fold_change):
                 all_extremes.append([cell_line, ab, drug, time, conc, val])
     return all_extremes
 
+def find_cell_line_vars(data, fold_change):
+    """Return conditions in which cell lines are qualitatively different."""
+    liml, limu = (numpy.log2(1.0/fold_change), numpy.log2(fold_change))
+    for cl1, cl2 in itertools.combinations(cell_lines, 2):
+        df1 = data[cl1]['median']
+        df2 = data[cl2]['median']
+        antibodies = df1.columns[3:]
+        for ab in antibodies:
+            cell_line_var = df1.loc[(df1[ab] < liml) & (df2[ab] > limu)]
