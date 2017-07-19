@@ -114,7 +114,34 @@ class BelProcessor(object):
         self.all_indirect_stmts = []
 
     def get_modifications(self):
-        """Extract INDRA Modification Statements from BEL."""
+        """Extract INDRA Modification Statements from BEL.
+
+        Two SPARQL patterns are used for extracting Modifications from BEL:
+
+        - q_phospho1 assumes that the subject is an AbundanceActivity, which
+          increases/decreases a ModifiedProteinAbundance.
+
+          Examples:
+
+              kinaseActivity(proteinAbundance(HGNC:IKBKE))
+              directlyIncreases
+              proteinAbundance(HGNC:IRF3,proteinModification(P,S,385))
+
+              phosphataseActivity(proteinAbundance(HGNC:DUSP4))
+              directlyDecreases
+              proteinAbundance(HGNC:MAPK1,proteinModification(P,T,185))
+
+        - q_phospho2 assumes that the subject is a ProteinAbundance which
+          increases/decreases a ModifiedProteinAbundance.
+
+          Examples:
+
+              proteinAbundance(HGNC:NGF) increases
+              proteinAbundance(HGNC:NFKBIA,proteinModification(P,Y,42))
+
+              proteinAbundance(HGNC:FGF1) decreases
+              proteinAbundance(HGNC:RB1,proteinModification(P))
+        """
 
         # Get statements where the subject is an activity
         q_phospho1 = prefixes + """
@@ -160,10 +187,10 @@ class BelProcessor(object):
 
             for stmt in res_phospho:
                 # Parse out the elements of the query
-                evidence = self.get_evidence(stmt[4])
-                enz = self.get_agent(stmt[0], stmt[5])
+                evidence = self._get_evidence(stmt[4])
+                enz = self._get_agent(stmt[0], stmt[5])
                 #act_type = name_from_uri(stmt[1])
-                sub = self.get_agent(stmt[1], stmt[6])
+                sub = self._get_agent(stmt[1], stmt[6])
                 mod = term_from_uri(stmt[2])
                 residue = self._get_residue(mod)
                 mod_pos = term_from_uri(stmt[3])
@@ -195,7 +222,21 @@ class BelProcessor(object):
         return
 
     def get_composite_activating_mods(self):
-        """Extract INDRA ActiveForm Statements with multiple mods from BEL."""
+        """Extract INDRA ActiveForm Statements with multiple mods from BEL.
+
+        The SPARQL pattern used for extraction from BEL looks for a
+        CompositeAbundance as subject where two constituents of the composite
+        are both ModifiedProteinAbundances. The object has to be a
+        Activity of a ProteinAbundance.
+
+        Examples:
+
+            compositeAbundance(
+            proteinAbundance(PFH:"AKT Family",proteinModification(P,S,473)),
+            proteinAbundance(PFH:"AKT Family",proteinModification(P,T,308)))
+            directlyIncreases
+            kinaseActivity(proteinAbundance(PFH:"AKT Family"))
+        """
         # To eliminate multiple matches, we use pos1 < pos2 but this will
         # only work if the pos is given, otherwise multiple matches of
         # the same mod combination may appear in the result
@@ -232,9 +273,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[7])
+            evidence = self._get_evidence(stmt[7])
             # Parse out the elements of the query
-            species = self.get_agent(stmt[0], stmt[8])
+            species = self._get_agent(stmt[0], stmt[8])
             act_type = term_from_uri(stmt[1]).lower()
             mod1 = term_from_uri(stmt[2])
             mod_pos1 = term_from_uri(stmt[3])
@@ -255,7 +296,18 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_activating_mods(self):
-        """Extract INDRA ActiveForm Statements with a single mod from BEL."""
+        """Extract INDRA ActiveForm Statements with a single mod from BEL.
+
+        The SPARQL pattern used for extraction from BEL looks for a
+        ModifiedProteinAbundance as subject and an Activiy of a
+        ProteinAbundance as object.
+
+        Examples:
+
+            proteinAbundance(HGNC:INSR,proteinModification(P,Y))
+            directlyIncreases
+            kinaseActivity(proteinAbundance(HGNC:INSR))
+        """
         q_mods = prefixes + """
             SELECT ?speciesName ?actType ?mod ?pos ?rel ?stmt ?species
             WHERE {
@@ -280,9 +332,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[5])
+            evidence = self._get_evidence(stmt[5])
             # Parse out the elements of the query
-            species = self.get_agent(stmt[0], stmt[6])
+            species = self._get_agent(stmt[0], stmt[6])
             act_type = term_from_uri(stmt[1]).lower()
             mod = term_from_uri(stmt[2])
             mod_pos = term_from_uri(stmt[3])
@@ -300,7 +352,20 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_complexes(self):
-        """Extract INDRA Complex Statements from BEL."""
+        """Extract INDRA Complex Statements from BEL.
+
+        The SPARQL query used to extract Complexes looks for ComplexAbundance
+        terms and their constituents. This pattern is distinct from other
+        patterns in this processor in that it queries for terms, not
+        full statements.
+
+        Examples:
+
+            complexAbundance(proteinAbundance(HGNC:PPARG),
+            proteinAbundance(HGNC:RXRA))
+            decreases
+            biologicalProcess(MESHPP:"Insulin Resistance")
+        """
         q_cmplx = prefixes + """
             SELECT ?complexTerm ?childName ?child ?stmt
             WHERE {
@@ -330,10 +395,10 @@ class BelProcessor(object):
         cmplx_ev = {}
         for stmt in res_cmplx:
             stmt_uri = stmt[3]
-            ev = self.get_evidence(stmt_uri)
+            ev = self._get_evidence(stmt_uri)
             cmplx_name = term_from_uri(stmt[0])
             cmplx_id = stmt_uri + '#' + cmplx_name
-            child = self.get_agent(stmt[1], stmt[2])
+            child = self._get_agent(stmt[1], stmt[2])
             cmplx_dict[cmplx_id].append(child)
             # This might be written multiple times but with the same
             # evidence
@@ -350,10 +415,24 @@ class BelProcessor(object):
                                                evidence=cmplx_ev[cmplx_id]))
 
     def get_activating_subs(self):
-        """Extract INDRA ActiveForm Statements based on a mutation from BEL."""
-        #p_HGNC_NRAS_sub_Q_61_K_DirectlyIncreases_gtp_p_HGNC_NRAS
-        #p_HGNC_KRAS_sub_G_12_R_DirectlyIncreases_gtp_p_PFH_RAS_Family
-        #p_HGNC_BRAF_sub_V_600_E_DirectlyIncreases_kin_p_HGNC_BRAF
+        """Extract INDRA ActiveForm Statements based on a mutation from BEL.
+
+        The SPARQL pattern used to extract ActiveForms due to mutations look
+        for a ProteinAbundance as a subject which has a child encoding the
+        amino acid substitution. The object of the statement is an
+        ActivityType of the same ProteinAbundance, which is either increased
+        or decreased.
+
+        Examples:
+
+            proteinAbundance(HGNC:NRAS,substitution(Q,61,K))
+            directlyIncreases
+            gtpBoundActivity(proteinAbundance(HGNC:NRAS))
+
+            proteinAbundance(HGNC:TP53,substitution(F,134,I))
+            directlyDecreases
+            transcriptionalActivity(proteinAbundance(HGNC:TP53))
+        """
         q_mods = prefixes + """
             SELECT ?enzyme_name ?sub_label ?act_type ?rel ?stmt ?subject
             WHERE {
@@ -377,9 +456,9 @@ class BelProcessor(object):
         res_mods = self.g.query(q_mods)
 
         for stmt in res_mods:
-            evidence = self.get_evidence(stmt[4])
+            evidence = self._get_evidence(stmt[4])
             # Parse out the elements of the query
-            enz = self.get_agent(stmt[0], stmt[5])
+            enz = self._get_agent(stmt[0], stmt[5])
             sub_expr = term_from_uri(stmt[1])
             act_type = term_from_uri(stmt[2]).lower()
             # Parse the WT and substituted residues from the node label.
@@ -413,10 +492,40 @@ class BelProcessor(object):
             self.statements.append(st)
 
     def get_activation(self):
-        """Extract INDRA Activation Statements from BEL."""
-        # Query for all statements where the activity of one protein
-        # directlyIncreases the activity of another protein, without reference
-        # to a modification.
+        """Extract INDRA Inhibition/Activation Statements from BEL.
+
+        The SPARQL query used to extract Activation Statements looks for
+        patterns in which the subject is is an ActivityType
+        (of a ProtainAbundance) or an Abundance (of a small molecule).
+        The object has to be the ActivityType (typically of a
+        ProteinAbundance) which is either increased or decreased.
+
+        Examples:
+
+            abundance(CHEBI:gefitinib) directlyDecreases
+            kinaseActivity(proteinAbundance(HGNC:EGFR))
+
+            kinaseActivity(proteinAbundance(HGNC:MAP3K5))
+            directlyIncreases kinaseActivity(proteinAbundance(HGNC:MAP2K7))
+
+        This pattern covers the extraction of Gap/Gef and GtpActivation
+        Statements, which are recognized by the object activty or the
+        subject activity, respectively, being `gtpbound`.
+
+        Examples:
+
+            catalyticActivity(proteinAbundance(HGNC:RASA1))
+            directlyDecreases
+            gtpBoundActivity(proteinAbundance(PFH:"RAS Family"))
+
+            catalyticActivity(proteinAbundance(HGNC:SOS1))
+            directlyIncreases
+            gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+
+            gtpBoundActivity(proteinAbundance(HGNC:HRAS))
+            directlyIncreases
+            catalyticActivity(proteinAbundance(HGNC:TIAM1))
+        """
         q_stmts = prefixes + """
             SELECT ?subjName ?subjActType ?rel ?objName ?objActType
                    ?stmt ?subj ?obj
@@ -441,8 +550,8 @@ class BelProcessor(object):
         res_stmts = self.g.query(q_stmts)
 
         for stmt in res_stmts:
-            evidence = self.get_evidence(stmt[5])
-            subj = self.get_agent(stmt[0], stmt[6])
+            evidence = self._get_evidence(stmt[5])
+            subj = self._get_agent(stmt[0], stmt[6])
             subj_activity = stmt[1]
             if subj_activity:
                 subj_activity = term_from_uri(stmt[1]).lower()
@@ -452,7 +561,7 @@ class BelProcessor(object):
                 is_activation = False
             else:
                 is_activation = True
-            obj = self.get_agent(stmt[3], stmt[7])
+            obj = self._get_agent(stmt[3], stmt[7])
             obj_activity = term_from_uri(stmt[4]).lower()
             stmt_str = strip_statement(stmt[5])
             # Mark this as a converted statement
@@ -485,28 +594,47 @@ class BelProcessor(object):
                     st = Activation(subj, obj, obj_activity, evidence)
                 self.statements.append(st)
 
-            """
-            #print "--------------------------------"
-            print stmt_str
-            print("This statement says that:")
-            print("%s activity increases activity of %s" %
-                  (subj_name, obj_name))
-            print "It doesn't specify the site."
-            act_mods = []
-            for bps in self.statements:
-                if type(bps) == ActivatingModification and \
-                   bps.monomer_name == obj_name:
-                    act_mods.append(bps)
-            # If we know about an activation modification...
-            if act_mods:
-                print "However, I happen to know about the following"
-                print "activating modifications for %s:" % obj_name
-                for act_mod in act_mods:
-                    print "    %s at %s" % (act_mod.mod, act_mod.mod_pos)
-        """
-
     def get_transcription(self):
-        """Get statements of the form tscript(X) inc/dec r(Y)."""
+        """Extract Increase/DecreaseAmount INDRA Statements from BEL.
+
+        Three distinct SPARQL patterns are used to extract amount
+        regulations from BEL.
+
+        - q_tscript1 searches for a subject which is a Transcription
+          ActivityType of a ProteinAbundance and an object which is
+          an RNAAbundance that is either increased or decreased.
+
+          Examples:
+
+              transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+              directlyIncreases
+              rnaAbundance(HGNC:SYK)
+
+              transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+              directlyDecreases
+              rnaAbundance(HGNC:CALCRL)
+
+        - q_tscript2 searches for a subject which is a ProteinAbundance
+          and an object which is an RNAAbundance. Note that this pattern
+          typically exists in an indirect form (i.e. increases/decreases).
+
+          Example:
+
+              proteinAbundance(HGNC:MTF1) directlyIncreases
+              rnaAbundance(HGNC:LCN1)
+
+        - q_tscript3 searches for a subject which is a
+          ModifiedProteinAbundance, with an object which is an RNAAbundance.
+          In the BEL large corpus, this pattern is found for
+          subjects which are protein families or mouse/rat proteins, and
+          the predicate in an indirect increase.
+
+          Example:
+
+              proteinAbundance(PFR:"Akt Family",proteinModification(P))
+              increases
+              rnaAbundance(RGD:Cald1)
+        """
         q_tscript1 = prefixes + """
             SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
             WHERE {
@@ -541,7 +669,7 @@ class BelProcessor(object):
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
-                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?target .
                 ?subject a belvoc:ModifiedProteinAbundance .
                 ?subject belvoc:hasModificationType ?mod .
@@ -550,7 +678,6 @@ class BelProcessor(object):
                 ?target a belvoc:RNAAbundance .
                 ?target belvoc:hasConcept ?targetName .
                 OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
-
             }
         """
         for q_tscript in (q_tscript1, q_tscript2, q_tscript3):
@@ -558,7 +685,7 @@ class BelProcessor(object):
             for stmt in res_tscript:
                 # Get modifications on the subject, if any
                 if q_tscript == q_tscript1:
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                     tf.activity = ActivityCondition('transcription', True)
                 elif q_tscript == q_tscript3:
                     mod = term_from_uri(stmt[6])
@@ -566,13 +693,13 @@ class BelProcessor(object):
                     mc = self._get_mod_condition(mod, mod_pos)
                     if mc is None:
                         continue
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                     tf.mods = mods=[mc]
                 else:
-                    tf = self.get_agent(stmt[0], stmt[3])
+                    tf = self._get_agent(stmt[0], stmt[3])
                 # Parse out the elements of the query
-                evidence = self.get_evidence(stmt[2])
-                target = self.get_agent(stmt[1], stmt[4])
+                evidence = self._get_evidence(stmt[2])
+                target = self._get_agent(stmt[1], stmt[4])
                 stmt_str = strip_statement(stmt[2])
                 # Get the relationship (increases/decreases, etc.)
                 rel = term_from_uri(stmt[5])
@@ -596,10 +723,25 @@ class BelProcessor(object):
                         self.converted_indirect_stmts.append(stmt_str)
 
     def get_conversions(self):
-        """Extract Conversion Statements."""
+        """Extract Conversion INDRA Statements from BEL.
+
+
+        The SPARQL query used to extract Conversions searches for
+        a subject (controller) which is an AbundanceActivity
+        which directlyIncreases a Reaction with a given list of
+        Reactants and Products.
+
+        Examples:
+
+            catalyticActivity(proteinAbundance(HGNC:HMOX1))
+            directlyIncreases
+            reaction(reactants(abundance(CHEBI:heme)),
+            products(abundance(SCHEM:Biliverdine),
+            abundance(CHEBI:"carbon monoxide")))
+        """
         query = prefixes + """
-            SELECT DISTINCT ?controller ?controllerName ?controllerActivity ?product
-                ?productName ?reactant ?reactantName ?stmt
+            SELECT DISTINCT ?controller ?controllerName ?controllerActivity
+                ?product ?productName ?reactant ?reactantName ?stmt
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
@@ -631,8 +773,8 @@ class BelProcessor(object):
         for stmts in stmt_map.values():
             # First we get the shared part of the Statement
             stmt = stmts[0]
-            subj = self.get_agent(stmt[1], stmt[0])
-            evidence = self.get_evidence(stmt[-1])
+            subj = self._get_agent(stmt[1], stmt[0])
+            evidence = self._get_evidence(stmt[-1])
             stmt_str = strip_statement(stmt[-1])
             # Now we collect the participants
             obj_from_map = {}
@@ -642,10 +784,10 @@ class BelProcessor(object):
                 product_name = stmt[4]
                 if reactant_name not in obj_from_map:
                     obj_from_map[reactant_name] = \
-                        self.get_agent(stmt[6], stmt[5])
+                        self._get_agent(stmt[6], stmt[5])
                 if product_name not in obj_to_map:
                     obj_to_map[product_name] = \
-                        self.get_agent(stmt[4], stmt[3])
+                        self._get_agent(stmt[4], stmt[3])
             obj_from = list(obj_from_map.values())
             obj_to = list(obj_to_map.values())
             st = Conversion(subj, obj_from, obj_to, evidence=evidence)
@@ -656,43 +798,12 @@ class BelProcessor(object):
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
-        Stores the results of the query in self.all_direct_stmts.
+        This method stores the results of the query in self.all_direct_stmts
+        as a list of strings. The SPARQL query used to find direct BEL
+        statements searches for all statements whose predicate is either
+        DirectyIncreases or DirectlyDecreases.
         """
         logger.info("Getting all direct statements...\n")
-        q_stmts = prefixes + """
-            SELECT ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasSubject ?subj .
-                ?stmt belvoc:hasObject ?obj .
-                {
-                  { ?subj a belvoc:AbundanceActivity . }
-                  UNION
-                  { ?subj a belvoc:ComplexAbundance . }
-                  UNION
-                  { ?subj a belvoc:ProteinAbundance . }
-                  UNION
-                  { ?subj a belvoc:ModifiedProteinAbundance . }
-                }
-                {
-                  { ?obj a belvoc:AbundanceActivity . }
-                  UNION
-                  { ?obj a belvoc:ComplexAbundance . }
-                  UNION
-                  { ?obj a belvoc:ProteinAbundance . }
-                  UNION
-                  { ?obj a belvoc:RNAAbundance . }
-                  UNION
-                  { ?obj a belvoc:ModifiedProteinAbundance . }
-                }
-
-                {
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
-                  UNION
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
-                }
-            }
-        """
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -711,7 +822,10 @@ class BelProcessor(object):
     def get_all_indirect_statements(self):
         """Get all indirect increases/decreases BEL statements.
 
-        Stores the results of the query in self.all_indirect_stmts.
+        This method stores the results of the query in self.all_indirect_stmts
+        as a list of strings. The SPARQL query used to find indirect BEL
+        statements searches for all statements whose predicate is either
+        Increases or Decreases.
         """
         q_stmts = prefixes + """
             SELECT ?stmt
@@ -837,7 +951,7 @@ class BelProcessor(object):
             logger.info("%s: %s" % (i, stmt))
 
     @staticmethod
-    def get_agent(concept, entity):
+    def _get_agent(concept, entity):
         name = term_from_uri(concept)
         namespace = namespace_from_uri(entity)
         db_refs = {}
@@ -911,7 +1025,7 @@ class BelProcessor(object):
         agent = Agent(agent_name, db_refs=db_refs)
         return agent
 
-    def get_evidence(self, statement):
+    def _get_evidence(self, statement):
         evidence = None
         citation = None
         annotations = []

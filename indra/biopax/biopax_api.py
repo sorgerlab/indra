@@ -4,7 +4,8 @@ from indra.java_vm import autoclass, JavaException
 from indra.biopax import pathway_commons_client as pcc
 from indra.biopax.processor import BiopaxProcessor
 
-def process_pc_neighborhood(gene_names, neighbor_limit=1):
+def process_pc_neighborhood(gene_names, neighbor_limit=1,
+                            database_filter=None):
     """Returns a BiopaxProcessor for a PathwayCommons neighborhood query.
 
     The neighborhood query finds the neighborhood around a set of source genes.
@@ -21,6 +22,11 @@ def process_pc_neighborhood(gene_names, neighbor_limit=1):
     neighbor_limit : Optional[int]
         The number of steps to limit the size of the neighborhood around
         the gene names being queried. Default: 1
+    database_filter : Optional[list]
+        A list of database identifiers to which the query is restricted.
+        Examples: ['reactome'], ['biogrid', 'pid', 'psp']
+        If not given, all databases are used in the query. For a full
+        list of databases see http://www.pathwaycommons.org/pc2/datasources
 
     Returns
     -------
@@ -28,12 +34,14 @@ def process_pc_neighborhood(gene_names, neighbor_limit=1):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = pcc.graph_query('neighborhood', gene_names,
-                            neighbor_limit=neighbor_limit)
+                            neighbor_limit=neighbor_limit,
+                            database_filter=database_filter)
     if model is not None:
         return process_model(model)
 
 
-def process_pc_pathsbetween(gene_names, neighbor_limit=1):
+def process_pc_pathsbetween(gene_names, neighbor_limit=1,
+                            database_filter=None):
     """Returns a BiopaxProcessor for a PathwayCommons paths-between query.
 
     The paths-between query finds the paths between a set of genes. Here
@@ -52,6 +60,11 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1):
     neighbor_limit : Optional[int]
         The number of steps to limit the length of the paths between
         the gene names being queried. Default: 1
+    database_filter : Optional[list]
+        A list of database identifiers to which the query is restricted.
+        Examples: ['reactome'], ['biogrid', 'pid', 'psp']
+        If not given, all databases are used in the query. For a full
+        list of databases see http://www.pathwaycommons.org/pc2/datasources
 
     Returns
     -------
@@ -59,12 +72,14 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = pcc.graph_query('pathsbetween', gene_names,
-                             neighbor_limit=neighbor_limit)
+                             neighbor_limit=neighbor_limit,
+                             database_filter=database_filter)
     if model is not None:
         return process_model(model)
 
 
-def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
+def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1,
+                           database_filter=None):
     """Returns a BiopaxProcessor for a PathwayCommons paths-from-to query.
 
     The paths-from-to query finds the paths from a set of source genes to
@@ -87,6 +102,11 @@ def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
     neighbor_limit : Optional[int]
         The number of steps to limit the length of the paths
         between the source genes and target genes being queried. Default: 1
+    database_filter : Optional[list]
+        A list of database identifiers to which the query is restricted.
+        Examples: ['reactome'], ['biogrid', 'pid', 'psp']
+        If not given, all databases are used in the query. For a full
+        list of databases see http://www.pathwaycommons.org/pc2/datasources
 
     Returns
     -------
@@ -94,7 +114,8 @@ def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = pcc.graph_query('pathsfromto', source_genes,
-                             target_genes, neighbor_limit)
+                             target_genes, neighbor_limit=neighbor_limit,
+                             database_filter=database_filter)
     if model is not None:
         return process_model(model)
 
