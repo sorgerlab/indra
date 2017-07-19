@@ -787,43 +787,12 @@ class BelProcessor(object):
     def get_all_direct_statements(self):
         """Get all directlyIncreases/Decreases BEL statements.
 
-        Stores the results of the query in self.all_direct_stmts.
+        This method stores the results of the query in self.all_direct_stmts
+        as a list of strings. The SPARQL query used to find direct BEL
+        statements searches for all statements whose predicate is either
+        DirectyIncreases or DirectlyDecreases.
         """
         logger.info("Getting all direct statements...\n")
-        q_stmts = prefixes + """
-            SELECT ?stmt
-            WHERE {
-                ?stmt a belvoc:Statement .
-                ?stmt belvoc:hasSubject ?subj .
-                ?stmt belvoc:hasObject ?obj .
-                {
-                  { ?subj a belvoc:AbundanceActivity . }
-                  UNION
-                  { ?subj a belvoc:ComplexAbundance . }
-                  UNION
-                  { ?subj a belvoc:ProteinAbundance . }
-                  UNION
-                  { ?subj a belvoc:ModifiedProteinAbundance . }
-                }
-                {
-                  { ?obj a belvoc:AbundanceActivity . }
-                  UNION
-                  { ?obj a belvoc:ComplexAbundance . }
-                  UNION
-                  { ?obj a belvoc:ProteinAbundance . }
-                  UNION
-                  { ?obj a belvoc:RNAAbundance . }
-                  UNION
-                  { ?obj a belvoc:ModifiedProteinAbundance . }
-                }
-
-                {
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyIncreases . }
-                  UNION
-                  { ?stmt belvoc:hasRelationship belvoc:DirectlyDecreases . }
-                }
-            }
-        """
         q_stmts = prefixes + """
             SELECT ?stmt
             WHERE {
@@ -842,7 +811,10 @@ class BelProcessor(object):
     def get_all_indirect_statements(self):
         """Get all indirect increases/decreases BEL statements.
 
-        Stores the results of the query in self.all_indirect_stmts.
+        This method stores the results of the query in self.all_indirect_stmts
+        as a list of strings. The SPARQL query used to find indirect BEL
+        statements searches for all statements whose predicate is either
+        Increases or Decreases.
         """
         q_stmts = prefixes + """
             SELECT ?stmt
