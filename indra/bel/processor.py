@@ -597,31 +597,31 @@ class BelProcessor(object):
     def get_transcription(self):
         """Extract Increase/DecreaseAmount INDRA Statements from BEL.
 
-        Two distinct SPARQL patterns are used to extract amount
+        Three distinct SPARQL patterns are used to extract amount
         regulations from BEL.
 
         - q_tscript1 searches for a subject which is a Transcription
           ActivityType of a ProteinAbundance and an object which is
           an RNAAbundance that is either increased or decreased.
 
-        Example:
+          Examples:
 
-            transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
-            directlyIncreases
-            rnaAbundance(HGNC:SYK)
+              transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+              directlyIncreases
+              rnaAbundance(HGNC:SYK)
 
-            transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
-            directlyDecreases
-            rnaAbundance(HGNC:CALCRL)
+              transcriptionalActivity(proteinAbundance(HGNC:FOXP2))
+              directlyDecreases
+              rnaAbundance(HGNC:CALCRL)
 
         - q_tscript2 searches for a subject which is a ProteinAbundance
           and an object which is an RNAAbundance. Note that this pattern
           typically exists in an indirect form (i.e. increases/decreases).
 
-        Example:
+          Example:
 
-            proteinAbundance(HGNC:MTF1) directlyIncreases
-            rnaAbundance(HGNC:LCN1)
+              proteinAbundance(HGNC:MTF1) directlyIncreases
+              rnaAbundance(HGNC:LCN1)
 
         - q_tscript3 searches for a subject which is a
           ModifiedProteinAbundance, with an object which is an RNAAbundance.
@@ -629,11 +629,11 @@ class BelProcessor(object):
           subjects which are protein families or mouse/rat proteins, and
           the predicate in an indirect increase.
 
-        Example:
+          Example:
 
-            proteinAbundance(PFR:"Akt Family",proteinModification(P))
-            increases
-            rnaAbundance(RGD:Cald1)
+              proteinAbundance(PFR:"Akt Family",proteinModification(P))
+              increases
+              rnaAbundance(RGD:Cald1)
         """
         q_tscript1 = prefixes + """
             SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
