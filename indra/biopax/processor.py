@@ -68,7 +68,14 @@ class BiopaxProcessor(object):
         pcc.model_to_owl(self.model, file_name)
 
     def get_complexes(self):
-        """Extract INDRA Complex statements from the model."""
+        """Extract INDRA Complex Statements from the BioPAX model.
+
+        This method searches for org.biopax.paxtools.model.level3.Complex
+        objects which represent molecular complexes. It doesn't reuse
+        BioPAX Pattern's org.biopax.paxtools.pattern.PatternBox.inComplexWith
+        query since that retrieves pairs of complex members rather than
+        the full complex.
+        """
         for obj in self.model.getObjects().toArray():
             bpe = _cast_biopax_element(obj)
             if not _is_complex(bpe):
@@ -86,7 +93,14 @@ class BiopaxProcessor(object):
                                                       encoding='utf-8'))
 
     def get_modifications(self):
-        """Extract INDRA Modification statements from model."""
+        """Extract INDRA Modification Statements from the BioPAX model.
+
+        To extract Modifications, this method reuses the structure of
+        BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
+        with additional constraints to specify the type of state change
+        occurring (phosphorylation, deubiquitination, etc.).
+        """
         for modclass, modtype in modclass_to_modtype.items():
             # TODO: we could possibly try to also extract generic
             # modifications here
@@ -96,7 +110,17 @@ class BiopaxProcessor(object):
             self.statements += stmts
 
     def get_activity_modification(self):
-        """Extract INDRA ActiveForm statements from the model."""
+        """Extract INDRA ActiveForm statements from the BioPAX model.
+
+        This method extracts ActiveForm Statements that are due to
+        protein modifications. This method reuses the structure of
+        BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
+        with additional constraints to specify the gain or loss of a
+        modification occurring (phosphorylation, deubiquitination, etc.)
+        and the gain or loss of activity due to the modification state
+        change.
+        """
         mod_filter = 'residue modification, active'
         for is_active in [True, False]:
             p = self._construct_modification_pattern()
@@ -145,7 +169,16 @@ class BiopaxProcessor(object):
                                                           encoding='utf-8'))
 
     def get_regulate_activities(self):
-        """Get RegulateActivity Statements."""
+        """Get Activation/Inhibition INDRA Statements from the BioPAX model.
+
+        This method extracts Activation/Inhibition Statements and reuses the
+        structure of BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
+        with additional constraints to specify the gain or loss of
+        activity state but assuring that the activity change is not due to
+        a modification state change (which are extracted by get_modifications
+        and get_activity_modification).
+        """
         mcc = _bpp('constraint.ModificationChangeConstraint')
         mcct = _bpp('constraint.ModificationChangeConstraint$Type')
         mod_filter = 'residue modification, active'
@@ -211,7 +244,14 @@ class BiopaxProcessor(object):
 
 
     def get_regulate_amounts(self):
-        """Extract INDRA RegulateAmount statements from the model."""
+        """Extract INDRA RegulateAmount Statements from the BioPAX model.
+
+        This method extracts IncreaseAmount/DecreaseAmount Statements from
+        the BioPAX model. It fully reuses BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.controlsExpressionWithTemplateReac
+        pattern to find TemplateReactions which control the expression of
+        a protein.
+        """
         p = pb.controlsExpressionWithTemplateReac()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
@@ -287,7 +327,16 @@ class BiopaxProcessor(object):
                 self.statements.append(st_dec)
 
     def get_conversions(self):
-        # NOTE: The pattern below gets all reactions in which a protein is the
+        """Extract Conversion INDRA Statements from the BioPAX model.
+
+        This method uses a custom BioPAX Pattern
+        (one that is not implemented PatternBox) to query for
+        BiochemicalReactions whose left and right hand sides are collections
+        of SmallMolecules. This pattern thereby extracts metabolic
+        conversions as well as signaling processes via small molecules
+        (e.g. lipid phosphorylation or cleavage).
+        """
+        # NOTE: This pattern gets all reactions in which a protein is the
         # controller and chemicals are converted. But with this pattern only
         # a single chemical is extracted from each side. This can be misleading
         # since we want to capture all inputs and all outputs of the
@@ -402,6 +451,15 @@ class BiopaxProcessor(object):
         return p
 
     def get_gef(self):
+        """Extract Gef INDRA Statements from the BioPAX model.
+
+        This method uses a custom BioPAX Pattern
+        (one that is not implemented PatternBox) to query for controlled
+        BiochemicalReactions in which the same protein is in complex with
+        GDP on the left hand side and in complex with GTP on the
+        right hand side. This implies that the controller is a GEF for the
+        GDP/GTP-bound protein.
+        """
         p = self._gef_gap_base()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
@@ -452,6 +510,15 @@ class BiopaxProcessor(object):
                 self.statements.append(st_dec)
 
     def get_gap(self):
+        """Extract Gap INDRA Statements from the BioPAX model.
+
+        This method uses a custom BioPAX Pattern
+        (one that is not implemented PatternBox) to query for controlled
+        BiochemicalReactions in which the same protein is in complex with
+        GTP on the left hand side and in complex with GDP on the
+        right hand side. This implies that the controller is a GAP for the
+        GDP/GTP-bound protein.
+        """
         p = self._gef_gap_base()
         s = _bpp('Searcher')
         res = s.searchPlain(self.model, p)
@@ -500,8 +567,6 @@ class BiopaxProcessor(object):
                 st = Gap(gap, ras, evidence=ev)
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
-
-
 
     @staticmethod
     def _get_complex_members(cplx):
