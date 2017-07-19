@@ -622,6 +622,18 @@ class BelProcessor(object):
 
             proteinAbundance(HGNC:MTF1) directlyIncreases
             rnaAbundance(HGNC:LCN1)
+
+        - q_tscript3 searches for a subject which is a
+          ModifiedProteinAbundance, with an object which is an RNAAbundance.
+          In the BEL large corpus, this pattern is found for
+          subjects which are protein families or mouse/rat proteins, and
+          the predicate in an indirect increase.
+
+        Example:
+
+            proteinAbundance(PFR:"Akt Family",proteinModification(P))
+            increases
+            rnaAbundance(RGD:Cald1)
         """
         q_tscript1 = prefixes + """
             SELECT ?tfName ?targetName ?stmt ?tf ?target ?rel
@@ -657,7 +669,7 @@ class BelProcessor(object):
             WHERE {
                 ?stmt a belvoc:Statement .
                 ?stmt belvoc:hasRelationship ?rel .
-                ?stmt belvoc:hasSubject ?tf .
+                ?stmt belvoc:hasSubject ?subject .
                 ?stmt belvoc:hasObject ?target .
                 ?subject a belvoc:ModifiedProteinAbundance .
                 ?subject belvoc:hasModificationType ?mod .
@@ -666,7 +678,6 @@ class BelProcessor(object):
                 ?target a belvoc:RNAAbundance .
                 ?target belvoc:hasConcept ?targetName .
                 OPTIONAL { ?subject belvoc:hasModificationPosition ?pos . }
-
             }
         """
         for q_tscript in (q_tscript1, q_tscript2, q_tscript3):
