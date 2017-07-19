@@ -1,12 +1,16 @@
+import numpy
 import pandas
-from collections import defaultdict
+import itertools
 
 rppa_file = 'data/TableS1-Split.xlsx'
+expression_file = 'data/Expression_Filtered.csv'
+mutation_file = 'data/WES_variants_filtered.csv'
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
               'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
 
 def read_rppa_data(fname=rppa_file):
+    """Return RPPA data as a dict median/std DataFrames."""
     data = {}
     for cell_line in cell_lines:
         data[cell_line] = {}
@@ -23,3 +27,22 @@ def read_rppa_data(fname=rppa_file):
                 i += 1
             data[cell_line][data_type] = df
     return data
+
+
+def find_extremes(data, fold_change):
+    """Return rows of data which are above or below the given fold change."""
+    liml, limu = (numpy.log2(1.0/fold_change), numpy.log2(fold_change))
+    all_extremes = []
+    for cell_line in cell_lines:
+        df = data[cell_line]['median']
+        antibodies = df.columns[3:]
+        for ab in antibodies:
+            extremes = df.loc[(df[ab] < liml) | (df[ab] > limu)]
+            for _, extreme in extremes.iterrows():
+                drug = extreme['Drug']
+                time = extreme['Time (hr)']
+                conc = extreme['Concentration (uM)']
+                val = extreme[ab]
+                all_extremes.append([cell_line, ab, drug, time, conc, val])
+    return all_extremes
+
