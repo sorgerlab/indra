@@ -13,6 +13,7 @@ def read_rppa_data(fname=rppa_file):
     """Return RPPA data as a dict median/std DataFrames."""
     data = {}
     for cell_line in cell_lines:
+        print('Reading data for %s' % cell_line)
         data[cell_line] = {}
         # Read both the median and the std sheet for each cell line
         for data_type, postfix in (('median', ''), ('std', '-std')):
@@ -46,12 +47,35 @@ def find_extremes(data, fold_change):
                 all_extremes.append([cell_line, ab, drug, time, conc, val])
     return all_extremes
 
-def find_cell_line_vars(data, fold_change):
+
+def find_cell_line_vars(data, fold_change, save_file=None):
     """Return conditions in which cell lines are qualitatively different."""
     liml, limu = (numpy.log2(1.0/fold_change), numpy.log2(fold_change))
+    all_vals = []
+    # Look at all cell line combinations for differences
     for cl1, cl2 in itertools.combinations(cell_lines, 2):
         df1 = data[cl1]['median']
         df2 = data[cl2]['median']
         antibodies = df1.columns[3:]
         for ab in antibodies:
-            cell_line_var = df1.loc[(df1[ab] < liml) & (df2[ab] > limu)]
+            filt = (((df1[ab] < liml) & (df2[ab] > limu)) |
+                    ((df2[ab] < liml) & (df1[ab] > limu)))
+            if filt.any():
+                cl1_row = df1.loc[filt]
+                cl2_row = df2.loc[filt]
+                vals = [cl1_row['Drug'].values[0],
+                        cl1_row['Time (hr)'].values[0],
+                        cl1_row['Concentration (uM)'].values[0],
+                        ab, cl1, cl2,
+                        cl1_row[ab].values[0], cl2_row[ab].values[0]]
+                all_vals.append(vals)
+    # Sort values
+    all_vals = sorted(all_vals, key=lambda x: abs(x[6]-x[7]), reverse=True)
+    # Optionally save into a CSV file
+    if save_file:
+        with open(save_file, 'w') as fh:
+            fh.write('Drug,Time (hr),Concentration (uM),Antibody,' + \
+                     'CellLine1,CellLine2,Value1,Value2\n')
+            for vals in all_vals:
+                fh.write(','.join([str(v) for v in vals]) + '\n')
+    return all_vals
