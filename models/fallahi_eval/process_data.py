@@ -30,7 +30,7 @@ def read_rppa_data(fname=rppa_file):
     return data
 
 
-def find_extremes(data, fold_change):
+def find_extremes(data, fold_change, save_file=None):
     """Return rows of data which are above or below the given fold change."""
     liml, limu = (numpy.log2(1.0/fold_change), numpy.log2(fold_change))
     all_extremes = []
@@ -44,7 +44,16 @@ def find_extremes(data, fold_change):
                 time = extreme['Time (hr)']
                 conc = extreme['Concentration (uM)']
                 val = extreme[ab]
-                all_extremes.append([cell_line, ab, drug, time, conc, val])
+                all_extremes.append([drug, time, conc, cell_line, ab, val])
+    # Sort values
+    all_extremes = sorted(all_extremes, key=lambda x: abs(x[5]), reverse=True)
+    # Optionally save into a CSV file
+    if save_file:
+        with open(save_file, 'w') as fh:
+            fh.write('Drug,Time (hr),Concentration (uM),' + \
+                     'CellLine,Antibody,Value\n')
+            for vals in all_extremes:
+                fh.write(','.join([str(v) for v in vals]) + '\n')
     return all_extremes
 
 
