@@ -41,9 +41,10 @@ class SBGNAssembler(object):
             self.statements = []
         else:
             self.statements = statements
-        self.sbgn = None
+        self.sbgn = emaker.sbgn()
+        self._map = emaker.map()
+        self.sbgn.append(self._map)
         self._id_counter = 0
-        self._map = None
         self._agent_ids = {}
 
     def add_statements(self, stmts):
@@ -305,6 +306,40 @@ class SBGNAssembler(object):
         if append:
             self._map.append(glyph)
             return agent_id
+        return glyph
+
+    def _glyph_for_complex_pattern(self, pattern):
+        # Make the main glyph for the agent
+        monomer_glyphs = []
+        for monomer_pattern in pattern.monomer_patterns:
+            glyph = self._glyph_for_monomer_pattern(monomer_pattern)
+            monomer_glyphs.append(glyph)
+
+        if len(monomer_glyphs) > 1:
+            pattern.matches_key = lambda: str(pattern)
+            agent_id = self._make_agent_id(pattern)
+            complex_glyph = \
+                emaker.glyph(emaker.bbox(x='1', y='1', w='70', h='30'),
+                             class_('complex'), id=agent_id)
+            for glyph in monomer_glyphs:
+                complex_glyph.append(glyph)
+            return complex_glyph
+        return monomer_glyphs[0]
+
+    def _glyph_for_monomer_pattern(self, pattern):
+        pattern.matches_key = lambda: str(pattern)
+        agent_id = self._make_agent_id(pattern)
+        glyph = emaker.glyph(emaker.label(text=pattern.monomer.name),
+                             emaker.bbox(x='0', y='0', w='140', h='60'),
+                             class_('protein'), id=agent_id)
+        for site, value in pattern.site_conditions.items():
+            if value is None:
+                continue
+            state = emaker.state(variable=site, value=value)
+            state_glyph = \
+                emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
+                             class_('state variable'), id=self._make_id())
+            glyph.append(state_glyph)
         return glyph
 
     def _make_id(self):
