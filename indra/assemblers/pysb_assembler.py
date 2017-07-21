@@ -910,11 +910,15 @@ class PysbAssembler(object):
             The exported model string
 
         """
-        try:
-            exp_str = pysb.export.export(self.model, format)
-        except KeyError:
-            logging.error('Unknown export format: %s' % format)
-            return None
+        # Handle SBGN as special case
+        if format == 'sbgn':
+            exp_str = export_sbgn(self.model)
+        else:
+            try:
+                exp_str = pysb.export.export(self.model, format)
+            except KeyError:
+                logging.error('Unknown export format: %s' % format)
+                return None
 
         if file_name:
             with open(file_name, 'wb') as fh:
@@ -2543,3 +2547,41 @@ class PysbPreassembler(object):
                                               from_agent.mutations)
         to_agent.location = from_agent.location
         to_agent.activity = from_agent.activity
+
+def export_sbgn(model):
+    import lxml.etree
+    import lxml.builder
+    from pysb.bng import generate_equations
+    from indra.assemblers.sbgn_assembler import SBGNAssembler
+
+    logger.info('Generating reaction network with BNG for SBGN export. ' +
+                'This could take a long time.')
+    generate_equations(model)
+
+    sa = SBGNAssembler()
+
+    glyphs = []
+    for species in model.species:
+        # There should be a map for these
+        glyph = sa._glyph_for_complex_pattern(species)
+        sa._map.append(glyph)
+        glyphs.append(glyph)
+    for reaction in model.reactions:
+        reactants = set(reaction['reactants']) - set(reaction['products'])
+        products = set(reaction['products']) - set(reaction['reactants'])
+        controllers = set(reaction['reactants']) & set(reaction['products'])
+        # Add glyph for reaction
+        process_glyph = sa._process_glyph('process')
+        # Connect glyphs with arcs
+        for r in reactants:
+            glyph = glyphs[r]
+            sa._arc('consumption', glyph.attrib['id'], process_glyph)
+        for p in products:
+            glyph = glyphs[p]
+            sa._arc('production', process_glyph, glyph.attrib['id'])
+        for c in controllers:
+            glyph = glyphs[p]
+            sa._arc('catalysis', glyph.attrib['id'], process_glyph)
+
+    sbgn_str = sa.print_model()
+    return sbgn_str
