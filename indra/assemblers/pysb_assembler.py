@@ -2580,7 +2580,7 @@ def export_sbgn(model):
             glyph = glyphs[p]
             sa._arc('production', process_glyph, glyph.attrib['id'])
         for c in controllers:
-            glyph = glyphs[p]
+            glyph = glyphs[c]
             sa._arc('catalysis', glyph.attrib['id'], process_glyph)
 
     sbgn_str = sa.print_model()

@@ -331,9 +331,15 @@ class SBGNAssembler(object):
         agent_id = self._make_agent_id(pattern)
         glyph = emaker.glyph(emaker.label(text=pattern.monomer.name),
                              emaker.bbox(x='0', y='0', w='140', h='60'),
-                             class_('protein'), id=agent_id)
+                             class_('macromolecule'), id=agent_id)
+        # Add a glyph for type
+        type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
+                                  class_('unit of information'),
+                                  emaker.bbox(x='0', y='0', w='53', h='18'),
+                                  id=self._make_id())
+        glyph.append(type_glyph)
         for site, value in pattern.site_conditions.items():
-            if value is None:
+            if value is None or isinstance(value, int):
                 continue
             state = emaker.state(variable=site, value=value)
             state_glyph = \
