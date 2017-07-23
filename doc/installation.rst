@@ -115,16 +115,39 @@ via the REACH API, an additional package called
 `pyjnius <https://github.com/kivy/pyjnius>`_ is needed to allow using Java/Scala
 classes from Python. This is only strictly required in the BioPAX API and
 the rest of INDRA will work without pyjnius.
-Pyjnius needs JRE and JDK 1.8 to be installed. On Mac, you have to install both
-`Legacy Java for OS X <http://support.apple.com/kb/DL1572>`_ and
-`JDK and JRE from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
-Then set JAVA\_HOME to your JDK home directory, for instance
+
+1. Install `JRE and JDK from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
+
+2. On Mac, `install Legacy Java for OSX <http://support.apple.com/kb/DL1572>`_.
+If you have trouble installing it, you can try the following as an alternative.
+Edit
+
+.. code-block:: bash
+
+    /Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Info.plist
+
+(the JDK folder name will need to correspond to your local version),
+and add `JNI` to `JVMCapabilities` as
+
+.. code-block:: xml
+
+    ...
+    <dict>
+        <key>JVMCapabilities</key>
+        <array>
+            <string>CommandLine</string>
+            <string>JNI</string>
+        </array>
+    ...
+
+3. Set JAVA\_HOME to your JDK home directory, for instance
 
 .. code-block:: bash
 
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Home
 
-Then first install cython (tested with version 0.23.5) followed by jnius-indra
+4. Then first install cython (tested with version 0.23.5) followed by jnius-indra. These need to be
+   broken up into two sequential calls to pip install.
 
 .. code-block:: bash
 
