@@ -2593,5 +2593,5 @@ def export_sbgn(model):
             glyph = glyphs[c]
             sa._arc('catalysis', glyph.attrib['id'], process_glyph)
 
-    sbgn_str = sa.print_model()
+    sbgn_str = sa.print_model().decode('utf-8')
     return sbgn_str

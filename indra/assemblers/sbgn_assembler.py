@@ -322,6 +322,7 @@ class SBGNAssembler(object):
                 emaker.glyph(emaker.bbox(x='1', y='1', w='70', h='30'),
                              class_('complex'), id=agent_id)
             for glyph in monomer_glyphs:
+                glyph.attrib['id'] = agent_id + glyph.attrib['id']
                 complex_glyph.append(glyph)
             return complex_glyph
         return monomer_glyphs[0]
