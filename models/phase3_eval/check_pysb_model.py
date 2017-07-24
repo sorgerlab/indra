@@ -125,6 +125,16 @@ def make_english_output(results, model, stmts):
         references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
     print(references)
 
+def export_json(results):
+    """Export a set of paths in JSON format for visualization."""
+    json_dict = {}
+    for drug_name, ab, relation, value, path_found, paths in results:
+        #json_dict[drug_name].append(ab : {})
+        pass
+
+
+
+
 if __name__ == '__main__':
     print("Processing data")
 
