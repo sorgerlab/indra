@@ -10,6 +10,8 @@ logger = logging.getLogger("omnipath")
 op_url = 'http://omnipathdb.org'
 
 def _agent_from_up_id(up_id):
+    """Build an Agent object from a Uniprot ID. Adds db_refs for both Uniprot
+    and HGNC where available."""
     db_refs = {'UP': up_id}
     gene_name = uniprot_client.get_gene_name(up_id)
     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
@@ -20,6 +22,7 @@ def _agent_from_up_id(up_id):
 
 
 def _stmts_from_op_mods(mod_list):
+    """Build INDRA Statements from a list of Omnipath PTM list entries."""
     stmt_list = []
     for mod_entry in mod_list:
         enz = _agent_from_up_id(mod_entry['enzyme'])
@@ -36,6 +39,12 @@ def _stmts_from_op_mods(mod_list):
 
 
 def get_all_modifications():
+    """Get all PTMs from Omnipath as INDRA Statements.
+
+    Returns
+    -------
+    list of Statements
+    """
     params = {'format': 'json', 'fields':['sources', 'references']}
     ptm_url = '%s/ptms' % op_url
     res = requests.get(ptm_url, params=params)
@@ -45,6 +54,17 @@ def get_all_modifications():
 
 
 def get_modifications(up_list):
+    """Get all PTMs from Omnipath for a list of proteins
+
+    Parameters
+    ----------
+    up_list : list
+        A list of Uniprot IDs.
+
+    Returns
+    -------
+    list of Statements
+    """
     params = {'format': 'json', 'fields':['sources', 'references']}
     gene_str = ','.join(up_list)
     ptm_url = '%s/ptms/%s' % (op_url, gene_str)
