@@ -2,8 +2,9 @@ from __future__ import unicode_literals
 from builtins import dict, str
 import logging
 import requests
+from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
-from indra.statements import *
+from indra.statements import modtype_to_modclass, Agent, Evidence
 
 logger = logging.getLogger("omnipath")
 
@@ -22,8 +23,9 @@ def _agent_from_up_id(up_id):
 
 
 def _stmts_from_op_mods(mod_list):
-    """Build INDRA Statements from a list of Omnipath PTM list entries."""
+    """Build Modification Statements from a list of Omnipath PTM entries."""
     stmt_list = []
+    unhandled_mod_types = []
     for mod_entry in mod_list:
         enz = _agent_from_up_id(mod_entry['enzyme'])
         sub = _agent_from_up_id(mod_entry['substrate'])
@@ -32,11 +34,22 @@ def _stmts_from_op_mods(mod_list):
         ref_list = mod_entry['references']
         evidence = [Evidence('omnipath', None, pmid)
                     for pmid in mod_entry['references']]
-        if mod_entry['modification'] == 'phosphorylation':
-            stmt = Phosphorylation(enz, sub, res, pos, evidence)
+        mod_type = mod_entry['modification']
+        modclass = modtype_to_modclass.get(mod_type)
+        if modclass is None:
+            if mod_type == 'cleavage':
+                print(mod_entry)
+                print()
+            unhandled_mod_types.append(mod_type)
+            continue
+        else:
+            stmt = modclass(enz, sub, res, pos, evidence)
         stmt_list.append(stmt)
+    print(Counter(unhandled_mod_types))
     return stmt_list
 
+#'cleavage',
+#'proteolytic cleavage',
 
 def get_all_modifications():
     """Get all PTMs from Omnipath as INDRA Statements.
