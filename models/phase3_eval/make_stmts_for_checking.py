@@ -68,7 +68,7 @@ def make_stmts(data, ab_agents, drug_ab_combs=None, thresh=None):
         antibodies = pd.get_all_antibodies(data)
         drug_ab_combs = itertools.product(drug_tx, antibodies)
 
-    dec_thresh, inc_thresh = thresh if thresh is not None else (1, 1)
+    dec_thresh, inc_thresh = np.log2(thresh if thresh is not None else (1, 1))
     drug_targets = pd.get_drug_targets()
     stmts = defaultdict(lambda: defaultdict(list))
     values = defaultdict(dict)
@@ -99,7 +99,7 @@ def get_eval_drug_ab_combs(data):
     drug_ab_combs = zip(drug_tx, antibodies)
     return drug_ab_combs
 
-def run(dec_thresh=-1, inc_thresh=1):
+def run(dec_thresh=0.5, inc_thresh=1.5):
     data = pd.read_data(pd.data_file)
     ab_agents = pd.get_antibody_map(data)
 
