@@ -218,14 +218,14 @@ if __name__ == '__main__':
                     paths = [s[0] for s in scored_result]
                     print('===========================')
                 results.append((drug_name, ab, relation, value, path_found,
-                                paths))
+                                paths, result.result_code))
         with open('pathfinding_results.pkl', 'wb') as fh:
             pickle.dump(results, fh)
     else:
         with open('pathfinding_results.pkl', 'rb') as fh:
             results = pickle.load(fh)
 
-    #write_unicode_csv('model_check_results.csv', results)
+    write_unicode_csv('model_check_results.csv', results)
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
     make_english_output(results, model, base_stmts)
