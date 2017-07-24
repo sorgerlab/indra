@@ -386,7 +386,12 @@ class ModelChecker(object):
             path_lengths.append(path_length)
         # Now, look for paths
         paths = []
-        if path_metrics:
+        if path_metrics and max_paths == 0:
+            pr = PathResult(True, 'MAX_PATHS_ZERO',
+                            max_paths, max_path_length)
+            pr.path_metrics = path_metrics
+            return pr
+        elif path_metrics:
             if min(path_lengths) <= max_path_length:
                 pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
                 pr.path_metrics = path_metrics
