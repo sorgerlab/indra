@@ -207,7 +207,6 @@ def get_hgnc_from_rat(rgd_id):
         rgd_id = rgd_id[4:]
     return rat_map.get(rgd_id)
 
-
 def get_rat_id(hgnc_id):
     """Return the RGD rat ID corresponding to the given HGNC ID.
 
