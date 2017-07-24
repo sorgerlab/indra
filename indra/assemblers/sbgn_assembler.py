@@ -329,6 +329,10 @@ class SBGNAssembler(object):
     def _glyph_for_monomer_pattern(self, pattern):
         pattern.matches_key = lambda: str(pattern)
         agent_id = self._make_agent_id(pattern)
+        # Handle sources and sinks
+        if pattern.monomer.name in ('__source', '__sink'):
+            return None
+        # Handle molecules
         glyph = emaker.glyph(emaker.label(text=pattern.monomer.name),
                              emaker.bbox(x='0', y='0', w='140', h='60'),
                              class_('macromolecule'), id=agent_id)

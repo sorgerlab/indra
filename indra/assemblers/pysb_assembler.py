@@ -2560,12 +2560,14 @@ def export_sbgn(model):
 
     sa = SBGNAssembler()
 
-    glyphs = []
-    for species in model.species:
+    glyphs = {}
+    for idx, species in enumerate(model.species):
         # There should be a map for these
         glyph = sa._glyph_for_complex_pattern(species)
+        if glyph is None:
+            continue
         sa._map.append(glyph)
-        glyphs.append(glyph)
+        glyphs[idx] = glyph
     for reaction in model.reactions:
         reactants = set(reaction['reactants']) - set(reaction['products'])
         products = set(reaction['products']) - set(reaction['reactants'])
@@ -2574,11 +2576,19 @@ def export_sbgn(model):
         process_glyph = sa._process_glyph('process')
         # Connect glyphs with arcs
         for r in reactants:
-            glyph = glyphs[r]
-            sa._arc('consumption', glyph.attrib['id'], process_glyph)
+            glyph = glyphs.get(r)
+            if glyph is None:
+                glyph_id = sa._none_glyph()
+            else:
+                glyph_id = glyph.attrib['id']
+            sa._arc('consumption', glyph_id, process_glyph)
         for p in products:
-            glyph = glyphs[p]
-            sa._arc('production', process_glyph, glyph.attrib['id'])
+            glyph = glyphs.get(p)
+            if glyph is None:
+                glyph_id = sa._none_glyph()
+            else:
+                glyph_id = glyph.attrib['id']
+            sa._arc('production', process_glyph, glyph_id)
         for c in controllers:
             glyph = glyphs[c]
             sa._arc('catalysis', glyph.attrib['id'], process_glyph)
