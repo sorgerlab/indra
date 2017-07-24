@@ -40,7 +40,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1, database_filter=Non
         A BioPAX model (java object).
     """
 
-    default_databases = ['wp', 'smpdb', 'reconx', 'reactome', 'psp', 'pid'
+    default_databases = ['wp', 'smpdb', 'reconx', 'reactome', 'psp', 'pid',
                          'panther', 'netpath', 'msigdb', 'mirtarbase', 'kegg',
                          'intact', 'inoh', 'humancyc', 'hprd',
                          'drugbank', 'dip', 'corum']
