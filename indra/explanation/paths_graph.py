@@ -80,8 +80,8 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     return (f_level, b_level)
 
 
-def paths_graph(g, source, target, target_polarity, length, f_level, b_level,
-                signed=False):
+def paths_graph(g, source, target, length, f_level, b_level,
+                signed=False, target_polarity=0):
     """Generate a graph where all nodes lie on a path of the given length.
 
     Nodes in the graph account for the cumulative polarity from the source
