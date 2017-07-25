@@ -84,7 +84,7 @@ def test_paths_graph_unsigned():
     # Path length 2
     pg = paths_graph.paths_graph(graph1_uns, source, target, 2, f_level,
                                  b_level, signed=False)
-    paths = list(networkx.shortest_simple_paths(pg, (2, 'A'), (0, 'D')))
+    paths = list(networkx.shortest_simple_paths(pg, (0, 'A'), (2, 'D')))
     assert len(paths) == 2
     assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
     assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
@@ -104,8 +104,8 @@ def test_paths_graph_signed():
     # Path length 2
     pg = paths_graph.paths_graph(graph1_s, source, target, 2, f_level, b_level, 
                                  signed=True, target_polarity=0)
-    paths = list(networkx.shortest_simple_paths(pg, (2, ('A', 0)),
-                                                    (0, ('D', 0))))
+    paths = list(networkx.shortest_simple_paths(pg, (0, ('A', 0)),
+                                                    (2, ('D', 0))))
     assert len(paths) == 2
     assert [(0, ('A', 0)), (1, ('C', 0)), (2, ('D', 0))] in paths
     assert [(0, ('A', 0)), (1, ('B', 0)), (2, ('D', 0))] in paths

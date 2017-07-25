@@ -155,8 +155,8 @@ def paths_graph(g, source, target, length, f_level, b_level,
     b_level_adj = b_level
     # Signed graphs
     if signed:
-        level = {0: set([(target, target_polarity)]),
-                 length: set([(source, 0)])}
+        level = {0: set([(source, 0)]),
+                 length: set([(target, target_polarity)])}
         # If the target polarity is even (positive/neutral), then the
         # cumulative polarities in the forward direction will match those in
         # the reverse direction; if the target polarity is odd, then the
@@ -173,14 +173,14 @@ def paths_graph(g, source, target, length, f_level, b_level,
                 b_level_adj[i] = polar_set
     # Unsigned graphs
     else:
-        level = {0: set([target]), length: set([source])}
+        level = {0: set([source]), length: set([target])}
     # Next we calculate the subset of nodes at each level that are reachable
     # from both the forward and backward directions. Because the polarities
     # have already been set appropriately, we can do this with a simple
     # set intersection.
     for i in range(1, length):
-        b_reach_set = b_level_adj[i]
-        f_reach_set = f_level[length - i]
+        f_reach_set = f_level[i]
+        b_reach_set = b_level_adj[length - i]
         path_nodes = set(f_reach_set) & set(b_reach_set)
         level[i] = path_nodes
     # Next we explicitly enumerate the path graph nodes by tagging each node
@@ -193,7 +193,7 @@ def paths_graph(g, source, target, length, f_level, b_level,
     pg_edges = set()
     for i in range(0, length):
         edges_at_this_level = set()
-        for u, v in itertools.product(pg_nodes[i+1], pg_nodes[i]):
+        for u, v in itertools.product(pg_nodes[i], pg_nodes[i+1]):
             # Signed graphs
             if signed:
                 u_name, u_pol = u[1]
@@ -302,6 +302,14 @@ def paths_to_graphset(paths_dict, pg_dict):
     gs = graphillion.GraphSet(all_paths)
     return gs
 
+
+def combine_path_graphs(pg_dict):
+    cpg = nx.DiGraph()
+    for level, pg in pg_dict.items():
+        # Start by adding
+        for edge in pg:
+            cpg.add_edges_from(pg.edges())
+    return cpg
 
 if __name__ == '__main__':
     g = get_edges('korkut_im.sif')
