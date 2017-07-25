@@ -32,18 +32,38 @@ def test_get_reachable_sets_signed():
     assert f_level == {0: {('A', 0)}, 1: {('B', 0), ('C', 0)}, 2: {('D', 0)}}
     assert b_level == {0: {('D', 0)}, 1: {('B', 0), ('C', 0)}, 2: {('A', 0)}}
 
-def test_get_reachable_sets_unsinged():
+def test_get_reachable_sets_unsigned():
     f_level, b_level = paths_graph.get_reachable_sets(
                                     graph1_uns, source, target, signed=False)
     assert f_level == {0: {'A'}, 1: {'B', 'C'}, 2: {'D'}}
     assert b_level == {0: {'D'}, 1: {'B', 'C'}, 2: {'A'}}
 
-def test_get_reachable_sets_nonpolar():
-    pass
+def test_paths_graph_signed():
+    # Path length 1
+    f_level, b_level = paths_graph.get_reachable_sets(graph1_s, source, target,
+                                 signed=True, max_depth=3)
+    pg = paths_graph.paths_graph(graph1_s, source, target, target_polarity,
+                                 1, f_level, b_level)
+    # (no paths of length 1)
+    assert len(pg) == 0
+    path_length = 2
+    # Path length 2
+    pg = paths_graph.paths_graph(graph1_s, source, target, target_polarity,
+                                 2, f_level, b_level)
+    paths = list(networkx.shortest_simple_paths(pg, (2, ('A', 0)),
+                                                    (0, ('D', 0))))
+    # Two paths of length 2
+    assert len(paths) == 2
+    assert [(2, ('A', 0)), (1, ('C', 0)), (0, ('D', 0))] in paths
+    assert [(2, ('A', 0)), (1, ('B', 0)), (0, ('D', 0))] in paths
+    # Path length 3
+    pg = paths_graph.paths_graph(graph1_s, source, target, target_polarity,
+                                 3, f_level, b_level)
+    # No paths of length 3
+    assert len(pg) == 0
 
 if __name__ == '__main__':
-    #ag = networkx.nx_agraph.to_agraph(pg)
-    #ag.draw('paths_graph_%d.pdf' % path_length, prog='dot')
+    test_paths_graph_signed()
     """
     path_length = 1
     f_level, b_level = paths_graph.get_reachable_sets(graph1, source, target)
