@@ -54,7 +54,7 @@ class GraphAssembler():
         A pygraphviz graph that is assembled by this assembler.
     existing_nodes : list[tuple]
         The list of nodes (identified by node key tuples) that are
-        alredy in the graph.
+        already in the graph.
     existing_edges : list[tuple]
         The list of edges (identified by edge key tuples) that are
         already in the graph.
@@ -107,33 +107,30 @@ class GraphAssembler():
         # Assemble in two stages.
         # First, create the nodes of the graph
         for stmt in self.statements:
-            if isinstance(stmt, Modification):
-                if stmt.enz is None:
-                    continue
-                self._add_node(stmt.enz)
-                self._add_node(stmt.sub)
-            elif isinstance(stmt, RegulateActivity):
-                self._add_node(stmt.subj)
-                self._add_node(stmt.obj)
+            # Skip SelfModification (self loops) -- has one node
+            if isinstance(stmt, SelfModification) or \
+               isinstance(stmt, ActiveForm):
+                continue
+            # Special handling for Complexes -- more than 1 node
             elif isinstance(stmt, Complex):
                 for m in stmt.members:
                     self._add_node(m)
+            # All else should have exactly 2 nodes
+            else:
+                assert len(stmt.agent_list()) == 2
+                for ag in stmt.agent_list():
+                    if ag is not None:
+                        self._add_node(ag)
         # Second, create the edges of the graph
         for stmt in self.statements:
-            if isinstance(stmt, Modification):
-                if stmt.enz is None:
-                    continue
-                modtype = modclass_to_modtype[stmt.__class__]
-                self._add_modification(modtype, stmt.enz, stmt.sub)
-            elif isinstance(stmt, Dephosphorylation):
-                if stmt.enz is None:
-                    continue
-                self._add_dephosphorylation(stmt.enz, stmt.sub)
-            elif isinstance(stmt, RegulateActivity):
-                self._add_regulate_activity(stmt.subj, stmt.obj,
-                                            stmt.is_activation)
+            # Skip SelfModification (self loops) -- has one node
+            if isinstance(stmt, SelfModification) or \
+               isinstance(stmt, ActiveForm):
+                continue
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt.members)
+            else:
+                self._add_stmt_edge(stmt)
 
     def get_string(self):
         """Return the assembled graph as a string.
@@ -204,36 +201,24 @@ class GraphAssembler():
                         label=node_label,
                         **self.node_properties)
 
-    def _add_modification(self, modtype, enz, sub):
+    def _add_stmt_edge(self, stmt):
         """Assemble a Modification statement."""
-        source = _get_node_key(enz)
-        target = _get_node_key(sub)
-        edge_key = (source, target, modtype)
+        source = _get_node_key(stmt.agent_list()[0])
+        target = _get_node_key(stmt.agent_list()[1])
+        edge_key = (source, target, stmt.__class__.__name__)
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        color = '#000000' if not modtype.startswith('de') else '#ff0000'
+        if isinstance(stmt, RemoveModification) or \
+             isinstance(stmt, Inhibition) or \
+             isinstance(stmt, DecreaseAmount) or \
+             isinstance(stmt, Gap):
+            color = '#ff0000'
+        else:
+            color = '#000000'
         params = {'color': color,
                   'arrowhead': 'normal',
                   'dir': 'forward'}
-        self._add_edge(source, target, **params)
-
-    def _add_regulate_activity(self, subj, obj, rel):
-        """Assemble a RegulateActivity statment."""
-        source = _get_node_key(subj)
-        target = _get_node_key(obj)
-        # Change edge properties depending on whether this is an
-        # Activation or an Inhibition
-        edge_name = 'activation' if rel else 'inhibition'
-        color = '#000000' if rel else '#ff0000'
-        arrowhead = 'vee' if rel else 'tee'
-        edge_key = (source, target, edge_name, rel)
-        if edge_key in self.existing_edges:
-            return
-        self.existing_edges.append(edge_key)
-        params = {'color': color,
-                  'arrowhead': arrowhead,
-                  'dir': 'fowrard'}
         self._add_edge(source, target, **params)
 
     def _add_complex(self, members):
@@ -278,4 +263,5 @@ def _get_node_label(agent):
     return name_for_node
 
 def _get_node_key(agent):
-    return agent.matches_key()
+    #return agent.matches_key()
+    return _get_node_label(agent)
