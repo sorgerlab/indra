@@ -22,7 +22,8 @@ def get_edges(sif_file):
     return g
 
 
-def get_reachable_sets(g, source, target, max_depth=10, signed=False):
+def get_reachable_sets(g, source, target, max_depth=10, signed=False,
+                       eliminate_cycles=True):
     """Get sets of nodes reachable from source and target at different depths.
 
     Parameters
@@ -50,16 +51,19 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     """
     # Forward and backward level sets for signed and unsigned graphs
     if signed:
-        f_level = {0: set([(source, 0)])}
-        b_level = {0: set([(target, 0)])}
+        source = (source, 0)
+        target = (target, 0)
+        f_level = {0: set([source])}
+        b_level = {0: set([target])}
     else:
         f_level = {0: set([source])}
         b_level = {0: set([target])}
-
     # A bit of trickery to avoid a duplicated for loop--may be too much!
-    directions = ((f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
-                  (b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
-    for level, edge_func in directions:
+    directions = (
+      ('forward', f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
+      ('backward', b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
+    for direction, level, edge_func in directions:
+        visited = set([source]) if direction == 'forward' else set([target])
         for i in range(1, max_depth):
             reachable_set = set()
             # Signed graph
@@ -74,11 +78,22 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
                 for node in level[i-1]:
                     for (u, v), reachable_node in edge_func(node):
                         reachable_set.add(reachable_node)
+            # If we're eliminating cycles, only consider those nodes reachable
+            # at the next level that haven't been visited in any previous
+            # level
+            if eliminate_cycles:
+                reachable_set = reachable_set.difference(visited)
+            visited = visited | reachable_set
+            # If the reachable set is empty then we can stop
             if not reachable_set:
                 break
-            level[i] = reachable_set
+            else:
+                level[i] = reachable_set
+        # If we're going forward we make sure we visited the target
+        if (direction == 'forward' and target not in visited) or \
+           (direction == 'backward' and source not in visited):
+            return (None, None)
     return (f_level, b_level)
-
 
 def paths_graph(g, source, target, length, f_level, b_level,
                 signed=False, target_polarity=0):

@@ -79,5 +79,40 @@ def test_paths_graph_unsigned():
                                  b_level, signed=False)
     assert len(pg) == 0
 
+def test_simple_unreachability_unsigned():
+    graph = networkx.DiGraph()
+    graph.add_nodes_from(['A', 'B', 'C', 'D'])
+    graph.add_edges_from([('A', 'B'), ('D', 'B'), ('C', 'A'), ('C', 'D')])
+    (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
+                                                    max_depth=5, signed=False)
+    assert f_level is None
+    assert b_level is None
+
+def test_simple_unreachability_signed():
+    # First make the unreachability due to the direction of the edges
+    graph = networkx.DiGraph()
+    graph.add_nodes_from(['A', 'B', 'C', 'D'])
+    graph.add_edges_from([('A', 'B', {'polarity': 0}),
+                          ('D', 'B', {'polarity': 0}),
+                          ('C', 'A', {'polarity': 0}),
+                          ('C', 'D', {'polarity': 0})])
+    (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
+                                                    max_depth=5, signed=True)
+    assert f_level is None
+    assert b_level is None
+    # This time, make the unreachability due to the sign
+    graph = networkx.DiGraph()
+    graph.add_nodes_from(['A', 'B', 'C', 'D'])
+    graph.add_edges_from([('A', 'B', {'polarity': 0}),
+                          ('D', 'B', {'polarity': 0}),
+                          ('C', 'A', {'polarity': 0}),
+                          ('C', 'D', {'polarity': 0})])
+    (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
+                                                    max_depth=5, signed=True)
+    assert f_level is None
+    assert b_level is None
+
 if __name__ == '__main__':
-    pass
+    test_get_reachable_sets_unsigned()
+    #test_paths_graph_unsigned()
+    #test_simple_unreachability_signed()
