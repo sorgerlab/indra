@@ -22,7 +22,7 @@ def get_edges(sif_file):
     return g
 
 
-def get_reachable_sets(g, source, target, max_depth=10):
+def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     """Get sets of nodes reachable from source and target at different depths.
 
     Parameters
@@ -48,12 +48,13 @@ def get_reachable_sets(g, source, target, max_depth=10):
         cumulative polarity, forwards or backwards, from the source or target,
         respectively.
     """
-    # Backward level sets
-    b_level = {}
-    b_level[0] = set([(target, 0)])
-    # Forward level sets
-    f_level = {}
-    f_level[0] = set([(source, 0)])
+    # Forward and backward level sets for signed and unsigned graphs
+    if signed:
+        f_level = {0: set([(source, 0)])}
+        b_level = {0: set([(target, 0)])}
+    else:
+        f_level = {0: set([source])}
+        b_level = {0: set([target])}
 
     # A bit of trickery to avoid a duplicated for loop--may be too much!
     directions = ((f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
@@ -61,11 +62,18 @@ def get_reachable_sets(g, source, target, max_depth=10):
     for level, edge_func in directions:
         for i in range(1, max_depth):
             reachable_set = set()
-            for node, node_polarity in level[i-1]:
-                for (u, v), reachable_node in edge_func(node):
-                    edge_polarity = g.get_edge_data(u, v)['polarity']
-                    cum_polarity = (node_polarity + edge_polarity) % 2
-                    reachable_set.add((reachable_node, cum_polarity))
+            # Signed graph
+            if signed:
+                for node, node_polarity in level[i-1]:
+                    for (u, v), reachable_node in edge_func(node):
+                        edge_polarity = g.get_edge_data(u, v)['polarity']
+                        cum_polarity = (node_polarity + edge_polarity) % 2
+                        reachable_set.add((reachable_node, cum_polarity))
+            # Unsigned graph
+            else:
+                for node in level[i-1]:
+                    for (u, v), reachable_node in edge_func(node):
+                        reachable_set.add(reachable_node)
             if not reachable_set:
                 break
             level[i] = reachable_set
