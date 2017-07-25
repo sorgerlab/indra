@@ -22,8 +22,7 @@ def get_edges(sif_file):
     return g
 
 
-def get_reachable_sets(g, source, target, max_depth=10, signed=False,
-                       eliminate_cycles=True):
+def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     """Get sets of nodes reachable from source and target at different depths.
 
     Parameters
@@ -78,11 +77,6 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False,
                 for node in level[i-1]:
                     for (u, v), reachable_node in edge_func(node):
                         reachable_set.add(reachable_node)
-            # If we're eliminating cycles, only consider those nodes reachable
-            # at the next level that haven't been visited in any previous
-            # level
-            if eliminate_cycles:
-                reachable_set = reachable_set.difference(visited)
             visited = visited | reachable_set
             # If the reachable set is empty then we can stop
             if not reachable_set:
@@ -94,6 +88,7 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False,
            (direction == 'backward' and source not in visited):
             return (None, None)
     return (f_level, b_level)
+
 
 def paths_graph(g, source, target, length, f_level, b_level,
                 signed=False, target_polarity=0):
