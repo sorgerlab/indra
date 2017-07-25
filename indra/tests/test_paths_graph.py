@@ -86,8 +86,8 @@ def test_paths_graph_unsigned():
                                  b_level, signed=False)
     paths = list(networkx.shortest_simple_paths(pg, (2, 'A'), (0, 'D')))
     assert len(paths) == 2
-    assert [(2, 'A'), (1, 'C'), (0, 'D')] in paths
-    assert [(2, 'A'), (1, 'B'), (0, 'D')] in paths
+    assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
+    assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
     # Path length 3
     pg = paths_graph.paths_graph(graph1_uns, source, target, 3, f_level,
                                  b_level, signed=False)
@@ -107,8 +107,8 @@ def test_paths_graph_signed():
     paths = list(networkx.shortest_simple_paths(pg, (2, ('A', 0)),
                                                     (0, ('D', 0))))
     assert len(paths) == 2
-    assert [(2, ('A', 0)), (1, ('C', 0)), (0, ('D', 0))] in paths
-    assert [(2, ('A', 0)), (1, ('B', 0)), (0, ('D', 0))] in paths
+    assert [(0, ('A', 0)), (1, ('C', 0)), (2, ('D', 0))] in paths
+    assert [(0, ('A', 0)), (1, ('B', 0)), (2, ('D', 0))] in paths
     # Path length 3
     pg = paths_graph.paths_graph(graph1_s, source, target, 3, f_level, b_level,
                                  signed=True, target_polarity=0)
@@ -133,30 +133,6 @@ def test_pg_check_unreachable_unsigned():
                                  signed=False)
     assert not pg
 
-"""
-def test_regression_on_er_graph():
-    graph = networkx.DiGraph()
-    graph.add_nodes_from([0, 1, 2, 3, 4])
-    graph.add_edges_from([(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3),
-                          (2, 0), (2, 1), (2, 4), (3, 0), (3, 4), (4, 0),
-                          (4, 2)])
-    path_lengths = {1: 1, 2: 2, 3: 2, 4: 1}
-    source, target = (0, 4)
-    f_level, b_level = paths_graph.get_reachable_sets(graph, source, target,
-                                 max_depth=10, signed=False)
-    for path_length in range(1, len(graph)):
-        if path_length == 2:
-            pass
-        pg = paths_graph.paths_graph(graph, source, target, path_length,
-                                     f_level, b_level, signed=False)
-        if pg:
-            # Count paths in the paths_graph
-            num_paths = len(list(networkx.shortest_simple_paths(
-                                pg, (path_length, source), (0, target))))
-        else:
-            num_paths == 0
-        assert num_paths == path_lengths[path_length]
-"""
 
 if __name__ == '__main__':
     pass
