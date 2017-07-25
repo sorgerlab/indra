@@ -140,8 +140,20 @@ def paths_graph(g, source, target, length, f_level, b_level,
     -------
     nx.DiGraph
         Graph representing paths from source to target with a given length
-        and overall polarity.
+        and overall polarity. If there are no paths of the specified length,
+        returns an empty graph.
     """
+    # If either f_level or b_level is None (as they would be if the nodes
+    # were unreachable from either directions) return an empty graph
+    if f_level is None or b_level is None:
+        return nx.DiGraph()
+    # Also, if the reachable sets do not have entries at the given length,
+    # this means that either we are attempting to create a paths_graph for
+    # a path longer than we generated reachable sets, or there is no path of
+    # the given length (may depend on whether cycles were eliminated when
+    # when generating the reachable sets).
+    if not (length in f_level and length in b_level):
+        return nx.DiGraph()
     # By default, we set the "adjusted backward reach set", aka b_level_adj,
     # to be the same as the original b_level; this is only overriden if we
     # have a signed graph and a negative target polarity
