@@ -4,7 +4,7 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from indra import trips
+from indra.processors import trips
 from indra.assemblers import PysbAssembler, SBGNAssembler
 from indra.util.plot_formatting import *
 from pysb import Observable, Parameter

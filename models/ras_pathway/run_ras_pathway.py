@@ -1,8 +1,7 @@
 import sys
 import time
 import pickle
-from indra import trips
-from indra.processors import reach
+from indra.processors import reach, trips
 from indra.assemblers import GraphAssembler
 import indra.tools.assemble_corpus as ac
 
