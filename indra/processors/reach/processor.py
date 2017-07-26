@@ -634,7 +634,7 @@ agent_mod_map = {
 
 def _read_bioentities_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../resources/bioentities_map.tsv')
+                         '../../resources/bioentities_map.tsv')
     bioentities_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:

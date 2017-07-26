@@ -8,7 +8,7 @@ import requests
 from indra.literature import id_lookup
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
-from indra.reach.processor import ReachProcessor
+from .processor import ReachProcessor
 # Python 2
 try:
     basestring
@@ -21,7 +21,7 @@ logger = logging.getLogger('reach')
 try:
     # For offline reading
     from indra.java_vm import autoclass, JavaException
-    from indra.reach.reach_reader import ReachReader
+    from .reach_reader import ReachReader
     reach_reader = ReachReader()
     try_offline = True
 except Exception:
