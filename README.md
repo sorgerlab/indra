@@ -84,7 +84,7 @@ Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
 [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
 
 ```python
-from indra import reach
+from indra.processors import reach
 # Process the neighborhood of BRAF and MAP2K1
 reach_processor = reach.process_pmc('3717945')
 # At this point, reach_processor.statements contains a list of INDRA statements
@@ -95,7 +95,7 @@ Next we look at an example of reading the 10 most recent PubMed abstracts on
 BRAF and collecting the results in INDRA statements.
 
 ```python
-from indra import reach
+from indra.processors import reach
 from indra.literature import pubmed_client
 # Search for 10 most recent abstracts in PubMed on 'BRAF'
 pmids = pubmed_client.get_ids('BRAF', retmax=10)
