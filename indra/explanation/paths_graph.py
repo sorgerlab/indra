@@ -2,7 +2,6 @@ import random
 import itertools
 from indra import logging
 import networkx as nx
-import graphillion
 
 logger = logging.getLogger('paths_graph')
 
@@ -307,6 +306,7 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
 
 
 def paths_to_graphset(paths_dict, pg_dict):
+    from graphillion import GraphSet
     # Construct the universe
     edges = []
     nodes = set([])
@@ -321,7 +321,7 @@ def paths_to_graphset(paths_dict, pg_dict):
             else:
                 edges.append(new_edge)
     # Set the graphset
-    graphillion.GraphSet.set_universe(edges)
+    GraphSet.set_universe(edges)
     # Create a graphset from the paths in paths_dict
     all_paths = []
     for path_length, path_list in paths_dict.items():
@@ -334,7 +334,7 @@ def paths_to_graphset(paths_dict, pg_dict):
                 assert to_node in nodes
                 new_path.append((from_node, to_node))
             all_paths.append(new_path)
-    gs = graphillion.GraphSet(all_paths)
+    gs = GraphSet(all_paths)
     return gs
 
 
