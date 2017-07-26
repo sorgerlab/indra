@@ -5,7 +5,7 @@ import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
-from indra.bel.processor import BelProcessor
+from .processor import BelProcessor
 
 logger = logging.getLogger('bel')
 

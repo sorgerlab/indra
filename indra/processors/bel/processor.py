@@ -1117,7 +1117,7 @@ class BelProcessor(object):
 
 def _build_bioentities_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../resources/bioentities_map.tsv')
+                         '../../resources/bioentities_map.tsv')
     bel_to_indra = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
@@ -1131,7 +1131,7 @@ def _build_bioentities_map():
 
 def _build_chebi_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../resources/bel_chebi_map.tsv')
+                         '../../resources/bel_chebi_map.tsv')
     chebi_name_id = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
