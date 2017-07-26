@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from os.path import dirname, join
 import sys
-from indra import trips
 import indra.statements
+from indra.processors import trips
 from indra.assemblers import PysbAssembler
 
 def test_bind():

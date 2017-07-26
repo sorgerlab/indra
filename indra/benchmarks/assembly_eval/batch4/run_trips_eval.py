@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra import trips
+from indra.processors import trips
 from assembly_eval import have_file, run_assembly
 
 if __name__ == '__main__':

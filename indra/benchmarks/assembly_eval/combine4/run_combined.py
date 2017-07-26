@@ -1,7 +1,7 @@
 import os
 import csv
 import pickle
-from indra import trips, reach
+from indra.processors import trips, reach
 from indra import index_cards
 from indra.literature import id_lookup
 from assembly_eval import have_file, run_assembly
