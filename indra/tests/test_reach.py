@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra import reach
-from indra.reach.processor import ReachProcessor
+from indra.processors import reach
+from indra.processors.reach.processor import ReachProcessor
 from indra.util import unicode_strs
 from indra.statements import IncreaseAmount, DecreaseAmount
 
