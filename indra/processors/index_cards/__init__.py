@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
-from indra.index_cards.processor import IndexCardProcessor
+from .processor import IndexCardProcessor
 
 def process_json_file(file_name, source_api):
     with open(file_name, 'rt') as fh:
