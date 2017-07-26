@@ -9,7 +9,6 @@ INDRA modules reference
    statements
    biopax/index
    processors/index
-   trips/index
    databases/index
    literature/index
    preassembler/index

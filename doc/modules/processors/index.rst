@@ -6,3 +6,4 @@ Processors for model input (:py:mod:`indra.processors`)
 
    bel/index
    reach/index
+   trips/index

@@ -15,7 +15,7 @@ extraction knowledge base to obtain a list of INDRA Statements
 
 .. ipython:: python
 
-    from indra import trips
+    from indra.processors import trips
 
     model_text = 'MAP2K1 phosphorylates MAPK1 and DUSP6 dephosphorylates MAPK1.'
     tp = trips.process_text(model_text)

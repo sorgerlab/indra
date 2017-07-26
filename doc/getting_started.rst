@@ -36,7 +36,7 @@ an INDRA Statement.
 
 .. code:: python
 
-    from indra import trips
+    from indra.processors import trips
     sentence = 'MAP2K1 phosphorylates MAPK3 at Thr-202 and Tyr-204'
     trips_processor = trips.process_text(sentence)
 
