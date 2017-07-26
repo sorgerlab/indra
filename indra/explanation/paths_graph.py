@@ -248,7 +248,18 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0):
 
 
 def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
-                 eliminate_cycles=True, signed=False, target_polarity=0):
+                 eliminate_cycles=True, signed=False, target_polarity=0,
+                 by_depth=False):
+    # A helper function for running the sampling loop
+    def _sample(pg, num):
+        paths = []
+        for i in range(num):
+            path = sample_single_path(pg, source, target, signed=signed,
+                                      target_polarity=target_polarity)
+            if path:
+                paths.append(path)
+        return paths
+
     logger.info("Computing forward and backward reach sets...")
     # By default the max_depth is the number of nodes
     if max_depth is None:
@@ -256,22 +267,33 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
     f_level, b_level = get_reachable_sets(g, source, target, max_depth)
     # Compute path graphs over a range of path lengths
     pg_by_length = {}
+    paths = []
     for path_length in range(1, max_depth):
         logger.info("Length %d: computing paths graph" % path_length)
         pg = paths_graph(g, source, target, path_length, f_level, b_level,
                          signed=signed, target_polarity=target_polarity)
         pg_by_length[path_length] = pg
-    # Combine the path graphs into one
-    cpg = combine_path_graphs(pg_by_length)
-    # Sample a given number of paths
-    logger.info("Length %d: Sampling %d paths" % (path_length, num_samples))
-    paths = []
-    for i in range(num_samples):
-        path = sample_single_path(cpg, source, target, signed=signed,
-                                  target_polarity=target_polarity)
-        paths.append(path)
-    # Remove redundant paths
-    return paths
+        # If we're sampling by depth, do sampling here
+        if pg and by_depth:
+            logger.info("Length %d: Sampling %d paths" %
+                        (path_length, num_samples))
+            paths += _sample(pg, num_samples)
+    # If we're sampling by depth, we've already collected all our paths
+    if by_depth:
+        return paths
+    # Otherwise, run the sampling on the combined path graph
+    else:
+        # Combine the path graphs into one
+        logger.info("Sampling %d paths from the combined path graph" %
+                    path_length)
+        cpg = combine_path_graphs(pg_by_length)
+        # If the combined path graph is empty, return an empty path list
+        if not cpg:
+            return []
+        # Otherwise, sample from the combined path graph
+        else:
+            paths = _sample(pg, num_samples)
+            return paths
 
 
 def paths_to_graphset(paths_dict, pg_dict):
