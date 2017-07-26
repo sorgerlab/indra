@@ -17,4 +17,4 @@ INDRA modules reference
    belief/index
    mechlinker/index
    assemblers/index
-   tools/index
+   explanation/index
