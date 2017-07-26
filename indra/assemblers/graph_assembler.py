@@ -116,11 +116,10 @@ class GraphAssembler():
                 for m in stmt.members:
                     self._add_node(m)
             # All else should have exactly 2 nodes
-            else:
+            elif all([ag is not None for ag in stmt.agent_list()]):
                 assert len(stmt.agent_list()) == 2
                 for ag in stmt.agent_list():
-                    if ag is not None:
-                        self._add_node(ag)
+                    self._add_node(ag)
         # Second, create the edges of the graph
         for stmt in self.statements:
             # Skip SelfModification (self loops) -- has one node
@@ -129,7 +128,7 @@ class GraphAssembler():
                 continue
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt.members)
-            else:
+            elif all([ag is not None for ag in stmt.agent_list()]):
                 self._add_stmt_edge(stmt)
 
     def get_string(self):
@@ -203,6 +202,7 @@ class GraphAssembler():
 
     def _add_stmt_edge(self, stmt):
         """Assemble a Modification statement."""
+        # Skip statements with None in the subject position
         source = _get_node_key(stmt.agent_list()[0])
         target = _get_node_key(stmt.agent_list()[1])
         edge_key = (source, target, stmt.__class__.__name__)
