@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 import glob
 import json
-from indra import sparser
+from indra.processors import sparser
 from indra.statements import *
 from indra.databases import uniprot_client, hgnc_client
 

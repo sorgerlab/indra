@@ -2,10 +2,9 @@ from __future__ import print_function, unicode_literals
 import logging
 __version__ = '1.4.2'
 
-__all__ = ['bel', 'biopax', 'trips', 'processors', 'index_cards', 'sparser',
-           'databases', 'literature',
-           'preassembler', 'assemblers', 'mechlinker', 'belief',
-           'tools', 'util']
+__all__ = ['bel', 'biopax', 'trips', 'processors', 'index_cards',
+           'databases', 'literature', 'preassembler', 'assemblers',
+           'mechlinker', 'belief', 'tools', 'util']
 
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
