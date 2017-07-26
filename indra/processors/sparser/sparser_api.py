@@ -3,7 +3,7 @@ from builtins import dict, str
 import logging
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.sparser.processor import SparserProcessor
+from .processor import SparserProcessor
 
 logger = logging.getLogger('sparser')
 

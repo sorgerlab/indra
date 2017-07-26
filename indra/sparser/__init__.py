@@ -1,1 +1,0 @@
-from indra.sparser.sparser_api import process_xml
