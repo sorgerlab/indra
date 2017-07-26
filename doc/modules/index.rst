@@ -8,7 +8,6 @@ INDRA modules reference
 
    statements
    biopax/index
-   bel/index
    processors/index
    trips/index
    databases/index

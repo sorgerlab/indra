@@ -12,7 +12,7 @@ For example to access the BEL API, one has to
 
 .. code:: python
 
-    from indra import bel
+    from indra.processors import bel
 
 For convenience, the output assembler classes are imported directly under
 `indra.assemblers` so they can be imported as, for instance,
@@ -64,7 +64,7 @@ the BEL Large Corpus.
 
 .. code:: python
 
-    from indra import bel
+    from indra.processors import bel
     bel_processor = bel.process_ndex_neighborhood(['KRAS', 'BRAF'])
 
 The `bel_processor` object has a `statements` attribute which contains a list
