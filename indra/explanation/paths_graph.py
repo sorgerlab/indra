@@ -218,57 +218,60 @@ def paths_graph(g, source, target, length, f_level, b_level,
     return path_graph
 
 
-def sample_single_path(g, source, target, length):
+def sample_single_path(pg, source, target, signed=False, target_polarity=0):
     """Sample a path from the paths graph."""
-    path = []
-    source_node = (length, (source, 0))
-    path.append(source_node)
-    assert source_node in g
+    # If the path graph is empty, there are no paths
+    if not pg:
+        return tuple([])
+    # Set the source node
+    if signed:
+        source_node = (0, (source, 0))
+        target = (target, target_polarity)
+    else:
+        source_node = (0, source)
+    assert source_node in pg
+    # Repeat until we find a path without a cycle
     while True:
-        current_node = path[-1]
-        succs = g.successors(current_node)
-        if succs:
-            v = random.choice(succs)
-            path.append(v)
-        else:
-            break
-    # Remove the prepended node levels
-    return tuple([u[1] for u in path])
+        path = [source_node[1]]
+        current_node = source_node
+        while True:
+            succs = pg.successors(current_node)
+            if succs:
+                v = random.choice(succs)
+                # If we've already hit this node, it's a cycle; skip
+                if v[1] in path:
+                    break
+                path.append(v[1])
+                if v[1] == target:
+                    return tuple(path)
+            current_node = v
 
 
-def sample_paths(g, source, target, target_polarity, max_depth=10,
-                 samples_per_length=100, draw_graphs=False):
+def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
+                 eliminate_cycles=True, signed=False, target_polarity=0):
     logger.info("Computing forward and backward reach sets...")
+    # By default the max_depth is the number of nodes
+    if max_depth is None:
+        max_depth = len(g)
     f_level, b_level = get_reachable_sets(g, source, target, max_depth)
-    # Compute path graph for a specific path length
-    paths_by_length = {}
+    # Compute path graphs over a range of path lengths
     pg_by_length = {}
-    for path_length in range(1, max_depth + 1):
+    for path_length in range(1, max_depth):
         logger.info("Length %d: computing paths graph" % path_length)
-        pg = paths_graph(g, source, target, target_polarity, path_length,
-                         f_level, b_level)
-
-        # If there are no paths of this length, the graph will be empty
-        if len(pg) == 0:
-            logger.info("Length %d: no paths" % path_length)
-            continue
-        # Optionally draw the paths graph for paths of this length
-        if draw_graphs:
-            logger.info("Length %d: drawing Graphviz graph" % path_length)
-            ag = nx.nx_agraph.to_agraph(pg)
-            ag.draw('paths_graph_%d.pdf' % path_length, prog='dot')
-        # Sample a given number of paths for this path length
-        num_paths = 100
-        logger.info("Length %d: Sampling %d paths" %
-                    (path_length, samples_per_length))
-        paths_for_length = []
-        while len(paths_for_length) < num_paths:
-            p = sample_single_path(pg, source, target, path_length)
-            paths_for_length.append(p)
-        # Remove redundant paths
-        paths_by_length[path_length] = list(set(paths_for_length))
+        pg = paths_graph(g, source, target, path_length, f_level, b_level,
+                         signed=signed, target_polarity=target_polarity)
         pg_by_length[path_length] = pg
-    return (paths_by_length, pg_by_length)
+    # Combine the path graphs into one
+    cpg = combine_path_graphs(pg_by_length)
+    # Sample a given number of paths
+    logger.info("Length %d: Sampling %d paths" % (path_length, num_samples))
+    paths = []
+    for i in range(num_samples):
+        path = sample_single_path(cpg, source, target, signed=signed,
+                                  target_polarity=target_polarity)
+        paths.append(path)
+    # Remove redundant paths
+    return paths
 
 
 def paths_to_graphset(paths_dict, pg_dict):
@@ -304,6 +307,7 @@ def paths_to_graphset(paths_dict, pg_dict):
 
 
 def combine_path_graphs(pg_dict):
+    """Combine a dict of path graphs into a single super-pathgraph."""
     cpg = nx.DiGraph()
     for level, pg in pg_dict.items():
         # Start by adding
