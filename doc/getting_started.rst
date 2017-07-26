@@ -51,7 +51,7 @@ Central <http://www.ncbi.nlm.nih.gov/pmc/>`_ is processed. The paper's PMC ID is
 
 .. code:: python
 
-    from indra import reach
+    from indra.processors import reach
     reach_processor = reach.process_pmc('3717945')
 
 The `reach_processor` object has a `statements` attribute which contains a list

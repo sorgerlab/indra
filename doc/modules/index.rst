@@ -9,7 +9,7 @@ INDRA modules reference
    statements
    biopax/index
    bel/index
-   reach/index
+   processors/index
    trips/index
    databases/index
    literature/index

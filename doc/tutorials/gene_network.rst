@@ -74,7 +74,7 @@ content type, different calls need to be made via INDRA's REACH API.
 .. code-block:: python
 
     from indra import literature
-    from indra import reach
+    from indra.processors import reach
 
     read_offline = True
 
