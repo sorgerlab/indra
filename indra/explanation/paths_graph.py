@@ -306,7 +306,6 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
             return paths
 
 
-
 def paths_to_graphset(paths_dict, pg_dict):
     # Construct the universe
     edges = []
@@ -337,6 +336,7 @@ def paths_to_graphset(paths_dict, pg_dict):
             all_paths.append(new_path)
     gs = graphillion.GraphSet(all_paths)
     return gs
+
 
 if __name__ == '__main__':
     g = get_edges('korkut_im.sif')

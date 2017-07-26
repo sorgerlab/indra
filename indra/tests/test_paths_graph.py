@@ -8,10 +8,10 @@ target_polarity = 0
 
 graph1_s = networkx.DiGraph()
 graph1_s.add_nodes_from(['A', 'B', 'C', 'D'])
-graph1_s.add_edges_from([('A', 'B', {'polarity': 0}),
-                         ('B', 'D', {'polarity': 0}),
-                         ('A', 'C', {'polarity': 0}),
-                         ('C', 'D', {'polarity': 0})])
+graph1_s.add_edges_from([('A', 'B', {'sign': 0}),
+                         ('B', 'D', {'sign': 0}),
+                         ('A', 'C', {'sign': 0}),
+                         ('C', 'D', {'sign': 0})])
 
 graph1_uns = networkx.DiGraph()
 graph1_uns.add_nodes_from(['A', 'B', 'C', 'D'])
@@ -20,8 +20,8 @@ graph1_uns.add_edges_from([('A', 'B'), ('B', 'D'), ('A', 'C'), ('C', 'D')])
 """
 graph2 = networkx.DiGraph()
 graph2.add_nodes_from(['A', 'B', 'C', 'D'])
-graph2.add_edges_from([('A', 'B', {'polarity': 0}), ('B', 'A', {'polarity': 0}),
-                      ('A', 'C', {'polarity': 0}), ('C', 'D', {'polarity': 0})])
+graph2.add_edges_from([('A', 'B', {'sign': 0}), ('B', 'A', {'sign': 0}),
+                      ('A', 'C', {'sign': 0}), ('C', 'D', {'sign': 0})])
 
 """
 
@@ -53,10 +53,10 @@ def test_unreachability_signed():
     # First make the unreachability due to the direction of the edges
     graph = networkx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
-    graph.add_edges_from([('A', 'B', {'polarity': 0}),
-                          ('D', 'B', {'polarity': 0}),
-                          ('C', 'A', {'polarity': 0}),
-                          ('C', 'D', {'polarity': 0})])
+    graph.add_edges_from([('A', 'B', {'sign': 0}),
+                          ('D', 'B', {'sign': 0}),
+                          ('C', 'A', {'sign': 0}),
+                          ('C', 'D', {'sign': 0})])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=True)
     assert f_level is None
@@ -64,10 +64,10 @@ def test_unreachability_signed():
     # This time, make the unreachability due to the sign
     graph = networkx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
-    graph.add_edges_from([('A', 'B', {'polarity': 0}),
-                          ('D', 'B', {'polarity': 0}),
-                          ('C', 'A', {'polarity': 0}),
-                          ('C', 'D', {'polarity': 0})])
+    graph.add_edges_from([('A', 'B', {'sign': 0}),
+                          ('D', 'B', {'sign': 0}),
+                          ('C', 'A', {'sign': 0}),
+                          ('C', 'D', {'sign': 0})])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=True)
     assert f_level is None
