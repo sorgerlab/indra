@@ -16,7 +16,7 @@ import gmail_client
 import twitter_client
 import ndex.client
 import ndex.networkn
-from indra import reach
+from indra.processors import reach
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client
