@@ -1684,7 +1684,7 @@ def _get_db_mappings(dbname, dbid):
 
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../resources/ncit_map.tsv')
+                         '../../resources/ncit_map.tsv')
     ncit_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     next(csv_rows)
@@ -1699,7 +1699,7 @@ ncit_map = _read_ncit_map()
 
 def _read_bioentities_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../resources/bioentities_map.tsv')
+                         '../../resources/bioentities_map.tsv')
     bioentities_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
