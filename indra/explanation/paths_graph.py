@@ -16,7 +16,7 @@ def get_edges(sif_file):
             if u == v:
                 pass
             else:
-                edges.append((u, v, {'polarity': int(polarity)}))
+                edges.append((u, v, {'sign': int(polarity)}))
     g = nx.DiGraph()
     g.add_edges_from(edges)
     return g
@@ -69,7 +69,7 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
             if signed:
                 for node, node_polarity in level[i-1]:
                     for (u, v), reachable_node in edge_func(node):
-                        edge_polarity = g.get_edge_data(u, v)['polarity']
+                        edge_polarity = g.get_edge_data(u, v)['sign']
                         cum_polarity = (node_polarity + edge_polarity) % 2
                         reachable_set.add((reachable_node, cum_polarity))
             # Unsigned graph
@@ -199,7 +199,7 @@ def paths_graph(g, source, target, length, f_level, b_level,
                 u_name, u_pol = u[1]
                 v_name, v_pol = v[1]
                 if (u_name, v_name) in g.edges():
-                    edge_polarity = g.get_edge_data(u_name, v_name)['polarity']
+                    edge_polarity = g.get_edge_data(u_name, v_name)['sign']
                     # Look for an edge that flips or doesn't flip the polarity
                     # of the path depending on what we see in the cumulative
                     # polarities
@@ -245,6 +245,16 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0):
                 if v[1] == target:
                     return tuple(path)
             current_node = v
+
+
+def combine_path_graphs(pg_dict):
+    """Combine a dict of path graphs into a single super-pathgraph."""
+    cpg = nx.DiGraph()
+    for level, pg in pg_dict.items():
+        # Start by adding
+        for edge in pg:
+            cpg.add_edges_from(pg.edges())
+    return cpg
 
 
 def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
@@ -296,6 +306,7 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
             return paths
 
 
+
 def paths_to_graphset(paths_dict, pg_dict):
     # Construct the universe
     edges = []
@@ -326,16 +337,6 @@ def paths_to_graphset(paths_dict, pg_dict):
             all_paths.append(new_path)
     gs = graphillion.GraphSet(all_paths)
     return gs
-
-
-def combine_path_graphs(pg_dict):
-    """Combine a dict of path graphs into a single super-pathgraph."""
-    cpg = nx.DiGraph()
-    for level, pg in pg_dict.items():
-        # Start by adding
-        for edge in pg:
-            cpg.add_edges_from(pg.edges())
-    return cpg
 
 if __name__ == '__main__':
     g = get_edges('korkut_im.sif')
