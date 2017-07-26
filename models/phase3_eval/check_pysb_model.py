@@ -3,7 +3,7 @@ import pickle
 import itertools
 from indra.util import write_unicode_csv
 from indra.assemblers import PysbAssembler, EnglishAssembler, CyJSAssembler
-from indra.tools.model_checker import ModelChecker
+from indra.explanation.model_checker import ModelChecker
 import indra.tools.assemble_corpus as ac
 import process_data
 import make_stmts_for_checking as make_stmts

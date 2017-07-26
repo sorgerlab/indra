@@ -5,10 +5,9 @@ from indra.statements import *
 from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
-from indra.tools.model_checker import ModelChecker, _mp_embeds_into, \
+from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
                                       _stmt_from_rule, PathResult
-#from indra.tools.model_checker import _match_rhs, _positive_path
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
