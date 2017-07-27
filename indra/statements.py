@@ -165,12 +165,12 @@ class BoundCondition(object):
     EGFR bound to EGF:
 
     >>> egf = Agent('EGF')
-    >>> egfr = Agent('EGFR', bound_conditions=(BoundCondition(egf)))
+    >>> egfr = Agent('EGFR', bound_conditions=[BoundCondition(egf)])
 
     BRAF *not* bound to a 14-3-3 protein (YWHAB):
 
     >>> ywhab = Agent('YWHAB')
-    >>> braf = Agent('BRAF', bound_conditions=(BoundCondition(ywhab, False)))
+    >>> braf = Agent('BRAF', bound_conditions=[BoundCondition(ywhab, False)])
     """
     def __init__(self, agent, is_bound=True):
         self.agent = agent
