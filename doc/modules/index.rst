@@ -7,7 +7,6 @@ INDRA modules reference
    :maxdepth: 3
 
    statements
-   biopax/index
    processors/index
    databases/index
    literature/index

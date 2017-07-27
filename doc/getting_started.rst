@@ -72,14 +72,16 @@ of INDRA Statements extracted from the queried neighborhood.
 
 Getting paths between two proteins from PathwayCommons (BioPAX)
 ```````````````````````````````````````````````````````````````
-In this example, we search for paths between the BRAF and MAPK3 proteins in
-the PathwayCommons databases using INDRA's BioPAX API. Note that this example
-will only work if all dependencies of the indra.biopax module are installed.
+In this example, we search for paths between the BRAF and MAPK3 proteins in the
+PathwayCommons databases using INDRA's BioPAX API. Note that this example will
+only work if all dependencies of the indra.processors.biopax module are
+installed.
+
 See the `Installation instructions <installation.html>`_ for more details.
 
 .. code:: python
 
-    from indra import biopax
+    from indra.processors import biopax
     proteins = ['BRAF', 'MAPK3']
     limit = 2
     biopax_processor = biopax.process_pc_pathsbetween(proteins, limit)
