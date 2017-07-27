@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+from pybel.constants import *
+
 from indra.statements import *
+from indra.util.export_pybel import convert_statement
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
               text='This is the evidence.')
@@ -28,6 +31,20 @@ def test_modification():
     g = stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
     assert (jd == jd2)
+
+
+def test_pybel_modification():
+    stmt = Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev])
+
+    u, v, d = convert_statement(stmt)
+
+    source = PROTEIN, 'HGNC', 'a'
+    target = PROTEIN, 'HGNC', 'b'
+    target_phosphorylated = PROTEIN, 'HGNC', 'b', (PMOD, (BEL_DEFAULT_NAMESPACE, 'Ph'), 'Ser')
+    target_reaction = REACTION, (target,), (target_phosphorylated,)
+
+    assert source == u
+    assert target_reaction == v
 
 
 def test_selfmodification():
