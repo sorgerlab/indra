@@ -1,6 +1,5 @@
 import json
-from indra import biopax
-from indra.processors import bel
+from indra.processors import bel, biopax
 from collections import OrderedDict
 
 def get_bel_statistics(bp):
