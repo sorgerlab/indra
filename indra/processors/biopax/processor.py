@@ -13,7 +13,7 @@ except ImportError:
 from indra.java_vm import autoclass, JavaException, cast
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import *
-from indra.biopax import pathway_commons_client as pcc
+from . import pathway_commons_client as pcc
 from indra.util import decode_obj
 
 logger = logging.getLogger('biopax')

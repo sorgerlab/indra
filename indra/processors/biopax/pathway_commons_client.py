@@ -14,7 +14,8 @@ logger = logging.getLogger('biopax')
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 
-def graph_query(kind, source, target=None, neighbor_limit=1, database_filter=None):
+def graph_query(kind, source, target=None, neighbor_limit=1,
+                database_filter=None):
     """Perform a graph query on PathwayCommons.
 
     For more information on these queries, see
