@@ -67,7 +67,7 @@ service](http://trips.ihmc.us/parser/cgi/drum).
 
 ```python
 from indra.assemblers import PysbAssembler
-from indra import trips
+from indra.processors import trips
 pa = PysbAssembler()
 # Process a natural language description of a mechanism
 trips_processor = trips.process_text('MEK2 phosphorylates ERK1 at Thr-202 and Tyr-204')
@@ -116,7 +116,7 @@ network through [NDEx](http://ndexbio.org) for a neighborhood of a given list
 of proteins using their HGNC gene names.
 
 ```python
-from indra import bel
+from indra.processors import bel
 # Process the neighborhood of BRAF and MAP2K1
 bel_processor = bel.process_ndex_neighborhood(['BRAF', 'MAP2K1'])
 # At this point, bel_processor.statements contains a list of INDRA statements
@@ -129,7 +129,7 @@ Note: see installation notes above for installing jnius, which is required for
 using the BioPAX API of INDRA.
 
 ```python
-from indra import biopax
+from indra.processors import biopax
 # Process the neighborhood of BRAF and MAP2K1
 biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'MAP2K2'])
 # Query the resulting BioPAX object model for phosphorylation
