@@ -1,7 +1,7 @@
 import pickle
 from indra.statements import Agent, ModCondition
-from indra.biopax import processor as bpc
-from indra.biopax import pathway_commons_client as pcc
+from indra.processors.biopax import processor as bpc
+from indra.processors.biopax import pathway_commons_client as pcc
 
 owl_pattern = '/home/bmg16/data/pathwaycommons/PathwayCommons9.%s.BIOPAX.owl'
 dbs = ['psp', 'pid', 'reactome', 'kegg', 'panther', 'hprd']
