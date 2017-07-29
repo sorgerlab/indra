@@ -5,7 +5,7 @@ import sys
 import csv
 import shutil
 import pickle
-from indra import reach
+from indra.processors import reach
 from indra.util import read_unicode_csv
 from indra.literature import pmc_client, get_full_text, id_lookup
 from assembly_eval import have_file, run_assembly

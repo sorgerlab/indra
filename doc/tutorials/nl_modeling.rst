@@ -9,9 +9,9 @@ Read INDRA Statements from a natural language string
 
 First we import INDRA's API to the TRIPS reading system. We then define a block
 of text which serves as the description of the mechanism to be modeled in the
-`model_text` variable. Finally, `indra.trips.process_text` is called which
-sends a request to the TRIPS web service, gets a response and processes the
-extraction knowledge base to obtain a list of INDRA Statements
+`model_text` variable. Finally, `indra.processors.trips.process_text` is called
+which sends a request to the TRIPS web service, gets a response and processes
+the extraction knowledge base to obtain a list of INDRA Statements
 
 .. ipython:: python
 
