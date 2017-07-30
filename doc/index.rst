@@ -31,6 +31,7 @@ Contents:
    getting_started.rst
    modules/index
    tutorials/index
+   rest_api.rst
 
 Indices and tables
 ==================
