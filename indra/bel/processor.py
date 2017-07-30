@@ -396,6 +396,8 @@ class BelProcessor(object):
         for stmt in res_cmplx:
             stmt_uri = stmt[3]
             ev = self._get_evidence(stmt_uri)
+            for e in ev:
+                e.epistemics['direct'] = True
             cmplx_name = term_from_uri(stmt[0])
             cmplx_id = stmt_uri + '#' + cmplx_name
             child = self._get_agent(stmt[1], stmt[2])
@@ -1052,6 +1054,23 @@ class BelProcessor(object):
             }
         """ % statement.format()
         res_evidence = self.g.query(q_evidence)
+
+        # Query for directness
+        q_direct = prefixes + """
+            SELECT ?predicate
+            WHERE {
+                <%s> belvoc:hasRelationship ?predicate .
+            }
+        """ % statement.format()
+        res_direct = self.g.query(q_direct)
+        epistemics = {}
+        if res_direct:
+            rel = term_from_uri(list(res_direct)[0][0])
+            if rel in ('DirectlyDecreases', 'DirectlyIncreases'):
+                epistemics['direct'] = True
+            if rel in ('Decreases', 'Increases'):
+                epistemics['direct'] = False
+
         evs = []
         for stmt in res_evidence:
             text = stmt[0].toPython()
@@ -1062,13 +1081,13 @@ class BelProcessor(object):
                     citation = m.groups()[0]
                     ev = Evidence(source_api='bel', source_id=statement,
                                   pmid=citation, text=text,
-                                  annotations=annotations)
+                                  annotations=annotations, epistemics=epistemics)
                     evs.append(ev)
                 else:
                     logger.warning('Could not parse citation: %s' % citation)
         if not evs:
             evs = [Evidence(source_api='bel', source_id=statement,
-                            annotations=annotations)]
+                            annotations=annotations, epistemics=epistemics)]
         return evs
 
     @staticmethod
