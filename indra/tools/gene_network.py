@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 import pickle
 import logging
-from indra.processors import bel, biopax
+from indra.sources import bel, biopax
 import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler, render_stmt_graph
 from indra.preassembler.hierarchy_manager import hierarchies

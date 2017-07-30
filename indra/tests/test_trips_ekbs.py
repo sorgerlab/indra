@@ -3,7 +3,7 @@ from builtins import dict, str
 import re
 import os
 from indra.statements import *
-from indra.processors import trips
+from indra.sources import trips
 
 path_this = os.path.dirname(os.path.abspath(__file__))
 

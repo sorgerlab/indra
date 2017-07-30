@@ -3,7 +3,7 @@ from builtins import dict, str
 import boto3
 import botocore
 import zlib
-from indra.processors import reach
+from indra.sources import reach
 import pickle
 import sys
 import logging

@@ -25,7 +25,7 @@ def main():
           packages=['indra', 'indra.assemblers', 'indra.belief',
                     'indra.benchmarks', 'indra.databases', 'indra.literature',
                     'indra.mechlinker', 'indra.preassembler',
-                    'indra.processors', 'indra.resources', 'indra.tests',
+                    'indra.sources', 'indra.resources', 'indra.tests',
                     'indra.tools', 'indra.tools.reading', 'indra.util'],
           install_requires=install_list,
           tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],

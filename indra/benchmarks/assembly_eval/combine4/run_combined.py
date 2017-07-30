@@ -2,7 +2,7 @@ import os
 import csv
 import pickle
 from indra.literature import id_lookup
-from indra.processors import trips, reach, index_cards
+from indra.sources import trips, reach, index_cards
 from assembly_eval import have_file, run_assembly
 
 if __name__ == '__main__':

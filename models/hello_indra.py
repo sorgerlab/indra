@@ -2,8 +2,8 @@ import numpy as np
 from pysb.integrate import Solver
 from pysb.export import export
 from matplotlib import pyplot as plt
-from indra.processors import biopax
-from indra.processors import bel, trips
+from indra.sources import biopax
+from indra.sources import bel, trips
 from indra.util import plot_formatting as pf
 from indra.assemblers import PysbAssembler
 

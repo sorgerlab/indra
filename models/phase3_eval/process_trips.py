@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import glob
-from indra.processors import trips
+from indra.sources import trips
 
 base_folder = 'sources/trips-20170206'
 

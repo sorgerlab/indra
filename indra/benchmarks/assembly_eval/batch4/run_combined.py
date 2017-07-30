@@ -4,7 +4,7 @@ import csv
 import uuid
 import pickle
 import rasmodel
-from indra.processors import trips, reach
+from indra.sources import trips, reach
 from indra.literature import id_lookup
 from indra.util import read_unicode_csv
 from assembly_eval import have_file, run_assembly

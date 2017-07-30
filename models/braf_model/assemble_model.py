@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 from pysb import *
 import pysb.export
-from indra.processors import trips
+from indra.sources import trips
 from indra.assemblers import PysbAssembler
 
 def apply_patch(original, patch):

@@ -13,7 +13,7 @@ import logging
 import functools
 import multiprocessing as mp
 from collections import Counter
-from indra.processors import reach
+from indra.sources import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 

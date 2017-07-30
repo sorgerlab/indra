@@ -3,7 +3,7 @@ import os
 from os.path import dirname, join
 import sys
 import indra.statements
-from indra.processors import trips
+from indra.sources import trips
 from indra.assemblers import PysbAssembler
 
 def test_bind():

@@ -66,8 +66,8 @@ description of a mechanism via the [TRIPS reading web
 service](http://trips.ihmc.us/parser/cgi/drum).
 
 ```python
+from indra.sources import trips
 from indra.assemblers import PysbAssembler
-from indra.processors import trips
 pa = PysbAssembler()
 # Process a natural language description of a mechanism
 trips_processor = trips.process_text('MEK2 phosphorylates ERK1 at Thr-202 and Tyr-204')
@@ -84,7 +84,7 @@ Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
 [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
 
 ```python
-from indra.processors import reach
+from indra.sources import reach
 # Process the neighborhood of BRAF and MAP2K1
 reach_processor = reach.process_pmc('3717945')
 # At this point, reach_processor.statements contains a list of INDRA statements
@@ -95,7 +95,7 @@ Next we look at an example of reading the 10 most recent PubMed abstracts on
 BRAF and collecting the results in INDRA statements.
 
 ```python
-from indra.processors import reach
+from indra.sources import reach
 from indra.literature import pubmed_client
 # Search for 10 most recent abstracts in PubMed on 'BRAF'
 pmids = pubmed_client.get_ids('BRAF', retmax=10)
@@ -116,7 +116,7 @@ network through [NDEx](http://ndexbio.org) for a neighborhood of a given list
 of proteins using their HGNC gene names.
 
 ```python
-from indra.processors import bel
+from indra.sources import bel
 # Process the neighborhood of BRAF and MAP2K1
 bel_processor = bel.process_ndex_neighborhood(['BRAF', 'MAP2K1'])
 # At this point, bel_processor.statements contains a list of INDRA statements
@@ -129,7 +129,7 @@ Note: see installation notes above for installing jnius, which is required for
 using the BioPAX API of INDRA.
 
 ```python
-from indra.processors import biopax
+from indra.sources import biopax
 # Process the neighborhood of BRAF and MAP2K1
 biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'MAP2K2'])
 # Query the resulting BioPAX object model for phosphorylation
@@ -137,5 +137,4 @@ biopax_processor.get_phosphorylation()
 # At this point, biopax_processor.statements contains a list of INDRA 
 # Phosphorylation statements extracted from the paths-from-to query.
 ```
-
 

@@ -3,8 +3,8 @@ from builtins import dict, str
 import os
 from rdflib.term import URIRef
 from indra.util import unicode_strs
-from indra.processors import bel
-from indra.processors.bel.processor import BelProcessor
+from indra.sources import bel
+from indra.sources.bel.processor import BelProcessor
 from indra.statements import RegulateAmount
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'

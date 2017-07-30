@@ -2,7 +2,7 @@ import sys
 import json
 import logging
 from bottle import route, run, request, default_app, response
-from indra.processors import trips, reach, bel, biopax
+from indra.sources import trips, reach, bel, biopax
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
     CyJSAssembler, SifAssembler

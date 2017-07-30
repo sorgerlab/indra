@@ -7,7 +7,7 @@ INDRA modules reference
    :maxdepth: 3
 
    statements
-   processors/index
+   sources/index
    databases/index
    literature/index
    preassembler/index
