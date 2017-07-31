@@ -1,5 +1,4 @@
 import json
-import uuid
 import pickle
 import itertools
 from indra.util import write_unicode_csv
@@ -14,9 +13,7 @@ def get_path_stmts(results, model, stmts):
     all_path_stmts = []
     for drug, target, polarity, value, found_path, paths, flag in results:
         path_stmts = {}
-        #for path in paths:
-        if paths:
-            path = paths[0]
+        for path in paths:
             path_stmts1 = stmts_for_path(path, model, stmts)
             for ps in path_stmts1:
                 path_stmts[ps.uuid] = ps
@@ -74,7 +71,7 @@ def make_cyjs_network(results, model, stmts):
 def make_english_output(results, model, stmts):
     citations = {}
     citation_count = 1
-    for source, target, polarity, value, found_path, paths in results:
+    for source, target, polarity, value, found_path, paths, flag in results:
         cond = 'How does treatment with %s %s %s?' % \
             (source, 'increase' if polarity == 'positive' else
                      'decrease', target)
@@ -126,15 +123,21 @@ def make_english_output(results, model, stmts):
         references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
     print(references)
 
-def export_json(results):
+def export_json(results, model, stmts):
     """Export a set of paths in JSON format for visualization."""
     json_dict = {}
-    for drug_name, ab, relation, value, path_found, paths in results:
-        #json_dict[drug_name].append(ab : {})
-        pass
-
-
-
+    for drug, ab, relation, value, path_found, paths, flag in results:
+        if json_dict.get(drug) is None:
+            json_dict[drug] = {}
+        if json_dict[drug].get(ab) is None:
+            json_dict[drug][ab] = {}
+        for idx, path in enumerate(paths):
+            path_stmts = []
+            for rule_name, sign in path[:-1]:
+                stmt = _stmt_from_rule(model, rule_name, stmts)
+                path_stmts.append(stmt.uuid)
+            json_dict[drug][ab][idx] = path_stmts
+    return json_dict
 
 if __name__ == '__main__':
     print("Processing data")
@@ -167,7 +170,7 @@ if __name__ == '__main__':
 
     base_stmts = ac.load_statements('output/korkut_model_pysb_before_pa.pkl')
     for st in base_stmts:
-        st.uuid = str(uuid.uuid4())
+        st.uuid = str(st.uuid)
 
     """
     # Merge the sources of statements
@@ -255,5 +258,6 @@ if __name__ == '__main__':
     write_unicode_csv('model_check_results.csv', results)
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
-    make_english_output(results, model, base_stmts)
+    #make_english_output(results, model, base_stmts)
     make_cyjs_network(results, model, base_stmts)
+    paths_json = export_json(results, model, base_stmts)
