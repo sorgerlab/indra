@@ -1,4 +1,5 @@
 import json
+import uuid
 import pickle
 import itertools
 from indra.util import write_unicode_csv
@@ -11,7 +12,7 @@ from assemble_pysb import set_context, add_observables
 
 def get_path_stmts(results, model, stmts):
     all_path_stmts = []
-    for source, target, polarity, value, found_path, paths in results:
+    for drug, target, polarity, value, found_path, paths, flag in results:
         path_stmts = {}
         #for path in paths:
         if paths:
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     ab_map = process_data.get_antibody_map(data)
 
     print('Loading data statements.')
-    data_stmts, data_values = make_stmts.run(dec_thresh=0.8, inc_thresh=1.2)
+    data_stmts, data_values = make_stmts.run(dec_thresh=0.5, inc_thresh=1.5)
     all_data_stmts = [values.values() for values in data_stmts.values()]
     all_data_stmts = itertools.chain.from_iterable(all_data_stmts)
     all_data_stmts = list(itertools.chain.from_iterable(all_data_stmts))
@@ -165,6 +166,8 @@ if __name__ == '__main__':
                 agent_data[drug_name][agent] = value
 
     base_stmts = ac.load_statements('output/korkut_model_pysb_before_pa.pkl')
+    for st in base_stmts:
+        st.uuid = str(uuid.uuid4())
 
     """
     # Merge the sources of statements
@@ -185,6 +188,12 @@ if __name__ == '__main__':
     with open('korkut_pysb.pkl', 'rb') as f:
         print("Unpickling PySB model")
         model = pickle.load(f)
+
+    # Some parameters up front
+    MAX_PATHS_ONE = 5
+    MAX_PATHS_ALL = 5
+    MAX_PATH_LENGTH = 6
+
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
@@ -207,15 +216,23 @@ if __name__ == '__main__':
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=5,
-                                                max_path_length=6)
+                    result = \
+                        mc.check_statement(stmt,
+                                           max_paths=MAX_PATHS_ONE,
+                                           max_path_length=MAX_PATH_LENGTH)
                     print(result)
+
                     if result.path_found:
                         path_found = 1
                         if result.paths:
                             paths += result.paths
                     else:
                         print("No path found")
+
+                    # For efficiency, break out of loop as soon as 5 paths
+                    # in total are found
+                    if len(paths) >= MAX_PATHS_ALL:
+                        break
                 if paths:
                     print('===========================')
                     print('Scoring a total of %d paths' % len(paths))
