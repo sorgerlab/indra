@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
+import uuid
 import pickle
 from os.path import join as pjoin
 from indra.tools import assemble_corpus as ac
@@ -80,6 +81,13 @@ if __name__ == '__main__':
         stmts = ac.run_preassembly(stmts, return_toplevel=False,
                                    save=pjoin(outf, 'preassembled.pkl'),
                                    poolsize=4)
+    # Old pickle files can have missing Statement UUIDs, to avoid propagating
+    # this, we set UUIDs here
+    for stmt in stmts:
+        try:
+            stmt.uuid
+        except:
+            stmt.uuid = str(uuid.uuid4())
 
     ### PySB assembly
     if 'pysb' in assemble_models:
