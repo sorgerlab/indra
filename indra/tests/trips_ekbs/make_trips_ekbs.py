@@ -1,5 +1,5 @@
 import re
-from indra import trips
+from indra.sources import trips
 
 def make_ekb(txt):
     fname = re.sub('[^a-zA-Z0-9]', '_', txt[:-1]) + '.ekb'

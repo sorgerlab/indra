@@ -1,9 +1,8 @@
 import os
 import csv
 import pickle
-from indra import trips, reach
-from indra import index_cards
 from indra.literature import id_lookup
+from indra.sources import trips, reach, index_cards
 from assembly_eval import have_file, run_assembly
 
 if __name__ == '__main__':

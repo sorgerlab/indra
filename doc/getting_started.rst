@@ -12,7 +12,7 @@ For example to access the BEL API, one has to
 
 .. code:: python
 
-    from indra import bel
+    from indra.sources import bel
 
 For convenience, the output assembler classes are imported directly under
 `indra.assemblers` so they can be imported as, for instance,
@@ -36,7 +36,7 @@ an INDRA Statement.
 
 .. code:: python
 
-    from indra import trips
+    from indra.sources import trips
     sentence = 'MAP2K1 phosphorylates MAPK3 at Thr-202 and Tyr-204'
     trips_processor = trips.process_text(sentence)
 
@@ -51,7 +51,7 @@ Central <http://www.ncbi.nlm.nih.gov/pmc/>`_ is processed. The paper's PMC ID is
 
 .. code:: python
 
-    from indra import reach
+    from indra.sources import reach
     reach_processor = reach.process_pmc('3717945')
 
 The `reach_processor` object has a `statements` attribute which contains a list
@@ -64,7 +64,7 @@ the BEL Large Corpus.
 
 .. code:: python
 
-    from indra import bel
+    from indra.sources import bel
     bel_processor = bel.process_ndex_neighborhood(['KRAS', 'BRAF'])
 
 The `bel_processor` object has a `statements` attribute which contains a list
@@ -72,14 +72,16 @@ of INDRA Statements extracted from the queried neighborhood.
 
 Getting paths between two proteins from PathwayCommons (BioPAX)
 ```````````````````````````````````````````````````````````````
-In this example, we search for paths between the BRAF and MAPK3 proteins in
-the PathwayCommons databases using INDRA's BioPAX API. Note that this example
-will only work if all dependencies of the indra.biopax module are installed.
+In this example, we search for paths between the BRAF and MAPK3 proteins in the
+PathwayCommons databases using INDRA's BioPAX API. Note that this example will
+only work if all dependencies of the indra.sources.biopax module are
+installed.
+
 See the `Installation instructions <installation.html>`_ for more details.
 
 .. code:: python
 
-    from indra import biopax
+    from indra.sources import biopax
     proteins = ['BRAF', 'MAPK3']
     limit = 2
     biopax_processor = biopax.process_pc_pathsbetween(proteins, limit)

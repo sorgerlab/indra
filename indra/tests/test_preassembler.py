@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
-from indra import trips
+from indra.sources import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \

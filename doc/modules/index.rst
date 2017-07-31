@@ -7,10 +7,7 @@ INDRA modules reference
    :maxdepth: 3
 
    statements
-   biopax/index
-   bel/index
-   reach/index
-   trips/index
+   sources/index
    databases/index
    literature/index
    preassembler/index

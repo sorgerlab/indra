@@ -17,7 +17,7 @@ if '-Xmx4g' not in jnius_config.get_options():
                        "is already running.")
 
 path_here = os.path.dirname(os.path.realpath(__file__))
-cp = path_here + '/biopax/jars/paxtools.jar'
+cp = os.path.join(path_here, 'sources/biopax/jars/paxtools.jar')
 cp_existing = os.environ.get('CLASSPATH')
 
 if cp_existing is not None:

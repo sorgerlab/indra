@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from indra.java_vm import autoclass, cast
-from indra import biopax
-import indra.biopax.processor as bpc
+from indra.sources import biopax
+import indra.sources.biopax.processor as bpc
 from indra.databases import uniprot_client
 from indra.util import unicode_strs
 from indra.preassembler import Preassembler

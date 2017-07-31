@@ -1,4 +1,4 @@
-from indra import sparser
+from indra.sources import sparser
 
 xml_str1 = '''
 <article pmid="54321">

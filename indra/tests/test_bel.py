@@ -1,10 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-from indra import bel
-from indra.util import unicode_strs
 from rdflib.term import URIRef
-from indra.bel.processor import BelProcessor
+from indra.util import unicode_strs
+from indra.sources import bel
+from indra.sources.bel.processor import BelProcessor
 from indra.statements import RegulateAmount
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
