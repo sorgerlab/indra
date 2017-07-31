@@ -55,13 +55,14 @@ def _stmt_from_rule(model, rule_name, stmts):
 def make_cyjs_network(results, model, stmts):
     path_stmts = get_path_stmts(results, model, stmts)
     path_genes = get_path_genes(path_stmts)
+    # Get UUIDs to use as filter
     path_uuids = [list(path.keys()) for path in path_stmts]
     all_path_uuids = []
     for p in path_uuids:
         all_path_uuids += p
-    print(json.dumps(path_uuids, indent=1))
     #filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
     filtered_stmts = ac.filter_uuid_list(stmts, all_path_uuids)
+    ac.dump_statements(filtered_stmts, 'output/korkut_cyjs_model.pkl')
     ca = CyJSAssembler(filtered_stmts)
     cm = ca.make_model()
     ca.set_CCLE_context(['SKMEL28_SKIN'])
