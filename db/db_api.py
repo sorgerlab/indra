@@ -35,10 +35,11 @@ def create_tables():
     CREATE TABLE  db_info (
         id serial PRIMARY KEY,
         db_name VARCHAR NOT NULL,
-        timestamp TIMESTAMPTZ
+        timestamp TIMESTAMP DEFAULT now()
     );
     CREATE TABLE statements (
         id serial PRIMARY KEY,
+        uuid VARCHAR UNIQUE NOT NULL,
         db_ref int4 REFERENCES db_info(id),
         type VARCHAR NOT NULL,
         json TEXT NOT NULL
@@ -127,3 +128,26 @@ def get_auth_xml_pmcids():
     conn.commit()
     for pmcid in cur.fetchall():
         print(pmcid)
+
+def add_db_stmts(stmts, db_name):
+    # First, add the DB info
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """INSERT INTO db_info (db_name) VALUES (%s) RETURNING id;"""
+    cur.execute(sql, (db_name,))
+    db_ref_id = cur.fetchone()[0]
+    # Now, insert the statements
+    for stmt in stmts:
+        sql = """INSERT INTO statements (uuid, db_ref, type, json)
+                    VALUES (%s, %s, %s, %s) RETURNING id;"""
+        cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
+                          stmt.to_json()))
+        id = cur.fetchone()[0]
+        # Now collect the agents and add them
+    conn.commit()
+
+
+if __name__ == '__main__':
+    import pickle
+    with open('bel_mapk.pkl', 'rb') as f:
+        stmts = pickle.load(f)

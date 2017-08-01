@@ -35,6 +35,7 @@ def initialize_pmc_manuscripts():
     # Process the file info (skip the header line)
     pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
                      if line][1:]
+    loaded_pmc_ids = db_api.get_auth_xml_pmcids()
     """
     # Function to write to local file with progress updates
     def write_to_file(fp, b, total_size):
@@ -70,12 +71,14 @@ def initialize_pmc_manuscripts():
         if os.path.exists(xml_path):
             print("Found file %s" % xml_path)
             db_api.add_text_ref(source='pmc', pmid=pmc_info.PMID,
-                                pmcid=pmc_info.PMCID, manuscript_id=pmc_info.MID)
+                                pmcid=pmc_info.PMCID,
+                                manuscript_id=pmc_info.MID)
+            assert pmc_info.PMCID
             # Open in text mode
             with open(xml_path, 'rt') as f:
                 content = f.read()
-            db_api.add_text_content_by_pmid(pmc_info.PMID, 'pmc_auth_xml',
-                                            content)
+            db_api.add_text_content_by_pmcid(pmc_info.PMCID, 'pmc_auth_xml',
+                                             content)
         counter += 1
 
 def update_pmc_manuscripts():
