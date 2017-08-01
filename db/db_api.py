@@ -2,29 +2,55 @@ import psycopg2 as pg
 
 conn = None
 
+def get_connection():
+    global conn
+    if conn is None:
+        aws_host = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
+        conn = pg.connect(host=aws_host, database='indra_db',
+                          user='indra_db_user', password='indra_db_pass')
+    return conn
+
 def create_tables():
     """Create the tables for the INDRA database."""
     conn = get_connection()
     sql = """
     CREATE TABLE text_ref (
         id serial PRIMARY KEY,
-        source VARCHAR(20) NOT NULL,
-        pmid VARCHAR(20) UNIQUE,
-        pmcid VARCHAR(20) UNIQUE,
-        doi VARCHAR(1000) UNIQUE,
-        url VARCHAR(1000) UNIQUE,
-        manuscript_id VARCHAR(20) UNIQUE,
-        journal VARCHAR(1000),
-        publisher VARCHAR(1000),
+        source VARCHAR NOT NULL,
+        pmid VARCHAR UNIQUE,
+        pmcid VARCHAR UNIQUE,
+        doi VARCHAR UNIQUE,
+        url VARCHAR UNIQUE,
+        manuscript_id VARCHAR UNIQUE,
+        journal VARCHAR,
+        publisher VARCHAR,
         pub_date DATE
     );
-
     CREATE TABLE text_content (
         id serial PRIMARY KEY,
         text_ref_id int4 NOT NULL REFERENCES text_ref(id),
-        content_type VARCHAR(100) NOT NULL,
+        content_type VARCHAR NOT NULL,
         content TEXT NOT NULL
     );
+    CREATE TABLE  db_info (
+        id serial PRIMARY KEY,
+        db_name VARCHAR NOT NULL,
+        timestamp TIMESTAMPTZ
+    );
+    CREATE TABLE statements (
+        id serial PRIMARY KEY,
+        db_ref int4 REFERENCES db_info(id),
+        type VARCHAR NOT NULL,
+        json TEXT NOT NULL
+    );
+    CREATE TABLE agents (
+        id serial PRIMARY KEY,
+        stmt_id int4 REFERENCES statements(id),
+        db_name VARCHAR NOT NULL,
+        db_id VARCHAR NOT NULL,
+        role VARCHAR NOT NULL
+    );
+    SET timezone = 'EST'
     """
     cur = conn.cursor()
     cur.execute(sql)
@@ -34,8 +60,18 @@ def drop_tables():
     """Drop all tables in the INDRA database."""
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute('DROP TABLE text_content;')
-    cur.execute('DROP TABLE text_ref;')
+    drop_cmds = ['DROP TABLE agents;',
+                 'DROP TABLE statements;',
+                 'DROP TABLE db_info;',
+                 'DROP TABLE text_content;',
+                 'DROP TABLE text_ref;',]
+    for cmd in drop_cmds:
+        try:
+            cur.execute(cmd)
+            conn.commit()
+        except pg.ProgrammingError as pe:
+            print(pe)
+            conn.rollback()
     conn.commit()
 
 def show_tables():
@@ -47,7 +83,6 @@ def show_tables():
     for table_info in cur.fetchall():
         if table_info[2] == 'indra_db_user':
             print(table_info)
-
 
 def add_text_ref(**kwargs):
     conn = get_connection()
@@ -82,11 +117,13 @@ def select_all(table):
     for text_ref in cur.fetchall():
         print(text_ref)
 
-def get_connection():
-    global conn
-    if conn is None:
-        aws_host = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
-        conn = pg.connect(host=aws_host, database='indra_db',
-                          user='indra_db_user', password='indra_db_pass')
-    return conn
-
+def get_auth_xml_pmcids():
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """SELECT text_ref.pmcid FROM text_ref, text_content
+                WHERE text_ref.id = text_content.text_ref_id
+                AND text_content.content_type = 'pmc_auth_xml';"""
+    cur.execute(sql)
+    conn.commit()
+    for pmcid in cur.fetchall():
+        print(pmcid)
