@@ -277,6 +277,21 @@ class CyJSAssembler(object):
             self._add_edge(edge_type, m1_id, m2_id, edge_polarity,
                            stmt.uuid)
 
+    def _get_edge_dict(self):
+        """Return a dict of edges.
+
+        Keyed tuples of (i, source, target, polarity)
+        with lists of edge ids [id1, id2, ...]
+        """
+        edge_dict = collections.defaultdict(lambda: [])
+        if len(self._edges) > 0:
+            for e in self._edges:
+                data = e['data']
+                key = tuple([data['i'], data['source'],
+                            data['target'], data['polarity']])
+                edge_dict[key] = data['id']
+        return edge_dict
+
     def _add_edge(self, edge_type, source, target, edge_polarity, uuid):
         edge = {'data': {'i': edge_type,
                          'source': source, 'target': target,
@@ -368,20 +383,6 @@ class CyJSAssembler(object):
         node_groups = [g for g in node_key_dict.values() if (len(g) > 1)]
         return node_groups
 
-    def _get_edge_dict(self):
-        """Return a dict of edges.
-
-        Keyed tuples of (i, source, target, polarity)
-        with lists of edge ids [id1, id2, ...]
-        """
-        edge_dict = collections.defaultdict(lambda: [])
-        for e in self._edges:
-            data = e['data']
-            key = tuple([data['i'], data['source'],
-                        data['target'], data['polarity']])
-            edge_dict[key].append(data['id'])
-        return edge_dict
-
     def _group_edges(self):
         """Group all edges that are topologically identical.
 
@@ -389,25 +390,6 @@ class CyJSAssembler(object):
         edges on parent (i.e. - group) nodes to 'Virtual' and creates a new
         edge to represent all of them.
         """
-        # first, group all edges if they are topologically identical
-        edge_dict = self._get_edge_dict()
-        uuids = collections.defaultdict(lambda: [])
-        for e in self._edges:
-            data = e['data']
-            key = tuple([data['i'], data['source'],
-                        data['target'], data['polarity']])
-            uuids[key] += data['uuid_list']
-        edges_to_remove = []
-        for key, val in edge_dict.items():
-            if len(val) > 1:
-                edges_to_remove += val
-        for key, val in edge_dict.items():
-            if len(val) > 1:
-                edge_uuids = [e['data']['uuid_list'][0] for e in self._edges
-                              if e['data']['id'] in val]
-                self._add_edge(key[0], key[1], key[2], key[3], edge_uuids)
-        self._edges = [x for x in self._edges
-                       if x['data']['id'] not in edges_to_remove]
         # edit edges on parent nodes and make new edges for them
         edges_to_add = [[], []]  # [group_edges, uuid_lists]
         for e in self._edges:
