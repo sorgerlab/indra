@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, unicode_literals
 from builtins import dict, str
 import pandas
 from copy import deepcopy
-from indra import biopax
+from indra.sources import biopax
 from indra.util import unicode_strs
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence
