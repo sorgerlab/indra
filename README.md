@@ -132,9 +132,7 @@ using the BioPAX API of INDRA.
 from indra.sources import biopax
 # Process the neighborhood of BRAF and MAP2K1
 biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'MAP2K2'])
-# Query the resulting BioPAX object model for phosphorylation
-biopax_processor.get_phosphorylation()
 # At this point, biopax_processor.statements contains a list of INDRA 
-# Phosphorylation statements extracted from the paths-from-to query.
+# Statements extracted from the paths-from-to query.
 ```
 
