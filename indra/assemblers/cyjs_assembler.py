@@ -486,10 +486,10 @@ def _get_db_refs(agent):
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, AddModification):
-        edge_type = 'Modification'
+        edge_type = stmt.__class__.__name__
         edge_polarity = 'positive'
     elif isinstance(stmt, RemoveModification):
-        edge_type = 'Modification'
+        edge_type = stmt.__class__.__name__
         edge_polarity = 'negative'
     elif isinstance(stmt, SelfModification):
         edge_type = 'SelfModification'
