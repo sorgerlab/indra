@@ -306,11 +306,11 @@ class CyJSAssembler(object):
             edge = [e for e in self._edges if e['data']['id'] == val][0]
         else:
             edge['data']['id'] = self._get_new_id()
+            self._edges.append(edge)
         if type(uuid) is not list:
             uuid = [uuid]
         edge['data']['uuid_list'] = edge['data'].get('uuid_list', [])
         edge['data']['uuid_list'] += uuid
-        self._edges.append(edge)
         return
 
     def _add_node(self, agent, uuid=None):
