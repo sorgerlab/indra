@@ -401,11 +401,13 @@ class CyJSAssembler(object):
         for key, val in edge_dict.items():
             if len(val) > 1:
                 edges_to_remove += val
-        self._edges = [x for x in self._edges
-                       if x['data']['id'] not in edges_to_remove]
         for key, val in edge_dict.items():
             if len(val) > 1:
-                self._add_edge(key[0], key[1], key[2], key[3], val)
+                edge_uuids = [e['data']['uuid_list'][0] for e in self._edges
+                              if e['data']['id'] in val]
+                self._add_edge(key[0], key[1], key[2], key[3], edge_uuids)
+        self._edges = [x for x in self._edges
+                       if x['data']['id'] not in edges_to_remove]
         # edit edges on parent nodes and make new edges for them
         edges_to_add = [[], []]  # [group_edges, uuid_lists]
         for e in self._edges:
