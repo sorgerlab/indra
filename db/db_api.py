@@ -1,6 +1,7 @@
 import json
 import psycopg2 as pg
 from indra.statements import *
+from indra.databases import hgnc_client
 
 conn = None
 
@@ -130,6 +131,23 @@ def get_auth_xml_pmcids():
     conn.commit()
     for pmcid in cur.fetchall():
         print(pmcid)
+
+def select_stmts_by_gene(hgnc_name, role=None):
+    hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """SELECT statements.json FROM statements, agents
+                WHERE agents.db_name = 'HGNC'
+                  AND agents.db_id = %s
+                  AND agents.stmt_id = statements.id;"""
+    cur.execute(sql, (hgnc_id,))
+    conn.commit()
+    stmts = []
+    for result in cur.fetchall():
+        stmt_json_str = result[0]
+        stmt_json = json.loads(stmt_json_str)
+        stmts.append(Statement._from_json(stmt_json))
+    return stmts
 
 def add_db_stmts(stmts, db_name):
     # First, add the DB info
