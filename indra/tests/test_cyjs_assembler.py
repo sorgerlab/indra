@@ -223,7 +223,16 @@ def test_grouping_block_targeting_block():
                   x['data']['i'] != 'Virtual']
     assert(len(real_edges) == 1)
 
-def test_edge_grouping_between_nongroup_nodes():
+def test_edge_aggregation_between_nongroup_nodes():
+    cja = CyJSAssembler()
+    cja.add_statements([st_phos_Y, st_phos_T])
+    cja.make_model(grouping=False)
+    assert(len(cja._nodes) == 2)
+    assert(len(cja._edges) == 1)
+    for edge in cja._edges:
+        assert(len(edge['data']['uuid_list']) == 2)
+    for node in cja._nodes:
+        assert(len(node['data']['uuid_list']) == 2)
     cja = CyJSAssembler()
     cja.add_statements([st_phos_Y, st_phos_T])
     cja.make_model(grouping=True)
