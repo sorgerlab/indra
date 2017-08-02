@@ -1,4 +1,6 @@
+import json
 import psycopg2 as pg
+from indra.statements import *
 
 conn = None
 
@@ -133,21 +135,43 @@ def add_db_stmts(stmts, db_name):
     # First, add the DB info
     conn = get_connection()
     cur = conn.cursor()
+    print("Adding db %s" % db_name)
     sql = """INSERT INTO db_info (db_name) VALUES (%s) RETURNING id;"""
     cur.execute(sql, (db_name,))
     db_ref_id = cur.fetchone()[0]
     # Now, insert the statements
     for stmt in stmts:
+        print("Inserting stmt %s" % stmt)
         sql = """INSERT INTO statements (uuid, db_ref, type, json)
                     VALUES (%s, %s, %s, %s) RETURNING id;"""
         cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
-                          stmt.to_json()))
-        id = cur.fetchone()[0]
+                          json.dumps(stmt.to_json())))
+        stmt_id = cur.fetchone()[0]
         # Now collect the agents and add them
+        for ag_ix, ag in enumerate(stmt.agent_list()):
+            if ag is None:
+                continue
+            if isinstance(stmt, Complex) or \
+               isinstance(stmt, SelfModification) or \
+               isinstance(stmt, ActiveForm):
+                role = 'OTHER'
+            elif ag_ix == 0:
+                role = 'SUBJECT'
+            elif ag_ix == 1:
+                role = 'OBJECT'
+            else:
+                assert False, "Unhandled agent role."
+            for db, db_id in ag.db_refs.items():
+                print("Inserting agent %s with db_refs %s %s" % (ag, db, db_id))
+                sql = """INSERT INTO agents (stmt_id, db_name, db_id, role)
+                         VALUES (%s, %s, %s, %s);"""
+                cur.execute(sql, (stmt_id, db, db_id, role))
     conn.commit()
+
 
 
 if __name__ == '__main__':
     import pickle
     with open('bel_mapk.pkl', 'rb') as f:
         stmts = pickle.load(f)
+
