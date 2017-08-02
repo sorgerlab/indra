@@ -293,13 +293,23 @@ class CyJSAssembler(object):
         return edge_dict
 
     def _add_edge(self, edge_type, source, target, edge_polarity, uuid):
+        edge_dict = self._get_edge_dict()
+        uuids = collections.defaultdict(lambda: [])
         edge = {'data': {'i': edge_type,
                          'source': source, 'target': target,
                          'polarity': edge_polarity}}
-        edge['data']['id'] = self._get_new_id()
+        data = edge['data']
+        key = tuple([data['i'], data['source'],
+                    data['target'], data['polarity']])
+        if key in edge_dict:
+            val = edge_dict[key]
+            edge = [e for e in self._edges if e['data']['id'] == val][0]
+        else:
+            edge['data']['id'] = self._get_new_id()
         if type(uuid) is not list:
             uuid = [uuid]
-        edge['data']['uuid_list'] = uuid
+        edge['data']['uuid_list'] = edge['data'].get('uuid_list', [])
+        edge['data']['uuid_list'] += uuid
         self._edges.append(edge)
         return
 
