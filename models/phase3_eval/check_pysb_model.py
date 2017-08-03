@@ -11,11 +11,9 @@ from assemble_pysb import set_context, add_observables
 
 def get_path_stmts(results, model, stmts):
     all_path_stmts = []
-    for source, target, polarity, value, found_path, paths in results:
+    for drug, target, polarity, value, found_path, paths, flag in results:
         path_stmts = {}
-        #for path in paths:
-        if paths:
-            path = paths[0]
+        for path in paths:
             path_stmts1 = stmts_for_path(path, model, stmts)
             for ps in path_stmts1:
                 path_stmts[ps.uuid] = ps
@@ -57,13 +55,14 @@ def _stmt_from_rule(model, rule_name, stmts):
 def make_cyjs_network(results, model, stmts):
     path_stmts = get_path_stmts(results, model, stmts)
     path_genes = get_path_genes(path_stmts)
+    # Get UUIDs to use as filter
     path_uuids = [list(path.keys()) for path in path_stmts]
     all_path_uuids = []
     for p in path_uuids:
         all_path_uuids += p
-    print(json.dumps(path_uuids, indent=1))
     #filtered_stmts = ac.filter_gene_list(stmts, path_genes, 'one')
     filtered_stmts = ac.filter_uuid_list(stmts, all_path_uuids)
+    ac.dump_statements(filtered_stmts, 'output/korkut_cyjs_model.pkl')
     ca = CyJSAssembler(filtered_stmts)
     cm = ca.make_model()
     ca.set_CCLE_context(['SKMEL28_SKIN'])
@@ -73,7 +72,7 @@ def make_cyjs_network(results, model, stmts):
 def make_english_output(results, model, stmts):
     citations = {}
     citation_count = 1
-    for source, target, polarity, value, found_path, paths in results:
+    for source, target, polarity, value, found_path, paths, flag in results:
         cond = 'How does treatment with %s %s %s?' % \
             (source, 'increase' if polarity == 'positive' else
                      'decrease', target)
@@ -125,6 +124,22 @@ def make_english_output(results, model, stmts):
         references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
     print(references)
 
+def export_json(results, model, stmts):
+    """Export a set of paths in JSON format for visualization."""
+    json_dict = {}
+    for drug, ab, relation, value, path_found, paths, flag in results:
+        if json_dict.get(drug) is None:
+            json_dict[drug] = {}
+        if json_dict[drug].get(ab) is None:
+            json_dict[drug][ab] = {}
+        for idx, path in enumerate(paths):
+            path_stmts = []
+            for rule_name, sign in path[:-1]:
+                stmt = _stmt_from_rule(model, rule_name, stmts)
+                path_stmts.append(stmt.uuid)
+            json_dict[drug][ab][idx] = path_stmts
+    return json_dict
+
 if __name__ == '__main__':
     print("Processing data")
 
@@ -133,7 +148,7 @@ if __name__ == '__main__':
     ab_map = process_data.get_antibody_map(data)
 
     print('Loading data statements.')
-    data_stmts, data_values = make_stmts.run(dec_thresh=0.8, inc_thresh=1.2)
+    data_stmts, data_values = make_stmts.run(dec_thresh=0.5, inc_thresh=1.5)
     all_data_stmts = [values.values() for values in data_stmts.values()]
     all_data_stmts = itertools.chain.from_iterable(all_data_stmts)
     all_data_stmts = list(itertools.chain.from_iterable(all_data_stmts))
@@ -155,6 +170,8 @@ if __name__ == '__main__':
                 agent_data[drug_name][agent] = value
 
     base_stmts = ac.load_statements('output/korkut_model_pysb_before_pa.pkl')
+    for st in base_stmts:
+        st.uuid = str(st.uuid)
 
     """
     # Merge the sources of statements
@@ -175,6 +192,12 @@ if __name__ == '__main__':
     with open('korkut_pysb.pkl', 'rb') as f:
         print("Unpickling PySB model")
         model = pickle.load(f)
+
+    # Some parameters up front
+    MAX_PATHS_ONE = 5
+    MAX_PATHS_ALL = 5
+    MAX_PATH_LENGTH = 6
+
 
     # Preprocess and assemble the pysb model
     #model = assemble_pysb(combined_stmts, data_genes, '')
@@ -197,15 +220,23 @@ if __name__ == '__main__':
                 paths = []
                 for stmt in stmt_list:
                     print("Checking: %s" % stmt)
-                    result = mc.check_statement(stmt, max_paths=5,
-                                                max_path_length=6)
+                    result = \
+                        mc.check_statement(stmt,
+                                           max_paths=MAX_PATHS_ONE,
+                                           max_path_length=MAX_PATH_LENGTH)
                     print(result)
+
                     if result.path_found:
                         path_found = 1
                         if result.paths:
                             paths += result.paths
                     else:
                         print("No path found")
+
+                    # For efficiency, break out of loop as soon as 5 paths
+                    # in total are found
+                    if len(paths) >= MAX_PATHS_ALL:
+                        break
                 if paths:
                     print('===========================')
                     print('Scoring a total of %d paths' % len(paths))
@@ -228,5 +259,6 @@ if __name__ == '__main__':
     write_unicode_csv('model_check_results.csv', results)
     path_stmts = get_path_stmts(results, model, base_stmts)
     path_genes = get_path_genes(path_stmts)
-    make_english_output(results, model, base_stmts)
+    #make_english_output(results, model, base_stmts)
     make_cyjs_network(results, model, base_stmts)
+    paths_json = export_json(results, model, base_stmts)

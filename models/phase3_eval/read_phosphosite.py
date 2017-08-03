@@ -4,6 +4,7 @@ import pandas
 from copy import deepcopy
 from indra.sources import biopax
 from indra.util import unicode_strs
+from indra.sources import biopax
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence
 
