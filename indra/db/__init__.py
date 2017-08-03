@@ -88,28 +88,28 @@ def show_tables():
         if table_info[2] == 'indra_db_user':
             print(table_info)
 
-def add_text_ref(**kwargs):
+def insert_text_ref(**kwargs):
     conn = get_connection()
     # First create the text ref entry
     sql = """INSERT INTO text_ref
                  VALUES (DEFAULT, %(source)s, %(pmid)s, %(pmcid)s, %(doi)s,
                          %(url)s, %(manuscript_id)s, %(journal)s,
-                         %(publisher)s, %(pub_date)s);"""
+                         %(publisher)s, %(pub_date)s)
+                 RETURNING id;"""
     cur = conn.cursor()
     args = dict(zip(['source', 'pmid', 'pmcid', 'doi', 'url', 'manuscript_id',
                       'journal', 'publisher', 'pub_date'], [None]*9))
     args.update(kwargs)
     cur.execute(sql, args)
+    text_ref_id = cur.fetchone()[0]
     conn.commit()
-    print(args)
+    return text_ref_id
 
-def add_text_content_by_pmid(pmid, content_type, content):
+def insert_text_content(text_ref_id, content_type, content):
     conn = get_connection()
-    sql = """INSERT INTO text_content
-            VALUES (DEFAULT,
-                    (SELECT id from text_ref WHERE pmid=%s), %s, %s);"""
+    sql = "INSERT INTO text_content VALUES (DEFAULT, %s, %s, %s);"
     cur = conn.cursor()
-    cur.execute(sql, (pmid, content_type, content))
+    cur.execute(sql, (text_ref_id, content_type, content))
     conn.commit()
 
 def select_all(table):

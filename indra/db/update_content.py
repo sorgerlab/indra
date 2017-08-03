@@ -4,14 +4,14 @@ import tarfile
 import tempfile
 from ftplib import FTP
 from collections import namedtuple
-import db_api
+from indra import db
 
 pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
 blocksize=33554432 # Chunk size recommended by NCBI
 
 def initialize_pmc_manuscripts():
-
     auth_dir = '/pub/pmc/manuscript'
+    # FIXME
     #temp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
     temp_dir = 'tmpIndrari7qqk_i'
     # Get an FTP connection
@@ -21,7 +21,7 @@ def initialize_pmc_manuscripts():
     ftp.cwd(auth_dir)
     # Some variables for meaningful progress messages
     stored_bytes = 0
-    log_pcts = list(range(0, 101, 5))
+    pcts_to_log = list(range(0, 101, 5))
     # Get the list of files from the CSV file
     filelist_bytes = []
     print("Downloading filelist.csv")
@@ -35,8 +35,9 @@ def initialize_pmc_manuscripts():
     # Process the file info (skip the header line)
     pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
                      if line][1:]
-    loaded_pmc_ids = db_api.get_auth_xml_pmcids()
+    #loaded_pmc_ids = db.get_auth_xml_pmcids()
     """
+    # FIXME this could be eliminated if logging not needed
     # Function to write to local file with progress updates
     def write_to_file(fp, b, total_size):
         nonlocal stored_bytes, log_pcts
@@ -46,7 +47,8 @@ def initialize_pmc_manuscripts():
         if pct_complete in log_pcts:
             print('%s: %s%% complete' % (filename, pct_complete))
             log_pcts.remove(pct_complete)
-
+    # Next, select the files to download (all .xml.tar.gz files)
+    # FIXME use the directory listing
     filename = 'PMC002XXXXXX.xml.tar.gz'
     outfilepath = os.path.join(temp_dir, filename)
     filesize = ftp.size(filename)
@@ -60,25 +62,26 @@ def initialize_pmc_manuscripts():
     tf = tarfile.open(outfilepath)
     print("Extracting all files from %s" % outfilepath)
     tf.extractall(path=tmp_dir)
-    # Now that we've extracted everything, walk the directory tree and upload
-    # content to the INDRA database
     """
     counter = 0
+    # Now that we've extracted everything, iterate over the filelist and
+    # load files into database along with ID info
     for pmc_info in pmc_info_list:
+        # FIXME can get rid of this
         if counter > 5:
             break
         xml_path = os.path.join(temp_dir, pmc_info.File)
         if os.path.exists(xml_path):
-            print("Found file %s" % xml_path)
-            db_api.add_text_ref(source='pmc', pmid=pmc_info.PMID,
+            # Insert reference info for the paper
+            text_ref_id = db.insert_text_ref(source='pmc', pmid=pmc_info.PMID,
                                 pmcid=pmc_info.PMCID,
                                 manuscript_id=pmc_info.MID)
-            assert pmc_info.PMCID
-            # Open in text mode
+            # Open the XML file, in text mode
             with open(xml_path, 'rt') as f:
                 content = f.read()
-            db_api.add_text_content_by_pmcid(pmc_info.PMCID, 'pmc_auth_xml',
-                                             content)
+            db.insert_text_content(text_ref_id, 'pmc_auth_xml', content)
+        else:
+            print("Could not find file %s" % xml_path)
         counter += 1
 
 def update_pmc_manuscripts():
