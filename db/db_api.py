@@ -149,7 +149,7 @@ def select_stmts_by_gene(hgnc_name, role=None):
         stmts.append(Statement._from_json(stmt_json))
     return stmts
 
-def add_db_stmts(stmts, db_name):
+def insert_db_stmts(stmts, db_name):
     # First, add the DB info
     conn = get_connection()
     cur = conn.cursor()
@@ -158,8 +158,8 @@ def add_db_stmts(stmts, db_name):
     cur.execute(sql, (db_name,))
     db_ref_id = cur.fetchone()[0]
     # Now, insert the statements
-    for stmt in stmts:
-        print("Inserting stmt %s" % stmt)
+    for stmt_ix, stmt in enumerate(stmts):
+        print("Inserting stmt %s (%d of %d)" % (stmt, stmt_ix+1, len(stmts)))
         sql = """INSERT INTO statements (uuid, db_ref, type, json)
                     VALUES (%s, %s, %s, %s) RETURNING id;"""
         cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
@@ -179,11 +179,18 @@ def add_db_stmts(stmts, db_name):
                 role = 'OBJECT'
             else:
                 assert False, "Unhandled agent role."
+            # If no db_refs for the agent, skip the INSERT that follows
+            if not ag.db_refs:
+                continue
+            sql = """INSERT INTO agents (stmt_id, db_name, db_id, role)
+                     VALUES """
+            args = []
+            sql_list = []
             for db, db_id in ag.db_refs.items():
-                print("Inserting agent %s with db_refs %s %s" % (ag, db, db_id))
-                sql = """INSERT INTO agents (stmt_id, db_name, db_id, role)
-                         VALUES (%s, %s, %s, %s);"""
-                cur.execute(sql, (stmt_id, db, db_id, role))
+                args += [stmt_id, db, db_id, role]
+                sql_list.append('(%s, %s, %s, %s)')
+            sql = sql + ','.join(sql_list) + ';'
+            cur.execute(sql, args)
     conn.commit()
 
 
