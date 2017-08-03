@@ -87,7 +87,11 @@ def initialize_pmc_manuscripts():
 def update_pmc_manuscripts():
     pass
 
-
+if __name__ == '__main__':
+    db.drop_tables()
+    db.create_tables()
+    initialize_pmc_manuscripts()
+    db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 
 """
 

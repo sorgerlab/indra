@@ -35,6 +35,12 @@ def create_tables():
         content_type VARCHAR NOT NULL,
         content TEXT NOT NULL
     );
+    CREATE TABLE reach (
+        id serial PRIMARY KEY,
+        text_content_id int4 NOT NULL REFERENCES text_content(id),
+        version VARCHAR NOT NULL,
+        json TEXT NOT NULL
+    );
     CREATE TABLE  db_info (
         id serial PRIMARY KEY,
         db_name VARCHAR NOT NULL,
@@ -193,7 +199,26 @@ def insert_db_stmts(stmts, db_name):
             cur.execute(sql, args)
     conn.commit()
 
+def insert_reach(text_content_id, version, json_str):
+    """Insert REACH reading results."""
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """INSERT INTO reach (text_content_id, version, json)
+             VALUES (%s, %s, %s);"""
+    cur.execute(sql, (text_content_id, version, json_str))
+    conn.commit()
 
+def select_text_no_reach():
+    """Get text_ref records that have not had any content read by REACH."""
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """SELECT id, content_type FROM text_content
+             WHERE NOT EXISTS
+                (SELECT * FROM reach
+                 WHERE reach.text_content_id = text_content.id);"""
+    cur.execute(sql)
+    conn.commit()
+    return cur.fetchall()
 
 if __name__ == '__main__':
     import pickle
