@@ -5,9 +5,13 @@ import tempfile
 from ftplib import FTP
 from collections import namedtuple
 from indra import db
+import functools
+import multiprocessing as mp
 
 pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
 blocksize=33554432 # Chunk size recommended by NCBI
+
+PmcInfo = namedtuple('PmcInfo', ('File', 'PMCID', 'PMID', 'MID'))
 
 def initialize_pmc_manuscripts():
     auth_dir = '/pub/pmc/manuscript'
@@ -34,7 +38,6 @@ def initialize_pmc_manuscripts():
     filelist_csv = b''.join(filelist_bytes).decode('ascii').split('\n')
     # Namedtuple for working with PMC info entries
     print("Processing filelist.csv")
-    PmcInfo = namedtuple('PmcInfo', ('File', 'PMCID', 'PMID', 'MID'))
     # Process the file info (skip the header line)
     pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
                      if line][1:]
@@ -78,24 +81,36 @@ def initialize_pmc_manuscripts():
     """
     # Now that we've extracted everything, iterate over the list of files we
     # haven't stored and load into database
-    for pmc_ix, pmc_info in enumerate(pmc_info_missing):
-        xml_path = os.path.join(tmp_dir, pmc_info.File)
-        if pmc_ix % 100 == 0:
-            print("Inserting %d of %d" % (pmc_ix+1, len(pmc_info_missing)))
-        if os.path.exists(xml_path):
-            # Insert reference info for the paper
-            text_ref_id = db.insert_text_ref(source='pmc', pmid=pmc_info.PMID,
-                                pmcid=pmc_info.PMCID,
-                                manuscript_id=pmc_info.MID)
-            # Open the XML file, in text mode
-            with open(xml_path, 'rt') as f:
-                content = f.read()
-            db.insert_text_content(text_ref_id, 'pmc_auth_xml', content)
-        else:
-            print("Could not find file %s" % xml_path)
+    ctx = mp.get_context('spawn')
+    pool = ctx.Pool(4)
+    insert_func = functools.partial(_insert_pmc_with_content,
+                                base_dir=tmp_dir, content_type='pmc_auth_xml')
+    import time
+    start = time.time()
+    pool.map(insert_func, pmc_info_missing[0:1000])
+    #for pmc_info in pmc_info_missing[0:1000]:
+    #    insert_func(pmc_info)
+    end = time.time()
+    elapsed = end - start
+    print("1000 insertions: %s sec" % elapsed)
 
-def update_pmc_manuscripts():
-    pass
+
+def _insert_pmc_with_content(pmc_info, base_dir=None, content_type=None):
+    xml_path = os.path.join(base_dir, pmc_info.File)
+    if os.path.exists(xml_path):
+        # Check to see if this text_ref is in the database
+        text_ref_id = db.get_text_ref_by_pmcid(pmc_info.PMCID)
+        # If not found, insert info for the paper
+        if text_ref_id is None:
+            text_ref_id = db.insert_text_ref(source='pmc', pmid=pmc_info.PMID,
+                                             pmcid=pmc_info.PMCID,
+                                             manuscript_id=pmc_info.MID)
+        # Open the XML file, in text mode
+        with open(xml_path, 'rt') as f:
+            content = f.read()
+        db.insert_text_content(text_ref_id, content_type, content)
+    else:
+        print("Could not find file %s" % xml_path)
 
 if __name__ == '__main__':
     initialize_pmc_manuscripts()
