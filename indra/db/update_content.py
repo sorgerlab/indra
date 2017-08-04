@@ -7,6 +7,7 @@ from collections import namedtuple
 from indra import db
 import functools
 import multiprocessing as mp
+from indra.util import write_unicode_csv
 
 pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
 blocksize=33554432 # Chunk size recommended by NCBI
@@ -41,15 +42,68 @@ def initialize_pmc_manuscripts():
     # Process the file info (skip the header line)
     pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
                      if line][1:]
-    # Get list of PMCIDs for which we've already stored author manuscripts
-    stored_pmc_ids = db.get_auth_xml_pmcids()
-    print("%d pmc_auth_xml PMCIDs already in DB" % len(stored_pmc_ids))
-    # Next, compare the list of PMCIDs against our PMC info list to see which
-    # ones we still need to load
-    missing_set = set([p.PMCID for p in pmc_info_list]).difference(
+
+    # Insert any missing text_refs into database
+    def update_text_refs(pmc_info_list):
+        stored_pmc_ids = [r[0] for r in db.select('text_ref', 'pmcid')]
+        missing_set = set([p.PMCID for p in pmc_info_list]).difference(
                                                           set(stored_pmc_ids))
-    pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
-    print("%d pmc_auth_xml PMCIDs left to load in DB" % len(pmc_info_missing))
+        pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
+        # Write the missing records to a CSV so we can use the copy command
+        pmc_info_to_copy = []
+        for pi in pmc_info_missing:
+            if pi.PMID == '0':
+                pmid = '\\N'
+            else:
+                pmid = pi.PMID
+            pmc_info_to_copy.append(('pmc', pmid, pi.PMCID, pi.MID))
+        missing_mids_csv = os.path.join(tmp_dir, 'missing_mids.tsv')
+        write_unicode_csv(missing_mids_csv, pmc_info_to_copy, delimiter='\t')
+        conn = db.get_connection()
+        cur = conn.cursor()
+        with open(missing_mids_csv, 'rt') as f:
+            cur.copy_from(f, 'text_ref', size=1000000,
+                          columns=('source', 'pmid', 'pmcid', 'manuscript_id'))
+        conn.commit()
+
+    update_text_refs(pmc_info_list)
+
+    def update_text_content(pmc_info_list):
+        # Get list of PMCIDs for which we've already stored author manuscripts
+        stored_pmc_ids = db.get_auth_xml_pmcids()
+        print("%d pmc_auth_xml PMCIDs already in DB" % len(stored_pmc_ids))
+        missing_set = set([p.PMCID for p in pmc_info_list]).difference(
+                                                          set(stored_pmc_ids))
+        pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
+        print("%d pmc_auth_xml PMCIDs left to load in DB" %
+              len(pmc_info_missing))
+        # Get the text ref IDs by PMCID
+        pmcid_tr_ids = db.get_text_refs_by_pmcid(
+                                 tuple([pi.PMCID for pi in pmc_info_missing]))
+        pmcid_tr_dict = dict(pmcid_tr_ids)
+        content_block_rows = []
+        import time
+        start = time.time()
+        for pi in pmc_info_missing[0:1000]:
+            xml_path = os.path.join(tmp_dir, pi.File)
+            if os.path.exists(xml_path):
+                text_ref_id = pmcid_tr_dict[pi.PMCID]
+                # Open the XML file, in text mode
+                with open(xml_path, 'rt') as f:
+                    content = f.read()
+                db.insert_text_content(text_ref_id, 'pmc_auth_xml', content)
+            else:
+                print("Could not find file %s" % xml_path)
+            # Iterate over PI. For each file, get TR ID from dict
+            # Create row with TRID, content_type, and content (escaped)
+            # Write rows representing chunk to a csv file
+        end = time.time()
+        elapsed = end-start
+        print("1000 insertions: %s sec" % elapsed)
+
+    update_text_content(pmc_info_list)
+
+    # Get PMCID -> text_ref_id mapping
     # FIXME uncomment
     """
     #loaded_pmc_ids = db.get_auth_xml_pmcids()
@@ -81,6 +135,7 @@ def initialize_pmc_manuscripts():
     """
     # Now that we've extracted everything, iterate over the list of files we
     # haven't stored and load into database
+    """
     ctx = mp.get_context('spawn')
     pool = ctx.Pool(4)
     insert_func = functools.partial(_insert_pmc_with_content,
@@ -93,7 +148,7 @@ def initialize_pmc_manuscripts():
     end = time.time()
     elapsed = end - start
     print("1000 insertions: %s sec" % elapsed)
-
+    """
 
 def _insert_pmc_with_content(pmc_info, base_dir=None, content_type=None):
     xml_path = os.path.join(base_dir, pmc_info.File)
@@ -113,6 +168,8 @@ def _insert_pmc_with_content(pmc_info, base_dir=None, content_type=None):
         print("Could not find file %s" % xml_path)
 
 if __name__ == '__main__':
+    #db.drop_tables()
+    #db.create_tables()
     initialize_pmc_manuscripts()
     db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 

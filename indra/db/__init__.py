@@ -134,6 +134,25 @@ def select(table, field=None):
     conn.commit()
     return cur.fetchall()
 
+def get_text_ref_by_pmcid(pmcid):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM text_ref WHERE pmcid = %s", [pmcid])
+    conn.commit()
+    res = cur.fetchone()
+    if res:
+        return res[0]
+    else:
+        return None
+
+def get_text_refs_by_pmcid(pmcid_list):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT pmcid, id FROM text_ref WHERE pmcid IN %s;",
+                (pmcid_list,))
+    conn.commit()
+    return cur.fetchall()
+
 def get_auth_xml_pmcids():
     conn = get_connection()
     cur = conn.cursor()
