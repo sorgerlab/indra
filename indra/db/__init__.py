@@ -73,6 +73,7 @@ def drop_tables():
     drop_cmds = ['DROP TABLE agents;',
                  'DROP TABLE statements;',
                  'DROP TABLE db_info;',
+                 'DROP TABLE reach;',
                  'DROP TABLE text_content;',
                  'DROP TABLE text_ref;',]
     for cmd in drop_cmds:
@@ -118,14 +119,20 @@ def insert_text_content(text_ref_id, content_type, content):
     cur.execute(sql, (text_ref_id, content_type, content))
     conn.commit()
 
-def select_all(table):
+
+def select(table, field=None):
     conn = get_connection()
     cur = conn.cursor()
-    sql = "SELECT * FROM %s;" % table
-    cur.execute(sql)
+    if field is None:
+        # WARNING: SQL injection!
+        sql = "SELECT * FROM %s;" % table
+        cur.execute(sql)
+    else:
+        # WARNING: SQL injection!
+        sql = "SELECT " + field + " FROM " + str(table) + ";"
+        cur.execute(sql)
     conn.commit()
-    for text_ref in cur.fetchall():
-        print(text_ref)
+    return cur.fetchall()
 
 def get_auth_xml_pmcids():
     conn = get_connection()
@@ -135,8 +142,7 @@ def get_auth_xml_pmcids():
                 AND text_content.content_type = 'pmc_auth_xml';"""
     cur.execute(sql)
     conn.commit()
-    for pmcid in cur.fetchall():
-        print(pmcid)
+    return [p[0] for p in cur.fetchall()]
 
 def select_stmts_by_gene(hgnc_name, role=None):
     hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
