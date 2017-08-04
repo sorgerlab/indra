@@ -1,4 +1,5 @@
 import os
+import csv
 import shutil
 import tarfile
 import tempfile
@@ -84,6 +85,7 @@ def initialize_pmc_manuscripts():
         content_block_rows = []
         import time
         start = time.time()
+        content_block_csv = os.path.join(tmp_dir, 'content_block.tsv')
         for pi in pmc_info_missing[0:1000]:
             xml_path = os.path.join(tmp_dir, pi.File)
             if os.path.exists(xml_path):
@@ -91,12 +93,27 @@ def initialize_pmc_manuscripts():
                 # Open the XML file, in text mode
                 with open(xml_path, 'rt') as f:
                     content = f.read()
-                db.insert_text_content(text_ref_id, 'pmc_auth_xml', content)
+                #if content.count('\r'):
+                #    import ipdb; ipdb.set_trace()
+                #if content.count('\\'):
+                #    import ipdb; ipdb.set_trace()
+                content_block_rows.append([text_ref_id,
+                                           'pmc_auth_xml', content])
             else:
                 print("Could not find file %s" % xml_path)
             # Iterate over PI. For each file, get TR ID from dict
             # Create row with TRID, content_type, and content (escaped)
             # Write rows representing chunk to a csv file
+        write_unicode_csv(content_block_csv, content_block_rows)
+        mid = time.time()
+        print("Time to write content csv: %s" % (mid - start))
+        conn = db.get_connection()
+        cur = conn.cursor()
+        with open(content_block_csv, 'rt') as f:
+            sql =  """COPY text_content (text_ref_id, content_type, content)
+                        FROM STDIN WITH (FORMAT csv);"""
+            cur.copy_expert(sql, f, size=1000000)
+        conn.commit()
         end = time.time()
         elapsed = end-start
         print("1000 insertions: %s sec" % elapsed)
