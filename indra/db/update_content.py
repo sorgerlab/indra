@@ -103,6 +103,7 @@ def initialize_pmc_manuscripts():
         tf = tarfile.open(outfilepath)
         print("Extracting all files from %s" % outfilepath)
         tf.extractall(path=tmp_dir)
+        print("Done extracting files.")
 
     def update_text_content(pmc_info_list, xml_file, tmp_dir):
         # Filter PMCIDs to store to only those contained in this XML file
@@ -113,32 +114,39 @@ def initialize_pmc_manuscripts():
                                  tuple([pi.PMCID for pi in pmc_to_store])))
         content_block_rows = []
         blocksize = 2000
-        for pi in pmc_to_store[0:blocksize]:
-            xml_path = os.path.join(tmp_dir, pi.File)
-            if os.path.exists(xml_path):
-                # Look up the text_ref_id for this PMCID
-                text_ref_id = pmcid_tr_dict[pi.PMCID]
-                # Read the XML file in text mode
-                with open(xml_path, 'rt') as f:
-                    content = f.read()
-                # Add to our CSV rows
-                content_block_rows.append([text_ref_id,
-                                           'pmc_auth_xml', content])
-            else:
-                print("Could not find file %s" % xml_path)
-        # Write the content data to a StringIO in CSV format
-        content_block_csv = StringIO()
-        writer = csv.writer(content_block_csv, delimiter=',', quotechar='"',
-                            quoting=csv.QUOTE_ALL)
-        writer.writerows(content_block_rows)
-        # Copy the data in CSV format to the Postgres DB
-        conn = db.get_connection()
-        cur = conn.cursor()
-        sql =  """COPY text_content (text_ref_id, content_type, content)
-                    FROM STDIN WITH (FORMAT csv);"""
-        cur.copy_expert(sql, content_block_csv, size=1000000)
-        conn.commit()
-        content_block_csv.close() # Close the StringIO
+        start_ix_list = range(0, len(pmc_to_store), blocksize)
+        for start_ix in start_ix_list:
+            end_ix = start_ix + blocksize
+            if end_ix > len(pmc_to_store):
+                end_ix = len(pmc_to_store)
+            for pi in pmc_to_store[start_ix:end_ix]:
+                xml_path = os.path.join(tmp_dir, pi.File)
+                if os.path.exists(xml_path):
+                    # Look up the text_ref_id for this PMCID
+                    text_ref_id = pmcid_tr_dict[pi.PMCID]
+                    # Read the XML file in text mode
+                    with open(xml_path, 'rt') as f:
+                        content = f.read()
+                    # Add to our CSV rows
+                    content_block_rows.append([text_ref_id,
+                                               'pmc_auth_xml', content])
+                else:
+                    print("Could not find file %s" % xml_path)
+            # Write the content data to a StringIO in CSV format
+            content_block_csv = StringIO()
+            writer = csv.writer(content_block_csv, delimiter=',', quotechar='"',
+                                quoting=csv.QUOTE_ALL)
+            writer.writerows(content_block_rows)
+            # Copy the data in CSV format to the Postgres DB
+            conn = db.get_connection()
+            cur = conn.cursor()
+            sql =  """COPY text_content (text_ref_id, content_type, content)
+                        FROM STDIN WITH (FORMAT csv);"""
+            cur.copy_expert(sql, content_block_csv, size=1000000)
+            conn.commit()
+            print("Copied files %d to %d from %s" %
+                  (start_ix, end_ix, xml_file))
+            content_block_csv.close() # Close the StringIO
 
     # The high-level procedure:
     # 1. Get info on all author manuscripts currently in PMC
@@ -150,7 +158,6 @@ def initialize_pmc_manuscripts():
     # 4. Figure out which archives we'll need to download
     xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
-    xml_list = ['PMC002XXXXXX.xml.tar.gz']
     for xml_file in xml_list:
         tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
         download_xml_archive(xml_file, tmp_dir)
