@@ -1,6 +1,7 @@
 import os
 from io import StringIO
 import csv
+import time
 import shutil
 import tarfile
 import tempfile
@@ -50,15 +51,17 @@ def initialize_pmc_manuscripts():
         pmc_info_to_copy = []
         for pi in pmc_info_missing:
             if pi.PMID == '0':
-                pmid = '\\N'
+                pmid = ''
             else:
                 pmid = pi.PMID
             pmc_info_to_copy.append(('pmc', pmid, pi.PMCID, pi.MID))
         # Write the content data to a StringIO in CSV format
         missing_mids_csv = StringIO()
         writer = csv.writer(missing_mids_csv, delimiter=',', quotechar='"',
-                            quoting=csv.QUOTE_ALL)
+                            quoting=csv.QUOTE_MINIMAL)
         writer.writerows(pmc_info_to_copy)
+        # Rewind the buffer for reading
+        missing_mids_csv.seek(0)
         # Copy the data in CSV format to the Postgres DB
         conn = db.get_connection()
         cur = conn.cursor()
@@ -116,6 +119,7 @@ def initialize_pmc_manuscripts():
         blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), blocksize)
         for start_ix in start_ix_list:
+            t0 = time.time()
             end_ix = start_ix + blocksize
             if end_ix > len(pmc_to_store):
                 end_ix = len(pmc_to_store)
@@ -132,11 +136,16 @@ def initialize_pmc_manuscripts():
                                                'pmc_auth_xml', content])
                 else:
                     print("Could not find file %s" % xml_path)
+            t1 = time.time()
             # Write the content data to a StringIO in CSV format
             content_block_csv = StringIO()
             writer = csv.writer(content_block_csv, delimiter=',', quotechar='"',
-                                quoting=csv.QUOTE_ALL)
+                                quoting=csv.QUOTE_MINIMAL)
             writer.writerows(content_block_rows)
+            content_block_csv.seek(0, os.SEEK_END)
+            print("CSV size: %s" % content_block_csv.tell())
+            content_block_csv.seek(0)
+            t2 = time.time()
             # Copy the data in CSV format to the Postgres DB
             conn = db.get_connection()
             cur = conn.cursor()
@@ -147,7 +156,13 @@ def initialize_pmc_manuscripts():
             print("Copied files %d to %d from %s" %
                   (start_ix, end_ix, xml_file))
             content_block_csv.close() # Close the StringIO
-
+            end = time.time()
+            read_time = (1000 * (t1 - t0)) / blocksize
+            write_csv_time = (1000 * (t2 - t1)) / blocksize
+            write_db_time = (1000 * (end - t2)) / blocksize
+            total_time = (1000 * (end - t0)) / blocksize
+            print("Total time: %.1f (read %.1f, write csv %.1f, write DB %.1f)"
+                  % (total_time, read_time, write_csv_time, write_db_time))
     # The high-level procedure:
     # 1. Get info on all author manuscripts currently in PMC
     pmc_info_list = get_file_info()
@@ -158,11 +173,13 @@ def initialize_pmc_manuscripts():
     # 4. Figure out which archives we'll need to download
     xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
+    xml_list = ['PMC004XXXXXX.xml.tar.gz']
     for xml_file in xml_list:
         tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
-        download_xml_archive(xml_file, tmp_dir)
+        tmp_dir = 'tmpIndrakgn7bm2j'
+        #download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
-        shutil.rmtree(tmp_dir)
+        #shutil.rmtree(tmp_dir)
     ftp.close()
 
 if __name__ == '__main__':
