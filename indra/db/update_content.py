@@ -29,6 +29,7 @@ def _get_ftp_connection(ftp_path):
     ftp.cwd(ftp_path)
     return ftp
 
+
 def _get_file_info(ftp_path, filename, datatype):
     ftp = _get_ftp_connection(ftp_path)
     # Get the list of files from the tab-separated .txt file
@@ -45,6 +46,23 @@ def _get_file_info(ftp_path, filename, datatype):
     next(csv_reader) # Skip the header row
     info_list = [datatype(*row) for row in csv_reader if row]
     return info_list
+
+
+def _read_and_compress(file_info, content_type=None):
+    file_path, text_ref_id = file_info
+    if os.path.exists(file_path):
+        # Look up the text_ref_id for this PMCID
+        # Read the XML file in text mode
+        with open(file_path, 'rt') as f:
+            content = f.read()
+        # Compress the content
+        content_gz = zip_string(content)
+        # Add to our CSV rows
+        return (text_ref_id, content_type, content_gz)
+    else:
+        print("Could not find file %s" % file_path)
+        return None
+
 
 def initialize_pmc_manuscripts():
     ftp_path = '/pub/pmc/manuscript'
@@ -82,7 +100,7 @@ def initialize_pmc_manuscripts():
         return pmc_info_missing
 
     def get_xml_archives_to_download(pmc_info_list):
-        ftp = get_ftp_connection(ftp_path)
+        ftp = _get_ftp_connection(ftp_path)
         # Get the list of .xml.tar.gz files
         xml_files = [f[0] for f in ftp.mlsd() if f[0].endswith('.xml.tar.gz')]
         print("xml_files: %s" % xml_files)
@@ -95,7 +113,7 @@ def initialize_pmc_manuscripts():
         return xml_files
 
     def download_xml_archive(filename, tmp_dir):
-        ftp = get_ftp_connection(ftp_path)
+        ftp = _get_ftp_connection(ftp_path)
         # Function to write to local file with progress updates
         def write_to_file(fp, b):
             fp.write(b)
@@ -111,36 +129,34 @@ def initialize_pmc_manuscripts():
         print("Done extracting files.")
         ftp.close()
 
-    def update_text_content(pmc_info_list, xml_file, tmp_dir):
+    def update_text_content(pmc_info_list, xml_file, tmp_dir, poolsize=4):
         # Filter PMCIDs to store to only those contained in this XML file
         stem = xml_file[0:6]
         pmc_to_store = [p for p in pmc_info_list if p.File.startswith(stem)]
+        import random
+        random.shuffle(pmc_to_store)
         # Get the text ref IDs by PMCID
         pmcid_tr_dict = dict(db.get_text_refs_by_pmcid(
                                  tuple([pi.PMCID for pi in pmc_to_store])))
         pmc_blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
+        ctx = mp.get_context('spawn')
+        pool = ctx.Pool(poolsize)
+        _compress_func =  functools.partial(_read_and_compress,
+                                            content_type=b'pmc_auth_xml')
         for start_ix in start_ix_list:
             content_block_rows = []
             t0 = time.time()
             end_ix = start_ix + pmc_blocksize
             if end_ix > len(pmc_to_store):
                 end_ix = len(pmc_to_store)
+            info_tuples = []
             for pi in pmc_to_store[start_ix:end_ix]:
                 xml_path = os.path.join(tmp_dir, pi.File)
-                if os.path.exists(xml_path):
-                    # Look up the text_ref_id for this PMCID
-                    text_ref_id = pmcid_tr_dict[pi.PMCID]
-                    # Read the XML file in text mode
-                    with open(xml_path, 'rt') as f:
-                        content = f.read()
-                    # Compress the content
-                    content_gz = zip_string(content)
-                    # Add to our CSV rows
-                    content_block_rows.append([text_ref_id,
-                                               b'pmc_auth_xml', content_gz])
-                else:
-                    print("Could not find file %s" % xml_path)
+                text_ref_id = pmcid_tr_dict[pi.PMCID]
+                info_tuples.append((xml_path, text_ref_id))
+            content_block_rows += pool.map(_compress_func, info_tuples)
+
             t1 = time.time()
             conn = db.get_connection()
             cols = ('text_ref_id', 'content_type', 'content')
@@ -165,15 +181,16 @@ def initialize_pmc_manuscripts():
     # 3. Find out which ones are missing auth_xml content in the databse
     pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
-    xml_list = get_xml_archives_to_download(pmc_info_missing)
+    #xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
-    #xml_list = ['PMC004XXXXXX.xml.tar.gz']
+    xml_list = ['PMC004XXXXXX.xml.tar.gz']
     for xml_file in xml_list:
-        tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
-        #tmp_dir = 'tmpIndrakgn7bm2j'
-        download_xml_archive(xml_file, tmp_dir)
+        #tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
+        tmp_dir = 'tmpIndrac2km4wir'
+        #download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
         #shutil.rmtree(tmp_dir)
+
 
 def initialize_pmc_oa():
     ftp_path = '/pub/pmc'
@@ -181,9 +198,8 @@ def initialize_pmc_oa():
     # The high-level procedure:
     # 1. Get info on all Open Access Subset papers currently in PMC
     pmc_info_list = _get_file_info(ftp_path, 'oa_file_list.csv', PmcOaInfo)
-    import ipdb; ipdb.set_trace()
     # 2. Add text_refs to database for any we don't currently have indexed
-    #update_text_refs(pmc_info_list)
+    update_text_refs(pmc_info_list)
     # 3. Find out which ones are missing auth_xml content in the databse
     #pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
@@ -199,9 +215,9 @@ def initialize_pmc_oa():
 
 if __name__ == '__main__':
     pass
-    #db.drop_tables()
-    #db.create_tables()
-    #initialize_pmc_manuscripts()
+    db.drop_tables()
+    db.create_tables()
+    initialize_pmc_manuscripts()
     #db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 
 
