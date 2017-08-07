@@ -1,5 +1,5 @@
 import os
-from io import StringIO
+from io import StringIO, BytesIO
 import csv
 import time
 import shutil
@@ -8,6 +8,7 @@ import tempfile
 from ftplib import FTP
 from collections import namedtuple
 from indra import db
+import pgcopy
 import functools
 import multiprocessing as mp
 from indra.util import write_unicode_csv
@@ -51,25 +52,16 @@ def initialize_pmc_manuscripts():
         pmc_info_to_copy = []
         for pi in pmc_info_missing:
             if pi.PMID == '0':
-                pmid = ''
+                pmid = None
             else:
-                pmid = pi.PMID
-            pmc_info_to_copy.append(('pmc', pmid, pi.PMCID, pi.MID))
-        # Write the content data to a StringIO in CSV format
-        missing_mids_csv = StringIO()
-        writer = csv.writer(missing_mids_csv, delimiter=',', quotechar='"',
-                            quoting=csv.QUOTE_MINIMAL)
-        writer.writerows(pmc_info_to_copy)
-        # Rewind the buffer for reading
-        missing_mids_csv.seek(0)
-        # Copy the data in CSV format to the Postgres DB
+                pmid = pi.PMID.encode('ascii')
+            pmc_info_to_copy.append((b'pmc', pmid, pi.PMCID.encode('ascii'),
+                                     pi.MID.encode('ascii')))
+        # Copy using pgcopy
         conn = db.get_connection()
-        cur = conn.cursor()
-        sql = """COPY text_ref (source, pmid, pmcid, manuscript_id)
-                 FROM STDIN WITH (FORMAT csv);"""
-        cur.copy_expert(sql, missing_mids_csv, size=1000000)
-        conn.commit()
-        missing_mids_csv.close() # Close the StringIO
+        cols = ('source', 'pmid', 'pmcid', 'manuscript_id')
+        mgr = pgcopy.CopyManager(conn, 'text_ref', cols)
+        mgr.copy(pmc_info_to_copy, BytesIO)
 
     def get_missing_auth_xml_pmcids(pmc_info_list):
         # Get list of PMCIDs for which we've already stored author manuscripts
@@ -169,6 +161,7 @@ def initialize_pmc_manuscripts():
     # 2. Add text_refs to database for any we don't currently have indexed
     update_text_refs(pmc_info_list)
     # 3. Find out which ones are missing auth_xml content in the databse
+    """
     pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
     xml_list = get_xml_archives_to_download(pmc_info_missing)
@@ -180,13 +173,14 @@ def initialize_pmc_manuscripts():
         #download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
         #shutil.rmtree(tmp_dir)
+    """
     ftp.close()
 
 if __name__ == '__main__':
-    #db.drop_tables()
-    #db.create_tables()
+    db.drop_tables()
+    db.create_tables()
     initialize_pmc_manuscripts()
-    db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
+    #db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 
 
 """
