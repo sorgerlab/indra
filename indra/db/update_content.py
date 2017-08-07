@@ -15,7 +15,7 @@ from indra.util import write_unicode_csv, zip_string
 
 PmcAuthInfo = namedtuple('PmcAuthInfo', ('File', 'PMCID', 'PMID', 'MID'))
 PmcOaInfo = namedtuple('PmcOaInfo',
-                       ('File', 'Article_Citation', 'Accession_ID',
+                       ('File', 'Article_Citation', 'PMCID',
                         'Last_Updated', 'PMID', 'License'))
 
 ftp_blocksize = 33554432 # Chunk size recommended by NCBI
@@ -48,6 +48,32 @@ def _get_file_info(ftp_path, filename, datatype):
     return info_list
 
 
+def _update_text_refs(pmc_info_list, source):
+    # Insert any missing text_refs into database.
+    stored_pmc_ids = [r[0] for r in db.select('text_ref', 'pmcid')]
+    missing_set = set([p.PMCID for p in pmc_info_list]).difference(
+                                                      set(stored_pmc_ids))
+    pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
+    # Write the missing records to a CSV so we can use the copy command
+    pmc_info_to_copy = []
+    for pi in pmc_info_missing:
+        if pi.PMID == '0' or pi.PMID == '':
+            pmid = None
+        else:
+            pmid = pi.PMID.encode('ascii')
+        if isinstance(pi, PmcAuthInfo):
+            manuscript_id = pi.MID.encode('ascii')
+        else:
+            manuscript_id = None
+        pmc_info_to_copy.append((source.encode('ascii'), pmid,
+                                 pi.PMCID.encode('ascii'), manuscript_id))
+    # Copy using pgcopy
+    conn = db.get_connection()
+    cols = ('source', 'pmid', 'pmcid', 'manuscript_id')
+    mgr = pgcopy.CopyManager(conn, 'text_ref', cols)
+    mgr.copy(pmc_info_to_copy, BytesIO)
+
+
 def _read_and_compress(file_info, content_type=None):
     file_path, text_ref_id = file_info
     if os.path.exists(file_path):
@@ -66,27 +92,6 @@ def _read_and_compress(file_info, content_type=None):
 
 def initialize_pmc_manuscripts():
     ftp_path = '/pub/pmc/manuscript'
-
-    def update_text_refs(pmc_info_list):
-        # Insert any missing text_refs into database.
-        stored_pmc_ids = [r[0] for r in db.select('text_ref', 'pmcid')]
-        missing_set = set([p.PMCID for p in pmc_info_list]).difference(
-                                                          set(stored_pmc_ids))
-        pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
-        # Write the missing records to a CSV so we can use the copy command
-        pmc_info_to_copy = []
-        for pi in pmc_info_missing:
-            if pi.PMID == '0':
-                pmid = None
-            else:
-                pmid = pi.PMID.encode('ascii')
-            pmc_info_to_copy.append((b'pmc', pmid, pi.PMCID.encode('ascii'),
-                                     pi.MID.encode('ascii')))
-        # Copy using pgcopy
-        conn = db.get_connection()
-        cols = ('source', 'pmid', 'pmcid', 'manuscript_id')
-        mgr = pgcopy.CopyManager(conn, 'text_ref', cols)
-        mgr.copy(pmc_info_to_copy, BytesIO)
 
     def get_missing_auth_xml_pmcids(pmc_info_list):
         # Get list of PMCIDs for which we've already stored author manuscripts
@@ -177,7 +182,7 @@ def initialize_pmc_manuscripts():
     # 1. Get info on all author manuscripts currently in PMC
     pmc_info_list = _get_file_info(ftp_path, 'filelist.csv', PmcAuthInfo)
     # 2. Add text_refs to database for any we don't currently have indexed
-    update_text_refs(pmc_info_list)
+    _update_text_refs(pmc_info_list)
     # 3. Find out which ones are missing auth_xml content in the databse
     pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
@@ -199,9 +204,9 @@ def initialize_pmc_oa():
     # 1. Get info on all Open Access Subset papers currently in PMC
     pmc_info_list = _get_file_info(ftp_path, 'oa_file_list.csv', PmcOaInfo)
     # 2. Add text_refs to database for any we don't currently have indexed
-    update_text_refs(pmc_info_list)
-    # 3. Find out which ones are missing auth_xml content in the databse
-    #pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
+    _update_text_refs(pmc_info_list)
+    # 3. Find out which ones are missing pmc_oa_xml content in the databse
+    pmc_info_missing = get_missing_oa_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
     #xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
