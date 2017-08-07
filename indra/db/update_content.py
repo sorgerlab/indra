@@ -145,10 +145,10 @@ def initialize_pmc_manuscripts():
                                  tuple([pi.PMCID for pi in pmc_to_store])))
         pmc_blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
-        ctx = mp.get_context('spawn')
-        pool = ctx.Pool(poolsize)
-        _compress_func =  functools.partial(_read_and_compress,
-                                            content_type=b'pmc_auth_xml')
+        #ctx = mp.get_context('spawn')
+        #pool = ctx.Pool(poolsize)
+        #_compress_func =  functools.partial(_read_and_compress,
+        #                                    content_type=b'pmc_auth_xml')
         for start_ix in start_ix_list:
             content_block_rows = []
             t0 = time.time()
@@ -159,8 +159,20 @@ def initialize_pmc_manuscripts():
             for pi in pmc_to_store[start_ix:end_ix]:
                 xml_path = os.path.join(tmp_dir, pi.File)
                 text_ref_id = pmcid_tr_dict[pi.PMCID]
-                info_tuples.append((xml_path, text_ref_id))
-            content_block_rows += pool.map(_compress_func, info_tuples)
+                if os.path.exists(xml_path):
+                    # Look up the text_ref_id for this PMCID
+                    # Read the XML file in text mode
+                    with open(xml_path, 'rt') as f:
+                        content = f.read()
+                    # Compress the content
+                    content_gz = zip_string(content)
+                    # Add to our CSV rows
+                    content_block_rows.append((text_ref_id, b'pmc_auth_xml',
+                                               content_gz))
+                else:
+                    print("Could not find file %s" % file_path)
+                #info_tuples.append((xml_path, text_ref_id))
+            #content_block_rows += pool.map(_compress_func, info_tuples)
 
             t1 = time.time()
             conn = db.get_connection()
@@ -182,7 +194,7 @@ def initialize_pmc_manuscripts():
     # 1. Get info on all author manuscripts currently in PMC
     pmc_info_list = _get_file_info(ftp_path, 'filelist.csv', PmcAuthInfo)
     # 2. Add text_refs to database for any we don't currently have indexed
-    _update_text_refs(pmc_info_list)
+    _update_text_refs(pmc_info_list, 'pmc_auth')
     # 3. Find out which ones are missing auth_xml content in the databse
     pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
@@ -204,7 +216,7 @@ def initialize_pmc_oa():
     # 1. Get info on all Open Access Subset papers currently in PMC
     pmc_info_list = _get_file_info(ftp_path, 'oa_file_list.csv', PmcOaInfo)
     # 2. Add text_refs to database for any we don't currently have indexed
-    _update_text_refs(pmc_info_list)
+    _update_text_refs(pmc_info_list, source='pmc_oa')
     # 3. Find out which ones are missing pmc_oa_xml content in the databse
     pmc_info_missing = get_missing_oa_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
