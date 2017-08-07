@@ -170,3 +170,4 @@ else:
         # http://www.gossamer-threads.com/lists/python/python/728903
         def _fixtext(self, text):
             return text
+
