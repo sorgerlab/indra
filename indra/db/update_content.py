@@ -11,7 +11,7 @@ from indra import db
 import pgcopy
 import functools
 import multiprocessing as mp
-from indra.util import write_unicode_csv
+from indra.util import write_unicode_csv, zip_string
 
 pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
 blocksize=33554432 # Chunk size recommended by NCBI
@@ -107,10 +107,10 @@ def initialize_pmc_manuscripts():
         # Get the text ref IDs by PMCID
         pmcid_tr_dict = dict(db.get_text_refs_by_pmcid(
                                  tuple([pi.PMCID for pi in pmc_to_store])))
-        content_block_rows = []
         blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), blocksize)
         for start_ix in start_ix_list:
+            content_block_rows = []
             t0 = time.time()
             end_ix = start_ix + blocksize
             if end_ix > len(pmc_to_store):
@@ -123,62 +123,51 @@ def initialize_pmc_manuscripts():
                     # Read the XML file in text mode
                     with open(xml_path, 'rt') as f:
                         content = f.read()
+                    # Compress the content
+                    content_gz = zip_string(content)
                     # Add to our CSV rows
                     content_block_rows.append([text_ref_id,
-                                               'pmc_auth_xml', content])
+                                               b'pmc_auth_xml', content_gz])
                 else:
                     print("Could not find file %s" % xml_path)
             t1 = time.time()
-            # Write the content data to a StringIO in CSV format
-            content_block_csv = StringIO()
-            writer = csv.writer(content_block_csv, delimiter=',', quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-            writer.writerows(content_block_rows)
-            content_block_csv.seek(0, os.SEEK_END)
-            print("CSV size: %s" % content_block_csv.tell())
-            content_block_csv.seek(0)
-            t2 = time.time()
-            # Copy the data in CSV format to the Postgres DB
             conn = db.get_connection()
-            cur = conn.cursor()
-            sql =  """COPY text_content (text_ref_id, content_type, content)
-                        FROM STDIN WITH (FORMAT csv);"""
-            cur.copy_expert(sql, content_block_csv, size=1000000)
-            conn.commit()
+            cols = ('text_ref_id', 'content_type', 'content')
+            mgr = pgcopy.CopyManager(conn, 'text_content', cols)
+            mgr.copy(content_block_rows, BytesIO)
+
             print("Copied files %d to %d from %s" %
                   (start_ix, end_ix, xml_file))
-            content_block_csv.close() # Close the StringIO
+            #content_block_csv.close()
             end = time.time()
             read_time = (1000 * (t1 - t0)) / blocksize
-            write_csv_time = (1000 * (t2 - t1)) / blocksize
-            write_db_time = (1000 * (end - t2)) / blocksize
+            write_db_time = (1000 * (end - t1)) / blocksize
             total_time = (1000 * (end - t0)) / blocksize
-            print("Total time: %.1f (read %.1f, write csv %.1f, write DB %.1f)"
-                  % (total_time, read_time, write_csv_time, write_db_time))
+            print("Total time: %.1f (read %.1f, write DB %.1f)"
+                  % (total_time, read_time, write_db_time))
+
     # The high-level procedure:
     # 1. Get info on all author manuscripts currently in PMC
     pmc_info_list = get_file_info()
     # 2. Add text_refs to database for any we don't currently have indexed
     update_text_refs(pmc_info_list)
     # 3. Find out which ones are missing auth_xml content in the databse
-    """
     pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
     # 4. Figure out which archives we'll need to download
     xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
     xml_list = ['PMC004XXXXXX.xml.tar.gz']
     for xml_file in xml_list:
-        tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
+        #tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
         tmp_dir = 'tmpIndrakgn7bm2j'
         #download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
         #shutil.rmtree(tmp_dir)
-    """
     ftp.close()
 
 if __name__ == '__main__':
-    db.drop_tables()
-    db.create_tables()
+    #db.drop_tables()
+    #db.create_tables()
     initialize_pmc_manuscripts()
     #db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 
