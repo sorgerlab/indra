@@ -145,6 +145,7 @@ def initialize_pmc_manuscripts():
             cols = ('text_ref_id', 'content_type', 'content')
             mgr = pgcopy.CopyManager(conn, 'text_content', cols)
             mgr.copy(content_block_rows, BytesIO)
+            conn.commit()
 
             print("Copied files %d to %d from %s" %
                   (start_ix, end_ix, xml_file))
@@ -171,7 +172,7 @@ def initialize_pmc_manuscripts():
         #tmp_dir = 'tmpIndrakgn7bm2j'
         download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
-        shutil.rmtree(tmp_dir)
+        #shutil.rmtree(tmp_dir)
 
 if __name__ == '__main__':
     #db.drop_tables()
