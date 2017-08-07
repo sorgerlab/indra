@@ -13,26 +13,31 @@ import functools
 import multiprocessing as mp
 from indra.util import write_unicode_csv, zip_string
 
-pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
-blocksize=33554432 # Chunk size recommended by NCBI
 
 PmcInfo = namedtuple('PmcInfo', ('File', 'PMCID', 'PMID', 'MID'))
 
+ftp_blocksize = 33554432 # Chunk size recommended by NCBI
+
 def initialize_pmc_manuscripts():
-    # Get an FTP connection
-    ftp = FTP(pmc_ftp_url)
-    ftp.login()
-    # Change to the manuscripts directory
-    ftp.cwd('/pub/pmc/manuscript')
+
+    def get_ftp_connection():
+        pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
+        # Get an FTP connection
+        ftp = FTP(pmc_ftp_url)
+        ftp.login()
+        # Change to the manuscripts directory
+        ftp.cwd('/pub/pmc/manuscript')
+        return ftp
 
     def get_file_info():
+        ftp = get_ftp_connection()
         # Get the list of files from the CSV file
         tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
         filelist_bytes = []
         print("Downloading filelist.csv")
         ftp.retrbinary('RETR filelist.csv',
                       callback=lambda b: filelist_bytes.append(b),
-                      blocksize=blocksize)
+                      blocksize=ftp_blocksize)
         filelist_csv = b''.join(filelist_bytes).decode('ascii').split('\n')
         # Namedtuple for working with PMC info entries
         print("Processing filelist.csv")
@@ -40,6 +45,7 @@ def initialize_pmc_manuscripts():
         pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
                          if line][1:]
         shutil.rmtree(tmp_dir)
+        ftp.close()
         return pmc_info_list
 
     def update_text_refs(pmc_info_list):
@@ -75,6 +81,7 @@ def initialize_pmc_manuscripts():
         return pmc_info_missing
 
     def get_xml_archives_to_download(pmc_info_list):
+        ftp = get_ftp_connection()
         # Get the list of .xml.tar.gz files
         xml_files = [f[0] for f in ftp.mlsd() if f[0].endswith('.xml.tar.gz')]
         print("xml_files: %s" % xml_files)
@@ -83,22 +90,25 @@ def initialize_pmc_manuscripts():
         for pi in pmc_info_list:
             stems.add(pi.File[0:6])
         to_download = [f for f in xml_files if f[0:6] in stems]
+        ftp.close()
         return xml_files
 
     def download_xml_archive(filename, tmp_dir):
+        ftp = get_ftp_connection()
         # Function to write to local file with progress updates
         def write_to_file(fp, b):
             fp.write(b)
         outfilepath = os.path.join(tmp_dir, filename)
         print("Getting %s" % filename)
         with open(outfilepath, 'wb') as f:
-            ftp.retrbinary('RETR %s' % filename,
-                           callback=lambda b: f.write(b), blocksize=blocksize)
+            ftp.retrbinary('RETR %s' % filename, callback=lambda b: f.write(b),
+                           blocksize=ftp_blocksize)
         # Extract all files in the TAR archive
         tf = tarfile.open(outfilepath)
         print("Extracting all files from %s" % outfilepath)
         tf.extractall(path=tmp_dir)
         print("Done extracting files.")
+        ftp.close()
 
     def update_text_content(pmc_info_list, xml_file, tmp_dir):
         # Filter PMCIDs to store to only those contained in this XML file
@@ -107,12 +117,12 @@ def initialize_pmc_manuscripts():
         # Get the text ref IDs by PMCID
         pmcid_tr_dict = dict(db.get_text_refs_by_pmcid(
                                  tuple([pi.PMCID for pi in pmc_to_store])))
-        blocksize = 2000
-        start_ix_list = range(0, len(pmc_to_store), blocksize)
+        pmc_blocksize = 2000
+        start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
         for start_ix in start_ix_list:
             content_block_rows = []
             t0 = time.time()
-            end_ix = start_ix + blocksize
+            end_ix = start_ix + pmc_blocksize
             if end_ix > len(pmc_to_store):
                 end_ix = len(pmc_to_store)
             for pi in pmc_to_store[start_ix:end_ix]:
@@ -138,11 +148,10 @@ def initialize_pmc_manuscripts():
 
             print("Copied files %d to %d from %s" %
                   (start_ix, end_ix, xml_file))
-            #content_block_csv.close()
             end = time.time()
-            read_time = (1000 * (t1 - t0)) / blocksize
-            write_db_time = (1000 * (end - t1)) / blocksize
-            total_time = (1000 * (end - t0)) / blocksize
+            read_time = (1000 * (t1 - t0)) / pmc_blocksize
+            write_db_time = (1000 * (end - t1)) / pmc_blocksize
+            total_time = (1000 * (end - t0)) / pmc_blocksize
             print("Total time: %.1f (read %.1f, write DB %.1f)"
                   % (total_time, read_time, write_db_time))
 
@@ -156,14 +165,13 @@ def initialize_pmc_manuscripts():
     # 4. Figure out which archives we'll need to download
     xml_list = get_xml_archives_to_download(pmc_info_missing)
     # 5. To save space, download and extract files one at a time
-    xml_list = ['PMC004XXXXXX.xml.tar.gz']
+    #xml_list = ['PMC004XXXXXX.xml.tar.gz']
     for xml_file in xml_list:
-        #tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
-        tmp_dir = 'tmpIndrakgn7bm2j'
-        #download_xml_archive(xml_file, tmp_dir)
+        tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
+        #tmp_dir = 'tmpIndrakgn7bm2j'
+        download_xml_archive(xml_file, tmp_dir)
         update_text_content(pmc_info_list, xml_file, tmp_dir)
-        #shutil.rmtree(tmp_dir)
-    ftp.close()
+        shutil.rmtree(tmp_dir)
 
 if __name__ == '__main__':
     #db.drop_tables()
