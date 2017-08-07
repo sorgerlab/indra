@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import sys
 import csv
+import gzip
+import zlib
+from io import BytesIO
 import xml.etree.ElementTree as ET
 
 if sys.version_info[0] >= 3:
@@ -141,6 +144,21 @@ def write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
             for row in rows:
                 csv_writer.writerow([unicode(cell).encode(encoding)
                                      for cell in row])
+
+def zip_string(content, name='gzipped_object'):
+    buf = BytesIO()
+    gzf = gzip.GzipFile(name, 'wb', 6, buf)
+    gzf.write(content.encode('utf8'))
+    gzf.close()
+    return buf.getvalue()
+
+
+def unzip_string(gz_obj):
+    # Get the content from the object
+    gz_body = gz_obj['Body'].read()
+    # Decode the gzipped content
+    content = zlib.decompress(gz_body, 16+zlib.MAX_WBITS)
+    return content.decode('utf8')
 
 
 if sys.version_info[0] >= 3:
