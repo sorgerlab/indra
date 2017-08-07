@@ -13,40 +13,41 @@ import functools
 import multiprocessing as mp
 from indra.util import write_unicode_csv, zip_string
 
-
-PmcInfo = namedtuple('PmcInfo', ('File', 'PMCID', 'PMID', 'MID'))
+PmcAuthInfo = namedtuple('PmcAuthInfo', ('File', 'PMCID', 'PMID', 'MID'))
+PmcOaInfo = namedtuple('PmcOaInfo',
+                       ('File', 'Article_Citation', 'Accession_ID',
+                        'Last_Updated', 'PMID', 'License'))
 
 ftp_blocksize = 33554432 # Chunk size recommended by NCBI
 
+def _get_ftp_connection(ftp_path):
+    pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
+    # Get an FTP connection
+    ftp = FTP(pmc_ftp_url)
+    ftp.login()
+    # Change to the manuscripts directory
+    ftp.cwd(ftp_path)
+    return ftp
+
+def _get_file_info(ftp_path, filename, datatype):
+    ftp = _get_ftp_connection(ftp_path)
+    # Get the list of files from the tab-separated .txt file
+    print("Downloading %s" % filename)
+    filelist_bytes = []
+    ftp.retrbinary('RETR %s' % filename,
+                  callback=lambda b: filelist_bytes.append(b),
+                  blocksize=ftp_blocksize)
+    ftp.close()
+    # Process the file info (skip the header line)
+    print("Processing %s" % filename)
+    file_str = StringIO(b''.join(filelist_bytes).decode('ascii'))
+    csv_reader = csv.reader(file_str, delimiter=',', quotechar='"')
+    next(csv_reader) # Skip the header row
+    info_list = [datatype(*row) for row in csv_reader if row]
+    return info_list
+
 def initialize_pmc_manuscripts():
-
-    def get_ftp_connection():
-        pmc_ftp_url = 'ftp.ncbi.nlm.nih.gov'
-        # Get an FTP connection
-        ftp = FTP(pmc_ftp_url)
-        ftp.login()
-        # Change to the manuscripts directory
-        ftp.cwd('/pub/pmc/manuscript')
-        return ftp
-
-    def get_file_info():
-        ftp = get_ftp_connection()
-        # Get the list of files from the CSV file
-        tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
-        filelist_bytes = []
-        print("Downloading filelist.csv")
-        ftp.retrbinary('RETR filelist.csv',
-                      callback=lambda b: filelist_bytes.append(b),
-                      blocksize=ftp_blocksize)
-        filelist_csv = b''.join(filelist_bytes).decode('ascii').split('\n')
-        # Namedtuple for working with PMC info entries
-        print("Processing filelist.csv")
-        # Process the file info (skip the header line)
-        pmc_info_list = [PmcInfo(*line.split(',')) for line in filelist_csv
-                         if line][1:]
-        shutil.rmtree(tmp_dir)
-        ftp.close()
-        return pmc_info_list
+    ftp_path = '/pub/pmc/manuscript'
 
     def update_text_refs(pmc_info_list):
         # Insert any missing text_refs into database.
@@ -81,7 +82,7 @@ def initialize_pmc_manuscripts():
         return pmc_info_missing
 
     def get_xml_archives_to_download(pmc_info_list):
-        ftp = get_ftp_connection()
+        ftp = get_ftp_connection(ftp_path)
         # Get the list of .xml.tar.gz files
         xml_files = [f[0] for f in ftp.mlsd() if f[0].endswith('.xml.tar.gz')]
         print("xml_files: %s" % xml_files)
@@ -94,7 +95,7 @@ def initialize_pmc_manuscripts():
         return xml_files
 
     def download_xml_archive(filename, tmp_dir):
-        ftp = get_ftp_connection()
+        ftp = get_ftp_connection(ftp_path)
         # Function to write to local file with progress updates
         def write_to_file(fp, b):
             fp.write(b)
@@ -158,7 +159,7 @@ def initialize_pmc_manuscripts():
 
     # The high-level procedure:
     # 1. Get info on all author manuscripts currently in PMC
-    pmc_info_list = get_file_info()
+    pmc_info_list = _get_file_info(ftp_path, 'filelist.csv', PmcAuthInfo)
     # 2. Add text_refs to database for any we don't currently have indexed
     update_text_refs(pmc_info_list)
     # 3. Find out which ones are missing auth_xml content in the databse
@@ -174,10 +175,33 @@ def initialize_pmc_manuscripts():
         update_text_content(pmc_info_list, xml_file, tmp_dir)
         #shutil.rmtree(tmp_dir)
 
+def initialize_pmc_oa():
+    ftp_path = '/pub/pmc'
+
+    # The high-level procedure:
+    # 1. Get info on all Open Access Subset papers currently in PMC
+    pmc_info_list = _get_file_info(ftp_path, 'oa_file_list.csv', PmcOaInfo)
+    import ipdb; ipdb.set_trace()
+    # 2. Add text_refs to database for any we don't currently have indexed
+    #update_text_refs(pmc_info_list)
+    # 3. Find out which ones are missing auth_xml content in the databse
+    #pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
+    # 4. Figure out which archives we'll need to download
+    #xml_list = get_xml_archives_to_download(pmc_info_missing)
+    # 5. To save space, download and extract files one at a time
+    #xml_list = ['PMC004XXXXXX.xml.tar.gz']
+    #for xml_file in xml_list:
+    #    tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
+    #    download_xml_archive(xml_file, tmp_dir)
+    #    update_text_content(pmc_info_list, xml_file, tmp_dir)
+    #    #shutil.rmtree(tmp_dir)
+
+
 if __name__ == '__main__':
+    pass
     #db.drop_tables()
     #db.create_tables()
-    initialize_pmc_manuscripts()
+    #initialize_pmc_manuscripts()
     #db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 
 
