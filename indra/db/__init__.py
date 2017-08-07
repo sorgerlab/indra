@@ -19,46 +19,46 @@ def create_tables():
     sql = """
     CREATE TABLE text_ref (
         id serial PRIMARY KEY,
-        source VARCHAR NOT NULL,
-        pmid VARCHAR UNIQUE,
-        pmcid VARCHAR UNIQUE,
-        doi VARCHAR UNIQUE,
-        url VARCHAR UNIQUE,
-        manuscript_id VARCHAR UNIQUE,
-        journal VARCHAR,
-        publisher VARCHAR,
+        source TEXT NOT NULL,
+        pmid TEXT UNIQUE,
+        pmcid TEXT UNIQUE,
+        doi TEXT UNIQUE,
+        url TEXT UNIQUE,
+        manuscript_id TEXT UNIQUE,
+        journal TEXT,
+        publisher TEXT,
         pub_date DATE
     );
     CREATE TABLE text_content (
         id serial PRIMARY KEY,
         text_ref_id int4 NOT NULL REFERENCES text_ref(id),
-        content_type VARCHAR NOT NULL,
+        content_type TEXT NOT NULL,
         content TEXT NOT NULL
     );
     CREATE TABLE reach (
         id serial PRIMARY KEY,
         text_content_id int4 NOT NULL REFERENCES text_content(id),
-        version VARCHAR NOT NULL,
+        version TEXT NOT NULL,
         json TEXT NOT NULL
     );
     CREATE TABLE  db_info (
         id serial PRIMARY KEY,
-        db_name VARCHAR NOT NULL,
+        db_name TEXT NOT NULL,
         timestamp TIMESTAMP DEFAULT now()
     );
     CREATE TABLE statements (
         id serial PRIMARY KEY,
-        uuid VARCHAR UNIQUE NOT NULL,
+        uuid TEXT UNIQUE NOT NULL,
         db_ref int4 REFERENCES db_info(id),
-        type VARCHAR NOT NULL,
+        type TEXT NOT NULL,
         json TEXT NOT NULL
     );
     CREATE TABLE agents (
         id serial PRIMARY KEY,
         stmt_id int4 REFERENCES statements(id),
-        db_name VARCHAR NOT NULL,
-        db_id VARCHAR NOT NULL,
-        role VARCHAR NOT NULL
+        db_name TEXT NOT NULL,
+        db_id TEXT NOT NULL,
+        role TEXT NOT NULL
     );
     SET timezone = 'EST'
     """
