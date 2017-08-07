@@ -33,13 +33,15 @@ def create_tables():
         id serial PRIMARY KEY,
         text_ref_id int4 NOT NULL REFERENCES text_ref(id),
         content_type TEXT NOT NULL,
-        content BYTEA NOT NULL
+        content BYTEA NOT NULL,
+        UNIQUE (text_ref_id, content_type)
     );
     CREATE TABLE reach (
         id serial PRIMARY KEY,
         text_content_id int4 NOT NULL REFERENCES text_content(id),
         version TEXT NOT NULL,
-        json BYTEA NOT NULL
+        json BYTEA NOT NULL,
+        UNIQUE (text_content_id, version)
     );
     CREATE TABLE  db_info (
         id serial PRIMARY KEY,
