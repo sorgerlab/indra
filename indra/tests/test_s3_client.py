@@ -118,4 +118,5 @@ def test_get_upload_content():
 
 if __name__ == '__main__':
     #test_filter_keys()
-    test_check_key()
+    # TODO: verify that this was what was intended. Was `test_check_key'
+    test_check_pmid()

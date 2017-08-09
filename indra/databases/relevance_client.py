@@ -67,6 +67,9 @@ def get_relevant_nodes(network_id, query_nodes):
     params = {'identifier_set': query_nodes,
               'kernel_id': kernel_id}
     res = ndex_client.send_request(url, params, is_json=True)
+    
+    assert res is not None, "ndex_client.send_request returned None."
+    
     ranked_entities = res.get('ranked_entities')
     if ranked_entities is None:
         logger.error('Could not get ranked entities.')

@@ -3,6 +3,7 @@ from builtins import dict, str
 import pickle
 import random
 from indra.statements import *
+from pip._vendor.distlib.compat import raw_input
 
 class StmtScoring(object):
 
@@ -63,10 +64,12 @@ class StmtScoring(object):
         for stmt in stmts_to_score:
             print("---------------------------------------------------")
             print("Statement: %s\n" % stmt)
+            if sys.version_info.major < 3:
+                input = raw_input
             for ev_ix, ev in enumerate(stmt.evidence):
                 print("Evidence %s: %s\n" % (ev_ix, ev.text))
             while True:
-                score_input = raw_input('Score (0, 1, q)> ')
+                score_input = input('Score (0, 1, q)> ')
                 if score_input in ('0', '1'):
                     score_input = int(score_input)
                     break

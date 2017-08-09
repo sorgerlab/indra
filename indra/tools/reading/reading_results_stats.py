@@ -55,6 +55,8 @@ def report_stmt_counts(paper_stmts, plot_prefix=None):
 
 def plot_frequencies(counts, plot_filename, bin_interval):
     freq_dist = []
+    if sys.version_info.major >= 3:
+        xrange = range
     bin_starts = xrange(0, len(counts), bin_interval)
     for bin_start_ix in bin_starts:
         bin_end_ix = bin_start_ix + bin_interval

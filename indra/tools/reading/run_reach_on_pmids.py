@@ -165,8 +165,8 @@ def download_from_s3(pmid, input_dir=None, reach_version=None,
                             s3_client.get_reach_metadata(pmid)
     # Found it, same version, no need to get text
     if read_reach_version is not None and \
-       read_reach_version == reach_version:
-       result = {pmid: {'reach_version': read_reach_version,
+        read_reach_version == reach_version:
+        result = {pmid: {'reach_version': read_reach_version,
                         'reach_source_text': read_source_text}}
     # Found it, different version, get the text
     else:

@@ -428,7 +428,7 @@ class ActivityCondition(object):
                                   'INDRA', other.activity_type):
             return True
 
-    def equals(selfs, other):
+    def equals(self, other):
         type_match = (self.activity_type == other.activity_type)
         is_act_match = (self.is_active == other.is_active)
         return (type_match and is_act_match)
