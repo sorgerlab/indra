@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Publisher PUBLIC "-//Springer-Verlag//DTD A++ V2.4//EN"
+                           "http://devel.springer.de/A++/V2.4/DTD/A++V2.4.dtd">
+<Publisher>
+  <PublisherInfo>
+    <PublisherName>Urban &amp; Vogel</PublisherName>
+    <PublisherLocation>Munich</PublisherLocation>
+  </PublisherInfo>
+  <Journal>
+    <JournalInfo JournalProductType="ArchiveJournal" NumberingStyle="Unnumbered">
+      <JournalID>15010</JournalID>
+      <JournalPrintISSN>0300-8126</JournalPrintISSN>
+      <JournalElectronicISSN>1439-0973</JournalElectronicISSN>
+      <JournalTitle>Infection</JournalTitle>
+      <JournalSubTitle>A Journal of INFECTIOUS Disease</JournalSubTitle>
+      <JournalAbbreviatedTitle>Infection</JournalAbbreviatedTitle>
+      <JournalSubjectGroup>
+        <JournalSubject Code="SCH" Type="Primary">Medicine &amp; Public Health</JournalSubject>
+        <JournalSubject Code="SCH33096" Priority="1" Type="Secondary">Infectious Diseases</JournalSubject>
+        <JournalSubject Code="SCH24003" Priority="2" Type="Secondary">General Practice / Family Medicine</JournalSubject>
+        <JournalSubject Code="SCH33002" Priority="3" Type="Secondary">Internal Medicine</JournalSubject>
+      </JournalSubjectGroup>
+    </JournalInfo>
+    <Volume>
+      <VolumeInfo TocLevels="0" VolumeType="Regular">
+        <VolumeIDStart>30</VolumeIDStart>
+        <VolumeIDEnd>30</VolumeIDEnd>
+        <VolumeIssueCount>6</VolumeIssueCount>
+      </VolumeInfo>
+      <Issue IssueType="Regular">
+        <IssueInfo TocLevels="0">
+          <IssueIDStart>2</IssueIDStart>
+          <IssueIDEnd>2</IssueIDEnd>
+          <IssueHistory>
+            <CoverDate>
+              <Year>2002</Year>
+              <Month>4</Month>
+            </CoverDate>
+          </IssueHistory>
+          <IssueCopyright>
+            <CopyrightHolderName>Urban &amp; Vogel Medien und Medizin Verlagsgesellschaft</CopyrightHolderName>
+            <CopyrightYear>2002</CopyrightYear>
+          </IssueCopyright>
+        </IssueInfo>
+        <Article ID="Art1">
+          <ArticleInfo ArticleType="OriginalPaper" ContainsESM="No" Language="En" NumberingStyle="Unnumbered" TocLevels="0">
+            <ArticleID>1083</ArticleID>
+            <ArticleDOI>10.1007/s15010-002-1083-8</ArticleDOI>
+            <ArticleSequenceNumber>2</ArticleSequenceNumber>
+            <ArticleTitle Language="En">Nosocomial Pneumonia: A Cost-of-Illness Analysis</ArticleTitle>
+            <ArticleCategory>Clinical and Epidemiological Study</ArticleCategory>
+            <ArticleFirstPage>61</ArticleFirstPage>
+            <ArticleLastPage>67</ArticleLastPage>
+            <ArticleHistory>
+              <RegistrationDate>
+                <Year>2002</Year>
+                <Month>2</Month>
+                <Day>12</Day>
+              </RegistrationDate>
+              <OnlineDate>
+                <Year>2014</Year>
+                <Month>2</Month>
+                <Day>12</Day>
+              </OnlineDate>
+            </ArticleHistory>
+            <ArticleCopyright>
+              <CopyrightHolderName>Urban &amp; Vogel Medien und Medizin Verlagsgesellschaft</CopyrightHolderName>
+              <CopyrightYear>2002</CopyrightYear>
+            </ArticleCopyright>
+            <ArticleGrants Type="Regular">
+              <MetadataGrant Grant="OpenAccess"/>
+              <AbstractGrant Grant="OpenAccess"/>
+              <BodyPDFGrant Grant="Restricted"/>
+              <BodyHTMLGrant Grant="Restricted"/>
+              <BibliographyGrant Grant="Restricted"/>
+              <ESMGrant Grant="Restricted"/>
+            </ArticleGrants>
+          </ArticleInfo>
+          <ArticleHeader>
+            <AuthorGroup>
+              <Author AffiliationIDS="A1">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>E. S.</GivenName>
+                  <FamilyName>Dietrich</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A2">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>M.</GivenName>
+                  <FamilyName>Demmler</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A3">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>G.</GivenName>
+                  <FamilyName>Schulgen</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A3">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>K.</GivenName>
+                  <FamilyName>Fekec</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A4">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>O.</GivenName>
+                  <FamilyName>Mast</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A5">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>K.</GivenName>
+                  <FamilyName>Pelz</FamilyName>
+                </AuthorName>
+              </Author>
+              <Author AffiliationIDS="A2">
+                <AuthorName DisplayOrder="Western">
+                  <GivenName>F. D.</GivenName>
+                  <FamilyName>Daschner</FamilyName>
+                </AuthorName>
+              </Author>
+              <Affiliation ID="A1">
+                <OrgName>Kassenärztliche Bundesvereinigung, Herbert-Lewin-Str. 3, D-50936 Köln, Germany; Phone: (+49/22) 1400-5248; Fax: -57248, e-mail: edietrich@kbv.de</OrgName>
+                <OrgAddress>
+                  <Country>Germany</Country>
+                </OrgAddress>
+              </Affiliation>
+              <Affiliation ID="A2">
+                <OrgName>Institute for Environmental Medicine and Hospital Epidemiology, University Clinic Freiburg, Freiburg, Germany</OrgName>
+                <OrgAddress>
+                  <Country>Germany</Country>
+                </OrgAddress>
+              </Affiliation>
+              <Affiliation ID="A3">
+                <OrgName>Institute for Biometry and Medical Informatics, University of Freiburg, Freiburg, Germany</OrgName>
+                <OrgAddress>
+                  <Country>Germany</Country>
+                </OrgAddress>
+              </Affiliation>
+              <Affiliation ID="A4">
+                <OrgName>Health Economics and Outcomes Research, Bayer Vital, Leverkusen, Germany</OrgName>
+                <OrgAddress>
+                  <Country>Germany</Country>
+                </OrgAddress>
+              </Affiliation>
+              <Affiliation ID="A5">
+                <OrgName>Institute for Medical Microbiology and Hygiene, University of Freiburg, Freiburg, Germany</OrgName>
+                <OrgAddress>
+                  <Country>Germany</Country>
+                </OrgAddress>
+              </Affiliation>
+            </AuthorGroup>
+            <Abstract ID="Abs1" Language="En">
+              <Heading>Abstract</Heading>
+              <Para>
+                <Emphasis Type="Bold">Background:</Emphasis> We investigated incremental cost of nosocomial pneumonia (NP) from the perspective of a hospital and health insurance funds.</Para>
+              <Para>
+                <Emphasis Type="Bold">Patients and Methods:</Emphasis> The incremental cost was determined by calculating total costs for pneumonia patients and controls using prospective and retrospective matched-pairs analysis with 29 and 37 matched pairs, respectively.</Para>
+              <Para>
+                <Emphasis Type="Bold">Results:</Emphasis> Compared to controls, patients who developed pneumonia had to be on artificial ventilation 5 days longer, needed markedly more intensive care with 6.55 additional days in intensive care. Excess cost per pneumonia patient amounted to DM 14,606 (95% CI: DM 5,285–23,927) from the hospital's perspective and to DM 7,988 (95% CI: DM 5,281–10,894) according to statutory insurance charges. According to the retrospective analysis carried out on the neurosurgical and neurological intensive care wards, pneumonia patients were ventilated 5 days longer than patients without pneumonia, needed more intensive care over 30 days and had an additional 14.03 days of intensive care and 10.14 more days in hospital. Excess cost per patient was DM 29,610 (95% CI: DM 23,054–36,174) from the hospital's perspective and DM 18,000 (95% CI: 14,855–21,020) according to the statutory insurance criteria.</Para>
+              <Para>
+                <Emphasis Type="Bold">Conclusion:</Emphasis> The study gives insight into the structure of incremental cost caused by NP and shows that based on a conservative cost calculation the incremental cost per NP patient is higher for the hospital than for health insurance funds which indicates a significant financial deficit for the hospital. Antibiotics and microbiology together only contribute 6.8% to incremental cost. Therefore in a cost saving initiative their close relationship to length of hospitalization must be considered.</Para>
+            </Abstract>
+            <KeywordGroup Language="En">
+              <Keyword>Key Words Nosocomial pneumonia</Keyword>
+              <Keyword>Incremental cost of hospital-acquired infections</Keyword>
+              <Keyword>Cost-of-illness analysis</Keyword>
+            </KeywordGroup>
+            <ArticleNote Type="Misc">
+              <SimplePara>Received: July 5, 2000 · Revision accepted: January 9, 2002</SimplePara>
+            </ArticleNote>
+          </ArticleHeader>
+          <NoBody/>
+        </Article>
+      </Issue>
+    </Volume>
+  </Journal>
+</Publisher>

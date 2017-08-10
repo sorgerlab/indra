@@ -4,13 +4,12 @@ import re
 import shutil
 import gzip
 import lxml.etree.ElementTree as ET
-from os import path, walk
+from os import path, walk, remove
 from subprocess import call
 from collections import namedtuple
 
 from indra.db import insert_text_ref, insert_text_content
 from indra.util import zip_string
-from indra.tools.reading.pmc_upload_to_s3 import content_type
 
 RE_PATT_TYPE = type(re.compile(''))
 # TODO: finish this
@@ -47,37 +46,49 @@ def _pdftotext(pdf_file_path, txt_file_path = None):
 
     return txt_file_path
 
+def get_xml_data(pdf_path):
+    'Get the data from the xml file if present'
+    pdf_name = path.basename(pdf_path)
+    art_dirname = path.abspath(pdf_path + '/'.join(4*['..']))
+    xml_path_list = _find(art_dirname, pdf_name + '\.xml.*?')
+    assert len(xml_path_list) > 0, "We have no metadata"
+    if len(xml_path_list) == 1:
+        xml = ET.parse(xml_path_list[0])
+    elif len(xml_path_list) > 1:
+        #TODO: we really should be more intelligent about this
+        xml = ET.parse(xml_path_list[0])
+    
+    entry_dict = {'doi':'ArticleDOI',
+                  'journal':['JournalTitle', 'JournalSubTitle'],
+                  'pub_date':'Year',
+                  'publisher':'PublisherName'}
+    ref_data = {}
+    for table_key, xml_label in entry_dict:
+        ref_data[table_key] = xml.find('.//' + xml_label)
+    
+    return ref_data
+
+def process_one_pdf(pdf_path, txt_path):
+    'Convert the pdf to txt and zip it'
+    txt_path = _pdftotext(pdf_path, txt_path)
+    with open(txt_path, 'rb') as f_in:
+        with gzip.open(txt_path + '.gz', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    with open(txt_path, 'rb') as f:
+        content = zip_string(f.read())
+    remove(txt_path) # Only a tmp file.
+    return content
+
 
 def upload_springer(springer_dir):
     '''Convert the pdfs to text and upload data to AWS'''
-    # TODO: This probably shouldn't be hard-coded.
+    # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
     for pdf_path in _find(springer_dir, '.*?\.pdf'):
-        pdf_name = path.basename(pdf_path)
-        
-        # This is where the xml /should/ be.
-        art_dirname = path.abspath(pdf_path + '/'.join(4*['..']))
-        xml_path_list = _find(art_dirname, pdf_name + '\.xml.*?')
-        assert len(xml_path_list) > 0, "We have no metadata"
-        if len(xml_path_list) == 1:
-            xml = ET.parse(xml_path_list[0])
-        elif len(xml_path_list) > 1:
-            #TODO: we really should be more intelligent about this
-            xml = ET.parse(xml_path_list[0])
-        text_ref_id = insert_text_ref(
-            source = 'springer',
-            doi = xml.find('.//ArticleDOI').text)
-        
-        #TODO: define the content_type
-        content_type = None
-        
-        txt_path = _pdftotext(pdf_path, txt_path)
-        with open(txt_path, 'rb') as f_in:
-            with gzip.open(txt_path + '.gz', 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        with open(txt_path, 'rb') as f:
-            content = zip_string(f.read())
-            
+        ref_data = get_xml_data(pdf_path)
+        text_ref_id = insert_text_ref(source = 'springer', **ref_data)
+        content_type = None #TODO: define the content_type
+        content = process_one_pdf(pdf_path, txt_path)
         insert_text_content(text_ref_id, content_type, content)
     return
 
