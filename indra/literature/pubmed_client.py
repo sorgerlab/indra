@@ -203,7 +203,10 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     for art_ix, pm_article in enumerate(pm_articles):
         pmid = find_elem_text(pm_article, 'MedlineCitation/PMID')
         # Look for the DOI in the ELocationID field...
-        doi = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID')
+        doi = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID'
+                                         '[@EIdType="doi"][@ValidYN="Y"]')
+        pii = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID'
+                                         '[@EIdType="pii"][@ValidYN="Y"]')
         # ...and if that doesn't work, look in the ArticleIdList
         if doi is None:
             doi = find_elem_text(pm_article, './/ArticleId[@IdType="doi"]')
@@ -250,6 +253,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         # Build the result
         result = {'doi': doi,
                   'pmcid': pmcid,
+                  'pii': pii,
                   'title': title,
                   'authors': author_names,
                   'journal_title': journal_title,
