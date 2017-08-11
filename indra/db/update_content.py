@@ -74,22 +74,6 @@ def _update_text_refs(pmc_info_list, source):
     mgr.copy(pmc_info_to_copy, BytesIO)
 
 
-def _read_and_compress(file_info, content_type=None):
-    file_path, text_ref_id = file_info
-    if os.path.exists(file_path):
-        # Look up the text_ref_id for this PMCID
-        # Read the XML file in text mode
-        with open(file_path, 'rt') as f:
-            content = f.read()
-        # Compress the content
-        content_gz = zip_string(content)
-        # Add to our CSV rows
-        return (text_ref_id, content_type, content_gz)
-    else:
-        print("Could not find file %s" % file_path)
-        return None
-
-
 def initialize_pmc_manuscripts():
     ftp_path = '/pub/pmc/manuscript'
 
@@ -145,10 +129,6 @@ def initialize_pmc_manuscripts():
                                  tuple([pi.PMCID for pi in pmc_to_store])))
         pmc_blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
-        #ctx = mp.get_context('spawn')
-        #pool = ctx.Pool(poolsize)
-        #_compress_func =  functools.partial(_read_and_compress,
-        #                                    content_type=b'pmc_auth_xml')
         for start_ix in start_ix_list:
             content_block_rows = []
             t0 = time.time()
@@ -171,9 +151,6 @@ def initialize_pmc_manuscripts():
                                                content_gz))
                 else:
                     print("Could not find file %s" % file_path)
-                #info_tuples.append((xml_path, text_ref_id))
-            #content_block_rows += pool.map(_compress_func, info_tuples)
-
             t1 = time.time()
             conn = db.get_connection()
             cols = ('text_ref_id', 'content_type', 'content')
