@@ -3,6 +3,7 @@ from builtins import dict, str
 import re
 import shutil
 import gzip
+from indra.literature import id_lookup, pubmed_client
 try:
     import lxml.etree.ElementTree as ET
 except:
@@ -70,9 +71,35 @@ def get_xml_data(pdf_path):
                   'publisher':'PublisherName'}
     ref_data = {}
     for table_key, xml_label in entry_dict.items():
-        ref_data[table_key] = xml.find('.//' + xml_label)
+        ref_data[table_key] = xml.find('.//' + xml_label).text
     
     return ref_data
+
+def find_other_ids(doi):
+    '''Use the doi to try and find the pmid and/or pmcid.'''
+    other_ids = dict(zip(['pmid', 'pmcid'], 2*[None]))
+    id_dict = id_lookup(doi, 'doi')
+    if id_dict['pmid'] is None:
+        result_list = pubmed_client.get_ids(doi)
+        for res in result_list:
+            if 'PMC' in res:
+                other_ids['pmcid'] = res
+                # This is not very efficient...
+                other_ids['pmid'] = id_lookup(res, 'pmcid')['pmid']
+                break
+        else:
+            # This is based on a circumstantial assumption.
+            # It will work for the test set, but may fail when
+            # upon generalization.
+            if len(result_list) == 1:
+                other_ids['pmid'] = result_list[0]
+            else:
+                other_ids['pmid'] = None
+    else:
+        other_ids['pmid'] = id_dict['pmid']
+        other_ids['pmcid'] = id_dict['pmcid']
+        
+    return other_ids
 
 def process_one_pdf(pdf_path, txt_path):
     'Convert the pdf to txt and zip it'
@@ -82,7 +109,7 @@ def process_one_pdf(pdf_path, txt_path):
             shutil.copyfileobj(f_in, f_out)
     with open(txt_path, 'rb') as f:
         content = zip_string(f.read().decode('utf-8'))
-    #remove(txt_path) # Only a tmp file.
+    remove(txt_path) # Only a tmp file.
     return content
 
 
@@ -93,13 +120,21 @@ def upload_springer(springer_dir):
     '''
     # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
+    uploaded = []
     for pdf_path in deep_find(springer_dir, '.*?\.pdf'):
         ref_data = get_xml_data(pdf_path)
+        ref_data.update(find_other_ids(ref_data['doi']))
+        
+        if ref_data['pmid'] is None and ref_data['pmcid'] is None:
+            # We will for now assume this article is not relevant.
+            continue
+                
         #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
         content = process_one_pdf(pdf_path, txt_path)
         #insert_text_content(text_ref_id, content_type, content)
-    return
+        uploaded.append(pdf_path)
+    return uploaded
 
 
 if __name__ == "__main__":
