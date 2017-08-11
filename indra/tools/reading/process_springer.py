@@ -27,10 +27,10 @@ def deep_find(top_dir, patt):
     '''
     if not isinstance(patt, RE_PATT_TYPE):
         patt = re.compile(patt)
-
+    
     def match_func(fname):
         return patt.match(fname) is not None
-
+    
     matches = []
     for root, _, filenames in walk(top_dir):
         for filename in filter(match_func, filenames):
@@ -44,11 +44,11 @@ def pdftotext(pdf_file_path, txt_file_path = None):
         txt_file_path = pdf_file_path.replace('.pdf', '.txt')
     elif callable(txt_file_path):
         txt_file_path = txt_file_path(pdf_file_path)
-
+    
     call(['pdftotext', pdf_file_path, txt_file_path])
     assert path.exists(txt_file_path),\
          "A txt file was not created or name is unknown!"
-
+    
     return txt_file_path
 #====================================================================
 
@@ -65,14 +65,18 @@ def get_xml_data(pdf_path):
         xml = ET.parse(xml_path_list[0])
     
     # Maybe include the journal subtitle too, in future.
-    entry_dict = {'doi':'ArticleDOI',
-                  'journal':'JournalTitle',
-                  'pub_date':'Year',
-                  'publisher':'PublisherName'}
+    entry_dict = {
+        'doi':'ArticleDOI',
+        'journal':'JournalTitle',
+        'pub_date':'Year',
+        'publisher':'PublisherName',
+        'abstract':'Abstract',
+        'title':'ArticleTitle'
+        }
     ref_data = {}
     for table_key, xml_label in entry_dict.items():
-        ref_data[table_key] = xml.find('.//' + xml_label).text
-    
+        ref_data[table_key] = xml.find('.//' + xml_label)
+            
     return ref_data
 
 def find_other_ids(doi):
@@ -123,16 +127,27 @@ def upload_springer(springer_dir):
     uploaded = []
     for pdf_path in deep_find(springer_dir, '.*?\.pdf'):
         ref_data = get_xml_data(pdf_path)
-        ref_data.update(find_other_ids(ref_data['doi']))
+        ref_data.update(find_other_ids(ref_data['doi'].text))
         
         if ref_data['pmid'] is None and ref_data['pmcid'] is None:
             # We will for now assume this article is not relevant.
             continue
-                
+        
         #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
-        content = process_one_pdf(pdf_path, txt_path)
+        full_content = process_one_pdf(pdf_path, txt_path)
         #insert_text_content(text_ref_id, content_type, content)
+        
+        if ref_data['abstract'] is not None:
+            content_type  = None # Somthing abstract
+            abst_text = ET.tostring(
+                ref_data['abstract'], 
+                encoding='utf8', 
+                method='text'
+                ).decode('utf8')
+            abst_content = zip_string(abst_text + ref_data['title'].text)
+            #insert_text_content(text_ref_id, content_type, abst_content)
+        
         uploaded.append(pdf_path)
     return uploaded
 

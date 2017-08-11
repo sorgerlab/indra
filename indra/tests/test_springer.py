@@ -4,6 +4,7 @@ from builtins import dict, str
 import re
 
 from indra.tools.reading import process_springer as ps
+from os.path import exists
 
 TOP_DIR = 'springer_mock'
 PDF_PATH = TOP_DIR + '/ART_1_NOPMID/BodyRef/PDF/15010_2002_Article_1083.pdf'
@@ -16,6 +17,7 @@ def test_xml_read():
 def test_convert_and_zip():
     'Tests that the pdf can be converted and zipped'
     ps.process_one_pdf(PDF_PATH, 'tmp_test.txt')
+    assert not exists('tmp_test.txt'), 'Temp file not so temporary!'
     return
 
 def test_id_finding():
