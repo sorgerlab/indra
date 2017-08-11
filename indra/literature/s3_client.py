@@ -41,7 +41,7 @@ def check_pmid(pmid):
     # http://stackoverflow.com/questions/15115588/urllib-quote-throws-keyerror
     # In Python 2, this can be solved by explicitly convert to either to
     # unicode or to a Python 2 bytestring (bytes) explicitly.
-    if sys.version_info[0] < 3:
+    if sys.version_info.major < 3:
         pmid = unicode(pmid)
     return pmid
 

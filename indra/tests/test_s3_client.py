@@ -115,7 +115,3 @@ def test_get_upload_content():
     (ct, ct_type) = s3_client.get_upload_content(pmid_s3_fulltext)
     assert ct == 'foo'
     assert ct_type == 'txt'
-
-if __name__ == '__main__':
-    #test_filter_keys()
-    test_check_key()

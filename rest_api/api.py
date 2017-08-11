@@ -336,7 +336,7 @@ def map_grounding():
 
 @route('/preassembly/map_sequence', method=['POST', 'OPTIONS'])
 @allow_cors
-def map_grounding():
+def map_sequence():
     """Map sequence on a list of INDRA Statements."""
     if request.method == 'OPTIONS':
         return {}

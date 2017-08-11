@@ -297,7 +297,7 @@ class ReachProcessor(object):
         try:
             entity_term = next(res)
         except StopIteration:
-            logger.debug(' %s is not an entity' % entity_id)
+            logger.debug(' %s is not an entity' % loc_id)
             return None
         name = entity_term.get('text')
         go_id = None

@@ -91,7 +91,7 @@ class SBGNAssembler(object):
                 #self._assemble_activeform(stmt)
                 pass
             else:
-                logger.warning("Unhandled Statement type %s" % type(s))
+                logger.warning("Unhandled Statement type %s" % type(stmt))
                 continue
         sbgn_str = self.print_model()
         return sbgn_str
