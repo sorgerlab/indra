@@ -144,7 +144,7 @@ def get_title(pubmed_id):
     return title
 
 
-def _abstract_from_article_element(article, prepend_title=True):
+def _abstract_from_article_element(article, prepend_title=False):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
@@ -169,7 +169,7 @@ def get_abstract(pubmed_id, prepend_title=True):
 
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
-                               get_abstracts=False, prepend_title=True):
+                               get_abstracts=False, prepend_title=False):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -184,6 +184,11 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
+    get_abstracts : boolean
+        Indicates whether to include the Pubmed abstract in the results.
+    prepend_title : boolean
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text.
 
     Returns
     -------
@@ -272,7 +277,8 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     return results
 
 
-def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
+def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
+                         get_abstracts=False, prepend_title=False):
     """Get article metadata for up to 200 PMIDs from the Pubmed database.
 
     Parameters
@@ -283,6 +289,11 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
+    get_abstracts : boolean
+        Indicates whether to include the Pubmed abstract in the results.
+    prepend_title : boolean
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text.
 
     Returns
     -------
@@ -300,7 +311,8 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
-    return get_metadata_from_xml_tree(tree, get_issns_from_nlm)
+    return get_metadata_from_xml_tree(tree, get_issns_from_nlm, get_abstracts,
+                                      prepend_title)
 
 
 @lru_cache(maxsize=1000)
