@@ -144,11 +144,7 @@ def get_title(pubmed_id):
     return title
 
 
-def get_abstract(pubmed_id, prepend_title=True):
-    """Get the abstract of an article in the Pubmed database."""
-    article = get_article_xml(pubmed_id)
-    if article is None:
-        return None
+def _abstract_from_article_element(article, prepend_title=True):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
@@ -164,7 +160,16 @@ def get_abstract(pubmed_id, prepend_title=True):
     return abstract_text
 
 
-def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False):
+def get_abstract(pubmed_id, prepend_title=True):
+    """Get the abstract of an article in the Pubmed database."""
+    article = get_article_xml(pubmed_id)
+    if article is None:
+        return None
+    return _abstract_from_article_element(article, prepend_title)
+
+
+def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
+                               get_abstracts=False, prepend_title=True):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -252,6 +257,13 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False):
                   'journal_nlm_id': nlm_id,
                   'issn_list': issn_list,
                   'page': page}
+        # Get the abstracts if requested
+        if get_abstracts:
+            medline_article = pm_article.find('MedlineCitation/Article')
+            abstract = _abstract_from_article_element(
+                                medline_article, prepend_title=prepend_title)
+            result['abstract'] = abstract
+        # Add to dict
         results[pmid] = result
     return results
 
