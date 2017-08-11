@@ -3,7 +3,10 @@ from builtins import dict, str
 import re
 import shutil
 import gzip
-import lxml.etree.ElementTree as ET
+try:
+    import lxml.etree.ElementTree as ET
+except:
+    import lxml.etree as ET
 from os import path, walk, remove
 from subprocess import call
 from collections import namedtuple
@@ -15,7 +18,8 @@ RE_PATT_TYPE = type(re.compile(''))
 # TODO: finish this
 SP_INFO = namedtuple('springer_info', ('File', 'date'))
 
-def _find(top_dir, patt):
+# TODO: This might do better in util, or somewhere more gnereal ====
+def deep_find(top_dir, patt):
     '''Find files that match `patt` recursively down from `top_dir`
     
     Note: patt may be a regex string or a regex pattern object.
@@ -33,7 +37,7 @@ def _find(top_dir, patt):
     return matches
 
 
-def _pdftotext(pdf_file_path, txt_file_path = None):
+def pdftotext(pdf_file_path, txt_file_path = None):
     '''Wrapper around the command line function of the same name'''
     if txt_file_path is None:
         txt_file_path = pdf_file_path.replace('.pdf', '.txt')
@@ -45,12 +49,13 @@ def _pdftotext(pdf_file_path, txt_file_path = None):
          "A txt file was not created or name is unknown!"
 
     return txt_file_path
+#====================================================================
 
 def get_xml_data(pdf_path):
     'Get the data from the xml file if present'
     pdf_name = path.basename(pdf_path)
     art_dirname = path.abspath(pdf_path + '/'.join(4*['..']))
-    xml_path_list = _find(art_dirname, pdf_name + '\.xml.*?')
+    xml_path_list = deep_find(art_dirname, pdf_name.replace('.pdf','\.xml.*?'))
     assert len(xml_path_list) > 0, "We have no metadata"
     if len(xml_path_list) == 1:
         xml = ET.parse(xml_path_list[0])
@@ -58,19 +63,20 @@ def get_xml_data(pdf_path):
         #TODO: we really should be more intelligent about this
         xml = ET.parse(xml_path_list[0])
     
+    # Maybe include the journal subtitle too, in future.
     entry_dict = {'doi':'ArticleDOI',
-                  'journal':['JournalTitle', 'JournalSubTitle'],
+                  'journal':'JournalTitle',
                   'pub_date':'Year',
                   'publisher':'PublisherName'}
     ref_data = {}
-    for table_key, xml_label in entry_dict:
+    for table_key, xml_label in entry_dict.items():
         ref_data[table_key] = xml.find('.//' + xml_label)
     
     return ref_data
 
 def process_one_pdf(pdf_path, txt_path):
     'Convert the pdf to txt and zip it'
-    txt_path = _pdftotext(pdf_path, txt_path)
+    txt_path = pdftotext(pdf_path, txt_path)
     with open(txt_path, 'rb') as f_in:
         with gzip.open(txt_path + '.gz', 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -84,7 +90,7 @@ def upload_springer(springer_dir):
     '''Convert the pdfs to text and upload data to AWS'''
     # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
-    for pdf_path in _find(springer_dir, '.*?\.pdf'):
+    for pdf_path in deep_find(springer_dir, '.*?\.pdf'):
         ref_data = get_xml_data(pdf_path)
         text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
