@@ -1,8 +1,8 @@
 import json
 import psycopg2 as pg
 from indra.statements import *
+from indra.util import unzip_string
 from indra.databases import hgnc_client
-
 conn = None
 
 def get_connection():
@@ -19,22 +19,22 @@ def create_tables():
     sql = """
     CREATE TABLE text_ref (
         id serial PRIMARY KEY,
-        source TEXT NOT NULL,
         pmid TEXT UNIQUE,
         pmcid TEXT UNIQUE,
-        doi TEXT UNIQUE,
+        doi TEXT,
+        pii TEXT,
         url TEXT UNIQUE,
         manuscript_id TEXT UNIQUE,
-        journal TEXT,
-        publisher TEXT,
-        pub_date DATE
+        UNIQUE (pmid, doi)
     );
     CREATE TABLE text_content (
         id serial PRIMARY KEY,
         text_ref_id int4 NOT NULL REFERENCES text_ref(id),
-        content_type TEXT NOT NULL,
+        source TEXT NOT NULL,
+        format TEXT NOT NULL,
+        text_type TEXT NOT NULL,
         content BYTEA NOT NULL,
-        UNIQUE (text_ref_id, content_type)
+        UNIQUE (text_ref_id, source, format)
     );
     CREATE TABLE reach (
         id serial PRIMARY KEY,
@@ -97,6 +97,7 @@ def show_tables():
         if table_info[2] == 'indra_db_user':
             print(table_info)
 
+
 def insert_text_ref(**kwargs):
     conn = get_connection()
     # First create the text ref entry
@@ -155,15 +156,52 @@ def get_text_refs_by_pmcid(pmcid_list):
     conn.commit()
     return cur.fetchall()
 
+
+def get_abstracts_by_pmids(pmid_list, unzip=True):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""SELECT text_ref.pmid, text_content.content
+                   FROM text_ref, text_content
+                   WHERE text_content.text_type = 'abstract' AND
+                         text_ref.pmid IN %s;""", (tuple(pmid_list),))
+    conn.commit()
+    results = []
+    for pmid, abstract_mem in cur.fetchall():
+        results.append((pmid, unzip_string(abstract_mem.tobytes())))
+    return results
+
+
+def get_text_refs_by_pmid(pmid_list):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT pmid, id FROM text_ref WHERE pmid IN %s;",
+                (pmid_list,))
+    conn.commit()
+    return cur.fetchall()
+
+
 def get_auth_xml_pmcids():
     conn = get_connection()
     cur = conn.cursor()
     sql = """SELECT text_ref.pmcid FROM text_ref, text_content
-                WHERE text_ref.id = text_content.text_ref_id
-                AND text_content.content_type = 'pmc_auth_xml';"""
+                WHERE text_ref.id = text_content.text_ref_id AND
+                      text_content.text_type = 'fulltext' AND
+                      text_content.source = 'pmc_auth';"""
     cur.execute(sql)
     conn.commit()
     return [p[0] for p in cur.fetchall()]
+
+
+def get_abstract_pmids():
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """SELECT text_ref.pmid FROM text_ref, text_content
+                WHERE text_ref.id = text_content.text_ref_id
+                AND text_content.text_type = 'abstract';"""
+    cur.execute(sql)
+    conn.commit()
+    return [p[0] for p in cur.fetchall()]
+
 
 def select_stmts_by_gene(hgnc_name, role=None):
     hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
@@ -247,8 +285,5 @@ def select_text_no_reach():
     conn.commit()
     return cur.fetchall()
 
-if __name__ == '__main__':
-    import pickle
-    with open('bel_mapk.pkl', 'rb') as f:
-        stmts = pickle.load(f)
+
 
