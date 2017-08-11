@@ -164,14 +164,17 @@ def get_abstract(pubmed_id, prepend_title=True):
     return abstract_text
 
 
-def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
-    """
-    Get article metadata for up to 200 PMIDs from the Pubmed database.
+def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False):
+    """Get metadata for an XML tree containing PubmedArticle elements.
+
+    Documentation on the XML structure can be found at:
+        - https://www.nlm.nih.gov/bsd/licensee/elements_descriptions.html
+        - https://www.nlm.nih.gov/bsd/licensee/elements_alphabetical.html
 
     Parameters
     ----------
-    pmid_list : list of PMIDs as strings
-        Can contain 1-200 PMIDs.
+    tree : xml.etree.ElementTree
+        ElementTree containing one or more PubmedArticle elements.
     get_issns_from_nlm : boolean
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
@@ -179,21 +182,11 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
 
     Returns
     -------
-    dict
-        Contains the following fields: 'doi', 'title', 'authors',
-        'journal_title', 'journal_abbrev', 'journal_nlm_id', 'issn_list',
-        'page'.
+    dict of dicts
+        Dictionary indexed by PMID. Each value is a dict containing the
+        following fields: 'doi', 'title', 'authors', 'journal_title',
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
     """
-    if len(pmid_list) > 200:
-        raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
-    query_string=','.join(pmid_list)
-    params = {'db': 'pubmed',
-              'retmode': 'xml',
-              'id': pmid_list}
-    tree = send_request(pubmed_fetch, params)
-    if tree is None:
-        return None
-
     # A function to get the text for the element, or None if not found
     def find_elem_text(root, xpath_string):
         elem = root.find(xpath_string)
@@ -263,51 +256,43 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
     return results
 
 
+def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False):
+    """Get article metadata for up to 200 PMIDs from the Pubmed database.
+
+    Parameters
+    ----------
+    pmid_list : list of PMIDs as strings
+        Can contain 1-200 PMIDs.
+    get_issns_from_nlm : boolean
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to False, since it slows down performance.
+
+    Returns
+    -------
+    dict of dicts
+        Dictionary indexed by PMID. Each value is a dict containing the
+        following fields: 'doi', 'title', 'authors', 'journal_title',
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
+    """
+    if len(pmid_list) > 200:
+        raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
+    query_string=','.join(pmid_list)
+    params = {'db': 'pubmed',
+              'retmode': 'xml',
+              'id': pmid_list}
+    tree = send_request(pubmed_fetch, params)
+    if tree is None:
+        return None
+    return get_metadata_from_xml_tree(tree, get_issns_from_nlm)
+
+
 @lru_cache(maxsize=1000)
 def get_issns_for_journal(nlm_id):
     """Get a list of the ISSN numbers for a journal given its NLM ID.
 
-    Structure of the XML output returned by the NLM Catalog query::
-
-        NLMCatalogRecordSet
-          NLMCatalogRecord
-            NlmUniqueID
-            DateCreated
-            DateRevised
-            DateAuthorized
-            DateCompleted
-            DateRevisedMajor
-            TitleMain
-            MedlineTA
-            TitleAlternate +
-            AuthorList
-            ResourceInfo
-              TypeOfResource
-              Issuance
-              ResourceUnit
-            PublicationTypeList
-            PublicationInfo
-              Country
-              PlaceCode
-              Imprint
-              PublicationFirstYear
-              PublicationEndYear
-            Language
-            PhysicalDescription
-            IndexingSourceList
-              IndexingSource
-                IndexingSourceName
-                Coverage
-            GeneralNote +
-            LocalNote
-            MeshHeadingList
-            Classification
-            ELocationList
-            LCCN
-            ISSN +
-            ISSNLinking
-            Coden
-            OtherID +
+    Information on NLM XML DTDs is available at
+    https://www.nlm.nih.gov/databases/dtd/
     """
     params = {'db': 'nlmcatalog',
               'retmode': 'xml',
@@ -346,52 +331,3 @@ def expand_pagination(pages):
         logger.warning("Multiple hyphens in page number: %s" % pages)
         return pages
 
-"""
-Note
-----
-
-Structure of the XML output returned by queries to Pubmed database::
-
-    PubmedArticleSet
-      PubmedArticle
-        MedlineCitation
-          PMID
-          DateCreated
-          DateCompleted
-          DateRevised
-          MedlineJournalInfo
-            Country
-            MedlineTA
-            NlmUniqueID
-            ISSNLinking
-          ChemicalList
-          CitationSubset
-          CommentsCorrectionsList
-          MeshHeadingList
-          OtherID
-          Article
-            Journal
-              ISSN
-              JournalIssue
-              Title
-              ISOAbbreviation
-            ArticleTitle
-            Pagination
-              MedlinePgn
-            ELocationID
-            Abstract
-            AuthorList
-              Author
-                LastName
-                ForeName
-                Initials
-                AffiliationInfo
-            Language
-            PublicationTypeList
-              PublicationType
-            ArticleDate
-        PubmedData
-          History
-          PublicationStatus
-          ArticleIdList
-"""
