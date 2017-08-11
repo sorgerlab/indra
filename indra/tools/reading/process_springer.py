@@ -81,21 +81,24 @@ def process_one_pdf(pdf_path, txt_path):
         with gzip.open(txt_path + '.gz', 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
     with open(txt_path, 'rb') as f:
-        content = zip_string(f.read())
-    remove(txt_path) # Only a tmp file.
+        content = zip_string(f.read().decode('utf-8'))
+    #remove(txt_path) # Only a tmp file.
     return content
 
 
 def upload_springer(springer_dir):
-    '''Convert the pdfs to text and upload data to AWS'''
+    '''Convert the pdfs to text and upload data to AWS
+    
+    Note: Currently does nothing.
+    '''
     # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
     for pdf_path in deep_find(springer_dir, '.*?\.pdf'):
         ref_data = get_xml_data(pdf_path)
-        text_ref_id = insert_text_ref(source = 'springer', **ref_data)
+        #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
         content = process_one_pdf(pdf_path, txt_path)
-        insert_text_content(text_ref_id, content_type, content)
+        #insert_text_content(text_ref_id, content_type, content)
     return
 
 
