@@ -3,6 +3,7 @@ import psycopg2 as pg
 from indra.statements import *
 from indra.util import unzip_string
 from indra.databases import hgnc_client
+
 conn = None
 
 def get_connection():
@@ -13,19 +14,21 @@ def get_connection():
                           user='indra_db_user', password='indra_db_pass')
     return conn
 
+
 def create_tables():
     """Create the tables for the INDRA database."""
     conn = get_connection()
     sql = """
     CREATE TABLE text_ref (
         id serial PRIMARY KEY,
-        pmid TEXT UNIQUE,
-        pmcid TEXT UNIQUE,
+        pmid TEXT,
+        pmcid TEXT,
         doi TEXT,
         pii TEXT,
         url TEXT UNIQUE,
         manuscript_id TEXT UNIQUE,
-        UNIQUE (pmid, doi)
+        UNIQUE (pmid, doi),
+        UNIQUE (pmcid, doi)
     );
     CREATE TABLE text_content (
         id serial PRIMARY KEY,
@@ -34,7 +37,7 @@ def create_tables():
         format TEXT NOT NULL,
         text_type TEXT NOT NULL,
         content BYTEA NOT NULL,
-        UNIQUE (text_ref_id, source, format)
+        UNIQUE (text_ref_id, source, format, text_type)
     );
     CREATE TABLE reach (
         id serial PRIMARY KEY,
@@ -68,6 +71,7 @@ def create_tables():
     cur.execute(sql)
     conn.commit()
 
+
 def drop_tables():
     """Drop all tables in the INDRA database."""
     conn = get_connection()
@@ -86,6 +90,7 @@ def drop_tables():
             print(pe)
             conn.rollback()
     conn.commit()
+
 
 def show_tables():
     """Show all tables in the INDRA database."""
@@ -115,6 +120,7 @@ def insert_text_ref(**kwargs):
     conn.commit()
     return text_ref_id
 
+
 def insert_text_content(text_ref_id, content_type, content):
     conn = get_connection()
     sql = "INSERT INTO text_content VALUES (DEFAULT, %s, %s, %s);"
@@ -137,6 +143,7 @@ def select(table, field=None):
     conn.commit()
     return cur.fetchall()
 
+
 def get_text_ref_by_pmcid(pmcid):
     conn = get_connection()
     cur = conn.cursor()
@@ -147,6 +154,7 @@ def get_text_ref_by_pmcid(pmcid):
         return res[0]
     else:
         return None
+
 
 def get_text_refs_by_pmcid(pmcid_list):
     conn = get_connection()
@@ -163,6 +171,7 @@ def get_abstracts_by_pmids(pmid_list, unzip=True):
     cur.execute("""SELECT text_ref.pmid, text_content.content
                    FROM text_ref, text_content
                    WHERE text_content.text_type = 'abstract' AND
+                         text_content.text_ref_id = text_ref.id AND
                          text_ref.pmid IN %s;""", (tuple(pmid_list),))
     conn.commit()
     results = []
@@ -220,6 +229,7 @@ def select_stmts_by_gene(hgnc_name, role=None):
         stmts.append(Statement._from_json(stmt_json))
     return stmts
 
+
 def insert_db_stmts(stmts, db_name):
     # First, add the DB info
     conn = get_connection()
@@ -264,6 +274,7 @@ def insert_db_stmts(stmts, db_name):
             cur.execute(sql, args)
     conn.commit()
 
+
 def insert_reach(text_content_id, version, json_str):
     """Insert REACH reading results."""
     conn = get_connection()
@@ -272,6 +283,7 @@ def insert_reach(text_content_id, version, json_str):
              VALUES (%s, %s, %s);"""
     cur.execute(sql, (text_content_id, version, json_str))
     conn.commit()
+
 
 def select_text_no_reach():
     """Get text_ref records that have not had any content read by REACH."""
