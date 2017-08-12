@@ -180,6 +180,14 @@ def get_abstracts_by_pmids(pmid_list, unzip=True):
     return results
 
 
+def get_all_pmids():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT pmid FROM text_ref;")
+    conn.commit()
+    return [r[0] for r in cur.fetchall()]
+
+
 def get_text_refs_by_pmid(pmid_list):
     conn = get_connection()
     cur = conn.cursor()

@@ -27,7 +27,7 @@ def download_baseline():
     # Get the list of .xml.tar.gz files
     ftp = _get_ftp_connection('/pubmed/baseline')
     xml_files = [f[0] for f in ftp.mlsd() if f[0].endswith('.xml.gz')]
-    for ix, xml_file in enumerate(xml_files[-5:]):
+    for ix, xml_file in enumerate(xml_files):
         # Download the Gzipped content into a BytesIO
         gzf_bytes = BytesIO()
         print("Downloading %s (%d of %d)" % (xml_file, ix+1, len(xml_files)))
@@ -43,13 +43,18 @@ def download_baseline():
         # Get the article metadata from the tree
         article_info = pubmed_client.get_metadata_from_xml_tree(
                         tree, get_abstracts=True, prepend_title=False)
+        print("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
         text_ref_records = []
         text_content_info = {}
         valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
-        print("Assembling records for insertion")
-        for pmid in valid_pmids:
+        print("%d valid PMIDs" % len(valid_pmids))
+        existing_pmids = set(db.get_all_pmids())
+        print("%d existing PMIDs in text_refs" % len(existing_pmids))
+        pmids_to_add = valid_pmids.difference(existing_pmids)
+        print("%d PMIDs to add to text_refs" % len(pmids_to_add))
+        for pmid in pmids_to_add:
             pmid_data = article_info[pmid]
             rec = (pmid, pmid_data.get('pmcid'), pmid_data.get('doi'),
                    pmid_data.get('pii'))
@@ -69,9 +74,7 @@ def download_baseline():
         mgr.copy(text_ref_records, BytesIO)
         # Build a dict mapping PMIDs to text_ref IDs
         pmid_tr_dict = dict(db.get_text_refs_by_pmid(
-                                tuple(text_content_info.keys())))
-        # TODO: Check database for existing text_contents for these elements
-        # before inserting
+                                        tuple(text_content_info.keys())))
         # Add the text_ref IDs to the content to be inserted
         text_content_records = []
         for pmid, tc_data in text_content_info.items():
@@ -88,8 +91,8 @@ def update_text_refs():
     pass
 
 if __name__ == '__main__':
-    db.drop_tables()
-    db.create_tables()
+    #db.drop_tables()
+    #db.create_tables()
     download_baseline()
     """
     with open('medline17n0001.xml', 'rb') as f:
