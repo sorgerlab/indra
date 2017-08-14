@@ -158,7 +158,7 @@ def upload_springer(springer_dir, verbose = False):
         ref_data = get_xml_data(pdf_path)
         ref_data.update(find_other_ids(ref_data['doi'].text))
         
-        if not this_is_useful(ref_data):
+        if this_is_useful(ref_data):
             if verbose:
                 print("Skipping...")
             continue
