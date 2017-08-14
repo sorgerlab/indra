@@ -116,8 +116,30 @@ def process_one_pdf(pdf_path, txt_path):
     remove(txt_path) # Only a tmp file.
     return content
 
+def zip_abstract(abst_el, ttl_el):
+    'Get the abstract from the xml'
+    abst_text = ET.tostring(
+        abst_el, 
+        encoding='utf8', 
+        method='text'
+        ).decode('utf8')
+    return zip_string(abst_text + ttl_el.text)
 
-def upload_springer(springer_dir):
+
+def this_is_useful(ref_data):
+    '''Determines if the data in the pdf is likely to be useful.
+    
+    Currently we are simply looking at the pmid and pmcid to see if either is
+    present, however in future we should really implement a more meaningful
+    method of determination.
+    
+    Returns: Bool
+    '''
+    return ref_data['pmid'] is None and ref_data['pmcid'] is None
+    
+
+
+def upload_springer(springer_dir, verbose = False):
     '''Convert the pdfs to text and upload data to AWS
     
     Note: Currently does nothing.
@@ -125,13 +147,23 @@ def upload_springer(springer_dir):
     # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
     uploaded = []
-    for pdf_path in deep_find(springer_dir, '.*?\.pdf'):
+    if verbose:
+        print("Looking for PDF`s.")
+    match_list = deep_find(springer_dir, '.*?\.pdf')
+    if verbose:
+        print("Found PDF`s. Now entering loop.")
+    for pdf_path in match_list:
+        if verbose:
+            print("Examining %s" % pdf_path)
         ref_data = get_xml_data(pdf_path)
         ref_data.update(find_other_ids(ref_data['doi'].text))
         
-        if ref_data['pmid'] is None and ref_data['pmcid'] is None:
-            # We will for now assume this article is not relevant.
+        if not this_is_useful(ref_data):
+            if verbose:
+                print("Skipping...")
             continue
+        elif verbose:
+            print("Processing...")
         
         #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
@@ -140,15 +172,12 @@ def upload_springer(springer_dir):
         
         if ref_data['abstract'] is not None:
             content_type  = None # Somthing abstract
-            abst_text = ET.tostring(
-                ref_data['abstract'], 
-                encoding='utf8', 
-                method='text'
-                ).decode('utf8')
-            abst_content = zip_string(abst_text + ref_data['title'].text)
+            abst_content = zip_abstract(ref_data['abstract'], ref_data['title'])
             #insert_text_content(text_ref_id, content_type, abst_content)
         
         uploaded.append(pdf_path)
+        if verbose:
+            print("Finished Processing...")
     return uploaded
 
 
@@ -156,4 +185,6 @@ if __name__ == "__main__":
     #TODO: we should probably support reading from a different
     # directory.
     default_dir = '/groups/lsp/darpa/springer/content/data'
-    upload_springer(default_dir)
+    upload_springer(default_dir, verbose=True)
+    
+    
