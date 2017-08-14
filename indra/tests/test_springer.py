@@ -4,9 +4,9 @@ from builtins import dict, str
 import re
 
 from indra.tools.reading import process_springer as ps
-from os.path import exists
+from os.path import exists, dirname, join, realpath
 
-TOP_DIR = 'springer_mock'
+TOP_DIR = join(realpath(dirname(__file__)), 'springer_mock')
 PDF_PATH = TOP_DIR + '/ART_1_NOPMID/BodyRef/PDF/15010_2002_Article_1083.pdf'
 
 def test_xml_read():
