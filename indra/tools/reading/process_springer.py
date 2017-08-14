@@ -4,6 +4,7 @@ import re
 import shutil
 import gzip
 from indra.literature import id_lookup, pubmed_client
+from datetime import datetime
 try:
     import lxml.etree.ElementTree as ET
 except:
@@ -12,15 +13,15 @@ from os import path, walk, remove
 from subprocess import call
 from collections import namedtuple
 
-from indra.db import insert_text_ref, insert_text_content
+from indra.db import insert_text_ref, insert_text_content, get_text_ref_by_id
 from indra.util import zip_string
 
 RE_PATT_TYPE = type(re.compile(''))
 # TODO: finish this
 SP_INFO = namedtuple('springer_info', ('File', 'date'))
 
-# TODO: This might do better in util, or somewhere more gnereal ====
-def deep_find(top_dir, patt, verbose=False):
+# TODO: This might do better in util, or somewhere more gnereal ===============
+def deep_find(top_dir, patt, since_date=None, verbose=False):
     '''Find files that match `patt` recursively down from `top_dir`
     
     Note: patt may be a regex string or a regex pattern object.
@@ -32,9 +33,16 @@ def deep_find(top_dir, patt, verbose=False):
         return patt.match(fname) is not None
     
     matches = []
-    for root, _, filenames in walk(top_dir):
+    for root, dirnames, filenames in walk(top_dir):
         if verbose:
             print("Looking in %s." % root)
+        # Check if the directory has been modified recently. Note that removing
+        # a dirname from dirnames will prevent walk from going into that dir.
+        if since_date is not None:
+            for dirname in dirnames[:]:
+                mod_time = datetime.fromtimestamp(path.getmtime(dirname))
+                if mod_time < since_date:
+                    dirnames.remove(dirname)
         for filename in filter(match_func, filenames):
             matches.append(path.join(root, filename))
     return matches
@@ -52,9 +60,9 @@ def pdftotext(pdf_file_path, txt_file_path = None):
          "A txt file was not created or name is unknown!"
     
     return txt_file_path
-#====================================================================
+#==============================================================================
 
-def get_xml_data(pdf_path):
+def get_xml_data(pdf_path, entry_dict):
     'Get the data from the xml file if present'
     pdf_name = path.basename(pdf_path)
     art_dirname = path.abspath(pdf_path + '/'.join(4*['..']))
@@ -67,19 +75,15 @@ def get_xml_data(pdf_path):
         xml = ET.parse(xml_path_list[0])
     
     # Maybe include the journal subtitle too, in future.
-    entry_dict = {
-        'doi':'ArticleDOI',
-        'journal':'JournalTitle',
-        'pub_date':'Year',
-        'publisher':'PublisherName',
-        'abstract':'Abstract',
-        'title':'ArticleTitle'
-        }
-    ref_data = {}
-    for table_key, xml_label in entry_dict.items():
-        ref_data[table_key] = xml.find('.//' + xml_label)
+    
+    
+    xml_data = {}
+    for purpose_key, xml_label_dict in entry_dict.items():
+        xml_data[purpose_key] = {}
+        for table_key, xml_label in xml_label_dict.items():
+            xml_data[purpose_key][table_key] = xml.find('.//' + xml_label)
             
-    return ref_data
+    return xml_data
 
 def find_other_ids(doi):
     '''Use the doi to try and find the pmid and/or pmcid.'''
@@ -141,52 +145,85 @@ def this_is_useful(ref_data):
     
 
 
-def upload_springer(springer_dir, verbose = False):
+def upload_springer(springer_dir, verbose = False, since_date=None):
     '''Convert the pdfs to text and upload data to AWS
     
     Note: Currently does nothing.
     '''
-    # TODO: We should probably filter which articles we process
     txt_path = 'tmp.txt'
     uploaded = []
     if verbose:
-        print("Looking for PDF`s.")
-    match_list = deep_find(springer_dir, '.*?\.pdf', verbose=verbose)
-    if verbose:
-        print("Found PDF`s. Now entering loop.")
+        vprint = print
+    else:
+        vprint = lambda x: None
+    vprint("Looking for PDF`s.")
+    match_list = deep_find(
+        springer_dir, 
+        '.*?\.pdf', 
+        verbose=verbose,
+        since_date=since_date
+        )
+    # TODO: cache the result of the search
+    vprint("Found PDF`s. Now entering loop.")
     for pdf_path in match_list:
-        if verbose:
-            print("Examining %s" % pdf_path)
-        ref_data = get_xml_data(pdf_path)
+        vprint("Examining %s" % pdf_path)
+        xml_data = get_xml_data(
+            pdf_path, 
+            entry_dict = {
+                'ref_data':{
+                    'doi':'ArticleDOI',
+                    'journal':'JournalTitle',
+                    'pub_date':'Year',
+                    'publisher':'PublisherName'
+                    },
+                'abst_data': {
+                    'abstract':'Abstract',
+                    'title':'ArticleTitle'
+                    }
+                }
+            )
+        ref_data = xml_data['ref_data']
         ref_data.update(find_other_ids(ref_data['doi'].text))
         
         if this_is_useful(ref_data):
-            if verbose:
-                print("Skipping...")
+            vprint("Skipping...")
             continue
-        elif verbose:
-            print("Processing...")
+        vprint("Processing...")
         
-        #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
+        # For now pmid's are the primary ID, so that should be the primary
+        #text_ref_id = get_text_ref_by_id(ref_data['pmid'], 'pmid')
+        #if text_ref_id is None:
+            #text_ref_id = insert_text_ref(source = 'springer', **ref_data)
         content_type = None #TODO: define the content_type
         full_content = process_one_pdf(pdf_path, txt_path)
-        #insert_text_content(text_ref_id, content_type, content)
+        #insert_text_content(text_ref_id, content_type, full_content)
         
-        if ref_data['abstract'] is not None:
+        abst_data = xml_data['abst_data']
+        if abst_data['abstract'] is not None:
             content_type  = None # Somthing abstract
-            abst_content = zip_abstract(ref_data['abstract'], ref_data['title'])
+            abst_content = zip_abstract(abst_data['abstract'], abst_data['title'])
+            # TODO: Check if the abstract is already there.
             #insert_text_content(text_ref_id, content_type, abst_content)
         
         uploaded.append(pdf_path)
-        if verbose:
-            print("Finished Processing...")
+        vprint("Finished Processing...")
     return uploaded
 
 
 if __name__ == "__main__":
     #TODO: we should probably support reading from a different
     # directory.
+    record_file = 'last_update.txt'
+    if path.exists(record_file):
+        with open(record_file, 'r') as f:
+            last_update = datetime.fromtimestamp(f.read())
+    else:
+        last_update = None
+    
     default_dir = '/groups/lsp/darpa/springer/content/data'
-    upload_springer(default_dir, verbose=True)
+    upload_springer(default_dir, verbose=True, since_date=last_update)
+    
+    with open(record_file, 'w') as f:
+        f.write(datetime.now().timestamp())
     
     

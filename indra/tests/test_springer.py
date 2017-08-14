@@ -4,14 +4,72 @@ from builtins import dict, str
 import re
 
 from indra.tools.reading import process_springer as ps
-from os.path import exists, dirname, join, realpath
+from os.path import exists, dirname, join, realpath, basename
+from time import sleep
+from datetime import datetime
+from os import makedirs, removedirs, remove
 
 TOP_DIR = join(realpath(dirname(__file__)), 'springer_mock')
 PDF_PATH = TOP_DIR + '/ART_1_NOPMID/BodyRef/PDF/15010_2002_Article_1083.pdf'
+FINDME = '{}.findme.tmp'
+
+def test_basic_deep_find():
+    'Test the basic functionality of the deep_find method'
+    # Setup
+    findables = [
+        FINDME.format('shallow'),
+        join('inhere', FINDME.format('deep'))
+        ]
+    try:
+        for findable in findables:
+            find_dir = dirname(findable)
+            if find_dir != '' and not exists(find_dir):
+                makedirs(find_dir)
+            open(findable, 'w').close()
+        
+        # Test
+        flist = ps.deep_find('.', FINDME.format('.*?'))
+        def clean(fname_list):
+            return [basename(f) for f in fname_list]
+        assert clean(flist) == clean(findables),\
+            "Expect to find: %s, but found %s." % (str(findables), str(flist))
+    finally:
+        for findable in findables:
+            if exists(findable):
+                remove(findable)
+            find_dif = dirname(findable)
+            if find_dif != '' and exists(find_dif):
+                removedirs(find_dif)
+    return
+
+def test_time_sensitive_deep_find():
+    'Tests whether the only recent files can be searched.'
+    old_fname = FINDME.format('old')
+    open(old_fname, 'w').close()
+    sleep(5)
+    check_from_date = datetime.now()
+    sleep(1)
+    new_fname = FINDME.format('old')
+    open(new_fname, 'w').close()
+    try:
+        assert exists(old_fname) and exists(new_fname),\
+            'Files to be found not created.'
+        flist = ps.deep_find(
+            '.', 
+            FINDME.format('.*?'), 
+            since_date = check_from_date
+            )
+        assert len(flist) == 1 and new_fname in flist,\
+            'Not just recent files found: %s.' % str(flist)
+    finally:
+        for fname in [old_fname, new_fname]:
+            if exists(fname):
+                remove(fname)
+    return
 
 def test_xml_read():
     'Tests whether the xml files are being read'
-    ps.get_xml_data(PDF_PATH)
+    ps.get_xml_data(PDF_PATH, entry_dict = {'ref_data':{'doi':'ArticleDOI'}})
     return
     
 def test_convert_and_zip():

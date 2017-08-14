@@ -3,6 +3,7 @@ import psycopg2 as pg
 from indra.statements import *
 from indra.util import unzip_string
 from indra.databases import hgnc_client
+#from lxml.includes.xpath import XPATH_INVALID_TYPE
 
 conn = None
 
@@ -14,7 +15,7 @@ def get_connection():
                           user='indra_db_user', password='indra_db_pass')
     return conn
 
-
+# Make this happen durring init if the tables do not exist.
 def create_tables():
     """Create the tables for the INDRA database."""
     conn = get_connection()
@@ -91,16 +92,21 @@ def drop_tables():
             conn.rollback()
     conn.commit()
 
-
-def show_tables():
-    """Show all tables in the INDRA database."""
+def get_tables():
+    """Get list of all tables in the INDRA database"""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute('SELECT * FROM pg_catalog.pg_tables')
     conn.commit()
     for table_info in cur.fetchall():
         if table_info[2] == 'indra_db_user':
-            print(table_info)
+            ret = table_info
+            break
+    return ret
+
+def show_tables():
+    """Show all tables in the INDRA database."""
+    print(get_tables())
 
 
 def insert_text_ref(**kwargs):
@@ -195,6 +201,23 @@ def get_text_refs_by_pmid(pmid_list):
                 (pmid_list,))
     conn.commit()
     return cur.fetchall()
+
+
+def get_text_ref_by_id(id_str, id_type):
+    '''Look up the text ref using an id
+    
+    Note: This should eventually support looking up by multiple ids.
+    '''
+    conn = get_connection()
+    cur = conn.cursor()
+    fmt = "SELECT id FROM text_ref WHERE {id_type} = {id}"
+    cur.execute(fmt.format(id = id_str, id_type = id_type))
+    conn.commit()
+    res = cur.fetchone()
+    if res:
+        return res[0]
+    else:
+        return None
 
 
 def get_auth_xml_pmcids():
