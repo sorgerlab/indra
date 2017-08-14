@@ -20,7 +20,7 @@ RE_PATT_TYPE = type(re.compile(''))
 SP_INFO = namedtuple('springer_info', ('File', 'date'))
 
 # TODO: This might do better in util, or somewhere more gnereal ====
-def deep_find(top_dir, patt):
+def deep_find(top_dir, patt, verbose=False):
     '''Find files that match `patt` recursively down from `top_dir`
     
     Note: patt may be a regex string or a regex pattern object.
@@ -33,6 +33,8 @@ def deep_find(top_dir, patt):
     
     matches = []
     for root, _, filenames in walk(top_dir):
+        if verbose:
+            print("Looking in %s." % root)
         for filename in filter(match_func, filenames):
             matches.append(path.join(root, filename))
     return matches
@@ -149,7 +151,7 @@ def upload_springer(springer_dir, verbose = False):
     uploaded = []
     if verbose:
         print("Looking for PDF`s.")
-    match_list = deep_find(springer_dir, '.*?\.pdf')
+    match_list = deep_find(springer_dir, '.*?\.pdf', verbose=verbose)
     if verbose:
         print("Found PDF`s. Now entering loop.")
     for pdf_path in match_list:
