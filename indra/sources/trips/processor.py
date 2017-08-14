@@ -941,6 +941,15 @@ class TripsProcessor(object):
 
         db_refs, _ = _get_db_refs(term)
 
+        # Check if the "real" TERM is an assoc-with of this TERM as
+        # in "the SRF transcription factor".
+        assoc_with = term.find('assoc-with')
+        if assoc_with is not None:
+            assoc_id = assoc_with.attrib.get('id')
+            if assoc_id is not None:
+                agent = self._get_agent_by_id(assoc_id, event_id)
+                return agent
+
         # If the entity is a complex
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
             components = term.findall("components/component")
