@@ -29,22 +29,38 @@ def deep_find(top_dir, patt, since_date=None, verbose=False):
     if not isinstance(patt, RE_PATT_TYPE):
         patt = re.compile(patt)
     
-    def match_func(fname):
-        return patt.match(fname) is not None
+    def is_after_time(time_stamp, path_str):
+        mod_time = datetime.fromtimestamp(path.getmtime(path_str))
+        if mod_time < time_stamp:
+            return False
+        return True
+    
+    def desired_files(fname):
+        if since_date is not None:
+            if not is_after_time(since_date, fname):
+                return False
+        return patt.match(path.basename(fname)) is not None
+    
+    def desired_dirs(dirpath):
+        if since_date is not None:
+            if not is_after_time(since_date, dirpath):
+                return False
+        return True
+    
+    def complete(root, leaves):
+        return [path.join(root, leaf) for leaf in leaves]
     
     matches = []
     for root, dirnames, filenames in walk(top_dir):
         if verbose:
             print("Looking in %s." % root)
         # Check if the directory has been modified recently. Note that removing
-        # a dirname from dirnames will prevent walk from going into that dir.
+        # a dirpath from dirnames will prevent walk from going into that dir.
         if since_date is not None:
-            for dirname in dirnames[:]:
-                mod_time = datetime.fromtimestamp(path.getmtime(dirname))
-                if mod_time < since_date:
-                    dirnames.remove(dirname)
-        for filename in filter(match_func, filenames):
-            matches.append(path.join(root, filename))
+            for dirpath in filter(desired_dirs, complete(root, dirnames)):
+                dirnames.remove(dirpath)
+        for filepath in filter(desired_files, complete(root, filenames)):
+            matches.append(filepath)
     return matches
 
 

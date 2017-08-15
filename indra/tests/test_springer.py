@@ -29,9 +29,7 @@ def test_basic_deep_find():
         
         # Test
         flist = ps.deep_find('.', FINDME.format('.*?'))
-        def clean(fname_list):
-            return [basename(f) for f in fname_list]
-        assert clean(flist) == clean(findables),\
+        assert set(map(basename, flist)) == set(map(basename, findables)),\
             "Expect to find: %s, but found %s." % (str(findables), str(flist))
     finally:
         for findable in findables:
@@ -44,22 +42,20 @@ def test_basic_deep_find():
 
 def test_time_sensitive_deep_find():
     'Tests whether the only recent files can be searched.'
-    old_fname = FINDME.format('old')
+    old_fname = join(FINDME.format('old'))
     open(old_fname, 'w').close()
-    sleep(5)
+    sleep(1)
     check_from_date = datetime.now()
     sleep(1)
-    new_fname = FINDME.format('old')
+    new_fname = FINDME.format('new')
     open(new_fname, 'w').close()
     try:
-        assert exists(old_fname) and exists(new_fname),\
-            'Files to be found not created.'
         flist = ps.deep_find(
             '.', 
             FINDME.format('.*?'), 
             since_date = check_from_date
             )
-        assert len(flist) == 1 and new_fname in flist,\
+        assert len(flist) == 1 and new_fname in set(map(basename, flist)),\
             'Not just recent files found: %s.' % str(flist)
     finally:
         for fname in [old_fname, new_fname]:
