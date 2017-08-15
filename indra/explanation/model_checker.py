@@ -112,7 +112,17 @@ class PathResult(object):
         return str(self)
 
 class ModelChecker(object):
-    """Check a PySB model against a set of INDRA statements."""
+    """Check a PySB model against a set of INDRA statements.
+
+    Parameters
+    ----------
+    model : pysb.Model
+        A PySB model to check.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to check the model against.
+    agent_obs: Optional[list[indra.statements.Agent]]
+        A list of INDRA Agents in a given state to be observed.
+    """
 
     def __init__(self, model, statements=None, agent_obs=None):
         self.model = model
@@ -134,7 +144,13 @@ class ModelChecker(object):
         self.rule_obs_dict = {}
 
     def add_statements(self, stmts):
-        """Add to the list of statements to check against the model."""
+        """Add to the list of statements to check against the model.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            The list of Statements to be added for checking.
+        """
         self.statements += stmts
 
     def get_im(self, force_update=False):
@@ -229,6 +245,14 @@ class ModelChecker(object):
     def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
 
+        Parameters
+        ----------
+        max_paths : Optional[int]
+            The maximum number of specific paths to return for each Statement
+            to be explained. Default: 1
+        max_path_length : Optional[int]
+            The maximum length of specific paths to return. Default: 5
+
         Returns
         -------
         list of (Statement, PathResult)
@@ -246,13 +270,18 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        indra.statements.Statement
+        stmt : indra.statements.Statement
             The Statement to check.
+        max_paths : Optional[int]
+            The maximum number of specific paths to return for each Statement
+            to be explained. Default: 1
+        max_path_length : Optional[int]
+            The maximum length of specific paths to return. Default: 5
 
         Returns
         -------
         boolean
-            Whether the model satisfies the statement.
+            True if the model satisfies the Statement.
         """
         # Make sure the influence map is initialized
         self.get_im()
