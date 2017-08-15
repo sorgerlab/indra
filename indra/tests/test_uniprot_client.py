@@ -17,6 +17,9 @@ def test_query_protein_deprecated():
     gene_name = uniprot_client.get_gene_name('Q8NHX1')
     assert gene_name == 'MAPK3'
     assert unicode_strs(gene_name)
+    gene_name = uniprot_client.get_gene_name('Q8NHX1', web_fallback=False)
+    assert gene_name == 'MAPK3'
+    assert unicode_strs(gene_name)
 
 def test_get_family_members():
     members = uniprot_client.get_family_members('RAF')

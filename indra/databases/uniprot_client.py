@@ -233,6 +233,7 @@ def get_gene_name(protein_id, web_fallback=True):
     gene_name : str
         The gene name corresponding to the given Uniprot ID.
     """
+    protein_id = get_primary_id(protein_id)
     try:
         gene_name = uniprot_gene_name[protein_id]
         # There are cases when the entry is in the resource
