@@ -44,7 +44,7 @@ def test_pg_0():
     (f_level, b_level) = pg.get_reachable_sets(g1_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g1_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = cfp.PG_0((0, source), (length, target), pg_raw)
+    (pg_0, tags) = cfp.PG_0(pg_raw, (0, source), (length, target))
     # Because no nodes are pruned, the initialized "cycle free" paths graph
     # will be the same as the path graph we started with
     assert pg_0 == pg_raw
@@ -56,7 +56,7 @@ def test_pg_0():
     (f_level, b_level) = pg.get_reachable_sets(g2_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g2_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = cfp.PG_0((0, source), (length, target), pg_raw)
+    (pg_0, tags) = cfp.PG_0(pg_raw, (0, source), (length, target))
     assert not pg_0
     assert not tags
 
@@ -65,7 +65,7 @@ def test_pg_0():
     (f_level, b_level) = pg.get_reachable_sets(g3_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g3_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = cfp.PG_0((0, source), (length, target), pg_raw)
+    (pg_0, tags) = cfp.PG_0(pg_raw, (0, source), (length, target))
     assert set(pg_0.edges()) == set([((0, 'A'), (1, 'B')), ((1, 'B'), (2, 'C')),
                                      ((2, 'C'), (3, 'D'))])
     assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],

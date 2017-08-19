@@ -2,7 +2,7 @@ import random
 import itertools
 from copy import copy
 import networkx as nx
-from .paths_graph import get_edges, get_reachable_sets, paths_graph
+from indra.explanation import paths_graph
 
 """
 As we know, a paths-graph, say G_n, has the property that every node in G_n
@@ -156,51 +156,48 @@ eliminate all cycles involving src as well as all cycles involving tgt. To
 prime the sampling procedure we add the tag 'source' to every node in the
 pruned graph; except to src whose tag set will be [] """
 
-def PG_0(src, tgt, pg_raw):
-    g = pg_raw.copy()
-    """ while debugging I got into trouble by not keeping track of different
-    versions of the same graph. Hence playing it safe above """ 
-    """ First identify the nodes to be pruned. They are just nodes whose names
-    are either 'source' or 'target' """
+def PG_0(pg, src, tgt):
+    # First we identify the nodes to be pruned. In this initial phase, they
+    # are simply nodes whose names are either 'source' or 'target'.
     nodes_to_prune = []
-    for v in g.nodes_iter():
+    for v in pg.nodes_iter():
         if (v != src) & (v != tgt) & ((v[1] == src[1]) or (v[1] == tgt[1])):
             nodes_to_prune.append(v)
     nodes_to_prune = list(set(nodes_to_prune))
-
-    """ If there are no nodes to be pruned (this is the case in our current
-    example) just add the tag [source] to every node other than src. The node
-    src gets the tag []."""
+    # Tags are stored in a dictionary indexed by node. Tags consist of a
+    # list of node names (without assosciated depths).
+    # If there are no nodes to be pruned then we simple add the tag [source] to
+    # every node other than src. src gets the empty tag [].
     if not nodes_to_prune:
-        # Dictionary for storing tags, indexed by node. Tags consist of a
-        # list of node names (without depths)
         tags_0 = {}
-        for v in pg_raw.nodes_iter():
+        for v in pg.nodes_iter():
             if v == src:
                 tags_0[v] = []
             else:
                 tags_0[v] = [src[1]]
         # Because we didn't prune out any nodes, we can return the original
-        # paths graph
-        return (pg_raw, tags_0)
+        # paths graph:
+        return (pg, tags_0)
     else:
-        g_pruned  = prune(g, nodes_to_prune, src, tgt)
+        # Prune the graph
+        pg_pruned  = prune(pg, nodes_to_prune, src, tgt)
         # If the source or target gets pruned then there are no cycle free
         # paths. Hence we return the degenerate (graph, tags) pair and
         # propagate it through the remaining stages.
-        if (src not in g_pruned) or (tgt not in g_pruned):
+        if (src not in pg_pruned) or (tgt not in pg_pruned):
             return (nx.DiGraph(), {})
         # The src and target are still reachable after initial pruning,
         # so add src tags to all nodes (implying that paths through any node
         # will have passed through src)
         else:
             tags_0 = {}
-            for v in g_pruned.nodes_iter():
+            for v in pg_pruned.nodes_iter():
                 if v == src:
                     tags_0[v] = []
                 else:
                     tags_0[v] = [src[1]]
-        return (g_pruned, tags_0)
+        return (pg_pruned, tags_0)
+
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
 
@@ -241,7 +238,7 @@ def PG(src, tgt, pg_0):
                     dic_X[x] = (g_x, tags_x)
                 else:
                     """ carry out the pruning """
-                    g_x_prune = prune(Z_x, src, tgt, g_x)
+                    g_x_prune = prune(g_x, Z_x, src, tgt)
                     """ if tgt or x gets pruned then x will contribute nothing
                     to G_k """
                     if (tgt not in g_x_prune) or (x not in g_x_prune):
@@ -312,20 +309,20 @@ def cf_sample_many_paths(src,tgt, H, t, n):
 
 
 if __name__ == '__main__':
-    G_0 = get_edges('korkut_im.sif')
+    G_0 = paths_graph.get_edges('korkut_im.sif')
     source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
     target = 'EIF4EBP1_T37_p_obs'
 
-    (f_level, b_level)  =  get_reachable_sets(G_0, source, target,
+    (f_level, b_level)  =  paths_graph.get_reachable_sets(G_0, source, target,
                                               max_depth=10, signed=False)
     length = 9
 
-    pg_raw = paths_graph(G_0, source, target, length, f_level, b_level,
-                    signed=False, target_polarity=0)
+    pg_raw = paths_graph.paths_graph(G_0, source, target, length, f_level,
+                                     b_level, signed=False, target_polarity=0)
 
     src = (0, source)
     tgt = (9, target)
-    pg_0 = PG_0(src,tgt,pg_raw)
+    pg_0 = PG_0(pg_raw, src, tgt)
 
     dic_PG = PG(src,tgt,pg_0)
     G_cf, T = dic_PG[8]
