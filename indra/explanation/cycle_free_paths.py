@@ -82,7 +82,7 @@ these nodes.
 (iii) In the resulting graph, identify Y, the set of nodes  have lost all their
 in_coming edges or out_going edges.
 
-Return g_prune, the partially pruned graph (obatined through steps (i) and
+Return g_prune, the partially pruned graph (obtained through steps (i) and
 (ii)) and Y, the candidiate set of nodes for the next iteration of pruning.
 
 prune(Y, src, tgt, g) applies span() repeatedly till there are no more nodes to
@@ -201,21 +201,21 @@ def PG_0(pg, src, tgt):
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
 
-def PG(src, tgt, pg_0):
-    dic_PG = {}
-    dic_PG[0] = pg_0
-    for k in range(1, 9):
+def PG(pg_0, src, tgt, path_length):
+    dic_PG = {0: pg_0}
+    for k in range(1, path_length):
+        # Start by copying the information from the previous level
         H = dic_PG[k-1][0].copy()
         tags = dic_PG[k-1][1].copy()
-        """ Check if we have already detected there are no cycle free paths. If
-        so just propagate this information """
-        if H.nodes() == []:
+        # Check if we have already detected there are no cycle free paths.
+        # If so just propagate this information.
+        if not H:
             dic_PG[k] = dic_PG[k-1]
         else:
-            """ Identify the nodes at level k in G_(k-1) """
+            # Identify the nodes at level k in G_(k-1)
             X = [v for v in H.nodes_iter() if v[0] == k]
-            """ we will track the (g_x, tags_x) pairs constributed by each x
-            through dic_X """
+            # We will track the (g_x, tags_x) pairs contributed by each x
+            # through dic_X
             dic_X = {}
             for x in X:
                 tags_x = {}
@@ -224,10 +224,13 @@ def PG(src, tgt, pg_0):
                 g_x = nx.DiGraph()
                 g_x.add_edges_from(g_x_b.edges())
                 g_x.add_edges_from(g_x_f.edges())
-                Z_x = [v for v in g_x_f if ((v[1] == x[1]) & (v[0] != k))]
-                """  If Z_x is null then just add the tag 'x' all the nodes in
-                g_x_f but not to x"""
-                if Z_x == []:
+                # Get the nodes representing cycles back through node x,
+                # (excluding x at level k)
+                nodes_to_prune = [v for v in g_x_f
+                                  if v[1] == x[1] and v[0] != k]
+                # If there are no nodes to prune then just add the tag 'x' to
+                # all the nodes in g_x_f but not to x
+                if not nodes_to_prune:
                     for v in g_x.nodes_iter():
                         if v[0] > k:
                             D = tags[v]
@@ -236,16 +239,16 @@ def PG(src, tgt, pg_0):
                         else:
                             tags_x[v] = tags[v]
                     dic_X[x] = (g_x, tags_x)
+                # Carry out the pruning
                 else:
-                    """ carry out the pruning """
-                    g_x_prune = prune(g_x, Z_x, src, tgt)
-                    """ if tgt or x gets pruned then x will contribute nothing
-                    to G_k """
+                    g_x_prune = prune(g_x, nodes_to_prune, src, tgt)
+                    # If tgt or x gets pruned then x will contribute nothing
+                    # to G_k
                     if (tgt not in g_x_prune) or (x not in g_x_prune):
                         pass
                     else:
-                        """ otherwise add the tag x to the nodes in the strict
-                        future of x. update dic_X """
+                        # Otherwise add the tag x to the nodes in the strict
+                        # future of x. update dic_X
                         for v in g_x_prune.nodes_iter():
                             if v[0] > k:
                                 D = tags[v]
@@ -254,8 +257,8 @@ def PG(src, tgt, pg_0):
                             else:
                                 tags_x[v] = tags[v]
                     dic_X[x] = (g_x_prune, tags_x)
-            """ we can now piece together the pairs in dic_X  to obatin (G_k,
-            tags_k) """
+            # We can now piece together the pairs in dic_X to obtain (G_k,
+            # tags_k)
             H_k = nx.DiGraph()
             tags_k = {}
             for x in X:
@@ -269,7 +272,7 @@ def PG(src, tgt, pg_0):
                         t.extend(tags_x[v])
                 t = list(set(t))
                 tags_k[v] = t
-        dic_PG[k] = (H_k, tags_k)
+            dic_PG[k] = (H_k, tags_k)
     return dic_PG
 
 """ The sampling procedure simply uses the tag sets to trace out cycle-free
@@ -301,6 +304,9 @@ def cf_sample_single_path(src, tgt, H,t):
         return tuple(path)
 
 def cf_sample_many_paths(src,tgt, H, t, n):
+    # If the graph is empty, then there are no paths
+    if not H:
+        return []
     P = []
     for i in range(0, n):
         p = cf_sample_single_path(src, tgt, H,t)
@@ -324,7 +330,7 @@ if __name__ == '__main__':
     tgt = (9, target)
     pg_0 = PG_0(pg_raw, src, tgt)
 
-    dic_PG = PG(src,tgt,pg_0)
+    dic_PG = PG(pg_0, src, tgt, length)
     G_cf, T = dic_PG[8]
     P = cf_sample_many_paths(src,tgt,G_cf, T, 1000)
     print(len(list(set(P))))
