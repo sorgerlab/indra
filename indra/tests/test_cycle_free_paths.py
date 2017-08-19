@@ -50,6 +50,7 @@ def test_pg_0():
     assert pg_0 == pg_raw
     assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],
                     (3, 'D'): ['A']}
+
     # The next graph contains a cycle passing through the source node, A,
     # and no acyclic paths
     (f_level, b_level) = pg.get_reachable_sets(g2_uns, source, target,
@@ -58,6 +59,17 @@ def test_pg_0():
     (pg_0, tags) = cfp.PG_0((0, source), (length, target), pg_raw)
     assert not pg_0
     assert not tags
+
+    # The next graph contains a cycle passing through the source node, A,
+    # with one acyclic path
+    (f_level, b_level) = pg.get_reachable_sets(g3_uns, source, target,
+                                               max_depth=length)
+    pg_raw = pg.paths_graph(g3_uns, source, target, length, f_level, b_level)
+    (pg_0, tags) = cfp.PG_0((0, source), (length, target), pg_raw)
+    assert set(pg_0.edges()) == set([((0, 'A'), (1, 'B')), ((1, 'B'), (2, 'C')),
+                                     ((2, 'C'), (3, 'D'))])
+    assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],
+                    (3, 'D'): ['A']}
 
 if __name__ == '__main__':
     test_prune()

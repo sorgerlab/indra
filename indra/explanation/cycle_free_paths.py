@@ -189,9 +189,10 @@ def PG_0(src, tgt, pg_raw):
         # paths. Hence we return the degenerate (graph, tags) pair and
         # propagate it through the remaining stages.
         if (src not in g_pruned) or (tgt not in g_pruned):
-            g_empty = nx.DiGraph()
-            tags_empty = {}
-            return (g_empty, tags_empty)
+            return (nx.DiGraph(), {})
+        # The src and target are still reachable after initial pruning,
+        # so add src tags to all nodes (implying that paths through any node
+        # will have passed through src)
         else:
             tags_0 = {}
             for v in g_pruned.nodes_iter():
