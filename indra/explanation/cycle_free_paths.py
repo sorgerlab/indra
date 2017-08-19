@@ -129,7 +129,7 @@ def prune(U, g):
     return g_prune
 """
 
-def prune(pg, nodes_to_prune, path_length):
+def prune(pg, nodes_to_prune, source, target):
     # Make a copy of the graph
     pg_pruned = pg.copy()
     while nodes_to_prune:
@@ -138,9 +138,9 @@ def prune(pg, nodes_to_prune, path_length):
         # sure to exclude the source and target, whose depths are at 0 and
         # path_length, respectively)
         no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
-                        if in_deg == 0 and node[0] != 0]
+                        if in_deg == 0 and node != source]
         no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
-                        if out_deg == 0 and node[0] != path_length]
+                        if out_deg == 0 and node != target]
         nodes_to_prune = set(no_in_edges + no_out_edges)
     return pg_pruned
 
@@ -158,21 +158,20 @@ pruned graph; except to src whose tag set will be [] """
 
 def PG_0(src, tgt, pg_raw):
     g = pg_raw.copy()
-    import ipdb; ipdb.set_trace()
     """ while debugging I got into trouble by not keeping track of different
     versions of the same graph. Hence playing it safe above """ 
     """ First identify the nodes to be pruned. They are just nodes whose names
     are either 'source' or 'target' """
-    Z_raw = []
+    nodes_to_prune = []
     for v in g.nodes_iter():
         if (v != src) & (v != tgt) & ((v[1] == src[1]) or (v[1] == tgt[1])):
-            Z_raw.append(v)
-    Z_raw = list(set(Z_raw))
+            nodes_to_prune.append(v)
+    nodes_to_prune = list(set(nodes_to_prune))
 
     """ If there are no nodes to be pruned (this is the case in our current
     example) just add the tag [source] to every node other than src. The node
     src gets the tag []."""
-    if Z_raw == []:
+    if not nodes_to_prune:
         # Dictionary for storing tags, indexed by node. Tags consist of a
         # list of node names (without depths)
         tags_0 = {}
@@ -185,11 +184,11 @@ def PG_0(src, tgt, pg_raw):
         # paths graph
         return (pg_raw, tags_0)
     else:
-        g_pruned  = prune(Z_raw, src, tgt, g)
+        g_pruned  = prune(g, nodes_to_prune, src, tgt)
         # If the source or target gets pruned then there are no cycle free
         # paths. Hence we return the degenerate (graph, tags) pair and
         # propagate it through the remaining stages.
-        if (src in g_pruned) or (tgt in g_pruned):
+        if (src not in g_pruned) or (tgt not in g_pruned):
             g_empty = nx.DiGraph()
             tags_empty = {}
             return (g_empty, tags_empty)
