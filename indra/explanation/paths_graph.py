@@ -33,7 +33,7 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     target : target
         Name of target node.
     max_depth : int
-        Maximum depth over which to compute reachable sets.
+        Maximum path length (depth) over which to compute reachable sets.
 
     Returns
     -------
@@ -62,7 +62,7 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
       ('backward', b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
     for direction, level, edge_func in directions:
         visited = set([source]) if direction == 'forward' else set([target])
-        for i in range(1, max_depth):
+        for i in range(1, max_depth+1):
             reachable_set = set()
             # Signed graph
             if signed:
