@@ -1,5 +1,6 @@
 import random
 import itertools
+from copy import copy
 import networkx as nx
 from .paths_graph import get_edges, get_reachable_sets, paths_graph
 
@@ -64,21 +65,22 @@ def backward(v, src, tgt, H):
 
 """
 forward(v, source, target, G_j) will return the subgraph of G_j, say G_j_v_f,
-that is forward reachable from v in G_j. We prune G_j_v_f through the following
-iterative procedure.  Let X_j_v be the set of nodes in G_j_v_f -other than v-
-that have the same name as v.  In other words u[1] = v[1] for every u in X_j_v.
+that is forward reachable from v in G_j.
 
-The function span(U, src, tgt, g) takes as inputs (a) g the current (possibly partially pruned)
+We prune G_j_v_f through the following iterative procedure.  Let X_j_v be the
+set of nodes in G_j_v_f -other than v- that have the same name as v.  In other
+words u[1] = v[1] for every u in X_j_v.
 
-graph (b) U, the set of nodes U that can be pruned. (c) src, tgt as before.
-(due to legacy issues I am carrying around src and tgt everywhere. Will clean
-up later) 
+The function span(U, src, tgt, g) takes as inputs (a) g the current (possibly
+partially pruned) graph (b) U, the set of nodes U that can be pruned.
 
 (i) Remove all the nodes in U.
 
-(ii) Remove all the in_coming and out_going edges (relative to G_j_v_f)  of these nodes. 
+(ii) Remove all the in_coming and out_going edges (relative to G_j_v_f)  of
+these nodes.
 
-(iii) In the resulting graph, identify Y, the set of nodes  have lost all their in_coming edges or out_going edges. 
+(iii) In the resulting graph, identify Y, the set of nodes  have lost all their
+in_coming edges or out_going edges.
 
 Return g_prune, the partially pruned graph (obatined through steps (i) and
 (ii)) and Y, the candidiate set of nodes for the next iteration of pruning.
@@ -97,7 +99,8 @@ If v or tgt gets eliminated then we can conclude that there are no cycle free
 paths passing through v in G_j and proceed accordingly.
 """
 
-def span(U, src,tgt, g):
+"""
+def span(U, g):
     g_current = nx.DiGraph()
     g_current.add_edges_from(g.in_edges(U))
     g_current.add_edges_from(g.out_edges(U))
@@ -118,15 +121,30 @@ def span(U, src,tgt, g):
     return (h, Y)
 
 
-def prune(U, src, tgt, g):
+def prune(U, g):
     while U != []:
-        g_prune, Y = span(U, src, tgt, g)
+        g_prune, Y = span(U, g)
         g = g_prune.copy()
         U = Y
     return g_prune
-
 """
 
+def prune(pg, nodes_to_prune, path_length):
+    # Make a copy of the graph
+    pg_pruned = pg.copy()
+    while nodes_to_prune:
+        pg_pruned.remove_nodes_from(nodes_to_prune)
+        # Make a list of nodes whose in or out degree is now 0 (making
+        # sure to exclude the source and target, whose depths are at 0 and
+        # path_length, respectively)
+        no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
+                        if in_deg == 0 and node[0] != 0]
+        no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
+                        if out_deg == 0 and node[0] != path_length]
+        nodes_to_prune = set(no_in_edges + no_out_edges)
+    return pg_pruned
+
+"""
 For the purposes of sampling cycle-free paths we attach a set of tags to each
 node when we compute G_j+1 from G_j.  Basically we add the tag v[1] to each
 node in G_j+1 that can be reached from v in the forward direction. This tag
@@ -140,7 +158,7 @@ pruned graph; except to src whose tag set will be [] """
 
 def PG_0(src, tgt, pg_raw):
     g = pg_raw.copy()
-
+    import ipdb; ipdb.set_trace()
     """ while debugging I got into trouble by not keeping track of different
     versions of the same graph. Hence playing it safe above """ 
     """ First identify the nodes to be pruned. They are just nodes whose names
@@ -167,22 +185,22 @@ def PG_0(src, tgt, pg_raw):
         # paths graph
         return (pg_raw, tags_0)
     else:
-        g_prune  = prune(Z_raw, src, tgt, g)
-        """ if src or tgt gets pruned then there are no cycle free paths. Hence
-        we return the degenerate (graph, tags) pair and propagate it through
-        the remaing stages """
-        if (src in g_prune) or (tgt in g_prune):
+        g_pruned  = prune(Z_raw, src, tgt, g)
+        # If the source or target gets pruned then there are no cycle free
+        # paths. Hence we return the degenerate (graph, tags) pair and
+        # propagate it through the remaining stages.
+        if (src in g_pruned) or (tgt in g_pruned):
             g_empty = nx.DiGraph()
             tags_empty = {}
             return (g_empty, tags_empty)
         else:
             tags_0 = {}
-            for v in g_prune.nodes_iter():
+            for v in g_pruned.nodes_iter():
                 if v == src:
                     tags_0[v] = []
                 else:
                     tags_0[v] = [src[1]]
-        return (g_prune, tags_0)
+        return (g_pruned, tags_0)
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
 
