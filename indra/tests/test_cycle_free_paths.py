@@ -83,6 +83,8 @@ def test_pg_0():
 
 
 def test_pg():
+    # TODO: Flesh this out more with some examples defining typical return
+    # values
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
     source, target, length = (0, 2, 2)
@@ -91,7 +93,6 @@ def test_pg():
     pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
     (pg_0, tags) = cfp.PG_0(pg_raw, (0, source), (length, target))
     dic_PG = cfp.PG((pg_0, tags), (0, source), (length, target), length)
-    import ipdb; ipdb.set_trace()
     assert len(dic_PG) == length - 1
     assert dic_PG[0][0]
     assert dic_PG[0][1]
