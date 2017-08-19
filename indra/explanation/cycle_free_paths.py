@@ -143,8 +143,8 @@ def PG_0(src, tgt, pg_raw):
 
     """ while debugging I got into trouble by not keeping track of different
     versions of the same graph. Hence playing it safe above """ 
-    """ First identify the nodes to be pruned. They are just nodes whose names are
-    either 'source' or 'target' """
+    """ First identify the nodes to be pruned. They are just nodes whose names
+    are either 'source' or 'target' """
     Z_raw = []
     for v in g.nodes_iter():
         if (v != src) & (v != tgt) & ((v[1] == src[1]) or (v[1] == tgt[1])):
@@ -153,15 +153,18 @@ def PG_0(src, tgt, pg_raw):
 
     """ If there are no nodes to be pruned (this is the case in our current
     example) just add the tag [source] to every node other than src. The node
-    src gets the tag []. Since we will be going from lower levels to higher
-    levels (yes,I can thing forwards now!) """
+    src gets the tag []."""
     if Z_raw == []:
+        # Dictionary for storing tags, indexed by node. Tags consist of a
+        # list of node names (without depths)
         tags_0 = {}
         for v in pg_raw.nodes_iter():
             if v == src:
                 tags_0[v] = []
             else:
                 tags_0[v] = [src[1]]
+        # Because we didn't prune out any nodes, we can return the original
+        # paths graph
         return (pg_raw, tags_0)
     else:
         g_prune  = prune(Z_raw, src, tgt, g)
@@ -274,8 +277,8 @@ def cf_sample_single_path(src, tgt, H,t):
             next = cf_succ(H,t, path, current)
             """ a sanity check; since I have not stree-tested the code yet """
             if next[1] in path:
-                print path.append(next)
-                print "error in the computation of G_cf"
+                print(path.append(next))
+                print("error in the computation of G_cf")
                 break
             else:
                 path.append(next[1])
@@ -309,5 +312,5 @@ if __name__ == '__main__':
     dic_PG = PG(src,tgt,pg_0)
     G_cf, T = dic_PG[8]
     P = cf_sample_many_paths(src,tgt,G_cf, T, 1000)
-    print len(list(set(P)))
+    print(len(list(set(P))))
     #print("--- %s seconds ---" % (time.time() - start_time))
