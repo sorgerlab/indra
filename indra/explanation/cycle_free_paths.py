@@ -1,6 +1,6 @@
 import random
 import itertools
-from copy import copy
+from copy import copy, deepcopy
 import networkx as nx
 from indra.explanation import paths_graph
 
@@ -200,79 +200,104 @@ def PG_0(pg, src, tgt):
 
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
+def draw(g, filename):
+    ag = nx.nx_agraph.to_agraph(g)
+    ag.draw(filename, prog='dot')
 
 def PG(pg_0, src, tgt, path_length):
-    dic_PG = {0: pg_0}
-    for k in range(1, path_length):
-        # Start by copying the information from the previous level
-        H = dic_PG[k-1][0].copy()
-        tags = dic_PG[k-1][1].copy()
-        # Check if we have already detected there are no cycle free paths.
-        # If so just propagate this information.
-        if not H:
-            dic_PG[k] = dic_PG[k-1]
-        else:
-            # Identify the nodes at level k in G_(k-1)
-            X = [v for v in H.nodes_iter() if v[0] == k]
-            # We will track the (g_x, tags_x) pairs contributed by each x
-            # through dic_X
-            dic_X = {}
-            for x in X:
-                tags_x = {}
-                g_x_b = backward(x, src, tgt, H)
-                g_x_f = forward(x, src, tgt, H)
-                g_x = nx.DiGraph()
-                g_x.add_edges_from(g_x_b.edges())
-                g_x.add_edges_from(g_x_f.edges())
-                # Get the nodes representing cycles back through node x,
-                # (excluding x at level k)
-                nodes_to_prune = [v for v in g_x_f
-                                  if v[1] == x[1] and v[0] != k]
-                # If there are no nodes to prune then just add the tag 'x' to
-                # all the nodes in g_x_f but not to x
-                if not nodes_to_prune:
-                    for v in g_x.nodes_iter():
-                        if v[0] > k:
-                            D = tags[v]
-                            D.append(x[1])
-                            tags_x[v] = D
-                        else:
-                            tags_x[v] = tags[v]
-                    dic_X[x] = (g_x, tags_x)
-                # Carry out the pruning
-                else:
-                    g_x_prune = prune(g_x, nodes_to_prune, src, tgt)
-                    # If tgt or x gets pruned then x will contribute nothing
-                    # to G_k
-                    if (tgt not in g_x_prune) or (x not in g_x_prune):
+    round_counter = 1
+    pg_0 = deepcopy(pg_0)
+    while True:
+        print("Starting round %d" % round_counter)
+        dic_PG = {0: pg_0}
+        print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]), len(dic_PG[0][0].edges())))
+        for k in range(1, path_length):
+            # Start by copying the information from the previous level
+            H = dic_PG[k-1][0].copy()
+            tags = deepcopy(dic_PG[k-1][1])
+            # Check if we have already detected there are no cycle free paths.
+            # If so just propagate this information.
+            if not H:
+                dic_PG[k] = dic_PG[k-1]
+            else:
+                # Identify the nodes at level k in G_(k-1)
+                X = [v for v in H.nodes_iter() if v[0] == k]
+                # We will track the (g_x, tags_x) pairs contributed by each x
+                # through dic_X
+                if k == 2:
+                    pass
+                    #import ipdb; ipdb.set_trace()
+                dic_X = {}
+                for x in X:
+                    if k == 1 and x == (1, 3):
+                        #import ipdb; ipdb.set_trace()
                         pass
-                    else:
-                        # Otherwise add the tag x to the nodes in the strict
-                        # future of x. update dic_X
-                        for v in g_x_prune.nodes_iter():
+                    tags_x = {}
+                    g_x_b = backward(x, src, tgt, H)
+                    g_x_f = forward(x, src, tgt, H)
+                    #draw(g_x_b, '%d_%d_back.pdf' % (x[0], x[1]))
+                    #draw(g_x_f, '%d_%d_fwd.pdf' % (x[0], x[1]))
+                    g_x = nx.DiGraph()
+                    g_x.add_edges_from(g_x_b.edges())
+                    g_x.add_edges_from(g_x_f.edges())
+                    # Get the nodes in the forward reach set representing cycles
+                    # back through node x, (excluding x at level k)
+                    nodes_to_prune = [v for v in g_x_f
+                                      if v[1] == x[1] and v[0] != k]
+                    # If there are no nodes to prune then just add the tag 'x' to
+                    # all the nodes in g_x_f but not to x
+                    if not nodes_to_prune:
+                        for v in g_x.nodes_iter():
                             if v[0] > k:
                                 D = tags[v]
                                 D.append(x[1])
                                 tags_x[v] = D
                             else:
                                 tags_x[v] = tags[v]
-                    dic_X[x] = (g_x_prune, tags_x)
-            # We can now piece together the pairs in dic_X to obtain (G_k,
-            # tags_k)
-            H_k = nx.DiGraph()
-            tags_k = {}
-            for x in X:
-                h_x = dic_X[x][0]
-                H_k.add_edges_from(h_x.edges())
-            for v in H_k.nodes_iter():
-                t = []
+                        dic_X[x] = (g_x, tags_x)
+                    # Carry out the pruning
+                    else:
+                        g_x_prune = prune(g_x, nodes_to_prune, src, tgt)
+                        # If tgt or x gets pruned then x will contribute nothing
+                        # to G_k
+                        if (tgt not in g_x_prune) or (x not in g_x_prune):
+                            pass
+                        else:
+                            # Otherwise add the tag x to the nodes in the strict
+                            # future of x. update dic_X
+                            for v in g_x_prune.nodes_iter():
+                                if v[0] > k:
+                                    D = tags[v]
+                                    D.append(x[1])
+                                    tags_x[v] = D
+                                else:
+                                    tags_x[v] = tags[v]
+                        dic_X[x] = (g_x_prune, tags_x)
+                        #draw(g_x_prune, 'lev%d_%d_%d_prune.pdf' % (k, x[0], x[1]))
+                # We can now piece together the pairs in dic_X to obtain (G_k,
+                # tags_k)
+                H_k = nx.DiGraph()
+                tags_k = {}
                 for x in X:
-                    if v in dic_X[x][0]:
-                        tags_x = dic_X[x][1]
-                        t.extend(tags_x[v])
-                t = list(set(t))
-                tags_k[v] = t
-            dic_PG[k] = (H_k, tags_k)
+                    h_x = dic_X[x][0]
+                    H_k.add_edges_from(h_x.edges())
+                for v in H_k.nodes_iter():
+                    t = []
+                    for x in X:
+                        if v in dic_X[x][0]:
+                            tags_x = dic_X[x][1]
+                            t.extend(tags_x[v])
+                    t = list(set(t))
+                    tags_k[v] = t
+                dic_PG[k] = (H_k, tags_k)
+            print("Level %d: %d nodes, %d edges" % (k, len(dic_PG[k][0]),
+                                                    len(dic_PG[k][0].edges())))
+        if not dic_PG[len(dic_PG)-1][0] or \
+           set(pg_0[0].edges()) == set(dic_PG[len(dic_PG)-1][0].edges()):
+            break
+        else:
+            pg_0 = dic_PG[k]
+        round_counter += 1
     return dic_PG
 
 """ The sampling procedure simply uses the tag sets to trace out cycle-free
@@ -335,3 +360,4 @@ if __name__ == '__main__':
     P = cf_sample_many_paths(src,tgt,G_cf, T, 1000)
     print(len(list(set(P))))
     #print("--- %s seconds ---" % (time.time() - start_time))
+

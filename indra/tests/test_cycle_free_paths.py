@@ -16,6 +16,7 @@ def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
     ag.draw(filename, prog='dot')
 
+
 def test_prune():
     g = nx.DiGraph()
     g.add_edges_from((('S', 'A'), ('S', 'B'), ('A', 'S'), ('B', 'C'),
@@ -34,6 +35,7 @@ def test_prune():
     assert set(pg_pruned.edges()) == \
            set([((0, 'S'), (1, 'B')), ((1, 'B'), (2, 'C')),
                 ((2, 'C'), (3, 'D')), ((3, 'D'), (4, 'T'))])
+
 
 def test_pg_0():
     source = 'A'
@@ -71,6 +73,8 @@ def test_pg_0():
     assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],
                     (3, 'D'): ['A']}
 
+    # This test stems from a randomly-generated network where no paths
+    # were found--guarantees that the problem is NOT that pg_0 is empty
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
     source, target, length = (0, 2, 2)
@@ -93,12 +97,26 @@ def test_pg():
     pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
     (pg_0, tags) = cfp.PG_0(pg_raw, (0, source), (length, target))
     dic_PG = cfp.PG((pg_0, tags), (0, source), (length, target), length)
-    assert len(dic_PG) == length - 1
+    assert len(dic_PG) == length
     assert dic_PG[0][0]
     assert dic_PG[0][1]
 
 
 def test_sampling():
+    """Test sampling of problematic graph.
+
+    The issue with this graph is that the operation on (1, 3) would prune out
+    (3, 3) the one causing the cycle, except that it is retained because there
+    is still a non-cyclic path through (3, 3) via (1, 1). However, in
+    subsequent steps, pruning of downstream nodes (i.e., (2, 4)) actually
+    eliminate any acyclic paths through (1, 3). As a result, there is a
+    circumstance, when sampling the resulting graph, that one can end up
+    sampling into (1, 3) but there are no permissible successors from (1, 3)
+    based on the tags.
+
+    The solution was to repeat the sampling process iteratively until
+    convergence.
+    """
     g = nx.DiGraph()
     g.add_edges_from([(0, 1), (0, 3), (0, 4), (0, 5), (1, 4), (2, 4), (2, 5),
                       (3, 0), (3, 2), (3, 4), (3, 5), (4, 2), (4, 3), (4, 5)])
@@ -111,7 +129,7 @@ def test_sampling():
     pg_0 = cfp.PG_0(pg_raw, src, tgt)
     dic_PG = cfp.PG(pg_0, src, tgt, length)
     G_cf, T = dic_PG[length - 1]
-    P = cfp.cf_sample_many_paths(src, tgt, G_cf, T, 10000)
+    P = cfp.cf_sample_many_paths(src, tgt, G_cf, T, 1000)
 
 
 if __name__ == '__main__':
