@@ -939,7 +939,7 @@ class TripsProcessor(object):
                 return None
             return member_agents
 
-        db_refs, _ = _get_db_refs(term)
+        db_refs, _, _ = _get_db_refs(term)
 
         # Check if the "real" TERM is an assoc-with of this TERM as
         # in "the SRF transcription factor".
@@ -1460,7 +1460,7 @@ def _get_db_refs(term):
             for dbname, dbid in [d.split(':') for d in dbids]:
                 if not db_refs.get(dbname):
                     db_refs[dbname] = dbid
-        return db_refs, []
+        return db_refs, None, []
 
     # This is the INDRA prioritization of grounding name spaces. Lower score
     # takes precedence.
@@ -1560,7 +1560,12 @@ def _get_db_refs(term):
         db_refs.pop('FA', None)
         db_refs['NXPFA'] = nxp_id
 
-    return db_refs, relevant_ambiguities
+    # Here we also get and return the type, which is a TRIPS
+    # ontology type. This is to be used in the context of
+    # Bioagents.
+    ont_type = top_grounding['type']
+
+    return db_refs, ont_type, relevant_ambiguities
 
 
 def _get_grounding_terms(term):
