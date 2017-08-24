@@ -3,112 +3,135 @@ import psycopg2 as pg
 from indra.statements import *
 from indra.util import unzip_string
 from indra.databases import hgnc_client
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
+    TIMESTAMP, create_engine
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.dialects.postgresql import BYTEA
+from datetime import datetime
+import time
 #from lxml.includes.xpath import XPATH_INVALID_TYPE
 
-conn = None
-
-def get_connection():
-    global conn
-    if conn is None:
-        aws_host = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
-        conn = pg.connect(host=aws_host, database='indra_db',
-                          user='indra_db_user', password='indra_db_pass')
-    return conn
-
-# Make this happen durring init if the tables do not exist.
-def create_tables():
-    """Create the tables for the INDRA database."""
-    conn = get_connection()
-    sql = """
-    CREATE TABLE text_ref (
-        id serial PRIMARY KEY,
-        pmid TEXT,
-        pmcid TEXT,
-        doi TEXT,
-        pii TEXT,
-        url TEXT UNIQUE,
-        manuscript_id TEXT UNIQUE,
-        UNIQUE (pmid, doi),
-        UNIQUE (pmcid, doi)
-    );
-    CREATE TABLE text_content (
-        id serial PRIMARY KEY,
-        text_ref_id int4 NOT NULL REFERENCES text_ref(id),
-        source TEXT NOT NULL,
-        format TEXT NOT NULL,
-        text_type TEXT NOT NULL,
-        content BYTEA NOT NULL,
-        UNIQUE (text_ref_id, source, format, text_type)
-    );
-    CREATE TABLE reach (
-        id serial PRIMARY KEY,
-        text_content_id int4 NOT NULL REFERENCES text_content(id),
-        version TEXT NOT NULL,
-        json BYTEA NOT NULL,
-        UNIQUE (text_content_id, version)
-    );
-    CREATE TABLE  db_info (
-        id serial PRIMARY KEY,
-        db_name TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT now()
-    );
-    CREATE TABLE statements (
-        id serial PRIMARY KEY,
-        uuid TEXT UNIQUE NOT NULL,
-        db_ref int4 REFERENCES db_info(id),
-        type TEXT NOT NULL,
-        json TEXT NOT NULL
-    );
-    CREATE TABLE agents (
-        id serial PRIMARY KEY,
-        stmt_id int4 REFERENCES statements(id),
-        db_name TEXT NOT NULL,
-        db_id TEXT NOT NULL,
-        role TEXT NOT NULL
-    );
-    SET timezone = 'EST'
-    """
-    cur = conn.cursor()
-    cur.execute(sql)
-    conn.commit()
-
-
-def drop_tables():
-    """Drop all tables in the INDRA database."""
-    conn = get_connection()
-    cur = conn.cursor()
-    drop_cmds = ['DROP TABLE agents;',
-                 'DROP TABLE statements;',
-                 'DROP TABLE db_info;',
-                 'DROP TABLE reach;',
-                 'DROP TABLE text_content;',
-                 'DROP TABLE text_ref;',]
-    for cmd in drop_cmds:
-        try:
-            cur.execute(cmd)
-            conn.commit()
-        except pg.ProgrammingError as pe:
-            print(pe)
-            conn.rollback()
-    conn.commit()
-
-def get_tables():
-    """Get list of all tables in the INDRA database"""
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM pg_catalog.pg_tables')
-    conn.commit()
-    for table_info in cur.fetchall():
-        if table_info[2] == 'indra_db_user':
-            ret = table_info
-            break
+def get_timestamp():
+    try:
+        ret = datetime.utcnow().timestamp()
+    except:
+        now = datetime.utcnow()
+        ret = time.mktime(now.timetuple())+now.microsecond/1000000.0
     return ret
 
-def show_tables():
-    """Show all tables in the INDRA database."""
-    print(get_tables())
+class DatabaseManager(object):
+    def __init__(self, host, sqltype='postgresql'):
+        self.host = host
+        self.Base = declarative_base()
+        
+        if sqltype is 'postgresql':
+            Bytea = BYTEA
+        else:
+            Bytea = String
+        
+        class TextRef(self.Base):
+            __tablename__ = 'text_ref'
+            id = Column(Integer, primary_key=True)
+            pmid = Column(String(20))
+            pmcid = Column(String(20))
+            doi = Column(String(100))
+            pii = Column(String(250))
+            url = Column(String(250), unique = True) # Maybe longer?
+            manuscript_id = Column(String(100), unique = True)
+            UniqueConstraint('pmid', 'doi')
+            UniqueConstraint('pmcid', 'doi')
+        
+        class TextContent(self.Base):
+            __tablename__ = 'text_content'
+            id = Column(Integer, primary_key=True)
+            text_ref_id = Column(Integer,  
+                                 ForeignKey('text_ref.id'),
+                                 nullable=False)
+            text_ref = relationship(TextRef)
+            source = Column(String(250), nullable=False)
+            format = Column(String(250), nullable=False)
+            text_type = Column(String(250), nullable=False)
+            content = Column(Bytea, nullable=False)
+            UniqueConstraint('text_ref_id', 'source', 'format', 'text_type')
+        
+        class Reach(self.Base):
+            __tablename__ = 'reach'
+            id = Column(Integer, primary_key=True)
+            text_content_id = Column(Integer, 
+                                     ForeignKey('text_content.id'), 
+                                     nullable=False)
+            text_content = relationship(TextContent)
+            version = Column(String(20), nullable=False)
+            json = Column(Bytea, nullable=False)
+            UniqueConstraint('text_content_id', 'version')
+        
+        class DBInfo(self.Base):
+            __tablename__ = 'db_info'
+            id = Column(Integer, primary_key=True)
+            db_name = Column(String(20), nullable=False)
+            #FIXME: I don't think the default here is really correct.
+            timestamp = Column(TIMESTAMP, default=get_timestamp())
+        
+        class Statements(self.Base):
+            __tablename__ = 'statements'
+            id = Column(Integer, primary_key=True)
+            uuid = Column(String(20), unique=True, nullable=False)
+            db_ref = Column(Integer, ForeignKey('db_info.id'))
+            db_info = relationship(DBInfo)
+            type = Column(String(100), nullable=False)
+            json = Column(String(500), nullable=False)
+        
+        class Agents(self.Base):
+            __tablename__ = 'agents'
+            id = Column(Integer, primary_key=True)
+            stmt_id = Column(Integer, 
+                             ForeignKey('statements.id'), 
+                             nullable=False)
+            statements = relationship(Statements)
+            db_name = Column(String(20), nullable=False)
+            db_id = Column(String(20), nullable=False)
+            role = Column(String(20), nullable=False)
+            
+        self.tables = {}
+        for tbl in [TextRef, TextContent, Reach, DBInfo, Statements, Agents]:
+            self.tables[tbl.__tablename__] = tbl
+        self.engine = create_engine(host)
+        self.session = None
+        
+    
+    def create_tables(self):
+        "Create the tables for INDRA database."
+        self.Base.metadata.create_all(self.engine)
+    
+    def drop_tables(self):
+        "Drop all the tables for INDRA database"
+        self.Base.metadata.drop_all(self.engine)
+    
+    def get_session(self):
+        "Get an active session with the database."
+        if self.session is None:
+            DBSession = sessionmaker(bind=self.engine)
+            self.session = DBSession()
+        
+    def get_tables(self):
+        "Get a list of available tables."
+        return [tbl_name for tbl_name in self.tables.keys()]
 
+    def show_tables(self):
+        print(self.get_tables())
+    
+    def insert_text_ref(self, **kwargs):
+        "Insert a text_ref entry."
+        inputs = dict.fromkeys(['source', 'pmid', 'pmcid', 'doi', 'url', 
+                                'manuscript_id', 'journal', 'publisher', 
+                                'pub_date'])
+        inputs.update(kwargs)
+        new_text_ref = self.tables['text_ref'](**inputs)
+        self.session.add(new_text_ref)
+        self.session.commit()
 
+'''
 def insert_text_ref(**kwargs):
     conn = get_connection()
     # First create the text ref entry
@@ -204,10 +227,10 @@ def get_text_refs_by_pmid(pmid_list):
 
 
 def get_text_ref_by_id(id_str, id_type):
-    '''Look up the text ref using an id
+    """Look up the text ref using an id
     
     Note: This should eventually support looking up by multiple ids.
-    '''
+    """
     conn = get_connection()
     cur = conn.cursor()
     fmt = "SELECT id FROM text_ref WHERE {id_type} = {id}"
@@ -330,3 +353,4 @@ def select_text_no_reach():
 
 
 
+'''

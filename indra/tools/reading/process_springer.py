@@ -201,7 +201,7 @@ def upload_springer(springer_dir, verbose = False, since_date=None):
         ref_data = xml_data['ref_data']
         ref_data.update(find_other_ids(ref_data['doi'].text))
         
-        if this_is_useful(ref_data):
+        if not this_is_useful(ref_data):
             vprint("Skipping...")
             continue
         vprint("Processing...")
