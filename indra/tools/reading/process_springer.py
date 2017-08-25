@@ -91,8 +91,6 @@ def get_xml_data(pdf_path, entry_dict):
         xml = ET.parse(xml_path_list[0])
     
     # Maybe include the journal subtitle too, in future.
-    
-    
     xml_data = {}
     for purpose_key, xml_label_dict in entry_dict.items():
         xml_data[purpose_key] = {}

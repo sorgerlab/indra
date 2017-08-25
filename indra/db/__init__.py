@@ -5,7 +5,7 @@ from indra.util import unzip_string
 from indra.databases import hgnc_client
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine
+    TIMESTAMP, create_engine, inspect
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
@@ -98,65 +98,133 @@ class DatabaseManager(object):
             self.tables[tbl.__tablename__] = tbl
         self.engine = create_engine(host)
         self.session = None
-        
     
     def create_tables(self):
         "Create the tables for INDRA database."
         self.Base.metadata.create_all(self.engine)
-    
+
     def drop_tables(self):
         "Drop all the tables for INDRA database"
         self.Base.metadata.drop_all(self.engine)
     
+    def _clear(self):
+        "Brutal clearing of all tables."
+        # This is intended for testing purposes, not general use.
+        # Use with care.
+        self.drop_tables()
+        self.create_tables()
+
     def get_session(self):
         "Get an active session with the database."
         if self.session is None:
             DBSession = sessionmaker(bind=self.engine)
             self.session = DBSession()
-        
+
     def get_tables(self):
         "Get a list of available tables."
         return [tbl_name for tbl_name in self.tables.keys()]
 
     def show_tables(self):
         print(self.get_tables())
+
+    def get_active_tables(self):
+        "Get the tables currently active in the database."
+        return inspect(self.engine).get_table_names()
     
+    def get_columns(self, tbl_name):
+        "Get a list of the column labels for a table."
+        return self.Base.metadata.tables[tbl_name].columns.keys()
+
     def insert_text_ref(self, **kwargs):
         "Insert a text_ref entry."
-        inputs = dict.fromkeys(['source', 'pmid', 'pmcid', 'doi', 'url', 
-                                'manuscript_id', 'journal', 'publisher', 
-                                'pub_date'])
+        inputs = dict.fromkeys(self.get_columns('text_ref'))
         inputs.update(kwargs)
         new_text_ref = self.tables['text_ref'](**inputs)
         self.session.add(new_text_ref)
         self.session.commit()
+        return new_text_ref.id
+
+    def insert_text_content(self, **kwargs):
+        "Insert an entry into text_content"
+        inputs = dict.fromkeys(self.get_columns('text_content'))
+        inputs.update(kwargs)
+        new_text_ref = self.tables['text_content'](**inputs)
+        self.session.add(new_text_ref)
+        self.session.commit()
+
+    def _filter_query(self, tbl_name, **kwargs):
+        "Query a table and filter results."
+        args = []
+        for attr_name, val in kwargs.items():
+            args.append(getattr(self.tables[tbl_name], attr_name) == val)
+        return self.session.query(self.tables[tbl_name]).filter(*args)
+
+    def get_text_ref_by_pmcid(self, pmcid):
+        "Read a text ref using it's pmcid"
+        return self._filter_query('text_ref', pmcid=pmcid).first()
+
+    def get_text_refs_by_pmid(self, pmid):
+        "Get all the text refs with a given pmid."
+        return self._filter_query('text_ref', pmid=pmid).all()
+    
+    def get_text_ref_by_id(self, tr_id):
+        "Get a text_ref using the text_ref_id."
+        return self._filter_query('text_ref', id=tr_id).first()
+
+    def get_text_refs_by_pmcid(self, pmcid_list):
+        "Get multipe refs indicated by pmcids in pmcid_list"
+    
+    def get_abstracts_by_pmids(self, pmid_list, unzip=True):
+        "Get abstracts using teh pmids in pmid_list."
+    
+    def insert_db_stmts(self, stmts, db_name):
+        "Insert statements into the db of db_name"
+        
 
 '''
-def insert_text_ref(**kwargs):
+def insert_db_stmts(stmts, db_name):
+    # First, add the DB info
     conn = get_connection()
-    # First create the text ref entry
-    sql = """INSERT INTO text_ref
-                 VALUES (DEFAULT, %(source)s, %(pmid)s, %(pmcid)s, %(doi)s,
-                         %(url)s, %(manuscript_id)s, %(journal)s,
-                         %(publisher)s, %(pub_date)s)
-                 RETURNING id;"""
     cur = conn.cursor()
-    args = dict(zip(['source', 'pmid', 'pmcid', 'doi', 'url', 'manuscript_id',
-                      'journal', 'publisher', 'pub_date'], [None]*9))
-    args.update(kwargs)
-    cur.execute(sql, args)
-    text_ref_id = cur.fetchone()[0]
+    print("Adding db %s" % db_name)
+    sql = """INSERT INTO db_info (db_name) VALUES (%s) RETURNING id;"""
+    cur.execute(sql, (db_name,))
+    db_ref_id = cur.fetchone()[0]
+    # Now, insert the statements
+    for stmt_ix, stmt in enumerate(stmts):
+        print("Inserting stmt %s (%d of %d)" % (stmt, stmt_ix+1, len(stmts)))
+        sql = """INSERT INTO statements (uuid, db_ref, type, json)
+                    VALUES (%s, %s, %s, %s) RETURNING id;"""
+        cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
+                          json.dumps(stmt.to_json())))
+        stmt_id = cur.fetchone()[0]
+        # Now collect the agents and add them
+        for ag_ix, ag in enumerate(stmt.agent_list()):
+            if ag is None:
+                continue
+            if isinstance(stmt, Complex) or \
+               isinstance(stmt, SelfModification) or \
+               isinstance(stmt, ActiveForm):
+                role = 'OTHER'
+            elif ag_ix == 0:
+                role = 'SUBJECT'
+            elif ag_ix == 1:
+                role = 'OBJECT'
+            else:
+                assert False, "Unhandled agent role."
+            # If no db_refs for the agent, skip the INSERT that follows
+            if not ag.db_refs:
+                continue
+            sql = """INSERT INTO agents (stmt_id, db_name, db_id, role)
+                     VALUES """
+            args = []
+            sql_list = []
+            for db, db_id in ag.db_refs.items():
+                args += [stmt_id, db, db_id, role]
+                sql_list.append('(%s, %s, %s, %s)')
+            sql = sql + ','.join(sql_list) + ';'
+            cur.execute(sql, args)
     conn.commit()
-    return text_ref_id
-
-
-def insert_text_content(text_ref_id, content_type, content):
-    conn = get_connection()
-    sql = "INSERT INTO text_content VALUES (DEFAULT, %s, %s, %s);"
-    cur = conn.cursor()
-    cur.execute(sql, (text_ref_id, content_type, content))
-    conn.commit()
-
 
 def select(table, field=None):
     conn = get_connection()
@@ -171,18 +239,6 @@ def select(table, field=None):
         cur.execute(sql)
     conn.commit()
     return cur.fetchall()
-
-
-def get_text_ref_by_pmcid(pmcid):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM text_ref WHERE pmcid = %s", [pmcid])
-    conn.commit()
-    res = cur.fetchone()
-    if res:
-        return res[0]
-    else:
-        return None
 
 
 def get_text_refs_by_pmcid(pmcid_list):
@@ -215,15 +271,6 @@ def get_all_pmids():
     cur.execute("SELECT pmid FROM text_ref;")
     conn.commit()
     return [r[0] for r in cur.fetchall()]
-
-
-def get_text_refs_by_pmid(pmid_list):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT pmid, id FROM text_ref WHERE pmid IN %s;",
-                (pmid_list,))
-    conn.commit()
-    return cur.fetchall()
 
 
 def get_text_ref_by_id(id_str, id_type):
@@ -284,49 +331,6 @@ def select_stmts_by_gene(hgnc_name, role=None):
     return stmts
 
 
-def insert_db_stmts(stmts, db_name):
-    # First, add the DB info
-    conn = get_connection()
-    cur = conn.cursor()
-    print("Adding db %s" % db_name)
-    sql = """INSERT INTO db_info (db_name) VALUES (%s) RETURNING id;"""
-    cur.execute(sql, (db_name,))
-    db_ref_id = cur.fetchone()[0]
-    # Now, insert the statements
-    for stmt_ix, stmt in enumerate(stmts):
-        print("Inserting stmt %s (%d of %d)" % (stmt, stmt_ix+1, len(stmts)))
-        sql = """INSERT INTO statements (uuid, db_ref, type, json)
-                    VALUES (%s, %s, %s, %s) RETURNING id;"""
-        cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
-                          json.dumps(stmt.to_json())))
-        stmt_id = cur.fetchone()[0]
-        # Now collect the agents and add them
-        for ag_ix, ag in enumerate(stmt.agent_list()):
-            if ag is None:
-                continue
-            if isinstance(stmt, Complex) or \
-               isinstance(stmt, SelfModification) or \
-               isinstance(stmt, ActiveForm):
-                role = 'OTHER'
-            elif ag_ix == 0:
-                role = 'SUBJECT'
-            elif ag_ix == 1:
-                role = 'OBJECT'
-            else:
-                assert False, "Unhandled agent role."
-            # If no db_refs for the agent, skip the INSERT that follows
-            if not ag.db_refs:
-                continue
-            sql = """INSERT INTO agents (stmt_id, db_name, db_id, role)
-                     VALUES """
-            args = []
-            sql_list = []
-            for db, db_id in ag.db_refs.items():
-                args += [stmt_id, db, db_id, role]
-                sql_list.append('(%s, %s, %s, %s)')
-            sql = sql + ','.join(sql_list) + ';'
-            cur.execute(sql, args)
-    conn.commit()
 
 
 def insert_reach(text_content_id, version, json_str):
