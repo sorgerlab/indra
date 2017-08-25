@@ -7,7 +7,7 @@ import tarfile
 import tempfile
 from ftplib import FTP
 from collections import namedtuple
-from indra import db
+from indra.db import db
 import pgcopy
 import functools
 import multiprocessing as mp

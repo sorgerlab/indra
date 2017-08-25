@@ -88,5 +88,12 @@ def test_uniqueness_text_ref_url():
         return # PASS
     assert False, "Uniqueness was not enforced."
     
-    
-    
+def test_insert_text_content():
+    "Test whether we can insert text content that is shallow (for testing)."
+    raise SkipTest("Not yet implemented")
+
+def test_get_auth_xml_pmcids():
+    "Test whether we can get auth xml pmcids"
+    raise SkipTest("Not yet implemented")
+
+     

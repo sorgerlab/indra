@@ -12,6 +12,8 @@ from datetime import datetime
 import time
 #from lxml.includes.xpath import XPATH_INVALID_TYPE
 
+DEFAULT_AWS_HOST = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
+
 def get_timestamp():
     try:
         ret = datetime.utcnow().timestamp()
@@ -99,6 +101,10 @@ class DatabaseManager(object):
         self.engine = create_engine(host)
         self.session = None
     
+    def get_connection(self):
+        "For backwards compatability."
+        self.get_session()
+    
     def create_tables(self):
         "Create the tables for INDRA database."
         self.Base.metadata.create_all(self.engine)
@@ -180,6 +186,18 @@ class DatabaseManager(object):
     def insert_db_stmts(self, stmts, db_name):
         "Insert statements into the db of db_name"
         
+    def get_auth_xml_pmcids(self):
+        sql = """SELECT text_ref.pmcid FROM text_ref, text_content
+                    WHERE text_ref.id = text_content.text_ref_id AND
+                          text_content.text_type = 'fulltext' AND
+                          text_content.source = 'pmc_auth';"""
+        res = self.session#.something...
+        return [p[0] for p in res.all()]
+        
+    
+        
+db = DatabaseManager(DEFAULT_AWS_HOST)
+db.get_session()
 
 '''
 def insert_db_stmts(stmts, db_name):
@@ -192,7 +210,7 @@ def insert_db_stmts(stmts, db_name):
     db_ref_id = cur.fetchone()[0]
     # Now, insert the statements
     for stmt_ix, stmt in enumerate(stmts):
-        print("Inserting stmt %s (%d of %d)" % (stmt, stmt_ix+1, len(stmts)))
+S        print("Inserting stmt %s (%d of %d)" % (stmt, stmt_ix+1, len(stmts)))
         sql = """INSERT INTO statements (uuid, db_ref, type, json)
                     VALUES (%s, %s, %s, %s) RETURNING id;"""
         cur.execute(sql, (stmt.uuid, db_ref_id, stmt.__class__.__name__,
