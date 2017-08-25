@@ -195,9 +195,17 @@ class DatabaseManager(object):
         return [p[0] for p in res.all()]
         
     
-        
-db = DatabaseManager(DEFAULT_AWS_HOST)
-db.get_session()
+try:
+    db = DatabaseManager(DEFAULT_AWS_HOST)
+    db.get_session()
+except Exception as e:
+    print("WARNING: Could not connect to aws database due to error:\n%s." % e)
+    class DummyManager(object):
+        def __getattribute__(self, attr_name, *args, **kwargs):
+            print(
+                "WARNING: Unable to get %s because db could not be loaded." % attr_name
+                )
+    db = DummyManager()
 
 '''
 def insert_db_stmts(stmts, db_name):
