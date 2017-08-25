@@ -15,3 +15,4 @@ INDRA modules reference
    mechlinker/index
    assemblers/index
    explanation/index
+   tools/index
