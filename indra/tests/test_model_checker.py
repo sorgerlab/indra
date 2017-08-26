@@ -7,7 +7,8 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
-                                      _stmt_from_rule, PathResult
+                                      _stmt_from_rule, PathResult, \
+                                      remove_im_params
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
@@ -933,7 +934,6 @@ def test_stmt_from_rule():
     assert(stmt == st)
 
 
-
 def test_activate_via_mod():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
     erk = Agent('ERK2', db_refs={'HGNC': '6871'})
@@ -1091,8 +1091,8 @@ def test_model_check_data():
 
 
 def test_prune_influence_map():
-    kin = Agent('Kin', db_refs={'HGNC': '1'})
-    phos = Agent('Phos', db_refs={'HGNC': '2'})
+    kin = Agent('Kinase', db_refs={'HGNC': '1'})
+    phos = Agent('Phosphatase', db_refs={'HGNC': '2'})
     subs = Agent('Substrate', db_refs={'HGNC': '3'})
     st1 = Phosphorylation(kin, subs)
     st2 = Dephosphorylation(phos, subs)
@@ -1100,8 +1100,12 @@ def test_prune_influence_map():
     pa.add_statements([st1, st2])
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [st1])
+    im = mc.get_im()
+    remove_im_params(pa.model, im)
+    #im.draw('before_pruning.pdf', prog='dot')
     mc.prune_influence_map()
     im = mc.get_im()
+    #im.draw('after_pruning.pdf', prog='dot')
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
 
@@ -1201,4 +1205,3 @@ def test_prune_influence_map():
 #
 # When Ras machine finds a new finding, it can be checked to see if it's
 # satisfied by the model.
-
