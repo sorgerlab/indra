@@ -16,7 +16,7 @@ from copy import copy, deepcopy
 import networkx as nx
 from indra.explanation import paths_graph
 
-def _forward(v, src, tgt, H):
+def _forward(v, H):
     """The input to the following forward reachset computation will be the
     graph G_i at the i-th stage for 1 <= j <= 8 together with one of its nodes
     at level j.  This forward reach set will subsequently be pruned.
@@ -37,7 +37,7 @@ reach set to the backward reachset to obtain G_(j+1, v). By patching together
 all the graphs in {G_{j+1, v}}_{v in j-th level of G_j} we will obtain G_j.
 """
 
-def _backward(v, src, tgt, H):
+def _backward(v, H):
     """We also compute the backward version.
     """
     j = v[0]
@@ -124,19 +124,12 @@ pruned graph; except to src whose tag set will be [] """
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
 
-def cycle_free_paths_graph(pg, source, target, path_length):
-    """We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
-    we process all the nodes at level i. We start from G_0 at level 0. The
-    first step is special in which obtain G_1 by processing the nodes (0,
-    source) and (10, target). Then by processing the the nodes of G_1 at level
-    1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
-    """
-    # Function for updating node tags
-    def _add_tag(tag_dict, tag_node, nodes_to_tag):
-        for v in nodes_to_tag:
-            tag_dict[v].append(tag_node[1])
-    # Initialize an empty list of tags for each node
-    tags = dict([(node, []) for node in pg.nodes_iter()])
+# Function for updating node tags in place
+def _add_tag(tag_dict, tag_node, nodes_to_tag):
+    for v in nodes_to_tag:
+        tag_dict[v].append(tag_node[1])
+
+def _initialize_cfpg(pg, source, target):
     # Identify the initial set of nodes to be pruned. In this initial phase,
     # they are simply nodes whose names match the source or target.
     nodes_to_prune = set([v for v in pg.nodes_iter()
@@ -144,10 +137,21 @@ def cycle_free_paths_graph(pg, source, target, path_length):
                              ((v[1] == source[1]) or (v[1] == target[1]))])
     # Get the paths graph after initial source/target cycle pruning
     pg_0 = _prune(pg, nodes_to_prune, source, target)
-    dic_PG = {0: (pg_0, tags)}
+    # Initialize an empty list of tags for each node
+    tags = dict([(node, []) for node in pg_0.nodes_iter()])
     # Add source tag to all nodes except source itself
     _add_tag(tags, source, [v for v in pg_0.nodes_iter() if v != source])
+    return (pg_0, tags)
 
+def cycle_free_paths_graph(pg, source, target, path_length):
+    """We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
+    we process all the nodes at level i. We start from G_0 at level 0. The
+    first step is special in which obtain G_1 by processing the nodes (0,
+    source) and (10, target). Then by processing the the nodes of G_1 at level
+    1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
+    """
+    # Initialize the cycle-free paths graph and the tag dictionary
+    dic_PG = {0: _initialize_cfpg(pg, source, target)}
     round_counter = 1
     # Perform CFPG generation in successive rounds to ensure convergence
     while True:
@@ -170,10 +174,8 @@ def cycle_free_paths_graph(pg, source, target, path_length):
                 dic_X = {}
                 for x in X:
                     tags_x = {}
-                    g_x_f = _forward(x, source, target, H)
-                    g_x_b = _backward(x, source, target, H)
-                    #draw(g_x_b, '%d_%d_back.pdf' % (x[0], x[1]))
-                    #draw(g_x_f, '%d_%d_fwd.pdf' % (x[0], x[1]))
+                    g_x_f = _forward(x, H)
+                    g_x_b = _backward(x, H)
                     g_x = nx.DiGraph()
                     g_x.add_edges_from(g_x_b.edges())
                     g_x.add_edges_from(g_x_f.edges())
@@ -183,33 +185,23 @@ def cycle_free_paths_graph(pg, source, target, path_length):
                                       if v[1] == x[1] and v[0] != k]
                     # If there are no nodes to prune then just add the tag 'x'
                     # to all the nodes in g_x_f but not to x
-                    if not nodes_to_prune:
-                        for v in g_x.nodes_iter():
-                            if v[0] > k:
-                                D = tags[v]
-                                D.append(x[1])
-                                tags_x[v] = D
-                            else:
-                                tags_x[v] = tags[v]
-                        dic_X[x] = (g_x, tags_x)
-                    # Carry out the pruning
-                    else:
-                        g_x_prune = _prune(g_x, nodes_to_prune, source, target)
-                        # If target or x gets pruned then x will contribute
-                        # nothing to G_k
-                        if (target not in g_x_prune) or (x not in g_x_prune):
-                            pass
+                    g_x_prune = _prune(g_x, nodes_to_prune, source, target)
+                    # If target or x gets pruned then x will contribute
+                    # nothing to G_k
+                    if (target not in g_x_prune) or (x not in g_x_prune):
+                        pass
+                    nodes_to_tag = [v for v in g_x_prune.nodes_iter()
+                                    if v[0] > k]
+                    # Otherwise add the tag x to the nodes in the strict
+                    # future of x. update dic_X
+                    for v in g_x_prune.nodes_iter():
+                        if v[0] > k:
+                            D = tags[v]
+                            D.append(x[1])
+                            tags_x[v] = D
                         else:
-                            # Otherwise add the tag x to the nodes in the strict
-                            # future of x. update dic_X
-                            for v in g_x_prune.nodes_iter():
-                                if v[0] > k:
-                                    D = tags[v]
-                                    D.append(x[1])
-                                    tags_x[v] = D
-                                else:
-                                    tags_x[v] = tags[v]
-                        dic_X[x] = (g_x_prune, tags_x)
+                            tags_x[v] = tags[v]
+                    dic_X[x] = (g_x_prune, tags_x)
                 # We can now piece together the pairs in dic_X to obtain (G_k,
                 # tags_k)
                 H_k = nx.DiGraph()
