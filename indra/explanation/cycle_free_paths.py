@@ -89,8 +89,14 @@ paths passing through v in G_j and proceed accordingly.
 """
 
 def _prune(pg, nodes_to_prune, source, target):
+    """Iteratively prunes nodes from a copy of the paths graph."""
+    # First check if we are pruning any nodes to prevent unnecessary copying
+    # of the paths graph
+    if not nodes_to_prune:
+        return pg
     # Make a copy of the graph
     pg_pruned = pg.copy()
+    # Perform iterative pruning
     while nodes_to_prune:
         # Remove the nodes in our pruning list
         pg_pruned.remove_nodes_from(nodes_to_prune)
@@ -116,63 +122,36 @@ eliminate all cycles involving src as well as all cycles involving tgt. To
 prime the sampling procedure we add the tag 'source' to every node in the
 pruned graph; except to src whose tag set will be [] """
 
-def PG_0(pg, src, tgt):
-    # First we identify the nodes to be pruned. In this initial phase, they
-    # are simply nodes whose names are either 'source' or 'target'.
-    nodes_to_prune = []
-    for v in pg.nodes_iter():
-        if (v != src) & (v != tgt) & ((v[1] == src[1]) or (v[1] == tgt[1])):
-            nodes_to_prune.append(v)
-    nodes_to_prune = list(set(nodes_to_prune))
-    # Tags are stored in a dictionary indexed by node. Tags consist of a
-    # list of node names (without assosciated depths).
-    # If there are no nodes to be pruned then we simple add the tag [source] to
-    # every node other than src. src gets the empty tag [].
-    if not nodes_to_prune:
-        tags_0 = {}
-        for v in pg.nodes_iter():
-            if v == src:
-                tags_0[v] = []
-            else:
-                tags_0[v] = [src[1]]
-        # Because we didn't prune out any nodes, we can return the original
-        # paths graph:
-        return (pg, tags_0)
-    else:
-        # Prune the graph
-        pg_pruned  = _prune(pg, nodes_to_prune, src, tgt)
-        # If the source or target gets pruned then there are no cycle free
-        # paths. Hence we return the degenerate (graph, tags) pair and
-        # propagate it through the remaining stages.
-        if (src not in pg_pruned) or (tgt not in pg_pruned):
-            return (nx.DiGraph(), {})
-        # The src and target are still reachable after initial pruning,
-        # so add src tags to all nodes (implying that paths through any node
-        # will have passed through src)
-        else:
-            tags_0 = {}
-            for v in pg_pruned.nodes_iter():
-                if v == src:
-                    tags_0[v] = []
-                else:
-                    tags_0[v] = [src[1]]
-        return (pg_pruned, tags_0)
-
-
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
 
-def PG(pg_0, src, tgt, path_length):
+def cycle_free_paths_graph(pg, source, target, path_length):
     """We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
     we process all the nodes at level i. We start from G_0 at level 0. The
     first step is special in which obtain G_1 by processing the nodes (0,
     source) and (10, target). Then by processing the the nodes of G_1 at level
     1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
     """
+    # Function for updating node tags
+    def _add_tag(tag_dict, tag_node, nodes_to_tag):
+        for v in nodes_to_tag:
+            tag_dict[v].append(tag_node[1])
+    # Initialize an empty list of tags for each node
+    tags = dict([(node, []) for node in pg.nodes_iter()])
+    # Identify the initial set of nodes to be pruned. In this initial phase,
+    # they are simply nodes whose names match the source or target.
+    nodes_to_prune = set([v for v in pg.nodes_iter()
+                          if (v != source) and (v != target) and \
+                             ((v[1] == source[1]) or (v[1] == target[1]))])
+    # Get the paths graph after initial source/target cycle pruning
+    pg_0 = _prune(pg, nodes_to_prune, source, target)
+    dic_PG = {0: (pg_0, tags)}
+    # Add source tag to all nodes except source itself
+    _add_tag(tags, source, [v for v in pg_0.nodes_iter() if v != source])
+
     round_counter = 1
-    pg_0 = deepcopy(pg_0)
+    # Perform CFPG generation in successive rounds to ensure convergence
     while True:
         print("Starting round %d" % round_counter)
-        dic_PG = {0: pg_0}
         print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]),
                                                len(dic_PG[0][0].edges())))
         for k in range(1, path_length):
@@ -191,8 +170,8 @@ def PG(pg_0, src, tgt, path_length):
                 dic_X = {}
                 for x in X:
                     tags_x = {}
-                    g_x_f = _forward(x, src, tgt, H)
-                    g_x_b = _backward(x, src, tgt, H)
+                    g_x_f = _forward(x, source, target, H)
+                    g_x_b = _backward(x, source, target, H)
                     #draw(g_x_b, '%d_%d_back.pdf' % (x[0], x[1]))
                     #draw(g_x_f, '%d_%d_fwd.pdf' % (x[0], x[1]))
                     g_x = nx.DiGraph()
@@ -215,10 +194,10 @@ def PG(pg_0, src, tgt, path_length):
                         dic_X[x] = (g_x, tags_x)
                     # Carry out the pruning
                     else:
-                        g_x_prune = _prune(g_x, nodes_to_prune, src, tgt)
-                        # If tgt or x gets pruned then x will contribute nothing
-                        # to G_k
-                        if (tgt not in g_x_prune) or (x not in g_x_prune):
+                        g_x_prune = _prune(g_x, nodes_to_prune, source, target)
+                        # If target or x gets pruned then x will contribute
+                        # nothing to G_k
+                        if (target not in g_x_prune) or (x not in g_x_prune):
                             pass
                         else:
                             # Otherwise add the tag x to the nodes in the strict
@@ -250,10 +229,10 @@ def PG(pg_0, src, tgt, path_length):
             print("Level %d: %d nodes, %d edges" % (k, len(dic_PG[k][0]),
                                                     len(dic_PG[k][0].edges())))
         if not dic_PG[len(dic_PG)-1][0] or \
-           set(pg_0[0].edges()) == set(dic_PG[len(dic_PG)-1][0].edges()):
+           set(dic_PG[0][0].edges()) == set(dic_PG[len(dic_PG)-1][0].edges()):
             break
         else:
-            pg_0 = dic_PG[k]
+            dic_PG = {0: dic_PG[k]}
         round_counter += 1
     return dic_PG
 
@@ -308,12 +287,11 @@ if __name__ == '__main__':
     pg_raw = paths_graph.paths_graph(G_0, source, target, length, f_level,
                                      b_level, signed=False, target_polarity=0)
 
+    # Append depths to our source and target nodes
     src = (0, source)
-    tgt = (8, target)
-    pg_0 = PG_0(pg_raw, src, tgt)
-
-    dic_PG = PG(pg_0, src, tgt, length)
+    tgt = (length, target)
+    dic_PG = cycle_free_paths_graph(pg_raw, src, tgt, length)
     G_cf, T = dic_PG[7]
-    P = cf_sample_many_paths(src,tgt,G_cf, T, 1000)
+    P = cf_sample_many_paths(src, tgt, G_cf, T, 1000)
     #print("--- %s seconds ---" % (time.time() - start_time))
 
