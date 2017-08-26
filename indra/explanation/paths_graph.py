@@ -256,7 +256,7 @@ def combine_path_graphs(pg_dict):
     return cpg
 
 
-def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
+def sample_paths(g, source, target, max_depth=None, num_samples=1000,
                  eliminate_cycles=True, signed=False, target_polarity=0,
                  by_depth=False):
     # A helper function for running the sampling loop
@@ -273,11 +273,12 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
     # By default the max_depth is the number of nodes
     if max_depth is None:
         max_depth = len(g)
-    f_level, b_level = get_reachable_sets(g, source, target, max_depth)
+    f_level, b_level = get_reachable_sets(g, source, target, max_depth,
+                                          signed=signed)
     # Compute path graphs over a range of path lengths
     pg_by_length = {}
     paths = []
-    for path_length in range(1, max_depth):
+    for path_length in range(1, max_depth+1):
         logger.info("Length %d: computing paths graph" % path_length)
         pg = paths_graph(g, source, target, path_length, f_level, b_level,
                          signed=signed, target_polarity=target_polarity)
@@ -294,7 +295,7 @@ def sample_paths(g, source, target, max_depth=None, num_samples = 1000,
     else:
         # Combine the path graphs into one
         logger.info("Sampling %d paths from the combined path graph" %
-                    path_length)
+                    num_samples)
         cpg = combine_path_graphs(pg_by_length)
         # If the combined path graph is empty, return an empty path list
         if not cpg:
@@ -343,8 +344,16 @@ if __name__ == '__main__':
     source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
     target = 'EIF4EBP1_T37_p_obs'
     target_polarity = 0
-    logger.info("Testing the logger.")
-    (paths_dict, pg_dict) = sample_paths(g, source, target, target_polarity,
-                                         draw_graphs=True, max_depth=8)
-    gs = paths_to_graphset(paths_dict, pg_dict)
+    im_paths = set(sample_paths(g, source, target, signed=True,
+                                target_polarity=0, by_depth=True, max_depth=8,
+                                num_samples=100000))
+    # 101 paths
+    #gs = paths_to_graphset(paths_dict, pg_dict)
 
+    g = get_edges('korkut_model_pysb_pysb.sif')
+    source = 'BLK'
+    target = 'EIF4EBP1'
+    sif_paths = set(sample_paths(g, source, target, signed=False, by_depth=True,
+                             max_depth=8, num_samples=10000000))
+    #gs = paths_to_graphset(paths_dict, pg_dict)
+    # 78,057 paths
