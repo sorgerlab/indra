@@ -4,7 +4,7 @@ from indra.explanation import paths_graph
 from matplotlib import pyplot as plt
 from indra.explanation import cycle_free_paths
 
-num_nodes = 6
+num_nodes = 40
 source = 0
 target = num_nodes - 1
 
@@ -17,6 +17,7 @@ edge_prob = 0.5
 randg = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob, directed=True)
 draw(randg, 'randg_%d_%s.pdf' % (num_nodes, edge_prob))
 
+"""
 # ---------------------
 # Use networkx to count all paths up to a certain length
 nx_start = time.time()
@@ -35,6 +36,7 @@ plt.ion()
 bins = range(num_nodes+1)
 nxh = plt.hist(nx_path_lengths, bins=bins, color='r', align='left')
 # ---------------------
+"""
 
 print("Starting PG")
 pg_start = time.time()
@@ -45,17 +47,22 @@ pg_start = time.time()
 
 sp_paths = []
 for length in range(1, num_nodes):
+    print()
+    print("Path length %d" % length)
     pg_raw = paths_graph.paths_graph(randg, source, target, length, f_level,
                                      b_level, signed=False)
     src = (0, source)
     tgt = (length, target)
     pg_0 = cycle_free_paths.PG_0(pg_raw, src, tgt)
     dic_PG = cycle_free_paths.PG(pg_0, src, tgt, length)
-    G_cf, T = dic_PG[length - 1]
-    P = cycle_free_paths.cf_sample_many_paths(src, tgt, G_cf, T, 10000)
-    sp_paths += set(P)
+    gs = paths_graph.paths_to_graphset
+    #G_cf, T = dic_PG[length - 1]
+    #P = cycle_free_paths.cf_sample_many_paths(src, tgt, G_cf, T, 10000)
+    #sp_paths += set(P)
 
 
+
+"""
 #sp_lengths = [len(p) for p in sp_paths]
 unique_paths = set(sp_paths)
 up_lengths = [len(p) for p in unique_paths]
@@ -70,6 +77,7 @@ sph = plt.hist(up_lengths, bins=bins, color='b', alpha=0.5,
 print(nx_paths)
 print(unique_paths)
 print(nx_paths == unique_paths)
+"""
 
 """
 # Possible path lengths range from 1 (nodes neighbor each other) to num_nodes-1
