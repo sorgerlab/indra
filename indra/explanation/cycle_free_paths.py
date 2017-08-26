@@ -1,56 +1,45 @@
+"""
+As we know, a paths-graph, say G_n, has the property that every node in G_n
+lies on a path of length n from source to target. These paths may not be
+cycle-free. This module transforms G_n into a new graph G_cf such that in G_cf
+every node lies on a cycle-free path from the source to a target. However it
+will NOT be the case, despite the misleading name G_cf, that G_cf contains
+*only* cycle-free paths. However we will be able to "easily" sample cycle-free
+paths from G_cf without any backtracking. Without too large a blow-up, G_cf can
+subsequently be transformed to G_CF which contains only cycle-free paths.  In
+fact I have a rough idea for doing this but haven't tested it out.
+"""
+
 import random
 import itertools
 from copy import copy, deepcopy
 import networkx as nx
 from indra.explanation import paths_graph
 
-"""
-As we know, a paths-graph, say G_n, has the property that every node in G_n
-lies on a path of length n from source to target. These paths may not be
-cycle-free. Our goal is to transform G_n,  into a new graph G_cf such that in
-G_cf every node lies on a cycle-free path from the source to a target. However
-it will NOT be the case -despite the misleading name G_cf- that G_cf contains
-only cycle-free paths. However we will be able to "easily" sample cycle-free
-paths from G_cf without any backtracking. My hope is that without too large a
-blow-up, G_cf can be transformed to G_CF which contains only cycle-free paths.
-In fact I have a rough idea for doing this but haven't tested it out.
-
-In the present experiment we work with the korkut_im.sif example. We set n = 10
-(also equal to max_depth in the get_reachable_sets function).  We will go from
-G_10( called pg_raw below) to G_cf in stages. At stage i we process all the
-nodes at level i.  We start from G_0  at level 0. The first step is  special in
-which obtain G_1 by processing the nodes (0, source) and  (10, target). Then by
-processing the the nodes of G_1 at level 1 we will obtain G_2 etc. At the end
-of this process we will set G_cf = G_8
-
-The input to the following forward reachset computation will be the graph G_i
-at the i-th stage for 1 <= j <= 8 together with one of its nodes at level j.
-This forward reach set will be pruned at the next step as explained below.
-"""
-
-def forward(v, src, tgt, H):
+def _forward(v, src, tgt, H):
+    """The input to the following forward reachset computation will be the
+    graph G_i at the i-th stage for 1 <= j <= 8 together with one of its nodes
+    at level j.  This forward reach set will subsequently be pruned.
+    """
     j = v[0]
     L = {}
     L[j] = [v]
-
     h = nx.DiGraph()
-
     for k in range(j+1, 10):
         for v in L[k-1]:
             h.add_edges_from(H.out_edges(v))
         L[k] = [w for w in h if w[0] == k]
-    #h.add_nodes_from(V)
     return h
 
 """
-We also compute the backward version.  We will then attach the pruned forward
+We will then attach the pruned forward
 reach set to the backward reachset to obtain G_(j+1, v). By patching together
 all the graphs in {G_{j+1, v}}_{v in j-th level of G_j} we will obtain G_j.
-Remark: The actual names in the code are slightly different. This should be
-fixed. Sorry!
 """
 
-def backward(v, src, tgt, H):
+def _backward(v, src, tgt, H):
+    """We also compute the backward version.
+    """
     j = v[0]
     L = {}
     L[j] = [v]
@@ -64,7 +53,7 @@ def backward(v, src, tgt, H):
 
 
 """
-forward(v, source, target, G_j) will return the subgraph of G_j, say G_j_v_f,
+_forward(v, source, target, G_j) will return the subgraph of G_j, say G_j_v_f,
 that is forward reachable from v in G_j.
 
 We prune G_j_v_f through the following iterative procedure.  Let X_j_v be the
@@ -85,8 +74,8 @@ in_coming edges or out_going edges.
 Return g_prune, the partially pruned graph (obtained through steps (i) and
 (ii)) and Y, the candidiate set of nodes for the next iteration of pruning.
 
-prune(Y, src, tgt, g) applies span() repeatedly till there are no more nodes to
-be pruned. We call prune() with Y = X_j_v and g = G_j_v_f
+_prune(Y, src, tgt, g) applies span() repeatedly till there are no more nodes to
+be pruned. We call _prune() with Y = X_j_v and g = G_j_v_f
 
 In the graph resulting from this pruning process, suppose both v and and tgt
 (ie. the node (9, target)) have survived. Since we will be going from lower
@@ -99,40 +88,11 @@ If v or tgt gets eliminated then we can conclude that there are no cycle free
 paths passing through v in G_j and proceed accordingly.
 """
 
-"""
-def span(U, g):
-    g_current = nx.DiGraph()
-    g_current.add_edges_from(g.in_edges(U))
-    g_current.add_edges_from(g.out_edges(U))
-
-    g.remove_edges_from(g_current.edges())
-    h = nx.DiGraph()
-    h.add_edges_from(g.edges())
-
-    Y = []
-    L = [n for n in g_current.nodes_iter()]
-    E = [e for e in g_current.edges_iter()]
-    for v in L:
-        if v in h.nodes():
-            I_v = set(h.in_edges(v)) 
-            O_v = set(h.out_edges(v))
-            if (I_v <= set(E)) or (O_v <= set(E)):
-                Y.append(v)
-    return (h, Y)
-
-
-def prune(U, g):
-    while U != []:
-        g_prune, Y = span(U, g)
-        g = g_prune.copy()
-        U = Y
-    return g_prune
-"""
-
-def prune(pg, nodes_to_prune, source, target):
+def _prune(pg, nodes_to_prune, source, target):
     # Make a copy of the graph
     pg_pruned = pg.copy()
     while nodes_to_prune:
+        # Remove the nodes in our pruning list
         pg_pruned.remove_nodes_from(nodes_to_prune)
         # Make a list of nodes whose in or out degree is now 0 (making
         # sure to exclude the source and target, whose depths are at 0 and
@@ -180,7 +140,7 @@ def PG_0(pg, src, tgt):
         return (pg, tags_0)
     else:
         # Prune the graph
-        pg_pruned  = prune(pg, nodes_to_prune, src, tgt)
+        pg_pruned  = _prune(pg, nodes_to_prune, src, tgt)
         # If the source or target gets pruned then there are no cycle free
         # paths. Hence we return the degenerate (graph, tags) pair and
         # propagate it through the remaining stages.
@@ -200,17 +160,21 @@ def PG_0(pg, src, tgt):
 
 
 """ Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
-def draw(g, filename):
-    ag = nx.nx_agraph.to_agraph(g)
-    ag.draw(filename, prog='dot')
 
 def PG(pg_0, src, tgt, path_length):
+    """We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
+    we process all the nodes at level i. We start from G_0 at level 0. The
+    first step is special in which obtain G_1 by processing the nodes (0,
+    source) and (10, target). Then by processing the the nodes of G_1 at level
+    1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
+    """
     round_counter = 1
     pg_0 = deepcopy(pg_0)
     while True:
         print("Starting round %d" % round_counter)
         dic_PG = {0: pg_0}
-        print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]), len(dic_PG[0][0].edges())))
+        print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]),
+                                               len(dic_PG[0][0].edges())))
         for k in range(1, path_length):
             # Start by copying the information from the previous level
             H = dic_PG[k-1][0].copy()
@@ -224,17 +188,11 @@ def PG(pg_0, src, tgt, path_length):
                 X = [v for v in H.nodes_iter() if v[0] == k]
                 # We will track the (g_x, tags_x) pairs contributed by each x
                 # through dic_X
-                if k == 2:
-                    pass
-                    #import ipdb; ipdb.set_trace()
                 dic_X = {}
                 for x in X:
-                    if k == 1 and x == (1, 3):
-                        #import ipdb; ipdb.set_trace()
-                        pass
                     tags_x = {}
-                    g_x_b = backward(x, src, tgt, H)
-                    g_x_f = forward(x, src, tgt, H)
+                    g_x_f = _forward(x, src, tgt, H)
+                    g_x_b = _backward(x, src, tgt, H)
                     #draw(g_x_b, '%d_%d_back.pdf' % (x[0], x[1]))
                     #draw(g_x_f, '%d_%d_fwd.pdf' % (x[0], x[1]))
                     g_x = nx.DiGraph()
@@ -244,8 +202,8 @@ def PG(pg_0, src, tgt, path_length):
                     # back through node x, (excluding x at level k)
                     nodes_to_prune = [v for v in g_x_f
                                       if v[1] == x[1] and v[0] != k]
-                    # If there are no nodes to prune then just add the tag 'x' to
-                    # all the nodes in g_x_f but not to x
+                    # If there are no nodes to prune then just add the tag 'x'
+                    # to all the nodes in g_x_f but not to x
                     if not nodes_to_prune:
                         for v in g_x.nodes_iter():
                             if v[0] > k:
@@ -257,7 +215,7 @@ def PG(pg_0, src, tgt, path_length):
                         dic_X[x] = (g_x, tags_x)
                     # Carry out the pruning
                     else:
-                        g_x_prune = prune(g_x, nodes_to_prune, src, tgt)
+                        g_x_prune = _prune(g_x, nodes_to_prune, src, tgt)
                         # If tgt or x gets pruned then x will contribute nothing
                         # to G_k
                         if (tgt not in g_x_prune) or (x not in g_x_prune):
@@ -273,7 +231,6 @@ def PG(pg_0, src, tgt, path_length):
                                 else:
                                     tags_x[v] = tags[v]
                         dic_X[x] = (g_x_prune, tags_x)
-                        #draw(g_x_prune, 'lev%d_%d_%d_prune.pdf' % (k, x[0], x[1]))
                 # We can now piece together the pairs in dic_X to obtain (G_k,
                 # tags_k)
                 H_k = nx.DiGraph()
@@ -346,18 +303,17 @@ if __name__ == '__main__':
 
     (f_level, b_level)  =  paths_graph.get_reachable_sets(G_0, source, target,
                                               max_depth=10, signed=False)
-    length = 9
+    length = 8
 
     pg_raw = paths_graph.paths_graph(G_0, source, target, length, f_level,
                                      b_level, signed=False, target_polarity=0)
 
     src = (0, source)
-    tgt = (9, target)
+    tgt = (8, target)
     pg_0 = PG_0(pg_raw, src, tgt)
 
     dic_PG = PG(pg_0, src, tgt, length)
-    G_cf, T = dic_PG[8]
+    G_cf, T = dic_PG[7]
     P = cf_sample_many_paths(src,tgt,G_cf, T, 1000)
-    print(len(list(set(P))))
     #print("--- %s seconds ---" % (time.time() - start_time))
 
