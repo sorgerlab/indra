@@ -1,3 +1,6 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+
 import json
 import psycopg2 as pg
 from indra.statements import *
@@ -41,8 +44,10 @@ class DatabaseManager(object):
             pii = Column(String(250))
             url = Column(String(250), unique = True) # Maybe longer?
             manuscript_id = Column(String(100), unique = True)
-            UniqueConstraint('pmid', 'doi')
-            UniqueConstraint('pmcid', 'doi')
+            __table_args__ = (
+                UniqueConstraint('pmid', 'doi'),
+                UniqueConstraint('pmcid', 'doi')
+                )
         
         class TextContent(self.Base):
             __tablename__ = 'text_content'
@@ -55,7 +60,9 @@ class DatabaseManager(object):
             format = Column(String(250), nullable=False)
             text_type = Column(String(250), nullable=False)
             content = Column(Bytea, nullable=False)
-            UniqueConstraint('text_ref_id', 'source', 'format', 'text_type')
+            __table_args__ = (
+                UniqueConstraint('text_ref_id', 'source', 'format', 'text_type'),
+                )
         
         class Reach(self.Base):
             __tablename__ = 'reach'
@@ -66,14 +73,16 @@ class DatabaseManager(object):
             text_content = relationship(TextContent)
             version = Column(String(20), nullable=False)
             json = Column(Bytea, nullable=False)
-            UniqueConstraint('text_content_id', 'version')
+            ___table_args__ = (
+                UniqueConstraint('text_content_id', 'version'),
+                )
         
         class DBInfo(self.Base):
             __tablename__ = 'db_info'
             id = Column(Integer, primary_key=True)
             db_name = Column(String(20), nullable=False)
             #FIXME: I don't think the default here is really correct.
-            timestamp = Column(TIMESTAMP, default=get_timestamp())
+            timestamp = Column(TIMESTAMP, nullable=False)
         
         class Statements(self.Base):
             __tablename__ = 'statements'
@@ -182,9 +191,6 @@ class DatabaseManager(object):
     
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
         "Get abstracts using teh pmids in pmid_list."
-    
-    def insert_db_stmts(self, stmts, db_name):
-        "Insert statements into the db of db_name"
         
     def get_auth_xml_pmcids(self):
         sql = """SELECT text_ref.pmcid FROM text_ref, text_content
@@ -193,7 +199,48 @@ class DatabaseManager(object):
                           text_content.source = 'pmc_auth';"""
         res = self.session#.something...
         return [p[0] for p in res.all()]
+    
+    def insert_db_stmts(self, stmts, db_name):
+        # Insert the db info
+        print("Adding db %s." % db_name)
+        db_ref_id = self.insert(
+            'db_info', 
+            db_name = db_name, 
+            timestamp=get_timestamp()
+            )
         
+        # Insert the statements
+        for i_stmt, stmt in enumerate(stmts):
+            print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
+            stmt_id = self.insert(
+                'statements', 
+                uuid=stmt.uuid, 
+                db_ref=db_ref_id, 
+                type=stmt.__class__.__name__, 
+                json=json.dumps(stmt.to_json())
+                )
+            
+            # Collect the agents and add them.
+            for i_ag, ag in enumerate(stmt.agent_list()):
+                if ag is None:
+                    continue
+                if isinstance(stmt, Complex) or \
+                    isinstance(stmt, SelfModification) or \
+                    isinstance(stmt, ActiveForm):
+                    role = 'OTHER'
+                elif i_ag == 0:
+                    role = 'SUBJECT'
+                elif i_ag == 1:
+                    role = 'OBJECT'
+                else:
+                    assert False, "Unhandled agent role."
+                
+                # If no db_refs for the agent, skip the insert that follows
+                if not ag.db_refs:
+                    continue
+                #TODO: Work out how to insert multiple things.
+                #self.insert('agents', )
+
     
 try:
     db = DatabaseManager(DEFAULT_AWS_HOST)

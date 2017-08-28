@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 
 from os import listdir, remove
 from indra.db import DatabaseManager
@@ -57,7 +59,7 @@ def test_create_tables():
 def test_insert_and_query_pmid():
     "Test that we can add a text_ref and get the text_ref back."
     db = startup()
-    pmid = u'1234'
+    pmid = '1234'
     text_ref_id = db.insert_text_ref(pmid=pmid)
     entries = db.get_text_refs_by_pmid(pmid)
     assert_equal(len(entries), 1, "One thing inserted, multiple entries found.")
@@ -65,35 +67,43 @@ def test_insert_and_query_pmid():
     assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
     db._clear()
 
+
 def test_uniqueness_text_ref_doi_pmid():
     "Test uniqueness enforcement behavior for text_ref insertion."
     db = startup()
-    pmid = u'1234'
-    doi = u'foo/1234'
-    text_ref_id_1 = db.insert_text_ref(doi=doi, pmid=pmid)
-    text_ref_id_2 = db.insert_text_ref(doi=doi, pmid=pmid)
-    entries = db.get_text_refs_by_pmid(pmid)
-    assert_equal(len(entries), 1, 'Got multiple entries, no uniqueness.')
-    assert_equal(text_ref_id_1, text_ref_id_2)
-    db._clear()
+    pmid = '1234'
+    doi = 'foo/1234'
+    db.insert_text_ref(doi=doi, pmid=pmid)
+    try:
+        db.insert_text_ref(doi=doi, pmid=pmid)
+    except IntegrityError:
+        return # PASS
+    finally:
+        db._clear()
+    assert False, "Uniqueness was not enforced."
+
 
 def test_uniqueness_text_ref_url():
     "Test whether the uniqueness imposed on the url of text_refs is enforced."
     db = startup()
-    url = u'http://foobar.com'
+    url = 'http://foobar.com'
     db.insert_text_ref(url=url)
     try:
         db.insert_text_ref(url=url)
     except IntegrityError:
         return # PASS
     assert False, "Uniqueness was not enforced."
-    
+
+
 def test_insert_text_content():
     "Test whether we can insert text content that is shallow (for testing)."
     raise SkipTest("Not yet implemented")
+
 
 def test_get_auth_xml_pmcids():
     "Test whether we can get auth xml pmcids"
     raise SkipTest("Not yet implemented")
 
-     
+
+    
+
