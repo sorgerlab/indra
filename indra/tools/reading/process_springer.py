@@ -13,7 +13,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from os import path, walk, remove
 from subprocess import call
 from collections import namedtuple
-from indra.db import DatabaseManager#, DEFAULT_AWS_HOST
+from indra.db import DatabaseManager, DEFAULT_AWS_HOST
 from indra.util import zip_string
 
 try:
@@ -107,6 +107,7 @@ def get_xml_data(pdf_path, entry_dict):
             
     return xml_data
 
+
 def find_other_ids(doi):
     '''Use the doi to try and find the pmid and/or pmcid.'''
     other_ids = dict(zip(['pmid', 'pmcid'], 2*[None]))
@@ -133,6 +134,7 @@ def find_other_ids(doi):
         
     return other_ids
 
+
 def process_one_pdf(pdf_path, txt_path, do_zip=True):
     'Convert the pdf to txt and zip it'
     txt_path = pdftotext(pdf_path, txt_path)
@@ -148,6 +150,7 @@ def process_one_pdf(pdf_path, txt_path, do_zip=True):
     
     remove(txt_path) # Only a tmp file.
     return content
+
 
 def zip_abstract(abst_el, ttl_el):
     'Get the abstract from the xml'
@@ -169,7 +172,6 @@ def pdf_is_worth_uploading(ref_data):
     Returns: Bool
     '''
     return ref_data['pmid'] is not None or ref_data['pmcid'] is not None
-    
 
 
 def upload_springer(springer_dir, verbose = False, since_date=None, 
