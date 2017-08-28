@@ -238,7 +238,6 @@ class DatabaseManager(object):
                   (inputs, tbl_name))
         return self.get_values([new_entry], ret_info)[0]
 
-
     def insert_many(self, tbl_name, input_dict_list, ret_info = 'id'):
         "Insert many records into the table given by table_name."
         self.grab_session()

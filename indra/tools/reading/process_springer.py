@@ -5,16 +5,21 @@ import shutil
 import gzip
 from indra.literature import id_lookup, pubmed_client
 from datetime import datetime
-try:
-    import lxml.etree.ElementTree as ET
-except:
-    import lxml.etree as ET
+#try:
+import xml.etree.ElementTree as ET
+#except:
+#    import xml.etree as ET
+from indra.util import UnicodeXMLTreeBuilder as UTB
 from os import path, walk, remove
 from subprocess import call
 from collections import namedtuple
-
-from indra.db import DatabaseManager, DEFAULT_AWS_HOST
+from indra.db import DatabaseManager#, DEFAULT_AWS_HOST
 from indra.util import zip_string
+
+try:
+    basestring
+except:
+    basestring = str
 
 RE_PATT_TYPE = type(re.compile(''))
 # TODO: finish this
@@ -85,17 +90,20 @@ def get_xml_data(pdf_path, entry_dict):
     xml_path_list = deep_find(art_dirname, pdf_name.replace('.pdf','\.xml.*?'))
     assert len(xml_path_list) > 0, "We have no metadata"
     if len(xml_path_list) == 1:
-        xml = ET.parse(xml_path_list[0])
+        xml = ET.parse(xml_path_list[0], parser=UTB())
     elif len(xml_path_list) > 1:
         #TODO: we really should be more intelligent about this
-        xml = ET.parse(xml_path_list[0])
+        xml = ET.parse(xml_path_list[0], parser=UTB())
     
     # Maybe include the journal subtitle too, in future.
     xml_data = {}
     for purpose_key, xml_label_dict in entry_dict.items():
         xml_data[purpose_key] = {}
         for table_key, xml_label in xml_label_dict.items():
-            xml_data[purpose_key][table_key] = xml.find('.//' + xml_label)
+            value = xml.find('.//' + xml_label)
+            if not isinstance(value, basestring):
+                value = value.text
+            xml_data[purpose_key][table_key] = unicode(value)
             
     return xml_data
 
@@ -125,14 +133,19 @@ def find_other_ids(doi):
         
     return other_ids
 
-def process_one_pdf(pdf_path, txt_path):
+def process_one_pdf(pdf_path, txt_path, do_zip=True):
     'Convert the pdf to txt and zip it'
     txt_path = pdftotext(pdf_path, txt_path)
     with open(txt_path, 'rb') as f_in:
         with gzip.open(txt_path + '.gz', 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
-    with open(txt_path, 'rb') as f:
-        content = zip_string(f.read().decode('utf-8'))
+    
+    with open(txt_path, 'rb') as f:        
+        if do_zip:
+            content = zip_string(f.read().decode('utf-8'))
+        else:
+            content = f.read().decode('utf-8')
+    
     remove(txt_path) # Only a tmp file.
     return content
 
@@ -146,7 +159,7 @@ def zip_abstract(abst_el, ttl_el):
     return zip_string(abst_text + ttl_el.text)
 
 
-def this_is_useful(ref_data):
+def pdf_is_worth_uploading(ref_data):
     '''Determines if the data in the pdf is likely to be useful.
     
     Currently we are simply looking at the pmid and pmcid to see if either is
@@ -155,7 +168,7 @@ def this_is_useful(ref_data):
     
     Returns: Bool
     '''
-    return ref_data['pmid'] is None and ref_data['pmcid'] is None
+    return ref_data['pmid'] is not None or ref_data['pmcid'] is not None
     
 
 
@@ -198,9 +211,9 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
                 }
             )
         ref_data = xml_data['ref_data']
-        ref_data.update(find_other_ids(ref_data['doi'].text))
+        ref_data.update(find_other_ids(ref_data['doi']))
         
-        if not this_is_useful(ref_data):
+        if not pdf_is_worth_uploading(ref_data):
             vprint("Skipping...")
             continue
         vprint("Processing...")
@@ -216,27 +229,39 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
         
         # For now pmid's are the primary ID, so that should be the primary
         tr_list = db.get_text_refs_by_pmid(ref_data['pmid'])
+        suf = " text ref %%s for pmid: %s, and doi: %s." % (ref_data['pmid'], ref_data['doi'])
         if len(tr_list) is 0:
             text_ref_id = db.insert_text_ref(**ref_data)
+            vprint("Inserted new" + suf % text_ref_id)
         else:
             text_ref_id = tr_list[0].id
+            vprint("Found existing" + suf % text_ref_id)
         
-        content_type = 'fulltext | pdftotext' #TODO: define the content_type
-        full_content = process_one_pdf(pdf_path, txt_path)
+        if sqltype is 'postgresql':
+            full_content = process_one_pdf(pdf_path, txt_path)
+        else:
+            full_content = process_one_pdf(pdf_path, txt_path, do_zip=False)
         db.insert_text_content(text_ref_id=text_ref_id,
-                               text_type=content_type,
+                               source='Springer',
+                               format='fulltext',
+                               text_type='pdftotext',
                                content=full_content)
         
         abst_data = xml_data['abst_data']
         if abst_data['abstract'] is not None:
-            content_type  = 'abstract | xmltotext' # Somthing abstract
-            abst_content = zip_abstract(abst_data['abstract'], abst_data['title'])
+            if sqltype is 'postgresql':
+                abst_content = zip_abstract(abst_data['abstract'], abst_data['title'])
+            else:
+                abst_content = abst_data['title']
             # TODO: Check if the abstract is already there.
-            db.insert_text_content(text_ref_id=text_ref_id,
-                                   text_type=content_type,
-                                   content=abst_content)
-        
-        uploaded.append(pdf_path)
+            if len(tr_list) is 0:
+                db.insert_text_content(text_ref_id=text_ref_id,
+                                       source='Springer',
+                                       format='abstract',
+                                       text_type='xmltotext',
+                                       content=abst_content)
+    
+        uploaded.append({'path':pdf_path, 'doi':ref_data['doi']})
         vprint("Finished Processing...")
     return uploaded
 
