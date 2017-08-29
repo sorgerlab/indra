@@ -29,6 +29,7 @@ def startup():
     
     db = DatabaseManager(TEST_HOST, sqltype='sqlite')
     db.get_session()
+    db._clear()
     
     return db
 
@@ -65,7 +66,6 @@ def test_insert_and_query_pmid():
     assert_equal(len(entries), 1, "One thing inserted, multiple entries found.")
     assert_equal(entries[0].pmid, pmid)#, "Got back the wrong pmid.")
     assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
-    db._clear()
 
 
 def test_uniqueness_text_ref_doi_pmid():
@@ -95,15 +95,72 @@ def test_uniqueness_text_ref_url():
     assert False, "Uniqueness was not enforced."
 
 
-def test_insert_text_content():
-    "Test whether we can insert text content that is shallow (for testing)."
-    raise SkipTest("Not yet implemented")
-
-
-def test_get_auth_xml_pmcids():
-    "Test whether we can get auth xml pmcids"
-    raise SkipTest("Not yet implemented")
-
-
+def test_get_abstracts():
+    "Test the ability to get a list of abstracts."
+    db = startup()
     
+    # Create a world of abstracts.
+    ref_id_list = db.insert_many(
+        'text_ref',
+        [
+            {'pmid':'1234'}, # searched for, just abstract.
+            {'pmid':'5678'}, # searched for, abstract and full_text
+            {'doi':'foo/234'}, # content, but no pmid.
+            {'pmid':'2468'}, # not searched for.
+            {'pmid':'1357'} # searched for, but no conent.
+            ]
+        )
+    found_abst_fmt = 'This should be found alongside pmid %s.'
+    not_found_fmt = 'If found, something is wrong with %s.'
+    db.insert_many(
+        'text_content',
+        [
+            {
+                'text_ref_id':ref_id_list[0], #pmid=1234
+                'source':'God',
+                'format':'stone tablet',
+                'text_type':'abstract',
+                'content':found_abst_fmt % '1234'
+                },
+            {
+                'text_ref_id':ref_id_list[1], #pmid=5678
+                'source':'Satan',
+                'format':'blood',
+                'text_type':'full_content',
+                'content':not_found_fmt % 'text_type filter'
+                },
+            {
+                'text_ref_id':ref_id_list[1], #pmid=5678
+                'source':'Satan',
+                'format':'blood',
+                'text_type':'abstract',
+                'content':found_abst_fmt % '5678'
+                },
+            {
+                'text_ref_id':ref_id_list[2], #no pmid
+                'source':'Nature',
+                'format':'tears',
+                'text_type':'abstract',
+                'content':not_found_fmt % 'text_ref_id filter'
+                },
+            {
+                'text_ref_id':ref_id_list[3], #pmid=1357
+                'source':'A Voice Inside Your Head',
+                'format':'whispers',
+                'text_type':'abstract',
+                'content':not_found_fmt % 'pmid filter.'
+                }
+            ]
+        )
+    
+    expected = [(pmid, found_abst_fmt % pmid) for pmid in ['1234', '5678']]
+    received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
+    assert_contents_equal(expected, received, "Did not get expected abstracts.")
+
+def test_get_all_pmids():
+    "Test whether we get all the pmids."
+    db = startup()
+    db.insert_many('text_ref', [{'pmid':'1234'}, {'pmid':'5678'}])
+    pmid_list = db.get_all_pmids()
+    assert_contents_equal(pmid_list, ['1234','5678'])
 
