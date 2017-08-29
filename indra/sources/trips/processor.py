@@ -1323,10 +1323,15 @@ class TripsProcessor(object):
 
     def _get_precond_event_ids(self, term_id):
         precond_ids = []
-        precond_event_ref = \
-            self.tree.find("TERM/[@id='%s']/features/inevent" % term_id)
-        if precond_event_ref is not None:
-            preconds = precond_event_ref.findall('event')
+        # Support for old format inevent/event
+        preconds = \
+            self.tree.findall("TERM/[@id='%s']/features/inevent/event" %
+                              term_id)
+        # Support for new format inevent only
+        if not preconds:
+            preconds = \
+                self.tree.findall("TERM/[@id='%s']/features/inevent" % term_id)
+        if preconds:
             precond_ids += [p.attrib.get('id') for p in preconds]
         precond_event_refs = \
             self.tree.findall("TERM/[@id='%s']/features/ptm" % term_id)
@@ -1335,7 +1340,11 @@ class TripsProcessor(object):
 
     def _find_static_events(self):
         # Find sub-EVENTs that TERMs refer to
+        # Support for old format inevent/event
         inevent_tags = self.tree.findall("TERM/features/inevent/event")
+        # Support for new format inevent only
+        if not inevent_tags:
+            inevent_tags = self.tree.findall("TERM/features/inevent")
         ptm_tags = self.tree.findall("TERM/features/ptm")
         notptm_tags = self.tree.findall("TERM/features/not-ptm")
         sub_event_ids = [t.attrib.get('id') for t in inevent_tags]
