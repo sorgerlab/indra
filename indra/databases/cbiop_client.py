@@ -87,3 +87,30 @@ def get_mutations_ccle_lines_genes(lines, gene_list):
             line_mutations[g] = amino_acid_change
         mutations[c] = line_mutations
     return mutations
+
+
+def check_ccle_lines_for_mutation(gene, amino_acid_change):
+    '''
+    Check which cell lines in CCLE have a particular mutation
+
+    Parameters
+    ----------
+    gene: str
+        as HGNC ID
+    amino_acid_change: str
+        example - V600E
+
+    Returns
+    -------
+    cell_lines : list
+        return the response from cBioPortal as a list of cell lines
+    '''
+    data = {'cmd': 'getMutationData',
+            'case_set_id': ccle_study,
+            'genetic_profile_id': ccle_study + '_mutations',
+            'gene_list': gene}
+    df = send_request(data, skiprows=1)
+    df = df[df['amino_acid_change'] == amino_acid_change]
+    cell_lines = df['case_id'].unique().tolist()
+    cell_lines = [x.split('_')[0] for x in cell_lines]
+    return cell_lines
