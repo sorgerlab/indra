@@ -943,14 +943,22 @@ class TripsProcessor(object):
 
         # Check if the "real" TERM is an assoc-with of this TERM as
         # in "the SRF transcription factor".
-        assoc_with = term.find('assoc-with')
-        if assoc_with is not None:
-            assoc_id = assoc_with.attrib.get('id')
-            if assoc_id is not None:
-                agent = self._get_agent_by_id(assoc_id, event_id)
-                return agent
+        # NOTE: MACROMOLECULAR-COMPLEXes like "The EGFR-EGF complex"
+        # can be assoc-with a GENE-PROTEIN with the same components
+        # listed. Following these assoc-withs should be avoided.
+        if not _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
+            assoc_with = term.find('assoc-with')
+            if assoc_with is not None:
+                assoc_id = assoc_with.attrib.get('id')
+                if assoc_id is not None:
+                    agent = self._get_agent_by_id(assoc_id, event_id)
+                    return agent
 
         # If the entity is a complex
+        # NOTE: sometimes other ONT types like GENE-PROTEIN also
+        # have components (e.g. PI3K/Akt).
+        # These should typically not be interpreted as complexes and
+        # for now are not extracted.
         if _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
             components = term.findall("components/component")
             agents = []
