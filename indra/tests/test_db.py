@@ -28,7 +28,7 @@ def startup():
         raise SkipTest("Could not create test table.")
     
     db = DatabaseManager(TEST_HOST, sqltype='sqlite')
-    db.get_session()
+    db.grab_session()
     db._clear()
     
     return db
@@ -61,8 +61,8 @@ def test_insert_and_query_pmid():
     "Test that we can add a text_ref and get the text_ref back."
     db = startup()
     pmid = '1234'
-    text_ref_id = db.insert_text_ref(pmid=pmid)
-    entries = db.get_text_refs_by_pmid(pmid)
+    text_ref_id = db.insert('text_ref', pmid=pmid)
+    entries = db.select('text_ref', db.TextRef.pmid==pmid)
     assert_equal(len(entries), 1, "One thing inserted, multiple entries found.")
     assert_equal(entries[0].pmid, pmid)#, "Got back the wrong pmid.")
     assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
@@ -73,9 +73,9 @@ def test_uniqueness_text_ref_doi_pmid():
     db = startup()
     pmid = '1234'
     doi = 'foo/1234'
-    db.insert_text_ref(doi=doi, pmid=pmid)
+    db.insert('text_ref', doi=doi, pmid=pmid)
     try:
-        db.insert_text_ref(doi=doi, pmid=pmid)
+        db.insert('text_ref', doi=doi, pmid=pmid)
     except IntegrityError:
         return # PASS
     finally:
@@ -87,9 +87,9 @@ def test_uniqueness_text_ref_url():
     "Test whether the uniqueness imposed on the url of text_refs is enforced."
     db = startup()
     url = 'http://foobar.com'
-    db.insert_text_ref(url=url)
+    db.insert('text_ref', url=url)
     try:
-        db.insert_text_ref(url=url)
+        db.insert('text_ref', url=url)
     except IntegrityError:
         return # PASS
     assert False, "Uniqueness was not enforced."
@@ -111,7 +111,7 @@ def test_get_abstracts():
             ]
         )
     found_abst_fmt = 'This should be found alongside pmid %s.'
-    not_found_fmt = 'If found, something is wrong with %s.'
+    not_found_fmt = 'If found, something is probably wrong with %s.'
     db.insert_many(
         'text_content',
         [
@@ -148,7 +148,7 @@ def test_get_abstracts():
                 'source':'A Voice Inside Your Head',
                 'format':'whispers',
                 'text_type':'abstract',
-                'content':not_found_fmt % 'pmid filter.'
+                'content':not_found_fmt % 'pmid filter'
                 }
             ]
         )

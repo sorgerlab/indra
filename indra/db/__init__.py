@@ -5,6 +5,7 @@ import json
 from indra.statements import *
 from indra.util import unzip_string
 from indra.databases import hgnc_client
+from io import BytesIO
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
     TIMESTAMP, create_engine, inspect
@@ -12,6 +13,15 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
 import time
+try:
+    from pgcopy import CopyManager
+    CAN_COPY = True
+except:
+    print("WARNING: pgcopy unavailable. Bulk copies will be slow.")
+    CopyManager = None
+    CAN_COPY = False
+
+from docutils.io import InputError
 #from lxml.includes.xpath import XPATH_INVALID_TYPE
 
 DEFAULT_AWS_HOST = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
@@ -32,12 +42,40 @@ def isiterable(obj):
     return hasattr(obj, '__iter__') and not isinstance(obj, str)
 
 
+class sqltypes:
+    POSTGRESQL = 'postgresql'
+    SQLITE = 'sqlite'
+
+
+class texttypes:
+    FULLTEXT = 'fulltext'
+    ABSTRACT = 'abstract'
+
+
 class DatabaseManager(object):
-    def __init__(self, host, sqltype='postgresql'):
+    """An object used to access indra's database.
+    
+    This object can be used to access and manage indra's database. It includes
+    both basic methods and some useful, more high-level methods. It is designed
+    to be used with postresql, however for testing, it uses a local sqlite 
+    database.
+    
+    This object is primarily built around sqlalchemy, which is a required
+    package for its use. It also optionally makes use of the pgcopy package for
+    large data transfers.
+    
+    Init:
+    ----
+    host -- the database to which you want to interface.
+    sqltype (optional) -- the type of sql library used. Use one of the sql
+            types provided by `sqltypes`.
+    """
+    def __init__(self, host, sqltype=sqltypes.POSTGRESQL):
         self.host = host
         self.Base = declarative_base()
+        self.sqltype = sqltype
         
-        if sqltype is 'postgresql':
+        if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
         else:
             Bytea = String
@@ -114,13 +152,9 @@ class DatabaseManager(object):
         self.tables = {}
         for tbl in [TextRef, TextContent, Reach, DBInfo, Statements, Agents]:
             self.tables[tbl.__tablename__] = tbl
+            self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)
         self.session = None
-
-
-    def get_connection(self):
-        "For backwards compatability."
-        self.get_session()
 
 
     def create_tables(self):
@@ -141,9 +175,9 @@ class DatabaseManager(object):
         self.create_tables()
 
 
-    def get_session(self):
+    def grab_session(self):
         "Get an active session with the database."
-        if self.session is None:
+        if self.session is None or not self.session.is_active:
             DBSession = sessionmaker(bind=self.engine)
             self.session = DBSession()
 
@@ -154,6 +188,7 @@ class DatabaseManager(object):
 
 
     def show_tables(self):
+        "Print a list of all the available tables."
         print(self.get_tables())
 
 
@@ -176,30 +211,37 @@ class DatabaseManager(object):
             raise
 
 
-    def get_values(self, entry_list, col_names):
+    def get_values(self, entry_list, col_names=None, keyed=False):
         "Get the column values from the entries in entry_list"
+        if col_names is None and len(entry_list) > 0: # Get everything.
+            col_names = self.get_columns(entry_list[0].__tablename__)
         ret = []
         for entry in entry_list:
             if isiterable(col_names):
-                ret.append([getattr(entry, a) for a in col_names])
+                if not keyed:
+                    ret.append([getattr(entry, col) for col in col_names])
+                else:
+                    ret.append({col:getattr(entry, col) for col in col_names})
             else:
                 ret.append(getattr(entry, col_names))
         return ret 
 
 
-    def insert(self, tbl_name, ret_vals = 'id', **input_dict):
+    def insert(self, tbl_name, ret_info = 'id', **input_dict):
         "Insert a an entry into specified table, and return id."
+        self.grab_session()
         inputs = dict.fromkeys(self.get_columns(tbl_name))
         inputs.update(input_dict)
         new_entry = self.tables[tbl_name](**inputs)
         self.session.add(new_entry)
         self.commit("Excepted while trying to insert %s into %s" % 
                   (inputs, tbl_name))
-        return self.get_values([new_entry], ret_vals)[0]
+        return self.get_values([new_entry], ret_info)[0]
 
 
     def insert_many(self, tbl_name, input_dict_list, ret_info = 'id'):
         "Insert many records into the table given by table_name."
+        self.grab_session()
         inputs = dict.fromkeys(self.get_columns(tbl_name))
         entry_list = []
         for input_dict in input_dict_list:
@@ -212,17 +254,69 @@ class DatabaseManager(object):
         return self.get_values(entry_list, ret_info)
 
 
-    def insert_text_ref(self, **kwargs):
-        "Insert a text_ref entry."
-        return self.insert('text_ref', **kwargs)
+    def copy(self, tbl_name, data, cols=None):
+        "Use pg_copy to copy over a large amount of data."
+        if cols is None:
+            cols = self.get_columns(tbl_name)
+        else:
+            assert all([col in self.get_columns(tbl_name) for col in cols]),\
+                "Do not recognize one of the columns in %s for table %s." % \
+                (cols, tbl_name)
+        if self.sqltype is sqltypes.POSTGRESQL and CAN_COPY:
+            conn = self.engine.raw_connection()
+            mngr = CopyManager(conn, tbl_name, cols)
+            mngr.copy(data, BytesIO)
+            conn.commit()
+        else:
+            #TODO: use bulk insert mappings?
+            print("WARNING: You are not using postresql or do not have pgcopy, so this will likely be very slow.")
+            self.insert_many('tbl_name', [dict(zip(cols, ro)) for ro in data])
 
 
-    def insert_text_content(self, **kwargs):
-        "Insert an entry into text_content"
-        return self.insert('text_content', **kwargs)
+    def filter_query(self, tbls, *args):
+        "Query a table and filter results."
+        self.grab_session()
+        if isiterable(tbls) and not isinstance(tbls, dict):
+            if isinstance(tbls[0], type(self.Base)):
+                query_args = tbls
+            elif isinstance(tbls[0], str):
+                query_args = [self.tables[tbl] for tbl in tbls]
+            else:
+                raise InputError('Unrecognized table specification type: %s.' %
+                                 type(tbls[0]))
+        else: 
+            if isinstance(tbls, type(self.Base)):
+                query_args = [tbls]
+            elif isinstance(tbls, str):
+                query_args = [self.tables[tbls]]
+            else:
+                raise InputError('Unrecognized table specification type: %s.' %
+                                 type(tbls))
+                
+        return self.session.query(*query_args).filter(*args)
+
+
+    def select_one(self, tbls, *args):
+        """Select the first value that matches requirements given in kwargs 
+        from table indicated by tbl_name.
+        
+        Note that if your specification yields multiple results, this method 
+        will just return the first result without exception.
+        """
+        return self.filter_query(tbls, *args).first()
+
+
+    def select(self, tbls, *args):
+        """Select any and all entries from table given by tbl_name.
+        
+        The results will be filtered your keyword arguments, as for example
+        adding `source='Springer'` to a selection from text content.
+        """
+        return self.filter_query(tbls, *args).all()
 
 
     def insert_db_stmts(self, stmts, db_name):
+        "Insert statement, their database, and any affiliated agents."
         # Insert the db info
         print("Adding db %s." % db_name)
         db_ref_id = self.insert(
@@ -248,9 +342,8 @@ class DatabaseManager(object):
                 # that follows.
                 if ag is None or ag.db_refs is None:
                     continue
-                if isinstance(stmt, Complex) or \
-                    isinstance(stmt, SelfModification) or \
-                    isinstance(stmt, ActiveForm):
+                if any([isinstance(stmt, tp) for tp in 
+                        [Complex, SelfModification, ActiveForm]]):
                     role = 'OTHER'
                 elif i_ag == 0:
                     role = 'SUBJECT'
@@ -273,71 +366,13 @@ class DatabaseManager(object):
         return
 
 
-    def _filter_query(self, tbl_name, **kwargs):
-        """Query a table and filter results.
-        
-        Note: it is assumed, currently, that iterable arguments are intended
-        for use with an `in` clause, which is reasonable given the current
-        schema, however, if that should change, this may need to change.
-        """
-        args = []
-        for attr_name, val in kwargs.items():
-            attr = getattr(self.tables[tbl_name], attr_name)
-            if isiterable(val):
-                args.append(attr.in_(val))
-            else:
-                args.append(attr == val)
-        return self.session.query(self.tables[tbl_name]).filter(*args)
-
-
-    def select_one(self, tbl_name, **kwargs):
-        """Select the first value that matches requirements given in kwargs 
-        from table indicated by tbl_name.
-        
-        Note that if your specification yields multiple results, this method 
-        will just return the first result without exception.
-        """
-        return self._filter_query(tbl_name, **kwargs).first()
-
-
-    def select(self, tbl_name, **kwargs):
-        """Select any and all entries from table given by tbl_name.
-        
-        The results will be filtered your keyword arguments, as for example
-        adding `source='Springer'` to a selection from text content.
-        """
-        return self._filter_query(tbl_name, **kwargs).all()
-
-
-    def get_text_ref_by_pmcid(self, pmcid):
-        "Read a text ref using it's pmcid"
-        return self._filter_query('text_ref', pmcid=pmcid).first()
-
-
-    def get_text_refs_by_pmid(self, pmid):
-        "Get all the text refs with a given pmid."
-        return self._filter_query('text_ref', pmid=pmid).all()
-
-
-    def get_text_ref_by_id(self, tr_id):
-        "Get a text_ref using the text_ref_id."
-        return self._filter_query('text_ref', id=tr_id).first()
-
-
-    def get_text_refs_by_pmcid(self, pmcid_list):
-        "Get multipe refs indicated by pmcids in pmcid_list"
-        return self._filter_query('text_ref', pmcid=pmcid_list).all()
-
-
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
         "Get abstracts using teh pmids in pmid_list."
-        Ref = self.tables['text_ref']
-        Cont = self.tables['text_content']
-        q = self.session.query(Ref, Cont)
-        abst_list = q.filter(
-            Ref.pmid.in_(pmid_list), 
-            Cont.text_ref_id==Ref.id, 
-            Cont.text_type=='abstract'
+        abst_list = self.filter_query(
+            [self.TextRef, self.TextContent],
+            self.TextContent.text_ref_id==self.TextRef.id,
+            self.TextContent.text_type=='abstract',
+            self.TextRef.pmid.in_(pmid_list)
             ).all()
         if unzip:
             def unzip_func(s):
@@ -349,12 +384,13 @@ class DatabaseManager(object):
 
 
     def get_auth_xml_pmcids(self):
-        sql = """SELECT text_ref.pmcid FROM text_ref, text_content
-                    WHERE text_ref.id = text_content.text_ref_id AND
-                          text_content.text_type = 'fulltext' AND
-                          text_content.source = 'pmc_auth';"""
-        res = self.session#.something...
-        return [p[0] for p in res.all()]
+        tref_list = self.filter_query(
+            [self.TextRef, self.TextContent],
+            self.TextRef.id==self.TextContent.text_ref_id,
+            self.TextContent.text_type=='fulltext',
+            self.TextContent.source=='pmc_auth'
+            )
+        return [tref.pmcid for tref in tref_list]
 
 
     def get_all_pmids(self):
@@ -362,32 +398,21 @@ class DatabaseManager(object):
         return self.get_values(self.select('text_ref'), 'pmid')
 
 
-
-try:
-    db = DatabaseManager(DEFAULT_AWS_HOST)
-    db.get_session()
-except Exception as e:
-    print("WARNING: Could not connect to aws database due to error:\n%s." % e)
-    class DummyManager(object):
-        def __getattribute__(self, attr_name, *args, **kwargs):
-            print(
-                "WARNING: Unable to get %s because db could not be loaded." % attr_name
-                )
-    db = DummyManager()
+def get_aws_db():
+    try:
+        db = DatabaseManager(DEFAULT_AWS_HOST)
+        db.grab_session()
+    except Exception as e:
+        print("WARNING: Could not connect to aws database due to error:\n%s." % e)
+        class DummyManager(object):
+            def __getattribute__(self, attr_name, *args, **kwargs):
+                print(
+                    "WARNING: Unable to get %s because db could not be loaded." % attr_name
+                    )
+        db = DummyManager()
+    return db
 
 '''
-def get_auth_xml_pmcids():
-    conn = get_connection()
-    cur = conn.cursor()
-    sql = """SELECT text_ref.pmcid FROM text_ref, text_content
-                WHERE text_ref.id = text_content.text_ref_id AND
-                      text_content.text_type = 'fulltext' AND
-                      text_content.source = 'pmc_auth';"""
-    cur.execute(sql)
-    conn.commit()
-    return [p[0] for p in cur.fetchall()]
-
-
 def get_abstract_pmids():
     conn = get_connection()
     cur = conn.cursor()

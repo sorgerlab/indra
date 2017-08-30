@@ -7,11 +7,12 @@ import tarfile
 import tempfile
 from ftplib import FTP
 from collections import namedtuple
-from indra.db import db
-import pgcopy
+from indra.db import get_aws_db
 import functools
 import multiprocessing as mp
 from indra.util import write_unicode_csv, zip_string
+
+db = get_aws_db()
 
 PmcAuthInfo = namedtuple('PmcAuthInfo', ('File', 'PMCID', 'PMID', 'MID'))
 PmcOaInfo = namedtuple('PmcOaInfo',
@@ -50,12 +51,12 @@ def _get_file_info(ftp_path, filename, datatype):
 
 def _update_text_refs(pmc_info_list, source):
     # Insert any missing text_refs into database.
-    stored_pmc_ids = [r[0] for r in db.select('text_ref', 'pmcid')]
+    stored_pmcids = [tr.pmcid for tr in db.select('text_ref', db.TextRef.pmcid!=None)]
     missing_set = set([p.PMCID for p in pmc_info_list]).difference(
-                                                      set(stored_pmc_ids))
+                                                      set(stored_pmcids))
     pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
     # Write the missing records to a CSV so we can use the copy command
-    pmc_info_to_copy = []
+    pmc_data = []
     for pi in pmc_info_missing:
         if pi.PMID == '0' or pi.PMID == '':
             pmid = None
@@ -65,13 +66,10 @@ def _update_text_refs(pmc_info_list, source):
             manuscript_id = pi.MID.encode('ascii')
         else:
             manuscript_id = None
-        pmc_info_to_copy.append((source.encode('ascii'), pmid,
-                                 pi.PMCID.encode('ascii'), manuscript_id))
+        pmc_data.append((source.encode('ascii'), pmid,
+                         pi.PMCID.encode('ascii'), manuscript_id))
     # Copy using pgcopy
-    conn = db.get_connection()
-    cols = ('source', 'pmid', 'pmcid', 'manuscript_id')
-    mgr = pgcopy.CopyManager(conn, 'text_ref', cols)
-    mgr.copy(pmc_info_to_copy, BytesIO)
+    db.copy('text_ref', pmc_data, cols=('pmid', 'pmcid', 'manuscript_id'))
 
 
 def initialize_pmc_manuscripts():
@@ -99,7 +97,7 @@ def initialize_pmc_manuscripts():
             stems.add(pi.File[0:6])
         to_download = [f for f in xml_files if f[0:6] in stems]
         ftp.close()
-        return xml_files
+        return to_download
 
     def download_xml_archive(filename, tmp_dir):
         ftp = _get_ftp_connection(ftp_path)
@@ -125,8 +123,10 @@ def initialize_pmc_manuscripts():
         import random
         random.shuffle(pmc_to_store)
         # Get the text ref IDs by PMCID
-        pmcid_tr_dict = dict(db.get_text_refs_by_pmcid(
-                                 tuple([pi.PMCID for pi in pmc_to_store])))
+        pmcid_tr_dict = dict(db.select(
+            'text_ref',
+            db.TextRef.pmcid.in_([pi.PMCID for pi in pmc_to_store])
+            ))
         pmc_blocksize = 2000
         start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
         for start_ix in start_ix_list:
@@ -138,7 +138,7 @@ def initialize_pmc_manuscripts():
             info_tuples = []
             for pi in pmc_to_store[start_ix:end_ix]:
                 xml_path = os.path.join(tmp_dir, pi.File)
-                text_ref_id = pmcid_tr_dict[pi.PMCID]
+                text_ref_id = pmcid_tr_dict[pi.PMCID].id
                 if os.path.exists(xml_path):
                     # Look up the text_ref_id for this PMCID
                     # Read the XML file in text mode
@@ -150,13 +150,9 @@ def initialize_pmc_manuscripts():
                     content_block_rows.append((text_ref_id, b'pmc_auth_xml',
                                                content_gz))
                 else:
-                    print("Could not find file %s" % file_path)
+                    print("Could not find file %s" % xml_path)
             t1 = time.time()
-            conn = db.get_connection()
-            cols = ('text_ref_id', 'content_type', 'content')
-            mgr = pgcopy.CopyManager(conn, 'text_content', cols)
-            mgr.copy(content_block_rows, BytesIO)
-            conn.commit()
+            db.copy('text_content', content_block_rows, ('text_ref_id', 'content_type', 'content'))
 
             print("Copied files %d to %d from %s" %
                   (start_ix, end_ix, xml_file))
@@ -209,8 +205,7 @@ def initialize_pmc_oa():
 
 if __name__ == '__main__':
     pass
-    db.drop_tables()
-    db.create_tables()
+    db._clear()
     initialize_pmc_manuscripts()
     #db.insert_reach('3', '1.3.3', "{'foo': 'bar'}")
 

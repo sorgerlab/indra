@@ -1,14 +1,15 @@
 import zlib
-import pgcopy
 import logging
 from io import BytesIO
 import xml.etree.ElementTree as ET
-from indra import db
+from indra.db import get_aws_db
 from indra.literature import pubmed_client
 from indra.util import zip_string, unzip_string, UnicodeXMLTreeBuilder as UTB
 from indra.db.update_content import _get_ftp_connection, ftp_blocksize
 import functools
 import multiprocessing as mp
+
+db = get_aws_db()
 
 logger = logging.getLogger('update_medline')
 
@@ -65,24 +66,25 @@ def _upload_xml_file(xml_file, deleted_pmids=None):
             text_content_info[pmid] = \
                             (b'pubmed', b'text', b'abstract', abstract_gz)
     # Copy the text ref information over
-    conn = db.get_connection()
-    cols = ('pmid', 'pmcid', 'doi', 'pii')
-    print("Copying text_refs to database")
-    mgr = pgcopy.CopyManager(conn, 'text_ref', cols)
-    mgr.copy(text_ref_records, BytesIO)
+    db.copy('text_ref', text_ref_records, ('pmid', 'pmcid', 'doi', 'pii'))
+
     # Build a dict mapping PMIDs to text_ref IDs
-    pmid_tr_dict = dict(db.get_text_refs_by_pmid(
-                                    tuple(text_content_info.keys())))
+    pmid_list = list(text_content_info.keys())
+    tref_list = db.select('text_ref', db.TextRef.pmid==pmid_list)
+    pmid_tr_dict = {pmid:trid for (pmid, trid) in 
+                    db.get_values(tref_list, ['pmid', 'id'])}
+
     # Add the text_ref IDs to the content to be inserted
     text_content_records = []
     for pmid, tc_data in text_content_info.items():
         tr_id = pmid_tr_dict[pmid]
         text_content_records.append((tr_id,) + tc_data)
     # Copy into database
-    conn = db.get_connection()
-    cols = ('text_ref_id', 'source', 'format', 'text_type', 'content')
-    mgr = pgcopy.CopyManager(conn, 'text_content', cols)
-    mgr.copy(text_content_records, BytesIO)
+    db.copy(
+        'text_content', 
+        text_content_records,
+        cols=('text_ref_id', 'source', 'format', 'text_type', 'content')
+        )
     ftp.close()
     return True
 
