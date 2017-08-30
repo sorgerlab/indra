@@ -9,6 +9,27 @@ def test_send_request_ccle():
     Check that the dataframe is longer than one
     '''
     data = {'cmd': 'getCaseLists',
-        'cancer_study_id': 'cellline_ccle_broad'}
+            'cancer_study_id': 'cellline_ccle_broad'}
     df = cbio_client.send_request(data)
     assert(len(df) > 0)
+
+
+def test_check_ccle_lines_for_mutation():
+    '''
+    Check how many lines have BRAF V600E mutations
+    Check that this returns a list greater than zero, and more specificially,
+    equal to 55 cell lines
+    '''
+    cl_BRAF_V600E = cbio_client.check_ccle_lines_for_mutation('BRAF', 'V600E')
+    assert(len(cl_BRAF_V600E) > 0)
+    assert(len(cl_BRAF_V600E) == 55)
+
+
+def test_get_mutations_ccle_lines_genes():
+    muts = cbio_client.get_mutations_ccle_lines_genes(['LOXIMVI', 'A101D'],
+                                                      ['BRAF', 'AKT1'])
+    assert len([x for x in muts]) == 2
+    assert 'V600E' in muts['LOXIMVI']['BRAF']
+    assert 'V600E' in muts['A101D']['BRAF']
+    assert len(muts['LOXIMVI']['AKT1']) == 0
+    assert len(muts['A101D']['AKT1']) == 0
