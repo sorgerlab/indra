@@ -2,6 +2,23 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import cbio_client
 
+def test_get_cancer_studies():
+    study_ids = cbio_client.get_cancer_studies('paad')
+    assert(len(study_ids) > 0)
+    assert('paad_tcga' in study_ids)
+
+def test_get_cancer_types():
+    type_ids = cbio_client.get_cancer_types('lung')
+    assert(len(type_ids) > 0)
+
+def test_get_genetic_profiles():
+    genetic_profiles = \
+        cbio_client.get_genetic_profiles('paad_icgc', 'mutation')
+    assert(len(genetic_profiles) > 0)
+
+def test_get_num_sequenced():
+    num_case = cbio_client.get_num_sequenced('paad_tcga')
+    assert(num_case > 0)
 
 def test_send_request_ccle():
     """Sends a request and gets back a dataframe of all cases in ccle study.
@@ -26,11 +43,11 @@ def test_get_ccle_lines_for_mutation():
 
 def test_get_mutations_ccle():
     muts = cbio_client.get_mutations_ccle(['BRAF', 'AKT1'],
-                                          ['LOXIMVI', 'A101D'])
+                                          ['LOXIMVI_SKIN', 'A101D_SKIN'])
     assert len([x for x in muts]) == 2
-    assert 'V600E' in muts['LOXIMVI']['BRAF']
-    assert 'V600E' in muts['A101D']['BRAF']
-    assert 'I208V' in muts['LOXIMVI']['BRAF']
-    assert 'I208V' not in muts['A101D']['BRAF']
-    assert len(muts['LOXIMVI']['AKT1']) == 0
-    assert len(muts['A101D']['AKT1']) == 0
+    assert 'V600E' in muts['LOXIMVI_SKIN']['BRAF']
+    assert 'V600E' in muts['A101D_SKIN']['BRAF']
+    assert 'I208V' in muts['LOXIMVI_SKIN']['BRAF']
+    assert 'I208V' not in muts['A101D_SKIN']['BRAF']
+    assert len(muts['LOXIMVI_SKIN']['AKT1']) == 0
+    assert len(muts['A101D_SKIN']['AKT1']) == 0
