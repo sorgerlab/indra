@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import pandas
 import logging
 import requests
@@ -234,7 +236,7 @@ def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
     return mutations
 
 
-def get_ccle_lines_mutation(gene, amino_acid_change):
+def get_ccle_lines_for_mutation(gene, amino_acid_change):
     """Return cell lines with a given point mutation in a given gene.
 
     Checks which cell lines in CCLE have a particular point mutation
