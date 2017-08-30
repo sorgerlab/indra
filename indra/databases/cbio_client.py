@@ -191,15 +191,21 @@ def get_cancer_types(cancer_filter=None):
     type_ids = res['type_of_cancer_id'].values()
     return type_ids
 
-def get_mutations_ccle_lines_genes(lines, gene_list):
-    """Return a dict of mutations in given genes and cell lines.
+def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
+    """Return a dict of mutations in given genes and cell lines from CCLE.
+
+    This is a specialized call to get_mutations tailored to CCLE cell lines.
 
     Parameters
     ----------
-    lines : list[str]
-        A list of CCLE cell line names to get mutations for
     gene_list : list[str]
         A list of HGNC gene symbols to get mutations in
+    cell_lines : list[str]
+        A list of CCLE cell line names to get mutations for.
+    mutation_type : Optional[str]
+        The type of mutation to filter to.
+        mutation_type can be one of: missense, nonsense, frame_shift_ins,
+                                     frame_shift_del, splice_site
 
     Returns
     -------
@@ -208,30 +214,17 @@ def get_mutations_ccle_lines_genes(lines, gene_list):
         {cell_line : {gene : [mutation1, mutation2, ...] }}
 
         Example:
-        {'LOXIMVI': {'BRAF': ['V600E', 'I208V']},
-         'SKMEL30': {'BRAF': ['D287H', 'E275K']}}
+        {'LOXIMVI_SKIN': {'BRAF': ['V600E', 'I208V']},
+         'SKMEL30_SKIN': {'BRAF': ['D287H', 'E275K']}}
     """
-    gene_str = ','.join(gene_list)
-    data = {'cmd': 'getMutationData',
-            'case_set_id': ccle_study,
-            'genetic_profile_id': ccle_study + '_mutations',
-            'gene_list': gene_str}
-
-    df = send_request(data, skiprows=1)
-    df_lines_dict = {x.split('_')[0]: x
-                     for x in df['case_id'].unique().tolist()}
-    filter_lines = [df_lines_dict.get(x, None) for x in lines]
-    filter_lines = [x for x in filter_lines if x is not None]
-    df = df[df['case_id'].isin(filter_lines)]
-    mutations = {}
-    for c in lines:
-        df_c = df[df['case_id'] == df_lines_dict[c]]
-        line_mutations = {}
-        for g in gene_list:
-            df_g = df_c[df_c['gene_symbol'] == g]
-            amino_acid_change = df_g['amino_acid_change'].tolist()
-            line_mutations[g] = amino_acid_change
-        mutations[c] = line_mutations
+    mutations = {cl: {g: [] for g in gene_list} for cl in cell_lines}
+    for cell_line in cell_lines:
+        mutations_cl = get_mutations(ccle_study, gene_list,
+                                     mutation_type=mutation_type,
+                                     case_id=cell_line)
+        for gene, aa_change in zip(mutations_cl['gene_symbol'],
+                                   mutations_cl['amino_acid_change']):
+            mutations[cell_line][gene].append(aa_change)
     return mutations
 
 
