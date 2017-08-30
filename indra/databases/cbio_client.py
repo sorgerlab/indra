@@ -89,8 +89,8 @@ def get_mutations(study_id, gene_list, mutation_type=None,
         df = df[df['case_id'] == case_id]
     res = _filter_data_frame(df, ['gene_symbol', 'amino_acid_change'],
                                    'mutation_type', mutation_type)
-    mutations = {'gene_symbol': res['gene_symbol'].values(),
-                 'amino_acid_change': res['amino_acid_change'].values()}
+    mutations = {'gene_symbol': list(res['gene_symbol'].values()),
+                 'amino_acid_change': list(res['amino_acid_change'].values())}
     return mutations
 
 
@@ -147,7 +147,7 @@ def get_genetic_profiles(study_id, profile_filter=None):
     df = send_request(**data)
     res = _filter_data_frame(df, ['genetic_profile_id'],
                                   'genetic_alteration_type', profile_filter)
-    genetic_profiles = res['genetic_profile_id'].values()
+    genetic_profiles = list(res['genetic_profile_id'].values())
     return genetic_profiles
 
 def get_cancer_studies(study_filter=None):
@@ -173,7 +173,7 @@ def get_cancer_studies(study_filter=None):
     df = send_request(**data)
     res = _filter_data_frame(df, ['cancer_study_id'],
                              'cancer_study_id', study_filter)
-    study_ids = res['cancer_study_id'].values()
+    study_ids = list(res['cancer_study_id'].values())
     return study_ids
 
 def get_cancer_types(cancer_filter=None):
@@ -196,7 +196,7 @@ def get_cancer_types(cancer_filter=None):
     data = {'cmd': 'getTypesOfCancer'}
     df = send_request(**data)
     res = _filter_data_frame(df, ['type_of_cancer_id'], 'name', cancer_filter)
-    type_ids = res['type_of_cancer_id'].values()
+    type_ids = list(res['type_of_cancer_id'].values())
     return type_ids
 
 def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
