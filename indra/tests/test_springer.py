@@ -141,19 +141,19 @@ def test_upload():
             'Expected: %s,\ngot: %s.'%(str(expected_uploads), str(uploads_arts))
         
         # Check that the correct database entries were made.
-        db.get_session()
+        db.grab_session()
         tref_dict = {}
         tcont_dict = {}
         for upload in uploads:
             key = basename(upload['path'])
-            tref = db.get_text_ref_by_doi(upload['doi'])
+            tref = db.select_one('text_ref', db.TextRef.doi==upload['doi'])
             tref_dict[key] = tref
             if tref is None:
                 continue # Cannot look for content w/o tref.id
-            tcont = db._filter_query('text_content', text_ref_id = tref.id).all()
-            tcont_dict[key] = tcont
+            tcont = db.select('text_content', db.TextContent.text_ref==tref)
+            tcont_dict[key] = tcont if len(tcont) > 0 else None
         err_fmt = "Did not insert all text %s.\nGot some \'None\'s: %s."
-        filter_dict = lambda d: filter(lambda (_,v): v is None, d.items())
+        filter_dict = lambda d: filter(lambda _,v: v is None, d.items())
         assert None not in list(tref_dict.values()),\
             err_fmt % ('ref', filter_dict(tref_dict))
         assert None not in list(tcont_dict.values()),\

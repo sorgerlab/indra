@@ -103,7 +103,7 @@ def get_xml_data(pdf_path, entry_dict):
             value = xml.find('.//' + xml_label)
             if not isinstance(value, basestring):
                 value = value.text
-            xml_data[purpose_key][table_key] = unicode(value)
+            xml_data[purpose_key][table_key] = value.encode('utf-8')
             
     return xml_data
 
@@ -227,13 +227,13 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
             db = DatabaseManager(host)
         else:
             db = DatabaseManager(host, sqltype=sqltype)
-        db.get_session()
+        db.grab_session()
         
         # For now pmid's are the primary ID, so that should be the primary
-        tr_list = db.get_text_refs_by_pmid(ref_data['pmid'])
+        tr_list = db.select('text_ref', db.TextRef.pmid==ref_data['pmid'])
         suf = " text ref %%s for pmid: %s, and doi: %s." % (ref_data['pmid'], ref_data['doi'])
         if len(tr_list) is 0:
-            text_ref_id = db.insert_text_ref(**ref_data)
+            text_ref_id = db.insert('text_ref', **ref_data)
             vprint("Inserted new" + suf % text_ref_id)
         else:
             text_ref_id = tr_list[0].id
@@ -243,11 +243,14 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
             full_content = process_one_pdf(pdf_path, txt_path)
         else:
             full_content = process_one_pdf(pdf_path, txt_path, do_zip=False)
-        db.insert_text_content(text_ref_id=text_ref_id,
-                               source='Springer',
-                               format='fulltext',
-                               text_type='pdftotext',
-                               content=full_content)
+        db.insert(
+            'text_content', 
+            text_ref_id=text_ref_id,
+            source='Springer',
+            format='fulltext',
+            text_type='pdftotext',
+            content=full_content
+            )
         
         abst_data = xml_data['abst_data']
         if abst_data['abstract'] is not None:
@@ -257,11 +260,14 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
                 abst_content = abst_data['title']
             # TODO: Check if the abstract is already there.
             if len(tr_list) is 0:
-                db.insert_text_content(text_ref_id=text_ref_id,
-                                       source='Springer',
-                                       format='abstract',
-                                       text_type='xmltotext',
-                                       content=abst_content)
+                db.insert(
+                    'text_content', 
+                    text_ref_id=text_ref_id,
+                    source='Springer',
+                    format='abstract',
+                    text_type='xmltotext',
+                    content=abst_content
+                    )
     
         uploaded.append({'path':pdf_path, 'doi':ref_data['doi']})
         vprint("Finished Processing...")
