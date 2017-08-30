@@ -80,9 +80,10 @@ def get_mutations_ccle_lines_genes(lines, gene_list):
     df = df[df['case_id'].isin(filter_lines)]
     mutations = {}
     for c in lines:
+        df_c = df[df['case_id'] == df_lines_dict[c]]
         line_mutations = {}
         for g in gene_list:
-            df_g = df[df['gene_symbol'] == g]
+            df_g = df_c[df_c['gene_symbol'] == g]
             amino_acid_change = df_g['amino_acid_change'].tolist()
             line_mutations[g] = amino_acid_change
         mutations[c] = line_mutations
