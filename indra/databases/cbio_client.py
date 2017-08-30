@@ -3,9 +3,11 @@ import logging
 import requests
 # Python3
 try:
+    from functools import lru_cache
     from io import StringIO
 # Python2
 except ImportError:
+    from functools32 import lru_cache
     from StringIO import StringIO
 
 logger = logging.getLogger('cbio')
@@ -13,7 +15,9 @@ logger = logging.getLogger('cbio')
 cbio_url = 'http://www.cbioportal.org/webservice.do'
 ccle_study = 'cellline_ccle_broad'
 
-def send_request(data, skiprows=0):
+
+@lru_cache(maxsize=10000)
+def send_request(**kwargs):
     """Return a data frame from a web service request to cBio portal.
 
     Sends a web service requrest to the cBio portal with arguments given in
@@ -24,18 +28,19 @@ def send_request(data, skiprows=0):
 
     Parameters
     ----------
-    data : dict
-        A dict of parameters for the query.
-    skiprows : Optional[int]
-        Number of rows to skip when reading dataframe. This is useful to align
-        headers.
+    kwargs : dict
+        A dict of parameters for the query. Entries map directly to web service
+        calls with the exception of the optional 'skiprows' entry, whose value
+        is used as the number of rows to skip when reading the result data
+        frame.
 
     Returns
     -------
-    df : Pandas DataFrame
-        return the response from cBioPortal as a Pandas DataFrame
+    df : pandas.DataFrame
+        Response from cBioPortal as a Pandas DataFrame.
     """
-    res = requests.get(cbio_url, params=data)
+    skiprows = kwargs.pop('skiprows', None)
+    res = requests.get(cbio_url, params=kwargs)
     if res.status_code == 200:
         csv_StringIO = StringIO(res.text)
         df = pandas.read_csv(csv_StringIO, sep='\t', skiprows=skiprows)
@@ -75,8 +80,9 @@ def get_mutations(study_id, gene_list, mutation_type=None,
     data = {'cmd': 'getMutationData',
             'case_set_id': study_id,
             'genetic_profile_id': genetic_profile,
-            'gene_list': gene_list_str}
-    df = send_request(data, skiprows=1)
+            'gene_list': gene_list_str,
+            'skiprows': 1}
+    df = send_request(**data)
     if case_id:
         df = df[df['case_id'] == case_id]
     res = _filter_data_frame(df, ['gene_symbol', 'amino_acid_change'],
@@ -105,7 +111,7 @@ def get_num_sequenced(study_id):
     """
     data = {'cmd': 'getCaseLists',
             'cancer_study_id': study_id}
-    df = send_request(data)
+    df = send_request(**data)
     row_filter = df['case_list_id'].str.contains('sequenced', case=False)
     num_case = len(df[row_filter]['case_ids'].tolist()[0].split(' '))
     return num_case
@@ -136,7 +142,7 @@ def get_genetic_profiles(study_id, profile_filter=None):
     """
     data = {'cmd': 'getGeneticProfiles',
             'cancer_study_id': study_id}
-    df = send_request(data)
+    df = send_request(**data)
     res = _filter_data_frame(df, ['genetic_profile_id'],
                                   'genetic_alteration_type', profile_filter)
     genetic_profiles = res['genetic_profile_id'].values()
@@ -162,7 +168,7 @@ def get_cancer_studies(study_filter=None):
         etc.
     """
     data = {'cmd': 'getCancerStudies'}
-    df = send_request(data)
+    df = send_request(**data)
     res = _filter_data_frame(df, ['cancer_study_id'],
                              'cancer_study_id', study_filter)
     study_ids = res['cancer_study_id'].values()
@@ -186,7 +192,7 @@ def get_cancer_types(cancer_filter=None):
         "panet" (neuro-endocrine) and "paad" (adenocarcinoma)
     """
     data = {'cmd': 'getTypesOfCancer'}
-    df = send_request(data)
+    df = send_request(**data)
     res = _filter_data_frame(df, ['type_of_cancer_id'], 'name', filter_str)
     type_ids = res['type_of_cancer_id'].values()
     return type_ids
@@ -250,8 +256,9 @@ def get_ccle_lines_mutation(gene, amino_acid_change):
     data = {'cmd': 'getMutationData',
             'case_set_id': ccle_study,
             'genetic_profile_id': ccle_study + '_mutations',
-            'gene_list': gene}
-    df = send_request(data, skiprows=1)
+            'gene_list': gene,
+            'skiprows': 1}
+    df = send_request(**data)
     df = df[df['amino_acid_change'] == amino_acid_change]
     cell_lines = df['case_id'].unique().tolist()
     return cell_lines
