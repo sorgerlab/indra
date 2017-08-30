@@ -9,32 +9,34 @@ except ImportError:
     from StringIO import StringIO
 
 logger = logging.getLogger('cbio')
-cbio_url = 'http://www.cbioportal.org/webservice.do'
 
+cbio_url = 'http://www.cbioportal.org/webservice.do'
 ccle_study = 'cellline_ccle_broad'
 
-
 def send_request(data, skiprows=0):
-    '''
+    """Return a data frame from a web service request to cBio portal.
+
     Sends a web service requrest to the cBio portal with arguments given in
     the dictionary data and returns a Pandas data frame on success.
+
+    More information about the service here:
+    http://www.cbioportal.org/web_api.jsp
 
     Parameters
     ----------
     data : dict
-        A dict of parameters for the cBioPortal query
+        A dict of parameters for the query.
     skiprows : int
         Number of rows to skip when reading dataframe. This is useful to align
-        headers
+        headers.
 
     Returns
     -------
     df : Pandas DataFrame
         return the response from cBioPortal as a Pandas DataFrame
-    '''
+    """
     res = requests.get(cbio_url, params=data)
-    status = res.status_code
-    if status == 200:
+    if res.status_code == 200:
         csv_StringIO = StringIO(res.text)
         df = pd.read_csv(csv_StringIO, sep='\t', skiprows=skiprows)
         return df
@@ -43,31 +45,26 @@ def send_request(data, skiprows=0):
 
 
 def get_mutations_ccle_lines_genes(lines, gene_list):
-    '''
-    Given a list of cell lines and genes, return the mutations in
-    those lines and genes, if any
+    """Return a dict of mutations in given genes and cell lines.
 
     Parameters
     ----------
-    lines : list of str
-        the names of the CCLE cell line(s)
-    gene_list : list of str
-        HGNC names of gene(s)
+    lines : list[str]
+        A list of CCLE cell line names to get mutations for
+    gene_list : list[str]
+        A list of HGNC gene symbols to get mutations in
 
     Returns
     -------
     mutations : dict
-        return the response from cBioPortal as a dict in the format
+        The result from cBioPortal as a dict in the format
         {cell_line : {gene : [mutation1, mutation2, ...] }}
 
-        for example -
+        Example:
         {'LOXIMVI': {'BRAF': ['V600E', 'I208V']},
          'SMEL30': {'BRAF': ['V600E', 'I208V']}}
-    '''
-    gene_str = ''
-    for x in gene_list:
-        gene_str += (x + ', ')
-    gene_str[:len(gene_str) - 2]
+    """
+    gene_str = ','.join(gene_list)
     data = {'cmd': 'getMutationData',
             'case_set_id': ccle_study,
             'genetic_profile_id': ccle_study + '_mutations',
@@ -91,21 +88,23 @@ def get_mutations_ccle_lines_genes(lines, gene_list):
 
 
 def check_ccle_lines_for_mutation(gene, amino_acid_change):
-    '''
-    Check which cell lines in CCLE have a particular mutation
+    """Return cell lines with a given mutation.
+
+    Check which cell lines in CCLE have a particular mutation and
+    return their names in a list.
 
     Parameters
     ----------
-    gene: str
+    gene : str
         as HGNC ID
-    amino_acid_change: str
+    amino_acid_change : str
         example - V600E
 
     Returns
     -------
     cell_lines : list
         return the response from cBioPortal as a list of cell lines
-    '''
+    """
     data = {'cmd': 'getMutationData',
             'case_set_id': ccle_study,
             'genetic_profile_id': ccle_study + '_mutations',
