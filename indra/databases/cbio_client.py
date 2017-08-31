@@ -346,6 +346,41 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     cell_lines = df['case_id'].unique().tolist()
     return cell_lines
 
+
+def get_ccle_cna(gene_list):
+    """Return a dict of CNAs in given genes and cell lines from CCLE.
+
+    This is a specialized call to get_mutations tailored to CCLE cell lines.
+
+    Parameters
+    ----------
+    gene_list : list[str]
+        A list of HGNC gene symbols to get mutations in
+    cell_lines : list[str]
+        A list of CCLE cell line names to get mutations for.
+    mutation_type : Optional[str]
+        The type of mutation to filter to.
+        mutation_type can be one of: missense, nonsense, frame_shift_ins,
+                                     frame_shift_del, splice_site
+
+    Returns
+    -------
+    profile_data : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    profile_data : dict
+        The result from cBioPortal as a dict in the format
+        {cell_line : {gene : [mutation1, mutation2, ...] }}
+
+        Example:
+        {'LOXIMVI_SKIN': {'BRAF': ['V600E', 'I208V']},
+         'SKMEL30_SKIN': {'BRAF': ['D287H', 'E275K']}}
+    """
+    profile_data = get_profile_data(ccle_study, ['BRAF', 'PTEN'],
+                                    'COPY_NUMBER_ALTERATION', 'all')
+    return profile_data
+
+
 def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     """Return a filtered data frame as a dictionary."""
     if filter_str is not None:
