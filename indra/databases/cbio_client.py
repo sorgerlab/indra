@@ -89,7 +89,7 @@ def get_mutations(study_id, gene_list, mutation_type=None,
     if case_id:
         df = df[df['case_id'] == case_id]
     res = _filter_data_frame(df, ['gene_symbol', 'amino_acid_change'],
-                                   'mutation_type', mutation_type)
+                             'mutation_type', mutation_type)
     mutations = {'gene_symbol': list(res['gene_symbol'].values()),
                  'amino_acid_change': list(res['amino_acid_change'].values())}
     return mutations
@@ -199,6 +199,7 @@ def get_num_sequenced(study_id):
     num_case = len(df[row_filter]['case_ids'].tolist()[0].split(' '))
     return num_case
 
+
 def get_genetic_profiles(study_id, profile_filter=None):
     """Return all the genetic profiles (data sets) for a given study.
 
@@ -233,9 +234,10 @@ def get_genetic_profiles(study_id, profile_filter=None):
             'cancer_study_id': study_id}
     df = send_request(**data)
     res = _filter_data_frame(df, ['genetic_profile_id'],
-                                  'genetic_alteration_type', profile_filter)
+                             'genetic_alteration_type', profile_filter)
     genetic_profiles = list(res['genetic_profile_id'].values())
     return genetic_profiles
+
 
 def get_cancer_studies(study_filter=None):
     """Return a list of cancer study identifiers, optionally filtered.
@@ -263,6 +265,7 @@ def get_cancer_studies(study_filter=None):
     study_ids = list(res['cancer_study_id'].values())
     return study_ids
 
+
 def get_cancer_types(cancer_filter=None):
     """Return a list of cancer types, optionally filtered.
 
@@ -285,6 +288,7 @@ def get_cancer_types(cancer_filter=None):
     res = _filter_data_frame(df, ['type_of_cancer_id'], 'name', cancer_filter)
     type_ids = list(res['type_of_cancer_id'].values())
     return type_ids
+
 
 def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
