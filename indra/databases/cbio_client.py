@@ -122,6 +122,59 @@ def get_case_lists(study_id):
     return case_set_ids
 
 
+def get_profile_data(study_id, gene_list, profile_filter, case_set_id=None):
+    """Return dict of cases and genes and their respective values.
+
+    Parameters
+    ----------
+    study_id : str
+        The ID of the cBio study.
+        Example: 'cellline_ccle_broad' or 'paad_icgc'
+    gene_list : list[str]
+        A list of genes with their HGNC symbols.
+        Example: ['BRAF', 'KRAS']
+    profile_filter : str
+        A string used to filter the profiles to return. Will be one of:
+        - MUTATION
+        - MUTATION_EXTENDED
+        - COPY_NUMBER_ALTERATION
+        - MRNA_EXPRESSION
+        - METHYLATION
+    case_set_id : Optional[str]
+        A string that specifices which case_set_id to use, based on a complete
+        or partial match. If not provided, will look for study_id + '_all'
+
+    Returns
+    -------
+    profile_data : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    """
+    genetic_profile = get_genetic_profiles(study_id, profile_filter)[0]
+    gene_list_str = ','.join(gene_list)
+    case_set_ids = get_case_lists(study_id)
+    if case_set_id:
+        case_set_id = [x for x in case_set_ids if case_set_id in x][0]
+    else:
+        case_set_id = study_id + '_all'
+        # based on looking at the cBioPortal, this is a common case_set_id
+    data = {'cmd': 'getProfileData',
+            'case_set_id': case_set_id,
+            'genetic_profile_id': genetic_profile,
+            'gene_list': gene_list_str,
+            'skiprows': 2}
+    df = send_request(**data)
+    case_list_df = [x for x in df.columns.tolist()
+                    if x not in ['GENE_ID', 'COMMON']]
+    gene_list_df = df['COMMON'].tolist()
+    profile_data = _recursive_dict()
+    for case in case_list_df:
+        profile_values = df[case].tolist()
+        for g, cv in zip(gene_list_df, profile_values):
+            profile_data[case][g] = cv
+    return profile_data
+
+
 def get_num_sequenced(study_id):
     """Return number of sequenced tumors for given study.
 
