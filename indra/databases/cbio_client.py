@@ -215,6 +215,12 @@ def get_genetic_profiles(study_id, profile_filter=None):
         Example: 'paad_icgc'
     profile_filter : Optional[str]
         A string used to filter the profiles to return.
+        Will be one of:
+        - MUTATION
+        - MUTATION_EXTENDED
+        - COPY_NUMBER_ALTERATION
+        - MRNA_EXPRESSION
+        - METHYLATION
         The genetic profiles can include "mutation", "CNA", "rppa",
         "methylation", etc.
 
