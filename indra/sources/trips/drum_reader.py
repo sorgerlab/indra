@@ -1,18 +1,22 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import sys
 import random
-from indra.sources import trips
+import logging
 from kqml import KQMLModule, KQMLPerformative, KQMLList
+
+logger = logging.getLogger('drum_reader')
 
 class DrumReader(KQMLModule):
     def __init__(self, **kwargs):
         self.to_read = kwargs.pop('to_read', None)
-        super(DrumReader, self).__init__(**kwargs)
+        super(DrumReader, self).__init__(name='DrumReader')
         self.msg_counter = random.randint(1, 100000)
         self.ready()
         self.extractions = []
-        for text in to_read:
+        self.reply_counter = len(self.to_read)
+        for text in self.to_read:
             self.read_text(text)
-        self.reply_counter = len(to_read)
 
     def read_text(self, text):
         print('Reading %s' % text)
@@ -23,8 +27,7 @@ class DrumReader(KQMLModule):
 
     def receive_reply(self, msg, content):
         extractions = content.gets(':extractions')
-        tp = trips.process_xml(extractions)
-        self.extractions += tp.statements
+        self.extractions.append(extractions)
         self.reply_counter -= 1
         if self.reply_counter == 0:
             self.exit(0)
@@ -42,5 +45,5 @@ def _get_perf(text, msg_id):
 if __name__ == '__main__':
     # NOTE: drum/bin/trips-drum needs to be running
     to_read = ['MEK phosphorylates ERK1.', 'BRAF phosphorylates MEK1.']
-    dr = DrumReader(name='DrumReader', to_read=to_read)
+    dr = DrumReader(to_read=to_read)
     dr.start()

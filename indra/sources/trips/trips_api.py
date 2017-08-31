@@ -1,10 +1,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 from .processor import TripsProcessor
 from indra.sources.trips import trips_client
 
+logger = logging.getLogger('trips')
+
+try:
+    from .drum_reader import DrumReader
+    offline_reading = True
+    offline_err = None
+except Exception as e:
+    offline_err = e
+    offline_reading = False
+
+
 def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
-                 service_endpoint='drum'):
+                 offline=False, service_endpoint='drum'):
     """Return a TripsProcessor by processing text.
 
     Parameters
@@ -18,6 +30,9 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
         If True, the saved XML is pretty-printed. Some third-party tools
         require non-pretty-printed XMLs which can be obtained by setting this
         to False. Default: True
+    oflline : Optional[bool]
+        If True, offline reading is used with a local instance of DRUM, if
+        availble. Default: False
     service_endpoint : Optional[str]
         Selects the TRIPS/DRUM web service endpoint to use. Is a choice between
         "drum" (default) and "drum-dev", a nightly build.
@@ -28,10 +43,38 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
         A TripsProcessor containing the extracted INDRA Statements
         in tp.statements.
     """
-    html = trips_client.send_query(text, service_endpoint)
-    xml = trips_client.get_xml(html)
-    if save_xml_name:
-        trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
+    if not offline:
+        html = trips_client.send_query(text, service_endpoint)
+        xml = trips_client.get_xml(html)
+        if save_xml_name:
+            trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
+    else:
+        if offline_reading:
+            try:
+                dr = DrumReader(to_read=[text])
+                if dr is None:
+                    raise Exception('DrumReader could not be instantiated.')
+            except BaseException as e:
+                logger.error(e)
+                logger.error('Make sure drum/bin/trips-drum is running in'
+                              ' a separate process')
+                return None
+            try:
+                dr.start()
+            except SystemExit:
+                pass
+            xml = dr.extractions[0]
+        else:
+            logger.error('Offline reading with TRIPS/DRUM not available.')
+            logger.error('Error message was: %s' % offline_err)
+            msg = """
+                To install DRUM locally, follow instructions at
+                https://github.com/wdebeaum/drum.
+                Next, install the pykqml package either from pip or from
+                https://github.com/bgyori/pykqml.
+                Once installed, run drum/bin/trips-drum in a separate process.
+                """
+            logger.error(msg)
     return process_xml(xml)
 
 
