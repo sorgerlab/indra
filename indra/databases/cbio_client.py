@@ -167,12 +167,11 @@ def get_profile_data(study_id, gene_list,
     df = send_request(**data)
     case_list_df = [x for x in df.columns.tolist()
                     if x not in ['GENE_ID', 'COMMON']]
-    gene_list_df = df['COMMON'].tolist()
-    profile_data = {case: {g: None for g in gene_list_df}
+    profile_data = {case: {g: None for g in gene_list}
                     for case in case_list_df}
     for case in case_list_df:
         profile_values = df[case].tolist()
-        for g, cv in zip(gene_list_df, profile_values):
+        for g, cv in zip(gene_list, profile_values):
             if isinstance(cv, int):
                 profile_data[case][g] = cv
     return profile_data
