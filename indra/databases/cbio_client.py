@@ -3,6 +3,7 @@ from builtins import dict, str
 import pandas
 import logging
 import requests
+from collections import defaultdict
 # Python3
 try:
     from functools import lru_cache
@@ -88,10 +89,92 @@ def get_mutations(study_id, gene_list, mutation_type=None,
     if case_id:
         df = df[df['case_id'] == case_id]
     res = _filter_data_frame(df, ['gene_symbol', 'amino_acid_change'],
-                                   'mutation_type', mutation_type)
+                             'mutation_type', mutation_type)
     mutations = {'gene_symbol': list(res['gene_symbol'].values()),
                  'amino_acid_change': list(res['amino_acid_change'].values())}
     return mutations
+
+
+def get_case_lists(study_id):
+    """Return a list of the case set ids for a particular study.
+
+    TAKE NOTE the "case_list_id" are the same thing as "case_set_id"
+    Within the data, this string is referred to as a "case_list_id".
+    Within API calls it is referred to as a 'case_set_id'.
+    The documentation does not make this explicitly clear.
+
+    Parameters
+    ----------
+    study_id : str
+        The ID of the cBio study.
+        Example: 'cellline_ccle_broad' or 'paad_icgc'
+
+    Returns
+    -------
+    case_set_ids : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    """
+    data = {'cmd': 'getCaseLists',
+            'cancer_study_id': study_id}
+    df = send_request(**data)
+    case_set_ids = df['case_list_id'].tolist()
+    return case_set_ids
+
+
+def get_profile_data(study_id, gene_list,
+                     profile_filter, case_set_filter=None):
+    """Return dict of cases and genes and their respective values.
+
+    Parameters
+    ----------
+    study_id : str
+        The ID of the cBio study.
+        Example: 'cellline_ccle_broad' or 'paad_icgc'
+    gene_list : list[str]
+        A list of genes with their HGNC symbols.
+        Example: ['BRAF', 'KRAS']
+    profile_filter : str
+        A string used to filter the profiles to return. Will be one of:
+        - MUTATION
+        - MUTATION_EXTENDED
+        - COPY_NUMBER_ALTERATION
+        - MRNA_EXPRESSION
+        - METHYLATION
+    case_set_filter : Optional[str]
+        A string that specifices which case_set_id to use, based on a complete
+        or partial match. If not provided, will look for study_id + '_all'
+
+    Returns
+    -------
+    profile_data : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    """
+    genetic_profile = get_genetic_profiles(study_id, profile_filter)[0]
+    gene_list_str = ','.join(gene_list)
+    case_set_ids = get_case_lists(study_id)
+    if case_set_filter:
+        case_set_id = [x for x in case_set_ids if case_set_filter in x][0]
+    else:
+        case_set_id = study_id + '_all'
+        # based on looking at the cBioPortal, this is a common case_set_id
+    data = {'cmd': 'getProfileData',
+            'case_set_id': case_set_id,
+            'genetic_profile_id': genetic_profile,
+            'gene_list': gene_list_str,
+            'skiprows': 2}
+    df = send_request(**data)
+    case_list_df = [x for x in df.columns.tolist()
+                    if x not in ['GENE_ID', 'COMMON']]
+    profile_data = {case: {g: None for g in gene_list}
+                    for case in case_list_df}
+    for case in case_list_df:
+        profile_values = df[case].tolist()
+        for g, cv in zip(gene_list, profile_values):
+            if isinstance(cv, int):
+                profile_data[case][g] = cv
+    return profile_data
 
 
 def get_num_sequenced(study_id):
@@ -118,6 +201,7 @@ def get_num_sequenced(study_id):
     num_case = len(df[row_filter]['case_ids'].tolist()[0].split(' '))
     return num_case
 
+
 def get_genetic_profiles(study_id, profile_filter=None):
     """Return all the genetic profiles (data sets) for a given study.
 
@@ -134,6 +218,12 @@ def get_genetic_profiles(study_id, profile_filter=None):
         Example: 'paad_icgc'
     profile_filter : Optional[str]
         A string used to filter the profiles to return.
+        Will be one of:
+        - MUTATION
+        - MUTATION_EXTENDED
+        - COPY_NUMBER_ALTERATION
+        - MRNA_EXPRESSION
+        - METHYLATION
         The genetic profiles can include "mutation", "CNA", "rppa",
         "methylation", etc.
 
@@ -146,9 +236,10 @@ def get_genetic_profiles(study_id, profile_filter=None):
             'cancer_study_id': study_id}
     df = send_request(**data)
     res = _filter_data_frame(df, ['genetic_profile_id'],
-                                  'genetic_alteration_type', profile_filter)
+                             'genetic_alteration_type', profile_filter)
     genetic_profiles = list(res['genetic_profile_id'].values())
     return genetic_profiles
+
 
 def get_cancer_studies(study_filter=None):
     """Return a list of cancer study identifiers, optionally filtered.
@@ -176,6 +267,7 @@ def get_cancer_studies(study_filter=None):
     study_ids = list(res['cancer_study_id'].values())
     return study_ids
 
+
 def get_cancer_types(cancer_filter=None):
     """Return a list of cancer types, optionally filtered.
 
@@ -198,6 +290,7 @@ def get_cancer_types(cancer_filter=None):
     res = _filter_data_frame(df, ['type_of_cancer_id'], 'name', cancer_filter)
     type_ids = list(res['type_of_cancer_id'].values())
     return type_ids
+
 
 def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
@@ -264,6 +357,32 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     df = df[df['amino_acid_change'] == amino_acid_change]
     cell_lines = df['case_id'].unique().tolist()
     return cell_lines
+
+
+def get_ccle_cna(gene_list, cell_lines):
+    """Return a dict of CNAs in given genes and cell lines from CCLE.
+
+    This is a specialized call to get_mutations tailored to CCLE cell lines.
+
+    Parameters
+    ----------
+    gene_list : list[str]
+        A list of HGNC gene symbols to get mutations in
+    cell_lines : list[str]
+        A list of CCLE cell line names to get mutations for.
+
+    Returns
+    -------
+    profile_data : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    """
+    profile_data = get_profile_data(ccle_study, gene_list,
+                                    'COPY_NUMBER_ALTERATION', 'all')
+    profile_data = dict((key, value) for key, value in profile_data.items()
+                        if key in cell_lines)
+    return profile_data
+
 
 def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     """Return a filtered data frame as a dictionary."""
