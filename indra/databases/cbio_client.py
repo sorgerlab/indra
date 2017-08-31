@@ -3,6 +3,7 @@ from builtins import dict, str
 import pandas
 import logging
 import requests
+from collections import defaultdict
 # Python3
 try:
     from functools import lru_cache
@@ -302,3 +303,7 @@ def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     else:
         data_list = df[data_col].to_dict()
     return data_list
+
+
+def _recursive_dict():
+    return defaultdict(_recursive_dict)
