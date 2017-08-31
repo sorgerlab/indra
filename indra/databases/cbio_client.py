@@ -122,7 +122,8 @@ def get_case_lists(study_id):
     return case_set_ids
 
 
-def get_profile_data(study_id, gene_list, profile_filter, case_set_id=None):
+def get_profile_data(study_id, gene_list,
+                     profile_filter, case_set_filter=None):
     """Return dict of cases and genes and their respective values.
 
     Parameters
@@ -140,7 +141,7 @@ def get_profile_data(study_id, gene_list, profile_filter, case_set_id=None):
         - COPY_NUMBER_ALTERATION
         - MRNA_EXPRESSION
         - METHYLATION
-    case_set_id : Optional[str]
+    case_set_filter : Optional[str]
         A string that specifices which case_set_id to use, based on a complete
         or partial match. If not provided, will look for study_id + '_all'
 
@@ -153,8 +154,8 @@ def get_profile_data(study_id, gene_list, profile_filter, case_set_id=None):
     genetic_profile = get_genetic_profiles(study_id, profile_filter)[0]
     gene_list_str = ','.join(gene_list)
     case_set_ids = get_case_lists(study_id)
-    if case_set_id:
-        case_set_id = [x for x in case_set_ids if case_set_id in x][0]
+    if case_set_filter:
+        case_set_id = [x for x in case_set_ids if case_set_filter in x][0]
     else:
         case_set_id = study_id + '_all'
         # based on looking at the cBioPortal, this is a common case_set_id
