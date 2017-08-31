@@ -168,11 +168,13 @@ def get_profile_data(study_id, gene_list,
     case_list_df = [x for x in df.columns.tolist()
                     if x not in ['GENE_ID', 'COMMON']]
     gene_list_df = df['COMMON'].tolist()
-    profile_data = _recursive_dict()
+    profile_data = {case: {g: None for g in gene_list_df}
+                    for case in case_list_df}
     for case in case_list_df:
         profile_values = df[case].tolist()
         for g, cv in zip(gene_list_df, profile_values):
-            profile_data[case][g] = cv
+            if isinstance(cv, int):
+                profile_data[case][g] = cv
     return profile_data
 
 
@@ -393,7 +395,3 @@ def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     else:
         data_list = df[data_col].to_dict()
     return data_list
-
-
-def _recursive_dict():
-    return defaultdict(_recursive_dict)
