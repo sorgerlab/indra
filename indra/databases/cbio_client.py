@@ -357,7 +357,7 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     return cell_lines
 
 
-def get_ccle_cna(gene_list):
+def get_ccle_cna(gene_list, cell_lines):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
     This is a specialized call to get_mutations tailored to CCLE cell lines.
@@ -368,10 +368,6 @@ def get_ccle_cna(gene_list):
         A list of HGNC gene symbols to get mutations in
     cell_lines : list[str]
         A list of CCLE cell line names to get mutations for.
-    mutation_type : Optional[str]
-        The type of mutation to filter to.
-        mutation_type can be one of: missense, nonsense, frame_shift_ins,
-                                     frame_shift_del, splice_site
 
     Returns
     -------
@@ -379,8 +375,10 @@ def get_ccle_cna(gene_list):
         A dict keyed to cases containing a dict keyed to genes
         containing int
     """
-    profile_data = get_profile_data(ccle_study, ['BRAF', 'PTEN'],
+    profile_data = get_profile_data(ccle_study, gene_list,
                                     'COPY_NUMBER_ALTERATION', 'all')
+    profile_data = dict((key, value) for key, value in profile_data.items()
+                        if key in cell_lines)
     return profile_data
 
 
