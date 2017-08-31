@@ -94,6 +94,33 @@ def get_mutations(study_id, gene_list, mutation_type=None,
     return mutations
 
 
+def get_case_lists(study_id):
+    """Return a list of the case set ids for a particular study.
+
+    TAKE NOTE the "case_list_id" are the same thing as "case_set_id"
+    Within the data, this string is referred to as a "case_list_id".
+    Within API calls it is referred to as a 'case_set_id'.
+    The documentation does not make this explicitly clear.
+
+    Parameters
+    ----------
+    study_id : str
+        The ID of the cBio study.
+        Example: 'cellline_ccle_broad' or 'paad_icgc'
+
+    Returns
+    -------
+    case_set_ids : dict[dict[int]]
+        A dict keyed to cases containing a dict keyed to genes
+        containing int
+    """
+    data = {'cmd': 'getCaseLists',
+            'cancer_study_id': study_id}
+    df = send_request(**data)
+    case_set_ids = df['case_list_id'].tolist()
+    return case_set_ids
+
+
 def get_num_sequenced(study_id):
     """Return number of sequenced tumors for given study.
 
