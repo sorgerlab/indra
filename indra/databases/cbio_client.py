@@ -374,13 +374,6 @@ def get_ccle_cna(gene_list):
     profile_data : dict[dict[int]]
         A dict keyed to cases containing a dict keyed to genes
         containing int
-    profile_data : dict
-        The result from cBioPortal as a dict in the format
-        {cell_line : {gene : [mutation1, mutation2, ...] }}
-
-        Example:
-        {'LOXIMVI_SKIN': {'BRAF': ['V600E', 'I208V']},
-         'SKMEL30_SKIN': {'BRAF': ['D287H', 'E275K']}}
     """
     profile_data = get_profile_data(ccle_study, ['BRAF', 'PTEN'],
                                     'COPY_NUMBER_ALTERATION', 'all')
