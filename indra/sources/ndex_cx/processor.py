@@ -16,6 +16,14 @@ _stmt_map = {
 }
 
 
+def _get_dict_from_list(dict_key, list_of_dicts):
+    the_dict = [cur_dict for cur_dict in list_of_dicts
+                if cur_dict.get(dict_key)]
+    if not the_dict:
+        raise ValueError('Could not find a dict with key %s' % dict_key)
+    return the_dict[0][dict_key]
+
+
 class NdexCxProcessor(object):
     def __init__(self, cx):
         self.cx = cx
@@ -26,7 +34,7 @@ class NdexCxProcessor(object):
         self._initialize_node_agents()
 
     def _initialize_node_agents(self):
-        nodes = self.cx[5]['nodes']
+        nodes = _get_dict_from_list('nodes', self.cx)
         invalid_genes = []
         for node in nodes:
             id = node['@id']
@@ -51,9 +59,11 @@ class NdexCxProcessor(object):
         return [name for name in self._node_names.values()]
 
     def get_statements(self):
-        edges = self.cx[6]['edges']
+        edges = _get_dict_from_list('edges', self.cx)
         for edge in edges:
-            edge_type = edge['i']
+            edge_type = edge.get('i')
+            if not edge_type:
+                continue
             stmt_type = _stmt_map.get(edge_type)
             if stmt_type:
                 id = edge['@id']
