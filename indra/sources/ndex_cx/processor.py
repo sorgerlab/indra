@@ -170,8 +170,20 @@ class NdexCxProcessor(object):
         edge_id : int
             ID of the edge in the underlying NDEx network.
         """
-        # TODO: Get evidence information from edge_attributes dict
-        ev = Evidence(source_api='ndex',
-                      source_id=self._network_info['externalId'],
-                      annotations={'edge_id': edge_id})
-        return ev
+        pmids = None
+        edge_attr = self._edge_attributes.get(edge_id)
+        if edge_attr:
+            pmids = edge_attr.get('pmids')
+        if not pmids:
+            return [Evidence(source_api='ndex',
+                             source_id=self._network_info['externalId'],
+                             annotations={'edge_id': edge_id})]
+        else:
+            evidence = []
+            for pmid in pmids:
+                evidence.append(
+                        Evidence(source_api='ndex',
+                                 source_id=self._network_info['externalId'],
+                                 pmid=pmid,
+                                 annotations={'edge_id': edge_id}))
+            return evidence
