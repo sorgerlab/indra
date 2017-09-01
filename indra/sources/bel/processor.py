@@ -82,10 +82,10 @@ class BelProcessor(object):
     ----------
     g : rdflib.Graph
         An RDF graph object containing the BEL model.
-    statements : list[indra.statement.Statements]
+    statements : list[indra.statements.Statement]
         A list of extracted INDRA Statements representing direct mechanisms.
         This list should be used for assembly in INDRA.
-    indirect_stmts : list[indra.statement.Statements]
+    indirect_stmts : list[indra.statements.Statement]
         A list of extracted INDRA Statements representing indirect mechanisms.
         This list should be used for assembly or model checking in INDRA.
     converted_direct_stmts : list[str]

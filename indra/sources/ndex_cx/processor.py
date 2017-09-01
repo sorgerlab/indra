@@ -5,11 +5,13 @@ from indra.databases import uniprot_client, chebi_client, hgnc_client
 from indra.literature import id_lookup
 from indra.statements import *
 
+
 logger = logging.getLogger('ndex_cx_processor')
 
 
 _stmt_map = {
     'phosphorylates': Phosphorylation,
+    'controls-phosphorylation-of': Phosphorylation,
     'in-complex-with': Complex,
     'NEGATIVE_INFLUENCE': Inhibition,
     'POSITIVE_INFLUENCE': Activation
@@ -17,6 +19,21 @@ _stmt_map = {
 
 
 def _get_dict_from_list(dict_key, list_of_dicts):
+    """Retrieve a specific dict from a list of dicts.
+
+    Parameters
+    ----------
+    dict_key : str
+        The (single) key of the dict to be retrieved from the list.
+    list_of_dicts : list
+        The list of dicts to search for the specific dict.
+
+    Returns
+    -------
+    dict value
+        The value associated with the dict_key (e.g., a list of nodes or
+        edges).
+    """
     the_dict = [cur_dict for cur_dict in list_of_dicts
                 if cur_dict.get(dict_key)]
     if not the_dict:
@@ -25,6 +42,19 @@ def _get_dict_from_list(dict_key, list_of_dicts):
 
 
 class NdexCxProcessor(object):
+    """The NdexCxProcessor extracts INDRA Statements from Cytoscape CX JSON.
+
+    Parameters
+    ----------
+    cx : list of dicts
+        JSON content containing the Cytoscape network in CX format.
+
+    Attributes
+    ----------
+    statements : list
+        A list of extracted INDRA Statements. Not all edges in the network
+        may be converted into Statements.
+    """
     def __init__(self, cx):
         self.cx = cx
         self.statements = []
@@ -34,6 +64,7 @@ class NdexCxProcessor(object):
         self._initialize_node_agents()
 
     def _initialize_node_agents(self):
+        """Initialize internal dicts containing node information."""
         nodes = _get_dict_from_list('nodes', self.cx)
         invalid_genes = []
         for node in nodes:
@@ -53,12 +84,28 @@ class NdexCxProcessor(object):
                     ', '.join(invalid_genes))
 
     def get_agents(self):
+        """Get list of grounded nodes in the network as Agents.
+
+        Returns
+        -------
+        list of Agents
+            Only nodes containing sufficient information to be grounded will
+            be contained in this list.
+        """
         return [ag for ag in self._node_agents.values()]
 
     def get_node_names(self):
+        """Get list of all nodes in the network by name."""
         return [name for name in self._node_names.values()]
 
     def get_statements(self):
+        """Convert network edges into Statements.
+
+        Returns
+        -------
+        list of Statements
+            Converted INDRA Statements.
+        """
         edges = _get_dict_from_list('edges', self.cx)
         for edge in edges:
             edge_type = edge.get('i')
@@ -80,16 +127,4 @@ class NdexCxProcessor(object):
                     stmt = stmt_type(source_agent, target_agent)
                 self.statements.append(stmt)
         return self.statements
-
-    def _get_evidence(self, card):
-        pmcid = card.get('pmc_id')
-        ids = id_lookup(pmcid, 'pmcid')
-        pmid = ids.get('pmid')
-        evidence = card.get('evidence')
-        all_evidence = []
-        if evidence is not None:
-            for text in evidence:
-                e = Evidence(self.source_api, pmid=pmid, text=text)
-                all_evidence.append(e)
-        return all_evidence
 
