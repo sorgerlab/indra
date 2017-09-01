@@ -14,9 +14,5 @@ def process_cx_str(json_str):
 
 def process_cx(json_list):
     ncp = NdexCxProcessor(json_list)
-    for item in json_list:
-        print(list(item.keys()))
-    #ncp.get_modifications()
-    #ncp.get_complexes()
-    #ncp.get_binds()
+    ncp.get_statements()
     return ncp
