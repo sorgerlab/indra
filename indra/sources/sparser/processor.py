@@ -9,8 +9,40 @@ from indra.databases import uniprot_client, hgnc_client
 
 logger = logging.getLogger('sparser')
 
+class SparserJSONProcessor(object):
+    def __init__(self, json_dict):
+        self.json_stmts = json_dict
 
-class SparserProcessor(object):
+    def get_statements(self):
+        indra_stmts = []
+        for stmt in self.json_stmts:
+            if stmt.get('type') == 'Phosphorylation':
+                position = stmt.get('position')
+                residue = stmt.get('residue')
+                if isinstance(position, list):
+                    if len(position) != 1:
+                        logger.error('Invalid position: %s' % position)
+                    else:
+                        stmt['position'] = position[0]
+                if isinstance(residue, list):
+                    if len(residue) != 1:
+                        logger.error('Invalid residue: %s' % residue)
+                    else:
+                        stmt['residue'] = residue[0]
+            if stmt.get('type') == 'Activation':
+                obj_activity = stmt.get('obj_activity')
+                if isinstance(obj_activity, list):
+                    if len(obj_activity) != 1:
+                        print('Invalid object activity: %s' % obj_activity)
+                    else:
+                        stmt['obj_activity'] = obj_activity[0]
+                obj = stmt.get('obj')
+                if isinstance(obj, list):
+                    continue
+            indra_stmts += stmts_from_json([stmt])
+        self.statements = indra_stmts
+
+class SparserXMLProcessor(object):
     def __init__(self, xml_etree):
         self.tree = xml_etree
         self.statements = []
@@ -247,6 +279,7 @@ class SparserProcessor(object):
     def _get_evidence(self, text):
         ev = Evidence(source_api='sparser', pmid=self.pmid, text=text)
         return ev
+
 
 def get_bioentities_mapping(db_ns, db_id):
     if db_ns == 'FA':
