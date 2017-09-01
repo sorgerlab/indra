@@ -105,15 +105,17 @@ class NdexCxProcessor(object):
                 ea_info = {'pmids': []}
                 self._edge_attributes[edge_id] = ea_info
             # Collect PMIDs from the various edge types
-            if ea_type == 'ndex:citation':
+            if ea_type == 'ndex:citation' or ea_type == 'citation_ids':
                 pmids = []
                 assert isinstance(ea_value, list)
                 # ndex:citations are in the form 'pmid:xxxxx'
                 for cit in ea_value:
                     if cit.upper().startswith('PMID:'):
-                        pmids.append(cit[5:])
+                        pmid = cit[5:]
+                        if pmid: # Check for empty PMID strings!
+                            pmids.append(pmid)
                     else:
-                        logger.info("Unexpected ndex:citation: %s" % cit)
+                        logger.info("Unexpected PMID format: %s" % cit)
                 ea_info['pmids'] += pmids
 
     def get_agents(self):
@@ -130,6 +132,15 @@ class NdexCxProcessor(object):
     def get_node_names(self):
         """Get list of all nodes in the network by name."""
         return [name for name in self._node_names.values()]
+
+    def get_pmids(self):
+        """Get list of all PMIDs associated with edges in the network."""
+        pmids = []
+        for ea in self._edge_attributes.values():
+            edge_pmids = ea.get('pmids')
+            if edge_pmids:
+                pmids += edge_pmids
+        return list(set(pmids))
 
     def get_statements(self):
         """Convert network edges into Statements.

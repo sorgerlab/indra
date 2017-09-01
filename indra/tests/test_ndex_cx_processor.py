@@ -32,6 +32,14 @@ def test_get_node_names():
     assert nodes == list(ncp_file._node_names.values())
 
 
+def test_get_pmids():
+    pmids = ncp_file.get_pmids()
+    for pmid in pmids:
+        # Make sure all of the entries are valid integers
+        assert isinstance(pmid, str)
+        int(pmid)
+
+
 def test_get_statements():
     stmts = ncp_file.get_statements()
     for stmt in stmts:
