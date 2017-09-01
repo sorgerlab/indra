@@ -5,18 +5,18 @@ from .processor import NdexCxProcessor
 
 def process_cx_file(file_name):
     with open(file_name, 'rt') as fh:
-        json_dict = json.load(fh)
-        return process_cx(json_dict)
+        json_list = json.load(fh)
+        return process_cx(json_list)
 
 def process_cx_str(json_str):
-    json_dict = json.loads(json_str)
-    return process_cx(json_dict)
+    json_list = json.loads(json_str)
+    return process_cx(json_list)
 
-def process_cx(json_dict):
-    if isinstance(json_dict, dict):
-        json_dict = [json_dict]
-    ncp = NdexCxProcessor(json_dict)
-    ncp.get_modifications()
-    ncp.get_complexes()
-    ncp.get_binds()
+def process_cx(json_list):
+    ncp = NdexCxProcessor(json_list)
+    for item in json_list:
+        print(list(item.keys()))
+    #ncp.get_modifications()
+    #ncp.get_complexes()
+    #ncp.get_binds()
     return ncp
