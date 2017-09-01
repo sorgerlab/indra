@@ -13,9 +13,11 @@ def test_initialize_node_agents():
     for ndex_id, agent in ncp._node_map.items():
         assert isinstance(ndex_id, int)
         assert isinstance(agent, Agent)
-        #assert agent.db_refs.get('HGNC')
+        assert agent.db_refs.get('HGNC')
+        assert agent.db_refs.get('UP')
 
 if __name__ == '__main__':
     #test_process_cx_file()
     #ncp = process_cx_file('merged_BRCA1_formatted.cx')
+    #import ipdb; ipdb.set_trace()
     test_initialize_node_agents()

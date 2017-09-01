@@ -1,9 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import objectpath
-from indra.databases import uniprot_client, chebi_client
+from indra.databases import uniprot_client, chebi_client, hgnc_client
 from indra.literature import id_lookup
 from indra.statements import *
+
+logger = logging.getLogger('ndex_cx_processor')
 
 class NdexCxProcessor(object):
     def __init__(self, cx):
@@ -15,18 +17,28 @@ class NdexCxProcessor(object):
 
     def _initialize_node_agents(self):
         nodes = self.cx[5]['nodes']
+        invalid_genes = []
         for node in nodes:
             id = node['@id']
             node_name = node['n']
-            self._node_map[id] = Agent(node_name)
+            hgnc_id = hgnc_client.get_hgnc_id(node_name)
+            if not hgnc_id:
+                invalid_genes.append(node_name)
+            else:
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                assert up_id
+                self._node_map[id] = Agent(node_name,db_refs={'HGNC': hgnc_id,
+                                                              'UP': up_id})
+        logger.info('Skipped invalid gene symbols: %s' %
+                    ', '.join(invalid_genes))
 
-        """
+    def get_statements(self):
         edges = self.cx[6]['edges']
         for edge in edges:
             id = edge['@id']
             edge_type = edge['i']
-            source_node =
-        """
+            source_node = edge['s']
+            target_node = edge['t']
 
     def _get_modifications(self): 
 
