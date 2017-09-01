@@ -1,11 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import json
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from .processor import SparserProcessor
+from .processor import SparserXMLProcessor, SparserJSONProcessor
 
 logger = logging.getLogger('sparser')
 
@@ -34,10 +35,11 @@ def process_nxml(fname, output_format='json'):
         suffix = '.json'
     else:
         logger.error('Unknown output format: %s' % output_format)
-    subprocess.call([sparser_path, format_flag, fname])
+    sparser_exec_path = os.path.join(sparser_path, 'save-semantics.sh')
+    subprocess.call([sparser_exec_path, format_flag, fname])
 
     output_fname = fname.split('.')[0] + '-semantics' + suffix
-    with open(output_fname, 'rb') as fh:
+    with open(output_fname, 'rt') as fh:
         json_dict = json.load(fh)
         return process_json_dict(json_dict)
 
