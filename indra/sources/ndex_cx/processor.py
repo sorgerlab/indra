@@ -61,7 +61,9 @@ class NdexCxProcessor(object):
         # Initialize the dict mapping node IDs to gene names
         self._node_names = {}
         self._node_agents = {}
+        self._network_info = {}
         self._initialize_node_agents()
+        self._initialize_network_info()
 
     def _initialize_node_agents(self):
         """Initialize internal dicts containing node information."""
@@ -82,6 +84,11 @@ class NdexCxProcessor(object):
                                                        'UP': up_id})
         logger.info('Skipped invalid gene symbols: %s' %
                     ', '.join(invalid_genes))
+
+    def _initialize_network_info(self):
+        ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]
+        self._network_info['externalId'] = ndex_info.get('externalId')
+        self._network_info['owner'] = ndex_info.get('owner')
 
     def get_agents(self):
         """Get list of grounded nodes in the network as Agents.
@@ -121,10 +128,24 @@ class NdexCxProcessor(object):
                                 (self._node_names[edge['s']],
                                  self._node_names[edge['t']], edge))
                     continue
+                ev = self._create_evidence(id)
                 if stmt_type == Complex:
-                    stmt = stmt_type([source_agent, target_agent])
+                    stmt = stmt_type([source_agent, target_agent], evidence=ev)
                 else:
-                    stmt = stmt_type(source_agent, target_agent)
+                    stmt = stmt_type(source_agent, target_agent, evidence=ev)
                 self.statements.append(stmt)
         return self.statements
 
+    def _create_evidence(self, edge_id):
+        """Create Evidence object for a specific edge/Statement in the network.
+
+        Parameters
+        ----------
+        edge_id : int
+            ID of the edge in the underlying NDEx network.
+        """
+        # TODO: Get evidence information from edge_attributes dict
+        ev = Evidence(source_api='ndex',
+                      source_id=self._network_info['externalId'],
+                      annotations={'edge_id': edge_id})
+        return ev

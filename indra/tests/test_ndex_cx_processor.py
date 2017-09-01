@@ -38,15 +38,18 @@ def test_get_statements():
         assert isinstance(stmt, Statement)
         for ag in stmt.agent_list():
             assert isinstance(ag, Agent)
-
+        for ev in stmt.evidence:
+            assert ev.source_api == 'ndex'
 
 def test_get_cx_from_ndex():
     # This network is public
     ncp = process_ndex_network('171b8e16-8cf4-11e7-a10d-0ac135e8bacf')
-
+    import ipdb; ipdb.set_trace()
 
 @raises(HTTPError)
 def test_get_cx_from_ndex_unauth():
     # This network should error because unauthorized without username/pwd
     ncp = process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf')
 
+if __name__ == '__main__':
+    test_get_cx_from_ndex()
