@@ -5,10 +5,13 @@ from indra.statements import Agent, Statement
 from requests.exceptions import HTTPError
 from nose.tools import raises
 
+
 ncp_file = process_cx_file('merged_BRCA1_formatted.cx')
+
 
 def test_process_cx_file():
     assert isinstance(ncp_file, NdexCxProcessor)
+
 
 def test_initialize_node_agents():
     assert isinstance(ncp_file._node_agents, dict)
@@ -18,13 +21,16 @@ def test_initialize_node_agents():
         assert agent.db_refs.get('HGNC')
         assert agent.db_refs.get('UP')
 
+
 def test_get_agents():
     nodes = ncp_file.get_agents()
     assert nodes == list(ncp_file._node_agents.values())
 
+
 def test_get_node_names():
     nodes = ncp_file.get_node_names()
     assert nodes == list(ncp_file._node_names.values())
+
 
 def test_get_statements():
     stmts = ncp_file.get_statements()
@@ -33,20 +39,14 @@ def test_get_statements():
         for ag in stmt.agent_list():
             assert isinstance(ag, Agent)
 
+
 def test_get_cx_from_ndex():
     # This network is public
     ncp = process_ndex_network('171b8e16-8cf4-11e7-a10d-0ac135e8bacf')
+
 
 @raises(HTTPError)
 def test_get_cx_from_ndex_unauth():
     # This network should error because unauthorized without username/pwd
     ncp = process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf')
-
-if __name__ == '__main__':
-    #test_process_cx_file()
-    #ncp = process_cx_file('merged_BRCA1_formatted.cx')
-    #import ipdb; ipdb.set_trace()
-    #test_initialize_node_agents()
-    #stmts = test_get_statements()
-    test_get_cx_from_ndex_unauth()
 
