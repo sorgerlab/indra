@@ -1,7 +1,9 @@
-from indra.sources.ndex_cx import process_cx_file
+from indra.sources.ndex_cx import process_cx_file, process_ndex_network
 from indra.sources.ndex_cx.processor import NdexCxProcessor
 from indra.databases import hgnc_client
 from indra.statements import Agent, Statement
+from requests.exceptions import HTTPError
+from nose.tools import raises
 
 ncp_file = process_cx_file('merged_BRCA1_formatted.cx')
 
@@ -31,10 +33,20 @@ def test_get_statements():
         for ag in stmt.agent_list():
             assert isinstance(ag, Agent)
 
+def test_get_cx_from_ndex():
+    # This network is public
+    ncp = process_ndex_network('171b8e16-8cf4-11e7-a10d-0ac135e8bacf')
+
+@raises(HTTPError)
+def test_get_cx_from_ndex_unauth():
+    # This network should error because unauthorized without username/pwd
+    ncp = process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf')
+
 if __name__ == '__main__':
     #test_process_cx_file()
     #ncp = process_cx_file('merged_BRCA1_formatted.cx')
     #import ipdb; ipdb.set_trace()
     #test_initialize_node_agents()
     #stmts = test_get_statements()
-    pass
+    test_get_cx_from_ndex_unauth()
+
