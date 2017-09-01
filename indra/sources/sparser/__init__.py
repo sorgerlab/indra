@@ -1,1 +1,1 @@
-from .sparser_api import process_xml, process_nxml
+from .sparser_api import process_text, process_xml, process_nxml_file, process_nxml_str
