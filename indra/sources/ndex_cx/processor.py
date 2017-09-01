@@ -62,8 +62,10 @@ class NdexCxProcessor(object):
         self._node_names = {}
         self._node_agents = {}
         self._network_info = {}
+        self._edge_attributes = {}
         self._initialize_node_agents()
         self._initialize_network_info()
+        self._initialize_edge_attributes()
 
     def _initialize_node_agents(self):
         """Initialize internal dicts containing node information."""
@@ -89,6 +91,30 @@ class NdexCxProcessor(object):
         ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]
         self._network_info['externalId'] = ndex_info.get('externalId')
         self._network_info['owner'] = ndex_info.get('owner')
+
+    def _initialize_edge_attributes(self):
+        edge_attr = _get_dict_from_list('edgeAttributes', self.cx)
+        for ea in edge_attr:
+            edge_id = ea.get('po')
+            ea_type = ea.get('n')
+            ea_value = ea.get('v')
+            ea_info = self._edge_attributes.get(edge_id)
+            # If we don't have any info about this edge, initialize an empty
+            # dict
+            if ea_info is None:
+                ea_info = {'pmids': []}
+                self._edge_attributes[edge_id] = ea_info
+            # Collect PMIDs from the various edge types
+            if ea_type == 'ndex:citation':
+                pmids = []
+                assert isinstance(ea_value, list)
+                # ndex:citations are in the form 'pmid:xxxxx'
+                for cit in ea_value:
+                    if cit.upper().startswith('PMID:'):
+                        pmids.append(cit[5:])
+                    else:
+                        logger.info("Unexpected ndex:citation: %s" % cit)
+                ea_info['pmids'] += pmids
 
     def get_agents(self):
         """Get list of grounded nodes in the network as Agents.
