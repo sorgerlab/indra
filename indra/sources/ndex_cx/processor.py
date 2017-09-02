@@ -63,6 +63,7 @@ class NdexCxProcessor(object):
         self._node_agents = {}
         self._network_info = {}
         self._edge_attributes = {}
+        self._initialize_node_attributes()
         self._initialize_node_agents()
         self._initialize_network_info()
         self._initialize_edge_attributes()
@@ -73,19 +74,31 @@ class NdexCxProcessor(object):
         invalid_genes = []
         for node in nodes:
             id = node['@id']
-            node_name = node['n']
-            self._node_names[id] = node_name
-            hgnc_id = hgnc_client.get_hgnc_id(node_name)
-            if not hgnc_id:
-                invalid_genes.append(node_name)
+            cx_db_refs = self.get_aliases(node)
+            up_id = cx_db_refs.get('UP')
+            if up_id:
+                gene_name = uniprot_client.get_gene_name(up_id)
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                db_refs = {'UP': up_id, 'HGNC': hgnc_id}
+                agent = Agent(gene_name, db_refs=db_refs)
+                self._node_names[id] = gene_name
+                self._node_agents[id] = agent
+                continue
             else:
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                assert up_id
-                self._node_agents[id] = Agent(node_name,
-                                              db_refs={'HGNC': hgnc_id,
-                                                       'UP': up_id})
-        logger.info('Skipped invalid gene symbols: %s' %
-                    ', '.join(invalid_genes))
+                node_name = node['n']
+                self._node_names[id] = node_name
+                hgnc_id = hgnc_client.get_hgnc_id(node_name)
+                if not hgnc_id:
+                    invalid_genes.append(node_name)
+                else:
+                    up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                    assert up_id
+                    self._node_agents[id] = Agent(node_name,
+                                                  db_refs={'HGNC': hgnc_id,
+                                                           'UP': up_id})
+        if invalid_genes:
+            logger.info('Skipped invalid gene symbols: %s' %
+                        ', '.join(invalid_genes))
 
     def _initialize_network_info(self):
         ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]
@@ -117,6 +130,9 @@ class NdexCxProcessor(object):
                     else:
                         logger.info("Unexpected PMID format: %s" % cit)
                 ea_info['pmids'] += pmids
+
+    def _initialize_node_attributes(self):
+        self._node_attributes = _get_dict_from_list('nodeAttributes', self.cx)
 
     def get_agents(self):
         """Get list of grounded nodes in the network as Agents.
@@ -198,3 +214,28 @@ class NdexCxProcessor(object):
                                  pmid=pmid,
                                  annotations={'edge_id': edge_id}))
             return evidence
+
+    def get_aliases(self, node):
+        cx_db_refs = {}
+        node_id = node['@id']
+        alias_attrs = [attr for attr in self._node_attributes if
+                       attr.get('po') == node_id and
+                       attr.get('n') == 'alias']
+        if not alias_attrs:
+            return {}
+        if len(alias_attrs) > 1:
+            logger.warning('More than one alias attribute for node %d' %
+                           node_id)
+        aliases = alias_attrs[0].get('v')
+        for alias in aliases:
+            db_name, db_id = alias.split(':')
+            db_name_mapped = cx_indra_db_map.get(db_name)
+            if not db_name_mapped:
+                logger.warning('DB name %s is not mapped to INDRA.' % db_name)
+                continue
+            cx_db_refs[db_name_mapped] = db_id
+        return cx_db_refs
+
+cx_indra_db_map = {
+        'UniProt': 'UP',
+        }
