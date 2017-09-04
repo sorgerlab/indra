@@ -46,7 +46,7 @@ def process_nxml_file(fname, output_format='json'):
             return process_json_dict(json_dict)
         else:
             xml_str = fh.read()
-            return process_xml(xmml_str)
+            return process_xml(xml_str)
 
 def process_text(text, output_format='json'):
     header = '<?xml version="1.0" encoding="UTF-8" ?>' + \

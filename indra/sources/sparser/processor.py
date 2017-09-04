@@ -40,7 +40,36 @@ class SparserJSONProcessor(object):
                 if isinstance(obj, list):
                     continue
             indra_stmts += stmts_from_json([stmt])
+        for stmt in indra_stmts:
+            _fix_agents(stmt)
         self.statements = indra_stmts
+
+
+def _fix_agents(stmt):
+    for agent in stmt.agent_list():
+        if agent is not None:
+            up_id = agent.db_refs.get('UP')
+            hgnc_id = agent.db_refs.get('HGNC')
+            be_id = agent.db_refs.get('BE')
+            if be_id:
+                agent.name = be_id
+            if hgnc_id:
+                gene_name = hgnc_client.get_hgnc_name(hgnc_id)
+                if gene_name:
+                    agent.name = gene_name
+                if not up_id:
+                    up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                    if up_id:
+                        agent.db_refs['UP'] = up_id
+            if up_id:
+                gene_name = uniprot_client.get_gene_name(up_id)
+                if gene_name:
+                    agent.name = gene_name
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        agent.db_refs['HGNC'] = hgnc_id
+        # TODO: handle NCIT, FA, IP, NXP to BE/HGNC/UP mappings
+
 
 class SparserXMLProcessor(object):
     def __init__(self, xml_etree):
@@ -188,6 +217,7 @@ class SparserXMLProcessor(object):
         else:
             raw_text = None
 
+        # TODO: factor this out and reuse fix_agents
         db_refs = {}
         # Save raw text if available
         if raw_text:
@@ -263,7 +293,7 @@ class SparserXMLProcessor(object):
         if residue_tag is not None:
             residue_aa_tag = residue_tag.find("var/[@name='amino-acid']/ref")
             if residue_aa_tag is not None:
-                residue = SparserProcessor._get_amino_acid(residue_aa_tag)
+                residue = SparserXMLProcessor._get_amino_acid(residue_aa_tag)
                 position_tag = residue_tag.find("var/[@name='position']")
                 if position_tag is not None:
                     position = position_tag.text.strip()
