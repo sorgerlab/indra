@@ -15,8 +15,9 @@ class SparserJSONProcessor(object):
 
     def get_statements(self):
         indra_stmts = []
+        mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
         for stmt in self.json_stmts:
-            if stmt.get('type') == 'Phosphorylation':
+            if stmt.get('type') in mod_class_names:
                 position = stmt.get('position')
                 residue = stmt.get('residue')
                 if isinstance(position, list):
@@ -40,6 +41,14 @@ class SparserJSONProcessor(object):
                 if isinstance(obj, list):
                     continue
             indra_stmts += stmts_from_json([stmt])
+        all_stmts = len(indra_stmts)
+        for stmt in indra_stmts:
+            indra_stmts = [stmt for stmt in indra_stmts
+                           if any(stmt.agent_list())]
+        valid_stmts = len(indra_stmts)
+        if all_stmts > valid_stmts:
+            logger.warning('%s Statements with None Agents filtered out.' %
+                           (all_stmts - valid_stmts))
         for stmt in indra_stmts:
             _fix_agents(stmt)
         self.statements = indra_stmts
