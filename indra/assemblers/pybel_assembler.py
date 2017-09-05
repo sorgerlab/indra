@@ -52,8 +52,9 @@ class PybelAssembler(object):
 
     def _assemble_regulate_activity(self, stmt):
         # Get node data and add to model
-        subj_node, subj_attr = _get_agent_node(stmt.subj)
-        obj_node, obj_attr = _get_agent_node(stmt.obj)
+        subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
+        act_obj = _get_activated_object(stmt)
+        obj_node, obj_attr, obj_edge = _get_agent_node(act_obj)
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
         # Define the edge data
@@ -61,33 +62,26 @@ class PybelAssembler(object):
                          if isinstance(stmt, Activation) \
                          else pc.DIRECTLY_DECREASES
         edge_data = {pc.RELATION: pybel_relation}
-        subj_activity = _get_agent_activity(stmt.subj)
-        if subj_activity:
-            edge_data[pc.SUBJECT] = subj_activity
-        act_obj = _get_activated_object(stmt)
-        obj_activity = _get_agent_activity(act_obj)
-        if obj_activity:
-            edge_data[pc.OBJECT] = obj_activity
+        if subj_edge:
+            edge_data[pc.SUBJECT] = subj_edge
+        if obj_edge:
+            edge_data[pc.OBJECT] = obj_edge
         self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_modification(self, stmt):
-        #(enz_node, enz_attr) = _get_agent_node(stmt.enz)
-        #(sub_node, sub_attr) = _get_agent_node(stmt.sub)
-        (enz_node, enz_attr) = _get_agent_node(stmt.enz)
+        (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
         sub_agent = _get_modified_substrate(stmt)
-        (sub_node, sub_attr) = _get_agent_node(sub_agent)
+        (sub_node, sub_attr, sub_edge) = _get_agent_node(sub_agent)
         self.model.add_node(enz_node, attr_dict=enz_attr)
         self.model.add_node(sub_node, attr_dict=sub_attr)
-        pybel_activity = _indra_pybel_act_map[
-                                    mod_acttype_map[stmt.__class__]]
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = {pc.SUBJECT: {
-                         pc.MODIFIER: pc.ACTIVITY,
-                         pc.EFFECT: {pc.NAME: pybel_activity,
-                                pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-                     pc.RELATION: pybel_relation}
+        edge_data = {pc.RELATION: pybel_relation}
+        if enz_edge:
+            edge_data[pc.SUBJECT] = enz_edge
+        if sub_edge:
+            edge_data[pc.OBJECT] = sub_edge
         # If there's no evidence for this statement, add node without
         # any evidence info
         if not stmt.evidence:
@@ -110,8 +104,8 @@ class PybelAssembler(object):
 
     def _assemble_regulate_amount(self, stmt):
         # p(HGNC:TP53) => p(HGNC:MDM2)
-        (subj_node, subj_attr) = _get_agent_node(stmt.subj)
-        (obj_node, obj_attr) = _get_agent_node(stmt.obj)
+        (subj_node, subj_attr, subj_edge) = _get_agent_node(stmt.subj)
+        (obj_node, obj_attr, obj_edge) = _get_agent_node(stmt.obj)
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
         pybel_relation = pc.DIRECTLY_INCREASES \
@@ -178,7 +172,9 @@ def _get_agent_node(agent):
     if variants:
         node_attr[pc.VARIANTS] = variants
     node_tuple = _make_node_tuple(node_attr)
-    return (node_tuple, node_attr)
+    # Also get edge data for the agent
+    edge_data = _get_agent_activity(agent)
+    return (node_tuple, node_attr, edge_data)
 
 def _get_agent_grounding(agent):
     hgnc_id = agent.db_refs.get('HGNC')

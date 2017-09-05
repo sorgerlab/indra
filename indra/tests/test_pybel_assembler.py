@@ -16,11 +16,28 @@ def draw(g, filename):
     ag.draw(filename, prog='dot')
 
 def test_simple_modification_no_evidence():
-    for modclass, modtuple, acttype in ((Phosphorylation, phostuple, 'kin'),
-                                        (Ubiquitination, ubtuple, 'cat')):
-        braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
-        mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
-        stmt = modclass(braf, mek, 'S', '218')
+    braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    braf_cat = Agent('BRAF', activity=ActivityCondition('catalytic', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt1 = Phosphorylation(braf, mek, 'S', '218')
+    stmt2 = Phosphorylation(braf_kin, mek, 'S', '218')
+    stmt3 = Ubiquitination(braf_cat, mek, 'S', '218')
+    # Edge info for subject
+    edge1 = None
+    edge2 = {pc.MODIFIER: pc.ACTIVITY,
+             pc.EFFECT: {
+                 pc.NAME: 'kin',
+                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+    edge3 = {pc.MODIFIER: pc.ACTIVITY,
+             pc.EFFECT: {
+                 pc.NAME: 'cat',
+                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+    for stmt, modtuple, subj_edge in ((stmt1, phostuple, edge1),
+                                     (stmt2, phostuple, edge2),
+                                     (stmt3, ubtuple, edge3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
         assert len(belgraph.nodes()) == 2
@@ -44,11 +61,7 @@ def test_simple_modification_no_evidence():
                     pc.PMOD_POSITION: modtuple[3]}]}
         assert belgraph.number_of_edges() == 1
         _, _, edge_data = belgraph.edges(data=True)[0]
-        assert edge_data[pc.SUBJECT] == {
-                pc.MODIFIER: pc.ACTIVITY,
-                pc.EFFECT: {
-                    pc.NAME: acttype,
-                    pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+        assert edge_data.get(pc.SUBJECT) == subj_edge
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
 
