@@ -108,6 +108,7 @@ def test_activation():
         _, _, edge_data = belgraph.edges(data=True)[0]
         assert edge_data == edge
 
+
 def test_increase_amount():
     tp53 = Agent('TP53', db_refs={'HGNC': '11998'})
     mdm2 = Agent('MDM2', db_refs={'HGNC': '6973'})
@@ -127,6 +128,7 @@ def test_increase_amount():
     assert belgraph.number_of_edges() == 1
     _, _, edge_data = belgraph.edges(data=True)[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+
 
 def test_increase_amount_tscript():
     tp53 = Agent('TP53', activity=ActivityCondition('transcription', True),
@@ -148,7 +150,8 @@ def test_increase_amount_tscript():
     assert belgraph.number_of_edges() == 1
     _, _, edge_data = belgraph.edges(data=True)[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
-    assert edge_data[pc.SUBJECT] == {pc.MODIFIER: pc.ACTIVITY,
-                                     pc.EFFECT: {pc.NAME: 'tscript',
-                                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+    assert edge_data[pc.SUBJECT] == {
+            pc.MODIFIER: pc.ACTIVITY,
+            pc.EFFECT: {pc.NAME: 'tscript',
+                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
 
