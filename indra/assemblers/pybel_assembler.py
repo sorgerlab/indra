@@ -111,7 +111,10 @@ def _get_agent_node(agent):
         if mod.position is not None:
             var[pc.PMOD_POSITION] = int(mod.position)
         variants.append(var)
-    # TODO: Handle other types of variants, e.g. Mutations
+    for mut in agent.mutations:
+        var = {pc.KIND: pc.HGVS,
+               pc.IDENTIFIER: mut.to_hgvs()}
+        variants.append(var)
     if variants:
         node_attr[pc.VARIANTS] = variants
     node_tuple = _make_node_tuple(node_attr)
