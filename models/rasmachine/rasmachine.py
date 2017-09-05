@@ -216,8 +216,7 @@ def assemble_cx(stmts):
     ca.add_statements(stmts)
     ca.make_model()
     cx_str = ca.print_cx()
-    with open('cx_upload.cx', 'wb') as fh:
-        fh.write(cx_str.encode('utf-8'))
+    return cx_str
 
 def upload_to_ndex(cx_str, ndex_cred):
     server = 'http://public.ndexbio.org'
@@ -539,7 +538,11 @@ if __name__ == '__main__':
     if use_ndex:
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
-        upload_to_ndex(new_stmts, ndex_cred)
+        cx_str = assemble_cx(new_stmts)
+        cx_name = os.path.join(model_path, model_name, 'model.cx')
+        with open(cx_name, 'wb') as fh:
+            fh.write(cx_str.encode('utf-8'))
+        upload_to_ndex(cx_str, ndex_cred)
 
     # Print and tweet the status message
     logger.info('--- Final statistics ---')
