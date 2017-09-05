@@ -8,6 +8,8 @@ phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Ser', 218)
 ubtuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ub'), 'Ser', 218)
 braf_node = (pc.PROTEIN, 'HGNC', 'BRAF')
 map2k1_node = (pc.PROTEIN, 'HGNC', 'MAP2K1')
+tp53_node = (pc.PROTEIN, 'HGNC', 'TP53')
+mdm2_node = (pc.PROTEIN, 'HGNC', 'MDM2')
 
 def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
@@ -86,5 +88,47 @@ def test_activation():
                 pc.NAME: 'BRAF'}
 
 
-if __name__ == '__main__':
-    test_activation()
+def test_increase_amount():
+    tp53 = Agent('TP53', db_refs={'HGNC': '11998'})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '6973'})
+
+    stmt = IncreaseAmount(tp53, mdm2)
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 2
+    assert mdm2_node in belgraph
+    assert tp53_node in belgraph
+    assert belgraph.node[tp53_node] == {pc.FUNCTION: pc.PROTEIN,
+                                        pc.NAMESPACE: 'HGNC',
+                                        pc.NAME: 'TP53'}
+    assert belgraph.node[mdm2_node] == {pc.FUNCTION: pc.PROTEIN,
+                                        pc.NAMESPACE: 'HGNC',
+                                        pc.NAME: 'MDM2'}
+    assert belgraph.number_of_edges() == 1
+    _, _, edge_data = belgraph.edges(data=True)[0]
+    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+
+def test_increase_amount_tscript():
+    tp53 = Agent('TP53', activity=ActivityCondition('transcription', True),
+                 db_refs={'HGNC': '11998'})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '6973'})
+
+    stmt = IncreaseAmount(tp53, mdm2)
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 2
+    assert mdm2_node in belgraph
+    assert tp53_node in belgraph
+    assert belgraph.node[tp53_node] == {pc.FUNCTION: pc.PROTEIN,
+                                        pc.NAMESPACE: 'HGNC',
+                                        pc.NAME: 'TP53'}
+    assert belgraph.node[mdm2_node] == {pc.FUNCTION: pc.PROTEIN,
+                                        pc.NAMESPACE: 'HGNC',
+                                        pc.NAME: 'MDM2'}
+    assert belgraph.number_of_edges() == 1
+    _, _, edge_data = belgraph.edges(data=True)[0]
+    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.SUBJECT] == {pc.MODIFIER: pc.ACTIVITY,
+                                     pc.EFFECT: {pc.NAME: 'tscript',
+                                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+
