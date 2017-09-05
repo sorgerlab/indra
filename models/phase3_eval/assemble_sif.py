@@ -1,4 +1,4 @@
-from indra.util import require_python3
+from indra.util import _require_python3
 import itertools
 from copy import deepcopy
 from os.path import join as pjoin

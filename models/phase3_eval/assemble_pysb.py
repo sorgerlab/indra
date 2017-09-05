@@ -1,4 +1,4 @@
-from indra.util import require_python3
+from indra.util import _require_python3
 import re
 import pickle
 import os.path

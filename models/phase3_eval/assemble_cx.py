@@ -1,4 +1,4 @@
-from indra.util import require_python3
+from indra.util import _require_python3
 from os.path import join as pjoin
 from indra.assemblers import CxAssembler
 import indra.tools.assemble_corpus as ac
