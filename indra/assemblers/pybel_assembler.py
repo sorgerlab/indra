@@ -8,7 +8,7 @@ import pybel.constants as pc
 from copy import deepcopy
 from pybel.parser.language import pmod_namespace
 from pybel.parser.parse_bel import canonicalize_variant
-
+from indra.assemblers.pysb_assembler import mod_acttype_map
 # Python 2
 try:
     basestring
@@ -17,6 +17,16 @@ except:
     basestring = str
 
 logger = logging.getLogger('pybel_assembler')
+
+
+_indra_pybel_act_map = {
+    'kinase': 'kin',
+    'phosphatase': 'phos',
+    'catalytic': 'cat',
+    'gtpbound': 'gtp',
+    'transcription': 'tscript',
+}
+
 
 class PybelAssembler(object):
 
@@ -45,16 +55,16 @@ class PybelAssembler(object):
         (sub_node, sub_attr) = _get_agent_node(sub_agent)
         self.model.add_node(enz_node, attr_dict=enz_attr)
         self.model.add_node(sub_node, attr_dict=sub_attr)
-        # Create an edge for each evidence object
+        pybel_activity = _indra_pybel_act_map[
+                                    mod_acttype_map[stmt.__class__]]
+        pybel_relation = pc.DIRECTLY_INCREASES \
+                         if isinstance(stmt, AddModification) \
+                         else pc.DIRECTLY_DECREASES
         edge = {pc.SUBJECT: {
-                pc.EFFECT: {pc.NAME: 'kin',
-                            pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE},
-                pc.MODIFIER: pc.ACTIVITY},
-                pc.RELATION: pc.INCREASES,
-                pc.OBJECT: {}}
-                #'object': {
-                #    'effect': {'name': 'kin', 'namespace': 'bel'},
-                #    'modifier': 'Activity'}}
+                    pc.MODIFIER: pc.ACTIVITY,
+                    pc.EFFECT: {pc.NAME: pybel_activity,
+                                pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
+                pc.RELATION: pybel_relation}
         # If there's no evidence for this statement, add node without
         # any evidence info
         if not stmt.evidence:
