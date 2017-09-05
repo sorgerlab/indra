@@ -51,6 +51,8 @@ class PybelAssembler(object):
                 self._assemble_regulate_activity(stmt)
             elif isinstance(stmt, RegulateAmount):
                 self._assemble_regulate_amount(stmt)
+            else:
+                logger.info('Unhandled statement: %s' % stmt)
         return self.model
 
     def _assemble_regulate_activity(self, stmt):
