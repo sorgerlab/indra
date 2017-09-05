@@ -61,11 +61,7 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, Activation) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = {pc.RELATION: pybel_relation}
-        if subj_edge:
-            edge_data[pc.SUBJECT] = subj_edge
-        if obj_edge:
-            edge_data[pc.OBJECT] = obj_edge
+        edge_data = _combine_edge_data(pybel_relation, subj_edge, obj_edge)
         self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_modification(self, stmt):
@@ -77,30 +73,8 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = {pc.RELATION: pybel_relation}
-        if enz_edge:
-            edge_data[pc.SUBJECT] = enz_edge
-        if sub_edge:
-            edge_data[pc.OBJECT] = sub_edge
-        # If there's no evidence for this statement, add node without
-        # any evidence info
-        if not stmt.evidence:
-            edge_data[pc.ANNOTATIONS] = {}
-            edge_data[pc.CITATION] = {}
-            edge_data[pc.EVIDENCE] = ''
-            self.model.add_edge(enz_node, sub_node,
-                                     attr_dict=edge_data)
-        # Otherwise, add an edge_data for each piece of evidence.
-        else:
-            for ev in stmt.evidence:
-                edge_data[pc.ANNOTATIONS] = {}
-                # FIXME Retrieve citation information from pubmed_client
-                edge_data[pc.CITATION] = {'authors': '', 'comments': '',
-                                     'date': '', 'name': '',
-                                     'reference': ev.pmid,
-                                     'type': 'PubMed'},
-                edge_data[pc.EVIDENCE] = ev.text
-                self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
+        edge_data = _combine_edge_data(pybel_relation, enz_edge, sub_edge)
+        self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
 
     def _assemble_regulate_amount(self, stmt):
         # p(HGNC:TP53) => p(HGNC:MDM2)
@@ -111,25 +85,18 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, IncreaseAmount) \
                          else pc.DIRECTLY_DECREASES
-        edge = {pc.RELATION: pybel_relation}
-        # If there's no evidence for this statement, add node without
-        # any evidence info
-        if not stmt.evidence:
-            edge[pc.ANNOTATIONS] = {}
-            edge[pc.CITATION] = {}
-            edge[pc.EVIDENCE] = ''
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge)
-        # Otherwise, add an edge for each piece of evidence.
-        else:
-            for ev in stmt.evidence:
-                edge[pc.ANNOTATIONS] = {}
-                # FIXME Retrieve citation information from pubmed_client
-                edge[pc.CITATION] = {'authors': '', 'comments': '',
-                                     'date': '', 'name': '',
-                                     'reference': ev.pmid,
-                                     'type': 'PubMed'},
-                edge[pc.EVIDENCE] = ev.text
-                self.model.add_edge(subj_node, obj_node, attr_dict=edge)
+        edge_data = _combine_edge_data(pybel_relation, subj_edge, obj_edge)
+        self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
+
+def _combine_edge_data(relation, subj_edge, obj_edge):
+    edge_data = {pc.RELATION: relation}
+    if subj_edge:
+        edge_data[pc.SUBJECT] = subj_edge
+    if obj_edge:
+        edge_data[pc.OBJECT] = obj_edge
+    return edge_data
+
 
 def _get_modified_substrate(mod_stmt):
     mod_agent = deepcopy(mod_stmt.sub)
@@ -176,6 +143,7 @@ def _get_agent_node(agent):
     edge_data = _get_agent_activity(agent)
     return (node_tuple, node_attr, edge_data)
 
+
 def _get_agent_grounding(agent):
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
@@ -208,6 +176,7 @@ def _get_agent_grounding(agent):
     else:
         return (None, None, None)
 
+
 def _get_agent_activity(agent):
     ac = agent.activity
     if not ac:
@@ -222,6 +191,7 @@ def _get_agent_activity(agent):
                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}
     return edge_data
 
+
 def _make_node_tuple(node_attr):
     if pc.VARIANTS in node_attr:
         variants = tuple(sorted([canonicalize_variant(token)
@@ -232,6 +202,27 @@ def _make_node_tuple(node_attr):
 
 def _make_simple_tuple(node_attr):
     return (node_attr[pc.FUNCTION], node_attr[pc.NAMESPACE], node_attr[pc.NAME])
+
+
+def _get_evidence(stmt):
+    # If there's no evidence for this statement, add node without
+    # any evidence info
+    if not stmt.evidence:
+        edge_data[pc.ANNOTATIONS] = {}
+        edge_data[pc.CITATION] = {}
+        edge_data[pc.EVIDENCE] = ''
+        self.model.add_edge(enz_node, sub_node,
+                                 attr_dict=edge_data)
+    # Otherwise, add an edge_data for each piece of evidence.
+    else:
+        for ev in stmt.evidence:
+            edge_data[pc.ANNOTATIONS] = {}
+            # FIXME Retrieve citation information from pubmed_client
+            edge_data[pc.CITATION] = {'authors': '', 'comments': '',
+                                 'date': '', 'name': '',
+                                 'reference': ev.pmid,
+                                 'type': 'PubMed'},
+            edge_data[pc.EVIDENCE] = ev.text
 
 
 def _get_citation(evidence):
