@@ -2,17 +2,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import json
+import time
 from indra.statements import *
 from indra.util import unzip_string
 from indra.databases import hgnc_client
 from io import BytesIO
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine, inspect
+    TIMESTAMP, create_engine, inspect, LargeBinary
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
-import time
 try:
     from pgcopy import CopyManager
     CAN_COPY = True
@@ -78,7 +78,7 @@ class DatabaseManager(object):
         if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
         else:
-            Bytea = String
+            Bytea = LargeBinary
         
         class TextRef(self.Base):
             __tablename__ = 'text_ref'
@@ -206,7 +206,8 @@ class DatabaseManager(object):
         "Commit, and give useful info if there is an exception."
         try:
             self.session.commit()
-        except:
+        except Exception as e:
+            print(e)
             print(err_msg)
             raise
 
@@ -269,7 +270,7 @@ class DatabaseManager(object):
         else:
             #TODO: use bulk insert mappings?
             print("WARNING: You are not using postresql or do not have pgcopy, so this will likely be very slow.")
-            self.insert_many('tbl_name', [dict(zip(cols, ro)) for ro in data])
+            self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
 
 
     def filter_query(self, tbls, *args):

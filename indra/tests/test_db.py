@@ -6,12 +6,17 @@ from indra.db import DatabaseManager
 from nose import SkipTest
 from nose.tools import assert_equal
 from sqlalchemy.exc import IntegrityError
+from indra.db.populate_content import initialize_medline, initialize_pmc_oa
 
 TEST_FILE = 'indra_test.db'
 TEST_HOST = 'sqlite:///' + TEST_FILE
 
 #TODO: implement setup-teardown system.
 START_SUCCESS = True
+
+#==============================================================================
+# The following are some helpful functions for the rest of the tests.
+#==============================================================================
 
 def assert_contents_equal(list1, list2, msg = None):
     "Check that the contenst of two lists are the same, regardless of order."
@@ -33,6 +38,9 @@ def startup():
     
     return db
 
+#==============================================================================
+# The following are tests for the database manager itself.
+#==============================================================================
 
 def test_startup():
     "Test the startup function."
@@ -49,6 +57,20 @@ def test_startup():
         START_SUCCESS = False
         raise
     return
+
+
+#==============================================================================
+# The following are tests for the initial population of the database. This
+# includes uploading data from Medline, PMC, Springer, and Elsevier. These
+# tend to make greater use of the database, and are likely to be slower.
+#==============================================================================
+
+def test_download_baseline():
+    "Tests whether we can download a baseline xml file."
+    db = startup()
+    initialize_medline(db) # Just make sure it doesn't die.
+    initialize_pmc_oa(db)
+    db._clear()
 
 def test_create_tables():
     "Test the create_tables feature"
@@ -110,8 +132,8 @@ def test_get_abstracts():
             {'pmid':'1357'} # searched for, but no conent.
             ]
         )
-    found_abst_fmt = 'This should be found alongside pmid %s.'
-    not_found_fmt = 'If found, something is probably wrong with %s.'
+    found_abst_fmt = b'This should be found alongside pmid %s.'
+    not_found_fmt = b'If found, something is probably wrong with %s.'
     db.insert_many(
         'text_content',
         [
@@ -120,42 +142,43 @@ def test_get_abstracts():
                 'source':'God',
                 'format':'stone tablet',
                 'text_type':'abstract',
-                'content':found_abst_fmt % '1234'
+                'content':found_abst_fmt % b'1234'
                 },
             {
                 'text_ref_id':ref_id_list[1], #pmid=5678
                 'source':'Satan',
                 'format':'blood',
                 'text_type':'full_content',
-                'content':not_found_fmt % 'text_type filter'
+                'content':not_found_fmt % b'text_type filter'
                 },
             {
                 'text_ref_id':ref_id_list[1], #pmid=5678
                 'source':'Satan',
                 'format':'blood',
                 'text_type':'abstract',
-                'content':found_abst_fmt % '5678'
+                'content':found_abst_fmt % b'5678'
                 },
             {
                 'text_ref_id':ref_id_list[2], #no pmid
                 'source':'Nature',
                 'format':'tears',
                 'text_type':'abstract',
-                'content':not_found_fmt % 'text_ref_id filter'
+                'content':not_found_fmt % b'text_ref_id filter'
                 },
             {
                 'text_ref_id':ref_id_list[3], #pmid=1357
                 'source':'A Voice Inside Your Head',
                 'format':'whispers',
                 'text_type':'abstract',
-                'content':not_found_fmt % 'pmid filter'
+                'content':not_found_fmt % b'pmid filter'
                 }
             ]
         )
     
-    expected = [(pmid, found_abst_fmt % pmid) for pmid in ['1234', '5678']]
+    expected = [(pmid, found_abst_fmt % pmid.encode()) for pmid in ['1234', '5678']]
     received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
     assert_contents_equal(expected, received, "Did not get expected abstracts.")
+
 
 def test_get_all_pmids():
     "Test whether we get all the pmids."
@@ -163,4 +186,7 @@ def test_get_all_pmids():
     db.insert_many('text_ref', [{'pmid':'1234'}, {'pmid':'5678'}])
     pmid_list = db.get_all_pmids()
     assert_contents_equal(pmid_list, ['1234','5678'])
+
+
+
 
