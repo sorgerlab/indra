@@ -37,6 +37,9 @@ class PybelAssembler(object):
 
         self.model = None
 
+    def add_statements(self, stmts_to_add):
+        self.stmts += stmts_to_add
+
     def make_model(self, **kwargs):
         self.model = pybel.BELGraph(**kwargs)
         for stmt in self.statements:
