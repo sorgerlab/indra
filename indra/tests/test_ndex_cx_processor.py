@@ -1,3 +1,4 @@
+import os
 from indra.sources.ndex_cx import process_cx_file, process_ndex_network
 from indra.sources.ndex_cx.processor import NdexCxProcessor
 from indra.databases import hgnc_client
@@ -6,7 +7,9 @@ from requests.exceptions import HTTPError
 from nose.tools import raises
 
 
-ncp_file = process_cx_file('merged_BRCA1_formatted.cx')
+path_this = os.path.dirname(os.path.abspath(__file__))
+ncp_file = \
+    process_cx_file(os.path.join(path_this, 'merged_BRCA1_formatted.cx'))
 
 
 def test_process_cx_file():

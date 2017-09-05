@@ -228,6 +228,8 @@ class NdexCxProcessor(object):
                            node_id)
         aliases = alias_attrs[0].get('v')
         for alias in aliases:
+            if ':' not in alias:
+                continue
             db_name, db_id = alias.split(':')
             db_name_mapped = cx_indra_db_map.get(db_name)
             if not db_name_mapped:
@@ -238,4 +240,5 @@ class NdexCxProcessor(object):
 
 cx_indra_db_map = {
         'UniProt': 'UP',
+        'uniprot knowledgebase': 'UP'
         }
