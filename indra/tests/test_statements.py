@@ -1122,6 +1122,10 @@ def test_eq_mut():
     assert(not MutCondition('600', 'V', 'E').equals(
                                              MutCondition('600', 'V', 'D')))
 
+def test_mut_hgvs():
+    mc = MutCondition('600', 'V', 'E')
+    assert mc.to_hgvs() == 'p.Val600Glu'
+
 def test_eq_agent():
     assert(Agent('one').equals(Agent('one')))
     assert(not Agent('one').equals(Agent('two')))
