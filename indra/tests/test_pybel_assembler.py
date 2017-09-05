@@ -49,6 +49,23 @@ def test_simple_modification_no_evidence():
                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
-if __name__ == '__main__':
-     test_simple_phosphorylation_no_evidence()
+def test_modification_with_mutation():
+    braf = Agent('BRAF', mutations=[MutCondition('600', 'V', 'E')],
+                 db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt = Phosphorylation(braf, mek, 'S', '218')
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 2
+    braf_mut_node = braf_node + ((pc.HGVS, 'p.Val600Glu'),)
+    assert braf_mut_node in belgraph
+    assert belgraph.node[braf_mut_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'BRAF',
+                pc.VARIANTS: [{
+                    pc.KIND: pc.HGVS,
+                    pc.IDENTIFIER: 'p.Val600Glu'}]}
 
+if __name__ == '__main__':
+    test_modification_with_mutation()

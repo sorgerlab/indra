@@ -29,7 +29,6 @@ _indra_pybel_act_map = {
 
 
 class PybelAssembler(object):
-
     def __init__(self, stmts=None):
         if stmts is None:
             self.statements = []
@@ -87,10 +86,7 @@ class PybelAssembler(object):
 
 def _get_modified_substrate(mod_stmt):
     mod_agent = deepcopy(mod_stmt.sub)
-    modtype = modclass_to_modtype[mod_stmt.__class__]
-    res = mod_stmt.residue
-    pos = mod_stmt.position
-    mc = ModCondition(mod_stmt.__class__.__name__.lower(), res, pos)
+    mc = mod_stmt._get_mod_condition()
     mod_agent.mods.append(mc)
     return mod_agent
 
@@ -123,16 +119,16 @@ def _get_agent_node(agent):
 
 
 def _agent_grounding(agent):
-        hgnc_id = agent.db_refs.get('HGNC')
-        up_id = agent.db_refs.get('UP')
-        # If no HGNC, check for Uniprot (in case is not a human gene)
-        if hgnc_id:
-            hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-            return ('HGNC', hgnc_name)
-        elif up_id:
-            return ('UNIPROT', up_id)
-        else:
-            return (None, None)
+    hgnc_id = agent.db_refs.get('HGNC')
+    up_id = agent.db_refs.get('UP')
+    # If no HGNC, check for Uniprot (in case is not a human gene)
+    if hgnc_id:
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+        return ('HGNC', hgnc_name)
+    elif up_id:
+        return ('UNIPROT', up_id)
+    else:
+        return (None, None)
 
 
 def _make_node_tuple(node_attr):
