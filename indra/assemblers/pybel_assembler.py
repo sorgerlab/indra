@@ -152,13 +152,13 @@ def _get_activated_object(reg_stmt):
 
 
 def _get_agent_node(agent):
-    (db_ns, db_id) = _agent_grounding(agent)
-    if db_ns is None:
+    (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
+    if abundance_type is None:
         logging.warning('Agent %s has no grounding.', agent)
         return None
-    node_attr = {pc.FUNCTION: pc.PROTEIN,
-                     pc.NAMESPACE: db_ns,
-                     pc.NAME: db_id}
+    node_attr = {pc.FUNCTION: abundance_type,
+                 pc.NAMESPACE: db_ns,
+                 pc.NAME: db_id}
     variants = []
     for mod in agent.mods:
         var = {pc.KIND: pc.PMOD,
@@ -180,6 +180,37 @@ def _get_agent_node(agent):
     node_tuple = _make_node_tuple(node_attr)
     return (node_tuple, node_attr)
 
+def _get_agent_grounding(agent):
+    hgnc_id = agent.db_refs.get('HGNC')
+    uniprot_id = agent.db_refs.get('UP')
+    be_id = agent.db_refs.get('BE')
+    pfam_id = agent.db_refs.get('PF')
+    fa_id = agent.db_refs.get('FA')
+    chebi_id = agent.db_refs.get('CHEBI')
+    pubchem_id = agent.db_refs.get('PUBCHEM')
+    go_id = agent.db_refs.get('GO')
+    mesh_id = agent.db_refs.get('MESH')
+    if hgnc_id:
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+        return (pc.PROTEIN, 'HGNC', hgnc_name)
+    elif up_id:
+        return (pc.PROTEIN, 'UP', uniprot_id)
+    elif be_id:
+        return (pc.PROTEIN, 'BE', be_id)
+    elif pfam_id:
+        return (pc.PROTEIN, 'PFAM', be_id)
+    elif fa_id:
+        return (pc.PROTEIN, 'NXPFA', be_id)
+    elif chebi_id:
+        return (pc.ABUNDANCE, 'CHEBI', chebi_id)
+    elif pubchem_id:
+        return (pc.ABUNDANCE, 'PUBCHEM', pubchem_id)
+    elif go_id:
+        return (pc.BIOPROCESS, 'GO', go_id)
+    elif mesh_id:
+        return (pc.BIOPROCESS, 'MESH', mesh_id)
+    else:
+        return (None, None, None)
 
 def _get_agent_activity(agent):
     ac = agent.activity
@@ -194,20 +225,6 @@ def _get_agent_activity(agent):
         edge_data[pc.EFFECT] = {pc.NAME: pybel_activity,
                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}
     return edge_data
-
-
-def _agent_grounding(agent):
-    hgnc_id = agent.db_refs.get('HGNC')
-    up_id = agent.db_refs.get('UP')
-    # If no HGNC, check for Uniprot (in case is not a human gene)
-    if hgnc_id:
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-        return ('HGNC', hgnc_name)
-    elif up_id:
-        return ('UNIPROT', up_id)
-    else:
-        return (None, None)
-
 
 def _make_node_tuple(node_attr):
     if pc.VARIANTS in node_attr:
