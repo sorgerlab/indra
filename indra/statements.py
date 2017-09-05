@@ -1577,6 +1577,10 @@ class RegulateActivity(Statement):
                   (self.is_activation == other.is_activation)
         return matches
 
+    def _get_activity_condition(self):
+        """Return ActivityCondition corresponding to this RegulateActivity."""
+        return ActivityCondition(self.obj_activity, self.is_activation)
+
 
 class Inhibition(RegulateActivity):
     """Indicates that a protein inhibits or deactivates another protein.
