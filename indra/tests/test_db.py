@@ -68,7 +68,7 @@ def test_startup():
 def test_download_baseline():
     "Tests whether we can download a baseline xml file."
     db = startup()
-    initialize_medline(db) # Just make sure it doesn't die.
+    #initialize_medline(db) # Just make sure it doesn't die.
     initialize_pmc_oa(db)
     db._clear()
 

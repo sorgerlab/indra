@@ -163,15 +163,11 @@ class Medline(Progenetor):
     
         # Add the text_ref IDs to the content to be inserted
         text_content_records = []
-        missing_pmids = 0
         for pmid, tc_data in text_content_info.items():
             if pmid not in pmid_tr_dict.keys():
-                #print('pmid %s not found.' % pmid)
-                missing_pmids += 1
                 continue
             tr_id = pmid_tr_dict[pmid] 
             text_content_records.append((tr_id,) + tc_data)
-        print("We missed %d/%d pmids." % (missing_pmids, len(text_content_info)))
         
         
         self.db.copy(
@@ -205,54 +201,110 @@ class PmcOA(Progenetor):
         info_list = [datatype(*row) for row in csv_reader if row]
         return info_list
 
-    def populate(self):
-        article_archs = [k for k in self.ftp_ls().keys() if k.startswith('articles') and k.endswith('.xml.tar.gz')]
-        current_id_list = self.db.get_values(self.db.select('text_ref'), ['pmid', 'pmcid'])
-        pmcid_list = [i[1].decode('utf8') for i in current_id_list if i[1] is not None]
+    def upload_article_archive(self, article_arch):
+        current_id_list = self.db.get_values(
+            self.db.select('text_ref'), 
+            ['pmid', 'pmcid']
+            )
+        pmcid_list = [
+            i[1].decode('utf8') for i in current_id_list if i[1] is not None
+            ]
+        
+        tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
+        tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
         
         tr_records = []
-        tc_records = []
+        tc_data = []
+        
+        #with GzipFile(article_arch, 'w') as gzf:
+        #    ftp = self.get_ftp_connection()
+        #    ftp.retrbinary('RETR %s' % article_arch,
+        #                   callback=lambda s: gzf.write(s),
+        #                   blocksize=ftp_blocksize)
+        #    gzf.flush()
+        #    ftp.close()
+        
+        with GzipFile(article_arch, 'r') as gzf:
+            tar = tarfile.open(fileobj=gzf, mode='r:gz')
+            xml_files = [m for m in tar.getmembers() if m.isfile()]
+            for i, xml_file in enumerate(xml_files):
+                #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
+                xml_str = tar.extractfile(xml_file).read()
+                try:
+                    tree = ET.XML(xml_str)
+                except ET.ParseError:
+                    print("Could not parse %s. Skipping." % xml_file)
+                    continue
+                id_data = {
+                    e.get('pub-id-type'):e.text for e in 
+                    tree.findall('.//article-id')
+                    }
+                abst_xml = tree.find('.//abstract')
+                fulltext_xml = tree.find('.//body')
+                if 'pmc' not in id_data.keys():
+                    print("Did not get a 'pmc' in %s." % xml_file)
+                    continue
+                    
+                #if 'PMC'+id_data['pmc'] not in pmcid_list:
+                #    continue
+                if 'pmcid' not in id_data.keys():
+                    id_data['pmcid'] = 'PMC' + id_data['pmc']
+                tr_records.append(tuple([id_data.get(c) for c in tr_cols]))
+                tc_data.append(
+                    (
+                        id_data['pmcid'], 
+                        'abstract', 
+                        zip_string(ET.tostring(abst_xml).decode('utf8'))
+                        )
+                    )
+                if fulltext_xml is not None:
+                    tc_data.append(
+                        (
+                            id_data['pmcid'], 
+                            'fulltext', 
+                            zip_string(ET.tostring(fulltext_xml).decode('utf8'))
+                            )
+                        )
+                if (i+1)%10000==0: # Upload in batches, so as not to overwhelm ram.
+                    self.db.copy(
+                        'text_ref', 
+                        [trr for trr in tr_records if trr[1] not in pmcid_list],
+                        tr_cols
+                        )
+                    pmcid_list = [
+                        tr[tr_cols.index('pmcid')].encode()
+                        for tr in tr_records
+                        ]
+                    tref_list = self.db.select(
+                        'text_ref', 
+                        self.db.TextRef.pmid.in_([p for p in pmcid_list])
+                        )
+                    pmcid_tr_dict = {
+                        pmcid.decode('utf-8'):trid for (pmcid, trid) in
+                        self.db.get_values(tref_list, ['pmcid', 'id'])
+                        }
+                    tc_records = [
+                        (pmcid_tr_dict[pmcid], 'pmc-oa', 'xml', txt_type, cont)
+                        for pmcid, txt_type, cont in tc_data
+                        ]
+                    self.db.copy('text_content', tc_records, tc_cols)
+                    print(i)
+                    tr_records = []
+                    tc_data = []
+
+    def populate(self):
+        article_archs = [
+            k for k in self.ftp_ls().keys() 
+            if k.startswith('articles') and k.endswith('.xml.tar.gz')
+            ]
         for article_arch in ['articles.A-B.xml.tar.gz']:#article_archs[:1]:
             try:
-                #with GzipFile(article_arch, 'w') as gzf:
-                #    ftp = self.get_ftp_connection()
-                #    ftp.retrbinary('RETR %s' % article_arch,
-                #                   callback=lambda s: gzf.write(s),
-                #                   blocksize=ftp_blocksize)
-                #    gzf.flush()
-                #    ftp.close()
-                with GzipFile(article_arch, 'r') as gzf:
-                    tar = tarfile.open(fileobj=gzf, mode='r:gz')
-                    xml_files = [m for m in tar.getmembers() if m.isfile()]
-                    for i, xml_file in enumerate(xml_files):
-                        #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
-                        xml_str = tar.extractfile(xml_file).read()
-                        try:
-                            tree = ET.XML(xml_str)
-                        except ET.ParseError:
-                            print("Could not parse %s. Skipping." % xml_file)
-                            continue
-                        id_data = {e.get('pub-id-type'):e.text for e in tree.findall('.//article-id')}
-                        abst_xml = tree.find('.//abstract')
-                        fulltext_xml = tree.find('.//body')
-                        if 'PMC'+id_data['pmc'] not in pmcid_list:
-                            continue
-                        print("Gonna add %s to db." % 'PMC'+id_data['pmc'])
-                        tr_records.append(id_data)
-                        tc_records.append((abst_xml, fulltext_xml))
-                        if (i+1)%10000==0:
-                            print(i)
-                            tr_records = []
-                            tc_records = []
+                self.upload_article_archive(article_arch)
             finally:
                 pass
                 #os.remove(article_arch)
-        return (tr_records, tc_records)
+        return
 
-
-
-
-        
 
 
 def _update_text_refs(pmc_info_list):
