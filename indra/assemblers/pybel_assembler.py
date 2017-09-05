@@ -64,8 +64,12 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, Activation) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = _combine_edge_data(pybel_relation, subj_edge, obj_edge)
-        self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        edge_data_list = \
+            _combine_edge_data(pybel_relation, subj_edge, obj_edge,
+                               stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
 
     def _assemble_modification(self, stmt):
         (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
@@ -76,8 +80,10 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = _combine_edge_data(pybel_relation, enz_edge, sub_edge)
-        self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
+        edge_data_list = _combine_edge_data(pybel_relation, enz_edge, sub_edge,
+                                            stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
 
     def _assemble_regulate_amount(self, stmt):
         # p(HGNC:TP53) => p(HGNC:MDM2)
@@ -88,17 +94,26 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, IncreaseAmount) \
                          else pc.DIRECTLY_DECREASES
-        edge_data = _combine_edge_data(pybel_relation, subj_edge, obj_edge)
-        self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
+                                            obj_edge, stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
-
-def _combine_edge_data(relation, subj_edge, obj_edge):
+def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
-    return edge_data
+    if not evidence:
+        return [edge_data]
+    edge_data_list = []
+    for ev in evidence:
+        pybel_ev = _get_evidence(ev)
+        edge_data_one = copy(edge_data)
+        edge_data_one.update(pybel_ev)
+        edge_data_list.append(edge_data_one)
+    return edge_data_list
 
 
 def _get_modified_substrate(mod_stmt):
@@ -207,27 +222,6 @@ def _make_simple_tuple(node_attr):
     return (node_attr[pc.FUNCTION], node_attr[pc.NAMESPACE], node_attr[pc.NAME])
 
 
-def _get_evidence(stmt):
-    # If there's no evidence for this statement, add node without
-    # any evidence info
-    if not stmt.evidence:
-        edge_data[pc.ANNOTATIONS] = {}
-        edge_data[pc.CITATION] = {}
-        edge_data[pc.EVIDENCE] = ''
-        self.model.add_edge(enz_node, sub_node,
-                                 attr_dict=edge_data)
-    # Otherwise, add an edge_data for each piece of evidence.
-    else:
-        for ev in stmt.evidence:
-            edge_data[pc.ANNOTATIONS] = {}
-            # FIXME Retrieve citation information from pubmed_client
-            edge_data[pc.CITATION] = {'authors': '', 'comments': '',
-                                 'date': '', 'name': '',
-                                 'reference': ev.pmid,
-                                 'type': 'PubMed'},
-            edge_data[pc.EVIDENCE] = ev.text
-
-
 def _get_evidence(evidence):
     pybel_ev = {pc.EVIDENCE: evidence.text}
     if evidence.pmid:
@@ -238,7 +232,6 @@ def _get_evidence(evidence):
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
->>>>>>> Generalize getting evidence
 
 """
 Representation of PTM reactions in PyBEL/BEL
