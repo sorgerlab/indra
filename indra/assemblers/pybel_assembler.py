@@ -225,8 +225,17 @@ def _get_evidence(stmt):
             edge_data[pc.EVIDENCE] = ev.text
 
 
-def _get_citation(evidence):
-    pass
+def _get_evidence(evidence):
+    pybel_ev = {pc.EVIDENCE: evidence.text}
+    if evidence.pmid:
+        citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
+                    pc.CITATION_REFERENCE: evidence.pmid}
+    else:
+        citation = {}
+    pybel_ev[pc.CITATION] = citation
+    pybel_ev[pc.ANNOTATIONS] = {}
+    return pybel_ev
+>>>>>>> Generalize getting evidence
 
 """
 Representation of PTM reactions in PyBEL/BEL
