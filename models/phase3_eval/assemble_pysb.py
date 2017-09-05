@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+from indra.util import require_python3
 import re
 import pickle
 import os.path

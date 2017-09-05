@@ -1,3 +1,4 @@
+from indra.util import require_python3
 import os
 import sys
 from random import shuffle
@@ -5,9 +6,6 @@ from indra.sources import biopax
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import CxAssembler
 from indra.literature.pubmed_client import get_ids_for_gene
-
-if sys.version_info[0] < 3:
-    raise Exception('Run this only in Python 3')
 
 
 base_network = 'PAR1-mediated thrombin signaling events.owl'

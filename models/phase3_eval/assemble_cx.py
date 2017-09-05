@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+from indra.util import require_python3
 from os.path import join as pjoin
 from indra.assemblers import CxAssembler
 import indra.tools.assemble_corpus as ac
