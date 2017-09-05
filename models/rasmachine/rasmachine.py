@@ -210,18 +210,21 @@ def _increment_ndex_ver(ver_str):
         new_ver = major_ver + '.' + new_minor_ver
     return new_ver
 
-def upload_to_ndex(stmts, ndex_cred):
-    server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
-    nd = ndex.client.Ndex(server, username, password)
-    network_id = ndex_cred.get('network')
-
+def assemble_cx(stmts):
     ca = CxAssembler()
     ca.network_name = 'rasmachine'
     ca.add_statements(stmts)
     ca.make_model()
     cx_str = ca.print_cx()
+    with open('cx_upload.cx', 'wb') as fh:
+        fh.write(cx_str.encode('utf-8'))
+
+def upload_to_ndex(cx_str, ndex_cred):
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+    nd = ndex.client.Ndex(server, username, password)
+    network_id = ndex_cred.get('network')
 
     try:
         logger.info('Getting network summary...')
@@ -235,8 +238,6 @@ def upload_to_ndex(stmts, ndex_cred):
     try:
         logger.info('Updating network...')
         cx_stream = io.BytesIO(cx_str.encode('utf-8'))
-        with open('cx_upload.cx', 'wb') as fh:
-            fh.write(cx_str.encode('utf-8'))
         nd.update_cx_network(cx_stream, network_id)
     except Exception as e:
         logger.error('Could not update NDEx network.')
