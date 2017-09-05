@@ -49,6 +49,7 @@ def test_simple_modification_no_evidence():
                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
+
 def test_modification_with_mutation():
     braf = Agent('BRAF', mutations=[MutCondition('600', 'V', 'E')],
                  db_refs={'HGNC': '1097', 'UP': 'P15056'})
@@ -67,5 +68,23 @@ def test_modification_with_mutation():
                     pc.KIND: pc.HGVS,
                     pc.IDENTIFIER: 'p.Val600Glu'}]}
 
+
+def test_activation():
+    braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt1 = Activation(braf_no_act, mek)
+    stmt2 = Activation(braf_kin, mek, 'kinase')
+    pba = pa.PybelAssembler([stmt1])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 2
+    assert braf_node in belgraph
+    assert belgraph.node[braf_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'BRAF'}
+
+
 if __name__ == '__main__':
-    test_modification_with_mutation()
+    test_activation()

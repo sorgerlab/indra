@@ -44,7 +44,15 @@ class PybelAssembler(object):
             # kin(p(agent)) => pmod(p(agent))
             if isinstance(stmt, Modification):
                 self._assemble_modification(stmt)
+            elif isinstance(stmt, RegulateActivity):
+                self._assemble_regulate_activity(stmt)
         return self.model
+
+    def _assemble_regulate_activity(self, stmt):
+        subj_node, subj_attr = _get_agent_node(stmt.subj)
+        obj_node, obj_attr = _get_agent_node(stmt.obj)
+        self.model.add_node(subj_node, attr_dict=subj_attr)
+        self.model.add_node(obj_node, attr_dict=obj_attr)
 
     def _assemble_modification(self, stmt):
         #(enz_node, enz_attr) = _get_agent_node(stmt.enz)
