@@ -11,6 +11,7 @@ import read_phosphosite
 from assemble_sif import assemble_sif
 from assemble_cx import assemble_cx
 from assemble_pysb import assemble_pysb
+from assemble_pybel import assemble_pybel
 
 def build_prior(genes, out_file):
     gn = GeneNetwork(genes, 'korkut')
@@ -100,3 +101,7 @@ if __name__ == '__main__':
     if 'cx' in assemble_models:
         for network_type in ('high_belief', 'direct'):
             cxa = assemble_cx(stmts, pjoin(outf, 'korkut_full'), network_type)
+
+    ### PyBEL assembly
+    if 'pybel' in assemble_models:
+        belgraph = assemble_pybel(stmts, pjoin(outf, 'korkut_pybel.pkl'))

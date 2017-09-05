@@ -5,10 +5,11 @@ from indra.databases import hgnc_client
 import logging
 import pybel
 import pybel.constants as pc
-from copy import deepcopy
+from copy import deepcopy, copy
 from pybel.parser.language import pmod_namespace
 from pybel.parser.parse_bel import canonicalize_variant
 from indra.assemblers.pysb_assembler import mod_acttype_map
+
 # Python 2
 try:
     basestring
@@ -43,8 +44,10 @@ class PybelAssembler(object):
     def make_model(self, **kwargs):
         self.model = pybel.BELGraph(**kwargs)
         for stmt in self.statements:
-            # Convert phosphorylation statements into
-            # kin(p(agent)) => pmod(p(agent))
+            # Skip statements with no subject
+            if stmt.agent_list()[0] is None:
+                continue
+            # Assemble statements
             if isinstance(stmt, Modification):
                 self._assemble_modification(stmt)
             elif isinstance(stmt, RegulateActivity):
@@ -135,17 +138,22 @@ def _get_activated_object(reg_stmt):
 def _get_agent_node(agent):
     (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
     if abundance_type is None:
-        logging.warning('Agent %s has no grounding.', agent)
+        logger.warning('Agent %s has no grounding.', agent)
         return None
     node_attr = {pc.FUNCTION: abundance_type,
                  pc.NAMESPACE: db_ns,
                  pc.NAME: db_id}
     variants = []
     for mod in agent.mods:
+        pybel_mod = pmod_namespace.get(mod.mod_type)
+        if not pybel_mod:
+            logger.info('Skipping modification of type %s on agent %s',
+                         mod.mod_type, agent)
+            continue
         var = {pc.KIND: pc.PMOD,
                pc.IDENTIFIER: {
                    pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                   pc.NAME: pmod_namespace[mod.mod_type]}}
+                   pc.NAME: pybel_mod}}
         if mod.residue is not None:
             res = amino_acids[mod.residue]['short_name'].capitalize()
             var[pc.PMOD_CODE] = res
@@ -177,7 +185,7 @@ def _get_agent_grounding(agent):
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         return (pc.PROTEIN, 'HGNC', hgnc_name)
-    elif up_id:
+    elif uniprot_id:
         return (pc.PROTEIN, 'UP', uniprot_id)
     elif be_id:
         return (pc.PROTEIN, 'BE', be_id)
@@ -202,8 +210,8 @@ def _get_agent_activity(agent):
     if not ac:
         return None
     if not ac.is_active:
-        raise ValueError('Cannot represent negative activity in PyBEL: %s' %
-                         agent)
+        logger.warning('Cannot represent negative activity in PyBEL: %s' %
+                       agent)
     edge_data = {pc.MODIFIER: pc.ACTIVITY}
     if not ac.activity_type == 'activity':
         pybel_activity = _indra_pybel_act_map[ac.activity_type]
