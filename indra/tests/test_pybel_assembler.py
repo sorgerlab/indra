@@ -78,15 +78,35 @@ def test_activation():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt1 = Activation(braf_no_act, mek)
     stmt2 = Activation(braf_kin, mek, 'kinase')
-    pba = pa.PybelAssembler([stmt1])
-    belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 2
-    assert braf_node in belgraph
-    assert belgraph.node[braf_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'BRAF'}
-
+    edge1 = {pc.RELATION: pc.DIRECTLY_INCREASES,
+             pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}}
+    edge2 = {pc.RELATION: pc.DIRECTLY_INCREASES,
+             pc.SUBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'kin',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
+             pc.OBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'kin',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+    for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
+        pba = pa.PybelAssembler([stmt])
+        belgraph = pba.make_model()
+        assert len(belgraph.nodes()) == 2
+        assert braf_node in belgraph
+        assert belgraph.node[braf_node] == {
+                    pc.FUNCTION: pc.PROTEIN,
+                    pc.NAMESPACE: 'HGNC',
+                    pc.NAME: 'BRAF'}
+        assert belgraph.node[map2k1_node] == {
+                    pc.FUNCTION: pc.PROTEIN,
+                    pc.NAMESPACE: 'HGNC',
+                    pc.NAME: 'MAP2K1'}
+        assert belgraph.number_of_edges() == 1
+        _, _, edge_data = belgraph.edges(data=True)[0]
+        assert edge_data == edge
 
 def test_increase_amount():
     tp53 = Agent('TP53', db_refs={'HGNC': '11998'})

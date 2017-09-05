@@ -51,10 +51,24 @@ class PybelAssembler(object):
         return self.model
 
     def _assemble_regulate_activity(self, stmt):
+        # Get node data and add to model
         subj_node, subj_attr = _get_agent_node(stmt.subj)
         obj_node, obj_attr = _get_agent_node(stmt.obj)
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
+        # Define the edge data
+        pybel_relation = pc.DIRECTLY_INCREASES \
+                         if isinstance(stmt, Activation) \
+                         else pc.DIRECTLY_DECREASES
+        edge_data = {pc.RELATION: pybel_relation}
+        subj_activity = _get_agent_activity(stmt.subj)
+        if subj_activity:
+            edge_data[pc.SUBJECT] = subj_activity
+        act_obj = _get_activated_object(stmt)
+        obj_activity = _get_agent_activity(act_obj)
+        if obj_activity:
+            edge_data[pc.OBJECT] = obj_activity
+        self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_modification(self, stmt):
         #(enz_node, enz_attr) = _get_agent_node(stmt.enz)
@@ -69,29 +83,30 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
-        edge = {pc.SUBJECT: {
-                    pc.MODIFIER: pc.ACTIVITY,
-                    pc.EFFECT: {pc.NAME: pybel_activity,
+        edge_data = {pc.SUBJECT: {
+                         pc.MODIFIER: pc.ACTIVITY,
+                         pc.EFFECT: {pc.NAME: pybel_activity,
                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-                pc.RELATION: pybel_relation}
+                     pc.RELATION: pybel_relation}
         # If there's no evidence for this statement, add node without
         # any evidence info
         if not stmt.evidence:
-            edge[pc.ANNOTATIONS] = {}
-            edge[pc.CITATION] = {}
-            edge[pc.EVIDENCE] = ''
-            self.model.add_edge(enz_node, sub_node, attr_dict=edge)
-        # Otherwise, add an edge for each piece of evidence.
+            edge_data[pc.ANNOTATIONS] = {}
+            edge_data[pc.CITATION] = {}
+            edge_data[pc.EVIDENCE] = ''
+            self.model.add_edge(enz_node, sub_node,
+                                     attr_dict=edge_data)
+        # Otherwise, add an edge_data for each piece of evidence.
         else:
             for ev in stmt.evidence:
-                edge[pc.ANNOTATIONS] = {}
+                edge_data[pc.ANNOTATIONS] = {}
                 # FIXME Retrieve citation information from pubmed_client
-                edge[pc.CITATION] = {'authors': '', 'comments': '',
+                edge_data[pc.CITATION] = {'authors': '', 'comments': '',
                                      'date': '', 'name': '',
                                      'reference': ev.pmid,
                                      'type': 'PubMed'},
-                edge[pc.EVIDENCE] = ev.text
-                self.model.add_edge(enz_node, sub_node, attr_dict=edge)
+                edge_data[pc.EVIDENCE] = ev.text
+                self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
 
     def _assemble_regulate_amount(self, stmt):
         # p(HGNC:TP53) => p(HGNC:MDM2)
@@ -129,6 +144,13 @@ def _get_modified_substrate(mod_stmt):
     return mod_agent
 
 
+def _get_activated_object(reg_stmt):
+    act_agent = deepcopy(reg_stmt.obj)
+    ac = reg_stmt._get_activity_condition()
+    act_agent.activity = ac
+    return act_agent
+
+
 def _get_agent_node(agent):
     (db_ns, db_id) = _agent_grounding(agent)
     if db_ns is None:
@@ -157,6 +179,21 @@ def _get_agent_node(agent):
         node_attr[pc.VARIANTS] = variants
     node_tuple = _make_node_tuple(node_attr)
     return (node_tuple, node_attr)
+
+
+def _get_agent_activity(agent):
+    ac = agent.activity
+    if not ac:
+        return None
+    if not ac.is_active:
+        raise ValueError('Cannot represent negative activity in PyBEL: %s' %
+                         agent)
+    edge_data = {pc.MODIFIER: pc.ACTIVITY}
+    if not ac.activity_type == 'activity':
+        pybel_activity = _indra_pybel_act_map[ac.activity_type]
+        edge_data[pc.EFFECT] = {pc.NAME: pybel_activity,
+                                pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}
+    return edge_data
 
 
 def _agent_grounding(agent):
