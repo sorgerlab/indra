@@ -46,6 +46,8 @@ class PybelAssembler(object):
                 self._assemble_modification(stmt)
             elif isinstance(stmt, RegulateActivity):
                 self._assemble_regulate_activity(stmt)
+            elif isinstance(stmt, RegulateAmount):
+                self._assemble_regulate_amount(stmt)
         return self.model
 
     def _assemble_regulate_activity(self, stmt):
@@ -91,6 +93,34 @@ class PybelAssembler(object):
                 edge[pc.EVIDENCE] = ev.text
                 self.model.add_edge(enz_node, sub_node, attr_dict=edge)
 
+    def _assemble_regulate_amount(self, stmt):
+        # p(HGNC:TP53) => p(HGNC:MDM2)
+        (subj_node, subj_attr) = _get_agent_node(stmt.subj)
+        (obj_node, obj_attr) = _get_agent_node(stmt.obj)
+        self.model.add_node(subj_node, attr_dict=subj_attr)
+        self.model.add_node(obj_node, attr_dict=obj_attr)
+        pybel_relation = pc.DIRECTLY_INCREASES \
+                         if isinstance(stmt, IncreaseAmount) \
+                         else pc.DIRECTLY_DECREASES
+        edge = {pc.RELATION: pybel_relation}
+        # If there's no evidence for this statement, add node without
+        # any evidence info
+        if not stmt.evidence:
+            edge[pc.ANNOTATIONS] = {}
+            edge[pc.CITATION] = {}
+            edge[pc.EVIDENCE] = ''
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge)
+        # Otherwise, add an edge for each piece of evidence.
+        else:
+            for ev in stmt.evidence:
+                edge[pc.ANNOTATIONS] = {}
+                # FIXME Retrieve citation information from pubmed_client
+                edge[pc.CITATION] = {'authors': '', 'comments': '',
+                                     'date': '', 'name': '',
+                                     'reference': ev.pmid,
+                                     'type': 'PubMed'},
+                edge[pc.EVIDENCE] = ev.text
+                self.model.add_edge(subj_node, obj_node, attr_dict=edge)
 
 def _get_modified_substrate(mod_stmt):
     mod_agent = deepcopy(mod_stmt.sub)
@@ -101,8 +131,8 @@ def _get_modified_substrate(mod_stmt):
 
 def _get_agent_node(agent):
     (db_ns, db_id) = _agent_grounding(agent)
-    if db_ns == None:
-        logging.warning('Agent %s has no grounding.', stmt)
+    if db_ns is None:
+        logging.warning('Agent %s has no grounding.', agent)
         return None
     node_attr = {pc.FUNCTION: pc.PROTEIN,
                      pc.NAMESPACE: db_ns,
