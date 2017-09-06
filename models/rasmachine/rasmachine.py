@@ -413,6 +413,8 @@ if __name__ == '__main__':
         if not ndex_cred.get('network'):
             logger.info('NDEx network missing.')
             use_ndex = False
+    else:
+        use_ndex = False      
     if use_ndex:
         logger.info('Using NDEx with given credentials.')
     else:
