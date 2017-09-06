@@ -30,19 +30,25 @@ _indra_pybel_act_map = {
 
 
 class PybelAssembler(object):
-    def __init__(self, stmts=None):
+    def __init__(self, stmts=None, name=None, description=None, version=None,
+                 **kwargs):
         if stmts is None:
             self.statements = []
         else:
             self.statements = stmts
 
-        self.model = None
+        # Create the model and assign metadata
+        self.model = pybel.BELGraph(**kwargs)
+        self.model.graph[pc.GRAPH_METADATA] = {
+                pc.METADATA_NAME: name,
+                pc.METADATA_DESCRIPTION: description,
+                pc.METADATA_VERSION: version
+            }
 
     def add_statements(self, stmts_to_add):
         self.stmts += stmts_to_add
 
-    def make_model(self, **kwargs):
-        self.model = pybel.BELGraph(**kwargs)
+    def make_model(self):
         for stmt in self.statements:
             # Skip statements with no subject
             if stmt.agent_list()[0] is None:
