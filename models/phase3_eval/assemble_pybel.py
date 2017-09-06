@@ -3,12 +3,20 @@ from builtins import dict, str
 from indra.assemblers import PybelAssembler
 import indra.tools.assemble_corpus as ac
 import pybel
+import requests
 
 def assemble_pybel(stmts, out_file_prefix):
     """Return a PyBEL Assembler"""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
-    pba = PybelAssembler(stmts)
+    pba = PybelAssembler(stmts, name='INDRA_Korkut_Model',
+                         description='Automatically assembled model of '
+                                     'cancer signaling.',
+                         version='0.0.1')
     pba.make_model()
     with open(out_file_prefix, 'wt') as f:
         pybel.to_json_file(pba.model, f)
+    url =  'https://pybel.scai.fraunhofer.de/api/receive'
+    headers = {'content-type': 'application/json'}
+    requests.post(url, json=pybel.to_json(pba.model), headers=headers)
+
