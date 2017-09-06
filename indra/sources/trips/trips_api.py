@@ -46,8 +46,6 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
     if not offline:
         html = trips_client.send_query(text, service_endpoint)
         xml = trips_client.get_xml(html)
-        if save_xml_name:
-            trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
     else:
         if offline_reading:
             try:
@@ -75,6 +73,9 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
                 Once installed, run drum/bin/trips-drum in a separate process.
                 """
             logger.error(msg)
+            return None
+    if save_xml_name:
+        trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
     return process_xml(xml)
 
 
