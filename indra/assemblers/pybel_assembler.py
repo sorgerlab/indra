@@ -81,7 +81,6 @@ class PybelAssembler(object):
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
-
     def _assemble_modification(self, stmt):
         (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
         sub_agent = _get_modified_substrate(stmt)
@@ -109,6 +108,7 @@ class PybelAssembler(object):
                                             obj_edge, stmt.evidence)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
