@@ -240,11 +240,18 @@ def _make_simple_tuple(node_attr):
 
 def _get_evidence(evidence):
     pybel_ev = {pc.EVIDENCE: evidence.text}
+    # If there is a PMID, use it as the citation
     if evidence.pmid:
         citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
                     pc.CITATION_REFERENCE: evidence.pmid}
+    # If no PMID, include the interface and source_api for now--
+    # in general this should probably be in the annotations for all evidence
     else:
-        citation = {}
+        cit_source = evidence.source_api if evidence.source_api else 'Unknown'
+        cit_id = evidence.source_id if evidence.source_id else 'Unknown'
+        cit_ref_str = '%s:%s' % (cit_source, cit_id)
+        citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_OTHER,
+                    pc.CITATION_REFERENCE: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
@@ -260,7 +267,7 @@ structure of bel graph.
 - node/tuple, maps to
   - dict with node/tuples as keys, each one mapped to
     - a dict, with integers (negative integers???) as keys, each one mapped to
-      - a dict with edge information?
+      - a dict with edge information
 
 inner dict has fields such as
 {'annotations': {},
