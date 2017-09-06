@@ -42,3 +42,9 @@ NDEx client (:py:mod:`indra.databases.ndex_client`)
 
 .. automodule:: indra.databases.ndex_client
     :members:
+
+cBio portal client (:py:mod:`indra.databases.cbio_client`)
+----------------------------------------------------------
+
+.. automodule:: indra.databases.cbio_client
+    :members:

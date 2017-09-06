@@ -67,7 +67,7 @@ def get_mutations(study_id, gene_list, mutation_type=None,
     mutation_type : Optional[str]
         The type of mutation to filter to.
         mutation_type can be one of: missense, nonsense, frame_shift_ins,
-                                     frame_shift_del, splice_site
+        frame_shift_del, splice_site
     case_id : Optional[str]
         The case ID within the study to filter to.
 
@@ -306,7 +306,7 @@ def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
     mutation_type : Optional[str]
         The type of mutation to filter to.
         mutation_type can be one of: missense, nonsense, frame_shift_ins,
-                                     frame_shift_del, splice_site
+        frame_shift_del, splice_site
 
     Returns
     -------
@@ -316,7 +316,7 @@ def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
 
         Example:
         {'LOXIMVI_SKIN': {'BRAF': ['V600E', 'I208V']},
-         'SKMEL30_SKIN': {'BRAF': ['D287H', 'E275K']}}
+        'SKMEL30_SKIN': {'BRAF': ['D287H', 'E275K']}}
     """
     mutations = {cl: {g: [] for g in gene_list} for cl in cell_lines}
     for cell_line in cell_lines:
