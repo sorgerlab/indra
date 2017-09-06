@@ -3,33 +3,39 @@ from builtins import dict, str
 import numpy
 import networkx
 
+
+default_probs = {
+    'rand': {
+        'biopax': 0.2,
+        'bel': 0.1,
+        'trips': 0.3,
+        'reach': 0.3,
+        'biogrid': 0.01,
+        'sparser': 0.3,
+        'r3': 0.1,
+        'phosphosite': 0.01,
+        'assertion': 0.0,
+        },
+    'syst': {
+        'biopax': 0.01,
+        'bel': 0.01,
+        'trips': 0.05,
+        'reach': 0.05,
+        'biogrid': 0.01,
+        'sparser': 0.05,
+        'r3': 0.05,
+        'phosphosite': 0.01,
+        'assertion': 0.0,
+        }
+    }
+
+
 class BeliefEngine(object):
     """Assigns beliefs to INDRA Statements based on supporting evidence."""
-    def __init__(self):
-        self.prior_probs = {
-            'rand': {
-                'biopax': 0.2,
-                'bel': 0.1,
-                'trips': 0.3,
-                'reach': 0.3,
-                'biogrid': 0.01,
-                'sparser': 0.3,
-                'r3': 0.1,
-                'phosphosite': 0.01,
-                'assertion': 0.0
-                },
-            'syst': {
-                'biopax': 0.01,
-                'bel': 0.01,
-                'trips': 0.05,
-                'reach': 0.05,
-                'biogrid': 0.01,
-                'sparser': 0.05,
-                'r3': 0.05,
-                'phosphosite': 0.01,
-                'assertion': 0.0
-                }
-            }
+    def __init__(self, prior_probs=None):
+        self.prior_probs = default_probs
+        if prior_probs:
+            self.prior_probs.update(prior_probs)
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
