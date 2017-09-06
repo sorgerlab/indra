@@ -14,6 +14,7 @@ default_probs = {
         'sparser': 0.3,
         'r3': 0.1,
         'phosphosite': 0.01,
+        'ndex': 0.049,
         'assertion': 0.0,
         },
     'syst': {
@@ -25,6 +26,7 @@ default_probs = {
         'sparser': 0.05,
         'r3': 0.05,
         'phosphosite': 0.01,
+        'ndex': 0.01,
         'assertion': 0.0,
         }
     }
