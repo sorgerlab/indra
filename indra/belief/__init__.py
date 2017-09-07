@@ -31,7 +31,28 @@ default_probs = {
 
 
 class BeliefEngine(object):
-    """Assigns beliefs to INDRA Statements based on supporting evidence."""
+    """Assigns beliefs to INDRA Statements based on supporting evidence.
+
+    Parameters
+    ----------
+    prior_probs : Optional[dict[dict]]
+        A dictionary of prior probabilities used to override/extend the
+        default ones. There are two types of prior probabilities: rand and syst
+        corresponding to random error and systematic error rate for each
+        knowledge source. The prior_probs dictionary has the general structure
+        {'rand': {'s1': pr1, ..., 'sn': prn},
+        'syst': {'s1': ps1, ..., 'sn': psn}}
+        where 's1' ... 'sn' are names of input sources and pr1 ... prn and
+        ps1 ... psn are error probabilities.
+        Examples: {'rand': {'some_source': 0.1}} sets the random error rate
+        for some_source to 0.1; {'rand': {''}}
+
+    Attributes
+    ----------
+    prior_probs : dict[dict]
+        A dictionary of prior systematic and random error probabilities for
+        each knowledge source.
+    """
     def __init__(self, prior_probs=None):
         self.prior_probs = default_probs
         if prior_probs:
