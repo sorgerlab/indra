@@ -13,6 +13,7 @@ f = Agent('b', db_refs={'UP': 'P28028', 'TEXT': 'b'})
 g = Agent('g', db_refs={'BE': 'ERK'})
 h = Agent('g', mods=['x', 'y'], mutations=['x', 'y'], activity='x',
                location='nucleus', bound_conditions=['x', 'y', 'z'])
+mapk1 = Agent('MAPK1', db_refs={'HGNC':'6871', 'UP':'P28482'})
 st1 = Phosphorylation(a, b)
 st2 = Phosphorylation(a, d)
 st3 = Phosphorylation(c, d)
@@ -28,6 +29,7 @@ st12 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': True})])
 st13 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': False})])
 st14 = Activation(a, b, 'activity')
 st15 = Activation(a, b, 'kinase')
+st16 = Phosphorylation(a, mapk1)
 st14.supports = [st15]
 st15.supported_by = [st14]
 st1.belief = 0.9
@@ -82,6 +84,17 @@ def test_filter_gene_list_one():
     assert(len(st_out) == 1)
     st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'invalid')
     assert(len(st_out) == 2)
+
+def test_filter_gene_list_families():
+    stmts_out = ac.filter_gene_list([st10, st16], ['MAPK1'], 'one',
+                                    allow_families=False)
+    assert len(stmts_out) == 1
+    assert stmts_out[0] == st16
+    stmts_out = ac.filter_gene_list([st10, st16], ['MAPK1'], 'one',
+                                    allow_families=True)
+    assert len(stmts_out) == 2
+    assert st10 in stmts_out
+    assert st16 in stmts_out
 
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
@@ -234,3 +247,7 @@ def test_filter_mutation_status():
     deletions = ['a']
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
     assert(len(st_out) == 0)
+
+
+if __name__ == '__main__':
+    test_filter_gene_list_families()
