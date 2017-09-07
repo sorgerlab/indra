@@ -4,6 +4,7 @@ import logging
 import itertools
 import rdflib.namespace
 from copy import deepcopy
+from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
 
@@ -104,7 +105,7 @@ class Expander(object):
             # Create an Evidence object for the statement with the URI of the
             # complex as the source_id
             ev = Evidence(source_api='bioentities', source_id=complex)
-            subunit_agents = [self._agent_from_uri(su) for su in subunits]
+            subunit_agents = [_agent_from_uri(su) for su in subunits]
             complex_stmt = Complex(subunit_agents, evidence=[ev])
             complex_stmts.append(complex_stmt)
         return complex_stmts
@@ -114,10 +115,11 @@ class Expander(object):
         expanded_complexes = self.expand_families(complex_stmts)
         return expanded_complexes
 
-    def _agent_from_uri(self, uri):
-        ag_ns, ag_id = self.entities.ns_id_from_uri(uri)
-        agent = _agent_from_ns_id(ag_ns, ag_id)
-        return agent
+
+def _agent_from_uri(uri):
+    ag_ns, ag_id = HierarchyManager.ns_id_from_uri(uri)
+    agent = _agent_from_ns_id(ag_ns, ag_id)
+    return agent
 
 
 def _agent_from_ns_id(ag_ns, ag_id):
