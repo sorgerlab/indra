@@ -14,6 +14,7 @@ the next level in the hierarchy are the following classes:
 - :py:class:`Translocation`
 - :py:class:`Gef`
 - :py:class:`Gap`
+- :py:class:`Conversion`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
@@ -73,17 +74,17 @@ of context specified on them including
 - an activity state (:py:class:`ActivityCondition`), and
 - cellular location
 
-The *active* form of an agent (in terms
-of its post-translational modifications or bound state) is indicated by an
-instance of the class :py:class:`ActiveForm`.
+The *active* form of an agent (in terms of its post-translational modifications
+or bound state) is indicated by an instance of the class
+:py:class:`ActiveForm`.
 
 Agents also carry grounding information which links them to database entries.
 These database references are represented as a dictionary in the `db_refs`
 attribute of each Agent. The dictionary can have multiple entries. For
-instance, INDRA's input Processors produce genes and proteins that carry
-both UniProt and HGNC IDs in db_refs, whenever possible. Bioentities provides
-a name space for protein families that are typically used in the literature.
-More information about Bioentities can be found here:
+instance, INDRA's input Processors produce genes and proteins that carry both
+UniProt and HGNC IDs in db_refs, whenever possible. Bioentities provides a name
+space for protein families that are typically used in the literature.  More
+information about Bioentities can be found here:
 https://github.com/sorgerlab/bioentities
 
 +------------------------+------------------+--------------------------+
