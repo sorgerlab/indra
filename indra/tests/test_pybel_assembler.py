@@ -122,6 +122,39 @@ def test_activation():
         assert edge_data == edge
 
 
+def test_inhibition():
+    braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt = Inhibition(braf_kin, mek, 'kinase')
+    edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
+             pc.SUBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'kin',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
+             pc.OBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'kin',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 2
+    assert braf_node in belgraph
+    assert belgraph.node[braf_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'BRAF'}
+    assert belgraph.node[map2k1_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'MAP2K1'}
+    assert belgraph.number_of_edges() == 1
+    _, _, edge_data = belgraph.edges(data=True)[0]
+    assert edge_data == edge
+
+
 def test_increase_amount():
     tp53 = Agent('TP53', db_refs={'HGNC': '11998'})
     mdm2 = Agent('MDM2', db_refs={'HGNC': '6973'})

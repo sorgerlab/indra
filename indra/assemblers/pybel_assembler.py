@@ -137,6 +137,9 @@ def _get_modified_substrate(mod_stmt):
 def _get_activated_object(reg_stmt):
     act_agent = deepcopy(reg_stmt.obj)
     ac = reg_stmt._get_activity_condition()
+    # We set is_active to True here since the polarity is encoded
+    # in the edge (decreases/increases)
+    ac.is_active = True
     act_agent.activity = ac
     return act_agent
 
