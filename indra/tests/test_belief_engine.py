@@ -1,8 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package
+from indra.belief import _get_belief_package, default_probs
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -181,3 +182,40 @@ def test_get_belief_package3():
     assert(len(package) == 3)
     assert(set([p[0] for p in package]) == set([0.6, 0.7, 0.8]))
 
+def test_default_probs():
+    """Make sure default probs are set with empty constructor."""
+    be = BeliefEngine()
+    for err_type in ('rand', 'syst'):
+        for k, v in be.prior_probs[err_type].items():
+            assert default_probs[err_type][k] == v
+
+def test_default_probs_override():
+    """Make sure default probs are overriden by constructor argument."""
+    be = BeliefEngine(prior_probs={'rand': {'assertion': 0.5}})
+    for err_type in ('rand', 'syst'):
+        for k, v in be.prior_probs[err_type].items():
+            if err_type == 'rand' and k == 'assertion':
+                assert v == 0.5
+            else:
+                assert default_probs[err_type][k] == v
+
+def test_default_probs_extend():
+    """Make sure default probs are extended by constructor argument."""
+    be = BeliefEngine(prior_probs={'rand': {'new_source': 0.1},
+                                   'syst': {'new_source': 0.05}})
+    for err_type in ('rand', 'syst'):
+        assert 'new_source' in be.prior_probs[err_type]
+        for k, v in be.prior_probs[err_type].items():
+            if err_type == 'rand' and k == 'new_source':
+                assert v == 0.1
+            elif err_type == 'syst' and k == 'new_source':
+                assert v == 0.05
+            else:
+                assert default_probs[err_type][k] == v
+
+@raises(Exception)
+def test_check_prior_probs():
+    be = BeliefEngine()
+    st = Phosphorylation(None, Agent('ERK'),
+                         evidence=[Evidence(source_api='xxx')])
+    be.set_prior_probs([st])

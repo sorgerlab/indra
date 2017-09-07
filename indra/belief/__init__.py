@@ -3,33 +3,60 @@ from builtins import dict, str
 import numpy
 import networkx
 
+
+default_probs = {
+    'rand': {
+        'biopax': 0.2,
+        'bel': 0.1,
+        'trips': 0.3,
+        'reach': 0.3,
+        'biogrid': 0.01,
+        'sparser': 0.3,
+        'r3': 0.1,
+        'phosphosite': 0.01,
+        'assertion': 0.0,
+        },
+    'syst': {
+        'biopax': 0.01,
+        'bel': 0.01,
+        'trips': 0.05,
+        'reach': 0.05,
+        'biogrid': 0.01,
+        'sparser': 0.05,
+        'r3': 0.05,
+        'phosphosite': 0.01,
+        'assertion': 0.0,
+        }
+    }
+
+
 class BeliefEngine(object):
-    """Assigns beliefs to INDRA Statements based on supporting evidence."""
-    def __init__(self):
-        self.prior_probs = {
-            'rand': {
-                'biopax': 0.2,
-                'bel': 0.1,
-                'trips': 0.3,
-                'reach': 0.3,
-                'biogrid': 0.01,
-                'sparser': 0.3,
-                'r3': 0.1,
-                'phosphosite': 0.01,
-                'assertion': 0.0
-                },
-            'syst': {
-                'biopax': 0.01,
-                'bel': 0.01,
-                'trips': 0.05,
-                'reach': 0.05,
-                'biogrid': 0.01,
-                'sparser': 0.05,
-                'r3': 0.05,
-                'phosphosite': 0.01,
-                'assertion': 0.0
-                }
-            }
+    """Assigns beliefs to INDRA Statements based on supporting evidence.
+
+    Parameters
+    ----------
+    prior_probs : Optional[dict[dict]]
+        A dictionary of prior probabilities used to override/extend the
+        default ones. There are two types of prior probabilities: rand and syst
+        corresponding to random error and systematic error rate for each
+        knowledge source. The prior_probs dictionary has the general structure
+        {'rand': {'s1': pr1, ..., 'sn': prn},
+        'syst': {'s1': ps1, ..., 'sn': psn}}
+        where 's1' ... 'sn' are names of input sources and pr1 ... prn and
+        ps1 ... psn are error probabilities.
+        Examples: {'rand': {'some_source': 0.1}} sets the random error rate
+        for some_source to 0.1; {'rand': {''}}
+
+    Attributes
+    ----------
+    prior_probs : dict[dict]
+        A dictionary of prior systematic and random error probabilities for
+        each knowledge source.
+    """
+    def __init__(self, prior_probs=None):
+        self.prior_probs = default_probs
+        if prior_probs:
+            self.prior_probs.update(prior_probs)
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -47,6 +74,7 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
+        self._check_prior_probs(statements)
         for st in statements:
             sources = [ev.source_api for ev in st.evidence]
             uniq_sources = numpy.unique(sources)
@@ -119,6 +147,18 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
+
+    def _check_prior_probs(self, statements):
+        """Check that we have probabilities  for sources in statements."""
+        sources = set()
+        for stmt in statements:
+            sources |= set([ev.source_api for ev in stmt.evidence])
+        for err_type in ('rand', 'syst'):
+            for source in sources:
+                if source not in self.prior_probs[err_type]:
+                    msg = 'BeliefEngine missing probability parameter' + \
+                        'for source: %s' % source
+                    raise Exception(msg)
 
 
 def _get_belief_package(stmt, n=1):
