@@ -6,7 +6,7 @@ from indra.db import DatabaseManager
 from nose import SkipTest
 from nose.tools import assert_equal
 from sqlalchemy.exc import IntegrityError
-from indra.db.populate_content import initialize_medline, initialize_pmc_oa
+from indra.db.populate_content import Medline, PmcOA, Manuscripts
 
 TEST_FILE = 'indra_test.db'
 TEST_HOST = 'sqlite:///' + TEST_FILE
@@ -17,7 +17,6 @@ START_SUCCESS = True
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
 #==============================================================================
-
 def assert_contents_equal(list1, list2, msg = None):
     "Check that the contenst of two lists are the same, regardless of order."
     res = set(list1) == set(list2)
@@ -41,7 +40,6 @@ def startup():
 #==============================================================================
 # The following are tests for the database manager itself.
 #==============================================================================
-
 def test_startup():
     "Test the startup function."
     # Cleanup from the last run, if necessary.
@@ -65,12 +63,42 @@ def test_startup():
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
 
-def test_download_baseline():
-    "Tests whether we can download a baseline xml file."
+def test_full_upload():
+    "Test whether we can perform a full upload."
+    # This uses a specially curated sample directory designed to access all code
+    # paths that the real system might experience, but on a much smaller (thus
+    # faster) scale. Errors in the ftp service will not be caught by this test.
     db = startup()
-    #initialize_medline(db) # Just make sure it doesn't die.
-    initialize_pmc_oa(db)
+    loc_path = 'test_ftp'
+    Medline(ftp_url=loc_path, local=True).populate(db)
+    tr_list = db.select('text_ref')
+    assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
+        'All text_refs MUST have pmids by now.'
+    #assert all([hasattr(tr, 'pmcid') for tr in tr_list]),\
+    #    'All text_refs should have pmcids at this point.' 
+    PmcOA(ftp_url=loc_path, local=True).populate(db)
+    Manuscripts(ftp_url=loc_path, local=True).populate(db)
     db._clear()
+
+def test_ftp_service():
+    "Test the progenitor childrens' ftp access."
+    cases = [
+        ('.csv', 'csv_as_dict'), 
+        #('.xml.gz', 'xml_file'),
+        ('.txt', 'file')
+        ]
+    for Child in [Medline, PmcOA, Manuscripts]:
+        c = Child()
+        files = c.ftp_ls()
+        for end, meth in cases:
+            rel_files = [f for f in files if f.endswith(end)]
+            # TODO: check metadata to choose small files.
+            if len(rel_files) > 0:
+                file = rel_files[0]
+                ret = getattr(c, 'get_' + meth)(file)
+                assert ret is not None,\
+                    "Failed to load %s from %s." % (file, Child.__name__)
+        # TODO: test the download.
 
 def test_create_tables():
     "Test the create_tables feature"
