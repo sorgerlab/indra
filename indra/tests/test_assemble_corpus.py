@@ -249,7 +249,3 @@ def test_filter_mutation_status():
     deletions = ['a']
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
     assert(len(st_out) == 0)
-
-
-if __name__ == '__main__':
-    test_filter_gene_list_families()
