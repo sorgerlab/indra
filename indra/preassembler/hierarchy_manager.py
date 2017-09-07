@@ -8,6 +8,8 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
+from indra.preassembler.make_entity_hierarchy import ns_map
+
 logger = logging.getLogger('hierarchy_manager')
 
 class HierarchyManager(object):
@@ -325,6 +327,19 @@ class HierarchyManager(object):
         else:
             raise ValueError('Unknown namespace %s' % ns)
 
+    @staticmethod
+    def ns_id_from_uri(uri):
+        sep_ix = uri.rfind('/') + 1
+        ag_ns = uri[0:sep_ix]
+        ag_id = uri[sep_ix:]
+        # Handle one special case here for HGNC IDs
+        if ag_id.startswith('HGNC:'):
+            ag_ns = 'http://identifiers.org/hgnc.symbol/'
+            ag_id = hgnc_client.get_hgnc_name(db_id[5:])
+        ag_ns_name = ns_map.get(ag_ns)
+        if ag_ns_name is None:
+            raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
+        return (ag_ns_name, ag_id)
 
 # Load the default entity and modification hierarchies
 entity_file_path = os.path.join(os.path.dirname(__file__),

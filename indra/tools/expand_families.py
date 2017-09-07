@@ -6,7 +6,6 @@ import rdflib.namespace
 from copy import deepcopy
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
-from indra.preassembler.make_entity_hierarchy import  ns_map
 
 logger = logging.getLogger('expand_families')
 
@@ -81,7 +80,7 @@ class Expander(object):
         # Parse children URI list into namespaces and ID
         children_parsed = []
         for child_uri in children_uris:
-            child_ns, child_id = _ns_id_from_uri(child_uri)
+            child_ns, child_id = self.entities.ns_id_from_uri(child_uri)
             # If ns_filter is None, add in all children
             if ns_filter is None:
                 children_parsed.append((child_ns, child_id))
@@ -105,7 +104,7 @@ class Expander(object):
             # Create an Evidence object for the statement with the URI of the
             # complex as the source_id
             ev = Evidence(source_api='bioentities', source_id=complex)
-            subunit_agents = [_agent_from_uri(su) for su in subunits]
+            subunit_agents = [self._agent_from_uri(su) for su in subunits]
             complex_stmt = Complex(subunit_agents, evidence=[ev])
             complex_stmts.append(complex_stmt)
         return complex_stmts
@@ -114,6 +113,11 @@ class Expander(object):
         complex_stmts = self.complexes_from_hierarchy()
         expanded_complexes = self.expand_families(complex_stmts)
         return expanded_complexes
+
+    def _agent_from_uri(self, uri):
+        ag_ns, ag_id = self.entities.ns_id_from_uri(uri)
+        agent = _agent_from_ns_id(ag_ns, ag_id)
+        return agent
 
 
 def _agent_from_ns_id(ag_ns, ag_id):
@@ -132,26 +136,9 @@ def _agent_from_ns_id(ag_ns, ag_id):
     return Agent(ag_name, db_refs=db_refs)
 
 
-def _agent_from_uri(uri):
-    ag_ns, ag_id = _ns_id_from_uri(uri)
-    agent = _agent_from_ns_id(ag_ns, ag_id)
-    return agent
 
 
 class UnknownNamespaceException(Exception):
     pass
 
 
-def _ns_id_from_uri(uri):
-    try:
-        (ag_ns, ag_id) = rdflib.namespace.split_uri(uri)
-    except Exception:
-        # Handle one special case here for HGNC IDs
-        db_id = uri.split('/')[-1]
-        if db_id.startswith('HGNC:'):
-            ag_ns = 'http://identifiers.org/hgnc.symbol/'
-            ag_id = hgnc_client.get_hgnc_name(db_id[5:])
-    ag_ns_name = ns_map.get(ag_ns)
-    if ag_ns_name is None:
-        raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
-    return (ag_ns_name, ag_id)
