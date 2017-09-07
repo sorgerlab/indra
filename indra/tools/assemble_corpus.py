@@ -9,7 +9,7 @@ except ImportError:
     # Python 3
     import pickle
 import logging
-from copy import deepcopy
+from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
@@ -443,7 +443,8 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
+def filter_gene_list(stmts_in, gene_list, policy, allow_families=True,
+                     **kwargs):
     """Return statements that contain genes given in a list.
 
     Parameters
@@ -457,6 +458,9 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
         statements that contain at least one of the list of genes and
         possibly others not in the list "all": keep statements that only
         contain genes given in the list
+    allow_families : bool
+        Will include statements involving Bioentities families containing one
+        of the genes in the gene list.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -469,15 +473,25 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
         genes_str = ', '.join(gene_list)
-        logger.info('Filtering %d statements for ones containing "%s" of: %s...' %
-                (len(stmts_in), policy, genes_str))
+        logger.info('Filtering %d statements for ones containing "%s" of: '
+                    '%s...' % (len(stmts_in), policy, genes_str))
+    # If we're allowing families, make a list of all Bioentities IDs that
+    # contain members of the gene list, and add them to the filter list
+    filter_list = copy(gene_list)
+    if allow_families:
+        for hgnc_name in gene_list:
+            gene_uri = hierarchies['entity'].get_uri('HGNC', hgnc_name)
+            parents = hierarchies['entity'].get_parents(gene_uri)
+            for par_uri in parents:
+                ns, id = hierarchies['entity'].ns_id_from_uri(par_uri)
+                filter_list.append(id)
     stmts_out = []
     if policy == 'one':
         for st in stmts_in:
             found_gene = False
             for agent in st.agent_list():
                 if agent is not None:
-                    if agent.name in gene_list:
+                    if agent.name in filter_list:
                         found_gene = True
                         break
             if found_gene:
@@ -487,7 +501,7 @@ def filter_gene_list(stmts_in, gene_list, policy, **kwargs):
             found_genes = True
             for agent in st.agent_list():
                 if agent is not None:
-                    if agent.name not in gene_list:
+                    if agent.name not in filter_list:
                         found_genes = False
                         break
             if found_genes:
