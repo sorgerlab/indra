@@ -329,14 +329,13 @@ class HierarchyManager(object):
 
     @staticmethod
     def ns_id_from_uri(uri):
-        try:
-            (ag_ns, ag_id) = rdflib.namespace.split_uri(uri)
-        except Exception:
-            # Handle one special case here for HGNC IDs
-            db_id = uri.split('/')[-1]
-            if db_id.startswith('HGNC:'):
-                ag_ns = 'http://identifiers.org/hgnc.symbol/'
-                ag_id = hgnc_client.get_hgnc_name(db_id[5:])
+        sep_ix = uri.rfind('/') + 1
+        ag_ns = uri[0:sep_ix]
+        ag_id = uri[sep_ix:]
+        # Handle one special case here for HGNC IDs
+        if ag_id.startswith('HGNC:'):
+            ag_ns = 'http://identifiers.org/hgnc.symbol/'
+            ag_id = hgnc_client.get_hgnc_name(db_id[5:])
         ag_ns_name = ns_map.get(ag_ns)
         if ag_ns_name is None:
             raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
