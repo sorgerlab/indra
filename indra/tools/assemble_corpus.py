@@ -443,7 +443,7 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
-def filter_gene_list(stmts_in, gene_list, policy, allow_families=True,
+def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                      **kwargs):
     """Return statements that contain genes given in a list.
 
@@ -458,9 +458,9 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=True,
         statements that contain at least one of the list of genes and
         possibly others not in the list "all": keep statements that only
         contain genes given in the list
-    allow_families : bool
+    allow_families : Optional[bool]
         Will include statements involving Bioentities families containing one
-        of the genes in the gene list.
+        of the genes in the gene list. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
