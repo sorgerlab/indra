@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.belief import _get_belief_package, default_probs
@@ -211,3 +212,10 @@ def test_default_probs_extend():
                 assert v == 0.05
             else:
                 assert default_probs[err_type][k] == v
+
+@raises(Exception)
+def test_check_prior_probs():
+    be = BeliefEngine()
+    st = Phosphorylation(None, Agent('ERK'),
+                         evidence=[Evidence(source_api='xxx')])
+    be.set_prior_probs([st])

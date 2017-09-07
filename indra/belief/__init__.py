@@ -74,6 +74,7 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
+        self._check_prior_probs(statements)
         for st in statements:
             sources = [ev.source_api for ev in st.evidence]
             uniq_sources = numpy.unique(sources)
@@ -146,6 +147,18 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
+
+    def _check_prior_probs(self, statements):
+        """Check that we have probabilities  for sources in statements."""
+        sources = set()
+        for stmt in statements:
+            sources |= set([ev.source_api for ev in stmt.evidence])
+        for err_type in ('rand', 'syst'):
+            for source in sources:
+                if source not in self.prior_probs[err_type]:
+                    msg = 'BeliefEngine missing probability parameter' + \
+                        'for source: %s' % source
+                    raise Exception(msg)
 
 
 def _get_belief_package(stmt, n=1):
