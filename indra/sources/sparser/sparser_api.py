@@ -58,8 +58,8 @@ def process_text(text, output_format='json'):
 
 def process_nxml_str(nxml_str, output_format='json'):
     tmp_fname = 'PMC12345.nxml'
-    with open(tmp_fname, 'w') as fh:
-        fh.write(nxml_str)
+    with open(tmp_fname, 'wb') as fh:
+        fh.write(nxml_str.encode('utf-8'))
     return process_nxml_file(tmp_fname, output_format)
 
 
