@@ -2191,7 +2191,12 @@ def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
              subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
              subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
              kf_bind)
-    add_rule_to_model(model, r)
+
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
+    if stmt.subj:
+        anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
+    add_rule_to_model(model, r, anns)
 
 def decreaseamount_assemble_one_step(stmt, model, agent_set):
     obj_pattern = get_monomer_pattern(model, stmt.obj)
@@ -2218,6 +2223,9 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set):
             subj_pattern + obj_pattern >> subj_pattern,
             kf_one_step_degrade)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
+    if stmt.subj:
+        anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
 decreaseamount_assemble_default = decreaseamount_assemble_one_step
@@ -2251,6 +2259,9 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
             subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
             kf_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
+    if stmt.subj:
+        anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
 def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
@@ -2308,6 +2319,9 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
         r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
                  synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
+    if stmt.subj:
+        anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
 increaseamount_monomers_default = increaseamount_monomers_one_step
