@@ -66,6 +66,7 @@ install:
 script:
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-gordo-1.3.3-SNAPSHOT.jar
+  - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   - cd $TRAVIS_BUILD_DIR
   - nosetests indra
      -v --with-doctest --with-doctest-ignore-unicode
