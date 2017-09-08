@@ -31,7 +31,7 @@ class SparserJSONProcessor(object):
                         logger.error('Invalid residue: %s' % residue)
                     else:
                         json_stmt['residue'] = residue[0]
-            elif json_stmt.get('type') == 'Activation':
+            elif json_stmt.get('type') in ('Activation', 'Inhibition'):
                 obj_activity = json_stmt.get('obj_activity')
                 if isinstance(obj_activity, list):
                     if len(obj_activity) != 1:
@@ -39,7 +39,7 @@ class SparserJSONProcessor(object):
                     else:
                         json_stmt['obj_activity'] = obj_activity[0]
                 obj = json_stmt.get('obj')
-                if isinstance(obj, list):
+                if isinstance(obj, (list, str)):
                   continue
             elif json_stmt.get('type') == 'Translocation':
                 # Fix locations if possible
@@ -66,7 +66,10 @@ class SparserJSONProcessor(object):
                 continue
             # Skip RegulateActivity if object is None
             if isinstance(stmt, RegulateActivity):
-                if stmt.obj is None:
+                if stmt.obj is None or stmt.subj is None:
+                    continue
+            if isinstance(stmt, Modification):
+                if stmt.sub is None:
                     continue
 
             # Step 4: Fix Agent names and grounding
