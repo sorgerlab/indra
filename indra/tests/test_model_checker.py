@@ -882,6 +882,20 @@ def test_gap_rasgtp_phos():
                                    ('MEK_phospho_p_obs', -1)]]
 
 
+def test_increase_amount():
+    tp53 = Agent('TP53', db_refs={'HGNC': '1'})
+    x = Agent('X', db_refs={'HGNC': 2})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '3'})
+    stmts = [IncreaseAmount(tp53, x), IncreaseAmount(x, mdm2)]
+    stmt_to_check = IncreaseAmount(tp53, mdm2)
+    pysba = PysbAssembler()
+    pysba.add_statements(stmts)
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    return checks
+
+
 def test_stmt_from_rule():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
     erk = Agent('ERK2', db_refs={'HGNC': '6871'})
@@ -1065,6 +1079,9 @@ def test_prune_influence_map():
     im = mc.get_im()
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
+
+if __name__ == '__main__':
+    checks = test_increase_amount()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
