@@ -49,6 +49,7 @@ def process_nxml_file(fname, output_format='json'):
             return process_xml(xml_str)
 
 def process_text(text, output_format='json'):
+    text = _escape_xml(text)
     header = '<?xml version="1.0" encoding="UTF-8" ?>' + \
         '<OAI-PMH><article><body><sec id="s1"><p>'
     footer = '</p></sec></body></article></OAI-PMH>'
@@ -73,3 +74,10 @@ def _process_elementtree(tree):
     sp.get_modifications()
     sp.get_activations()
     return sp
+
+def _escape_xml(text):
+    esc_map = {'"': '&quot;', '&': '&amp;', '\'': '&apos;',
+               '<': '&lt;', '>': '&gt;'}
+    for orig, new in esc_map.items():
+        text = text.replace(orig, new)
+    return text
