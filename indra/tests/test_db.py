@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from os import listdir, remove
-from indra.db import DatabaseManager
+from indra.db import DatabaseManager, get_aws_db
 from nose import SkipTest
 from nose.tools import assert_equal
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,8 @@ TEST_FILE = 'indra_test.db'
 TEST_HOST = 'sqlite:///' + TEST_FILE
 
 #TODO: implement setup-teardown system.
-START_SUCCESS = True
+LOCAL_START_SUCCESS = True
+REMOTE_START_SUCCESS = True
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -26,9 +27,9 @@ def assert_contents_equal(list1, list2, msg = None):
     assert res, err_msg
 
 
-def startup():
+def local_startup():
     "Set up the database for testing."
-    if not START_SUCCESS:
+    if not LOCAL_START_SUCCESS:
         raise SkipTest("Could not create test table.")
     
     db = DatabaseManager(TEST_HOST, sqltype='sqlite')
@@ -37,24 +38,164 @@ def startup():
     
     return db
 
+def remote_startup():
+    "Set up the database for testing."
+    if not REMOTE_START_SUCCESS:
+        raise SkipTest("Could not create test table.")
+    
+    db = get_aws_db()
+    db.grab_session()
+    db._clear()
+    
+    return db
+
 #==============================================================================
 # The following are tests for the database manager itself.
 #==============================================================================
-def test_startup():
-    "Test the startup function."
+def test_local_startup():
+    "Test the local_startup function."
     # Cleanup from the last run, if necessary.
     if TEST_FILE in listdir('.'):
         remove(TEST_FILE)
     try:
-        db = startup()
+        db = local_startup()
         db.create_tables()
         assert TEST_FILE in listdir('.'), "Test database not created"
         assert db.session is not None, "Could not get db session."
     except:
-        global START_SUCCESS
-        START_SUCCESS = False
+        global LOCAL_START_SUCCESS
+        LOCAL_START_SUCCESS = False
         raise
     return
+
+
+def test_remote_startup():
+    "Test the remote_startup function."
+    # Cleanup from the last run, if necessary.
+    try:
+        db = remote_startup()
+        db.create_tables()
+        assert db.session is not None, "Could not get db session."
+    except:
+        global REMOTE_START_SUCCESS
+        REMOTE_START_SUCCESS = False
+        raise
+    return
+
+def test_create_tables():
+    "Test the create_tables feature"
+    db = local_startup()
+    db.create_tables()
+    assert_contents_equal(db.get_active_tables(), db.get_tables())
+
+
+def test_insert_and_query_pmid():
+    "Test that we can add a text_ref and get the text_ref back."
+    db = local_startup()
+    pmid = '1234'
+    text_ref_id = db.insert('text_ref', pmid=pmid)
+    entries = db.select('text_ref', db.TextRef.pmid==pmid)
+    assert_equal(len(entries), 1, "One thing inserted, multiple entries found.")
+    assert_equal(entries[0].pmid, pmid)#, "Got back the wrong pmid.")
+    assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
+
+
+def test_uniqueness_text_ref_doi_pmid():
+    "Test uniqueness enforcement behavior for text_ref insertion."
+    db = local_startup()
+    pmid = '1234'
+    doi = 'foo/1234'
+    db.insert('text_ref', doi=doi, pmid=pmid)
+    try:
+        db.insert('text_ref', doi=doi, pmid=pmid)
+    except IntegrityError:
+        return # PASS
+    finally:
+        db._clear()
+    assert False, "Uniqueness was not enforced."
+
+
+def test_uniqueness_text_ref_url():
+    "Test whether the uniqueness imposed on the url of text_refs is enforced."
+    db = local_startup()
+    url = 'http://foobar.com'
+    db.insert('text_ref', url=url)
+    try:
+        db.insert('text_ref', url=url)
+    except IntegrityError:
+        return # PASS
+    assert False, "Uniqueness was not enforced."
+
+
+def test_get_abstracts():
+    "Test the ability to get a list of abstracts."
+    db = local_startup()
+    
+    # Create a world of abstracts.
+    ref_id_list = db.insert_many(
+        'text_ref',
+        [
+            {'pmid':'1234'}, # searched for, just abstract.
+            {'pmid':'5678'}, # searched for, abstract and full_text
+            {'doi':'foo/234'}, # content, but no pmid.
+            {'pmid':'2468'}, # not searched for.
+            {'pmid':'1357'} # searched for, but no conent.
+            ]
+        )
+    found_abst_fmt = 'This should be found alongside pmid %s.'
+    not_found_fmt = 'If found, something is probably wrong with %s.'
+    db.insert_many(
+        'text_content',
+        [
+            {
+                'text_ref_id':ref_id_list[0], #pmid=1234
+                'source':'God',
+                'format':'stone tablet',
+                'text_type':'abstract',
+                'content':(found_abst_fmt % '1234').encode('utf8')
+                },
+            {
+                'text_ref_id':ref_id_list[1], #pmid=5678
+                'source':'Satan',
+                'format':'blood',
+                'text_type':'full_content',
+                'content':(not_found_fmt % 'text_type filter').encode('utf8')
+                },
+            {
+                'text_ref_id':ref_id_list[1], #pmid=5678
+                'source':'Satan',
+                'format':'blood',
+                'text_type':'abstract',
+                'content':(found_abst_fmt % '5678').encode('utf8')
+                },
+            {
+                'text_ref_id':ref_id_list[2], #no pmid
+                'source':'Nature',
+                'format':'tears',
+                'text_type':'abstract',
+                'content':(not_found_fmt % 'text_ref_id filter').encode('utf8')
+                },
+            {
+                'text_ref_id':ref_id_list[3], #pmid=1357
+                'source':'A Voice Inside Your Head',
+                'format':'whispers',
+                'text_type':'abstract',
+                'content':(not_found_fmt % 'pmid filter').encode('utf8')
+                }
+            ]
+        )
+    
+    expected = [(pmid, (found_abst_fmt % pmid).encode('utf8')) for pmid in ['1234', '5678']]
+    received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
+    assert_contents_equal(expected, received, "Did not get expected abstracts.")
+
+
+def test_get_all_pmids():
+    "Test whether we get all the pmids."
+    db = local_startup()
+    db.insert_many('text_ref', [{'pmid':'1234'}, {'pmid':'5678'}])
+    pmid_list = db.get_all_pmids()
+    assert_contents_equal(pmid_list, ['1234','5678'])
 
 
 #==============================================================================
@@ -63,12 +204,12 @@ def test_startup():
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
 
-def test_full_upload():
-    "Test whether we can perform a full upload."
+def test_full_local_upload():
+    "Test whether we can perform a targeted upload to a local db."
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
-    db = startup()
+    db = local_startup()
     loc_path = 'test_ftp'
     Medline(ftp_url=loc_path, local=True).populate(db)
     tr_list = db.select('text_ref')
@@ -80,8 +221,28 @@ def test_full_upload():
     Manuscripts(ftp_url=loc_path, local=True).populate(db)
     db._clear()
 
+
+def test_full_remote_upload():
+    "Test whether we can perform a targeted upload to aws."
+    # This uses a specially curated sample directory designed to access all code
+    # paths that the real system might experience, but on a much smaller (thus
+    # faster) scale. Errors in the ftp service will not be caught by this test.
+    db = remote_startup()
+    loc_path = 'test_ftp'
+    Medline(ftp_url=loc_path, local=True).populate(db)
+    tr_list = db.select('text_ref')
+    assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
+        'All text_refs MUST have pmids by now.'
+    #assert all([hasattr(tr, 'pmcid') for tr in tr_list]),\
+    #    'All text_refs should have pmcids at this point.' 
+    PmcOA(ftp_url=loc_path, local=True).populate(db)
+    Manuscripts(ftp_url=loc_path, local=True).populate(db)
+    db._clear()
+
+
 def test_ftp_service():
     "Test the progenitor childrens' ftp access."
+    raise SkipTest()
     cases = [
         ('.csv', 'csv_as_dict'), 
         #('.xml.gz', 'xml_file'),
@@ -99,122 +260,6 @@ def test_ftp_service():
                 assert ret is not None,\
                     "Failed to load %s from %s." % (file, Child.__name__)
         # TODO: test the download.
-
-def test_create_tables():
-    "Test the create_tables feature"
-    db = startup()
-    db.create_tables()
-    assert_contents_equal(db.get_active_tables(), db.get_tables())
-
-
-def test_insert_and_query_pmid():
-    "Test that we can add a text_ref and get the text_ref back."
-    db = startup()
-    pmid = '1234'
-    text_ref_id = db.insert('text_ref', pmid=pmid)
-    entries = db.select('text_ref', db.TextRef.pmid==pmid)
-    assert_equal(len(entries), 1, "One thing inserted, multiple entries found.")
-    assert_equal(entries[0].pmid, pmid)#, "Got back the wrong pmid.")
-    assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
-
-
-def test_uniqueness_text_ref_doi_pmid():
-    "Test uniqueness enforcement behavior for text_ref insertion."
-    db = startup()
-    pmid = '1234'
-    doi = 'foo/1234'
-    db.insert('text_ref', doi=doi, pmid=pmid)
-    try:
-        db.insert('text_ref', doi=doi, pmid=pmid)
-    except IntegrityError:
-        return # PASS
-    finally:
-        db._clear()
-    assert False, "Uniqueness was not enforced."
-
-
-def test_uniqueness_text_ref_url():
-    "Test whether the uniqueness imposed on the url of text_refs is enforced."
-    db = startup()
-    url = 'http://foobar.com'
-    db.insert('text_ref', url=url)
-    try:
-        db.insert('text_ref', url=url)
-    except IntegrityError:
-        return # PASS
-    assert False, "Uniqueness was not enforced."
-
-
-def test_get_abstracts():
-    "Test the ability to get a list of abstracts."
-    db = startup()
-    
-    # Create a world of abstracts.
-    ref_id_list = db.insert_many(
-        'text_ref',
-        [
-            {'pmid':'1234'}, # searched for, just abstract.
-            {'pmid':'5678'}, # searched for, abstract and full_text
-            {'doi':'foo/234'}, # content, but no pmid.
-            {'pmid':'2468'}, # not searched for.
-            {'pmid':'1357'} # searched for, but no conent.
-            ]
-        )
-    found_abst_fmt = b'This should be found alongside pmid %s.'
-    not_found_fmt = b'If found, something is probably wrong with %s.'
-    db.insert_many(
-        'text_content',
-        [
-            {
-                'text_ref_id':ref_id_list[0], #pmid=1234
-                'source':'God',
-                'format':'stone tablet',
-                'text_type':'abstract',
-                'content':found_abst_fmt % b'1234'
-                },
-            {
-                'text_ref_id':ref_id_list[1], #pmid=5678
-                'source':'Satan',
-                'format':'blood',
-                'text_type':'full_content',
-                'content':not_found_fmt % b'text_type filter'
-                },
-            {
-                'text_ref_id':ref_id_list[1], #pmid=5678
-                'source':'Satan',
-                'format':'blood',
-                'text_type':'abstract',
-                'content':found_abst_fmt % b'5678'
-                },
-            {
-                'text_ref_id':ref_id_list[2], #no pmid
-                'source':'Nature',
-                'format':'tears',
-                'text_type':'abstract',
-                'content':not_found_fmt % b'text_ref_id filter'
-                },
-            {
-                'text_ref_id':ref_id_list[3], #pmid=1357
-                'source':'A Voice Inside Your Head',
-                'format':'whispers',
-                'text_type':'abstract',
-                'content':not_found_fmt % b'pmid filter'
-                }
-            ]
-        )
-    
-    expected = [(pmid, found_abst_fmt % pmid.encode()) for pmid in ['1234', '5678']]
-    received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
-    assert_contents_equal(expected, received, "Did not get expected abstracts.")
-
-
-def test_get_all_pmids():
-    "Test whether we get all the pmids."
-    db = startup()
-    db.insert_many('text_ref', [{'pmid':'1234'}, {'pmid':'5678'}])
-    pmid_list = db.get_all_pmids()
-    assert_contents_equal(pmid_list, ['1234','5678'])
-
 
 
 

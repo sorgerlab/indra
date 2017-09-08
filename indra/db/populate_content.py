@@ -141,8 +141,11 @@ class Medline(Progenetor):
         tree = self.get_xml_file(xml_file)
         
         # Get the article metadata from the tree
-        article_info = pubmed_client.get_metadata_from_xml_tree(
+        try:
+            article_info = pubmed_client.get_metadata_from_xml_tree(
                         tree, get_abstracts=True, prepend_title=False)
+        except Exception as e:
+            raise e
         print("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
@@ -177,9 +180,9 @@ class Medline(Progenetor):
         pmid_list = list(text_content_info.keys())
         tref_list = db.select(
             'text_ref', 
-            db.TextRef.pmid.in_([p.encode() for p in pmid_list])
+            db.TextRef.pmid.in_([p for p in pmid_list])
             )
-        pmid_tr_dict = {pmid.decode('utf-8'):trid for (pmid, trid) in 
+        pmid_tr_dict = {pmid:trid for (pmid, trid) in 
                         db.get_values(tref_list, ['pmid', 'id'])}
 
         # Add the text_ref IDs to the content to be inserted
@@ -217,7 +220,7 @@ class PmcOA(Progenetor):
         db_conts = {}
         for i, id_type in enumerate(['pmid', 'pmcid']):
             db_conts[id_type] = [
-                e[i].decode('utf8') for e in current_id_list if e[i] is not None
+                e[i] for e in current_id_list if e[i] is not None
                 ]
 
         # Define some helpful functions.
@@ -264,7 +267,7 @@ class PmcOA(Progenetor):
 
         # Process the text content data
         arc_pmcid_list = [
-            tr['pmcid' ].encode('utf8')
+            tr['pmcid' ]
             for tr in tr_data
             ]
         tref_list = db.select(
@@ -272,7 +275,7 @@ class PmcOA(Progenetor):
             db.TextRef.pmcid.in_(arc_pmcid_list)
             )
         pmcid_tr_dict = {
-            pmcid.decode('utf8'):trid for (pmcid, trid) in
+            pmcid:trid for (pmcid, trid) in
             db.get_values(tref_list, ['pmcid', 'id'])
             }
         tc_records = [

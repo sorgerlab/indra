@@ -24,7 +24,7 @@ except:
 from docutils.io import InputError
 #from lxml.includes.xpath import XPATH_INVALID_TYPE
 
-DEFAULT_AWS_HOST = 'indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com'
+DEFAULT_AWS_HOST = 'postgresql://indra_db_user:indra_db_pass@indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com/indra_db'
 
 
 def get_timestamp():
@@ -399,17 +399,8 @@ class DatabaseManager(object):
 
 
 def get_aws_db():
-    try:
-        db = DatabaseManager(DEFAULT_AWS_HOST)
-        db.grab_session()
-    except Exception as e:
-        print("WARNING: Could not connect to aws database due to error:\n%s." % e)
-        class DummyManager(object):
-            def __getattribute__(self, attr_name, *args, **kwargs):
-                print(
-                    "WARNING: Unable to get %s because db could not be loaded." % attr_name
-                    )
-        db = DummyManager()
+    db = DatabaseManager(DEFAULT_AWS_HOST)
+    db.grab_session()
     return db
 
 '''
