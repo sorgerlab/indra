@@ -212,11 +212,14 @@ class ModelChecker(object):
                 self.stmt_to_obs[stmt] = obs_list
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
-                regulated_sub, polarity = \
+                regulated_obj, polarity = \
                         _add_activity_to_agent(stmt.obj, stmt.obj_activity,
                                                stmt.is_activation)
-                obs_list = add_obs_for_agent(regulated_sub)
+                obs_list = add_obs_for_agent(regulated_obj)
                 # Associate this statement with this observable
+                self.stmt_to_obs[stmt] = obs_list
+            elif isinstance(stmt, RegulateAmount):
+                obs_list = add_obs_for_agent(stmt.obj)
                 self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
@@ -290,6 +293,9 @@ class ModelChecker(object):
         elif isinstance(stmt, RegulateActivity):
             return self._check_regulate_activity(stmt, max_paths,
                                                  max_path_length)
+        elif isinstance(stmt, RegulateAmount):
+            return self._check_regulate_amount(stmt, max_paths,
+                                               max_path_length)
         else:
             return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
                               max_paths, max_path_length)
@@ -308,6 +314,16 @@ class ModelChecker(object):
         # This may fail, since there may be no rule in the model activating the
         # object, and the object may not have an "active" site of the
         # appropriate type
+        obs_names = self.stmt_to_obs[stmt]
+        for obs_name in obs_names:
+            return self._find_im_paths(subj_mp, obs_name, target_polarity,
+                                       max_paths, max_path_length)
+
+    def _check_regulate_amount(self, stmt, max_paths, max_path_length):
+        """Check a RegulateAmount statement."""
+        logger.info('Checking stmt: %s' % stmt)
+        subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
+        target_polarity = 1 if isinstance(stmt, IncreaseAmount) else -1
         obs_names = self.stmt_to_obs[stmt]
         for obs_name in obs_names:
             return self._find_im_paths(subj_mp, obs_name, target_polarity,

@@ -882,6 +882,45 @@ def test_gap_rasgtp_phos():
                                    ('MEK_phospho_p_obs', -1)]]
 
 
+def test_increase_amount():
+    tp53 = Agent('TP53', db_refs={'HGNC': '1'})
+    x = Agent('X', db_refs={'HGNC': 2})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '3'})
+    stmts = [IncreaseAmount(tp53, x), IncreaseAmount(x, mdm2)]
+    stmt_to_check = IncreaseAmount(tp53, mdm2)
+    pysba = PysbAssembler()
+    pysba.add_statements(stmts)
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1].paths == [[('TP53_synthesizes_X', 1),
+                                   ('X_synthesizes_MDM2', 1),
+                                   ('MDM2__obs', 1)]]
+
+
+def test_decrease_amount():
+    tp53 = Agent('TP53', db_refs={'HGNC': '1'})
+    tp53u = Agent('TP53', mods=[ModCondition('ubiquitination')],
+                  db_refs={'HGNC': '1'})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '3'})
+    stmts = [IncreaseAmount(tp53, mdm2),
+             Ubiquitination(mdm2, tp53), DecreaseAmount(None, tp53u)]
+    stmt_to_check = DecreaseAmount(tp53, tp53)
+    pysba = PysbAssembler()
+    pysba.add_statements(stmts)
+    pysba.make_model(policies='one_step')
+    mc = ModelChecker(pysba.model, [stmt_to_check])
+    checks = mc.check_model()
+    assert len(checks) == 1
+    assert checks[0][0] == stmt_to_check
+    assert checks[0][1].paths == [[('TP53_synthesizes_MDM2', 1),
+                                   ('MDM2_ubiquitination_TP53_ub', 1),
+                                   ('TP53_ub_degraded', 1),
+                                   ('TP53__obs', -1)]]
+
+
 def test_stmt_from_rule():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
     erk = Agent('ERK2', db_refs={'HGNC': '6871'})
@@ -1065,6 +1104,7 @@ def test_prune_influence_map():
     im = mc.get_im()
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
+
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation

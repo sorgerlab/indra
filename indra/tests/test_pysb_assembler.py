@@ -590,6 +590,16 @@ def test_annotation():
     pa.make_model()
     assert(len(pa.model.annotations) == 5)
 
+def test_annotation_regamount():
+    st1 = IncreaseAmount(Agent('BRAF', db_refs = {'UP': 'P15056'}),
+                         Agent('MAP2K2', db_refs = {'HGNC': '6842'}))
+    st2 = DecreaseAmount(Agent('BRAF', db_refs = {'UP': 'P15056'}),
+                         Agent('MAP2K2', db_refs = {'HGNC': '6842'}))
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2])
+    pa.make_model()
+    assert(len(pa.model.annotations) == 8)
+
 def test_print_model():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
     pa = PysbAssembler()
