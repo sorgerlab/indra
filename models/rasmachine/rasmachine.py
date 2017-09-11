@@ -7,6 +7,7 @@ import yaml
 import time
 import json
 import pytz
+import click
 import shutil
 import tzlocal
 import logging
@@ -34,7 +35,6 @@ try:
 except Exception:
     aws_available = False
 
-model_path = os.path.dirname(os.path.abspath(__file__))
 global_filters = ['grounding', 'prior_one', 'human_only']
 
 logger = logging.getLogger('rasmachine')
@@ -82,8 +82,7 @@ def check_pmids(stmts):
                     logger.warning('Invalid PMID: %s' % ev.pmid)
 
 def process_paper(model_name, pmid):
-    json_path = os.path.join(model_path, model_name,
-                             'jsons', 'PMID%s.json' % pmid)
+    json_path = os.path.join(model_name, 'jsons', 'PMID%s.json' % pmid)
 
     if pmid.startswith('api') or pmid.startswith('PMID'):
         logger.warning('Invalid PMID: %s' % pmid)
@@ -114,7 +113,7 @@ def process_paper(model_name, pmid):
         check_pmids(rp.statements)
     return rp, txt_format
 
-def process_paper_aws(pmid):
+def process_paper_aws(pmid, start_time_local):
     try:
         metadata, content_type = get_full_text(pmid, metadata=True)
     except Exception as e:
@@ -165,7 +164,7 @@ def make_status_message(stats):
                     (abstr_str, mech_str)
     return msg_str
 
-def extend_model(model_name, model, pmids, aws_available=False):
+def extend_model(model_name, model, pmids, start_time_local, aws_available=False):
     npapers = 0
     nabstracts = 0
     nexisting = 0
@@ -182,7 +181,7 @@ def extend_model(model_name, model, pmids, aws_available=False):
                 if not aws_available:
                     rp, txt_format = process_paper(model_name, pmid)
                 else:
-                    rp, txt_format = process_paper_aws(pmid)
+                    rp, txt_format = process_paper_aws(pmid, start_time_local)
                 if rp is not None:
                     if txt_format == 'abstract':
                         nabstracts += 1
@@ -293,7 +292,7 @@ def get_config(config_fname):
     try:
         config = yaml.load(fh)
     except Exception as e:
-        logger.error('Could not parse YAML configuration %s.' % config_name)
+        logger.error('Could not parse YAML configuration %s.' % config_fname)
         raise(e)
 
     return config
@@ -333,31 +332,25 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
-if __name__ == '__main__':
+
+@click.command()
+@click.argument('model_path')
+@click.option('--config')
+def main(model_path, config):
+    """Runs the RAS Machine"""
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
     start_time_local = datetime.datetime.now(tzlocal.get_localzone())
 
-    if len(sys.argv) < 2:
-        logger.error('Model name argument missing')
-        sys.exit()
+    default_config_fname = os.path.join(model_path, 'config.yaml')
 
-    model_name = sys.argv[1]
-
-    default_config_fname = os.path.join(model_name, 'config.yaml')
-
-    if len(sys.argv) >= 3:
-        config_fname = sys.argv[2]
+    if config:
+        config = get_config(config)
     elif os.path.exists(default_config_fname):
         logger.info('Loading default configuration from %s', default_config_fname)
-        config_fname = default_config_fname
+        config = get_config(default_config_fname)
     else:
         logger.error('Configuration file argument missing.')
-        sys.exit()
-
-    try:
-        config = get_config(config_fname)
-    except Exception as e:
         sys.exit()
 
     # Probability cutoff for filtering statements
@@ -422,7 +415,7 @@ if __name__ == '__main__':
             logger.info('NDEx network missing.')
             use_ndex = False
     else:
-        use_ndex = False      
+        use_ndex = False
     if use_ndex:
         logger.info('Using NDEx with given credentials.')
     else:
@@ -494,7 +487,7 @@ if __name__ == '__main__':
     # Load the model
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
-    inc_model_file = os.path.join(model_path, model_name, 'model.pkl')
+    inc_model_file = os.path.join(model_path, 'model.pkl')
     model = IncrementalModel(inc_model_file)
     # Include search genes as prior genes
     model.prior_genes = search_genes
@@ -518,7 +511,7 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
-                            extend_model(model_name, model, pmids, aws_available)
+        extend_model(model_path, model, pmids, start_time_local, aws_available=aws_available)
     # Having added new statements, we preassemble the model
     model.preassemble(filters=global_filters)
 
@@ -540,8 +533,7 @@ if __name__ == '__main__':
     logger.info(time.strftime('%c'))
 
     # Save a time stamped version of the pickle for backup/diagnostic purposes
-    inc_model_bkp_file = os.path.join(model_path, model_name,
-                                      'model-%s.pkl' % date_str)
+    inc_model_bkp_file = os.path.join(model_path, 'model-%s.pkl' % date_str)
     model.save(inc_model_bkp_file)
 
     # Upload the new, final statements to NDEx
@@ -549,7 +541,7 @@ if __name__ == '__main__':
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
         cx_str = assemble_cx(new_stmts)
-        cx_name = os.path.join(model_path, model_name, 'model.cx')
+        cx_name = os.path.join(model_path, 'model.cx')
         with open(cx_name, 'wb') as fh:
             fh.write(cx_str.encode('utf-8'))
         upload_to_ndex(cx_str, ndex_cred)
@@ -566,3 +558,6 @@ if __name__ == '__main__':
         if use_twitter:
             logger.info('Now tweeting: %s' % msg_str)
             twitter_client.update_status(msg_str, twitter_cred)
+
+if __name__ == '__main__':
+    main()
