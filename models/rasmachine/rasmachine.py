@@ -581,5 +581,13 @@ def summarize(model_path):
     agents = model.get_model_agents()
     click.echo('Number of agents: {}'.format(len(agents)))
 
+
+@main.command()
+@click.argument('model_path')
+@click.option('--pmids', click.File('r'), default=sys.stdin)
+def increment_pmids(model_path, pmids):
+    """Loads the model, increments it with the given PMIDS then exports"""
+    raise NotImplementedError
+
 if __name__ == '__main__':
     main()
