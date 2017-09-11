@@ -221,6 +221,8 @@ def test_full_local_upload():
     tc_list = db.select('text_content', db.TextContent.text_type==texttypes.FULLTEXT)
     assert len(tc_list), "No fulltext was added."
     Manuscripts(ftp_url=loc_path, local=True).populate(db)
+    tc_list = db.select('text_content', db.TextContent.source==Manuscripts.my_source)
+    assert len(tc_list), "No manuscripts uploaded."
 
 
 def test_full_remote_upload():
@@ -240,6 +242,8 @@ def test_full_remote_upload():
     tc_list = db.select('text_content', db.TextContent.text_type==texttypes.FULLTEXT)
     assert len(tc_list), "No fulltext was added."
     Manuscripts(ftp_url=loc_path, local=True).populate(db)
+    tc_list = db.select('text_content', db.TextContent.source==Manuscripts.my_source)
+    assert len(tc_list), "No manuscripts uploaded."
 
 
 def test_ftp_service():

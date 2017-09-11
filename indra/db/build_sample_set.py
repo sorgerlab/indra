@@ -145,7 +145,7 @@ def build_set(n, parent_dir):
     
     # Create the test manuscripts file.
     print('Adding manuscript directories...')
-    dirfmt = get_path('pub/pmc/manuscripts/%s')
+    dirfmt = get_path('pub/pmc/manuscript/%s')
     dirnames = [dirfmt  % ('PMC00%dXXXXXX.xml' % i) for i in range(2,6)]
     for dirname in dirnames:
         if os.path.exists(dirname):

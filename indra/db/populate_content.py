@@ -204,8 +204,8 @@ class Medline(Progenetor):
             self.upload_xml_file(db, xml_file)
 
 
-class PmcOA(Progenetor):
-    my_path = 'pub/pmc'
+class PmcUploader(Progenetor):
+    my_source = NotImplemented
     def upload_batch(self, db, tr_data, tc_data):
         # Get the latest on what is already in the database.
         "Add a batch of text refs and text content to the database."
@@ -282,7 +282,7 @@ class PmcOA(Progenetor):
             db.get_values(tref_list, ['pmcid', 'id'])
             }
         tc_records = [
-            (pmcid_tr_dict[pmcid], 'pmc-oa', 'xml', txt_type, cont)
+            (pmcid_tr_dict[pmcid], self.my_source, 'xml', txt_type, cont)
             for pmcid, txt_type, cont in tc_data
             ]
 
@@ -291,12 +291,12 @@ class PmcOA(Progenetor):
         db.copy('text_content', tc_records, self.tc_cols)
 
 
-    def upload_article_archive(self, db, article_arch):
+    def upload_archive(self, db, archive):
         "Process a single tar gzipped article archive."
         tr_data = []
         tc_data = []
         
-        with tarfile.open(article_arch, mode='r:gz') as tar:
+        with tarfile.open(archive, mode='r:gz') as tar:
             print('Loading...')
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
@@ -348,178 +348,10 @@ class PmcOA(Progenetor):
         self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
         
-        article_archs = [
-            k for k in self.ftp_ls() 
-            if k.startswith('articles') and k.endswith('.xml.tar.gz')
-            ]
-        for article_arch in article_archs:
-            try:
-                print('Downloading archive %s.' % article_arch)
-                self.download_file(article_arch)
-                self.upload_article_archive(db, article_arch)
-            except Exception as e:
-                raise e
-            finally:
-                os.remove(article_arch)
-        return
-
-
-class Manuscripts(Progenetor):
-    my_path = 'pub/pmc/manuscript'
-    def get_tarname_from_filename(self, fname):
-        "Get the name of the tar file based on the file name (or a pmcid)."
-        re_match = re.match('(PMC00\d).*?', fname)
-        if re_match is not None:
-            tarname = re_match.group(0) + 6*'X' + '.xml.tar.gz'
-        else:
-            tarname = None
-        return tarname
-    
-    
-    def upload_batch(self, db, tr_data, tc_data):
-        # Get the latest on what is already in the database.
-        "Add a batch of text refs and text content to the database."
-        pmid_list = [entry['pmid'] for entry in tr_data]
-        pmcid_list = [entry['pmcid'] for entry in tr_data]
-        text_refs = db.select(
-            'text_ref', 
-            db.TextRef.pmid.in_(pmid_list) | db.TextRef.pmcid.in_(pmcid_list)
-            )
-        raw_db_conts = db.get_values(
-            text_refs, 
-            ['pmid', 'pmcid'],
-            keyed=True
-            )
-        del text_refs
-        db_conts = {
-            'pmid':[e['pmid'] for e in raw_db_conts],
-            'pmcid':[e['pmcid'] for e in raw_db_conts]
-            }
-
-        # Define some helpful functions.
-        filtered_tr_records = []
-        def add_record(tr_entry):
-            entry_lst = []
-            for k in self.tr_cols:
-                if tr_entry[k] is None:
-                    entry = tr_entry[k]
-                else:
-                    entry = tr_entry[k]
-                entry_lst.append(entry)
-            filtered_tr_records.append(tuple(entry_lst))
-
-        def update_record(tr_entry):
-            tr = db.select('text_ref', db.TextRef.pmid==tr_entry['pmid'])
-            tr.pmcid = tr_entry['pmcid']
-            db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
-
-        # Process the text ref data.
-        for tr_entry in tr_data:
-            # Try to check by pmid first
-            if tr_entry['pmid'] is None:
-                pmid = id_lookup(tr_entry['pmcid'])['pmid']
-                if pmid is None:
-                    if tr_entry['pmcid'] not in db_conts['pmcid']:
-                        # Add a record without a pmid (it happens)
-                        add_record(tr_entry)
-                elif pmid not in db_conts['pmid']:
-                    add_record(tr_entry)
-                else:
-                    if tr_entry['pmcid'] not in db_conts['pmcid']:
-                        update_record(tr_entry)
-            elif tr_entry['pmid'] not in db_conts['pmid']:
-                # If there is not pmid, there is no pmcid in db.
-                add_record(tr_entry)
-            else:
-                if tr_entry['pmcid'] not in db_conts['pmcid']:
-                    update_record(tr_entry)
-
-        # Upload the text content data.
-        print('Added %d new text refs...' % len(filtered_tr_records))
-        db.copy('text_ref', filtered_tr_records, self.tr_cols)
-
-        # Process the text content data
-        arc_pmcid_list = [
-            tr['pmcid' ]
-            for tr in tr_data
-            ]
-        tref_list = db.select(
-            'text_ref', 
-            db.TextRef.pmcid.in_(arc_pmcid_list)
-            )
-        pmcid_tr_dict = {
-            pmcid:trid for (pmcid, trid) in
-            db.get_values(tref_list, ['pmcid', 'id'])
-            }
-        tc_records = [
-            (pmcid_tr_dict[pmcid], 'pmc-oa', 'xml', txt_type, cont)
-            for pmcid, txt_type, cont in tc_data
-            ]
-
-        # Upload the text content data.
-        print('Adding %d more text content entries...' % len(tc_records))
-        db.copy('text_content', tc_records, self.tc_cols)
-
-
-    def upload_archive(self, db, archive):
-        tr_data = []
-        tc_data = []
-        with tarfile.open(archive, 'r:gz') as tar:
-            xml_files = [m for m in tar.getmembers() if m.isfile()]
-            for i, xml_file in enumerate(xml_files):
-                xml_str = tar.extractfile(xml_file).read()
-                try:
-                    tree = ET.XML(xml_str)
-                except ET.ParseError:
-                    print("Could not parse %s. Skipping." % xml_file.name)
-                    continue
-                id_data = {
-                    e.get('pub-id-type'):e.text for e in 
-                    tree.findall('.//article-id')
-                    }
-                if 'pmc' not in id_data.keys():
-                    print("Did not get a 'pmc' in %s." % xml_file)
-                    continue
-                    
-                #if 'PMC'+id_data['pmc'] not in pmcid_list:
-                #    continue
-                if 'pmcid' not in id_data.keys():
-                    id_data['pmcid'] = 'PMC' + id_data['pmc']
-                rec_dict = dict.fromkeys(self.tr_cols)
-                rec_dict.update(id_data)
-                tr_data.append(rec_dict)
-                for typ, lbl in [(texttypes.ABSTRACT,'abstract'), (texttypes.FULLTEXT,'body')]:
-                    cont_xml = tree.find('.//'+lbl)
-                    if cont_xml is not None:
-                        content = ET.tostring(cont_xml).decode('utf8')
-                        tc_data.append(
-                            (
-                                id_data['pmcid'], 
-                                typ, 
-                                zip_string(content)
-                                )
-                            )
-                if (i+1)%BATCH_SIZE==0: # Upload in batches, so as not to overwhelm ram.
-                    print("Uploading batch %d of data..." % (i+1)/BATCH_SIZE)
-                    self.upload_batch(db, tr_data, tc_data)
-                    tr_data = []
-                    tc_data = []
-            else:
-                print("Uploading final batch of data...")
-                self.upload_batch(db, tr_data, tc_data)
-        return
-            
-
-
-    def populate(self, db):
-        self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
-        self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
-        archives = [
-            k for k in self.ftp_ls()
-            if k.endswith('.xml.tar.gz')
-            ]
+        archives = [k for k in self.ftp_ls() if self.is_archive(k)]
         for archive in archives:
             try:
+                print('Downloading archive %s.' % archive)
                 self.download_file(archive)
                 self.upload_archive(db, archive)
             except Exception as e:
@@ -528,113 +360,30 @@ class Manuscripts(Progenetor):
                 os.remove(archive)
         return
 
-def initialize_pmc_manuscripts(db):
-    ftp_path = '/pub/pmc/manuscript'
 
-    def get_missing_auth_xml_pmcids(pmc_info_list):
-        # Get list of PMCIDs for which we've already stored author manuscripts
-        stored_pmc_ids = db.get_auth_xml_pmcids()
-        print("%d pmc_auth_xml PMCIDs already in DB" % len(stored_pmc_ids))
-        missing_set = set([p.PMCID for p in pmc_info_list]).difference(
-                                                          set(stored_pmc_ids))
-        pmc_info_missing = [p for p in pmc_info_list if p.PMCID in missing_set]
-        print("%d pmc_auth_xml PMCIDs left to load in DB" %
-              len(pmc_info_missing))
-        return pmc_info_missing
+class PmcOA(PmcUploader):
+    my_path = 'pub/pmc'
+    my_source = 'pmc_oa'
+    
+    def is_archive(self, k):
+        return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
-    def get_xml_archives_to_download(pmc_info_list):
-        ftp = _get_ftp_connection(ftp_path)
-        # Get the list of .xml.tar.gz files
-        xml_files = [f[0] for f in ftp.mlsd() if f[0].endswith('.xml.tar.gz')]
-        print("xml_files: %s" % xml_files)
-        # Get list of stems in the list of missing files
-        stems = set([])
-        for pi in pmc_info_list:
-            stems.add(pi.File[0:6])
-        to_download = [f for f in xml_files if f[0:6] in stems]
-        ftp.close()
-        return to_download
 
-    def download_xml_archive(filename, tmp_dir):
-        ftp = _get_ftp_connection(ftp_path)
-        # Function to write to local file with progress updates
-        def write_to_file(fp, b):
-            fp.write(b)
-        outfilepath = os.path.join(tmp_dir, filename)
-        print("Getting %s" % filename)
-        with open(outfilepath, 'wb') as f:
-            ftp.retrbinary('RETR %s' % filename, callback=lambda b: f.write(b),
-                           blocksize=ftp_blocksize)
-        # Extract all files in the TAR archive
-        tf = tarfile.open(outfilepath)
-        print("Extracting all files from %s" % outfilepath)
-        tf.extractall(path=tmp_dir)
-        print("Done extracting files.")
-        ftp.close()
+class Manuscripts(PmcUploader):
+    my_path = 'pub/pmc/manuscript'
+    my_source = 'manuscripts'
+    def get_tarname_from_filename(self, fname):
+        "Get the name of the tar file based on the file name (or a pmcid)."
+        re_match = re.match('(PMC00\d).*?', fname)
+        if re_match is not None:
+            tarname = re_match.group(0) + 6*'X' + '.xml.tar.gz'
+        else:
+            tarname = None
+        return tarname
 
-    def update_text_content(pmc_info_list, xml_file, tmp_dir, source, poolsize=4):
-        # Filter PMCIDs to store to only those contained in this XML file
-        stem = xml_file[0:6]
-        pmc_to_store = [p for p in pmc_info_list if p.File.startswith(stem)]
-        import random
-        random.shuffle(pmc_to_store)
-        # Get the text ref IDs by PMCID
-        pmcid_tr_dict = dict(db.select(
-            'text_ref',
-            db.TextRef.pmcid.in_([pi.PMCID for pi in pmc_to_store])
-            ))
-        pmc_blocksize = 2000
-        start_ix_list = range(0, len(pmc_to_store), pmc_blocksize)
-        for start_ix in start_ix_list:
-            content_block_rows = []
-            t0 = time.time()
-            end_ix = start_ix + pmc_blocksize
-            if end_ix > len(pmc_to_store):
-                end_ix = len(pmc_to_store)
-            for pi in pmc_to_store[start_ix:end_ix]:
-                xml_path = os.path.join(tmp_dir, pi.File)
-                text_ref_id = pmcid_tr_dict[pi.PMCID].id
-                if os.path.exists(xml_path):
-                    # Look up the text_ref_id for this PMCID
-                    # Read the XML file in text mode
-                    with open(xml_path, 'rt') as f:
-                        content = f.read()
-                    # Compress the content
-                    content_gz = zip_string(content)
-                    # Add to our CSV rows
-                    content_block_rows.append((text_ref_id, source, 'pmc_auth_xml', 'fulltext',
-                                               content_gz))
-                else:
-                    print("Could not find file %s" % xml_path)
-            t1 = time.time()
-            db.copy('text_content', content_block_rows, ('text_ref_id', 'source', 'format', 'text_type', 'content'))
 
-            print("Copied files %d to %d from %s" %
-                  (start_ix, end_ix, xml_file))
-            end = time.time()
-            read_time = (1000 * (t1 - t0)) / pmc_blocksize
-            write_db_time = (1000 * (end - t1)) / pmc_blocksize
-            total_time = (1000 * (end - t0)) / pmc_blocksize
-            print("Total time: %.1f (read %.1f, write DB %.1f)"
-                  % (total_time, read_time, write_db_time))
-
-    # The high-level procedure:
-    # 1. Get info on all author manuscripts currently in PMC
-    pmc_info_list = _get_file_info(ftp_path, 'filelist.csv', PmcAuthInfo)
-    # 2. Add text_refs to database for any we don't currently have indexed
-    _update_text_refs(pmc_info_list)
-    # 3. Find out which ones are missing auth_xml content in the databse
-    pmc_info_missing = get_missing_auth_xml_pmcids(pmc_info_list)
-    # 4. Figure out which archives we'll need to download
-    #xml_list = get_xml_archives_to_download(pmc_info_missing)
-    # 5. To save space, download and extract files one at a time
-    xml_list = ['PMC004XXXXXX.xml.tar.gz']
-    for xml_file in xml_list:
-        #tmp_dir = tempfile.mkdtemp(prefix='tmpIndra', dir='.')
-        tmp_dir = 'tmpIndrac2km4wir'
-        #download_xml_archive(xml_file, tmp_dir)
-        update_text_content(pmc_info_list, xml_file, tmp_dir, 'pmc_auth')
-        #shutil.rmtree(tmp_dir)
+    def is_archive(self, k):
+        return k.endswith('.xml.tar.gz')
 
 
 if __name__ == '__main__':
