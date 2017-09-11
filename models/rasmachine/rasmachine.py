@@ -333,11 +333,16 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     return stmts_out
 
 
-@click.command()
+@click.group()
+def main():
+    """The RAS Machine and utilities"""
+
+
+@main.command()
 @click.argument('model_path')
 @click.option('--config')
-def main(model_path, config):
-    """Runs the RAS Machine"""
+def run(model_path, config):
+    """Runs the RAS Machine for the given model path"""
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
     start_time_local = datetime.datetime.now(tzlocal.get_localzone())
