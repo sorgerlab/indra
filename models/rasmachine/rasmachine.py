@@ -365,57 +365,60 @@ def main(model_path, config):
         logger.info('Using belief threshold: %.2f' % belief_threshold)
 
     twitter_cred = config.get('twitter')
-    if twitter_cred:
-        use_twitter = True
-        if not twitter_cred.get('consumer_token'):
-            logger.info('Twitter consumer token (consumer_token) missing.')
-            use_twitter = False
-        if not twitter_cred.get('consumer_secret'):
-            logger.info('Twitter consumer secret (consumer_secret) missing.')
-            use_twitter = False
-        if not twitter_cred.get('access_token'):
-            logger.info('Twitter access token (access_token) missing.')
-            use_twitter = False
-        if not twitter_cred.get('access_secret'):
-            logger.info('Twitter access secret (access_secret) missing.')
-            use_twitter = False
-    else:
+    if not twitter_cred:
         use_twitter = False
+    elif not twitter_cred.get('consumer_token'):
+        logger.info('Twitter consumer token (consumer_token) missing.')
+        use_twitter = False
+    elif not twitter_cred.get('consumer_secret'):
+        logger.info('Twitter consumer secret (consumer_secret) missing.')
+        use_twitter = False
+    elif not twitter_cred.get('access_token'):
+        logger.info('Twitter access token (access_token) missing.')
+        use_twitter = False
+    elif not twitter_cred.get('access_secret'):
+        logger.info('Twitter access secret (access_secret) missing.')
+        use_twitter = False
+    else:
+        use_twitter = True
+
     if use_twitter:
         logger.info('Using Twitter with given credentials.')
     else:
         logger.info('Not using Twitter due to missing credentials.')
 
     gmail_cred = config.get('gmail')
-    if gmail_cred:
-        use_gmail = True
-        if not gmail_cred.get('user'):
-            logger.info('Gmail user missing.')
-            use_gmail = False
-        if not gmail_cred.get('password'):
-            logger.info('Gmail password missing.')
-            use_gmail = False
-    else:
+    if not gmail_cred:
         use_gmail = False
+    elif not gmail_cred.get('user'):
+        logger.info('Gmail user missing.')
+        use_gmail = False
+    elif not gmail_cred.get('password'):
+        logger.info('Gmail password missing.')
+        use_gmail = False
+    else:
+        use_gmail = True
+
     if use_gmail:
         logger.info('Using Gmail with given credentials.')
     else:
         logger.info('Not using Gmail due to missing credentials.')
 
     ndex_cred = config.get('ndex')
-    if ndex_cred:
-        use_ndex = True
-        if not ndex_cred.get('user'):
-            logger.info('NDEx user missing.')
-            use_ndex = False
-        if not ndex_cred.get('password'):
-            logger.info('NDEx password missing.')
-            use_ndex = False
-        if not ndex_cred.get('network'):
-            logger.info('NDEx network missing.')
-            use_ndex = False
-    else:
+    if not ndex_cred:
         use_ndex = False
+    elif not ndex_cred.get('user'):
+        logger.info('NDEx user missing.')
+        use_ndex = False
+    elif not ndex_cred.get('password'):
+        logger.info('NDEx password missing.')
+        use_ndex = False
+    elif not ndex_cred.get('network'):
+        logger.info('NDEx network missing.')
+        use_ndex = False
+    else:
+        use_ndex = True
+
     if use_ndex:
         logger.info('Using NDEx with given credentials.')
     else:
