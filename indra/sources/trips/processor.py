@@ -1534,12 +1534,14 @@ def _get_db_refs(term):
     # Sometimes the top grounding has much lower priority and not much higher
     # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
     # In this case we take the second entry.
+    import ipdb; ipdb.set_trace()
     if len(top_per_score_group) > 1:
         score_diff = top_per_score_group[0]['score'] - \
                      top_per_score_group[1]['score']
         priority_diff = top_per_score_group[0]['priority'] - \
                         top_per_score_group[1]['priority']
-        if score_diff < 0.2 and priority_diff >= 2:
+        if score_diff < 0.2 and (priority_diff >= 2 or \
+            'FA' in top_per_score_group[0]['refs']):
             top_grounding = top_per_score_group[1]
     relevant_ambiguities = []
     for amb in ambiguities:
@@ -1688,6 +1690,10 @@ def _get_grounding_terms(term):
 
 
 def _get_db_mappings(dbname, dbid):
+    # In our mappings we rename NextProt to NXP from FA
+    if dbname == 'FA':
+        dbname = 'NXP'
+        dbid = 'FA:' + dbid
     db_mappings = []
     be_id = bioentities_map.get((dbname, dbid))
     if be_id is not None:
