@@ -14,7 +14,8 @@ _stmt_map = {
     'controls-phosphorylation-of': Phosphorylation,
     'in-complex-with': Complex,
     'NEGATIVE_INFLUENCE': Inhibition,
-    'POSITIVE_INFLUENCE': Activation
+    'POSITIVE_INFLUENCE': Activation,
+    'binds': Complex,
 }
 
 
