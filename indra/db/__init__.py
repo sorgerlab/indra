@@ -13,6 +13,7 @@ from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
+from numbers import Number
 try:
     from pgcopy import CopyManager
     CAN_COPY = True
@@ -265,7 +266,18 @@ class DatabaseManager(object):
         if self.sqltype is sqltypes.POSTGRESQL and CAN_COPY:
             conn = self.engine.raw_connection()
             mngr = CopyManager(conn, tbl_name, cols)
-            mngr.copy(data, BytesIO)
+            data_bts = []
+            for entry in data:
+                new_entry = []
+                for element in entry:
+                    if isinstance(element, str):
+                        new_entry.append(element.encode('utf8'))
+                    elif isinstance(element, bytes) or element is None or isinstance(element, Number):
+                        new_entry.append(element)
+                    else:
+                        raise Exception("Don't know what to do with this type.")
+                data_bts.append(tuple(new_entry))
+            mngr.copy(data_bts, BytesIO)
             conn.commit()
         else:
             #TODO: use bulk insert mappings?
@@ -387,7 +399,7 @@ class DatabaseManager(object):
         tref_list = self.filter_query(
             [self.TextRef, self.TextContent],
             self.TextRef.id==self.TextContent.text_ref_id,
-            self.TextContent.text_type=='fulltext',
+            self.TextContent.text_type==texttypes.FULLTEXT,
             self.TextContent.source=='pmc_auth'
             )
         return [tref.pmcid for tref in tref_list]
@@ -396,6 +408,10 @@ class DatabaseManager(object):
     def get_all_pmids(self):
         "Get a list of all the pmids on record."
         return self.get_values(self.select('text_ref'), 'pmid')
+    
+    def get_pmids(self, pmid_list):
+        text_refs = self.select('text_ref', self.TextRef.pmid.in_(pmid_list))
+        return self.get_values(text_refs, 'pmid')
 
 
 def get_aws_db():

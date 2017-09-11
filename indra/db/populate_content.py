@@ -1,32 +1,26 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-import os
 import csv
 import time
 import tarfile
 import zlib
 import logging
 import xml.etree.ElementTree as ET
-from indra.util import write_unicode_csv, zip_string, unzip_string
-from indra.util import UnicodeXMLTreeBuilder as UTB
-from ftplib import FTP
-from collections import namedtuple
-from indra.db import get_aws_db
-from io import StringIO, BytesIO
-from indra.literature import pubmed_client
-from gzip import GzipFile
+import os
 from os import path
+from ftplib import FTP
+from io import BytesIO
+from indra.util import zip_string, unzip_string
+from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
+from indra.literature import pubmed_client
+from indra.db import get_aws_db, texttypes
 
 logger = logging.getLogger('update_db')
 
-PmcAuthInfo = namedtuple('PmcAuthInfo', ('File', 'PMCID', 'PMID', 'MID'))
-PmcOaInfo = namedtuple('PmcOaInfo',
-                       ('File', 'Article_Citation', 'PMCID',
-                        'Last_Updated', 'PMID', 'License'))
-
 ftp_blocksize = 33554432 # Chunk size recommended by NCBI
+BATCH_SIZE = 10000
 
 def path_join(*args):
     joined_str = path.join(*args)
@@ -153,22 +147,23 @@ class Medline(Progenetor):
         text_content_info = {}
         valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
         print("%d valid PMIDs" % len(valid_pmids))
-        existing_pmids = set(db.get_all_pmids())
-        print("%d existing PMIDs in text_refs" % len(existing_pmids))
+        existing_pmids = set(db.get_pmids(valid_pmids))
+        print("%d valid PMIDs already in text_refs." % len(existing_pmids))
         pmids_to_add = valid_pmids.difference(existing_pmids)
         print("%d PMIDs to add to text_refs" % len(pmids_to_add))
         for pmid in pmids_to_add:
             pmid_data = article_info[pmid]
             rec = (pmid, pmid_data.get('pmcid'), pmid_data.get('doi'),
                    pmid_data.get('pii'))
-            text_ref_records.append(tuple([None if not r else r.encode('utf8')
-                                          for r in rec]))
+            text_ref_records.append(
+                tuple([None if not r else r for r in rec])
+                )
             abstract = pmid_data.get('abstract')
             # Make sure it's not an empty or whitespace-only string
             if abstract and abstract.strip():
                 abstract_gz = zip_string(abstract)
                 text_content_info[pmid] = \
-                                (b'pubmed', b'text', b'abstract', abstract_gz)
+                    ('pubmed', 'text', texttypes.ABSTRACT, abstract_gz)
 
         db.copy(
             'text_ref', 
@@ -213,15 +208,22 @@ class PmcOA(Progenetor):
     def upload_batch(self, db, tr_data, tc_data):
         # Get the latest on what is already in the database.
         "Add a batch of text refs and text content to the database."
-        current_id_list = db.get_values(
-            db.select('text_ref'), 
-            ['pmid', 'pmcid']
+        pmid_list = [entry['pmid'] for entry in tr_data]
+        pmcid_list = [entry['pmcid'] for entry in tr_data]
+        text_refs = db.select(
+            'text_ref', 
+            db.TextRef.pmid.in_(pmid_list) | db.TextRef.pmcid.in_(pmcid_list)
             )
-        db_conts = {}
-        for i, id_type in enumerate(['pmid', 'pmcid']):
-            db_conts[id_type] = [
-                e[i] for e in current_id_list if e[i] is not None
-                ]
+        raw_db_conts = db.get_values(
+            text_refs, 
+            ['pmid', 'pmcid'],
+            keyed=True
+            )
+        del text_refs
+        db_conts = {
+            'pmid':[e['pmid'] for e in raw_db_conts],
+            'pmcid':[e['pmcid'] for e in raw_db_conts]
+            }
 
         # Define some helpful functions.
         filtered_tr_records = []
@@ -231,7 +233,7 @@ class PmcOA(Progenetor):
                 if tr_entry[k] is None:
                     entry = tr_entry[k]
                 else:
-                    entry = tr_entry[k].encode('utf8')
+                    entry = tr_entry[k]
                 entry_lst.append(entry)
             filtered_tr_records.append(tuple(entry_lst))
 
@@ -244,7 +246,6 @@ class PmcOA(Progenetor):
         for tr_entry in tr_data:
             # Try to check by pmid first
             if tr_entry['pmid'] is None:
-                print("Did not get pmid for %s." % tr_entry['pmcid'])
                 pmid = id_lookup(tr_entry['pmcid'])['pmid']
                 if pmid is None:
                     if tr_entry['pmcid'] not in db_conts['pmcid']:
@@ -263,6 +264,7 @@ class PmcOA(Progenetor):
                     update_record(tr_entry)
 
         # Upload the text content data.
+        print('Added %d new text refs...' % len(filtered_tr_records))
         db.copy('text_ref', filtered_tr_records, self.tr_cols)
 
         # Process the text content data
@@ -284,6 +286,7 @@ class PmcOA(Progenetor):
             ]
 
         # Upload the text content data.
+        print('Adding %d more text content entries...' % len(tc_records))
         db.copy('text_content', tc_records, self.tc_cols)
 
 
@@ -292,9 +295,11 @@ class PmcOA(Progenetor):
         tr_data = []
         tc_data = []
         
+        print('Downloading archive %s.' % article_arch)
         self.download_file(article_arch)
         
         with tarfile.open(article_arch, mode='r:gz') as tar:
+            print('Loading...')
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
                 #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
@@ -319,7 +324,7 @@ class PmcOA(Progenetor):
                 rec_dict = dict.fromkeys(self.tr_cols)
                 rec_dict.update(id_data)
                 tr_data.append(rec_dict)
-                for typ, lbl in [('abstract','abstract'), ('fulltext','body')]:
+                for typ, lbl in [(texttypes.ABSTRACT,'abstract'), (texttypes.FULLTEXT,'body')]:
                     cont_xml = tree.find('.//'+lbl)
                     if cont_xml is not None:
                         content = ET.tostring(cont_xml).decode('utf8')
@@ -330,11 +335,13 @@ class PmcOA(Progenetor):
                                 zip_string(content)
                                 )
                             )
-                if (i+1)%10000==0: # Upload in batches, so as not to overwhelm ram.
+                if (i+1)%BATCH_SIZE==0: # Upload in batches, so as not to overwhelm ram.
+                    print("Uploading batch %d of data..." % (i+1)/BATCH_SIZE)
                     self.upload_batch(db, tr_data, tc_data)
                     tr_data = []
                     tc_data = []
             else:
+                print("Uploading final batch of data...")
                 self.upload_batch(db, tr_data, tc_data)
         return
 

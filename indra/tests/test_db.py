@@ -2,11 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from os import listdir, remove
-from indra.db import DatabaseManager, get_aws_db
 from nose import SkipTest
 from nose.tools import assert_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.populate_content import Medline, PmcOA, Manuscripts
+from indra.db import DatabaseManager, get_aws_db, texttypes
 
 TEST_FILE = 'indra_test.db'
 TEST_HOST = 'sqlite:///' + TEST_FILE
@@ -203,7 +203,6 @@ def test_get_all_pmids():
 # includes uploading data from Medline, PMC, Springer, and Elsevier. These
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
-
 def test_full_local_upload():
     "Test whether we can perform a targeted upload to a local db."
     # This uses a specially curated sample directory designed to access all code
@@ -213,13 +212,15 @@ def test_full_local_upload():
     loc_path = 'test_ftp'
     Medline(ftp_url=loc_path, local=True).populate(db)
     tr_list = db.select('text_ref')
+    assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
         'All text_refs MUST have pmids by now.'
     #assert all([hasattr(tr, 'pmcid') for tr in tr_list]),\
     #    'All text_refs should have pmcids at this point.' 
     PmcOA(ftp_url=loc_path, local=True).populate(db)
+    tc_list = db.select('text_content', db.TextContent.text_type==texttypes.FULLTEXT)
+    assert len(tc_list), "No fulltext was added."
     Manuscripts(ftp_url=loc_path, local=True).populate(db)
-    db._clear()
 
 
 def test_full_remote_upload():
@@ -236,8 +237,9 @@ def test_full_remote_upload():
     #assert all([hasattr(tr, 'pmcid') for tr in tr_list]),\
     #    'All text_refs should have pmcids at this point.' 
     PmcOA(ftp_url=loc_path, local=True).populate(db)
+    tc_list = db.select('text_content', db.TextContent.text_type==texttypes.FULLTEXT)
+    assert len(tc_list), "No fulltext was added."
     Manuscripts(ftp_url=loc_path, local=True).populate(db)
-    db._clear()
 
 
 def test_ftp_service():
