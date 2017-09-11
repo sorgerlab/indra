@@ -1516,6 +1516,8 @@ def _get_db_refs(term):
             top_idx = 0
             for i, entry in enumerate(entries):
                 if entry['priority'] < top_entry['priority']:
+                    if 'NCIT' in entry['refs'] and 'HGNC' in entry['refs']:
+                        continue
                     top_entry = entry
                     top_idx = i
             for i, entry in enumerate(entries):
