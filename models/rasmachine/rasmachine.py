@@ -209,9 +209,9 @@ def _increment_ndex_ver(ver_str):
         new_ver = major_ver + '.' + new_minor_ver
     return new_ver
 
-def assemble_cx(stmts):
+def assemble_cx(stmts, name):
     ca = CxAssembler()
-    ca.network_name = 'rasmachine'
+    ca.network_name = name
     ca.add_statements(stmts)
     ca.make_model()
     cx_str = ca.print_cx()
@@ -543,7 +543,7 @@ def main(model_path, config):
     if use_ndex:
         logger.info('Uploading to NDEx')
         logger.info(time.strftime('%c'))
-        cx_str = assemble_cx(new_stmts)
+        cx_str = assemble_cx(new_stmts, name=ndex_cred.get('name', 'rasmachine'))
         cx_name = os.path.join(model_path, 'model.cx')
         with open(cx_name, 'wb') as fh:
             fh.write(cx_str.encode('utf-8'))
