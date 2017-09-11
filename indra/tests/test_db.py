@@ -244,7 +244,6 @@ def test_full_remote_upload():
 
 def test_ftp_service():
     "Test the progenitor childrens' ftp access."
-    raise SkipTest()
     cases = [
         ('.csv', 'csv_as_dict'), 
         #('.xml.gz', 'xml_file'),

@@ -57,6 +57,7 @@ def build_set(n, parent_dir):
     os.makedirs(parent_dir)
     os.makedirs(get_path('pub/pmc'))
     os.makedirs(get_path('pubmed/baseline'))
+    os.makedirs(get_path('pub/pmc/manuscripts'))
     
     # Get the pmid data from medline (med_pmid_list)
     print("Getting medline lists...")
@@ -141,7 +142,46 @@ def build_set(n, parent_dir):
     # TODO: Add test case to touch this.
     with open(get_path('pubmed/deleted.pmids.gz'), 'wb') as gzf:
         gzf.write(gzip.compress(b''))
-
+    
+    # Create the test manuscripts file.
+    print('Adding manuscript directories...')
+    dirfmt = get_path('pub/pmc/manuscripts/%s')
+    dirnames = [dirfmt  % ('PMC00%dXXXXXX.xml' % i) for i in range(2,6)]
+    for dirname in dirnames:
+        if os.path.exists(dirname):
+            shutil.rmtree(dirname)
+        os.mkdir(dirname)
+    ex_man_dicts = [d for d in man_dicts if d['PMCID'] in pmcid_list]
+    for d in ex_man_dicts:
+        d['Tarfile'] = man.get_tarname_from_filename(d['File'])
+    tar_members = dict.fromkeys(set(
+        [d['Tarfile'] for d in ex_man_dicts]
+        ))
+    for tarname in tar_members.keys():
+        if not os.path.exists(tarname):
+            man.download_file(tarname)
+        #with tarfile.open(tarname, 'r:gz') as tar:
+        #    tar_members[tarname] = tar.getmembers()
+    for d in ex_man_dicts:
+        parent_dir = os.path.join(
+            dirfmt % tarname.replace('.tar.gz', ''), 
+            os.path.dirname(d['File'])
+            )
+        test_fname = os.path.join(
+            dirfmt % tarname.replace('.tar.gz', ''),
+            d['File']
+            )
+        with tarfile.open(d['Tarfile'], 'r:gz') as tar:
+            print('\tExtracting %s...' % d['Tarfile'])
+            tar.extract(d['File'])
+        if not os.path.exists(parent_dir):
+            os.makedirs(parent_dir)
+        os.rename(d['File'], test_fname)
+    for dirname in dirnames:
+        with tarfile.open(dirname + '.tar.gz', 'w:gz') as tar:
+            tar.add(dirname)
+        shutil.rmtree(dirname)
+    
     return examples
 
 if __name__ == '__main__':
