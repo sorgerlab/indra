@@ -567,5 +567,19 @@ def run(model_path, config):
             logger.info('Now tweeting: %s' % msg_str)
             twitter_client.update_status(msg_str, twitter_cred)
 
+
+@main.command()
+@click.argument('model_path')
+def summarize(model_path):
+    """Summarizes a model. Right now just outputs the number of statmenents"""
+    logger.info(time.strftime('%c'))
+    logger.info('Loading original model.')
+    inc_model_file = os.path.join(model_path, 'model.pkl')
+    model = IncrementalModel(inc_model_file)
+    stmts = model.get_statements()
+    click.echo('Number of statements: {}'.format(len(stmts)))
+    agents = model.get_model_agents()
+    click.echo('Number of agents: {}'.format(len(agents)))
+
 if __name__ == '__main__':
     main()
