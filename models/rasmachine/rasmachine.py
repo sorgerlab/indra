@@ -341,12 +341,20 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         logger.error('Model name argument missing')
         sys.exit()
-    if len(sys.argv) < 3:
+
+    model_name = sys.argv[1]
+
+    default_config_fname = os.path.join(model_name, 'config.yaml')
+
+    if len(sys.argv) >= 3:
+        config_fname = sys.argv[2]
+    elif os.path.exists(default_config_fname):
+        logger.info('Loading default configuration from %s', default_config_fname)
+        config_fname = default_config_fname
+    else:
         logger.error('Configuration file argument missing.')
         sys.exit()
 
-    model_name = sys.argv[1]
-    config_fname = sys.argv[2]
     try:
         config = get_config(config_fname)
     except Exception as e:
