@@ -1516,7 +1516,18 @@ def _get_db_refs(term):
             top_entry = entries[0]
             top_idx = 0
             for i, entry in enumerate(entries):
+                # We take the lowes priority entry within the score group
+                # as the top entry
                 if entry['priority'] < top_entry['priority']:
+                    # This is a corner case in which a protein family
+                    # should be prioritized over a specific protein,
+                    # specifically when HGNC was mapped from NCIT but
+                    # BE was not mapped from NCIT, the HGNC shouldn't
+                    # take precedence.
+                    if entry.get('comment') == 'HGNC_FROM_NCIT' and \
+                        'BE' in top_entry['refs'] and \
+                        top_entry.get('comment') != 'BE_FROM_NCIT':
+                        continue
                     top_entry = entry
                     top_idx = i
             for i, entry in enumerate(entries):
@@ -1534,7 +1545,9 @@ def _get_db_refs(term):
     top_grounding = top_per_score_group[0]
     # Sometimes the top grounding has much lower priority and not much higher
     # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
-    # In this case we take the second entry.
+    # In this case we take the second entry. A special case is handled where
+    # a BE entry was mapped from FA, in which case priority difference of < 2
+    # is also accepted.
     if len(top_per_score_group) > 1:
         score_diff = top_per_score_group[0]['score'] - \
                      top_per_score_group[1]['score']
@@ -1634,6 +1647,10 @@ def _get_grounding_terms(term):
                 new_refs[ref_mapped[0]] = ref_mapped[1]
         if 'FA' in refs and 'BE' not in refs and 'BE' in new_refs:
             comment = 'BE_FROM_FA'
+        if 'NCIT' in refs and 'HGNC' not in refs and 'HGNC' in new_refs:
+            comment = 'HGNC_FROM_NCIT'
+        if 'NCIT' in refs and 'BE' not in refs and 'BE' in new_refs:
+            comment = 'BE_FROM_NCIT'
         for k, v in new_refs.items():
             refs[k] = v
 
