@@ -110,37 +110,26 @@ class CyJSAssembler(object):
     def set_CCLE_context(self, cell_types):
         """Set context of all nodes and node members from CCLE."""
         self.get_gene_names()
-        gene_names = self._gene_names
-        exp = {}
-        mut = {}
 
-        # context_client gives back a dict with genes as keys.
-        # prefer lines keys, so this will need to be transposed
-        def transpose_context(context_dict):
-            d = context_dict
-            d_genes = [x for x in d]
-            d_lines = [x for x in d[d_genes[0]]]
-            transposed = {x: {y: d[y][x] for y in d_genes} for x in d_lines}
-            return transposed
-        # access the context service in chunks of cell types.
-        # it will timeout if queried with larger chunks.
-        while len(cell_types) > 0:
-            cell_types_chunk = cell_types[:10]
-            del cell_types[:10]
-            exp_temp = context_client.get_protein_expression(gene_names,
-                                                             cell_types_chunk)
-            exp_temp = transpose_context(exp_temp)
-            for e in exp_temp:
-                exp[e] = exp_temp[e]
-            mut_temp = context_client.get_mutations(gene_names,
-                                                    cell_types_chunk)
-            mut_temp = transpose_context(mut_temp)
-            for m in mut_temp:
-                mut[m] = mut_temp[m]
-        # create bins for the exp values
+        # Get expression and mutations from context client
+        exp_values = \
+            context_client.get_protein_expression(self._gene_names, cell_types)
+        mut_values = \
+            context_client.get_mutations(self._gene_names, cell_types)
+
+        # Make a dict of presence/absence of mutations
+        muts = {cell_line: {} for cell_line in cell_types}
+        for cell_line, entries in mut_values.items():
+            if entries is not None:
+                for gene, mutations in entries.items():
+                    if mutations:
+                        muts[cell_line][gene] = 1
+                    else:
+                        muts[cell_line][gene] = 0
+
+        # Create bins for the exp values
         # because colorbrewer only does 3-9 bins and I don't feel like
         # reinventing color scheme theory, this will only bin 3-9 bins
-
         def bin_exp(expression_dict):
             d = expression_dict
             exp_values = []
@@ -168,9 +157,10 @@ class CyJSAssembler(object):
                                     binned_dict[n_bins][line][gene] = thr_idx
                                     break
             return binned_dict
-        binned_exp = bin_exp(exp)
+        binned_exp = bin_exp(exp_values)
+
         context = {'bin_expression': binned_exp,
-                   'mutation': mut}
+                   'mutation': muts}
         self._context['CCLE'] = context
 
     def print_cyjs_graph(self):
