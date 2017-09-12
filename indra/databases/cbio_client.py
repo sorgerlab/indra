@@ -384,6 +384,39 @@ def get_ccle_cna(gene_list, cell_lines):
     return profile_data
 
 
+def get_ccle_mrna(gene_list, cell_lines):
+    """Return a dict of mRNA amounts in given genes and cell lines from CCLE.
+
+    Parameters
+    ----------
+    gene_list : list[str]
+        A list of HGNC gene symbols to get mRNA amounts for.
+    cell_lines : list[str]
+        A list of CCLE cell line names to get mRNA amounts for.
+
+    Returns
+    -------
+    mrna_amounts : dict[dict[float]]
+        A dict keyed to cell lines containing a dict keyed to genes
+        containing float
+    """
+    gene_list_str = ','.join(gene_list)
+    data = {'cmd': 'getProfileData',
+            'case_set_id': 'cellline_ccle_broad_mrna',
+            'genetic_profile_id': 'cellline_ccle_broad_mrna',
+            'gene_list': gene_list_str,
+            'skiprows': 2}
+    df = send_request(**data)
+    mrna_amounts = {cl: {g: [] for g in gene_list} for cl in cell_lines}
+    for cell_line in cell_lines:
+        if cell_line in df.columns:
+            for gene in gene_list:
+                value_cell = df[cell_line][df['COMMON'] == gene]
+                value = value_cell.values[0]
+                mrna_amounts[cell_line][gene] = value
+    return mrna_amounts
+
+
 def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     """Return a filtered data frame as a dictionary."""
     if filter_str is not None:
