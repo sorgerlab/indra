@@ -28,10 +28,9 @@ def get_protein_expression(gene_names, cell_types):
 
     Returns
     -------
-    res : str
-        A json string containing the predicted protein expression levels of
-        the given proteins in the given cell types as returned by the
-        NDEx web service.
+    res : dict[dict[float]]
+        A dictionary keyed by cell line, which contains another dictionary
+        that is keyed by gene name, with estimated protein amounts as values.
     """
     A = 0.2438361
     B = 3.0957627
@@ -44,7 +43,7 @@ def get_protein_expression(gene_names, cell_types):
     return protein_amounts
 
 def get_mutations(gene_names, cell_types):
-    """Return the mutation status of genes in cell types.
+    """Return protein amino acid changes in given genes and cell types.
 
     Parameters
     ----------
@@ -58,16 +57,10 @@ def get_mutations(gene_names, cell_types):
 
     Returns
     -------
-    res : str
-        A json string containing the mutation status of
-        the given proteins in the given cell types as returned by the
-        NDEx web service.
+    res : dict[dict[list]]
+        A dictionary keyed by cell line, which contains another dictionary
+        that is keyed by gene name, with a list of amino acid substitutions
+        as values.
     """
-    url = ndex_context + 'mutation/cell_line'
-    if isinstance(gene_names, basestring):
-        gene_names = [gene_names]
-    if isinstance(cell_types, basestring):
-        cell_types = [cell_types]
-    params = {g: cell_types for g in gene_names}
-    res = ndex_client.send_request(url, params, is_json=True)
-    return res
+    mutations = cbio_client.get_mutations_ccle(['BRAF'], ['LOXIMVI_SKIN'])
+    return mutations
