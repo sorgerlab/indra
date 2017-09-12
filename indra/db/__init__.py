@@ -14,6 +14,13 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
 from numbers import Number
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
+
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
+
 try:
     from pgcopy import CopyManager
     CAN_COPY = True
@@ -95,6 +102,15 @@ class DatabaseManager(object):
                 UniqueConstraint('pmcid', 'doi')
                 )
         
+        class SourceFile(self.Base):
+            __tablename__ = 'source_file'
+            id = Column(Integer, primary_key=True)
+            source = Column(String(250), nullable=False)
+            name = Column(String(250), nullable=False)
+            __table_args__ = (
+                UniqueConstraint('source', 'name'),
+                )
+        
         class TextContent(self.Base):
             __tablename__ = 'text_content'
             id = Column(Integer, primary_key=True)
@@ -110,24 +126,25 @@ class DatabaseManager(object):
                 UniqueConstraint('text_ref_id', 'source', 'format', 'text_type'),
                 )
         
-        class Reach(self.Base):
-            __tablename__ = 'reach'
+        class Readings(self.Base):
+            __tablename__ = 'readings'
             id = Column(Integer, primary_key=True)
             text_content_id = Column(Integer, 
                                      ForeignKey('text_content.id'), 
                                      nullable=False)
             text_content = relationship(TextContent)
-            version = Column(String(20), nullable=False)
-            json = Column(Bytea, nullable=False)
+            reader = Column(String(20), nullable=False)
+            reader_version = Column(String(20), nullable=False)
+            format = Column(String(20), nullable=False) #xml, json, etc.
+            bytes = Column(Bytea, nullable=False)
             ___table_args__ = (
-                UniqueConstraint('text_content_id', 'version'),
+                UniqueConstraint('text_content_id', 'reader', 'reader_version'),
                 )
         
         class DBInfo(self.Base):
             __tablename__ = 'db_info'
             id = Column(Integer, primary_key=True)
             db_name = Column(String(20), nullable=False)
-            #FIXME: I don't think the default here is really correct.
             timestamp = Column(TIMESTAMP, nullable=False)
         
         class Statements(self.Base):
@@ -151,7 +168,7 @@ class DatabaseManager(object):
             role = Column(String(20), nullable=False)
             
         self.tables = {}
-        for tbl in [TextRef, TextContent, Reach, DBInfo, Statements, Agents]:
+        for tbl in [TextRef, TextContent, Readings, SourceFile, DBInfo, Statements, Agents]:
             self.tables[tbl.__tablename__] = tbl
             self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)

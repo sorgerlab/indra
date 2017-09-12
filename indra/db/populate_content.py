@@ -9,6 +9,7 @@ import logging
 import xml.etree.ElementTree as ET
 import re
 import os
+import multiprocessing as mp
 from os import path
 from ftplib import FTP
 from io import BytesIO
@@ -23,22 +24,37 @@ logger = logging.getLogger('update_db')
 ftp_blocksize = 33554432 # Chunk size recommended by NCBI
 BATCH_SIZE = 10000
 
-def path_join(*args):
-    joined_str = path.join(*args)
-    part_list = joined_str.split('/')
-    for part in part_list[1:]:
-        if part == '..':
-            idx = part_list.index(part) - 1
-            part_list.pop(idx)
-            part_list.pop(idx)
-    return path.join(*part_list)
+    
 
 
-class Progenetor(object):
-    my_path = NotImplemented
-    def __init__(self, ftp_url='ftp.ncbi.nlm.nih.gov', local=False):
+class NihFtpClient(object):
+    '''
+    High level access to the nih ftp repositories.
+    
+    Parameters
+    ----------
+    my_path: str 
+        The path to the subdirectory around which this client operates.
+    ftp_url: str: (default: 'ftp.ncbi.nlm.nih.gov')
+        The url to the ftp site. May be a local directory (see `local`)
+    local: bool: (default: False)
+        These methods may be run on a local directory (intended for testing).
+    '''
+    def __init__(self, my_path, ftp_url='ftp.ncbi.nlm.nih.gov', local=False):
+        self.my_path = my_path
         self.is_local = local
         self.ftp_url = ftp_url
+
+
+    def path_join(self, *args):
+        joined_str = path.join(*args)
+        part_list = joined_str.split('/')
+        for part in part_list[1:]:
+            if part == '..':
+                idx = part_list.index(part) - 1
+                part_list.pop(idx)
+                part_list.pop(idx)
+        return path.join(*part_list)
 
 
     def get_ftp_connection(self, ftp_path = None):
@@ -71,7 +87,7 @@ class Progenetor(object):
 
 
     def ret_file(self, f_path, buf):
-        full_path = path_join(self.my_path, f_path)
+        full_path = self.path_join(self.my_path, f_path)
         if not self.is_local:
             with self.get_ftp_connection() as ftp:
                 ftp.retrbinary('RETR /%s' % full_path,
@@ -79,7 +95,7 @@ class Progenetor(object):
                                blocksize=ftp_blocksize)
                 buf.flush()
         else:
-            with open(path_join(self.ftp_url, full_path), 'rb') as f:
+            with open(self.path_join(self.ftp_url, full_path), 'rb') as f:
                 buf.write(f.read())
                 buf.flush()
         return
@@ -102,23 +118,50 @@ class Progenetor(object):
         if ftp_path is None:
             ftp_path = self.my_path
         else:
-            ftp_path = path_join(self.my_path, ftp_path)
+            ftp_path = self.path_join(self.my_path, ftp_path)
         if not self.is_local:
             with self.get_ftp_connection() as ftp:
                 contents = ftp.nlst()
         else:
-            contents = os.listdir(path_join(self.ftp_url, ftp_path))
+            contents = os.listdir(self.path_join(self.ftp_url, ftp_path))
         return contents
 
 
+class Uploader(object):
+    '''
+    This abstract class provides the api required for any object that is used 
+    to upload content into the database.
+    '''
+    my_source=NotImplemented
     def populate(self, db):
-        raise NotImplementedError()
+        "A stub for the method used to initially populate the database."
+        raise NotImplementedError(
+            "`Populate` not implemented for `%s`." % self.__class__.__name__
+            )
+    
+    def update(self, db):
+        "A stub for the method used to update the content on the database."
+        raise NotImplementedError(
+            "`Update` not implemented for `%s`." % self.__class__.__name__
+            )
+
+class NihUploader(Uploader):
+    '''
+    This is an abstract class for all the uploaders that use the nih ftp 
+    service.
+    
+    See `NihFtpClient` for parameters. 
+    '''
+    my_path = NotImplemented
+    def __init__(self, *args, **kwargs):
+        self.ftp = NihFtpClient(self.my_path, *args, **kwargs)
 
 
-class Medline(Progenetor):
+class Medline(NihUploader):
     my_path='pubmed/baseline'
+    my_source='pubmed'
     def get_deleted_pmids(self):
-        del_pmid_str = self.get_file('../deleted.pmids.gz')
+        del_pmid_str = self.ftp.get_file('../deleted.pmids.gz')
         pmid_list = [
             line.strip() for line in unzip_string(del_pmid_str).split('\n')
             ]
@@ -126,18 +169,22 @@ class Medline(Progenetor):
 
 
     def get_xml_list(self):
-        all_files = self.ftp_ls()
+        all_files = self.ftp.ftp_ls()
         return [k for k in all_files if k.endswith('.xml.gz')]
 
 
-    def get_article_info(self, xml_file):
-        tree = self.get_xml_file(xml_file)
+    def get_article_info(self, xml_file, q = None):
+        tree = self.ftp.get_xml_file(xml_file)
         article_info = pubmed_client.get_metadata_from_xml_tree(
             tree, 
             get_abstracts=True, 
             prepend_title=False
             )
-        return article_info
+        if q is not None:
+            q.put(article_info)
+            return
+        else:
+            return article_info
 
     
     def fix_doi(self, doi):
@@ -149,11 +196,11 @@ class Medline(Progenetor):
             return
         if doi[:L] != doi[L:]:
             return
+        print("\tFixing doubled doi: %s" % doi)
         return doi[:L]
 
-    def upload_xml_file(self, db, xml_file):
+    def upload_article(self, db, article_info):
         deleted_pmids = self.get_deleted_pmids()
-        article_info = self.get_article_info(xml_file)
         
         print("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
@@ -181,7 +228,7 @@ class Medline(Progenetor):
             if abstract and abstract.strip():
                 abstract_gz = zip_string(abstract)
                 text_content_info[pmid] = \
-                    ('pubmed', 'text', texttypes.ABSTRACT, abstract_gz)
+                    (self.my_source, 'text', texttypes.ABSTRACT, abstract_gz)
 
         db.copy(
             'text_ref', 
@@ -215,13 +262,60 @@ class Medline(Progenetor):
         return True
 
 
-    def populate(self, db):
+    def populate(self, db, n_procs = 2, continuing=False):
+        """
+        Perform the initial population of the pubmed content into the database.
+        
+        Inputs
+        ------
+        db: indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs: int
+            The number of processes to use when parsing xmls.
+        continuing: bool
+            If true, assume that we are picking up after an error, or otherwise
+            continuing from an earlier process. This means we will skip over
+            source files contained in the database. If false, all files will be
+            read and parsed.
+        """
         xml_files = self.get_xml_list()
+        tr_list = db.select(
+            'source_file', 
+            db.SourceFile.source==self.my_source
+            )
+        existing_xmls = [tr.name for tr in tr_list]
+        
+        q = mp.Queue(n_procs)
+        proc_list = []
         for xml_file in xml_files:
-            self.upload_xml_file(db, xml_file)
+            if continuing and xml_file in existing_xmls:
+                print("Skipping %s. Already uploaded." % xml_file)
+                continue
+            if xml_file not in existing_xmls:
+                db.insert('source_file', source=self.my_source, name=xml_file)
+            p = mp.Process(target=self.get_article_info, args=(xml_file, q, ))
+            proc_list.append(p)
+        n_tot = len(proc_list)
+        
+        for _ in range(n_procs):
+            if len(proc_list):
+                proc_list.pop(0).start()
+
+        while len(proc_list):
+            article_info = q.get() # This will block until at least one is done
+            proc_list.pop(0).start()
+            self.upload_article(db, article_info)
+            n_tot -= 1
+
+        while n_tot is not 0:
+            article_info = q.get()
+            self.upload_article(db, article_info)
+            n_tot -= 1
+        
+        return
 
 
-class PmcUploader(Progenetor):
+class PmcUploader(NihUploader):
     my_source = NotImplemented
     def upload_batch(self, db, tr_data, tc_data):
         # Get the latest on what is already in the database.
@@ -361,16 +455,44 @@ class PmcUploader(Progenetor):
         return
 
 
-    def populate(self, db):
+    def populate(self, db, n=1, continuing=False):
+        """
+        Perform the initial population of the pubmed content into the database.
+        
+        Inputs
+        ------
+        db: indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs: int
+            (Not used) The number of processes to use when parsing xmls.
+        continuing: bool
+            If true, assume that we are picking up after an error, or
+            otherwise continuing from an earlier process. This means we will
+            skip over source files contained in the database. If false, all
+            files will be read and parsed.
+        """
         self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
         
-        archives = [k for k in self.ftp_ls() if self.is_archive(k)]
+        if continuing:
+            tr_list = db.select(
+                'source_file', 
+                db.SourceFile.source==self.my_source
+                )
+            existing_arcs = [tr.name for tr in tr_list]
+        else:
+            existing_arcs = []
+        
+        archives = [k for k in self.ftp.ftp_ls() if self.is_archive(k)]
         for archive in archives:
+            if continuing and archive in existing_arcs:
+                print("Skipping %s. Already uploaded." % archive)
+                continue
             try:
                 print('Downloading archive %s.' % archive)
-                self.download_file(archive)
+                self.ftp.download_file(archive)
                 self.upload_archive(db, archive)
+                db.insert('source_file', source=self.my_source, name=archive)
             except Exception as e:
                 raise e
             finally:
@@ -404,11 +526,19 @@ class Manuscripts(PmcUploader):
 
 
 if __name__ == '__main__':
+    from sys import argv
+    if '--continue' in argv:
+        continuing=True
+    else:
+        continuing=False
+    if '-n' in argv:
+        n = int(argv[argv.index('-n') + 1])
     db = get_aws_db()
-    db._clear()
-    Medline().populate(db)
-    PmcOA().populate(db)
-    Manuscripts().populate(db)
+    if not continuing:
+        db._clear()
+    Medline().populate(db, n, continuing)
+    PmcOA().populate(db, n, continuing)
+    Manuscripts().populate(db, n, continuing)
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,

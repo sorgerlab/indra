@@ -1,8 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-from os import listdir, remove
+from sys import version_info
 from nose import SkipTest
+from os import listdir, remove, path
 from nose.tools import assert_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.populate_content import Medline, PmcOA, Manuscripts
@@ -204,35 +205,56 @@ def test_get_all_pmids():
 # includes uploading data from Medline, PMC, Springer, and Elsevier. These
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
+TEST_POPULATE = True
+if version_info.major is not 3:
+    TEST_POPULATE = False
+
+TEST_FTP = 'test_ftp'
+if TEST_POPULATE and not path.exists(TEST_FTP):
+    print("Creating test directory. This could take a while...")
+    from indra.db.build_sample_set import build_set
+    build_set(2, TEST_FTP)
+
 def test_full_local_upload():
     "Test whether we can perform a targeted upload to a local db."
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
     db = local_startup()
-    loc_path = 'test_ftp'
-    Medline(ftp_url=loc_path, local=True).populate(db)
+    Medline(ftp_url=TEST_FTP, local=True).populate(db)
     tr_list = db.select('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
         'All text_refs MUST have pmids by now.'
     #assert all([hasattr(tr, 'pmcid') for tr in tr_list]),\
     #    'All text_refs should have pmcids at this point.' 
-    PmcOA(ftp_url=loc_path, local=True).populate(db)
+    PmcOA(ftp_url=TEST_FTP, local=True).populate(db)
     tc_list = db.select('text_content', db.TextContent.text_type==texttypes.FULLTEXT)
     assert len(tc_list), "No fulltext was added."
-    Manuscripts(ftp_url=loc_path, local=True).populate(db)
+    Manuscripts(ftp_url=TEST_FTP, local=True).populate(db)
     tc_list = db.select('text_content', db.TextContent.source==Manuscripts.my_source)
     assert len(tc_list), "No manuscripts uploaded."
 
 
-def test_double_doi():
-    "Test whether we handle the doubled doi case."
+def test_multiple_pmids():
+    "Test that pre-existing pmids are correctly handled."
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
     db = local_startup()
-    med = Medline()
-    med.upload_xml_file(db, 'medline17n0343.xml.gz')
-    assert len(db.select('text_ref')) == 29999, "Missed some pmids..."
+    med = Medline(ftp_url=TEST_FTP, local=True)
+    med.populate(db)
+    num_refs = len(db.select('text_ref'))
+    med.populate(db)
+    assert len(db.select('text_ref')) == num_refs,\
+        "Duplicate pmids poorly handled."
     return
+
+
+def test_continuing_upload():
+    "Test whether we correcly pick up where we left off when continuing."
+    SkipTest("Not sure how to actually test this....")
 
 
 def test_full_remote_upload():
@@ -240,6 +262,8 @@ def test_full_remote_upload():
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
     raise SkipTest("Do not mess with the database...")
     db = remote_startup()
     loc_path = 'test_ftp'
@@ -259,6 +283,8 @@ def test_full_remote_upload():
 
 def test_ftp_service():
     "Test the progenitor childrens' ftp access."
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
     cases = [
         ('.csv', 'csv_as_dict'), 
         #('.xml.gz', 'xml_file'),
@@ -266,13 +292,13 @@ def test_ftp_service():
         ]
     for Child in [Medline, PmcOA, Manuscripts]:
         c = Child()
-        files = c.ftp_ls()
+        files = c.ftp.ftp_ls()
         for end, meth in cases:
             rel_files = [f for f in files if f.endswith(end)]
             # TODO: check metadata to choose small files.
             if len(rel_files) > 0:
                 file = rel_files[0]
-                ret = getattr(c, 'get_' + meth)(file)
+                ret = getattr(c.ftp, 'get_' + meth)(file)
                 assert ret is not None,\
                     "Failed to load %s from %s." % (file, Child.__name__)
         # TODO: test the download.

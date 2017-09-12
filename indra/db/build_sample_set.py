@@ -12,7 +12,7 @@ import os
 import re
 import shutil
 
-def get_example(case, med_pmid_list, pmc_dicts, man_dicts):
+def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
     if case == (1, 0, 0):
         pmid = random.choice(med_pmid_list)
         pmc_pmid_list = [d['PMID'] for d in pmc_dicts if d['PMID'] != '']
@@ -48,6 +48,23 @@ def get_example(case, med_pmid_list, pmc_dicts, man_dicts):
 
 
 def build_set(n, parent_dir):
+    '''
+    Create the nastiest set of content we're willing/able to handle.
+    
+    We create a small local representation of the entirety of the nih 
+    repositories we use, including all the nasty corner cases we can manage.
+    This allows for rapid development and testing.
+    
+    Inputs
+    ------
+    n: int
+        The number of copies of each test case to be included. Examples are
+        chosen as randomly as possible. Multiple samples could increase the
+        reliability of the test.
+    parent_dir: str
+        The head of the tree that stands in place of the url to the nih ftp
+        directory.
+    '''
     # Create the necessary directories.
     def get_path(sub_path):
         return os.path.join(parent_dir, sub_path)
@@ -57,7 +74,7 @@ def build_set(n, parent_dir):
     os.makedirs(parent_dir)
     os.makedirs(get_path('pub/pmc'))
     os.makedirs(get_path('pubmed/baseline'))
-    os.makedirs(get_path('pub/pmc/manuscripts'))
+    os.makedirs(get_path('pub/pmc/manuscript'))
     
     # Get the pmid data from medline (med_pmid_list)
     print("Getting medline lists...")
@@ -65,7 +82,7 @@ def build_set(n, parent_dir):
     med = Medline()
     for i in range(1,7):
         buf = BytesIO()
-        med.ret_file("../MuId-PmId-%d.zip" % i, buf)
+        med.ftp.ret_file("../MuId-PmId-%d.zip" % i, buf)
         zf = zipfile.ZipFile(buf)
         with zf.open(zf.namelist()[0]) as id_f:
             id_str = id_f.read().decode('utf8')
@@ -74,19 +91,27 @@ def build_set(n, parent_dir):
     # Get the data from pmc oa (pmc_dicts)
     print("Getting pmc oa lists....")
     pmc = PmcOA()
-    pmc_dicts = pmc.get_csv_as_dict('oa_file_list.csv')
+    pmc_dicts = pmc.ftp.get_csv_as_dict('oa_file_list.csv')
 
     # Get the data for the manuscripts (man_dicts)
     print("Getting manuscript lists...")
     man = Manuscripts()
-    man_dicts = man.get_csv_as_dict('filelist.csv')
+    man_dicts = man.ftp.get_csv_as_dict('filelist.csv')
 
     # Get pmid, pmcid, mid tuples for the examples that we will use.
     print("Generating example sets...")
     examples = []
     for case in [(1,0,0), (1,1,0), (0,1,0), (1,1,1), (1,0,1)]:
         for _ in range(n):
-            examples.append(get_example(case, med_pmid_list, pmc_dicts, man_dicts))
+            example = _get_example(case, med_pmid_list, pmc_dicts, man_dicts)
+            examples.append(example)
+    double_doi_info = med.get_article_info('medline17n0343.xml.gz')
+    pmids_w_double_doi = [
+        k for k, v in double_doi_info.items() 
+        if v['doi'] is not None and len(v['doi']) > 100
+        ]
+    examples.append((random.choice(pmids_w_double_doi), '','',))
+            
 
     # Create the test medline file.
     print("Creating medline test file...")
@@ -118,7 +143,7 @@ def build_set(n, parent_dir):
     pmcid_list = [pmcid for _, pmcid, _ in examples if pmcid != '']
     ex_pmc_dicts = [d for d in pmc_dicts if d['Accession ID'] in pmcid_list]
     for d in ex_pmc_dicts:
-        fname = pmc.download_file(d['File'])
+        fname = pmc.ftp.download_file(d['File'])
         with tarfile.open(fname, 'r:gz') as tar:
             mems = tar.getmembers()
             mem = [mem for mem in mems if mem.name.endswith('.nxml')][0]
@@ -159,7 +184,8 @@ def build_set(n, parent_dir):
         ))
     for tarname in tar_members.keys():
         if not os.path.exists(tarname):
-            man.download_file(tarname)
+            print("\tDownloading %s..." % tarname)
+            man.ftp.download_file(tarname)
         #with tarfile.open(tarname, 'r:gz') as tar:
         #    tar_members[tarname] = tar.getmembers()
     for d in ex_man_dicts:
@@ -172,7 +198,7 @@ def build_set(n, parent_dir):
             d['File']
             )
         with tarfile.open(d['Tarfile'], 'r:gz') as tar:
-            print('\tExtracting %s...' % d['Tarfile'])
+            print('\tExtracting %s from %s...' % (d['File'], d['Tarfile']))
             tar.extract(d['File'])
         if not os.path.exists(parent_dir):
             os.makedirs(parent_dir)
