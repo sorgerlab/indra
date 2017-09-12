@@ -303,7 +303,7 @@ texinfo_documents = [
 # Note that for sub-modules, all parent modules must be listed explicitly.
 MOCK_MODULES = [
     'pygraphviz', 'jnius', 'jnius_config',
-    'functools32', 'rdflib', 'rdflib.namespace', 'rdflib.plugins',
+    'rdflib', 'rdflib.namespace', 'rdflib.plugins',
     'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
     'objectpath', 'lxml', 'lxml.etree',
     'lxml.builder', 'networkx'
