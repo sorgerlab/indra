@@ -186,9 +186,11 @@ class CxAssembler(object):
         """
         node_names = [node['n'] for node in self.cx['nodes']]
         res_expr = context_client.get_protein_expression(node_names,
-                                                         cell_type)
+                                                         [cell_type])
         res_mut = context_client.get_mutations(node_names,
-                                               cell_type)
+                                               [cell_type])
+        res_expr = res_expr.get(cell_type)
+        res_mut = res_mut.get(cell_type)
         if not res_expr:
             msg = 'Could not get protein expression for %s cell type.' % \
                   cell_type
@@ -211,12 +213,13 @@ class CxAssembler(object):
             if amount is not None:
                 node_attribute = {'po': node['@id'],
                                   'n': 'expression_amount',
-                                  'v': int(amount[cell_type])}
+                                  'v': int(amount)}
                 self.cx['nodeAttributes'].append(node_attribute)
             if mut is not None:
+                is_mutated = 1 if mut else 0
                 node_attribute = {'po': node['@id'],
                                   'n': 'is_mutated',
-                                  'v': int(mut[cell_type])}
+                                  'v': is_mutated}
                 self.cx['nodeAttributes'].append(node_attribute)
             if mut is not None or amount is not None:
                 counter += 1
