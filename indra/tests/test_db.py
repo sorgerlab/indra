@@ -13,7 +13,7 @@ TEST_HOST = 'sqlite:///' + TEST_FILE
 
 #TODO: implement setup-teardown system.
 LOCAL_START_SUCCESS = True
-REMOTE_START_SUCCESS = True
+REMOTE_START_SUCCESS = False
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -72,6 +72,7 @@ def test_local_startup():
 def test_remote_startup():
     "Test the remote_startup function."
     # Cleanup from the last run, if necessary.
+    raise SkipTest("Do not mess with the database...")
     try:
         db = remote_startup()
         db.create_tables()
@@ -225,11 +226,21 @@ def test_full_local_upload():
     assert len(tc_list), "No manuscripts uploaded."
 
 
+def test_double_doi():
+    "Test whether we handle the doubled doi case."
+    db = local_startup()
+    med = Medline()
+    med.upload_xml_file(db, 'medline17n0343.xml.gz')
+    assert len(db.select('text_ref')) == 29999, "Missed some pmids..."
+    return
+
+
 def test_full_remote_upload():
     "Test whether we can perform a targeted upload to aws."
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
+    raise SkipTest("Do not mess with the database...")
     db = remote_startup()
     loc_path = 'test_ftp'
     Medline(ftp_url=loc_path, local=True).populate(db)
