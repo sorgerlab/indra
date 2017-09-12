@@ -6,4 +6,4 @@ future
 requests
 pysb
 pandas
-functools32
+functools
