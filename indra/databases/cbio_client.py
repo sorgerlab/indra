@@ -45,6 +45,15 @@ def send_request(**kwargs):
     skiprows = kwargs.pop('skiprows', None)
     res = requests.get(cbio_url, params=kwargs)
     if res.status_code == 200:
+        # Adaptively skip rows based on number of comment lines
+        if skiprows == -1:
+            lines = res.text.split('\n')
+            skiprows = 0
+            for line in lines:
+                if line.startswith('#'):
+                    skiprows += 1
+                else:
+                    break
         csv_StringIO = StringIO(res.text)
         df = pandas.read_csv(csv_StringIO, sep='\t', skiprows=skiprows)
         return df
@@ -406,7 +415,7 @@ def get_ccle_mrna(gene_list, cell_lines):
             'case_set_id': ccle_study + '_mrna',
             'genetic_profile_id': ccle_study + '_mrna',
             'gene_list': gene_list_str,
-            'skiprows': 2}
+            'skiprows': -1}
     df = send_request(**data)
     mrna_amounts = {cl: {g: [] for g in gene_list} for cl in cell_lines}
     for cell_line in cell_lines:
@@ -415,6 +424,8 @@ def get_ccle_mrna(gene_list, cell_lines):
                 value_cell = df[cell_line][df['COMMON'] == gene]
                 value = value_cell.values[0]
                 mrna_amounts[cell_line][gene] = value
+        else:
+            mrna_amounts[cell_line] = None
     return mrna_amounts
 
 
