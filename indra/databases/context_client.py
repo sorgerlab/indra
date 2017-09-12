@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.databases import ndex_client
+from copy import copy
 from indra.databases import cbio_client
 # Python 2
 try:
@@ -9,7 +9,6 @@ try:
 except:
     basestring = str
 
-ndex_context = 'http://general.bigmech.ndexbio.org:8081/context/'
 
 def get_protein_expression(gene_names, cell_types):
     """Return the protein expression levels of genes in cell types.
@@ -26,22 +25,26 @@ def get_protein_expression(gene_names, cell_types):
 
     Returns
     -------
-    res : str
-        A json string containing the predicted protein expression levels of
-        the given proteins in the given cell types as returned by the
-        NDEx web service.
+    res : dict[dict[float]]
+        A dictionary keyed by cell line, which contains another dictionary
+        that is keyed by gene name, with estimated protein amounts as values.
     """
-    url = ndex_context + 'expression/cell_line'
-    if isinstance(gene_names, basestring):
-        gene_names = [gene_names]
-    if isinstance(cell_types, basestring):
-        cell_types = [cell_types]
-    params = {g: cell_types for g in gene_names}
-    res = ndex_client.send_request(url, params, is_json=True)
-    return res
+    A = 0.2438361
+    B = 3.0957627
+    mrna_amounts = cbio_client.get_ccle_mrna(gene_names, cell_types)
+    protein_amounts = copy(mrna_amounts)
+    for cell_type in cell_types:
+        amounts = mrna_amounts.get(cell_type)
+        if amounts is None:
+            continue
+        for gene_name, amount in amounts.items():
+            if amount is not None:
+                protein_amount = 10**(A * amount + B)
+                protein_amounts[cell_type][gene_name] = protein_amount
+    return protein_amounts
 
 def get_mutations(gene_names, cell_types):
-    """Return the mutation status of genes in cell types.
+    """Return protein amino acid changes in given genes and cell types.
 
     Parameters
     ----------
@@ -55,16 +58,10 @@ def get_mutations(gene_names, cell_types):
 
     Returns
     -------
-    res : str
-        A json string containing the mutation status of
-        the given proteins in the given cell types as returned by the
-        NDEx web service.
+    res : dict[dict[list]]
+        A dictionary keyed by cell line, which contains another dictionary
+        that is keyed by gene name, with a list of amino acid substitutions
+        as values.
     """
-    url = ndex_context + 'mutation/cell_line'
-    if isinstance(gene_names, basestring):
-        gene_names = [gene_names]
-    if isinstance(cell_types, basestring):
-        cell_types = [cell_types]
-    params = {g: cell_types for g in gene_names}
-    res = ndex_client.send_request(url, params, is_json=True)
-    return res
+    mutations = cbio_client.get_mutations_ccle(gene_names, cell_types)
+    return mutations

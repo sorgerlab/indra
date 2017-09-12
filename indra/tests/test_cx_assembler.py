@@ -105,7 +105,7 @@ def test_set_context():
     cxa.make_model()
     cxa.set_context('BT20_BREAST')
     print(cxa.cx['nodeAttributes'])
-    assert(len(cxa.cx['nodeAttributes']) == 10)
+    assert(len(cxa.cx['nodeAttributes']) == 11)
 
 def test_make_print_model():
     cxa = CxAssembler()

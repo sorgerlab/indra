@@ -80,6 +80,17 @@ def test_get_ccle_cna():
     assert len(profile_data) == 2
 
 
+def test_get_ccle_mrna():
+    mrna = cbio_client.get_ccle_mrna(['XYZ', 'MAP2K1'], ['A375_SKIN'])
+    assert('A375_SKIN' in mrna)
+    assert(mrna['A375_SKIN'] is not None)
+    assert(mrna['A375_SKIN']['MAP2K1'] > 10)
+    assert(mrna['A375_SKIN']['XYZ'] is None)
+    mrna = cbio_client.get_ccle_mrna(['EGFR', 'BRAF'], ['XXX'])
+    assert('XXX' in mrna)
+    assert(mrna['XXX'] is None)
+
+
 def test_get_ccle_cna_big():
     """
     Get the CNA data on 124 genes in 4 cell lines. Expect to have CNA values

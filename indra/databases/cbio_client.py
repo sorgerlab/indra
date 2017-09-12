@@ -45,6 +45,15 @@ def send_request(**kwargs):
     skiprows = kwargs.pop('skiprows', None)
     res = requests.get(cbio_url, params=kwargs)
     if res.status_code == 200:
+        # Adaptively skip rows based on number of comment lines
+        if skiprows == -1:
+            lines = res.text.split('\n')
+            skiprows = 0
+            for line in lines:
+                if line.startswith('#'):
+                    skiprows += 1
+                else:
+                    break
         csv_StringIO = StringIO(res.text)
         df = pandas.read_csv(csv_StringIO, sep='\t', skiprows=skiprows)
         return df
@@ -84,7 +93,7 @@ def get_mutations(study_id, gene_list, mutation_type=None,
             'case_set_id': study_id,
             'genetic_profile_id': genetic_profile,
             'gene_list': gene_list_str,
-            'skiprows': 1}
+            'skiprows': -1}
     df = send_request(**data)
     if case_id:
         df = df[df['case_id'] == case_id]
@@ -325,6 +334,7 @@ def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
                                      case_id=cell_line)
         for gene, aa_change in zip(mutations_cl['gene_symbol'],
                                    mutations_cl['amino_acid_change']):
+            aa_change = str(aa_change)
             mutations[cell_line][gene].append(aa_change)
     return mutations
 
@@ -382,6 +392,44 @@ def get_ccle_cna(gene_list, cell_lines):
     profile_data = dict((key, value) for key, value in profile_data.items()
                         if key in cell_lines)
     return profile_data
+
+
+def get_ccle_mrna(gene_list, cell_lines):
+    """Return a dict of mRNA amounts in given genes and cell lines from CCLE.
+
+    Parameters
+    ----------
+    gene_list : list[str]
+        A list of HGNC gene symbols to get mRNA amounts for.
+    cell_lines : list[str]
+        A list of CCLE cell line names to get mRNA amounts for.
+
+    Returns
+    -------
+    mrna_amounts : dict[dict[float]]
+        A dict keyed to cell lines containing a dict keyed to genes
+        containing float
+    """
+    gene_list_str = ','.join(gene_list)
+    data = {'cmd': 'getProfileData',
+            'case_set_id': ccle_study + '_mrna',
+            'genetic_profile_id': ccle_study + '_mrna',
+            'gene_list': gene_list_str,
+            'skiprows': -1}
+    df = send_request(**data)
+    mrna_amounts = {cl: {g: [] for g in gene_list} for cl in cell_lines}
+    for cell_line in cell_lines:
+        if cell_line in df.columns:
+            for gene in gene_list:
+                value_cell = df[cell_line][df['COMMON'] == gene]
+                if value_cell.empty:
+                    mrna_amounts[cell_line][gene] = None
+                else:
+                    value = value_cell.values[0]
+                    mrna_amounts[cell_line][gene] = value
+        else:
+            mrna_amounts[cell_line] = None
+    return mrna_amounts
 
 
 def _filter_data_frame(df, data_col, filter_col, filter_str=None):
