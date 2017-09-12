@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import numpy
 from copy import copy
-from indra.databases import ndex_client
 from indra.databases import cbio_client
 # Python 2
 try:
@@ -11,7 +10,6 @@ try:
 except:
     basestring = str
 
-ndex_context = 'http://general.bigmech.ndexbio.org:8081/context/'
 
 def get_protein_expression(gene_names, cell_types):
     """Return the protein expression levels of genes in cell types.
@@ -62,5 +60,5 @@ def get_mutations(gene_names, cell_types):
         that is keyed by gene name, with a list of amino acid substitutions
         as values.
     """
-    mutations = cbio_client.get_mutations_ccle(['BRAF'], ['LOXIMVI_SKIN'])
+    mutations = cbio_client.get_mutations_ccle(gene_names, cell_types)
     return mutations
