@@ -32,6 +32,14 @@ def test_get_agents():
     assert nodes == list(ncp_file._node_agents.values())
 
 
+def test_get_agents_no_grounding():
+    ncp = \
+        process_cx_file(os.path.join(path_this, 'merged_BRCA1_formatted.cx'),
+                        require_grounding=False)
+    node_names = list(ncp._node_names.values())
+    names_from_agents = [ag.name for ag in ncp._node_agents.values()]
+    assert set(node_names) == set(names_from_agents)
+
 def test_get_node_names():
     nodes = ncp_file.get_node_names()
     assert nodes == list(ncp_file._node_names.values())

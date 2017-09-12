@@ -102,8 +102,9 @@ class NdexCxProcessor(object):
                                                   db_refs={'HGNC': hgnc_id,
                                                            'UP': up_id})
         if invalid_genes:
-            logger.info('Skipped invalid gene symbols: %s' %
-                        ', '.join(invalid_genes))
+            verb = 'Skipped' if self.require_grounding else 'Included'
+            logger.info('%s invalid gene symbols: %s' %
+                        (verb, ', '.join(invalid_genes)))
 
     def _initialize_network_info(self):
         ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]
