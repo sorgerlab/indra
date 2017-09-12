@@ -834,17 +834,19 @@ class PysbAssembler(object):
         if self.model is None:
             return
         monomer_names = [m.name for m in self.model.monomers]
-        res = context_client.get_protein_expression(monomer_names, cell_type)
-        if not res:
+        res = context_client.get_protein_expression(monomer_names, [cell_type])
+        amounts = res.get(cell_type)
+        if not amounts:
             logger.warning('Could not get context for %s cell type.' %
                            cell_type)
             self.add_default_initial_conditions()
+            return
         monomers_found = []
         monomers_notfound = []
         for m in self.model.monomers:
-            init = res.get(m.name)
+            init = amounts.get(m.name)
             if init is not None:
-                init_round = round(init[cell_type])
+                init_round = round(init)
                 set_base_initial_condition(self.model, m, init_round)
                 monomers_found.append(m.name)
             else:
