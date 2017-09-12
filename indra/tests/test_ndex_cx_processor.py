@@ -38,7 +38,9 @@ def test_get_agents_no_grounding():
                         require_grounding=False)
     node_names = list(ncp._node_names.values())
     names_from_agents = [ag.name for ag in ncp._node_agents.values()]
+    texts_from_agents = [ag.db_refs['TEXT'] for ag in ncp._node_agents.values()]
     assert set(node_names) == set(names_from_agents)
+    assert set(node_names) == set(texts_from_agents)
 
 def test_get_node_names():
     nodes = ncp_file.get_node_names()

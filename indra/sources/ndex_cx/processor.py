@@ -81,7 +81,7 @@ class NdexCxProcessor(object):
             if up_id:
                 gene_name = uniprot_client.get_gene_name(up_id)
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                db_refs = {'UP': up_id, 'HGNC': hgnc_id}
+                db_refs = {'UP': up_id, 'HGNC': hgnc_id, 'TEXT': gene_name}
                 agent = Agent(gene_name, db_refs=db_refs)
                 self._node_names[id] = gene_name
                 self._node_agents[id] = agent
@@ -92,15 +92,16 @@ class NdexCxProcessor(object):
                 hgnc_id = hgnc_client.get_hgnc_id(node_name)
                 if not hgnc_id:
                     if not self.require_grounding:
-                        self._node_agents[id] = Agent(node_name)
-                    else:
-                        invalid_genes.append(node_name)
+                        self._node_agents[id] = \
+                                Agent(node_name, db_refs={'TEXT': node_name})
+                    invalid_genes.append(node_name)
                 else:
                     up_id = hgnc_client.get_uniprot_id(hgnc_id)
                     assert up_id
                     self._node_agents[id] = Agent(node_name,
                                                   db_refs={'HGNC': hgnc_id,
-                                                           'UP': up_id})
+                                                           'UP': up_id,
+                                                           'TEXT': node_name})
         if invalid_genes:
             verb = 'Skipped' if self.require_grounding else 'Included'
             logger.info('%s invalid gene symbols: %s' %
