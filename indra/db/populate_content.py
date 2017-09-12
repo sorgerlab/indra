@@ -130,17 +130,31 @@ class Medline(Progenetor):
         return [k for k in all_files if k.endswith('.xml.gz')]
 
 
+    def get_article_info(self, xml_file):
+        tree = self.get_xml_file(xml_file)
+        article_info = pubmed_client.get_metadata_from_xml_tree(
+            tree, 
+            get_abstracts=True, 
+            prepend_title=False
+            )
+        return article_info
+
+    
+    def fix_doi(self, doi):
+        "Sometimes the doi is doubled (no idea why). Fix it."
+        if doi is None:
+            return doi
+        L = len(doi)
+        if L%2 is not 0:
+            return
+        if doi[:L] != doi[L:]:
+            return
+        return doi[:L]
+
     def upload_xml_file(self, db, xml_file):
         deleted_pmids = self.get_deleted_pmids()
+        article_info = self.get_article_info(xml_file)
         
-        tree = self.get_xml_file(xml_file)
-        
-        # Get the article metadata from the tree
-        try:
-            article_info = pubmed_client.get_metadata_from_xml_tree(
-                        tree, get_abstracts=True, prepend_title=False)
-        except Exception as e:
-            raise e
         print("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
@@ -154,8 +168,11 @@ class Medline(Progenetor):
         print("%d PMIDs to add to text_refs" % len(pmids_to_add))
         for pmid in pmids_to_add:
             pmid_data = article_info[pmid]
-            rec = (pmid, pmid_data.get('pmcid'), pmid_data.get('doi'),
-                   pmid_data.get('pii'))
+            rec = (
+                pmid, pmid_data.get('pmcid'), 
+                self.fix_doi(pmid_data.get('doi')),
+                pmid_data.get('pii')
+                )
             text_ref_records.append(
                 tuple([None if not r else r for r in rec])
                 )
