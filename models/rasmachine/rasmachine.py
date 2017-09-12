@@ -584,10 +584,14 @@ def summarize(model_path):
 
 @main.command()
 @click.argument('model_path')
-@click.option('--pmids', click.File('r'), default=sys.stdin)
+@click.option('--pmids', type=click.File(), default=sys.stdin)
 def increment_pmids(model_path, pmids):
     """Loads the model, increments it with the given PMIDS then exports"""
-    raise NotImplementedError
+    click.echo('This feature is not implemented')
+    click.echo('Model path recieved: {}'.format(model_path))
+    click.echo('PMIDS:')
+    for pmid in pmids:
+        click.echo(pmid)
 
 if __name__ == '__main__':
     main()
