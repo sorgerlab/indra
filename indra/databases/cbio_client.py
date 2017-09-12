@@ -422,8 +422,11 @@ def get_ccle_mrna(gene_list, cell_lines):
         if cell_line in df.columns:
             for gene in gene_list:
                 value_cell = df[cell_line][df['COMMON'] == gene]
-                value = value_cell.values[0]
-                mrna_amounts[cell_line][gene] = value
+                if value_cell.empty:
+                    mrna_amounts[cell_line][gene] = None
+                else:
+                    value = value_cell.values[0]
+                    mrna_amounts[cell_line][gene] = value
         else:
             mrna_amounts[cell_line] = None
     return mrna_amounts
