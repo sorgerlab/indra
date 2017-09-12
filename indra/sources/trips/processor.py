@@ -1479,6 +1479,7 @@ def _get_db_refs(term):
                     db_refs[dbname] = dbid
         return db_refs, None, []
 
+
     # This is the INDRA prioritization of grounding name spaces. Lower score
     # takes precedence.
     ns_priority = {
@@ -1516,8 +1517,6 @@ def _get_db_refs(term):
             top_idx = 0
             for i, entry in enumerate(entries):
                 if entry['priority'] < top_entry['priority']:
-                    if 'NCIT' in entry['refs'] and 'HGNC' in entry['refs']:
-                        continue
                     top_entry = entry
                     top_idx = i
             for i, entry in enumerate(entries):
@@ -1536,14 +1535,13 @@ def _get_db_refs(term):
     # Sometimes the top grounding has much lower priority and not much higher
     # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
     # In this case we take the second entry.
-    import ipdb; ipdb.set_trace()
     if len(top_per_score_group) > 1:
         score_diff = top_per_score_group[0]['score'] - \
                      top_per_score_group[1]['score']
         priority_diff = top_per_score_group[0]['priority'] - \
                         top_per_score_group[1]['priority']
         if score_diff < 0.2 and (priority_diff >= 2 or \
-            'FA' in top_per_score_group[0]['refs']):
+            top_per_score_group[0].get('comment') == 'BE_FROM_FA'):
             top_grounding = top_per_score_group[1]
     relevant_ambiguities = []
     for amb in ambiguities:
@@ -1625,6 +1623,8 @@ def _get_grounding_terms(term):
                 continue
             refs[db_ns] = db_id
 
+        comment = None
+
         # Next we look at alternatives for the entry. For instance
         # we check if NCIT maps to HGNC, CHEBI, GO or BE.
         new_refs = {}
@@ -1632,8 +1632,11 @@ def _get_grounding_terms(term):
             db_mappings = _get_db_mappings(ref_ns, ref_id)
             for ref_mapped in db_mappings:
                 new_refs[ref_mapped[0]] = ref_mapped[1]
+        if 'FA' in refs and 'BE' not in refs and 'BE' in new_refs:
+            comment = 'BE_FROM_FA'
         for k, v in new_refs.items():
             refs[k] = v
+
 
         # Now get the match score associated with the term
         match_score = dt.attrib.get('match-score')
@@ -1661,7 +1664,8 @@ def _get_grounding_terms(term):
         grounding_term = {'score': match_score,
                           'refs': refs,
                           'name': db_name,
-                          'type': entity_type}
+                          'type': entity_type,
+                          'comment': comment}
         terms.append(grounding_term)
     # Finally, the scores are sorted in descending order
     terms = sorted(terms, key=operator.itemgetter('score'), reverse=True)
@@ -1673,16 +1677,24 @@ def _get_grounding_terms(term):
     # ==>
     # [{'refs': {'NCIT': '123', 'HGNC': '234', 'UP': 'P123'}, score: 1.0}]
     if len(terms) > 1:
+        # Start with the first term, assumed to be independent
         independent_terms = [terms[0]]
+        # Iterate over the rest of the terms to check if they are independent
         for t in terms[1:]:
             any_match = False
+            # Update each of the independent terms with matching but missing
+            # groundings from the current term
             for it in independent_terms:
                 match = False
+                # Are there any matching groundings to this term?
                 for k, v in t['refs'].items():
                     if k in it['refs'] and it['refs'][k] == v:
                         match = True
                         any_match = True
+                # If there are, add all the items to the independent term
                 if match:
+                    if it.get('comment') == 'BE_FROM_FA' and 'BE' in t['refs']:
+                        it['comment'] = None
                     for k, v in t['refs'].items():
                         it['refs'][k] = v
             if not any_match:
