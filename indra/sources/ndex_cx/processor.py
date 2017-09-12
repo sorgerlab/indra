@@ -56,9 +56,10 @@ class NdexCxProcessor(object):
         A list of extracted INDRA Statements. Not all edges in the network
         may be converted into Statements.
     """
-    def __init__(self, cx):
+    def __init__(self, cx, require_grounding=True):
         self.cx = cx
         self.statements = []
+        self.require_grounding = require_grounding
         # Initialize the dict mapping node IDs to gene names
         self._node_names = {}
         self._node_agents = {}
@@ -90,7 +91,10 @@ class NdexCxProcessor(object):
                 self._node_names[id] = node_name
                 hgnc_id = hgnc_client.get_hgnc_id(node_name)
                 if not hgnc_id:
-                    invalid_genes.append(node_name)
+                    if not self.require_grounding:
+                        self._node_agents[id] = Agent(node_name)
+                    else:
+                        invalid_genes.append(node_name)
                 else:
                     up_id = hgnc_client.get_uniprot_id(hgnc_id)
                     assert up_id
