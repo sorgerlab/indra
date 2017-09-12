@@ -93,7 +93,7 @@ def get_mutations(study_id, gene_list, mutation_type=None,
             'case_set_id': study_id,
             'genetic_profile_id': genetic_profile,
             'gene_list': gene_list_str,
-            'skiprows': 1}
+            'skiprows': -1}
     df = send_request(**data)
     if case_id:
         df = df[df['case_id'] == case_id]

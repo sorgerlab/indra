@@ -3,6 +3,7 @@ from builtins import dict, str
 from indra.databases import context_client
 from indra.util import unicode_strs
 
+
 def test_get_protein_expression():
     res = context_client.get_protein_expression(['EGFR'], ['BT20_BREAST'])
     assert(res is not None)
@@ -10,6 +11,7 @@ def test_get_protein_expression():
     assert(res['BT20_BREAST'].get('EGFR') is not None)
     assert(res['BT20_BREAST']['EGFR'] > 1000)
     assert unicode_strs(res)
+
 
 def test_get_mutations():
     res = context_client.get_mutations(['BRAF'], ['A375_SKIN'])
@@ -19,3 +21,34 @@ def test_get_mutations():
     assert(res['A375_SKIN']['BRAF'] == ['V600E'])
     assert unicode_strs(res)
 
+
+def test_get_protein_expression_gene_missing():
+    protein_amounts = context_client.get_protein_expression(['EGFR', 'XYZ'],
+                                                            ['BT20_BREAST'])
+    assert('BT20_BREAST' in protein_amounts)
+    assert(protein_amounts['BT20_BREAST']['EGFR'] > 10000)
+    assert(protein_amounts['BT20_BREAST']['XYZ'] is None)
+
+
+def test_get_protein_expression_cell_type_missing():
+    protein_amounts = context_client.get_protein_expression(['EGFR'],
+                                                            ['BT20_BREAST', 'XYZ'])
+    assert('BT20_BREAST' in protein_amounts)
+    assert(protein_amounts['BT20_BREAST']['EGFR'] > 10000)
+    assert('XYZ' in protein_amounts)
+    assert(protein_amounts['XYZ'] is None)
+
+
+def test_get_mutations_gene_missing():
+    mutations = context_client.get_mutations(['BRAF', 'XYZ'], ['A375_SKIN'])
+    assert('A375_SKIN' in mutations)
+    assert(mutations['A375_SKIN']['BRAF'] == ['V600E'])
+    assert(not mutations['A375_SKIN']['XYZ'])
+
+
+def test_get_mutations_cell_type_missing():
+    mutations = context_client.get_mutations(['BRAF'], ['A375_SKIN', 'XYZ'])
+    assert('A375_SKIN' in mutations)
+    assert(mutations['A375_SKIN']['BRAF'] == ['V600E'])
+    assert('XYZ' in mutations)
+    assert(not mutations['XYZ']['BRAF'])

@@ -34,10 +34,14 @@ def get_protein_expression(gene_names, cell_types):
     B = 3.0957627
     mrna_amounts = cbio_client.get_ccle_mrna(gene_names, cell_types)
     protein_amounts = copy(mrna_amounts)
-    for cell_line, amounts in mrna_amounts.items():
+    for cell_type in cell_types:
+        amounts = mrna_amounts.get(cell_type)
+        if amounts is None:
+            continue
         for gene_name, amount in amounts.items():
-            protein_amount = 10**(A * amount + B)
-            protein_amounts[cell_line][gene_name] = protein_amount
+            if amount is not None:
+                protein_amount = 10**(A * amount + B)
+                protein_amounts[cell_type][gene_name] = protein_amount
     return protein_amounts
 
 def get_mutations(gene_names, cell_types):
