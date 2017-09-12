@@ -325,6 +325,7 @@ def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
                                      case_id=cell_line)
         for gene, aa_change in zip(mutations_cl['gene_symbol'],
                                    mutations_cl['amino_acid_change']):
+            aa_change = str(aa_change)
             mutations[cell_line][gene].append(aa_change)
     return mutations
 
@@ -402,8 +403,8 @@ def get_ccle_mrna(gene_list, cell_lines):
     """
     gene_list_str = ','.join(gene_list)
     data = {'cmd': 'getProfileData',
-            'case_set_id': 'cellline_ccle_broad_mrna',
-            'genetic_profile_id': 'cellline_ccle_broad_mrna',
+            'case_set_id': ccle_study + '_mrna',
+            'genetic_profile_id': ccle_study + '_mrna',
             'gene_list': gene_list_str,
             'skiprows': 2}
     df = send_request(**data)
