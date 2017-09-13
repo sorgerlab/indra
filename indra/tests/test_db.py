@@ -220,6 +220,7 @@ def test_full_local_upload():
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
+    raise SkipTest()
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
     db = local_startup()
@@ -248,13 +249,43 @@ def test_multiple_pmids():
     num_refs = len(db.select('text_ref'))
     med.populate(db)
     assert len(db.select('text_ref')) == num_refs,\
-        "Duplicate pmids poorly handled."
+        "Duplicate pmids allowed to be submitted.."
+    return
+
+
+def test_multible_pmc_oa_content():
+    "Test to make sure repeated content is handled correctly."
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
+    db = local_startup()
+    pmc = PmcOA(ftp_url=TEST_FTP, local=True)
+    pmc.populate(db)
+    num_conts = len(db.select('text_content'))
+    pmc.populate(db)
+    assert len(db.select('text_content')) == num_conts,\
+        "Duplicate text content allowed to be submitted."
+    return
+
+
+def test_multiple_text_ref_pmc_oa():
+    "Test whether a duplicate text ref in pmc oa is handled correctly."
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
+    db = local_startup()
+    pmc = PmcOA(ftp_url=TEST_FTP, local=True)
+    inp = dict.fromkeys(pmc.tr_cols)
+    inp.update(pmcid='PMC5579538', doi='10.1021/acsomega.7b00205')
+    pmc.upload_batch(db, [inp], [])
+    num_refs = len(db.select('text_ref'))
+    pmc.upload_batch(db, [inp], [])
+    assert len(db.select('text_ref')) == num_refs,\
+        "Duplicate refs allowed to be submitted.."
     return
 
 
 def test_continuing_upload():
     "Test whether we correcly pick up where we left off when continuing."
-    SkipTest("Not sure how to actually test this....")
+    raise SkipTest("Not sure how to actually test this....")
 
 
 def test_full_remote_upload():
@@ -283,6 +314,7 @@ def test_full_remote_upload():
 
 def test_ftp_service():
     "Test the progenitor childrens' ftp access."
+    raise SkipTest()
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
     cases = [

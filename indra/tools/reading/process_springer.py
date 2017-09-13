@@ -213,6 +213,9 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
                 }
             )
         ref_data = xml_data['ref_data']
+        if not isinstance(ref_data['doi'], str):
+            print('Need to decode ref_data doi.')
+            ref_data['doi'] = ref_data['doi'].decode('utf8')
         ref_data.update(find_other_ids(ref_data['doi']))
         
         if not pdf_is_worth_uploading(ref_data):
@@ -249,7 +252,7 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
             source='Springer',
             format='fulltext',
             text_type='pdftotext',
-            content=full_content
+            content=full_content.encode('utf8')
             )
         
         abst_data = xml_data['abst_data']

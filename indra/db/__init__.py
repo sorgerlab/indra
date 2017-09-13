@@ -344,6 +344,12 @@ class DatabaseManager(object):
         return self.filter_query(tbls, *args).all()
 
 
+    def has_entry(self, tbls, *args):
+        "Check whether an entry or entries matching given specs live in the db."
+        q = self.filter_query(tbls, *args)
+        return self.session.query(q.exists()).first()
+
+
     def insert_db_stmts(self, stmts, db_name):
         "Insert statement, their database, and any affiliated agents."
         # Insert the db info
