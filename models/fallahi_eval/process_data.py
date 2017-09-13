@@ -82,10 +82,12 @@ def get_gene_names(data, antibody_HGNC_dict):
     antibody_list = []
     exclude_columns = ['Drug', 'Time (hr)', 'Concentration (uM)']
     for cl in cell_lines:
-        antibody_list.append([x for x in data[cl]['median']
-                              if x not in exclude_columns])
+        antibody_list += [x for x in data[cl]['median']
+                          if x not in exclude_columns]
     antibody_list = list(set(antibody_list))
-    antibody_gene_list = [antibody_HGNC_dict[a] for a in antibody_list]
+    antibody_gene_list = []
+    for ab in antibody_list:
+        antibody_gene_list += antibody_HGNC_dict[ab]
     ras_gene_list = read_gene_list('../../data/ras_pathway_proteins.csv')
     msb2015_gene_list = read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
     msb2017_gene_list = read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
