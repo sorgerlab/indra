@@ -9,7 +9,7 @@ import requests
 
 logger = logging.getLogger('trips')
 
-trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
+trips_url = 'http://trips.ihmc.us/parser/cgi/drum-dev'
 
 
 def send_query(text, query_args=None):
