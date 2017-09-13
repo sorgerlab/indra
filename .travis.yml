@@ -81,13 +81,13 @@ script:
   - cd $TRAVIS_BUILD_DIR/models
   - python hello_indra.py
   - cd $TRAVIS_BUILD_DIR/models/p53_model
-  - python run_p53_model.py
+  - python run_p53_model.py noplot
   - cd $TRAVIS_BUILD_DIR/models/braf_model
   - python assemble_model.py
   - cd $TRAVIS_BUILD_DIR/models/ras_pathway
   - python run_ras_pathway.py trips
   # Run assembly benchmarks
-  - cd indra/benchmarks/assembly_eval/batch4
+  - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
   - python run_combined.py
 after_success:
   coveralls

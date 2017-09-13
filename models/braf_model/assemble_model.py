@@ -140,3 +140,9 @@ def assemble_model(model_id, reread=False):
     pa.model = model
     pa.save_model('model%d.py' % model_id)
     return model
+
+
+if __name__ == '__main__':
+    for model_id in (1, 2, 3):
+        model = assemble_model(model_id, reread=True)
+        print(model)
