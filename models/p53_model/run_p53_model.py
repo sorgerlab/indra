@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,7 +130,8 @@ def run_model(model):
     ax = plt.gca()
     format_axis(ax)
     #plt.subplots_adjust()
-    plt.savefig(model.name + '.pdf')
+    if not _no_plot:
+        plt.savefig(model.name + '.pdf')
     return ts, solver
 
 def export_pomi(model, formats):
@@ -137,10 +139,14 @@ def export_pomi(model, formats):
         model_export = export(model, f)
         extension = (f if f != 'pysb_flat' else 'py')
         fname = 'POMI1.0.%s' % extension
-        with open(fname, 'wb') as fh:
+        with open(fname, 'wt') as fh:
             fh.write(model_export)
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'noplot':
+        _no_plot = True
+    else:
+        _no_plot = False
     reread = False
     model_names = ['ATR_v1',
                    'ATR_v2',
