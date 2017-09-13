@@ -73,11 +73,17 @@ script:
   - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-gordo-1.3.3-SNAPSHOT.jar
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   # Run standard unit tests
-  #- cd $TRAVIS_BUILD_DIR
-  #- nosetests indra
-  #   -v --with-doctest --with-doctest-ignore-unicode
-  #   --with-coverage --cover-inclusive --cover-package=indra
-  # Run NL model examples
+  - cd $TRAVIS_BUILD_DIR
+  - nosetests indra
+     -v --with-doctest --with-doctest-ignore-unicode
+     --with-coverage --cover-inclusive --cover-package=indra
+  # Run NL model examples only when the environmental variable
+  # RUN_NL_MODELS is set to true in the Travis build
+  # NOTE: if blocks in Travis DO NOT FAIL even if there is
+  # and error in one of the commands inside. Therefore passing
+  # alone does not mean that all the operations inside were
+  # successful. Rather, the log needs to be inspected and compared
+  # to desired behavior.
   - |
     if [ $RUN_NL_MODELS == "true" ]; then
         cd $TRAVIS_BUILD_DIR/models
@@ -90,7 +96,8 @@ script:
         python run_ras_pathway.py trips
      fi
   # Run assembly benchmarks
-  #- cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
-  #- python run_combined.py
+  - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
+  - python run_combined.py
+  - cd $TRAVIS_BUILD_DIR
 after_success:
   coveralls
