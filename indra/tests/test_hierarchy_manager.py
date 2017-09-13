@@ -31,10 +31,10 @@ def test_isa_entity3():
     assert(not ent_hierarchy.isa('BE', 'RAF', 'HGNC', 'BRAF'))
 
 def test_partof_entity():
-    assert ent_hierarchy.partof('BE', 'HIF1_alpha', 'BE', 'HIF1')
+    assert ent_hierarchy.partof('BE', 'HIF_alpha', 'BE', 'HIF')
 
 def test_partof_entity_not():
-    assert not ent_hierarchy.partof('BE', 'HIF1', 'BE', 'HIF1_alpha')
+    assert not ent_hierarchy.partof('BE', 'HIF1', 'BE', 'HIF_alpha')
 
 def test_isa_mod():
     assert(mod_hierarchy.isa('INDRA', 'phosphorylation',
