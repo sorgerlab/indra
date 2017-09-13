@@ -1,6 +1,7 @@
 import numpy
 import pandas
 import itertools
+from indra.literature import pubmed_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
 expression_file = 'data/Expression_Filtered.csv'
@@ -98,7 +99,11 @@ def get_gene_pmids(gene_names):
     # Use indra.literature.pubmed_client.get_ids_for_gene for each gene
     #   to get its PMIDs
     # Collect all PMIDs in one list and return
-    return None
+    genes_pmid_list = []
+    for gene in gene_names:
+        genes_pmid_list += pubmed_client.get_ids_for_gene(gene)
+    genes_pmid_list = list(set(genes_pmid_list))
+    return genes_pmid_list
 
 
 def get_drug_pmids(data):
