@@ -11,6 +11,21 @@ logger = logging.getLogger('index_card_assembler')
 global_submitter = 'cure'
 
 class IndexCardAssembler(object):
+    """Assembler creating index cards from a set of INDRA Statements.
+
+    Parameters
+    ----------
+    statements : list
+        A list of INDRA statements to be assembled.
+    pmc_override : Optional[str]
+        A PMC ID to assign to the index card.
+
+    Attributes
+    ----------
+    statements : list
+        A list of INDRA statements to be assembled.
+    """
+
     def __init__(self, statements=None, pmc_override=None):
         if statements is None:
             self.statements =  []
@@ -20,9 +35,17 @@ class IndexCardAssembler(object):
         self.pmc_override = pmc_override
 
     def add_statements(self, statements):
+        """Add statements to the assembler.
+
+        Parameters
+        ----------
+        statements : list[indra.statement.Statements]
+            The list of Statements to add to the assembler.
+        """
         self.statements.extend(statements)
 
     def make_model(self):
+        """Assemble statements into index cards."""
         for stmt in self.statements:
             if isinstance(stmt, Modification):
                 card = assemble_modification(stmt)
@@ -47,14 +70,30 @@ class IndexCardAssembler(object):
                 self.cards.append(card)
 
     def print_model(self):
+        """Return the assembled cards as a JSON string.
+
+        Returns
+        -------
+        cards_json : str
+            The JSON string representing the assembled cards.
+        """
         cards = [c.card for c in self.cards]
         # If there is only one card, print it as a single
         # card not as a list
         if len(cards) == 1:
             cards = cards[0]
-        return json.dumps(cards, indent=1)
+        cards_json = json.dumps(cards, indent=1)
+        return cards_json
 
     def save_model(self, file_name='index_cards.json'):
+        """Save the assembled cards into a file.
+
+        Parameters
+        ----------
+        file_name : Optional[str]
+            The name of the file to save the cards into. Default:
+            index_cards.json
+        """
         with open(file_name, 'wt') as fh:
             fh.write(self.print_model())
 
@@ -167,7 +206,7 @@ def assemble_modification(stmt):
         interaction['modifications'][0]['aa_code'] =  stmt.residue
 
     # If the statement is direct or there is no enzyme
-    if get_is_direct(stmt) or stmt.enz is None:
+    if _get_is_direct(stmt) or stmt.enz is None:
         interaction['participant_a'] = get_participant(stmt.enz)
         interaction['participant_b'] = get_participant(stmt.sub)
         card.card['interaction'] = interaction
@@ -209,7 +248,7 @@ def assemble_selfmodification(stmt):
         interaction['modifications'][0]['aa_code'] =  stmt.residue
 
     # If the statement is direct or there is no enzyme
-    if get_is_direct(stmt) or stmt.enz is None:
+    if _get_is_direct(stmt) or stmt.enz is None:
         interaction['participant_a'] = get_participant(stmt.enz)
         interaction['participant_b'] = get_participant(stmt.enz)
         card.card['interaction'] = interaction
@@ -366,7 +405,7 @@ def get_evidence_text(stmt):
             ', '.join(sources)]
     return ev_txts
 
-def get_is_direct(stmt):
+def _get_is_direct(stmt):
     '''Returns true if there is evidence that the statement is a direct
     interaction. If any of the evidences associated with the statement
     indicates a direct interatcion then we assume the interaction

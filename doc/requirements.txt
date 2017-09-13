@@ -5,3 +5,4 @@ matplotlib
 future
 requests
 pysb
+pandas

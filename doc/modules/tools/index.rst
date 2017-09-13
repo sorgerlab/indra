@@ -25,20 +25,17 @@ Build a model incrementally over time (:py:mod:`indra.tools.incremental_model`)
 .. automodule:: indra.tools.incremental_model
     :members:
 
-High-throughput reading tools (:py:mod:`indra.tools.reading`)
--------------------------------------------------------------
+.. High-throughput reading tools (:py:mod:`indra.tools.reading`)
+   -------------------------------------------------------------
+   .. automodule:: indra.tools.reading
+       :members:
 
-.. automodule:: indra.tools.reading
-    :members:
+.. Scoring INDRA Statements manually (:py:mod:`indra.tools.stmt_scoring`)
+   ----------------------------------------------------------------------
+   .. automodule:: indra.tools.stmt_scoring
+       :members:
 
-Scoring INDRA Statements manually (:py:mod:`indra.tools.stmt_scoring`)
-----------------------------------------------------------------------
-
-.. automodule:: indra.tools.stmt_scoring
-    :members:
-
-Generate English language questions on linked mechanisms (:py:mod:`indra.tools.mechlinker_queries`)
----------------------------------------------------------------------------------------------------
-
-.. automodule:: indra.tools.mechlinker_queries
-    :members:
+.. Generate English language questions on linked mechanisms (:py:mod:`indra.tools.mechlinker_queries`)
+   ---------------------------------------------------------------------------------------------------
+   .. automodule:: indra.tools.mechlinker_queries
+       :members:

@@ -688,7 +688,7 @@ class BaseAgent(object):
 class AgentState(object):
     """A class representing Agent state without identifying a specific Agent.
 
-    Properties
+    Attributes
     ----------
     bound_conditions : list[indra.statements.BoundCondition]
     mods : list[indra.statements.ModCondition]
