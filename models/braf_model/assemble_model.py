@@ -51,20 +51,20 @@ def assemble_model(model_id, reread=False):
 
     # Set initial conditions
     erk = model.monomers['ERK']
-    obs = Observable(b'ERK_p', erk(phospho='p'))
+    obs = Observable('ERK_p', erk(phospho='p'))
     model.add_component(obs)
     vem = model.monomers['VEMURAFENIB']
-    obs = Observable(b'Vem_free', vem(map3k=None))
+    obs = Observable('Vem_free', vem(map3k=None))
     model.add_component(obs)
     ras = model.monomers['RAS']
-    obs = Observable(b'RAS_active', ras(gtp=ANY))
+    obs = Observable('RAS_active', ras(gtp=ANY))
     model.add_component(obs)
     braf = model.monomers['BRAF']
-    obs = Observable(b'BRAF_active', braf(vemurafenib=None))
+    obs = Observable('BRAF_active', braf(vemurafenib=None))
     model.add_component(obs)
-    model.parameters[b'BRAF_0'].value = 0
+    model.parameters['BRAF_0'].value = 0
     egf = model.monomers['EGF']
-    obs = Observable(b'EGF_free', egf(erbb=None))
+    obs = Observable('EGF_free', egf(erbb=None))
     model.add_component(obs)
 
     # Add mutated form of BRAF as initial condition

@@ -139,7 +139,7 @@ def export_pomi(model, formats):
         model_export = export(model, f)
         extension = (f if f != 'pysb_flat' else 'py')
         fname = 'POMI1.0.%s' % extension
-        with open(fname, 'wb') as fh:
+        with open(fname, 'wt') as fh:
             fh.write(model_export)
 
 if __name__ == '__main__':
