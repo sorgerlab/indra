@@ -69,10 +69,10 @@ def get_searchgenes_pmids(search_genes, num_days):
     pmids = {}
     for s in search_genes:
         try:
-            ids = pubmed_client.get_ids_for_gene(s, reldate=num_days)
+            pmids[s] = pubmed_client.get_ids_for_gene(s, reldate=num_days)
         except ValueError as e:
             logger.error('Gene symbol %s is invalid')
-        pmids[s] = ids
+            continue
     return pmids
 
 def check_pmids(stmts):
@@ -253,7 +253,7 @@ def upload_to_ndex(cx_str, ndex_cred):
     logger.info('Updating NDEx network (%s) profile to %s' %
                 (network_id, profile))
     profile_retries = 5
-    for i in range(profile_retries):
+    for _ in range(profile_retries):
         try:
             time.sleep(5)
             nd.update_network_profile(network_id, profile)
