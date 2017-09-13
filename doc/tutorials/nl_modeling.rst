@@ -1,8 +1,9 @@
 Using natural language to build models
 ======================================
 
-In this tutorial we build a simple model using natural language, then 
-contextualize and parameterize it, and export it into different formats.
+In this tutorial we build a simple model using natural language,
+and export it into different formats.
+
 
 Read INDRA Statements from a natural language string
 ----------------------------------------------------
@@ -80,26 +81,20 @@ identifiers and also annotate the semantics of each component of each rule.
     for annotation in pa.model.annotations:
         print(annotation)
 
-Set the model to a particular cell line context
------------------------------------------------
-
-We can use INDRA's contextualization module which is built into the
-PysbAssembler to set the amounts of proteins in the model to total amounts
-measured (or estimated) in a given cancer cell line. In this example,
-we will use the  `A375` melanoma cell line to set the total amounts of
-proteins in the model.
-
-.. ipython:: python
-
-    pa.set_context('A375_SKIN')
-
-At this point the PySB model has total protein amounts set consistent with the
-A375 cell line:
-
-.. ipython:: python
-
-    for monomer_pattern, parameter in pa.model.initial_conditions:
-        print('%s = %d' % (monomer_pattern, parameter.value))
+..  Set the model to a particular cell line context
+    -----------------------------------------------
+    We can use INDRA's contextualization module which is built into the
+    PysbAssembler to set the amounts of proteins in the model to total amounts
+    measured (or estimated) in a given cancer cell line. In this example,
+    we will use the  `A375` melanoma cell line to set the total amounts of
+    proteins in the model.
+    .. ipython:: python
+        pa.set_context('A375_SKIN')
+    At this point the PySB model has total protein amounts set consistent with the
+    A375 cell line:
+    .. ipython:: python
+        for monomer_pattern, parameter in pa.model.initial_conditions:
+            print('%s = %d' % (monomer_pattern, parameter.value))
 
 Exporting the model into other common formats
 ---------------------------------------------

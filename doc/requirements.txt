@@ -6,4 +6,3 @@ future
 requests
 pysb
 pandas
-functools

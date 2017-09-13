@@ -306,7 +306,7 @@ MOCK_MODULES = [
     'rdflib', 'rdflib.namespace', 'rdflib.plugins',
     'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
     'objectpath', 'lxml', 'lxml.etree',
-    'lxml.builder', 'networkx'
+    'lxml.builder', 'networkx', 'functools32'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
