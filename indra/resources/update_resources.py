@@ -129,7 +129,7 @@ def update_chebi_entries():
     df_pubchem = df[df['REFERENCE_DB_NAME']=='PubChem']
     df_pubchem.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                            inplace=True)
-    df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_pubchem.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'PUBCHEM'], index=False)
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
@@ -137,7 +137,7 @@ def update_chebi_entries():
     df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
-    df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_chembl.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
 def update_cellular_components():
