@@ -26,6 +26,21 @@ logger = logging.getLogger('cyjs_assembler')
 
 
 class CyJSAssembler(object):
+    """This class assembles a CytoscapeJS graph from a set of INDRA Statements.
+
+    CytoscapeJS is a web-based network library for analysis and
+    visualisation: http://js.cytoscape.org/
+
+    Parameters
+    ----------
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be assembled.
+
+    Attributes
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements to be assembled.
+    """
     def __init__(self, stmts=None):
         if not stmts:
             self.statements = []
@@ -183,9 +198,8 @@ class CyJSAssembler(object):
         cyjs_str_context : str
             A json string of the context dictionary. e.g. -
             {'CCLE' : {'bin_expression' : {'cell_line1' : {'gene1':'val1'} },
-                       'bin_expression' : {'cell_line' : {'gene1':'val1'} }
-                      }
-            }
+            'bin_expression' : {'cell_line' : {'gene1':'val1'} }
+            }}
         """
         context = self._context
         context_str = json.dumps(context, indent=1, sort_keys=True)
