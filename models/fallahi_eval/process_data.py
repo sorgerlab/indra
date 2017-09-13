@@ -66,6 +66,12 @@ def read_rppa_data(fname=rppa_file):
     return data
 
 
+def read_gene_list(path):
+    df = pandas.read_csv(path, sep='\t', error_bad_lines=False, header=None)
+    gene_list = df[0].tolist()
+    return sorted(list(set(gene_list)))
+
+
 def get_gene_names(data):
     # Get the gene names in the data from the data frame
     # Append any other gene names that are also relevant that are not in
