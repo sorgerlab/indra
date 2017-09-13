@@ -45,14 +45,16 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
-def get_email_pmids(gmail_cred, num_days=10):
+def get_email_pmids(gmail_cred):
     M = gmail_client.gmail_login(gmail_cred.get('user'),
                                  gmail_cred.get('password'))
     gmail_client.select_mailbox(M, 'INBOX')
+    num_days = int(gmail_cred.get('num_days', 10))
+    logger.info('Searching last %d days of emails', num_days)
     pmids = gmail_client.get_message_pmids(M, num_days)
     return pmids
 
-def get_searchterm_pmids(search_terms, num_days=1):
+def get_searchterm_pmids(search_terms, num_days):
     pmids = {}
     for s in search_terms:
         # Special cases
@@ -60,11 +62,10 @@ def get_searchterm_pmids(search_terms, num_days=1):
             s = 'c-MET'
         elif s.upper() == 'JUN':
             s = 'c-JUN'
-        ids = pubmed_client.get_ids(s, reldate=num_days)
-        pmids[s] = ids
+        pmids[s] = pubmed_client.get_ids(s, reldate=num_days)
     return pmids
 
-def get_searchgenes_pmids(search_genes, num_days=1):
+def get_searchgenes_pmids(search_genes, num_days):
     pmids = {}
     for s in search_genes:
         try:
@@ -434,7 +435,7 @@ def run(model_path, config):
     if use_gmail:
         logger.info('Getting PMIDs from emails.')
         try:
-            email_pmids = get_email_pmids(gmail_cred, num_days=10)
+            email_pmids = get_email_pmids(gmail_cred)
             # Put the email_pmids into the pmids dictionary
             pmids['Gmail'] = email_pmids
             logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
@@ -451,7 +452,9 @@ def run(model_path, config):
         if search_genes:
             search_terms += search_genes
         logger.info('Using search terms: %s' % ', '.join(search_terms))
-        pmids_term = get_searchterm_pmids(search_terms, num_days=5)
+        num_days = int(config.get('search_terms_num_days', 5))
+        logger.info('Searching the last %d days', num_days)
+        pmids_term = get_searchterm_pmids(search_terms, num_days=num_days)
         num_pmids = sum([len(pm) for pm in pmids_term.values()])
         logger.info('Collected %d PMIDs from PubMed search_terms.' % num_pmids)
         pmids = _extend_dict(pmids, pmids_term)
