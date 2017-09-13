@@ -127,11 +127,18 @@ def get_drug_pmids(drug_dict):
     return drugs_pmid_list
 
 
-def get_all_pmids(data, pmid_file='pmids.txt'):
+def get_all_pmids(data, antibody_HGNC_dict, drug_dict, pmid_file='pmids.txt'):
     # Call both get_gene_pmids and get_drug_pmids, and combine the results
     # Save list of PMIDs in the pmid_file path given
     # Return all PMIDs in a single list
-    return None
+    gene_names = get_gene_names(data, antibody_HGNC_dict)
+    genes_pmid_list = get_gene_pmids(gene_names)
+    drugs_pmid_list = get_drug_pmids(data, drug_dict)
+    pmid_list = list(set(genes_pmid_list + drugs_pmid_list))
+    with open(pmid_file, 'wb') as fh:
+        for pmid in pmid_list:
+            fh.write(('%s\n' % pmid).encode('utf-8'))
+    return pmid_list
 
 
 def find_extremes(data, fold_change, save_file=None):
