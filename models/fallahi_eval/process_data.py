@@ -72,12 +72,26 @@ def read_gene_list(path):
     return sorted(list(set(gene_list)))
 
 
-def get_gene_names(data):
+def get_gene_names(data, antibody_HGNC_dict):
     # Get the gene names in the data from the data frame
     # Append any other gene names that are also relevant that are not in
     #   the data
     # Return gene_names
-    return None
+    gene_names = []
+    antibody_list = []
+    exclude_columns = ['Drug', 'Time (hr)', 'Concentration (uM)']
+    for cl in cell_lines:
+        antibody_list.append([x for x in data[cl]['median']
+                              if x not in exclude_columns])
+    antibody_list = list(set(antibody_list))
+    antibody_gene_list = [antibody_HGNC_dict[a] for a in antibody_list]
+    ras_gene_list = read_gene_list('../../data/ras_pathway_proteins.csv')
+    msb2015_gene_list = read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
+    msb2017_gene_list = read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
+    gene_names = (ras_gene_list + msb2015_gene_list +
+                  msb2017_gene_list + antibody_gene_list)
+    gene_names = list(set(gene_names))
+    return gene_names
 
 
 def get_gene_pmids(gene_names):
