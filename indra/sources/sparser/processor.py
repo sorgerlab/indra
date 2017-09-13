@@ -9,8 +9,103 @@ from indra.databases import uniprot_client, hgnc_client
 
 logger = logging.getLogger('sparser')
 
+class SparserJSONProcessor(object):
+    def __init__(self, json_dict):
+        self.json_stmts = json_dict
+        self.statements = []
 
-class SparserProcessor(object):
+    def get_statements(self):
+        mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
+        for json_stmt in self.json_stmts:
+            # Step 1: fix JSON directly to eliminate errors when deserializing
+            if json_stmt.get('type') in mod_class_names:
+                position = json_stmt.get('position')
+                residue = json_stmt.get('residue')
+                if isinstance(position, list):
+                    if len(position) != 1:
+                        logger.error('Invalid position: %s' % position)
+                    else:
+                        json_stmt['position'] = position[0]
+                if isinstance(residue, list):
+                    if len(residue) != 1:
+                        logger.error('Invalid residue: %s' % residue)
+                    else:
+                        json_stmt['residue'] = residue[0]
+            elif json_stmt.get('type') in ('Activation', 'Inhibition'):
+                obj_activity = json_stmt.get('obj_activity')
+                if isinstance(obj_activity, list):
+                    if len(obj_activity) != 1:
+                        print('Invalid object activity: %s' % obj_activity)
+                    else:
+                        json_stmt['obj_activity'] = obj_activity[0]
+                obj = json_stmt.get('obj')
+                if isinstance(obj, (list, str)):
+                  continue
+            elif json_stmt.get('type') == 'Translocation':
+                # Fix locations if possible
+                for loc_param in ('from_location', 'to_location'):
+                    loc = json_stmt.get(loc_param)
+                    if loc:
+                        try:
+                            loc = get_valid_location(loc)
+                        except InvalidLocationError:
+                            logger.error('Invalid location: %s' % loc)
+                            loc = None
+                        json_stmt[loc_param] = loc
+                # Skip Translocation with both locations None
+                if json_stmt.get('from_location') is None and \
+                    json_stmt.get('to_location') is None:
+                    continue
+
+            # Step 2: Deserialize into INDRA Statement
+            stmt = Statement._from_json(json_stmt)
+
+            # Step 3: Filter out invalid Statements
+            # Skip Statement if all agents are None
+            if not any(stmt.agent_list()):
+                continue
+            # Skip RegulateActivity if object is None
+            if isinstance(stmt, RegulateActivity):
+                if stmt.obj is None or stmt.subj is None:
+                    continue
+            if isinstance(stmt, Modification):
+                if stmt.sub is None:
+                    continue
+
+            # Step 4: Fix Agent names and grounding
+            _fix_agents(stmt)
+
+            # Step 5: Append to list of Statements
+            self.statements.append(stmt)
+
+
+def _fix_agents(stmt):
+    for agent in stmt.agent_list():
+        if agent is not None:
+            up_id = agent.db_refs.get('UP')
+            hgnc_id = agent.db_refs.get('HGNC')
+            be_id = agent.db_refs.get('BE')
+            if be_id:
+                agent.name = be_id
+            if hgnc_id:
+                gene_name = hgnc_client.get_hgnc_name(hgnc_id)
+                if gene_name:
+                    agent.name = gene_name
+                if not up_id:
+                    up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                    if up_id:
+                        agent.db_refs['UP'] = up_id
+            if up_id:
+                gene_name = uniprot_client.get_gene_name(up_id)
+                if gene_name:
+                    agent.name = gene_name
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        agent.db_refs['HGNC'] = hgnc_id
+        # TODO: handle NCIT, FA, IP, NXP to BE/HGNC/UP mappings
+
+
+class SparserXMLProcessor(object):
     def __init__(self, xml_etree):
         self.tree = xml_etree
         self.statements = []
@@ -156,6 +251,7 @@ class SparserProcessor(object):
         else:
             raw_text = None
 
+        # TODO: factor this out and reuse fix_agents
         db_refs = {}
         # Save raw text if available
         if raw_text:
@@ -231,7 +327,7 @@ class SparserProcessor(object):
         if residue_tag is not None:
             residue_aa_tag = residue_tag.find("var/[@name='amino-acid']/ref")
             if residue_aa_tag is not None:
-                residue = SparserProcessor._get_amino_acid(residue_aa_tag)
+                residue = SparserXMLProcessor._get_amino_acid(residue_aa_tag)
                 position_tag = residue_tag.find("var/[@name='position']")
                 if position_tag is not None:
                     position = position_tag.text.strip()
@@ -247,6 +343,7 @@ class SparserProcessor(object):
     def _get_evidence(self, text):
         ev = Evidence(source_api='sparser', pmid=self.pmid, text=text)
         return ev
+
 
 def get_bioentities_mapping(db_ns, db_id):
     if db_ns == 'FA':
