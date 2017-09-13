@@ -9,6 +9,7 @@ mutation_file = 'data/WES_variants_filtered.csv'
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
               'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
 
+
 def read_rppa_data(fname=rppa_file):
     """Return RPPA data as a dict median/std DataFrames."""
     data = {}
@@ -35,12 +36,14 @@ def get_gene_names(data):
     # Append any other gene names that are also relevant that are not in
     #   the data
     # Return gene_names
+    return None
 
 
 def get_gene_pmids(gene_names):
     # Use indra.literature.pubmed_client.get_ids_for_gene for each gene
     #   to get its PMIDs
     # Collect all PMIDs in one list and return
+    return None
 
 
 def get_drug_pmids(data):
@@ -49,13 +52,14 @@ def get_drug_pmids(data):
     # Use indra.literature.pubmed_client.get_ids with the
     #   name and/or synonym(s) of each drug and get the relevant PMIDS
     # Collect all PMIDs in one list and return
-    #
+    return None
 
 
-def get_all_pmids(data, pmid_file='pmids.txt')
+def get_all_pmids(data, pmid_file='pmids.txt'):
     # Call both get_gene_pmids and get_drug_pmids, and combine the results
     # Save list of PMIDs in the pmid_file path given
     # Return all PMIDs in a single list
+    return None
 
 
 def find_extremes(data, fold_change, save_file=None):
