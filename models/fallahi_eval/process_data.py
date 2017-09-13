@@ -124,7 +124,7 @@ def get_drug_pmids(drug_dict):
     drug_names = get_drug_names(drug_dict)
     drugs_pmid_list = []
     for drug in drug_names:
-        drugs_pmid_list += pubmed_client.pubmed_client.get_ids(drug)
+        drugs_pmid_list += pubmed_client.get_ids(drug)
     drugs_pmid_list = list(set(drugs_pmid_list))
     return drugs_pmid_list
 
@@ -135,7 +135,7 @@ def get_all_pmids(data, antibody_HGNC_dict, drug_dict, pmid_file='pmids.txt'):
     # Return all PMIDs in a single list
     gene_names = get_gene_names(data, antibody_HGNC_dict)
     genes_pmid_list = get_gene_pmids(gene_names)
-    drugs_pmid_list = get_drug_pmids(data, drug_dict)
+    drugs_pmid_list = get_drug_pmids(drug_dict)
     pmid_list = list(set(genes_pmid_list + drugs_pmid_list))
     with open(pmid_file, 'wb') as fh:
         for pmid in pmid_list:
@@ -201,3 +201,9 @@ def find_cell_line_vars(data, fold_change, save_file=None):
             for vals in all_vals:
                 fh.write(','.join([str(v) for v in vals]) + '\n')
     return all_vals
+
+
+if __name__ == '__main__':
+    rppa_data = read_rppa_data(rppa_file)
+    all_pmids = get_all_pmids(rppa_data, antibody_HGNC_dict, drug_dict,
+                              pmid_file='pmids.txt')
