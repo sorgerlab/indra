@@ -30,6 +30,34 @@ def read_rppa_data(fname=rppa_file):
     return data
 
 
+def get_gene_names(data):
+    # Get the gene names in the data from the data frame
+    # Append any other gene names that are also relevant that are not in
+    #   the data
+    # Return gene_names
+
+
+def get_gene_pmids(gene_names):
+    # Use indra.literature.pubmed_client.get_ids_for_gene for each gene
+    #   to get its PMIDs
+    # Collect all PMIDs in one list and return
+
+
+def get_drug_pmids(data):
+    # Extract name of drugs from the data or make a list at the top of
+    #   this file
+    # Use indra.literature.pubmed_client.get_ids with the
+    #   name and/or synonym(s) of each drug and get the relevant PMIDS
+    # Collect all PMIDs in one list and return
+    #
+
+
+def get_all_pmids(data, pmid_file='pmids.txt')
+    # Call both get_gene_pmids and get_drug_pmids, and combine the results
+    # Save list of PMIDs in the pmid_file path given
+    # Return all PMIDs in a single list
+
+
 def find_extremes(data, fold_change, save_file=None):
     """Return rows of data which are above or below the given fold change."""
     liml, limu = (numpy.log2(1.0/fold_change), numpy.log2(fold_change))
