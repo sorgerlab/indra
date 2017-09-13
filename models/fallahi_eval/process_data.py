@@ -106,13 +106,25 @@ def get_gene_pmids(gene_names):
     return genes_pmid_list
 
 
-def get_drug_pmids(data):
+def get_drug_names(drug_dict):
+    drug_names = []
+    for d in drug_dict:
+        drug_names += drug_dict[d]
+    return drug_names
+
+
+def get_drug_pmids(drug_dict):
     # Extract name of drugs from the data or make a list at the top of
     #   this file
     # Use indra.literature.pubmed_client.get_ids with the
     #   name and/or synonym(s) of each drug and get the relevant PMIDS
     # Collect all PMIDs in one list and return
-    return None
+    drug_names = get_drug_names(drug_dict)
+    drugs_pmid_list = []
+    for drug in drug_names:
+        drugs_pmid_list += pubmed_client.pubmed_client.get_ids(drug)
+    drugs_pmid_list = list(set(drugs_pmid_list))
+    return drugs_pmid_list
 
 
 def get_all_pmids(data, pmid_file='pmids.txt'):
