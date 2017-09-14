@@ -1,3 +1,4 @@
+from indra.util import _require_python3
 import numpy
 import pandas
 import itertools
@@ -67,17 +68,15 @@ def read_rppa_data(fname=rppa_file):
     return data
 
 
-def read_gene_list(path):
+def _read_gene_list(path):
     df = pandas.read_csv(path, sep='\t', error_bad_lines=False, header=None)
     gene_list = df[0].tolist()
     return sorted(list(set(gene_list)))
 
 
-def get_gene_names(data, antibody_HGNC_dict):
-    # Get the gene names in the data from the data frame
-    # Append any other gene names that are also relevant that are not in
-    #   the data
-    # Return gene_names
+def get_gene_names(data):
+    """Return genes relevant to the data, RAS signaling, and the Fallahi paper.
+    """
     gene_names = []
     antibody_list = []
     exclude_columns = ['Drug', 'Time (hr)', 'Concentration (uM)']
@@ -88,9 +87,11 @@ def get_gene_names(data, antibody_HGNC_dict):
     antibody_gene_list = []
     for ab in antibody_list:
         antibody_gene_list += antibody_HGNC_dict[ab]
-    ras_gene_list = read_gene_list('../../data/ras_pathway_proteins.csv')
-    msb2015_gene_list = read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
-    msb2017_gene_list = read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
+    ras_gene_list = _read_gene_list('../../data/ras_pathway_proteins.csv')
+    msb2015_gene_list = \
+            _read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
+    msb2017_gene_list = \
+            _read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
     gene_names = (ras_gene_list + msb2015_gene_list +
                   msb2017_gene_list + antibody_gene_list)
     gene_names = list(set(gene_names))
@@ -98,44 +99,31 @@ def get_gene_names(data, antibody_HGNC_dict):
 
 
 def get_gene_pmids(gene_names):
-    # Use indra.literature.pubmed_client.get_ids_for_gene for each gene
-    #   to get its PMIDs
-    # Collect all PMIDs in one list and return
+    """Return PMIDs for all genes of interest."""
     genes_pmid_list = []
     for gene in gene_names:
         genes_pmid_list += pubmed_client.get_ids_for_gene(gene)
     genes_pmid_list = list(set(genes_pmid_list))
+    print('Found %d PMIDs for genes' % len(genes_pmid_list))
     return genes_pmid_list
 
 
-def get_drug_names(drug_dict):
-    drug_names = []
-    for d in drug_dict:
-        drug_names += drug_dict[d]
-    return drug_names
-
-
-def get_drug_pmids(drug_dict):
-    # Extract name of drugs from the data or make a list at the top of
-    #   this file
-    # Use indra.literature.pubmed_client.get_ids with the
-    #   name and/or synonym(s) of each drug and get the relevant PMIDS
-    # Collect all PMIDs in one list and return
-    drug_names = get_drug_names(drug_dict)
+def get_drug_pmids():
+    """Return PMIDs for all the drugs and their synonyms."""
     drugs_pmid_list = []
-    for drug in drug_names:
-        drugs_pmid_list += pubmed_client.get_ids(drug)
+    for drug_synonyms in drug_dict.values():
+        for drug_synonym in drug_synonyms:
+            drugs_pmid_list += pubmed_client.get_ids(drug_synonym, retmax=5000)
     drugs_pmid_list = list(set(drugs_pmid_list))
+    print('Found %d PMIDs for drugs' % len(drugs_pmid_list))
     return drugs_pmid_list
 
 
-def get_all_pmids(data, antibody_HGNC_dict, drug_dict, pmid_file='pmids.txt'):
-    # Call both get_gene_pmids and get_drug_pmids, and combine the results
-    # Save list of PMIDs in the pmid_file path given
-    # Return all PMIDs in a single list
-    gene_names = get_gene_names(data, antibody_HGNC_dict)
+def get_all_pmids(data, pmid_file='pmids.txt'):
+    """Return all PMIDs for genes and drugs of interest."""
+    gene_names = get_gene_names(data)
     genes_pmid_list = get_gene_pmids(gene_names)
-    drugs_pmid_list = get_drug_pmids(drug_dict)
+    drugs_pmid_list = get_drug_pmids()
     pmid_list = list(set(genes_pmid_list + drugs_pmid_list))
     with open(pmid_file, 'wb') as fh:
         for pmid in pmid_list:
@@ -205,5 +193,4 @@ def find_cell_line_vars(data, fold_change, save_file=None):
 
 if __name__ == '__main__':
     rppa_data = read_rppa_data(rppa_file)
-    all_pmids = get_all_pmids(rppa_data, antibody_HGNC_dict, drug_dict,
-                              pmid_file='pmids.txt')
+    all_pmids = get_all_pmids(rppa_data, pmid_file='pmids.txt')
