@@ -1,8 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import requests
+import io
 import json
 import time
+import requests
 import logging
 import ndex
 
@@ -83,7 +84,7 @@ def update_ndex_network(cx_str, network_id, ndex_cred):
         Credentials dict containing two keys, "username", and "password".
     """
     server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
+    username = ndex_cred.get('username')
     password = ndex_cred.get('password')
     nd = ndex.client.Ndex(server, username, password)
 
