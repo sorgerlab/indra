@@ -12,21 +12,12 @@ associated evidence.  Sets of Statements can then be used to assemble both
 executable rule-based models (using `PySB`_) and a variety of different types
 of network models.
 
-License and funding
--------------------
-
-INDRA is made available under the 2-clause `BSD license
-<https://opensource.org/licenses/BSD-2-Clause>`_. Users are asked to
-acknowledge DARPA grant W911NF-14-1-0397, “Programmatic modelling for 
-reasoning across complex mechanisms,” Peter Sorger and Dexter Pratt PIs.
-
 .. _PySB: http://pysb.org
-
-Contents:
 
 .. toctree::
    :maxdepth: 3
 
+   license.rst
    installation.rst
    getting_started.rst
    modules/index
