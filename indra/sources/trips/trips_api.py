@@ -3,7 +3,8 @@ from builtins import dict, str
 from .processor import TripsProcessor
 from indra.sources.trips import trips_client
 
-def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True):
+def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
+                 service_endpoint='drum'):
     """Return a TripsProcessor by processing text.
 
     Parameters
@@ -17,6 +18,9 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True):
         If True, the saved XML is pretty-printed. Some third-party tools
         require non-pretty-printed XMLs which can be obtained by setting this
         to False. Default: True
+    service_endpoint : Optional[str]
+        Selects the TRIPS/DRUM web service endpoint to use. Is a choice between
+        "drum" (default) and "drum-dev", a nightly build.
 
     Returns
     -------
@@ -24,7 +28,7 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True):
         A TripsProcessor containing the extracted INDRA Statements
         in tp.statements.
     """
-    html = trips_client.send_query(text)
+    html = trips_client.send_query(text, service_endpoint)
     xml = trips_client.get_xml(html)
     if save_xml_name:
         trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
