@@ -7,6 +7,7 @@ import pickle
 import numpy as np
 from random import shuffle
 from matplotlib import pyplot as plt
+from indra.preassembler import grounding_mapper as gm
 
 import ndex
 from indra.sources import ndex_cx
@@ -18,11 +19,10 @@ from indra.util import _require_python3
 from indra.tools.gene_network import GeneNetwork
 from indra.statements import IncreaseAmount
 
-def build_prior(genes, out_file):
-    gn = GeneNetwork(genes, 'dna_damage_prior')
+def build_prior(genes, file_prefix):
+    gn = GeneNetwork(genes, file_prefix)
     stmts = gn.get_statements(filter=False)
-    #stmts = gn.get_biopax_stmts(filter=False)
-    ac.dump_statements(stmts, out_file)
+    ac.dump_statements(stmts, '%s.pkl' % file_prefix)
     return stmts
 
 
@@ -48,6 +48,7 @@ def run_assembly(stmts, filename):
     stmts = ac.filter_human_only(stmts)
     #stmts = ac.expand_families(stmts)
     stmts = ac.filter_gene_list(stmts, gene_names, 'one', allow_families=True)
+    #stmts = ac.filter_gene_list(stmts, gene_names, 'all', allow_families=True)
     stmts = ac.map_sequence(stmts)
     stmts = ac.run_preassembly(stmts, return_toplevel=False, poolsize=4)
     ac.dump_statements(stmts, filename)
@@ -151,34 +152,52 @@ if __name__ == '__main__':
     # Load NDEx credentials
     with open('ndex_cred.json', 'rt') as f:
         ndex_cred = json.load(f)
+
     # Get the network
-    ncp = ndex_cx.process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf',
+    ncp = ndex_cx.process_ndex_network('55cfccd4-966e-11e7-a10d-0ac135e8bacf',
                                        username=ndex_cred['username'],
-                                       password=ndex_cred['password'])
+                                       password=ndex_cred['password'],
+                                       require_grounding=False)
+
+    gnd_map_ext = {'PALB2_wt_eto': {'HGNC': 'PALB2'},
+                   'PALB2_wt': {'HGNC': 'PALB2'},
+                   'CSDA': {'HGNC': 'YBX3'},
+                   'COBRA1': {'HGNC': 'NELFB'},
+                   'SRPR': {'HGNC': 'SRPRA'},
+                   'TOMM70A': {'HGNC': 'TOMM70'}
+                   }
+
+    gm.default_grounding_map.update(gnd_map_ext)
+    gmapper = gm.GroundingMapper(gm.default_grounding_map)
+    ncp_stmts = gmapper.map_agents(ncp.statements)
+
     gene_names = [hgnc_client.get_hgnc_name(ag.db_refs['HGNC'])
-                  for ag in ncp.get_agents()]
+                  for stmt in ncp_stmts for ag in stmt.agent_list()]
 
     """
     # Get PMIDs for reading
     entrez_pmids = get_pmids(gene_names)
     network_pmids = ncp.get_pmids()
     pmids = list(set(entrez_pmids + network_pmids))
-    save_pmids_for_reading(pmids, 'dna_damage_pmids.txt')
+    save_pmids_for_reading(pmids, 'pmids.txt')
     """
 
     # Build the model
-    prior_stmts = build_prior(gene_names, 'prior_stmts.pkl')
+    prior_stmts = build_prior(gene_names, 'palb2_prior')
+    #with open('palb2_prior.pkl', 'rb') as f:
+    #    prior_stmts = pickle.load(f)
+    #    print("Loaded %d prior stmts" % len(prior_stmts))
     reach_stmts = ac.load_statements('reach_stmts.pkl')
-    stmts = ncp.statements + reach_stmts + prior_stmts
+    stmts = ncp_stmts + reach_stmts + prior_stmts
     stmts = run_assembly(stmts, 'unfiltered_assembled_stmts.pkl')
 
     # Filter the statements at different levels
-    ids_cutoffs = (('4e26a4f0-9388-11e7-a10d-0ac135e8bacf', 0.90),
-                   ('527fecf7-9388-11e7-a10d-0ac135e8bacf', 0.95),
-                   ('2f0e17bc-9387-11e7-a10d-0ac135e8bacf', 0.99))
+    ids_cutoffs = (('c793e3d1-97f1-11e7-a10d-0ac135e8bacf', 0.90),
+                   ('c816a864-97f1-11e7-a10d-0ac135e8bacf', 0.95),
+                   ('c83b6e77-97f1-11e7-a10d-0ac135e8bacf', 0.99))
 
     for net_id, cutoff in ids_cutoffs:
-        stmts_filt = filter(stmts, cutoff, 'stmts_%.2f.pkl' % cutoff)
-        cxa = assemble_cx(stmts_filt, 'dna_damage_%.2f.cx' % cutoff)
+        stmts_filt = filter(stmts, cutoff, 'palb2_stmts_%.2f.pkl' % cutoff)
+        cxa = assemble_cx(stmts_filt, 'palb2_%.2f.cx' % cutoff)
         cx_str = cxa.print_cx()
         upload_to_ndex(cx_str, ndex_cred, net_id)
