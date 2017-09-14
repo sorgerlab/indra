@@ -496,11 +496,15 @@ def main():
 
 @main.command()
 @click.argument('model_path')
-@click.option('--config')
+@click.option('--config', help="Specify configuration file path, otherwise looks for config.yaml in model path")
 def run(model_path, config):
     """Runs the RAS Machine for the given model path"""
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
+
+    if not os.path.isdir(model_path):
+        logger.error('%s is not a directory', model_path)
+        sys.exit()
 
     default_config_fname = os.path.join(model_path, 'config.yaml')
 
@@ -609,7 +613,7 @@ def summarize(model_path):
 
 @main.command()
 @click.argument('model_path')
-@click.option('--pmids', type=click.File(), default=sys.stdin)
+@click.option('--pmids', type=click.File(), default=sys.stdin, help="A file with a PMID on each line")
 def enumerated(model_path, pmids):
     """Loads the model, increments it with the given PMIDS then exports"""
     default_config_fname = os.path.join(model_path, 'config.yaml')
