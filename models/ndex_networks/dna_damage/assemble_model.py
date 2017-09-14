@@ -75,78 +75,6 @@ def plot_belief_scores(stmts):
     plt.hist(scores)
 
 
-def upload_to_ndex(cx_str, ndex_cred, network_id):
-    server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('username')
-    password = ndex_cred.get('password')
-    nd = ndex.client.Ndex(server, username, password)
-    #network_id = ndex_cred.get('network')
-
-    try:
-        print('Getting network summary...')
-        summary = nd.get_network_summary(network_id)
-    except Exception as e:
-        print('Could not get NDEx network summary.')
-        print(e)
-        return
-
-    # Update network content
-    try:
-        print('Updating network...')
-        cx_stream = io.BytesIO(cx_str.encode('utf-8'))
-        nd.update_cx_network(cx_stream, network_id)
-    except Exception as e:
-        print('Could not update NDEx network.')
-        print(e)
-        return
-
-    # Update network profile
-    ver_str = summary.get('version')
-    new_ver = _increment_ndex_ver(ver_str)
-    profile = {'name': summary.get('name'),
-               'description': summary.get('description'),
-               'version': new_ver,
-               }
-    print('Updating NDEx network (%s) profile to %s' %
-                (network_id, profile))
-    profile_retries = 5
-    for i in range(profile_retries):
-        try:
-            time.sleep(5)
-            nd.update_network_profile(network_id, profile)
-            break
-        except Exception as e:
-            print('Could not update NDEx network profile.')
-            print(e)
-
-    # Update network style
-    import ndex.beta.toolbox as toolbox
-    template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
-
-    d_edge_types = ["Activation", "Inhibition",
-                    "Modification", "SelfModification",
-                    "Gap", "Gef", "IncreaseAmount",
-                    "DecreaseAmount"]
-
-    source_network = ndex.networkn.NdexGraph(server=server, username=username,
-                                             password=password,
-                                             uuid=network_id)
-
-    toolbox.apply_template(source_network, template_uuid, server=server,
-                           username=username, password=password)
-
-    source_network.update_to(network_id, server=server, username=username,
-                             password=password)
-
-def _increment_ndex_ver(ver_str):
-    if not ver_str:
-        new_ver = '1.0'
-    else:
-        major_ver, minor_ver = ver_str.split('.')
-        new_minor_ver = str(int(minor_ver) + 1)
-        new_ver = major_ver + '.' + new_minor_ver
-    return new_ver
-
 if __name__ == '__main__':
     # Load NDEx credentials
     with open('ndex_cred.json', 'rt') as f:
@@ -181,4 +109,4 @@ if __name__ == '__main__':
         stmts_filt = filter(stmts, cutoff, 'stmts_%.2f.pkl' % cutoff)
         cxa = assemble_cx(stmts_filt, 'dna_damage_%.2f.cx' % cutoff)
         cx_str = cxa.print_cx()
-        upload_to_ndex(cx_str, ndex_cred, net_id)
+        ndex_client.update_ndex_network(cx_str, net_id, ndex_cred)
