@@ -250,8 +250,8 @@ def upload_to_ndex(cx_str, ndex_cred):
                'description': summary.get('description'),
                'version': new_ver,
                }
-    logger.info('Updating NDEx network (%s) profile to %s' %
-                (network_id, profile))
+    logger.info('Updating NDEx network (%s) profile to %s',
+                network_id, profile)
     profile_retries = 5
     for _ in range(profile_retries):
         try:
@@ -333,150 +333,73 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
-
-@click.group()
-def main():
-    """The RAS Machine and utilities"""
-
-
-@main.command()
-@click.argument('model_path')
-@click.option('--config')
-def run(model_path, config):
-    """Runs the RAS Machine for the given model path"""
-    logger.info('-------------------------')
+def upload_new_ndex(model_path, new_stmts, ndex_cred):
+    logger.info('Uploading to NDEx')
     logger.info(time.strftime('%c'))
-    start_time_local = datetime.datetime.now(tzlocal.get_localzone())
+    cx_str = assemble_cx(new_stmts, name=ndex_cred.get('name', 'rasmachine'))
+    cx_name = os.path.join(model_path, 'model.cx')
+    with open(cx_name, 'wb') as fh:
+        fh.write(cx_str.encode('utf-8'))
+    upload_to_ndex(cx_str, ndex_cred)
 
-    default_config_fname = os.path.join(model_path, 'config.yaml')
 
-    if config:
-        config = get_config(config)
-    elif os.path.exists(default_config_fname):
-        logger.info('Loading default configuration from %s', default_config_fname)
-        config = get_config(default_config_fname)
-    else:
-        logger.error('Configuration file argument missing.')
-        sys.exit()
+def make_date_str():
+    return datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 
-    # Probability cutoff for filtering statements
-    default_belief_threshold = 0.95
-    belief_threshold = config.get('belief_threshold')
-    if belief_threshold is None:
-        belief_threshold = default_belief_threshold
-        msg = 'Belief threshold argument (belief_threshold) not specified.' + \
-              ' Using default belief threshold %.2f' % default_belief_threshold
-        logger.info(msg)
-    else:
-        logger.info('Using belief threshold: %.2f' % belief_threshold)
 
-    twitter_cred = config.get('twitter')
-    if not twitter_cred:
-        use_twitter = False
-    elif not twitter_cred.get('consumer_token'):
-        logger.info('Twitter consumer token (consumer_token) missing.')
-        use_twitter = False
-    elif not twitter_cred.get('consumer_secret'):
-        logger.info('Twitter consumer secret (consumer_secret) missing.')
-        use_twitter = False
-    elif not twitter_cred.get('access_token'):
-        logger.info('Twitter access token (access_token) missing.')
-        use_twitter = False
-    elif not twitter_cred.get('access_secret'):
-        logger.info('Twitter access secret (access_secret) missing.')
-        use_twitter = False
-    else:
-        use_twitter = True
-
-    if use_twitter:
-        logger.info('Using Twitter with given credentials.')
-    else:
-        logger.info('Not using Twitter due to missing credentials.')
-
+def get_gmail_cred(config):
     gmail_cred = config.get('gmail')
     if not gmail_cred:
-        use_gmail = False
+        return
     elif not gmail_cred.get('user'):
         logger.info('Gmail user missing.')
-        use_gmail = False
+        return
     elif not gmail_cred.get('password'):
         logger.info('Gmail password missing.')
-        use_gmail = False
-    else:
-        use_gmail = True
+        return
+    return gmail_cred
 
-    if use_gmail:
-        logger.info('Using Gmail with given credentials.')
-    else:
-        logger.info('Not using Gmail due to missing credentials.')
 
+def get_twitter_cred(config):
+    twitter_cred = config.get('twitter')
+
+    if not twitter_cred:
+        return
+    elif not twitter_cred.get('consumer_token'):
+        logger.info('Twitter consumer token (consumer_token) missing.')
+        return
+    elif not twitter_cred.get('consumer_secret'):
+        logger.info('Twitter consumer secret (consumer_secret) missing.')
+        return
+    elif not twitter_cred.get('access_token'):
+        logger.info('Twitter access token (access_token) missing.')
+        return
+    elif not twitter_cred.get('access_secret'):
+        logger.info('Twitter access secret (access_secret) missing.')
+        return
+
+    return twitter_cred
+
+
+def get_ndex_cred(config):
     ndex_cred = config.get('ndex')
     if not ndex_cred:
-        use_ndex = False
+        return
     elif not ndex_cred.get('user'):
         logger.info('NDEx user missing.')
-        use_ndex = False
+        return
     elif not ndex_cred.get('password'):
         logger.info('NDEx password missing.')
-        use_ndex = False
+        return
     elif not ndex_cred.get('network'):
         logger.info('NDEx network missing.')
-        use_ndex = False
-    else:
-        use_ndex = True
-
-    if use_ndex:
-        logger.info('Using NDEx with given credentials.')
-    else:
-        logger.info('Not using NDEx due to missing information.')
-
-    pmids = {}
-    # Get email PMIDs
-    if use_gmail:
-        logger.info('Getting PMIDs from emails.')
-        try:
-            email_pmids = get_email_pmids(gmail_cred)
-            # Put the email_pmids into the pmids dictionary
-            pmids['Gmail'] = email_pmids
-            logger.info('Collected %d PMIDs from Gmail' % len(email_pmids))
-        except Exception as e:
-            logger.error('Could not get PMIDs from Gmail, continuing.')
-            logger.error(e)
-
-    # Get PMIDs for general search_terms
-    search_terms = config.get('search_terms')
-    if not search_terms:
-        logger.info('No search terms argument (search_terms) specified.')
-    else:
-        search_genes = config.get('search_genes')
-        if search_genes:
-            search_terms += search_genes
-        logger.info('Using search terms: %s' % ', '.join(search_terms))
-        num_days = int(config.get('search_terms_num_days', 5))
-        logger.info('Searching the last %d days', num_days)
-        pmids_term = get_searchterm_pmids(search_terms, num_days=num_days)
-        num_pmids = sum([len(pm) for pm in pmids_term.values()])
-        logger.info('Collected %d PMIDs from PubMed search_terms.' % num_pmids)
-        pmids = _extend_dict(pmids, pmids_term)
+        return
+    return ndex_cred
 
 
-    search_genes = config.get('search_genes')
-
-    '''
-    # Get PMIDs for search_genes
-    # Temporarily removed because Entrez-based article searches
-    # are lagging behind and cannot be time-limited
-    if not search_genes:
-        logger.info('No search genes argument (search_genes) specified.')
-    else:
-        logger.info('Using search genes: %s' % ', '.join(search_genes))
-        pmids_gene = get_searchgenes_pmids(search_genes, num_days=5)
-        num_pmids = sum([len(pm) for pm in pmids_gene.values()])
-        logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
-        pmids = _extend_dict(pmids, pmids_gene)
-    '''
-    date = datetime.datetime.today()
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+def run_machine(model_path, pmids, belief_threshold, search_genes=None, ndex_cred=None, twitter_cred=None):
+    start_time_local = datetime.datetime.now(tzlocal.get_localzone())
+    date_str = make_date_str()
 
     # Save PMIDs in file and send for remote reading
     if aws_available:
@@ -501,7 +424,8 @@ def run(model_path, config):
     inc_model_file = os.path.join(model_path, 'model.pkl')
     model = IncrementalModel(inc_model_file)
     # Include search genes as prior genes
-    model.prior_genes = search_genes
+    if search_genes:
+        model.prior_genes = search_genes
     stats = {}
     logger.info(time.strftime('%c'))
     logger.info('Preassembling original model.')
@@ -548,14 +472,8 @@ def run(model_path, config):
     model.save(inc_model_bkp_file)
 
     # Upload the new, final statements to NDEx
-    if use_ndex:
-        logger.info('Uploading to NDEx')
-        logger.info(time.strftime('%c'))
-        cx_str = assemble_cx(new_stmts, name=ndex_cred.get('name', 'rasmachine'))
-        cx_name = os.path.join(model_path, 'model.cx')
-        with open(cx_name, 'wb') as fh:
-            fh.write(cx_str.encode('utf-8'))
-        upload_to_ndex(cx_str, ndex_cred)
+    if ndex_cred:
+        upload_new_ndex(model_path, new_stmts, ndex_cred)
 
     # Print and tweet the status message
     logger.info('--- Final statistics ---')
@@ -566,9 +484,113 @@ def run(model_path, config):
     msg_str = make_status_message(stats)
     if msg_str is not None:
         logger.info('Status message: %s' % msg_str)
-        if use_twitter:
+        if twitter_cred:
             logger.info('Now tweeting: %s' % msg_str)
             twitter_client.update_status(msg_str, twitter_cred)
+
+
+@click.group()
+def main():
+    """The RAS Machine and utilities"""
+
+
+@main.command()
+@click.argument('model_path')
+@click.option('--config')
+def run(model_path, config):
+    """Runs the RAS Machine for the given model path"""
+    logger.info('-------------------------')
+    logger.info(time.strftime('%c'))
+
+    default_config_fname = os.path.join(model_path, 'config.yaml')
+
+    if config:
+        config = get_config(config)
+    elif os.path.exists(default_config_fname):
+        logger.info('Loading default configuration from %s', default_config_fname)
+        config = get_config(default_config_fname)
+    else:
+        logger.error('Configuration file argument missing.')
+        sys.exit()
+
+    # Probability cutoff for filtering statements
+    default_belief_threshold = 0.95
+    belief_threshold = config.get('belief_threshold')
+    if belief_threshold is None:
+        belief_threshold = default_belief_threshold
+        msg = 'Belief threshold argument (belief_threshold) not specified.' + \
+              ' Using default belief threshold %.2f' % default_belief_threshold
+        logger.info(msg)
+    else:
+        logger.info('Using belief threshold: %.2f' % belief_threshold)
+
+    twitter_cred = get_twitter_cred(config)
+    if twitter_cred:
+        logger.info('Using Twitter with given credentials.')
+    else:
+        logger.info('Not using Twitter due to missing credentials.')
+
+    gmail_cred = get_gmail_cred(config)
+    if gmail_cred:
+        logger.info('Using Gmail with given credentials.')
+    else:
+        logger.info('Not using Gmail due to missing credentials.')
+
+    ndex_cred = get_ndex_cred(config)
+    if ndex_cred:
+        logger.info('Using NDEx with given credentials.')
+    else:
+        logger.info('Not using NDEx due to missing information.')
+
+    pmids = {}
+    # Get email PMIDs
+    if gmail_cred:
+        logger.info('Getting PMIDs from emails.')
+        try:
+            email_pmids = get_email_pmids(gmail_cred)
+            # Put the email_pmids into the pmids dictionary
+            pmids['Gmail'] = email_pmids
+            logger.info('Collected %d PMIDs from Gmail', len(email_pmids))
+        except:
+            logger.exception('Could not get PMIDs from Gmail, continuing.')
+
+    # Get PMIDs for general search_terms and genes
+    search_genes = config.get('search_genes')
+    search_terms = config.get('search_terms')
+    if not search_terms:
+        logger.info('No search terms argument (search_terms) specified.')
+    else:
+        if search_genes is not None:
+            search_terms += search_genes
+        logger.info('Using search terms: %s' % ', '.join(search_terms))
+        num_days = int(config.get('search_terms_num_days', 5))
+        logger.info('Searching the last %d days', num_days)
+        pmids_term = get_searchterm_pmids(search_terms, num_days=num_days)
+        num_pmids = sum([len(pm) for pm in pmids_term.values()])
+        logger.info('Collected %d PMIDs from PubMed search_terms.', num_pmids)
+        pmids = _extend_dict(pmids, pmids_term)
+
+    '''
+    # Get PMIDs for search_genes
+    # Temporarily removed because Entrez-based article searches
+    # are lagging behind and cannot be time-limited
+    if not search_genes:
+        logger.info('No search genes argument (search_genes) specified.')
+    else:
+        logger.info('Using search genes: %s' % ', '.join(search_genes))
+        pmids_gene = get_searchgenes_pmids(search_genes, num_days=5)
+        num_pmids = sum([len(pm) for pm in pmids_gene.values()])
+        logger.info('Collected %d PMIDs from PubMed search_genes.' % num_pmids)
+        pmids = _extend_dict(pmids, pmids_gene)
+    '''
+    run_machine(
+        model_path,
+        pmids,
+        belief_threshold,
+        search_genes=search_genes,
+        ndex_cred=ndex_cred,
+        twitter_cred=twitter_cred
+    )
 
 
 @main.command()
@@ -588,13 +610,22 @@ def summarize(model_path):
 @main.command()
 @click.argument('model_path')
 @click.option('--pmids', type=click.File(), default=sys.stdin)
-def increment_pmids(model_path, pmids):
+def enumerated(model_path, pmids):
     """Loads the model, increments it with the given PMIDS then exports"""
-    click.echo('This feature is not implemented')
-    click.echo('Model path recieved: {}'.format(model_path))
-    click.echo('PMIDS:')
-    for pmid in pmids:
-        click.echo(pmid)
+    default_config_fname = os.path.join(model_path, 'config.yaml')
+    config = get_config(default_config_fname)
+
+    belief_threshold = config.get('belief_threshold', 0.95)
+    twitter_cred = get_twitter_cred(config)
+    ndex_cred = get_ndex_cred(config)
+
+    run_machine(
+        model_path,
+        {'enumerated': [pmid.strip() for pmid in pmids]},
+        belief_threshold,
+        ndex_cred=ndex_cred,
+        twitter_cred=twitter_cred
+    )
 
 if __name__ == '__main__':
     main()
