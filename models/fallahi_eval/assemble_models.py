@@ -32,7 +32,7 @@ if __name__ == '__main__':
         stmts = ac.filter_gene_list(stmts, gene_names, 'all')
         stmts = ac.map_sequence(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
-        ac.dump_stmts(stmts, pre_stmts_file)
+        ac.dump_statements(stmts, pre_stmts_file)
 
     stmts = ac.load_statements(pre_stmts_file)
     model = assemble_pysb(stmts, gene_names)
