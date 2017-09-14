@@ -144,3 +144,12 @@ def update_ndex_network(cx_str, network_id, ndex_cred):
                              password=password)
 
 
+def _increment_ndex_ver(ver_str):
+    if not ver_str:
+        new_ver = '1.0'
+    else:
+        major_ver, minor_ver = ver_str.split('.')
+        new_minor_ver = str(int(minor_ver) + 1)
+        new_ver = major_ver + '.' + new_minor_ver
+    return new_ver
+
