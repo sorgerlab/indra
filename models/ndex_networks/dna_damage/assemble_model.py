@@ -8,9 +8,8 @@ import numpy as np
 from random import shuffle
 from matplotlib import pyplot as plt
 
-import ndex
 from indra.sources import ndex_cx
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import CxAssembler
 from indra.literature.pubmed_client import get_ids_for_gene
@@ -20,8 +19,8 @@ from indra.statements import IncreaseAmount
 
 def build_prior(genes, out_file):
     gn = GeneNetwork(genes, 'dna_damage_prior')
-    stmts = gn.get_statements(filter=False)
-    #stmts = gn.get_biopax_stmts(filter=False)
+    #stmts = gn.get_statements(filter=False)
+    stmts = gn.get_biopax_stmts(filter=False)
     ac.dump_statements(stmts, out_file)
     return stmts
 
@@ -79,13 +78,14 @@ if __name__ == '__main__':
     # Load NDEx credentials
     with open('ndex_cred.json', 'rt') as f:
         ndex_cred = json.load(f)
+    """
     # Get the network
     ncp = ndex_cx.process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf',
                                        username=ndex_cred['username'],
                                        password=ndex_cred['password'])
     gene_names = [hgnc_client.get_hgnc_name(ag.db_refs['HGNC'])
                   for ag in ncp.get_agents()]
-
+    """
     """
     # Get PMIDs for reading
     entrez_pmids = get_pmids(gene_names)
@@ -93,12 +93,15 @@ if __name__ == '__main__':
     pmids = list(set(entrez_pmids + network_pmids))
     save_pmids_for_reading(pmids, 'dna_damage_pmids.txt')
     """
-
+    """
     # Build the model
     prior_stmts = build_prior(gene_names, 'prior_stmts.pkl')
     reach_stmts = ac.load_statements('reach_stmts.pkl')
     stmts = ncp.statements + reach_stmts + prior_stmts
     stmts = run_assembly(stmts, 'unfiltered_assembled_stmts.pkl')
+    """
+    with open('unfiltered_assembled_stmts.pkl', 'rb') as f:
+        stmts = pickle.load(f)
 
     # Filter the statements at different levels
     ids_cutoffs = (('4e26a4f0-9388-11e7-a10d-0ac135e8bacf', 0.90),
