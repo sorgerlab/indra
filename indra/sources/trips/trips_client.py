@@ -9,16 +9,20 @@ import requests
 
 logger = logging.getLogger('trips')
 
-trips_url = 'http://trips.ihmc.us/parser/cgi/drum'
+drum_url = 'http://trips.ihmc.us/parser/cgi/drum'
+drum_dev_url = 'http://trips.ihmc.us/parser/cgi/drum-dev'
 
 
-def send_query(text, query_args=None):
+def send_query(text, service_endpoint='drum', query_args=None):
     """Send a query to the TRIPS web service.
 
     Parameters
     ----------
     text : str
         The text to be processed.
+    service_endpoint : Optional[str]
+        Selects the TRIPS/DRUM web service endpoint to use. Is a choice between
+        "drum" (default) and "drum-dev", a nightly build.
     query_args : Optional[dict]
         A dictionary of arguments to be passed with the query.
 
@@ -27,10 +31,17 @@ def send_query(text, query_args=None):
     html : str
         The HTML result returned by the web service.
     """
+    if service_endpoint == 'drum':
+        url = drum_url
+    elif service_endpoint == 'drum-dev':
+        ur = drum_dev_url
+    else:
+        logger.error('Invalid service endpoint: %s' % service_endpoint)
+        return ''
     if query_args is None:
         query_args = {}
     query_args.update({'input': text})
-    res = requests.get(trips_url, query_args, timeout=3600)
+    res = requests.get(url, query_args, timeout=3600)
     if not res.status_code == 200:
         logger.error('Problem with TRIPS query: status code %s' %
                      res.status_code)
