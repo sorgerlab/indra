@@ -4,8 +4,9 @@ import requests
 import json
 import time
 import logging
+import ndex
 
-logger = logging.getLogger('ndex')
+logger = logging.getLogger('ndex_client')
 
 ndex_base_url = 'http://52.37.175.128'
 
@@ -67,3 +68,79 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
         return res.json()
     else:
         return res.text
+
+
+def update_ndex_network(cx_str, network_id, ndex_cred):
+    """Update an existing CX network on NDEx with new CX content.
+
+    Parameters
+    ----------
+    cx_str : str
+        String containing the CX content.
+    network_id : str
+        UUID of the network on NDEx.
+    ndex_cred : dict
+        Credentials dict containing two keys, "username", and "password".
+    """
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+    nd = ndex.client.Ndex(server, username, password)
+
+    try:
+        logger.info('Getting network summary...')
+        summary = nd.get_network_summary(network_id)
+    except Exception as e:
+        logger.error('Could not get NDEx network summary.')
+        logger.error(e)
+        return
+
+    # Update network content
+    try:
+        logger.info('Updating network...')
+        cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+        nd.update_cx_network(cx_stream, network_id)
+    except Exception as e:
+        logger.error('Could not update NDEx network.')
+        logger.error(e)
+        return
+
+    # Update network profile
+    ver_str = summary.get('version')
+    new_ver = _increment_ndex_ver(ver_str)
+    profile = {'name': summary.get('name'),
+               'description': summary.get('description'),
+               'version': new_ver,
+               }
+    logger.info('Updating NDEx network (%s) profile to %s' %
+                (network_id, profile))
+    profile_retries = 5
+    for i in range(profile_retries):
+        try:
+            time.sleep(5)
+            nd.update_network_profile(network_id, profile)
+            break
+        except Exception as e:
+            logger.error('Could not update NDEx network profile.')
+            logger.error(e)
+
+    # Update network style
+    import ndex.beta.toolbox as toolbox
+    template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
+
+    d_edge_types = ["Activation", "Inhibition",
+                    "Modification", "SelfModification",
+                    "Gap", "Gef", "IncreaseAmount",
+                    "DecreaseAmount"]
+
+    source_network = ndex.networkn.NdexGraph(server=server, username=username,
+                                             password=password,
+                                             uuid=network_id)
+
+    toolbox.apply_template(source_network, template_uuid, server=server,
+                           username=username, password=password)
+
+    source_network.update_to(network_id, server=server, username=username,
+                             password=password)
+
+
