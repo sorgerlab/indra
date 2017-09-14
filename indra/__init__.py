@@ -1,9 +1,9 @@
 from __future__ import print_function, unicode_literals
 import logging
-__version__ = '1.4.2'
+__version__ = '1.5.0'
 
-__all__ = ['sources', 'databases', 'literature', 'preassembler', 'assemblers',
-           'mechlinker', 'belief', 'tools', 'util']
+__all__ = ['assemblers', 'belief', 'databases', 'explanation', 'literature',
+           'mechlinker', 'preassembler', 'sources', 'tools', 'util']
 
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
