@@ -332,6 +332,29 @@ def get_ccle_mrna_levels():
     return res
 
 
+#   CCLE CNA   #
+@route('/databases/cbio/ccle_cna', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_ccle_cna():
+    """Get CCLE CNA
+    -2 = homozygous deletion
+    -1 = hemizygous deletion
+     0 = neutral / no change
+     1 = gain
+     2 = high level amplification
+    """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    cna = cbio_client.get_ccle_cna(gene_list, cell_lines)
+    cna_str = json.dumps(cna)
+    res = {'cna': cna_str}
+    return res
+
+
 @route('/preassembly/map_grounding', method=['POST', 'OPTIONS'])
 @allow_cors
 def map_grounding():
