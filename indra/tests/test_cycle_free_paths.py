@@ -128,9 +128,7 @@ def test_sampling():
     tgt = (length, target)
     dic_PG = cfp.cycle_free_paths_graph(pg_raw, src, tgt, length)
     G_cf, T = dic_PG[length - 1]
-    P = cfp.cf_sample_many_paths(src, tgt, G_cf, T, 1000)
-
+    P = cfp.sample_many_paths(src, tgt, G_cf, T, 1000)
 
 if __name__ == '__main__':
-    test_pg()
     test_sampling()

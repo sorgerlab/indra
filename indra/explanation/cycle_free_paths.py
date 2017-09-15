@@ -1,15 +1,13 @@
 """
-Compute cycle-free paths graphs.
+Compute cycle-free paths graphs for use in sampling causal paths.
 
-Algorithm developed by P.S. Thiagarajan (https://scholar.harvard.edu/thiagu)
-
-A *paths-graph,* say G_n, has the property that every node in G_n lies on a
+A *paths-graph,* say *G_n*, has the property that every node in *G_n* lies on a
 path of length n from source to target. These paths may not be cycle-free. This
-module transforms G_n into a new graph G_cf such that in G_cf every node lies
-on a cycle-free path from the source to a target. Note that it will *not* be
-the case, despite the misleading name G_cf, that G_cf contains *only*
+module transforms *G_n* into a new graph *G_cf* such that in *G_cf* every node
+lies on a cycle-free path from the source to a target. Note that it will *not*
+be the case, despite the misleading name *G_cf*, that *G_cf* contains *only*
 cycle-free paths. However, we are able to "easily" sample cycle-free paths from
-G_cf without any backtracking using metadata attached to each node in G_cf.
+*G_cf* without any backtracking using metadata attached to each node in *G_cf*.
 
 The algorithm is described further in :py:func:`cycle_free_paths_graph`, below.
 """
@@ -24,27 +22,27 @@ from indra.explanation import paths_graph
 def cycle_free_paths_graph(pg, source, target, path_length):
     """Compute a cycle free paths graph.
 
-    Starting from the "raw" (contains cycles) paths graph, the algorithm
-    proceeds as follows.
+    Starting from the "raw" (i.e., containing cycles) paths graph, and given a
+    target path length n, the algorithm iterates over each "level" in the
+    graph 0 <= k <= n where level 0 consists only of the source node and level
+    n consists only of the target.
 
-    For the purposes of sampling cycle-free paths we attach a set of tags to
-    each node when we compute G_j+1 from G_j.  Basically we add the tag v[1] to
-    each node in G_j+1 that can be reached from v in the forward direction.
-    This tag tells that in tracing path starting from v as long as we stick to
-    nodes whose tag set contains v, we will be ok. 
+    Each level k consists of a set of nodes, X; we examine each node x in X and
+    identify the subset of nodes that are reachable in both the forward and
+    backward directions from x. If any of the nodes in the forward reach
+    subgraph contain x itself (but at a different depth), this represents a
+    cyclic path back through x that is then pruned.
 
-    pg_raw is our path graph. As mentioned above the first step is special. We
-    eliminate all cycles involving src as well as all cycles involving tgt. To
-    prime the sampling procedure we add the tag 'source' to every node in the
-    pruned graph; except to src whose tag set will be []
-
-    Finally we compute each G_j for 1 <= j <= 8 together with tag sets
-
-    We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
-    we process all the nodes at level i. We start from G_0 at level 0. The
-    first step is special in which obtain G_1 by processing the nodes (0,
-    source) and (10, target). Then by processing the the nodes of G_1 at level
-    1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
+    Each node x therefore defines its own subgraph of cycle free paths, g_x.
+    After iterating over all x in X, we combine these subgraphs into the
+    (in-progress) cycle free paths graph H_k. H_k therefore consists of the
+    superset of nodes of all the subgraphs g_x for level k. When merging these
+    subgraphs we prevent the re-introduction of cyclic paths by annotating each
+    node in the graph with a list of "tags". The tags for any given node
+    consist of a list of nodes lying at prior (upstream) levels. Therefore
+    during sampling, transitions from an upstream node to a downstream node are
+    only permissible if all nodes in the path up to a certain level are
+    contained in the tag set of the downstream node.
 
     Parameters
     ----------
@@ -180,8 +178,6 @@ def _initialize_cfpg(pg, source, target):
     # Add source tag to all nodes except source itself
     _add_tag(tags, source, [v for v in pg_0.nodes_iter() if v != source])
     return (pg_0, tags)
-
-
 
 
 def _prune(pg, nodes_to_prune, source, target):
@@ -322,7 +318,7 @@ def _cf_succ(H, t, path, v):
     return w
 
 
-def cf_sample_single_path(source, target, H, t):
+def sample_single_path(source, target, H, t):
     """Sample a single cycle-free path.
 
     The sampling procedure uses the tag sets to trace out cycle-free
@@ -357,7 +353,8 @@ def cf_sample_single_path(source, target, H, t):
         current = next
     return tuple(path)
 
-def cf_sample_many_paths(source, target, H, t, n):
+
+def sample_many_paths(source, target, H, t, n):
     """Sample many cycle-free paths.
 
     Parameters
@@ -382,7 +379,7 @@ def cf_sample_many_paths(source, target, H, t, n):
         return []
     P = []
     for i in range(0, n):
-        p = cf_sample_single_path(source, target, H, t)
+        p = sample_single_path(source, target, H, t)
         P.append(p)
     return P
 
@@ -404,6 +401,6 @@ if __name__ == '__main__':
     tgt = (length, target)
     dic_PG = cycle_free_paths_graph(pg_raw, src, tgt, length)
     G_cf, T = dic_PG[7]
-    P = cf_sample_many_paths(src, tgt, G_cf, T, 1000)
+    P = sample_many_paths(src, tgt, G_cf, T, 1000)
     #print("--- %s seconds ---" % (time.time() - start_time))
 
