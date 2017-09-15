@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from copy import copy
 import logging
 import collections
 from indra.util import read_unicode_csv
@@ -86,19 +87,21 @@ def _fix_agent(agent):
     print('Before: %s' % (','.join(['%s:%s' % (k, v) for k, v in agent.db_refs.items()])))
     print('Before: %s' % agent.name)
     # First we fix some name spaces
-    for db_ns, db_id in agent.db_refs:
+    db_refs_tmp = copy(agent.db_refs)
+    for db_ns, db_id in agent.db_refs.items():
         # Change FA name space
         if db_ns == 'FA':
-            db_ns = 'NXP'
-            db_id = 'FA:' + db_id
+            db_refs_tmp.pop('FA', None)
+            db_refs_tmp['NXPFA'] = db_id
         # Change IPR name space
         elif db_ns == 'IPR':
-            db_ns = 'IP'
+            db_refs_tmp.pop('IPR', None)
+            db_refs_tmp['IP'] = db_id
         # Change XFAM name space
         elif db_ns == 'XFAM':
-            db_ns = 'PF'
-            db_id = db_id.split('.')[0]
-        agent.db_refs[db_ns] = db_id
+            db_refs_tmp.pop('XFAM', None)
+            db_refs_tmp['PF'] = db_id.split('.')[0]
+    agent.db_refs = db_refs_tmp
     # Check if we have a BE entry
     be_id = agent.db_refs.get('BE')
     # Try to map to BE from NXP, IPR, PF, NCIT
@@ -293,7 +296,7 @@ class SparserXMLProcessor(object):
         # If we have a proper UID then we try to reconstruct an Agent from that
         if uid is not None and len(uid.split(':')) == 2:
             db_ns, db_id = uid.split(':')
-            be_id = get_bioentities_mapping(db_ns, db_id)
+            be_id = bioentities_map.get((db_ns, db_id))
             if be_id:
                 db_refs[db_ns] = db_id
                 db_refs['BE'] = be_id
@@ -403,6 +406,9 @@ def _read_bioentities_map():
         source_ns = row[0]
         source_id = row[1]
         be_id = row[2]
+        if source_ns == 'NXP':
+            source_ns = 'NXPFA'
+            source_id = source_id.split(':')[1]
         bioentities_map[(source_ns, source_id)] = be_id
     return bioentities_map
 
