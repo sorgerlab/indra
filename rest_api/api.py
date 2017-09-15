@@ -7,6 +7,7 @@ from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
     CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
+from indra.databases import cbio_client
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -311,6 +312,23 @@ def assemble_loopy():
     sa.make_model(use_name_as_key=True)
     model_str = sa.print_loopy(as_url=True)
     res = {'loopy_url': model_str}
+    return res
+
+
+#   CCLE mRNA amounts   #
+@route('/databases/cbio/ccle_mrna_amounts', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_ccle_mrna_levels():
+    """Get CCLE mRNA amounts using cBioClient"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    mrna_amounts = cbio_client.get_ccle_mrna(gene_list, cell_lines)
+    mrna_amounts_str = json.dumps(mrna_amounts)
+    res = {'mrna_amounts': mrna_amounts_str}
     return res
 
 
