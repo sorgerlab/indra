@@ -90,18 +90,21 @@ class NdexCxProcessor(object):
                 node_name = node['n']
                 self._node_names[id] = node_name
                 hgnc_id = hgnc_client.get_hgnc_id(node_name)
+                db_refs = {'TEXT': node_name}
                 if not hgnc_id:
                     if not self.require_grounding:
                         self._node_agents[id] = \
-                                Agent(node_name, db_refs={'TEXT': node_name})
+                                Agent(node_name, db_refs=db_refs)
                     invalid_genes.append(node_name)
                 else:
+                    db_refs.update({'HGNC': hgnc_id})
                     up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                    assert up_id
-                    self._node_agents[id] = Agent(node_name,
-                                                  db_refs={'HGNC': hgnc_id,
-                                                           'UP': up_id,
-                                                           'TEXT': node_name})
+                    # It's possible that a valid HGNC ID will not have a
+                    # Uniprot ID, as in the case of HOTAIR (HOX transcript
+                    # antisense RNA, HGNC:33510)
+                    if up_id:
+                        db_refs.update({'UP': up_id})
+                    self._node_agents[id] = Agent(node_name, db_refs=db_refs)
         if invalid_genes:
             verb = 'Skipped' if self.require_grounding else 'Included'
             logger.info('%s invalid gene symbols: %s' %

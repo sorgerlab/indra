@@ -42,6 +42,7 @@ def test_get_agents_no_grounding():
     assert set(node_names) == set(names_from_agents)
     assert set(node_names) == set(texts_from_agents)
 
+
 def test_get_node_names():
     nodes = ncp_file.get_node_names()
     assert nodes == list(ncp_file._node_names.values())
@@ -66,8 +67,8 @@ def test_get_statements():
 
 
 def test_get_cx_from_ndex():
-    # This network is public
-    ncp = process_ndex_network('171b8e16-8cf4-11e7-a10d-0ac135e8bacf')
+    # Ras Machine network
+    ncp = process_ndex_network('50e3dff7-133e-11e6-a039-06603eb7f303')
 
 
 @raises(HTTPError)
