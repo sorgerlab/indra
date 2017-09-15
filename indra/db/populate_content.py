@@ -327,26 +327,18 @@ class PmcUploader(NihUploader):
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
 
 
-    def upload_batch(self, db, tr_data, tc_data):
-        # Get the latest on what is already in the database.
-        "Add a batch of text refs and text content to the database."
-        pmid_list = [entry['pmid'] for entry in tr_data]
-        pmcid_list = [entry['pmcid'] for entry in tr_data]
-        #text_refs = db.select(
-        #    'text_ref', 
-        #    db.TextRef.pmid.in_(pmid_list) | db.TextRef.pmcid.in_(pmcid_list)
-        #    )
-        #raw_db_conts = db.get_values(
-        #    text_refs, 
-        #    ['pmid', 'pmcid'],
-        #    keyed=True
-        #    )
-        #del text_refs
+    def filter_text_refs(self, db, tr_data):
+        "Try to reconcile the data we have with what's already on the db."
+        tr_list = db.select(
+            'text_ref',
+            db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
+            db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
+            )
         db_conts = {
-            'pmid':[tr.pmid for tr in db.select('text_ref', db.TextRef.pmid.in_(pmid_list))],
-            'pmcid':[tr.pmcid for tr in db.select('text_ref', db.TextRef.pmcid.in_(pmcid_list))]
+            'pmid':[tr.pmid for tr in tr_list],
+            'pmcid':[tr.pmcid for tr in tr_list]
             }
-
+        
         # Define some helpful functions.
         filtered_tr_records = []
         def add_record(tr_entry):
@@ -368,43 +360,55 @@ class PmcUploader(NihUploader):
             tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
-
+            
+        def lookup_pmid(pmcid):
+            ret = id_lookup(pmcid)
+            return None if 'pmid' not in ret.keys() else ret['pmid']
+        
+        def get_tr_from_pmid(pmid):
+            for tr in tr_list:
+                if tr.pmid == pmid:
+                    return tr
+            return None
+        
         # Process the text ref data.
+        pmcids_to_skip = []
         for tr_entry in tr_data:
-            # Try to check by pmid first
-            if tr_entry['pmid'] is None:
-                pmid = id_lookup(tr_entry['pmcid'])['pmid']
-                if pmid is None:
-                    if tr_entry['pmcid'] not in db_conts['pmcid']:
-                        # Add a record without a pmid (it happens)
-                        add_record(tr_entry)
-                elif pmid not in db_conts['pmid']:
-                    if tr_entry['pmcid'] not in db_conts['pmcid']:
-                        tr_entry['pmid'] = pmid
-                        add_record(tr_entry)
-                    else:
-                        update_record_with_pmid(tr_entry, pmid)
-                else:
-                    if tr_entry['pmcid'] not in db_conts['pmcid']:
-                        update_record_with_pmcid(tr_entry)
-            elif tr_entry['pmid'] not in db_conts['pmid']:
-                if tr_entry['pmcid'] not in db_conts['pmcid']:
-                    add_record(tr_entry)
-                else:
+            if tr_entry['pmcid'] in db_conts['pmcid']:
+                if tr_entry['pmid'] is None:
+                    pmid = lookup_pmid(tr_entry['pmcid'])
+                    if pmid is not None and not db.has_entry('text_ref', db.TextRef.pmid==pmid):
+                            update_record_with_pmid(tr_entry, pmid)
+                elif tr_entry['pmid'] not in db_conts['pmid']:
                     update_record_with_pmid(tr_entry)
             else:
-                if tr_entry['pmcid'] not in db_conts['pmcid']:
-                    update_record_with_pmcid(tr_entry)
+                if tr_entry['pmid'] is None:
+                    pmid = lookup_pmid(tr_entry['pmcid'])
+                    if pmid is not None and db.has_entry('text_ref', db.TextRef.pmid==pmid):
+                            tr_entry['pmid'] = pmid
+                            update_record_with_pmcid(tr_entry)
+                    else:
+                        tr_entry['pmid'] = pmid
+                        add_record(tr_entry)
+                elif tr_entry['pmid'] in db_conts['pmid']:
+                    if get_tr_from_pmid(tr_entry['pmid']).pmcid is None:
+                        update_record_with_pmcid(tr_entry)
+                    else:
+                        with open('review.txt', 'a') as f:
+                            f.write(
+                                'Skipped record from %s with pmcid %s due to conflicting pmids. Please review.\n' 
+                                % (self.my_source, tr_entry['pmcid'])
+                                )
+                        pmcids_to_skip.append(tr_entry['pmcid'])
+                else:
+                    add_record(tr_entry)
         
-        # Upload the text content data.
-        print('Adding %d new text refs...' % len(filtered_tr_records))
-        db.copy('text_ref', filtered_tr_records, self.tr_cols)
+        return filtered_tr_records, pmcids_to_skip
 
-        # Process the text content data
-        arc_pmcid_list = [
-            tr['pmcid' ]
-            for tr in tr_data
-            ]
+
+    def filter_text_content(self, db, tc_data):
+        'Filter the text content'
+        arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
         tref_list = db.select(
             'text_ref', 
             db.TextRef.pmcid.in_(arc_pmcid_list)
@@ -423,18 +427,81 @@ class PmcUploader(NihUploader):
             (tc.text_ref_id, tc.source, tc.format, tc.text_type)
             for tc in existing_tcs
             ]
-        tc_records = [
-            (pmcid_trid_dict[pmcid], self.my_source, 'xml', txt_type, cont)
-            for pmcid, txt_type, cont in tc_data
-            ]
+        tc_records = []
+        for tc in tc_data:
+            tc_records.append(
+                (
+                    pmcid_trid_dict[tc['pmcid']], 
+                    self.my_source, 
+                    'xml', 
+                    tc['text_type'], 
+                    tc['content']
+                    )
+                )
         filtered_tc_records = [
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
+        return filtered_tc_records
+
+
+    def upload_batch(self, db, tr_data, tc_data):
+        "Add a batch of text refs and text content to the database."
+        filtered_tr_records, pmcids_to_skip = \
+            self.filter_text_refs(db, tr_data)
+        if len(pmcids_to_skip) is not 0:
+            mod_tc_data = [
+                tc for tc in tc_data if tc['pmcid'] not in pmcids_to_skip
+                ]
+        else:
+            mod_tc_data = tc_data
+        
+        # Upload the text content data.
+        print('Adding %d new text refs...' % len(filtered_tr_records))
+        db.copy('text_ref', filtered_tr_records, self.tr_cols)
+
+        # Process the text content data
+        filtered_tc_records = self.filter_text_content(db, mod_tc_data)
 
         # Upload the text content data.
         print('Adding %d more text content entries...' % len(filtered_tc_records))
         db.copy('text_content', filtered_tc_records, self.tc_cols)
 
+    
+    def get_data_from_xml_str(self, xml_str, filename):
+        "Get the data out of the xml string."
+        try:
+            tree = ET.XML(xml_str)
+        except ET.ParseError:
+            print("Could not parse %s. Skipping." % filename)
+            return None
+        id_data = {
+            e.get('pub-id-type'):e.text for e in 
+            tree.findall('.//article-id')
+            }
+        if 'pmc' not in id_data.keys():
+            print("Did not get a 'pmc' in %s." % filename)
+            return None
+            
+        #if 'PMC'+id_data['pmc'] not in pmcid_list:
+        #    continue
+        if 'pmcid' not in id_data.keys():
+            id_data['pmcid'] = 'PMC' + id_data['pmc']
+        rec_dict = dict.fromkeys(self.tr_cols)
+        rec_dict.update(id_data)
+        tr_data_entries= [rec_dict]
+        tc_data_entries = []
+        for typ, lbl in [(texttypes.ABSTRACT,'abstract'), (texttypes.FULLTEXT,'body')]:
+            cont_xml = tree.find('.//'+lbl)
+            if cont_xml is not None:
+                content = ET.tostring(cont_xml).decode('utf8')
+                tc_data_entries.append(
+                    {
+                        'pmcid':id_data['pmcid'], 
+                        'text_type':typ, 
+                        'content':zip_string(content)
+                        }
+                    )
+        return tr_data_entries, tc_data_entries
 
     def upload_archive(self, db, archive, q=None):
         "Process a single tar gzipped article archive."
@@ -446,37 +513,11 @@ class PmcUploader(NihUploader):
             for i, xml_file in enumerate(xml_files):
                 #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
                 xml_str = tar.extractfile(xml_file).read()
-                try:
-                    tree = ET.XML(xml_str)
-                except ET.ParseError:
-                    print("Could not parse %s. Skipping." % xml_file.name)
+                res = self.get_data_from_xml_str(xml_str, xml_file.name)
+                if res is None:
                     continue
-                id_data = {
-                    e.get('pub-id-type'):e.text for e in 
-                    tree.findall('.//article-id')
-                    }
-                if 'pmc' not in id_data.keys():
-                    print("Did not get a 'pmc' in %s." % xml_file)
-                    continue
-                    
-                #if 'PMC'+id_data['pmc'] not in pmcid_list:
-                #    continue
-                if 'pmcid' not in id_data.keys():
-                    id_data['pmcid'] = 'PMC' + id_data['pmc']
-                rec_dict = dict.fromkeys(self.tr_cols)
-                rec_dict.update(id_data)
-                tr_data.append(rec_dict)
-                for typ, lbl in [(texttypes.ABSTRACT,'abstract'), (texttypes.FULLTEXT,'body')]:
-                    cont_xml = tree.find('.//'+lbl)
-                    if cont_xml is not None:
-                        content = ET.tostring(cont_xml).decode('utf8')
-                        tc_data.append(
-                            (
-                                id_data['pmcid'], 
-                                typ, 
-                                zip_string(content)
-                                )
-                            )
+                tr_data += res[0]
+                tc_data += res[1]
                 if (i+1)%BATCH_SIZE==0: # Upload in batches, so as not to overwhelm ram.
                     print("Submitting batch %d of data for %s..." % 
                           ((i+1)/BATCH_SIZE, archive))
@@ -526,11 +567,11 @@ class PmcUploader(NihUploader):
         """
         archives = self.get_file_list()
         
-        tr_list = db.select(
+        sf_list = db.select(
             'source_file', 
             db.SourceFile.source==self.my_source
             )
-        existing_arcs = [tr.name for tr in tr_list]
+        existing_arcs = [sf.name for sf in sf_list]
         
         q = mp.Queue(len(archives))
         wait_list = []

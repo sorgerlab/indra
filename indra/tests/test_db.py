@@ -4,7 +4,7 @@ from builtins import dict, str
 from sys import version_info
 from nose import SkipTest
 from os import listdir, remove, path
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_list_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.populate_content import Medline, PmcOA, Manuscripts
 from indra.db import DatabaseManager, get_aws_db, texttypes
@@ -220,7 +220,6 @@ def test_full_local_upload():
     # This uses a specially curated sample directory designed to access all code
     # paths that the real system might experience, but on a much smaller (thus
     # faster) scale. Errors in the ftp service will not be caught by this test.
-    raise SkipTest()
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
     db = local_startup()
@@ -312,9 +311,71 @@ def test_full_remote_upload():
     assert len(tc_list), "No manuscripts uploaded."
 
 
+def test_id_handling_pmc_oa():
+    "Test every conceivable combination pmid/pmcid presense."
+    if not TEST_POPULATE:
+        raise SkipTest("These feautures are only supported in Python 3.x")
+    db = local_startup()
+    pmc = PmcOA(ftp_url=TEST_FTP, local=True)
+    
+    # Initialize with all possible states we could have gotten from medline.
+    pm_inp_tpl_list = [
+        ('caseA%d' % i, 'PMCcaseA%d' % i) for i in range(2)
+        ] + [
+        ('caseB%d' % i, None) for i in range(2)
+        ] + [
+        (None, 'PMCcaseC%d' % i) for i in range(2)
+        ] + [
+        ('28884161', None),
+        ('26977217', 'PMC4771487')
+        ]
+    db.insert_many(
+        'text_ref', 
+        [dict(zip(('pmid', 'pmcid'), d)) for d in pm_inp_tpl_list]
+        )
+    
+    # Prepare the 'batch' to be submitted for pmc oa, and try it.
+    oa_inp_tpl_list = [
+        ('case%s0' % l, 'PMCcase%s0'  %l) for l in ['A', 'B', 'C']
+        ] + [
+        (None, 'PMCcase%s1' % l) for l in ['A', 'B', 'C']
+        ] + [
+        (None, 'PMC5579538'), # lookup pmid in db
+        (None, 'PMC4238023'), # lookup no pmid in db
+        ('26977217', 'PMC5142709'), # wrong pmid
+        ]
+    tr_inp = []
+    for pmid, pmcid in oa_inp_tpl_list:
+        inp_dict = dict.fromkeys(pmc.tr_cols)
+        inp_dict.update(pmcid=pmcid, pmid=pmid)
+        tr_inp.append(inp_dict)
+    tc_inp = [{'pmcid':pmcid, 'text_type':'txt', 'content':b'content'} 
+               for _, pmcid in oa_inp_tpl_list]
+    pmc.upload_batch(db, tr_inp, tc_inp)
+    
+    # Check the text refs.
+    expected_pairs = [
+        ('caseA0', 'PMCcaseA0'), 
+        ('caseA1', 'PMCcaseA1'), 
+        ('caseB0', 'PMCcaseB0'), 
+        ('caseB1', None), # in practice this should be resolved with id_lookup
+        ('caseC0', 'PMCcaseC0'), 
+        (None, 'PMCcaseC1'), 
+        ('28884161', 'PMC5579538'), 
+        ('26977217', 'PMC4771487'), 
+        (None, 'PMCcaseB1'), 
+        ('25409783', 'PMC4238023')
+        ]
+    actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select('text_ref')]
+    assert_list_equal(actual_pairs, expected_pairs, 'DB text refs incorrect.')
+    
+    # Check the text content
+    assert len(db.select('text_content')) is 8, 'Too much DB text content.'
+    return
+
+
 def test_ftp_service():
     "Test the progenitor childrens' ftp access."
-    raise SkipTest()
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
     cases = [
