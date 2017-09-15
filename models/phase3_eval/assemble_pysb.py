@@ -8,7 +8,7 @@ from pysb.export.kappa import KappaExporter
 from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
-from indra.assemblers import PysbAssembler, IndexCardAssembler
+from indra.assemblers import PysbAssembler, IndexCardAssembler, SifAssembler
 import process_data
 
 def assemble_pysb(stmts, data_genes, out_file):
@@ -16,6 +16,15 @@ def assemble_pysb(stmts, data_genes, out_file):
     base_file, _ = os.path.splitext(out_file)
     #stmts = ac.load_statements('%s.pkl' % base_file)
     stmts = preprocess_stmts(stmts, data_genes)
+
+    # Make a SIF model equivalent to the PySB model
+    # Useful for making direct comparisons in pathfinding
+    sa = SifAssembler(stmts)
+    sa.make_model(use_name_as_key=True, include_mods=True,
+                  include_complexes=True)
+    sif_str = sa.print_model(include_unsigned_edges=True)
+    with open('%s_pysb.sif' % base_file, 'wt') as f:
+        f.write(sif_str)
 
     # This is the "final" set of statements going into the assembler so it
     # makes sense to cache these.

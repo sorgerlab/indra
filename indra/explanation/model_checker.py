@@ -50,6 +50,7 @@ class PathResult(object):
         MAX_PATH_LENGTH_EXCEEDED
         PATHS_FOUND
         INPUT_RULES_NOT_FOUND
+        MAX_PATHS_ZERO
 
     Attributes
     ----------
@@ -646,9 +647,27 @@ def _find_sources_with_paths(im, target, sources, polarity):
 
 
 def remove_im_params(model, im):
-    for param in model.parameters:
-        im.remove_node(param.name)
+    """Remove parameter nodes from the influence map.
 
+    Parameters
+    ----------
+    model : pysb.core.Model
+        PySB model.
+    im : pygraphviz AGraph
+        Influence map.
+
+    Returns
+    -------
+    pygraphviz AGraph
+        Influence map with the parameter nodes removed.
+    """
+    for param in model.parameters:
+        # If the node doesn't exist e.g., it may have already been removed),
+        # skip over the parameter without error
+        try:
+            im.remove_node(param.name)
+        except:
+            pass
 
 def _find_sources(im, target, sources, polarity):
     """Get the subset of source nodes with paths to the target.
