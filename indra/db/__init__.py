@@ -274,6 +274,9 @@ class DatabaseManager(object):
 
     def copy(self, tbl_name, data, cols=None):
         "Use pg_copy to copy over a large amount of data."
+        if len(data) is 0:
+            return # Nothing to do....
+        
         if cols is None:
             cols = self.get_columns(tbl_name)
         else:
@@ -347,7 +350,7 @@ class DatabaseManager(object):
     def has_entry(self, tbls, *args):
         "Check whether an entry or entries matching given specs live in the db."
         q = self.filter_query(tbls, *args)
-        return self.session.query(q.exists()).first()
+        return self.session.query(q.exists()).first()[0]
 
 
     def insert_db_stmts(self, stmts, db_name):
