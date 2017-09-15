@@ -155,10 +155,10 @@ def update_network(cx_str, network_id, ndex_cred):
                'description': summary.get('description'),
                'version': new_ver,
                }
-    logger.info('Updating NDEx network (%s) profile to %s' %
-                (network_id, profile))
+    logger.info('Updating NDEx network (%s) profile to %s',
+                network_id, profile)
     profile_retries = 5
-    for i in range(profile_retries):
+    for _ in range(profile_retries):
         try:
             time.sleep(5)
             nd.update_network_profile(network_id, profile)
