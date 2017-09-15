@@ -71,7 +71,7 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
         return res.text
 
 
-def update_ndex_network(cx_str, network_id, ndex_cred):
+def update_network(cx_str, network_id, ndex_cred):
     """Update an existing CX network on NDEx with new CX content.
 
     Parameters
