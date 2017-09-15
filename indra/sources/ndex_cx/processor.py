@@ -14,7 +14,8 @@ _stmt_map = {
     'controls-phosphorylation-of': Phosphorylation,
     'in-complex-with': Complex,
     'NEGATIVE_INFLUENCE': Inhibition,
-    'POSITIVE_INFLUENCE': Activation
+    'POSITIVE_INFLUENCE': Activation,
+    'binds': Complex,
 }
 
 
@@ -55,9 +56,10 @@ class NdexCxProcessor(object):
         A list of extracted INDRA Statements. Not all edges in the network
         may be converted into Statements.
     """
-    def __init__(self, cx):
+    def __init__(self, cx, require_grounding=True):
         self.cx = cx
         self.statements = []
+        self.require_grounding = require_grounding
         # Initialize the dict mapping node IDs to gene names
         self._node_names = {}
         self._node_agents = {}
@@ -79,7 +81,7 @@ class NdexCxProcessor(object):
             if up_id:
                 gene_name = uniprot_client.get_gene_name(up_id)
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                db_refs = {'UP': up_id, 'HGNC': hgnc_id}
+                db_refs = {'UP': up_id, 'HGNC': hgnc_id, 'TEXT': gene_name}
                 agent = Agent(gene_name, db_refs=db_refs)
                 self._node_names[id] = gene_name
                 self._node_agents[id] = agent
@@ -89,16 +91,21 @@ class NdexCxProcessor(object):
                 self._node_names[id] = node_name
                 hgnc_id = hgnc_client.get_hgnc_id(node_name)
                 if not hgnc_id:
+                    if not self.require_grounding:
+                        self._node_agents[id] = \
+                                Agent(node_name, db_refs={'TEXT': node_name})
                     invalid_genes.append(node_name)
                 else:
                     up_id = hgnc_client.get_uniprot_id(hgnc_id)
                     assert up_id
                     self._node_agents[id] = Agent(node_name,
                                                   db_refs={'HGNC': hgnc_id,
-                                                           'UP': up_id})
+                                                           'UP': up_id,
+                                                           'TEXT': node_name})
         if invalid_genes:
-            logger.info('Skipped invalid gene symbols: %s' %
-                        ', '.join(invalid_genes))
+            verb = 'Skipped' if self.require_grounding else 'Included'
+            logger.info('%s invalid gene symbols: %s' %
+                        (verb, ', '.join(invalid_genes)))
 
     def _initialize_network_info(self):
         ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]

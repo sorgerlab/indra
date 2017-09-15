@@ -5,13 +5,16 @@ import ndex.client
 from .processor import NdexCxProcessor
 
 
-def process_cx_file(file_name):
+def process_cx_file(file_name, require_grounding=True):
     """Process a CX JSON file into Statements.
 
     Parameters
     ----------
     file_name : str
         Path to file containing CX JSON.
+    require_grounding: bool
+        Whether network nodes lacking grounding information should be included
+        among the extracted Statements (default is True).
 
     Returns
     -------
@@ -20,10 +23,11 @@ def process_cx_file(file_name):
     """
     with open(file_name, 'rt') as fh:
         json_list = json.load(fh)
-        return process_cx(json_list)
+        return process_cx(json_list, require_grounding=require_grounding)
 
 
-def process_ndex_network(network_id, username=None, password=None):
+def process_ndex_network(network_id, username=None, password=None,
+                         require_grounding=True):
     """Process an NDEx network into Statements.
 
     Parameters
@@ -34,6 +38,9 @@ def process_ndex_network(network_id, username=None, password=None):
         NDEx username.
     password : str
         NDEx password.
+    require_grounding: bool
+        Whether network nodes lacking grounding information should be included
+        among the extracted Statements (default is True).
 
     Returns
     -------
@@ -49,22 +56,25 @@ def process_ndex_network(network_id, username=None, password=None):
         logger.error('Response: %s' % res.text)
         return None
     json_list = res.json()
-    return process_cx(json_list)
+    return process_cx(json_list, require_grounding=require_grounding)
 
 
-def process_cx(cx_json):
+def process_cx(cx_json, require_grounding=True):
     """Process a CX JSON object into Statements.
 
     Parameters
     ----------
     cx_json : list
         CX JSON object.
+    require_grounding: bool
+        Whether network nodes lacking grounding information should be included
+        among the extracted Statements (default is True).
 
     Returns
     -------
     NdexCxProcessor
         Processor containing Statements.
     """
-    ncp = NdexCxProcessor(cx_json)
+    ncp = NdexCxProcessor(cx_json, require_grounding=require_grounding)
     ncp.get_statements()
     return ncp
