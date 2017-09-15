@@ -72,11 +72,6 @@ def assemble_cx(stmts, save_file):
     return cxa
 
 
-def plot_belief_scores(stmts):
-    scores = np.array([s.belief for s in stmts])
-    plt.hist(scores)
-
-
 if __name__ == '__main__':
     # Load NDEx credentials
     with open('ndex_cred.json', 'rt') as f:
@@ -87,7 +82,7 @@ if __name__ == '__main__':
                                        username=ndex_cred['user'],
                                        password=ndex_cred['password'],
                                        require_grounding=False)
-
+    # Add grounding entries for ungrounded nodes/noncanonical gene names
     gnd_map_ext = {'PALB2_wt_eto': {'HGNC': 'PALB2'},
                    'PALB2_wt': {'HGNC': 'PALB2'},
                    'CSDA': {'HGNC': 'YBX3'},
@@ -113,9 +108,6 @@ if __name__ == '__main__':
 
     # Build the model
     prior_stmts = build_prior(gene_names, 'palb2_prior')
-    #with open('palb2_prior.pkl', 'rb') as f:
-    #    prior_stmts = pickle.load(f)
-    #    print("Loaded %d prior stmts" % len(prior_stmts))
     reach_stmts = ac.load_statements('reach_stmts.pkl')
     stmts = ncp_stmts + reach_stmts + prior_stmts
     stmts = run_assembly(stmts, 'unfiltered_assembled_stmts.pkl')
@@ -129,4 +121,4 @@ if __name__ == '__main__':
         stmts_filt = filter(stmts, cutoff, 'palb2_stmts_%.2f.pkl' % cutoff)
         cxa = assemble_cx(stmts_filt, 'palb2_%.2f.cx' % cutoff)
         cx_str = cxa.print_cx()
-        ndex_client.update_ndex_network(cx_str, net_id, ndex_cred)
+        ndex_client.update_network(cx_str, net_id, ndex_cred)

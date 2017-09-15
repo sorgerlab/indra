@@ -69,16 +69,10 @@ def assemble_cx(stmts, save_file):
     return cxa
 
 
-def plot_belief_scores(stmts):
-    scores = np.array([s.belief for s in stmts])
-    plt.hist(scores)
-
-
 if __name__ == '__main__':
     # Load NDEx credentials
     with open('ndex_cred.json', 'rt') as f:
         ndex_cred = json.load(f)
-    """
     # Get the network
     ncp = ndex_cx.process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf',
                                        username=ndex_cred['user'],
@@ -86,22 +80,18 @@ if __name__ == '__main__':
     gene_names = [hgnc_client.get_hgnc_name(ag.db_refs['HGNC'])
                   for ag in ncp.get_agents()]
     """
-    """
     # Get PMIDs for reading
     entrez_pmids = get_pmids(gene_names)
     network_pmids = ncp.get_pmids()
     pmids = list(set(entrez_pmids + network_pmids))
     save_pmids_for_reading(pmids, 'dna_damage_pmids.txt')
     """
-    """
+
     # Build the model
     prior_stmts = build_prior(gene_names, 'prior_stmts.pkl')
     reach_stmts = ac.load_statements('reach_stmts.pkl')
     stmts = ncp.statements + reach_stmts + prior_stmts
     stmts = run_assembly(stmts, 'unfiltered_assembled_stmts.pkl')
-    """
-    with open('unfiltered_assembled_stmts.pkl', 'rb') as f:
-        stmts = pickle.load(f)
 
     # Filter the statements at different levels
     ids_cutoffs = (('4e26a4f0-9388-11e7-a10d-0ac135e8bacf', 0.90),
@@ -112,4 +102,4 @@ if __name__ == '__main__':
         stmts_filt = filter(stmts, cutoff, 'stmts_%.2f.pkl' % cutoff)
         cxa = assemble_cx(stmts_filt, 'dna_damage_%.2f.cx' % cutoff)
         cx_str = cxa.print_cx()
-        ndex_client.update_ndex_network(cx_str, net_id, ndex_cred)
+        ndex_client.update_network(cx_str, net_id, ndex_cred)
