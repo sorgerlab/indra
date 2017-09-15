@@ -121,14 +121,15 @@ Assemble the statements into a network model
 .. code-block:: python
 
     from indra.assemblers import CxAssembler
+    from indra.databases import ndex_client
 
     cxa = CxAssembler(stmts)
-    cxa.make_model()
+    cx_str = cxa.make_model()
 
-we can now upload this network to the Network Data Exchange (NDEx).
+We can now upload this network to the Network Data Exchange (NDEx).
 
 .. code-block:: python
 
     ndex_cred = {'user': 'myusername', 'password': 'xxx'}
-    network_id = cxa.upload_model(ndex_cred)
+    network_id = ndex_client.create_network(cx_str, ndex_cred)
     print(network_id)
