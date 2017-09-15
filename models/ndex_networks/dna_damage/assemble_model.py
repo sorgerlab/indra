@@ -81,7 +81,7 @@ if __name__ == '__main__':
     """
     # Get the network
     ncp = ndex_cx.process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf',
-                                       username=ndex_cred['username'],
+                                       username=ndex_cred['user'],
                                        password=ndex_cred['password'])
     gene_names = [hgnc_client.get_hgnc_name(ag.db_refs['HGNC'])
                   for ag in ncp.get_agents()]

@@ -21,7 +21,8 @@ from indra.statements import IncreaseAmount
 
 def build_prior(genes, file_prefix):
     gn = GeneNetwork(genes, file_prefix)
-    stmts = gn.get_statements(filter=False)
+    #stmts = gn.get_statements(filter=False)
+    stmts = gn.get_biopax_stmts(filter=False)
     ac.dump_statements(stmts, '%s.pkl' % file_prefix)
     return stmts
 
@@ -83,7 +84,7 @@ if __name__ == '__main__':
 
     # Get the network
     ncp = ndex_cx.process_ndex_network('55cfccd4-966e-11e7-a10d-0ac135e8bacf',
-                                       username=ndex_cred['username'],
+                                       username=ndex_cred['user'],
                                        password=ndex_cred['password'],
                                        require_grounding=False)
 
@@ -128,4 +129,4 @@ if __name__ == '__main__':
         stmts_filt = filter(stmts, cutoff, 'palb2_stmts_%.2f.pkl' % cutoff)
         cxa = assemble_cx(stmts_filt, 'palb2_%.2f.cx' % cutoff)
         cx_str = cxa.print_cx()
-        upload_to_ndex(cx_str, ndex_cred, net_id)
+        ndex_client.update_ndex_network(cx_str, net_id, ndex_cred)
