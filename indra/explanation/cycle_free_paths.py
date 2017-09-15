@@ -346,7 +346,7 @@ def sample_single_path(source, target, H, t):
     path = [source[1]]
     current = source
     while current != target:
-        next = cf_succ(H, t, path, current)
+        next = _cf_succ(H, t, path, current)
         """ a sanity check; since I have not stree-tested the code yet """
         assert next[1] not in path, "Error: found a cycle"
         path.append(next[1])
