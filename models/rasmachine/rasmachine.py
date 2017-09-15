@@ -15,9 +15,8 @@ import datetime
 import argparse
 import gmail_client
 import twitter_client
-import ndex.client
-import ndex.networkn
 from indra.sources import reach
+from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client
@@ -283,7 +282,7 @@ def upload_new_ndex(model_path, new_stmts, ndex_cred):
     with open(cx_name, 'wb') as fh:
         fh.write(cx_str.encode('utf-8'))
     network_id = ndex_cred['network']
-    ndex_client.update_ndex_network(cx_str, network_id, ndex_cred)
+    ndex_client.update_network(cx_str, network_id, ndex_cred)
 
 
 def make_date_str():
