@@ -1,4 +1,6 @@
 from indra.sources import sparser
+from indra.sources.sparser.processor import _fix_agent
+from indra.statements import Agent
 
 xml_str1 = '''
 <article pmid="54321">
@@ -93,3 +95,40 @@ def test_phosphorylation2():
     assert (ev.pmid == '12345')
     assert (ev.text)
     assert (ev.source_api == 'sparser')
+
+
+def test_fix_agent_be_name():
+    a = Agent('XXX', db_refs={'BE': 'CDK'})
+    _fix_agent(a)
+    assert(a.name == 'CDK')
+
+
+def test_fix_agent_hgnc_only():
+    a = Agent('XXX', db_refs={'HGNC': '7199'})
+    _fix_agent(a)
+    assert(a.name == 'MOS')
+    assert(a.db_refs.get('UP') == 'P00540')
+
+
+def test_fix_agent_fa_only():
+    a = Agent('XXX', db_refs={'FA': '00815'})
+    _fix_agent(a)
+    assert(a.name == 'Cyclin')
+    assert(a.db_refs.get('BE') == 'Cyclin')
+    assert(a.db_refs.get('NXPFA') == '00815')
+    assert('FA' not in a.db_refs)
+
+
+def test_fix_agent_ncit_only():
+    a = Agent('XXX', db_refs={'NCIT': 'C25785'})
+    _fix_agent(a)
+    assert(a.name == 'KRAS')
+    assert(a.db_refs.get('HGNC') == '6407')
+    assert(a.db_refs.get('UP') == 'P01116')
+
+
+def test_fix_agent_ncit_only():
+    a = Agent('XXX', db_refs={'NCIT': 'C104166'})
+    _fix_agent(a)
+    assert(a.name == 'TUBB')
+    assert(a.db_refs.get('BE') == 'TUBB')
