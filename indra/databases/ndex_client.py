@@ -121,7 +121,9 @@ def update_network(cx_str, network_id, ndex_cred):
     network_id : str
         UUID of the network on NDEx.
     ndex_cred : dict
-        Credentials dict containing two keys, "username", and "password".
+        A dictionary with the following entries:
+        'user': NDEx user name
+        'password': NDEx password
     """
     server = 'http://public.ndexbio.org'
     username = ndex_cred.get('user')
