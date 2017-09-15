@@ -171,11 +171,6 @@ def update_network(cx_str, network_id, ndex_cred):
     import ndex.beta.toolbox as toolbox
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
-    d_edge_types = ["Activation", "Inhibition",
-                    "Modification", "SelfModification",
-                    "Gap", "Gef", "IncreaseAmount",
-                    "DecreaseAmount"]
-
     source_network = ndex.networkn.NdexGraph(server=server, username=username,
                                              password=password,
                                              uuid=network_id)
