@@ -84,7 +84,7 @@ def update_ndex_network(cx_str, network_id, ndex_cred):
         Credentials dict containing two keys, "username", and "password".
     """
     server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('username')
+    username = ndex_cred.get('user')
     password = ndex_cred.get('password')
     nd = ndex.client.Ndex(server, username, password)
 

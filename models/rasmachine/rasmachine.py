@@ -45,6 +45,7 @@ def build_prior(genes, out_file):
     ac.dump_statements(stmts, out_file)
     return stmts
 
+
 def get_email_pmids(gmail_cred):
     M = gmail_client.gmail_login(gmail_cred.get('user'),
                                  gmail_cred.get('password'))
@@ -53,6 +54,7 @@ def get_email_pmids(gmail_cred):
     logger.info('Searching last %d days of emails', num_days)
     pmids = gmail_client.get_message_pmids(M, num_days)
     return pmids
+
 
 def get_searchterm_pmids(search_terms, num_days):
     pmids = {}
@@ -65,6 +67,7 @@ def get_searchterm_pmids(search_terms, num_days):
         pmids[s] = pubmed_client.get_ids(s, reldate=num_days)
     return pmids
 
+
 def get_searchgenes_pmids(search_genes, num_days):
     pmids = {}
     for s in search_genes:
@@ -75,12 +78,14 @@ def get_searchgenes_pmids(search_genes, num_days):
             continue
     return pmids
 
+
 def check_pmids(stmts):
     for stmt in stmts:
         for ev in stmt.evidence:
             if ev.pmid is not None:
                 if not ev.pmid.isdigit():
                     logger.warning('Invalid PMID: %s' % ev.pmid)
+
 
 def process_paper(model_name, pmid):
     json_path = os.path.join(model_name, 'jsons', 'PMID%s.json' % pmid)
@@ -114,6 +119,7 @@ def process_paper(model_name, pmid):
         check_pmids(rp.statements)
     return rp, txt_format
 
+
 def process_paper_aws(pmid, start_time_local):
     try:
         metadata, content_type = get_full_text(pmid, metadata=True)
@@ -135,6 +141,7 @@ def process_paper_aws(pmid, start_time_local):
     if dt > dt_script:
         content_type = 'existing_json'
     return rp, content_type
+
 
 def make_status_message(stats):
     ndiff = (stats['new_final'] - stats['orig_final'])
@@ -164,6 +171,7 @@ def make_status_message(stats):
                 msg_str = 'Today I read %s, and learned %s!' %\
                     (abstr_str, mech_str)
     return msg_str
+
 
 def extend_model(model_name, model, pmids, start_time_local):
     npapers = 0
@@ -201,14 +209,6 @@ def extend_model(model_name, model, pmids, start_time_local):
                     logger.info('Reach processing failed for PMID%s' % pmid)
     return npapers, nabstracts, nexisting
 
-def _increment_ndex_ver(ver_str):
-    if not ver_str:
-        new_ver = '1.0'
-    else:
-        major_ver, minor_ver = ver_str.split('.')
-        new_minor_ver = str(int(minor_ver) + 1)
-        new_ver = major_ver + '.' + new_minor_ver
-    return new_ver
 
 def assemble_cx(stmts, name):
     ca = CxAssembler()
@@ -218,71 +218,10 @@ def assemble_cx(stmts, name):
     cx_str = ca.print_cx()
     return cx_str
 
-def upload_to_ndex(cx_str, ndex_cred):
-    server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
-    nd = ndex.client.Ndex(server, username, password)
-    network_id = ndex_cred.get('network')
-
-    try:
-        logger.info('Getting network summary...')
-        summary = nd.get_network_summary(network_id)
-    except Exception as e:
-        logger.error('Could not get NDEx network summary.')
-        logger.error(e)
-        return
-
-    # Update network content
-    try:
-        logger.info('Updating network...')
-        cx_stream = io.BytesIO(cx_str.encode('utf-8'))
-        nd.update_cx_network(cx_stream, network_id)
-    except Exception as e:
-        logger.error('Could not update NDEx network.')
-        logger.error(e)
-        return
-
-    # Update network profile
-    ver_str = summary.get('version')
-    new_ver = _increment_ndex_ver(ver_str)
-    profile = {'name': summary.get('name'),
-               'description': summary.get('description'),
-               'version': new_ver,
-               }
-    logger.info('Updating NDEx network (%s) profile to %s',
-                network_id, profile)
-    profile_retries = 5
-    for _ in range(profile_retries):
-        try:
-            time.sleep(5)
-            nd.update_network_profile(network_id, profile)
-            break
-        except Exception as e:
-            logger.error('Could not update NDEx network profile.')
-            logger.error(e)
-
-    # Update network style
-    import ndex.beta.toolbox as toolbox
-    template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
-
-    d_edge_types = ["Activation", "Inhibition",
-                    "Modification", "SelfModification",
-                    "Gap", "Gef", "IncreaseAmount",
-                    "DecreaseAmount"]
-
-    source_network = ndex.networkn.NdexGraph(server=server, username=username,
-                                             password=password,
-                                             uuid=network_id)
-
-    toolbox.apply_template(source_network, template_uuid, server=server,
-                           username=username, password=password)
-
-    source_network.update_to(network_id, server=server, username=username,
-                             password=password)
 
 class InvalidConfigurationError(Exception):
     pass
+
 
 def get_config(config_fname):
     try:
@@ -298,10 +237,12 @@ def get_config(config_fname):
 
     return config
 
+
 def _extend_dict(d1, d2):
     for k, v in d2.items():
         d1[k] = v
     return d1
+
 
 def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     logger.info('Filtering %d statements to above %f belief' %
@@ -333,6 +274,7 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
+
 def upload_new_ndex(model_path, new_stmts, ndex_cred):
     logger.info('Uploading to NDEx')
     logger.info(time.strftime('%c'))
@@ -340,7 +282,8 @@ def upload_new_ndex(model_path, new_stmts, ndex_cred):
     cx_name = os.path.join(model_path, 'model.cx')
     with open(cx_name, 'wb') as fh:
         fh.write(cx_str.encode('utf-8'))
-    upload_to_ndex(cx_str, ndex_cred)
+    network_id = ndex_cred['network']
+    ndex_client.update_ndex_network(cx_str, network_id, ndex_cred)
 
 
 def make_date_str():
