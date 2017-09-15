@@ -6,6 +6,7 @@ import time
 import requests
 import logging
 import ndex
+import ndex.client
 
 logger = logging.getLogger('ndex_client')
 
@@ -69,6 +70,45 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
         return res.json()
     else:
         return res.text
+
+
+def create_network(cx_str, ndex_cred):
+    """Creates a new NDEx network of the assembled CX model.
+
+    To upload the assembled CX model to NDEx, you need to have
+    a registered account on NDEx (http://ndexbio.org/) and have
+    the `ndex` python package installed. The uploaded network
+    is private by default.
+
+    Parameters
+    ----------
+    ndex_cred : dict
+        A dictionary with the following entries:
+        'user': NDEx user name
+        'password': NDEx password
+
+    Returns
+    -------
+    network_id :  str
+        The UUID of the NDEx network that was created by uploading
+        the assembled CX model.
+    """
+    nd = ndex.client.Ndex('http://public.ndexbio.org',
+                          username=ndex_cred.get('user'),
+                          password=ndex_cred.get('password'))
+    cx_stream = io.BytesIO(cx_str.encode('utf-8'))
+    try:
+        logger.info('Uploading network to NDEx.')
+        network_uri = nd.save_cx_stream_as_new_network(cx_stream)
+    except Exception as e:
+        logger.error('Could not upload network to NDEx.')
+        logger.error(e)
+        return
+
+    network_id = network_uri.rsplit('/')[-1]
+    logger.info('The UUID for the uploaded network is: %s' % network_id)
+    logger.info('View at: http://ndexbio.org/#/network/%s' % network_id)
+    return network_id
 
 
 def update_network(cx_str, network_id, ndex_cred):
