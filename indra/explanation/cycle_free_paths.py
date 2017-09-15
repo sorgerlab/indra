@@ -1,13 +1,17 @@
 """
-As we know, a paths-graph, say G_n, has the property that every node in G_n
-lies on a path of length n from source to target. These paths may not be
-cycle-free. This module transforms G_n into a new graph G_cf such that in G_cf
-every node lies on a cycle-free path from the source to a target. However it
-will NOT be the case, despite the misleading name G_cf, that G_cf contains
-*only* cycle-free paths. However we will be able to "easily" sample cycle-free
-paths from G_cf without any backtracking. Without too large a blow-up, G_cf can
-subsequently be transformed to G_CF which contains only cycle-free paths.  In
-fact I have a rough idea for doing this but haven't tested it out.
+Compute cycle-free paths graphs.
+
+Algorithm developed by P.S. Thiagarajan (https://scholar.harvard.edu/thiagu)
+
+A *paths-graph,* say G_n, has the property that every node in G_n lies on a
+path of length n from source to target. These paths may not be cycle-free. This
+module transforms G_n into a new graph G_cf such that in G_cf every node lies
+on a cycle-free path from the source to a target. Note that it will *not* be
+the case, despite the misleading name G_cf, that G_cf contains *only*
+cycle-free paths. However, we are able to "easily" sample cycle-free paths from
+G_cf without any backtracking using metadata attached to each node in G_cf.
+
+The algorithm is described further in :py:func:`cycle_free_paths_graph`, below.
 """
 
 import random
@@ -16,139 +20,52 @@ from copy import copy, deepcopy
 import networkx as nx
 from indra.explanation import paths_graph
 
-def _forward(v, H):
-    """The input to the following forward reachset computation will be the
-    graph G_i at the i-th stage for 1 <= j <= 8 together with one of its nodes
-    at level j.  This forward reach set will subsequently be pruned.
-    """
-    j = v[0]
-    L = {}
-    L[j] = [v]
-    h = nx.DiGraph()
-    for k in range(j+1, 10):
-        for v in L[k-1]:
-            h.add_edges_from(H.out_edges(v))
-        L[k] = [w for w in h if w[0] == k]
-    return h
-
-"""
-We will then attach the pruned forward
-reach set to the backward reachset to obtain G_(j+1, v). By patching together
-all the graphs in {G_{j+1, v}}_{v in j-th level of G_j} we will obtain G_j.
-"""
-
-def _backward(v, H):
-    """We also compute the backward version.
-    """
-    j = v[0]
-    L = {}
-    L[j] = [v]
-    J =  list(reversed(range(0, j)))
-    h = nx.DiGraph()
-    for k in J:
-        for v in L[k+1]:
-            h.add_edges_from(H.in_edges(v))
-        L[k] = [w for w in h if w[0] == k]
-    return h
-
-
-"""
-_forward(v, source, target, G_j) will return the subgraph of G_j, say G_j_v_f,
-that is forward reachable from v in G_j.
-
-We prune G_j_v_f through the following iterative procedure.  Let X_j_v be the
-set of nodes in G_j_v_f -other than v- that have the same name as v.  In other
-words u[1] = v[1] for every u in X_j_v.
-
-The function span(U, src, tgt, g) takes as inputs (a) g the current (possibly
-partially pruned) graph (b) U, the set of nodes U that can be pruned.
-
-(i) Remove all the nodes in U.
-
-(ii) Remove all the in_coming and out_going edges (relative to G_j_v_f)  of
-these nodes.
-
-(iii) In the resulting graph, identify Y, the set of nodes  have lost all their
-in_coming edges or out_going edges.
-
-Return g_prune, the partially pruned graph (obtained through steps (i) and
-(ii)) and Y, the candidiate set of nodes for the next iteration of pruning.
-
-_prune(Y, src, tgt, g) applies span() repeatedly till there are no more nodes to
-be pruned. We call _prune() with Y = X_j_v and g = G_j_v_f
-
-In the graph resulting from this pruning process, suppose both v and and tgt
-(ie. the node (9, target)) have survived. Since we will be going from lower
-levels to higher levels (yes, I can now think forwards!) we are guaranteed to
-be able to trace a cycle-free path from (0, source) to v. Further, thanks to
-the pruning we are guaranteed to be able to go from v to tgt without hitting a
-cycle involving v[1] in the current stage.
-
-If v or tgt gets eliminated then we can conclude that there are no cycle free
-paths passing through v in G_j and proceed accordingly.
-"""
-
-def _prune(pg, nodes_to_prune, source, target):
-    """Iteratively prunes nodes from a copy of the paths graph."""
-    # First check if we are pruning any nodes to prevent unnecessary copying
-    # of the paths graph
-    if not nodes_to_prune:
-        return pg
-    # Make a copy of the graph
-    pg_pruned = pg.copy()
-    # Perform iterative pruning
-    while nodes_to_prune:
-        # Remove the nodes in our pruning list
-        pg_pruned.remove_nodes_from(nodes_to_prune)
-        # Make a list of nodes whose in or out degree is now 0 (making
-        # sure to exclude the source and target, whose depths are at 0 and
-        # path_length, respectively)
-        no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
-                        if in_deg == 0 and node != source]
-        no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
-                        if out_deg == 0 and node != target]
-        nodes_to_prune = set(no_in_edges + no_out_edges)
-    return pg_pruned
-
-"""
-For the purposes of sampling cycle-free paths we attach a set of tags to each
-node when we compute G_j+1 from G_j.  Basically we add the tag v[1] to each
-node in G_j+1 that can be reached from v in the forward direction. This tag
-tells that in tracing path starting from v as long as we stick to nodes whose
-tag set contains v, we will be ok. 
-
-pg_raw is our path graph. As mentioned above the first step is special. We
-eliminate all cycles involving src as well as all cycles involving tgt. To
-prime the sampling procedure we add the tag 'source' to every node in the
-pruned graph; except to src whose tag set will be [] """
-
-""" Finally we compute each G_j for 1 <= j <= 8 together with tag sets """
-
-# Function for updating node tags in place
-def _add_tag(tag_dict, tag_node, nodes_to_tag):
-    for v in nodes_to_tag:
-        tag_dict[v].append(tag_node[1])
-
-def _initialize_cfpg(pg, source, target):
-    # Identify the initial set of nodes to be pruned. In this initial phase,
-    # they are simply nodes whose names match the source or target.
-    nodes_to_prune = set([v for v in pg.nodes_iter()
-                          if (v != source) and (v != target) and \
-                             ((v[1] == source[1]) or (v[1] == target[1]))])
-    # Get the paths graph after initial source/target cycle pruning
-    pg_0 = _prune(pg, nodes_to_prune, source, target)
-    # Initialize an empty list of tags for each node
-    tags = dict([(node, []) for node in pg_0.nodes_iter()])
-    # Add source tag to all nodes except source itself
-    _add_tag(tags, source, [v for v in pg_0.nodes_iter() if v != source])
-    return (pg_0, tags)
 
 def cycle_free_paths_graph(pg, source, target, path_length):
-    """We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
+    """Compute a cycle free paths graph.
+
+    Starting from the "raw" (contains cycles) paths graph, the algorithm
+    proceeds as follows.
+
+    For the purposes of sampling cycle-free paths we attach a set of tags to
+    each node when we compute G_j+1 from G_j.  Basically we add the tag v[1] to
+    each node in G_j+1 that can be reached from v in the forward direction.
+    This tag tells that in tracing path starting from v as long as we stick to
+    nodes whose tag set contains v, we will be ok. 
+
+    pg_raw is our path graph. As mentioned above the first step is special. We
+    eliminate all cycles involving src as well as all cycles involving tgt. To
+    prime the sampling procedure we add the tag 'source' to every node in the
+    pruned graph; except to src whose tag set will be []
+
+    Finally we compute each G_j for 1 <= j <= 8 together with tag sets
+
+    We will go from G_n (called pg_raw below) to G_cf in stages. At stage i
     we process all the nodes at level i. We start from G_0 at level 0. The
     first step is special in which obtain G_1 by processing the nodes (0,
     source) and (10, target). Then by processing the the nodes of G_1 at level
     1 we will obtain G_2 etc. At the end of this process we will set G_cf = G_8
+
+    Parameters
+    ----------
+    pg : networkx.DiGraph()
+        "Raw" (contains cycles) paths graph as created by
+        :py:func:`indra.explanation.paths_graph.paths_graph`.
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+    path_length : int
+        Desired path length.
+
+    Returns
+    -------
+    tuple : (networkx.DiGraph(), dict)
+        The initialized, not-yet cycle free paths graph consists of the
+        paths graph remaining after cycles through the source or target
+        nodes are removed. The dict represents an initial set of tags
+        defining the permissible forward nodes from a given node (i.e.,
+        those nodes lying on a cycle free path).
     """
     # Initialize the cycle-free paths graph and the tag dictionary
     dic_PG = {0: _initialize_cfpg(pg, source, target)}
@@ -228,12 +145,175 @@ def cycle_free_paths_graph(pg, source, target, path_length):
         round_counter += 1
     return dic_PG
 
-""" The sampling procedure simply uses the tag sets to trace out cycle-free
-paths. The basic idea is if we have reached a node v via the path p then we can
-choose the successor u of v as the next node only if p appears in the tag set
-of u. """
 
-def cf_succ(H,t, path, v):
+def _initialize_cfpg(pg, source, target):
+    """Initialize cycle free paths graph data structures.
+
+    Parameters
+    ----------
+    pg : networkx.DiGraph()
+        "Raw" (contains cycles) paths graph as created by
+        :py:func:`indra.explanation.paths_graph.paths_graph`.
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+
+    Returns
+    -------
+    tuple : (networkx.DiGraph(), dict)
+        The initialized, not-yet cycle free paths graph consists of the
+        paths graph remaining after cycles through the source or target
+        nodes are removed. The dict represents an initial set of tags
+        defining the permissible forward nodes from a given node (i.e.,
+        those nodes lying on a cycle free path).
+    """
+    # Identify the initial set of nodes to be pruned. In this initial phase,
+    # they are simply nodes whose names match the source or target.
+    nodes_to_prune = set([v for v in pg.nodes_iter()
+                          if (v != source) and (v != target) and \
+                             ((v[1] == source[1]) or (v[1] == target[1]))])
+    # Get the paths graph after initial source/target cycle pruning
+    pg_0 = _prune(pg, nodes_to_prune, source, target)
+    # Initialize an empty list of tags for each node
+    tags = dict([(node, []) for node in pg_0.nodes_iter()])
+    # Add source tag to all nodes except source itself
+    _add_tag(tags, source, [v for v in pg_0.nodes_iter() if v != source])
+    return (pg_0, tags)
+
+
+
+
+def _prune(pg, nodes_to_prune, source, target):
+    """Iteratively prunes nodes from a copy of the paths graph.
+
+    We prune the graph *pg* iteratively by the following procedure:
+
+      1. Remove the nodes given by *nodes_to_prune* from the graph.
+      2. Identify nodes (other than the source node) that now have no
+         incoming edges.
+      3. Identify nodes (other than the target node) that now have no outgoing
+         edges.
+      4. Set *nodes_to_prune* to the nodes identified in steps 2 and 3.
+      5. Repeat from 1 until there are no more nodes to prune.
+
+    Parameters
+    ----------
+    pg : networkx.DiGraph
+        Paths graph to prune.
+    nodes_to_prune : list
+        Nodes to prune from paths graph.
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+
+    Returns
+    -------
+    networkx.DiGraph()
+        Pruned paths graph.
+    """
+    # First check if we are pruning any nodes to prevent unnecessary copying
+    # of the paths graph
+    if not nodes_to_prune:
+        return pg
+    # Make a copy of the graph
+    pg_pruned = pg.copy()
+    # Perform iterative pruning
+    while nodes_to_prune:
+        # Remove the nodes in our pruning list
+        pg_pruned.remove_nodes_from(nodes_to_prune)
+        # Make a list of nodes whose in or out degree is now 0 (making
+        # sure to exclude the source and target, whose depths are at 0 and
+        # path_length, respectively)
+        no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
+                        if in_deg == 0 and node != source]
+        no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
+                        if out_deg == 0 and node != target]
+        nodes_to_prune = set(no_in_edges + no_out_edges)
+    return pg_pruned
+
+
+# Function for updating node tags in place
+def _add_tag(tag_dict, tag_node, nodes_to_tag):
+    for v in nodes_to_tag:
+        tag_dict[v].append(tag_node[1])
+
+
+def _forward(v, H):
+    """Compute the subgraph of H defined by the paths forward from node v.
+
+    Parameters
+    ----------
+    v : tuple(int, str)
+        The node to get the _forward subgraph for.
+    H : networkx.DiGraph()
+        For a given path length n, H defines the graph G_i at the i-th stage
+        for 1 <= i <= n.
+
+    Returns
+    -------
+    networkx.DiGraph()
+        Subgraph reachable by forward paths from v in H.
+    """
+    j = v[0]
+    L = {}
+    L[j] = [v]
+    h = nx.DiGraph()
+    for k in range(j+1, 10):
+        for v in L[k-1]:
+            h.add_edges_from(H.out_edges(v))
+        L[k] = [w for w in h if w[0] == k]
+    return h
+
+
+def _backward(v, H):
+    """Compute the subgraph of H defined by the paths backward from node v.
+
+    Parameters
+    ----------
+    v : tuple(int, str)
+        The node to get the _backward subgraph for.
+    H : networkx.DiGraph()
+        For a given path length n, H defines the graph G_i at the i-th stage
+        for 1 <= i <= n.
+
+    Returns
+    -------
+    networkx.DiGraph()
+        Subgraph reachable by backward paths from v in H.
+    """
+    j = v[0]
+    L = {}
+    L[j] = [v]
+    J =  list(reversed(range(0, j)))
+    h = nx.DiGraph()
+    for k in J:
+        for v in L[k+1]:
+            h.add_edges_from(H.in_edges(v))
+        L[k] = [w for w in h if w[0] == k]
+    return h
+
+
+def _cf_succ(H, t, path, v):
+    """Randomly choose a successor node of v.
+
+    Parameters
+    ----------
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+    path : list
+        The path so far (list of nodes).
+    v : tuple
+        The current node.
+
+    Returns
+    -------
+    tuple
+        Randomly chosen successor node on a non-cyclic path.
+    """
     succ = []
     for u in H.successors(v):
         if set(path) <= set(t[u]):
@@ -241,28 +321,68 @@ def cf_succ(H,t, path, v):
     w = random.choice(succ)
     return w
 
-def cf_sample_single_path(src, tgt, H,t):   
-        path = [src[1]]
-        current = src
-        while current != tgt:
-            next = cf_succ(H,t, path, current)
-            """ a sanity check; since I have not stree-tested the code yet """
-            if next[1] in path:
-                print(path.append(next))
-                print("error in the computation of G_cf")
-                break
-            else:
-                path.append(next[1])
-                current = next
-        return tuple(path)
 
-def cf_sample_many_paths(src,tgt, H, t, n):
+def cf_sample_single_path(source, target, H, t):
+    """Sample a single cycle-free path.
+
+    The sampling procedure uses the tag sets to trace out cycle-free
+    paths. If we have reached a node *v* via the path *p* then we can choose
+    the successor *u* of *v* as the next node only if *p* appears in the tag
+    set of u.
+
+    Parameters
+    ----------
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+
+    Returns
+    -------
+    list of strings
+        A randomly sampled, non-cyclic path. Nodes are represented as node
+        names only, i.e., the depth prefixes are removed.
+    """
+    path = [source[1]]
+    current = source
+    while current != target:
+        next = cf_succ(H, t, path, current)
+        """ a sanity check; since I have not stree-tested the code yet """
+        assert next[1] not in path, "Error: found a cycle"
+        path.append(next[1])
+        current = next
+    return tuple(path)
+
+def cf_sample_many_paths(source, target, H, t, n):
+    """Sample many cycle-free paths.
+
+    Parameters
+    ----------
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+
+    Returns
+    -------
+    list of lists
+        Each item in the list is a list of strings representing a path. Note
+        that the paths may not be unique.
+    """
     # If the graph is empty, then there are no paths
     if not H:
         return []
     P = []
     for i in range(0, n):
-        p = cf_sample_single_path(src, tgt, H,t)
+        p = cf_sample_single_path(source, target, H, t)
         P.append(p)
     return P
 
