@@ -13,5 +13,4 @@ cd "$DIR"
 export PYTHONPATH=$PYTHONPATH:../../../indra
 echo $PYTHONPATH
 log_file="$model_name/log.txt"
-config_file="$model_name/config.yaml"
-python rasmachine.py $model_name $config_file >> $log_file 2>> $log_file
+python rasmachine.py run_with_search $model_name >> $log_file 2>> $log_file
