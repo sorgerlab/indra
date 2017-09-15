@@ -84,8 +84,6 @@ class SparserJSONProcessor(object):
 def _fix_agent(agent):
     if agent is None:
         return
-    print('Before: %s' % (','.join(['%s:%s' % (k, v) for k, v in agent.db_refs.items()])))
-    print('Before: %s' % agent.name)
     # First we fix some name spaces
     db_refs_tmp = copy(agent.db_refs)
     for db_ns, db_id in agent.db_refs.items():
@@ -137,8 +135,6 @@ def _fix_agent(agent):
             hgnc_id = hgnc_client.get_hgnc_id(gene_name)
             if hgnc_id:
                 agent.db_refs['HGNC'] = hgnc_id
-    print('After: %s' % (','.join(['%s:%s' % (k, v) for k, v in agent.db_refs.items()])))
-    print('After: %s' % agent.name)
 
 
 class SparserXMLProcessor(object):
