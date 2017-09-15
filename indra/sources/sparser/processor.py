@@ -73,36 +73,69 @@ class SparserJSONProcessor(object):
                     continue
 
             # Step 4: Fix Agent names and grounding
-            _fix_agents(stmt)
+            for agent in stmt.agent_list():
+                _fix_agent(agent)
 
             # Step 5: Append to list of Statements
             self.statements.append(stmt)
 
 
-def _fix_agents(stmt):
-    for agent in stmt.agent_list():
-        if agent is not None:
-            up_id = agent.db_refs.get('UP')
-            hgnc_id = agent.db_refs.get('HGNC')
-            be_id = agent.db_refs.get('BE')
+def _fix_agent(agent):
+    if agent is None:
+        return
+    print('Before: %s' % (','.join(['%s:%s' % (k, v) for k, v in agent.db_refs.items()])))
+    print('Before: %s' % agent.name)
+    # First we fix some name spaces
+    for db_ns, db_id in agent.db_refs:
+        # Change FA name space
+        if db_ns == 'FA':
+            db_ns = 'NXP'
+            db_id = 'FA:' + db_id
+        # Change IPR name space
+        elif db_ns == 'IPR':
+            db_ns = 'IP'
+        # Change XFAM name space
+        elif db_ns == 'XFAM':
+            db_ns = 'PF'
+            db_id = db_id.split('.')[0]
+        agent.db_refs[db_ns] = db_id
+    # Check if we have a BE entry
+    be_id = agent.db_refs.get('BE')
+    # Try to map to BE from NXP, IPR, PF, NCIT
+    if not be_id:
+        for db_ns, db_id in agent.db_refs.items():
+            be_id = bioentities_map.get((db_ns, db_id))
             if be_id:
-                agent.name = be_id
-            if hgnc_id:
-                gene_name = hgnc_client.get_hgnc_name(hgnc_id)
-                if gene_name:
-                    agent.name = gene_name
-                if not up_id:
-                    up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                    if up_id:
-                        agent.db_refs['UP'] = up_id
+                break
+    # Try mapping NCIT to specific genes if possible
+    if not be_id and 'NCIT' in agent.db_refs:
+        target = ncit_map.get(agent.db_refs['NCIT'])
+        if target:
+            agent.db_refs[target[0]] = target[1]
+    # Check what entries we have
+    up_id = agent.db_refs.get('UP')
+    hgnc_id = agent.db_refs.get('HGNC')
+    # BE takes precedence if we have it
+    if be_id:
+        agent.db_refs['BE'] = be_id
+        agent.name = be_id
+    elif hgnc_id:
+        gene_name = hgnc_client.get_hgnc_name(hgnc_id)
+        if gene_name:
+            agent.name = gene_name
+        if not up_id:
+            up_id = hgnc_client.get_uniprot_id(hgnc_id)
             if up_id:
-                gene_name = uniprot_client.get_gene_name(up_id)
-                if gene_name:
-                    agent.name = gene_name
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        agent.db_refs['HGNC'] = hgnc_id
-        # TODO: handle NCIT, FA, IP, NXP to BE/HGNC/UP mappings
+                agent.db_refs['UP'] = up_id
+    elif up_id:
+        gene_name = uniprot_client.get_gene_name(up_id)
+        if gene_name:
+            agent.name = gene_name
+            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+            if hgnc_id:
+                agent.db_refs['HGNC'] = hgnc_id
+    print('After: %s' % (','.join(['%s:%s' % (k, v) for k, v in agent.db_refs.items()])))
+    print('After: %s' % agent.name)
 
 
 class SparserXMLProcessor(object):
@@ -290,7 +323,7 @@ class SparserXMLProcessor(object):
                             if hgnc_id:
                                 db_refs['HGNC'] = hgnc_id
             elif db_ns == 'FA':
-                db_refs['NXPFA'] = db_id
+                db_refs['NXP'] = 'FA:' + db_id
             elif db_ns == 'XFAM':
                 db_refs['PF'] = db_id.split('.')[0]
             elif db_ns == 'CHEBI':
@@ -345,17 +378,6 @@ class SparserXMLProcessor(object):
         return ev
 
 
-def get_bioentities_mapping(db_ns, db_id):
-    if db_ns == 'FA':
-        db_ns = 'NXP'
-        db_id = 'FA:' + db_id
-    elif db_ns == 'IPR':
-        db_ns = 'IP'
-    elif db_ns == 'XFAM':
-        db_ns = 'PF'
-        db_id = db_id.split('.')[0]
-    be_id = bioentities_map.get((db_ns, db_id))
-    return be_id
 
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
