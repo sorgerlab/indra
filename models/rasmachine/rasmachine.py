@@ -165,7 +165,7 @@ def make_status_message(stats):
                     (abstr_str, mech_str)
     return msg_str
 
-def extend_model(model_name, model, pmids, start_time_local, aws_available=False):
+def extend_model(model_name, model, pmids, start_time_local):
     npapers = 0
     nabstracts = 0
     nexisting = 0
@@ -397,7 +397,8 @@ def get_ndex_cred(config):
     return ndex_cred
 
 
-def run_machine(model_path, pmids, belief_threshold, search_genes=None, ndex_cred=None, twitter_cred=None):
+def run_machine(model_path, pmids, belief_threshold, search_genes=None,
+                ndex_cred=None, twitter_cred=None):
     start_time_local = datetime.datetime.now(tzlocal.get_localzone())
     date_str = make_date_str()
 
@@ -446,7 +447,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None, ndex_cre
     logger.info(time.strftime('%c'))
     logger.info('Extending model.')
     stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
-        extend_model(model_path, model, pmids, start_time_local, aws_available=aws_available)
+        extend_model(model_path, model, pmids, start_time_local)
     # Having added new statements, we preassemble the model
     model.preassemble(filters=global_filters)
 
@@ -496,9 +497,10 @@ def main():
 
 @main.command()
 @click.argument('model_path')
-@click.option('--config', help="Specify configuration file path, otherwise looks for config.yaml in model path")
-def run(model_path, config):
-    """Runs the RAS Machine for the given model path"""
+@click.option('--config', help='Specify configuration file path, otherwise '
+                                'looks for config.yaml in model path')
+def run_with_search(model_path, config):
+    """Run with PubMed search for new papers."""
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
 
@@ -511,7 +513,8 @@ def run(model_path, config):
     if config:
         config = get_config(config)
     elif os.path.exists(default_config_fname):
-        logger.info('Loading default configuration from %s', default_config_fname)
+        logger.info('Loading default configuration from %s',
+                    default_config_fname)
         config = get_config(default_config_fname)
     else:
         logger.error('Configuration file argument missing.')
@@ -600,7 +603,7 @@ def run(model_path, config):
 @main.command()
 @click.argument('model_path')
 def summarize(model_path):
-    """Summarizes a model. Right now just outputs the number of statmenents"""
+    """Print model summary."""
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, 'model.pkl')
@@ -613,9 +616,10 @@ def summarize(model_path):
 
 @main.command()
 @click.argument('model_path')
-@click.option('--pmids', type=click.File(), default=sys.stdin, help="A file with a PMID on each line")
-def enumerated(model_path, pmids):
-    """Loads the model, increments it with the given PMIDS then exports"""
+@click.option('--pmids', type=click.File(), default=sys.stdin,
+              help="A file with a PMID on each line")
+def run_with_pmids(model_path, pmids):
+    """Run with given list of PMIDs."""
     default_config_fname = os.path.join(model_path, 'config.yaml')
     config = get_config(default_config_fname)
 
