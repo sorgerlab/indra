@@ -329,6 +329,7 @@ class PmcUploader(NihUploader):
 
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
+        print("Beginning to filter text refs...")
         tr_list = db.select(
             'text_ref',
             db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
@@ -338,6 +339,7 @@ class PmcUploader(NihUploader):
             'pmid':[tr.pmid for tr in tr_list],
             'pmcid':[tr.pmcid for tr in tr_list]
             }
+        print("\tGot db contents...")
         
         # Define some helpful functions.
         filtered_tr_records = []
@@ -352,18 +354,30 @@ class PmcUploader(NihUploader):
             filtered_tr_records.append(tuple(entry_lst))
 
         def update_record_with_pmcid(tr_entry):
+            print("\tUpdating a record with a new pmcid....")
             tr = db.select_one('text_ref', db.TextRef.pmid==tr_entry['pmid'])
             tr.pmcid = tr_entry['pmcid']
             db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
+            print("\tDone updating...")
         
         def update_record_with_pmid(tr_entry, pmid=None):
+            print("\tUpdating a record with a new pmid...")
             tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
+            print("\tDone updating...")
             
         def lookup_pmid(pmcid):
+            print("\tLooking for a missing pmid...")
             ret = id_lookup(pmcid)
+            print("\tDone looking...")
             return None if 'pmid' not in ret.keys() else ret['pmid']
+        
+        def db_has_pmid(pmid):
+            print("\tLooking for pmid in db...")
+            ret = db.has_entry('text_ref', db.TextRef.pmid==pmid)
+            print("\tDetermined pmid status...")
+            return ret
         
         def get_tr_from_pmid(pmid):
             for tr in tr_list:
@@ -373,18 +387,21 @@ class PmcUploader(NihUploader):
         
         # Process the text ref data.
         pmcids_to_skip = []
-        for tr_entry in tr_data:
+        N = len(tr_data)
+        for i, tr_entry in enumerate(tr_data):
+            if N >= 100 and i%int(N/25):
+                print('|', end='')
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:
                     pmid = lookup_pmid(tr_entry['pmcid'])
-                    if pmid is not None and not db.has_entry('text_ref', db.TextRef.pmid==pmid):
+                    if pmid is not None and not db_has_pmid(pmid):
                             update_record_with_pmid(tr_entry, pmid)
                 elif tr_entry['pmid'] not in db_conts['pmid']:
                     update_record_with_pmid(tr_entry)
             else:
                 if tr_entry['pmid'] is None:
                     pmid = lookup_pmid(tr_entry['pmcid'])
-                    if pmid is not None and db.has_entry('text_ref', db.TextRef.pmid==pmid):
+                    if pmid is not None and db_has_pmid(pmid):
                             tr_entry['pmid'] = pmid
                             update_record_with_pmcid(tr_entry)
                     else:
@@ -402,12 +419,13 @@ class PmcUploader(NihUploader):
                         pmcids_to_skip.append(tr_entry['pmcid'])
                 else:
                     add_record(tr_entry)
-        
+        print("Done filtering text refs...")
         return filtered_tr_records, pmcids_to_skip
 
 
     def filter_text_content(self, db, tc_data):
         'Filter the text content'
+        print("Beginning to filter text content...")
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
         tref_list = db.select(
             'text_ref', 
@@ -441,6 +459,7 @@ class PmcUploader(NihUploader):
         filtered_tc_records = [
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
+        print("Finished filtering the text content...")
         return filtered_tc_records
 
 
@@ -507,8 +526,21 @@ class PmcUploader(NihUploader):
         "Process a single tar gzipped article archive."
         tr_data = []
         tc_data = []
+        
+        def submit(tag, tr_data, tc_data):
+            batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
+            print("Submitting %s of data for %s..." % 
+                  (batch_name, archive))
+            
+            if q is not None:
+                q.put(((batch_name, archive), tr_data[:], tc_data[:]))
+            else:
+                self.upload_batch(db, tr_data[:], tc_data[:])
+            tr_data.clear()
+            tc_data.clear()
+        
         with tarfile.open(archive, mode='r:gz') as tar:
-            print('Loading...')
+            print('Loading %s...' % archive)
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
                 #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
@@ -519,20 +551,9 @@ class PmcUploader(NihUploader):
                 tr_data += res[0]
                 tc_data += res[1]
                 if (i+1)%BATCH_SIZE==0: # Upload in batches, so as not to overwhelm ram.
-                    print("Submitting batch %d of data for %s..." % 
-                          ((i+1)/BATCH_SIZE, archive))
-                    if q is not None:
-                        q.put((tr_data, tc_data))
-                    else:
-                        self.upload_batch(db, tr_data, tc_data)
-                    tr_data = []
-                    tc_data = []
+                    submit((i+1)/BATCH_SIZE, tr_data, tc_data)
             else:
-                print("Submitting final batch of data for %s..." % archive)
-                if q is not None:
-                    q.put((tr_data, tc_data))
-                else:
-                    self.upload_batch(db, tr_data, tc_data)
+                submit('final', tr_data, tc_data)
         return
 
 
@@ -605,16 +626,23 @@ class PmcUploader(NihUploader):
                 active_list.remove((a, p))
                 start_next_proc()
             try:
-                tr_data, tc_data = q.get_nowait() # This will block until at least one is done
+                # This will not block until at least one is done
+                label, tr_data, tc_data = q.get_nowait()
+            except KeyboardInterrupt:
+                raise
             except:
                 continue
+            print("Beginning to upload %s from %s..." % label)
             self.upload_batch(db, tr_data, tc_data)
+            print("Finished %s from %s..." % label)
             time.sleep(0.1)
                 
         # Empty the queue.
         while not q.empty():
             try:
                 tr_data, tc_data = q.get(timeout=1)
+            except KeyboardInterrupt:
+                raise
             except:
                 break
             self.upload_batch(db, tr_data, tc_data)
