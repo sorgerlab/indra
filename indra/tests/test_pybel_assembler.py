@@ -3,6 +3,7 @@ from indra.statements import *
 import pybel
 import networkx as nx
 import pybel.constants as pc
+from indra.databases import hgnc_client
 
 phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Ser', 218)
 ubtuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ub'), 'Ser', 218)
@@ -249,5 +250,26 @@ def test_gap():
     _, _, edge_data = belgraph.edges(data=True)[0]
     assert edge_data == edge
 
+
+def test_active_form():
+    ras = Agent('KRAS', mutations=[MutCondition('12', 'G', 'V')],
+                db_refs={'HGNC':'6407'})
+    mapk1_p = Agent('MAP2K1',
+                    mods=[ModCondition('phosphorylation', 'T', '185')],
+                    db_refs={'HGNC': hgnc_client.get_hgnc_id('MAP2K1')})
+    mapk1_pp = Agent('MAP2K1',
+                     mods=[ModCondition('phosphorylation', 'T', '185'),
+                           ModCondition('phosphorylation', 'Y', '187')],
+                     db_refs={'HGNC': hgnc_client.get_hgnc_id('MAP2K1')})
+    stmt1 = ActiveForm(ras, 'gtpbound', True)
+    stmt2 = ActiveForm(mapk1_p, 'kinase', True)
+    stmt3 = ActiveForm(mapk1_pp, 'kinase', True)
+    for stmt in (stmt1, stmt2, stmt3):
+        pba = pa.PybelAssembler([stmt])
+        belgraph = pba.make_model()
+        assert len(belgraph) == 2
+        # TODO: Add tests for specific edge content
+
+
 if __name__ == '__main__':
-    test_gap()
+    test_active_form()
