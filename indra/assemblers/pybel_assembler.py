@@ -26,6 +26,8 @@ _indra_pybel_act_map = {
     'catalytic': 'cat',
     'gtpbound': 'gtp',
     'transcription': 'tscript',
+    'gef': 'gef',
+    'gap': 'gap'
 }
 
 
@@ -60,6 +62,8 @@ class PybelAssembler(object):
                 self._assemble_regulate_activity(stmt)
             elif isinstance(stmt, RegulateAmount):
                 self._assemble_regulate_amount(stmt)
+            elif isinstance(stmt, Gef):
+                self._assemble_gef(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -109,6 +113,20 @@ class PybelAssembler(object):
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
+    def _assemble_gef(self, stmt):
+        gef = deepcopy(stmt.gef)
+        gef.activity = ActivityCondition('gef', True)
+        ras = deepcopy(stmt.ras)
+        ras.activity = ActivityCondition('gtpbound', True)
+        (subj_node, subj_attr, subj_edge) = _get_agent_node(gef)
+        (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
+        self.model.add_node(subj_node, attr_dict=subj_attr)
+        self.model.add_node(obj_node, attr_dict=obj_attr)
+        pybel_relation = pc.DIRECTLY_INCREASES
+        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
+                                            obj_edge, stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
