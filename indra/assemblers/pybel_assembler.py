@@ -7,7 +7,7 @@ import pybel
 import pybel.constants as pc
 from copy import deepcopy, copy
 from pybel.parser.language import pmod_namespace
-from pybel.parser.parse_bel import canonicalize_variant
+from pybel.parser.canonicalize import node_to_tuple
 from indra.assemblers.pysb_assembler import mod_acttype_map
 
 # Python 2
@@ -210,7 +210,7 @@ def _get_agent_node(agent):
         variants.append(var)
     if variants:
         node_attr[pc.VARIANTS] = variants
-    node_tuple = _make_node_tuple(node_attr)
+    node_tuple = node_to_tuple(node_attr)
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
     return (node_tuple, node_attr, edge_data)
@@ -262,18 +262,6 @@ def _get_agent_activity(agent):
         edge_data[pc.EFFECT] = {pc.NAME: pybel_activity,
                                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}
     return edge_data
-
-
-def _make_node_tuple(node_attr):
-    if pc.VARIANTS in node_attr:
-        variants = tuple(sorted([canonicalize_variant(token)
-                                 for token in node_attr[pc.VARIANTS]]))
-        return _make_simple_tuple(node_attr) + variants
-    return _make_simple_tuple(node_attr)
-
-
-def _make_simple_tuple(node_attr):
-    return (node_attr[pc.FUNCTION], node_attr[pc.NAMESPACE], node_attr[pc.NAME])
 
 
 def _get_evidence(evidence):
