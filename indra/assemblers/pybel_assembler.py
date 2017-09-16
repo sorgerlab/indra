@@ -66,6 +66,8 @@ class PybelAssembler(object):
                 self._assemble_gef(stmt)
             elif isinstance(stmt, Gap):
                 self._assemble_gap(stmt)
+            elif isinstance(stmt, ActiveForm):
+                self._assemble_active_form(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -144,6 +146,21 @@ class PybelAssembler(object):
                                             obj_edge, stmt.evidence)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
+    def _assemble_active_form(self, stmt):
+        act_agent = Agent(stmt.agent.name, db_refs=stmt.agent.db_refs)
+        act_agent.activity = ActivityCondition(stmt.activity, True)
+        pybel_relation = pc.DIRECTLY_INCREASES if stmt.is_active \
+                                               else pc.DIRECTLY_DECREASES
+        (subj_node, subj_attr, subj_edge) = _get_agent_node(stmt.agent)
+        (obj_node, obj_attr, obj_edge) = _get_agent_node(act_agent)
+        self.model.add_node(subj_node, attr_dict=subj_attr)
+        self.model.add_node(obj_node, attr_dict=obj_attr)
+        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
+                                            obj_edge, stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
