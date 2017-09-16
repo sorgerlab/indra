@@ -64,6 +64,8 @@ class PybelAssembler(object):
                 self._assemble_regulate_amount(stmt)
             elif isinstance(stmt, Gef):
                 self._assemble_gef(stmt)
+            elif isinstance(stmt, Gap):
+                self._assemble_gap(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -123,6 +125,21 @@ class PybelAssembler(object):
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
         pybel_relation = pc.DIRECTLY_INCREASES
+        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
+                                            obj_edge, stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
+    def _assemble_gap(self, stmt):
+        gap = deepcopy(stmt.gap)
+        gap.activity = ActivityCondition('gap', True)
+        ras = deepcopy(stmt.ras)
+        ras.activity = ActivityCondition('gtpbound', True)
+        (subj_node, subj_attr, subj_edge) = _get_agent_node(gap)
+        (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
+        self.model.add_node(subj_node, attr_dict=subj_attr)
+        self.model.add_node(obj_node, attr_dict=obj_attr)
+        pybel_relation = pc.DIRECTLY_DECREASES
         edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
                                             obj_edge, stmt.evidence)
         for edge_data in edge_data_list:

@@ -226,5 +226,28 @@ def test_gef():
     assert edge_data == edge
 
 
+def test_gap():
+    gef = Agent('RASA1', mods=[ModCondition('phosphorylation')],
+                db_refs={'HGNC':'9871'})
+    ras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    stmt = Gap(gef, ras)
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 2
+    assert belgraph.number_of_edges() == 1
+    edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
+             pc.SUBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'gap',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
+             pc.OBJECT: {
+                 pc.MODIFIER: pc.ACTIVITY,
+                 pc.EFFECT: {
+                     pc.NAME: 'gtp',
+                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+    _, _, edge_data = belgraph.edges(data=True)[0]
+    assert edge_data == edge
+
 if __name__ == '__main__':
-    test_gef()
+    test_gap()
