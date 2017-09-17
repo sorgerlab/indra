@@ -899,7 +899,9 @@ class PysbAssembler(object):
             The format to export into, for instance "kappa", "bngl",
             "sbml", "matlab", "mathematica", "potterswheel". See
             http://pysb.readthedocs.io/en/latest/modules/export/index.html
-            for a list of supported formats.
+            for a list of supported formats. In addition to the formats
+            supported by PySB itself, this method also provides "sbgn"
+            output.
 
         file_name : Optional[str]
             An optional file name to save the exported model into.
@@ -908,7 +910,6 @@ class PysbAssembler(object):
         -------
         exp_str : str
             The exported model string
-
         """
         # Handle SBGN as special case
         if format == 'sbgn':
@@ -2549,6 +2550,23 @@ class PysbPreassembler(object):
         to_agent.activity = from_agent.activity
 
 def export_sbgn(model):
+    """Return an SBGN model string corresponding to the PySB model.
+
+    This function first calls generate_equations on the PySB model to obtain
+    a reaction network (i.e. individual species, reactions). It then iterates
+    over each reaction and and instantiates its reactants, products, and the
+    process itself as SBGN glyphs and arcs.
+
+    Parameters
+    ----------
+    model : pysb.core.Model
+        A PySB model to be exported into SBGN
+
+    Returns
+    -------
+    sbgn_str : str
+        An SBGN model as string
+    """
     import lxml.etree
     import lxml.builder
     from pysb.bng import generate_equations

@@ -309,6 +309,7 @@ class SBGNAssembler(object):
         return glyph
 
     def _glyph_for_complex_pattern(self, pattern):
+        """Add glyph and member glyphs for a PySB ComplexPattern."""
         # Make the main glyph for the agent
         monomer_glyphs = []
         for monomer_pattern in pattern.monomer_patterns:
@@ -328,6 +329,7 @@ class SBGNAssembler(object):
         return monomer_glyphs[0]
 
     def _glyph_for_monomer_pattern(self, pattern):
+        """Add glyph for a PySB MonomerPattern."""
         pattern.matches_key = lambda: str(pattern)
         agent_id = self._make_agent_id(pattern)
         # Handle sources and sinks
