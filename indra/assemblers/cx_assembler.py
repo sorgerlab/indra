@@ -7,7 +7,7 @@ import logging
 import itertools
 from collections import OrderedDict
 from indra.statements import *
-from indra.databases import context_client, get_identifiers_url
+from indra.databases import context_client, ndex_client, get_identifiers_url
 
 # Python 2
 try:
@@ -167,6 +167,31 @@ class CxAssembler(object):
         with open(file_name, 'wt') as fh:
             cx_str = self.print_cx()
             fh.write(cx_str)
+
+    def upload_model(self, ndex_cred):
+        """Creates a new NDEx network of the assembled CX model.
+
+        To upload the assembled CX model to NDEx, you need to have
+        a registered account on NDEx (http://ndexbio.org/) and have
+        the `ndex` python package installed. The uploaded network
+        is private by default.
+
+        Parameters
+        ----------
+        ndex_cred : dict
+            A dictionary with the following entries:
+            'user': NDEx user name
+            'password': NDEx password
+
+        Returns
+        -------
+        network_id :  str
+            The UUID of the NDEx network that was created by uploading
+            the assembled CX model.
+        """
+        cx_str = self.print_cx()
+        network_id = ndex_client.create_network(cx_str, ndex_cred)
+        return network_id
 
     def set_context(self, cell_type):
         """Set protein expression data and mutational status as node attribute
