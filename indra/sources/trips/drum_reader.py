@@ -3,12 +3,20 @@ from builtins import dict, str
 import sys
 import random
 import logging
-from kqml import KQMLModule, KQMLPerformative, KQMLList
+try:
+    from kqml import KQMLModule, KQMLPerformative, KQMLList
+    have_kqml = True
+except ImportError:
+    KQMLModule = object
+    have_kqml = False
 
 logger = logging.getLogger('drum_reader')
 
 class DrumReader(KQMLModule):
     def __init__(self, **kwargs):
+        if not have_kqml:
+            raise ImportError('Install the `pykqml` package to use ' +
+                              'the DrumReader')
         self.to_read = kwargs.pop('to_read', None)
         super(DrumReader, self).__init__(name='DrumReader')
         self.msg_counter = random.randint(1, 100000)
