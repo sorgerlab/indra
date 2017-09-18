@@ -395,67 +395,119 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
 
 if __name__ == '__main__':
     # Set some variables
-    cleanup = False
-    verbose = True
     path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
     reach_version = '1.3.3-b4a284'
     force_read = True
-    force_fulltext = False
 
     # Check the arguments
-    usage = "Usage: %s basename pmid_list tmp_dir num_cores start_index " \
-            "end_index [force_fulltext]\n" % sys.argv[0]
-    usage += "Alternative usage: %s upload_json basename output_dir " \
-                        "content_types_file num_cores" % sys.argv[0]
-    if len(sys.argv) not in  (6, 7, 8):
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 6 and sys.argv[1] != 'upload_json':
-        print(usage)
-        sys.exit()
-    if len(sys.argv) == 8 and sys.argv[6] != 'force_fulltext':
-        print(usage)
-        sys.exit()
-    elif len(sys.argv) == 8:
-        force_fulltext = True
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Apply NLP readers to the content available for a list of pmids.'
+        )
+    parser.add_argument(
+        '-r', '--reader',
+        choices=['reach', 'sparser', 'all'],
+        default='all',
+        dest='readers',
+        nargs=1,
+        help='Choose which reader(s) to use.'
+        )
+    parser.add_argument(
+        '-u', '--upload_json',
+        dest='upload_json',
+        action='store_true',
+        help='Option to simply upload previously read json files. Overrides -r option, so no reading will be done.'
+        )
+    parser.add_argument(
+        '-f', '--force_fulltext',
+        dest='force_fulltext',
+        action='store_true',
+        help='Option to force reading of the full text.'
+        )
+    parser.add_argument(
+        '-n', '--num_cores',
+        dest = 'num_cores',
+        default=1,
+        type=int,
+        help='Select the number of cores you want to use.'
+        )
+    parser.add_argument(
+        '-v', '--verbose',
+        dest='verbose',
+        action='store_true',
+        help='Show more output to screen.'
+        )
+    parser.add_argument(
+        '-c', '--cleanup',
+        dest='cleanup',
+        action='store_true',
+        help='Clean up after run.'
+        )
+    parser.add_argument(
+        '-s', '--start_index',
+        dest='start_index',
+        type=int,
+        help='Select the first pmid in the list to start reading.',
+        default=0
+        )
+    parser.add_argument(
+        '-e', '--end_index',
+        dest='end_index',
+        type=int,
+        help='Select the last pmid in the list to read.',
+        default=-1
+        )
+    parser.add_argument(
+        dest='basename',
+        help='The name of this job.'
+        )
+    parser.add_argument(
+        dest='out_dir',
+        help='The output directory where stuff is written. This is only a temporary directory when reading.'
+        )
+    parser.add_argument(
+        dest='pmid_list_file',
+        help='Path to a file containing a list of line separated pmids for the articles to be read.'
+        )
+    args = parser.parse_args()
+    if args.upload_json:
+        args.readers='none'
+    print(args.readers, args.upload_json, args.pmid_list)
+    
+    
+    # Old usages:
+    #usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
+    #        "end_index [force_fulltext]\n" % sys.argv[0]
+    #usage += "Alternative usage: %s upload_json basename output_dir " \
+    #                    "content_types_file num_cores" % sys.argv[0]
 
     # One type of operation: just upload previously read JSON files
-    if len(sys.argv) == 6 and sys.argv[1] == 'upload_json':
-        basename = sys.argv[2]
-        output_dir = sys.argv[3]
-        text_sources_file = sys.argv[4]
-        num_cores = int(sys.argv[5])
-        with open(text_sources_file, 'rb') as f:
+    if args.upload_json:
+        with open(args.pmid_list_file, 'rb') as f:
             text_sources = pickle.load(f)
-        stmts = upload_process_reach_files(output_dir, text_sources, reach_version,
-                                           num_cores)
-        pickle_file = '%s_stmts.pkl' % basename
+        stmts = upload_process_reach_files(args.out_dir, text_sources, reach_version,
+                                           args.num_cores)
+        pickle_file = '%s_stmts.pkl' % args.basename
         with open(pickle_file, 'wb') as f:
             pickle.dump(stmts, f, protocol=2)
         sys.exit()
 
     # =======================
     # Alternatively, run the whole process
-    # Get the command line arguments
-    (basename, pmid_list_file, tmp_dir, num_cores,
-                                start_index, end_index) = sys.argv[1:7]
-    start_index = int(start_index)
-    end_index = int(end_index)
-    num_cores = int(num_cores)
 
     # Load the list of PMIDs from the given file
-    with open(pmid_list_file) as f:
+    with open(args.pmid_list_file) as f:
         pmid_list = [line.strip('\n') for line in f.readlines()]
 
     # Do the reading
-    (stmts, content_types) = run(pmid_list, tmp_dir, num_cores, start_index,
-                                 end_index, force_read, force_fulltext,
+    (stmts, content_types) = run(pmid_list, args.out_dir, args.num_cores, args.start_index,
+                                 args.end_index, force_read, args.force_fulltext,
                                  path_to_reach, reach_version,
-                                 cleanup=cleanup, verbose=verbose)
+                                 cleanup=args.cleanup, verbose=args.verbose)
 
     # Pickle the statements
-    pickle_file = '%s_stmts_%d_%d.pkl' % (basename, start_index, end_index)
+    pickle_file = '%s_stmts_%d_%d.pkl' % (args.basename, args.start_index, args.end_index)
     with open(pickle_file, 'wb') as f:
         pickle.dump(stmts, f, protocol=2)
 
