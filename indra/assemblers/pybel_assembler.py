@@ -81,6 +81,13 @@ class PybelAssembler(object):
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
 
+    def _add_edges(self, relation, subj_node, subj_edge, obj_node, obj_edge,
+                   evidence):
+        edge_data_list = \
+            _combine_edge_data(relation, subj_edge, obj_edge, evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
     def _assemble_regulate_activity(self, stmt):
         # Get node data and add to model
         subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
@@ -92,11 +99,8 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, Activation) \
                          else pc.DIRECTLY_DECREASES
-        edge_data_list = \
-            _combine_edge_data(pybel_relation, subj_edge, obj_edge,
-                               stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
+                        obj_edge, stmt.evidence)
 
     def _assemble_modification(self, stmt):
         (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
@@ -107,13 +111,10 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
-        edge_data_list = _combine_edge_data(pybel_relation, enz_edge, sub_edge,
-                                            stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
+        self._add_edges(pybel_relation, enz_node, enz_edge, sub_node, sub_edge,
+                        stmt.evidence)
 
     def _assemble_regulate_amount(self, stmt):
-        # p(HGNC:TP53) => p(HGNC:MDM2)
         (subj_node, subj_attr, subj_edge) = _get_agent_node(stmt.subj)
         (obj_node, obj_attr, obj_edge) = _get_agent_node(stmt.obj)
         self.model.add_node(subj_node, attr_dict=subj_attr)
@@ -121,10 +122,8 @@ class PybelAssembler(object):
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, IncreaseAmount) \
                          else pc.DIRECTLY_DECREASES
-        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
-                                            obj_edge, stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
+                        obj_edge, stmt.evidence)
 
     def _assemble_gef(self, stmt):
         gef = deepcopy(stmt.gef)
@@ -135,11 +134,8 @@ class PybelAssembler(object):
         (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
         subj_node = self.model.add_node_from_data(subj_attr)
         obj_node = self.model.add_node_from_data(obj_attr)
-        pybel_relation = pc.DIRECTLY_INCREASES
-        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
-                                            obj_edge, stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        self._add_edges(pc.DIRECTLY_INCREASES, subj_node, subj_edge, obj_node,
+                        obj_edge, stmt.evidence)
 
     def _assemble_gap(self, stmt):
         gap = deepcopy(stmt.gap)
@@ -150,11 +146,8 @@ class PybelAssembler(object):
         (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
-        pybel_relation = pc.DIRECTLY_DECREASES
-        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
-                                            obj_edge, stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        self._add_edges(pc.DIRECTLY_DECREASES, subj_node, subj_edge, obj_node,
+                        obj_edge, stmt.evidence)
 
     def _assemble_active_form(self, stmt):
         act_agent = Agent(stmt.agent.name, db_refs=stmt.agent.db_refs)
@@ -165,10 +158,8 @@ class PybelAssembler(object):
         (obj_node, obj_attr, obj_edge) = _get_agent_node(act_agent)
         self.model.add_node(subj_node, attr_dict=subj_attr)
         self.model.add_node(obj_node, attr_dict=obj_attr)
-        edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
-                                            obj_edge, stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
+                        obj_edge, stmt.evidence)
 
     def _assemble_complex(self, stmt):
         _, complex_node_data, _ = _get_complex_node(stmt.members)
@@ -190,18 +181,14 @@ class PybelAssembler(object):
             pc.PRODUCTS: pybel_lists[1]
         }
         obj_node = self.model.add_node_from_data(rxn_node_data)
+        obj_edge = None # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
             # Add the node
             subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
             self.model.add_node_from_data(subj_attr)
-            # Add the edge
-            pybel_relation = pc.DIRECTLY_INCREASES
-            edge_data_list = \
-                _combine_edge_data(pybel_relation, subj_edge, None,
-                                   stmt.evidence)
-            for edge_data in edge_data_list:
-                self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+            self._add_edges(pc.DIRECTLY_INCREASES, subj_node, subj_edge,
+                            obj_node, obj_edge, stmt.evidence)
 
     def _assemble_autophosphorylation(self, stmt):
         (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
@@ -217,18 +204,15 @@ class PybelAssembler(object):
         (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
         enz_node = self.model.add_node_from_data(enz_attr)
         sub_node = self.model.add_node_from_data(sub_attr)
-        pybel_relation = pc.DIRECTLY_INCREASES
-        edge_data_list = _combine_edge_data(pybel_relation, enz_edge, sub_edge,
-                                            stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
+        self._add_edges(pc.DIRECTLY_INCREASES, enz_node, enz_edge, sub_node,
+                        sub_edge, stmt.evidence)
 
     def _assemble_transphosphorylation(self, stmt):
         # Check our assumptions about the bound condition of the enzyme
         assert len(stmt.enz.bound_conditions) == 1
         assert stmt.enz.bound_conditions[0].is_bound
         # Get the "enzyme" node as the complex
-        _, complex_data, _ = _get_agent_node(stmt.enz)
+        _, complex_data, complex_edge = _get_agent_node(stmt.enz)
         # Create a modified protein node for the bound target
         sub_agent = deepcopy(stmt.enz.bound_conditions[0].agent)
         mc = stmt._get_mod_condition()
@@ -236,11 +220,8 @@ class PybelAssembler(object):
         (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
         complex_node = self.model.add_node_from_data(complex_data)
         sub_node = self.model.add_node_from_data(sub_attr)
-        pybel_relation = pc.DIRECTLY_INCREASES
-        edge_data_list = _combine_edge_data(pybel_relation, None, sub_edge,
-                                            stmt.evidence)
-        for edge_data in edge_data_list:
-            self.model.add_edge(complex_node, sub_node, attr_dict=edge_data)
+        self._add_edges(pc.DIRECTLY_INCREASES, complex_node, complex_edge,
+                        sub_node, sub_edge, stmt.evidence)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
