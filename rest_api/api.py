@@ -316,7 +316,7 @@ def assemble_loopy():
 
 
 #   CCLE mRNA amounts   #
-@route('/databases/cbio/ccle_mrna_amounts', method=['POST', 'OPTIONS'])
+@route('/databases/cbio/get_ccle_mrna', method=['POST', 'OPTIONS'])
 @allow_cors
 def get_ccle_mrna_levels():
     """Get CCLE mRNA amounts using cBioClient"""
@@ -333,7 +333,7 @@ def get_ccle_mrna_levels():
 
 
 #   CCLE CNA   #
-@route('/databases/cbio/ccle_cna', method=['POST', 'OPTIONS'])
+@route('/databases/cbio/get_ccle_cna', method=['POST', 'OPTIONS'])
 @allow_cors
 def get_ccle_cna():
     """Get CCLE CNA
