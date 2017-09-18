@@ -355,6 +355,24 @@ def get_ccle_cna():
     return res
 
 
+@route('/databases/cbio/get_mutations_ccle', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_mutations_ccle():
+    """Get CCLE mutations
+    returns the amino acid changes for a given list of genes and cell lines
+    """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    mutations = cbio_client.get_mutations_ccle(gene_list, cell_lines)
+    mutations_str = json.dumps(mutations)
+    res = {'mutations': mutations_str}
+    return res
+
+
 @route('/preassembly/map_grounding', method=['POST', 'OPTIONS'])
 @allow_cors
 def map_grounding():
