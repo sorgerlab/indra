@@ -180,36 +180,43 @@ def extend_model(model_name, model, pmids, start_time_local):
     npapers = 0
     nabstracts = 0
     nexisting = 0
-    id_used = []
+    id_used = set()
     for search_term, pmid_list in pmids.items():
         for pmid in pmid_list:
             # If the paper has not been included in the model yet
             if pmid in id_used:
                 continue
-            id_used.append(pmid)
-            if model.stmts.get(pmid) is None:
-                logger.info('Processing %s for search term %s' % \
-                            (pmid, search_term))
-                if not aws_available:
-                    rp, txt_format = process_paper(model_name, pmid)
-                else:
-                    rp, txt_format = process_paper_aws(pmid, start_time_local)
-                if rp is not None:
-                    if txt_format == 'abstract':
-                        nabstracts += 1
-                    elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
-                        npapers += 1
-                    else:
-                        nexisting += 1
-                    if not rp.statements:
-                        logger.info('No statement from PMID%s (%s)' % \
-                                    (pmid, txt_format))
-                    else:
-                        logger.info('%d statements from PMID%s (%s)' % \
-                                    (len(rp.statements), pmid, txt_format))
-                    model.add_statements(pmid, rp.statements)
-                else:
-                    logger.info('Reach processing failed for PMID%s' % pmid)
+            id_used.add(pmid)
+            if model.stmts.get(pmid) is not None:
+                continue
+
+            logger.info('Processing %s for search term %s' % \
+                        (pmid, search_term))
+
+            if not aws_available:
+                rp, txt_format = process_paper(model_name, pmid)
+            else:
+                rp, txt_format = process_paper_aws(pmid, start_time_local)
+
+            if rp is None:
+                logger.info('Reach processing failed for PMID%s', pmid)
+                continue
+
+            if txt_format == 'abstract':
+                nabstracts += 1
+            elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
+                npapers += 1
+            else:
+                nexisting += 1
+
+            if not rp.statements:
+                logger.info('No statement from PMID%s (%s)' % \
+                            (pmid, txt_format))
+            else:
+                logger.info('%d statements from PMID%s (%s)' % \
+                            (len(rp.statements), pmid, txt_format))
+            model.add_statements(pmid, rp.statements)
+
     return npapers, nabstracts, nexisting
 
 
