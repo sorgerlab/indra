@@ -23,6 +23,12 @@ elk1 = ag('ELK1')
 elk1_p = ag('ELK1', mods=[ModCondition('phosphorylation')])
 elk1_tscript = ag('ELK1', activity=ActivityCondition('transcription', True))
 fos = ag('FOS')
+hk1 = ag('HK1')
+glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
+g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
+egfr = ag('EGFR')
+grb2 = ag('GRB2')
+
 
 stmts = [
     Gef(sos1, kras),
@@ -33,7 +39,10 @@ stmts = [
     Phosphorylation(mapk1_p, elk1),
     ActiveForm(elk1_p, 'transcription', True),
     IncreaseAmount(elk1_tscript, fos),
+    Conversion(hk1, [glu], [g6p]),
+    Complex([egfr, grb2, sos1]),
 ]
+
 #model_text = """
 #    BRAF phosphorylates MAP2K1 at S218.
 #    MAP2K1 phosphorylated at S218 phosphorylates MAPK1 at T185.
@@ -47,7 +56,7 @@ model_description = 'Test of INDRA Statement assembly into PyBEL.'
 print("Assembling to PyBEL...")
 
 pba = PybelAssembler(stmts, name='INDRA_PyBEL_test',
-                     description=model_description, version='0.0.7')
+                     description=model_description, version='0.0.10')
 pba.make_model()
 with open('pybel_model.json', 'wt') as f:
     pybel.to_json_file(pba.model, f)
