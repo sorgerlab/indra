@@ -68,6 +68,8 @@ class PybelAssembler(object):
                 self._assemble_gap(stmt)
             elif isinstance(stmt, ActiveForm):
                 self._assemble_active_form(stmt)
+            elif isinstance(stmt, Complex):
+                self._assemble_complex(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -160,6 +162,19 @@ class PybelAssembler(object):
                                             obj_edge, stmt.evidence)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
+    def _assemble_complex(self, stmt):
+        members_list = []
+        for member in stmt.agent_list():
+            func, namespace, name = _get_agent_grounding(member)
+            members_list.append({
+                pc.FUNCTION: func,
+                pc.NAMESPACE: namespace,
+                pc.NAME: name})
+        complex_node = {
+                pc.FUNCTION: pc.COMPLEX,
+                pc.MEMBERS: members_list}
+        self.model.add_node_from_data(complex_node)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
