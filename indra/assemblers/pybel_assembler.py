@@ -194,7 +194,19 @@ class PybelAssembler(object):
             pc.REACTANTS: pybel_lists[0],
             pc.PRODUCTS: pybel_lists[1]
         }
-        self.model.add_node_from_data(rxn_node_data)
+        obj_node = self.model.add_node_from_data(rxn_node_data)
+        # Add node for controller, if there is one
+        if stmt.subj is not None:
+            # Add the node
+            subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
+            self.model.add_node_from_data(subj_attr)
+            # Add the edge
+            pybel_relation = pc.DIRECTLY_INCREASES
+            edge_data_list = \
+                _combine_edge_data(pybel_relation, subj_edge, None,
+                                   stmt.evidence)
+            for edge_data in edge_data_list:
+                self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
