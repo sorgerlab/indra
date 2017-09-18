@@ -440,7 +440,15 @@ def test_bound_condition():
 
 
 def test_transphosphorylation():
-    pass
+    egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
+    egfr_dimer = Agent('EGFR', bound_conditions=[BoundCondition(egfr)],
+                       db_refs={'HGNC': id('EGFR')})
+    stmt = Transphosphorylation(egfr_dimer, 'Y', '1173')
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 3
+    assert belgraph.number_of_edges() == 2
+
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
