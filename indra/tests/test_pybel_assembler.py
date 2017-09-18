@@ -5,6 +5,9 @@ import networkx as nx
 import pybel.constants as pc
 from indra.databases import hgnc_client
 
+def id(gene_name):
+    return hgnc_client.get_hgnc_id(gene_name)
+
 phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Ser', 218)
 ubtuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ub'), 'Ser', 218)
 braf_node = (pc.PROTEIN, 'HGNC', 'BRAF')
@@ -271,5 +274,29 @@ def test_active_form():
         # TODO: Add tests for specific edge content
 
 
+def test_complex():
+    egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
+    grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
+    sos = Agent('SOS1', db_refs={'HGNC': id('SOS1')})
+    stmt = Complex([egfr, grb2, sos])
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 1
+    complex_node = belgraph.nodes()[0]
+    assert complex_node == {
+        pc.FUNCTION: pc.COMPLEX,
+        pc.MEMBERS: [
+            {pc.FUNCTION: pc.PROTEIN,
+             pc.NAMESPACE: 'HGNC',
+             pc.NAME: 'EGFR'},
+            {pc.FUNCTION: pc.PROTEIN,
+             pc.NAMESPACE: 'HGNC',
+             pc.NAME: 'GRB2'},
+            {pc.FUNCTION: pc.PROTEIN,
+             pc.NAMESPACE: 'HGNC',
+             pc.NAME: 'SOS1'}
+        ]}
+
+
 if __name__ == '__main__':
-    test_active_form()
+    test_complex()
