@@ -300,5 +300,34 @@ def test_complex():
         ]}
 
 
+def test_rxn_no_controller():
+    glu = Agent('D-GLUCOSE', db_refs = {'CHEBI': 'CHEBI:17634'})
+    g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
+    stmt = Conversion(None, [glu], [g6p])
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 1
+    rxn_tuple = belgraph.nodes()[0]
+    assert belgraph.node[rxn_tuple] == {
+        pc.FUNCTION: pc.REACTION,
+        pc.REACTANTS: [
+            {
+                pc.FUNCTION: pc.ABUNDANCE,
+                pc.NAMESPACE: 'CHEBI',
+                pc.NAME: 'CHEBI:17634',
+            }
+        ],
+        pc.PRODUCTS: [
+            {
+                pc.FUNCTION: pc.ABUNDANCE,
+                pc.NAMESPACE: 'CHEBI',
+                pc.NAME: 'CHEBI:4170'
+            }
+        ]
+    }
+
+# TODO: Add tests for evidence
+# TODO: Add tests for different groundings
+
 if __name__ == '__main__':
-    test_complex()
+    test_rxn_no_controller()
