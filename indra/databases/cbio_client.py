@@ -172,7 +172,7 @@ def get_profile_data(study_id, gene_list,
             'case_set_id': case_set_id,
             'genetic_profile_id': genetic_profile,
             'gene_list': gene_list_str,
-            'skiprows': 2}
+            'skiprows': -1}
     df = send_request(**data)
     case_list_df = [x for x in df.columns.tolist()
                     if x not in ['GENE_ID', 'COMMON']]
