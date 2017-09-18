@@ -36,14 +36,23 @@ class SBGNAssembler(object):
         The structure of the SBGN model that is assembled, represented as an
         XML ElementTree.
     """
+
+    process_style = {'x': '0', 'y': '0', 'w': '10', 'h': '10'}
+    source_sink_style = {'x': '0', 'y': '0', 'w': '10', 'h': '10'}
+    monomer_style = {'x': '0', 'y': '0', 'w': '60', 'h': '30'}
+    complex_style = {'x': '1', 'y': '1', 'w': '60', 'h': '65'}
+    entity_type_style = {'x': '0', 'y': '0', 'w': '30', 'h': '12'}
+    entity_state_style = {'x': '1', 'y': '1', 'w': '28', 'h': '12'}
+
     def __init__(self, statements=None):
         if not statements:
             self.statements = []
         else:
             self.statements = statements
-        self.sbgn = None
+        self.sbgn = emaker.sbgn()
+        self._map = emaker.map()
+        self.sbgn.append(self._map)
         self._id_counter = 0
-        self._map = None
         self._agent_ids = {}
 
     def add_statements(self, stmts):
@@ -233,14 +242,14 @@ class SBGNAssembler(object):
 
     def _process_glyph(self, class_name):
         process_id = self._make_id()
-        process_glyph = emaker.glyph(emaker.bbox(x='0', y='0', w='20', h='20'),
+        process_glyph = emaker.glyph(emaker.bbox(**self.process_style),
                                      class_(class_name), id=process_id)
         self._map.append(process_glyph)
         return process_id
 
     def _none_glyph(self):
         glyph_id = self._make_id()
-        none_glyph = emaker.glyph(emaker.bbox(x='0', y='0', w='20', h='20'),
+        none_glyph = emaker.glyph(emaker.bbox(**self.source_sink_style),
                                   class_('source and sink'), id=glyph_id)
         self._map.append(none_glyph)
         return glyph_id
@@ -251,16 +260,17 @@ class SBGNAssembler(object):
         agent_id = self._make_agent_id(agent)
         agent_type = _get_agent_type(agent)
         glyph = emaker.glyph(emaker.label(text=agent.name),
-                             emaker.bbox(x='0', y='0', w='140', h='60'),
+                             emaker.bbox(**self.monomer_style),
                              class_(agent_type), id=agent_id)
 
+        # Temporarily remove
         # Make a glyph for the agent type
         # TODO: handle other agent types
-        type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
-                                  class_('unit of information'),
-                                  emaker.bbox(x='0', y='0', w='53', h='18'),
-                                  id=self._make_id())
-        glyph.append(type_glyph)
+        #type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
+        #                          class_('unit of information'),
+        #                          emaker.bbox(**self.entity_type_style),
+        #                          id=self._make_id())
+        #glyph.append(type_glyph)
 
         # Make glyphs for agent state
         # TODO: handle location, mutation
@@ -274,7 +284,7 @@ class SBGNAssembler(object):
             value = states[m.mod_type][1 if m.is_modified else 0]
             state = emaker.state(variable=variable, value=value)
             state_glyph = \
-                emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
+                emaker.glyph(state, emaker.bbox(**self.entity_state_style),
                              class_('state variable'), id=self._make_id())
             glyph.append(state_glyph)
         if agent.activity:
@@ -282,7 +292,7 @@ class SBGNAssembler(object):
             state = emaker.state(variable=abbrevs[agent.activity.activity_type],
                                  value=value)
             state_glyph = \
-                emaker.glyph(state, emaker.bbox(x='1', y='1', w='70', h='30'),
+                emaker.glyph(state, emaker.bbox(**self.entity_state_style),
                              class_('state variable'), id=self._make_id())
             glyph.append(state_glyph)
 
@@ -297,7 +307,7 @@ class SBGNAssembler(object):
             # are given and so members has only 1 element
             if len(members) > 1:
                 complex_glyph = \
-                    emaker.glyph(emaker.bbox(x='1', y='1', w='70', h='30'),
+                    emaker.glyph(emaker.bbox(**self.complex_style),
                                  class_('complex'), id=self._make_id())
                 for member in members:
                     complex_glyph.append(member)
@@ -305,6 +315,54 @@ class SBGNAssembler(object):
         if append:
             self._map.append(glyph)
             return agent_id
+        return glyph
+
+    def _glyph_for_complex_pattern(self, pattern):
+        """Add glyph and member glyphs for a PySB ComplexPattern."""
+        # Make the main glyph for the agent
+        monomer_glyphs = []
+        for monomer_pattern in pattern.monomer_patterns:
+            glyph = self._glyph_for_monomer_pattern(monomer_pattern)
+            monomer_glyphs.append(glyph)
+
+        if len(monomer_glyphs) > 1:
+            pattern.matches_key = lambda: str(pattern)
+            agent_id = self._make_agent_id(pattern)
+            complex_glyph = \
+                emaker.glyph(emaker.bbox(**self.complex_style),
+                             class_('complex'), id=agent_id)
+            for glyph in monomer_glyphs:
+                glyph.attrib['id'] = agent_id + glyph.attrib['id']
+                complex_glyph.append(glyph)
+            return complex_glyph
+        return monomer_glyphs[0]
+
+    def _glyph_for_monomer_pattern(self, pattern):
+        """Add glyph for a PySB MonomerPattern."""
+        pattern.matches_key = lambda: str(pattern)
+        agent_id = self._make_agent_id(pattern)
+        # Handle sources and sinks
+        if pattern.monomer.name in ('__source', '__sink'):
+            return None
+        # Handle molecules
+        glyph = emaker.glyph(emaker.label(text=pattern.monomer.name),
+                             emaker.bbox(**self.monomer_style),
+                             class_('macromolecule'), id=agent_id)
+        # Temporarily remove this
+        # Add a glyph for type
+        #type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
+        #                          class_('unit of information'),
+        #                          emaker.bbox(**self.entity_type_style),
+        #                          id=self._make_id())
+        #glyph.append(type_glyph)
+        for site, value in pattern.site_conditions.items():
+            if value is None or isinstance(value, int):
+                continue
+            state = emaker.state(variable=site, value=value)
+            state_glyph = \
+                emaker.glyph(state, emaker.bbox(**self.entity_state_style),
+                             class_('state variable'), id=self._make_id())
+            glyph.append(state_glyph)
         return glyph
 
     def _make_id(self):
