@@ -37,12 +37,12 @@ class SBGNAssembler(object):
         XML ElementTree.
     """
 
-    process_style = {'x': '0', 'y': '0', 'w': '20', 'h': '20'}
-    source_sink_style = {'x': '0', 'y': '0', 'w': '20', 'h': '20'}
-    monomer_style = {'x': '0', 'y': '0', 'w': '50', 'h': '30'}
-    complex_style = {'x': '0', 'y': '0', 'w': '60', 'h': '60'}
-    entity_type_style = {'x': '0', 'y': '0', 'w': '20', 'h': '15'}
-    entity_state_style = {'x': '1', 'y': '0', 'w': '20', 'h': '15'}
+    process_style = {'x': '0', 'y': '0', 'w': '10', 'h': '10'}
+    source_sink_style = {'x': '0', 'y': '0', 'w': '10', 'h': '10'}
+    monomer_style = {'x': '0', 'y': '0', 'w': '60', 'h': '30'}
+    complex_style = {'x': '1', 'y': '1', 'w': '60', 'h': '65'}
+    entity_type_style = {'x': '0', 'y': '0', 'w': '30', 'h': '12'}
+    entity_state_style = {'x': '1', 'y': '1', 'w': '28', 'h': '12'}
 
     def __init__(self, statements=None):
         if not statements:
@@ -263,13 +263,14 @@ class SBGNAssembler(object):
                              emaker.bbox(**self.monomer_style),
                              class_(agent_type), id=agent_id)
 
+        # Temporarily remove
         # Make a glyph for the agent type
         # TODO: handle other agent types
-        type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
-                                  class_('unit of information'),
-                                  emaker.bbox(**self.entity_type_style),
-                                  id=self._make_id())
-        glyph.append(type_glyph)
+        #type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
+        #                          class_('unit of information'),
+        #                          emaker.bbox(**self.entity_type_style),
+        #                          id=self._make_id())
+        #glyph.append(type_glyph)
 
         # Make glyphs for agent state
         # TODO: handle location, mutation
@@ -347,12 +348,13 @@ class SBGNAssembler(object):
         glyph = emaker.glyph(emaker.label(text=pattern.monomer.name),
                              emaker.bbox(**self.monomer_style),
                              class_('macromolecule'), id=agent_id)
+        # Temporarily remove this
         # Add a glyph for type
-        type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
-                                  class_('unit of information'),
-                                  emaker.bbox(**self.entity_type_style),
-                                  id=self._make_id())
-        glyph.append(type_glyph)
+        #type_glyph = emaker.glyph(emaker.label(text='mt:prot'),
+        #                          class_('unit of information'),
+        #                          emaker.bbox(**self.entity_type_style),
+        #                          id=self._make_id())
+        #glyph.append(type_glyph)
         for site, value in pattern.site_conditions.items():
             if value is None or isinstance(value, int):
                 continue
