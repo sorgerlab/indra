@@ -21,6 +21,9 @@ def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
     ag.draw(filename, prog='dot')
 
+def get_edge_data(g, u, v):
+    return list(g.get_edge_data(u, v).values())[0]
+
 def test_simple_modification_no_evidence():
     braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
@@ -46,7 +49,7 @@ def test_simple_modification_no_evidence():
                                      (stmt3, ubtuple, edge3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph.nodes()) == 2
+        assert len(belgraph.nodes()) == 3
         assert braf_node in belgraph
         map2k1_mod_node = map2k1_node + tuple([modtuple])
         assert map2k1_mod_node in belgraph
@@ -65,8 +68,8 @@ def test_simple_modification_no_evidence():
                         pc.NAME: modtuple[1][1]},
                     pc.PMOD_CODE: modtuple[2],
                     pc.PMOD_POSITION: modtuple[3]}]}
-        assert belgraph.number_of_edges() == 1
-        _, _, edge_data = belgraph.edges(data=True)[0]
+        assert belgraph.number_of_edges() == 2
+        edge_data = get_edge_data(belgraph, braf_node, map2k1_mod_node)
         assert edge_data.get(pc.SUBJECT) == subj_edge
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
@@ -78,7 +81,8 @@ def test_modification_with_mutation():
     stmt = Phosphorylation(braf, mek, 'S', '218')
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 2
+    # Adds in the base protein nodes as well as the variants (so 4 nodes)
+    assert len(belgraph.nodes()) == 4
     braf_mut_node = braf_node + ((pc.HGVS, 'p.Val600Glu'),)
     assert braf_mut_node in belgraph
     assert belgraph.node[braf_mut_node] == {
@@ -215,8 +219,14 @@ def test_gef():
     stmt = Gef(gef, ras)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph) == 2
-    assert belgraph.number_of_edges() == 1
+    assert len(belgraph) == 3
+    assert belgraph.number_of_edges() == 2
+    gef_node = (pc.PROTEIN, 'HGNC', 'SOS1',
+                (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph')))
+    kras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
+    assert gef_node in belgraph
+    assert kras_node in belgraph
+    edge_data = get_edge_data(belgraph, gef_node, kras_node)
     edge = {pc.RELATION: pc.DIRECTLY_INCREASES,
              pc.SUBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
@@ -228,7 +238,6 @@ def test_gef():
                  pc.EFFECT: {
                      pc.NAME: 'gtp',
                      pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
-    _, _, edge_data = belgraph.edges(data=True)[0]
     assert edge_data == edge
 
 
@@ -447,8 +456,13 @@ def test_transphosphorylation():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 3
-    assert belgraph.number_of_edges() == 2
-
+    assert belgraph.number_of_edges() == 3
+    egfr_dimer_node = (pc.COMPLEX, (pc.PROTEIN, 'HGNC', 'EGFR'),
+                                   (pc.PROTEIN, 'HGNC', 'EGFR'))
+    egfr_phos_node = (pc.PROTEIN, 'HGNC', 'EGFR',
+                      (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Tyr', 1173))
+    edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
+    assert edge_data == {pc.RELATION: pc.DIRECTLY_INCREASES}
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
@@ -459,4 +473,6 @@ def test_transphosphorylation():
 # TODO: Is it possible to have modified proteins inside a complex in BEL/PyBEL?
 
 if __name__ == '__main__':
-    test_bound_condition()
+    #test_simple_modification_no_evidence()
+    #test_modification_with_mutation()
+    test_transphosphorylation()
