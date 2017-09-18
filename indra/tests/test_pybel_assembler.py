@@ -397,11 +397,21 @@ def test_autophosphorylation():
                         pc.NAME: egfr_phostuple[1][1]},
                     pc.PMOD_CODE: egfr_phostuple[2],
                     pc.PMOD_POSITION: egfr_phostuple[3]}]}
-    assert belgraph.number_of_edges() == 1
-    u, v, data = belgraph.edges(data=True)[0]
-    assert u == egfr_node
-    assert v == egfr_phos_node
-    assert data == {pc.RELATION: pc.DIRECTLY_INCREASES}
+    assert belgraph.number_of_edges() == 2
+    # There will be two edges between these nodes
+    edge_dicts = list(belgraph.get_edge_data(egfr_node,
+                                             egfr_phos_node).values())
+    assert {pc.RELATION: pc.DIRECTLY_INCREASES} in edge_dicts
+
+    # Test an autophosphorylation with a bound condition
+    tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
+    p38_tab1 = Agent('MAPK14', bound_conditions=[BoundCondition(tab1)],
+                     db_refs={'HGNC': id('MAPK14')})
+    stmt = Autophosphorylation(p38_tab1, 'Y', '100')
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 4
+    assert belgraph.number_of_edges() == 4
 
 
 def test_bound_condition():
@@ -475,4 +485,4 @@ def test_transphosphorylation():
 if __name__ == '__main__':
     #test_simple_modification_no_evidence()
     #test_modification_with_mutation()
-    test_transphosphorylation()
+    test_autophosphorylation()

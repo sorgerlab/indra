@@ -28,7 +28,11 @@ glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
 g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
 egfr = ag('EGFR')
 grb2 = ag('GRB2')
-
+tab1 = ag('TAB1')
+p38_tab1 = Agent('MAPK14', bound_conditions=[BoundCondition(tab1)],
+                 db_refs=gnd('MAPK14'))
+egfr_dimer = Agent('EGFR', bound_conditions=[BoundCondition(egfr)],
+                   db_refs=gnd('EGFR'))
 
 stmts = [
     Gef(sos1, kras),
@@ -41,23 +45,16 @@ stmts = [
     IncreaseAmount(elk1_tscript, fos),
     Conversion(hk1, [glu], [g6p]),
     Complex([egfr, grb2, sos1]),
+    Autophosphorylation(p38_tab1, 'Y', '100'),
+    Transphosphorylation(egfr_dimer, 'Y', '1173'),
 ]
-
-#model_text = """
-#    BRAF phosphorylates MAP2K1 at S218.
-#    MAP2K1 phosphorylated at S218 phosphorylates MAPK1 at T185.
-#    MAPK1 phosphorylated at T185 phosphorylates ELK1.
-#    Phosphorylated ELK1 transcribes c-FOS.
-#"""
-#model_description = ' '.join([line.strip() for line in model_text.split('\n')])
-#print("Processing text with TRIPS...")
-#tp = trips.process_text(model_text)
 model_description = 'Test of INDRA Statement assembly into PyBEL.'
 print("Assembling to PyBEL...")
 
 pba = PybelAssembler(stmts, name='INDRA_PyBEL_test',
-                     description=model_description, version='0.0.10')
+                     description=model_description, version='0.0.21')
 pba.make_model()
+
 with open('pybel_model.json', 'wt') as f:
     pybel.to_json_file(pba.model, f)
 url =  'https://pybel.scai.fraunhofer.de/api/receive'

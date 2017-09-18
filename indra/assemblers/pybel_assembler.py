@@ -204,13 +204,19 @@ class PybelAssembler(object):
                 self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_autophosphorylation(self, stmt):
-        (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
+        (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
         sub_agent = deepcopy(stmt.enz)
         mc = stmt._get_mod_condition()
         sub_agent.mods.append(mc)
-        (sub_node, sub_attr, sub_edge) = _get_agent_node(sub_agent)
-        self.model.add_node(enz_node, attr_dict=enz_attr)
-        self.model.add_node(sub_node, attr_dict=sub_attr)
+        # FIXME Ignore any bound conditions on the substrate!!!
+        # This is because if they are included, a complex node will be returned,
+        # which (at least currently) won't incorporate any protein
+        # modifications.
+        sub_agent.bound_conditions = []
+        # FIXME
+        (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
+        enz_node = self.model.add_node_from_data(enz_attr)
+        sub_node = self.model.add_node_from_data(sub_attr)
         pybel_relation = pc.DIRECTLY_INCREASES
         edge_data_list = _combine_edge_data(pybel_relation, enz_edge, sub_edge,
                                             stmt.evidence)
