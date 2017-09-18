@@ -14,6 +14,8 @@ braf_node = (pc.PROTEIN, 'HGNC', 'BRAF')
 map2k1_node = (pc.PROTEIN, 'HGNC', 'MAP2K1')
 tp53_node = (pc.PROTEIN, 'HGNC', 'TP53')
 mdm2_node = (pc.PROTEIN, 'HGNC', 'MDM2')
+egfr_node = (pc.PROTEIN, 'HGNC', 'EGFR')
+egfr_phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Tyr', 1173)
 
 def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
@@ -362,9 +364,38 @@ def test_rxn_with_controller():
     }
 
 
+def test_autophosphorylation():
+    egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
+    stmt = Autophosphorylation(egfr, 'Y', '1173')
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 2
+    assert egfr_node in belgraph.nodes()
+    egfr_phos_node = egfr_node + tuple([egfr_phostuple])
+    assert egfr_phos_node in belgraph.nodes()
+    assert belgraph.node[egfr_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'EGFR'}
+    assert belgraph.node[egfr_phos_node] == {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'EGFR',
+                pc.VARIANTS: [{
+                    pc.KIND: pc.PMOD,
+                    pc.IDENTIFIER: {
+                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
+                        pc.NAME: egfr_phostuple[1][1]},
+                    pc.PMOD_CODE: egfr_phostuple[2],
+                    pc.PMOD_POSITION: egfr_phostuple[3]}]}
+    assert belgraph.number_of_edges() == 1
+    u, v, data = belgraph.edges(data=True)[0]
+    assert u == egfr_node
+    assert v == egfr_phos_node
+    assert data == {pc.RELATION: pc.DIRECTLY_INCREASES}
+
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
 
 if __name__ == '__main__':
-    test_rxn_with_controller()
-    #test_complex()
+    test_autophosphorylation()
