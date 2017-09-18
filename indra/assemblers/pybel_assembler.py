@@ -53,7 +53,8 @@ class PybelAssembler(object):
     def make_model(self):
         for stmt in self.statements:
             # Skip statements with no subject
-            if stmt.agent_list()[0] is None:
+            if stmt.agent_list()[0] is None and \
+                    not isinstance(stmt, Conversion):
                 continue
             # Assemble statements
             if isinstance(stmt, Modification):
@@ -70,6 +71,8 @@ class PybelAssembler(object):
                 self._assemble_active_form(stmt)
             elif isinstance(stmt, Complex):
                 self._assemble_complex(stmt)
+            elif isinstance(stmt, Conversion):
+                self._assemble_conversion(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -171,10 +174,27 @@ class PybelAssembler(object):
                 pc.FUNCTION: func,
                 pc.NAMESPACE: namespace,
                 pc.NAME: name})
-        complex_node = {
+        complex_node_data = {
                 pc.FUNCTION: pc.COMPLEX,
                 pc.MEMBERS: members_list}
-        self.model.add_node_from_data(complex_node)
+        self.model.add_node_from_data(complex_node_data)
+
+    def _assemble_conversion(self, stmt):
+        pybel_lists = ([], [])
+        for pybel_list, agent_list in \
+                            zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
+            for ag in agent_list:
+                func, namespace, name = _get_agent_grounding(ag)
+                pybel_list.append({
+                    pc.FUNCTION: func,
+                    pc.NAMESPACE: namespace,
+                    pc.NAME: name})
+        rxn_node_data = {
+            pc.FUNCTION: pc.REACTION,
+            pc.REACTANTS: pybel_lists[0],
+            pc.PRODUCTS: pybel_lists[1]
+        }
+        self.model.add_node_from_data(rxn_node_data)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
