@@ -1283,6 +1283,12 @@ class SelfModification(Statement):
                   (self.position == other.position)
         return matches
 
+    def _get_mod_condition(self):
+        """Return a ModCondition corresponding to this Modification."""
+        mod_type = modclass_to_modtype[self.__class__]
+        mc = ModCondition(mod_type, self.residue, self.position, True)
+        return mc
+
     def to_json(self):
         generic = super(SelfModification, self).to_json()
         json_dict = _o({'type': generic['type']})
@@ -2557,6 +2563,9 @@ modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modclass_to_modtype[Modification] = 'modification'
+modclass_to_modtype[Autophosphorylation] = 'phosphorylation'
+modclass_to_modtype[Transphosphorylation] = 'phosphorylation'
+
 # These are the modification types that are valid in ModConditions
 modtype_conditions = [modclass_to_modtype[mt] for mt in \
                       AddModification.__subclasses__()]
