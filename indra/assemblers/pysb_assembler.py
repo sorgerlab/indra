@@ -2580,19 +2580,19 @@ def export_sbgn(model):
 
     glyphs = {}
     for idx, species in enumerate(model.species):
-        # There should be a map for these
         glyph = sa._glyph_for_complex_pattern(species)
         if glyph is None:
             continue
         sa._map.append(glyph)
         glyphs[idx] = glyph
     for reaction in model.reactions:
+        # Get all the reactions / products / controllers of the reaction
         reactants = set(reaction['reactants']) - set(reaction['products'])
         products = set(reaction['products']) - set(reaction['reactants'])
         controllers = set(reaction['reactants']) & set(reaction['products'])
         # Add glyph for reaction
         process_glyph = sa._process_glyph('process')
-        # Connect glyphs with arcs
+        # Connect reactants with arcs
         for r in reactants:
             glyph = glyphs.get(r)
             if glyph is None:
@@ -2600,6 +2600,7 @@ def export_sbgn(model):
             else:
                 glyph_id = glyph.attrib['id']
             sa._arc('consumption', glyph_id, process_glyph)
+        # Connect products with arcs
         for p in products:
             glyph = glyphs.get(p)
             if glyph is None:
@@ -2607,6 +2608,7 @@ def export_sbgn(model):
             else:
                 glyph_id = glyph.attrib['id']
             sa._arc('production', process_glyph, glyph_id)
+        # Connect controllers with arcs
         for c in controllers:
             glyph = glyphs[c]
             sa._arc('catalysis', glyph.attrib['id'], process_glyph)
