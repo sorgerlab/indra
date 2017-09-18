@@ -1,6 +1,9 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+
+from io import BytesIO
 from indra.literature import pubmed_client as pub
 from indra.db.populate_content import PmcOA, Medline, Manuscripts
-from io import BytesIO
 
 import xml.etree.ElementTree as ET
 import tarfile
@@ -11,6 +14,7 @@ import random
 import os
 import re
 import shutil
+
 
 def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
     if case == (1, 0, 0):
@@ -48,23 +52,22 @@ def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
 
 
 def build_set(n, parent_dir):
-    '''
-    Create the nastiest set of content we're willing/able to handle.
-    
-    We create a small local representation of the entirety of the nih 
+    """Create the nastiest set of content we're willing/able to handle.
+
+    We create a small local representation of the entirety of the nih
     repositories we use, including all the nasty corner cases we can manage.
     This allows for rapid development and testing.
-    
-    Inputs
-    ------
-    n: int
+
+    Parameters
+    ----------
+    n : int
         The number of copies of each test case to be included. Examples are
         chosen as randomly as possible. Multiple samples could increase the
         reliability of the test.
-    parent_dir: str
+    parent_dir : str
         The head of the tree that stands in place of the url to the nih ftp
         directory.
-    '''
+    """
     # Create the necessary directories.
     def get_path(sub_path):
         return os.path.join(parent_dir, sub_path)
@@ -75,7 +78,7 @@ def build_set(n, parent_dir):
     os.makedirs(get_path('pub/pmc'))
     os.makedirs(get_path('pubmed/baseline'))
     os.makedirs(get_path('pub/pmc/manuscript'))
-    
+
     # Get the pmid data from medline (med_pmid_list)
     print("Getting medline lists...")
     med_pmid_list = []
@@ -87,7 +90,7 @@ def build_set(n, parent_dir):
         with zf.open(zf.namelist()[0]) as id_f:
             id_str = id_f.read().decode('utf8')
         med_pmid_list += [l.split('\t')[1] for l in id_str.splitlines()]
-    
+
     # Get the data from pmc oa (pmc_dicts)
     print("Getting pmc oa lists....")
     pmc = PmcOA()
@@ -111,7 +114,6 @@ def build_set(n, parent_dir):
         if v['doi'] is not None and len(v['doi']) > 100
         ]
     examples.append((random.choice(pmids_w_double_doi), '','',))
-            
 
     # Create the test medline file.
     print("Creating medline test file...")
@@ -127,8 +129,6 @@ def build_set(n, parent_dir):
     if tree is not None:
         f_bts = b''
         f_bts += b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-        #f_bts += (b"<!DOCTYPE PubmedArticleSet SYSTEM \"%s\">\n" %
-        #    b"http://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_170101.dtd")
         f_bts += ET.tostring(tree)
         f_path = get_path('pubmed/baseline/medline17nTEST.xml.gz') 
         with open(f_path, 'wb') as gzf:
@@ -162,16 +162,16 @@ def build_set(n, parent_dir):
     with tarfile.open(art_dirname + '.tar.gz', 'w:gz') as tar:
         tar.add(art_dirname)
     shutil.rmtree(art_dirname)
-    
+
     # Create deleted pmids file (just make an empty file,for now.
     # TODO: Add test case to touch this.
     with open(get_path('pubmed/deleted.pmids.gz'), 'wb') as gzf:
         gzf.write(gzip.compress(b''))
-    
+
     # Create the test manuscripts file.
     print('Adding manuscript directories...')
     dirfmt = get_path('pub/pmc/manuscript/%s')
-    dirnames = [dirfmt  % ('PMC00%dXXXXXX.xml' % i) for i in range(2,6)]
+    dirnames = [dirfmt % ('PMC00%dXXXXXX.xml' % i) for i in range(2, 6)]
     for dirname in dirnames:
         if os.path.exists(dirname):
             shutil.rmtree(dirname)
@@ -186,11 +186,9 @@ def build_set(n, parent_dir):
         if not os.path.exists(tarname):
             print("\tDownloading %s..." % tarname)
             man.ftp.download_file(tarname)
-        #with tarfile.open(tarname, 'r:gz') as tar:
-        #    tar_members[tarname] = tar.getmembers()
     for d in ex_man_dicts:
         parent_dir = os.path.join(
-            dirfmt % tarname.replace('.tar.gz', ''), 
+            dirfmt % tarname.replace('.tar.gz', ''),
             os.path.dirname(d['File'])
             )
         test_fname = os.path.join(
@@ -207,8 +205,9 @@ def build_set(n, parent_dir):
         with tarfile.open(dirname + '.tar.gz', 'w:gz') as tar:
             tar.add(dirname)
         shutil.rmtree(dirname)
-    
+
     return examples
+
 
 if __name__ == '__main__':
     from sys import argv

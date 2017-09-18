@@ -17,34 +17,32 @@ from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
-from indra.db import get_aws_db, texttypes
+from indra.db import get_primary_db, texttypes, formats
 
 logger = logging.getLogger('update_db')
 
-ftp_blocksize = 33554432 # Chunk size recommended by NCBI
+ftp_blocksize = 33554432  # Chunk size recommended by NCBI
 BATCH_SIZE = 10000
-
-    
 
 
 class NihFtpClient(object):
-    '''
-    High level access to the nih ftp repositories.
-    
+    """High level access to the nih ftp repositories.
+
     Parameters
     ----------
-    my_path: str 
+    my_path : str
         The path to the subdirectory around which this client operates.
-    ftp_url: str: (default: 'ftp.ncbi.nlm.nih.gov')
-        The url to the ftp site. May be a local directory (see `local`)
-    local: bool: (default: False)
+    ftp_url : str
+        The url to the ftp site. May be a local directory (see `local`). By
+        default this is `'ftp.ncbi.nlm.nih.gov'`.
+    local : bool
         These methods may be run on a local directory (intended for testing).
-    '''
+        (default is `False`).
+    """
     def __init__(self, my_path, ftp_url='ftp.ncbi.nlm.nih.gov', local=False):
         self.my_path = my_path
         self.is_local = local
         self.ftp_url = ftp_url
-
 
     def path_join(self, *args):
         joined_str = path.join(*args)
@@ -56,8 +54,7 @@ class NihFtpClient(object):
                 part_list.pop(idx)
         return path.join(*part_list)
 
-
-    def get_ftp_connection(self, ftp_path = None):
+    def get_ftp_connection(self, ftp_path=None):
         if ftp_path is None:
             ftp_path = self.my_path
         # Get an FTP connection
@@ -67,7 +64,6 @@ class NihFtpClient(object):
         ftp.cwd(ftp_path)
         return ftp
 
-
     def get_xml_file(self, xml_file):
         print("Downloading %s" % (xml_file))
         ret = self.get_file(xml_file)
@@ -76,7 +72,6 @@ class NihFtpClient(object):
         print("Parsing XML metadata")
         return ET.XML(xml_bytes, parser=UTB())
 
-
     def get_csv_as_dict(self, csv_file):
         csv_str = self.get_file(csv_file).decode('utf8')
         lst = []
@@ -84,7 +79,6 @@ class NihFtpClient(object):
         for row in reader:
             lst.append(row)
         return [dict(zip(lst[0], row)) for row in lst[1:]]
-
 
     def ret_file(self, f_path, buf):
         full_path = self.path_join(self.my_path, f_path)
@@ -100,21 +94,18 @@ class NihFtpClient(object):
                 buf.flush()
         return
 
-
     def download_file(self, f_path):
         name = path.basename(f_path)
         with open(name, 'wb') as gzf:
             self.ret_file(f_path, gzf)
         return name
 
-
     def get_file(self, f_path):
         gzf_bytes = BytesIO()
         self.ret_file(f_path, gzf_bytes)
         return gzf_bytes.getvalue()
 
-
-    def ftp_ls(self, ftp_path = None):
+    def ftp_ls(self, ftp_path=None):
         if ftp_path is None:
             ftp_path = self.my_path
         else:
@@ -128,38 +119,40 @@ class NihFtpClient(object):
 
 
 class Uploader(object):
-    '''
-    This abstract class provides the api required for any object that is used 
+    """This abstract class provides the api required for any object that is used
     to upload content into the database.
-    '''
-    my_source=NotImplemented
+    """
+    my_source = NotImplemented
+
     def populate(self, db):
         "A stub for the method used to initially populate the database."
         raise NotImplementedError(
             "`Populate` not implemented for `%s`." % self.__class__.__name__
             )
-    
+
     def update(self, db):
         "A stub for the method used to update the content on the database."
         raise NotImplementedError(
             "`Update` not implemented for `%s`." % self.__class__.__name__
             )
 
+
 class NihUploader(Uploader):
-    '''
-    This is an abstract class for all the uploaders that use the nih ftp 
+    """This is an abstract class for all the uploaders that use the nih ftp
     service.
-    
-    See `NihFtpClient` for parameters. 
-    '''
+
+    See `NihFtpClient` for parameters.
+    """
     my_path = NotImplemented
+
     def __init__(self, *args, **kwargs):
         self.ftp = NihFtpClient(self.my_path, *args, **kwargs)
 
 
 class Medline(NihUploader):
-    my_path='pubmed/baseline'
-    my_source='pubmed'
+    my_path = 'pubmed/baseline'
+    my_source = 'pubmed'
+
     def get_deleted_pmids(self):
         del_pmid_str = self.ftp.get_file('../deleted.pmids.gz')
         pmid_list = [
@@ -167,17 +160,15 @@ class Medline(NihUploader):
             ]
         return pmid_list
 
-
     def get_file_list(self):
         all_files = self.ftp.ftp_ls()
         return [k for k in all_files if k.endswith('.xml.gz')]
 
-
-    def get_article_info(self, xml_file, q = None):
+    def get_article_info(self, xml_file, q=None):
         tree = self.ftp.get_xml_file(xml_file)
         article_info = pubmed_client.get_metadata_from_xml_tree(
-            tree, 
-            get_abstracts=True, 
+            tree,
+            get_abstracts=True,
             prepend_title=False
             )
         if q is not None:
@@ -186,13 +177,12 @@ class Medline(NihUploader):
         else:
             return article_info
 
-    
     def fix_doi(self, doi):
         "Sometimes the doi is doubled (no idea why). Fix it."
         if doi is None:
             return doi
         L = len(doi)
-        if L%2 is not 0:
+        if L % 2 is not 0:
             return
         if doi[:L] != doi[L:]:
             return
@@ -201,7 +191,7 @@ class Medline(NihUploader):
 
     def upload_article(self, db, article_info):
         deleted_pmids = self.get_deleted_pmids()
-        
+
         print("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
@@ -216,7 +206,7 @@ class Medline(NihUploader):
         for pmid in pmids_to_add:
             pmid_data = article_info[pmid]
             rec = (
-                pmid, pmid_data.get('pmcid'), 
+                pmid, pmid_data.get('pmcid'),
                 self.fix_doi(pmid_data.get('doi')),
                 pmid_data.get('pii')
                 )
@@ -231,18 +221,18 @@ class Medline(NihUploader):
                     (self.my_source, 'text', texttypes.ABSTRACT, abstract_gz)
 
         db.copy(
-            'text_ref', 
-            text_ref_records, 
+            'text_ref',
+            text_ref_records,
             ('pmid', 'pmcid', 'doi', 'pii',)
             )
 
         # Build a dict mapping PMIDs to text_ref IDs
         pmid_list = list(text_content_info.keys())
-        tref_list = db.select(
-            'text_ref', 
+        tref_list = db.select_all(
+            'text_ref',
             db.TextRef.pmid.in_([p for p in pmid_list])
             )
-        pmid_tr_dict = {pmid:trid for (pmid, trid) in 
+        pmid_tr_dict = {pmid: trid for (pmid, trid) in
                         db.get_values(tref_list, ['pmid', 'id'])}
 
         # Add the text_ref IDs to the content to be inserted
@@ -250,41 +240,38 @@ class Medline(NihUploader):
         for pmid, tc_data in text_content_info.items():
             if pmid not in pmid_tr_dict.keys():
                 continue
-            tr_id = pmid_tr_dict[pmid] 
+            tr_id = pmid_tr_dict[pmid]
             text_content_records.append((tr_id,) + tc_data)
 
-
         db.copy(
-            'text_content', 
+            'text_content',
             text_content_records,
             cols=('text_ref_id', 'source', 'format', 'text_type', 'content',)
             )
         return True
 
+    def populate(self, db, n_procs=1, continuing=False):
+        """Perform the initial input of the pubmed content into the database.
 
-    def populate(self, db, n_procs = 1, continuing=False):
-        """
-        Perform the initial population of the pubmed content into the database.
-        
         Inputs
         ------
-        db: indra.db.DatabaseManager instance
+        db : indra.db.DatabaseManager instance
             The database to which the data will be uploaded.
-        n_procs: int
+        n_procs : int
             The number of processes to use when parsing xmls.
-        continuing: bool
+        continuing : bool
             If true, assume that we are picking up after an error, or otherwise
             continuing from an earlier process. This means we will skip over
             source files contained in the database. If false, all files will be
             read and parsed.
         """
         xml_files = self.get_file_list()
-        tr_list = db.select(
-            'source_file', 
-            db.SourceFile.source==self.my_source
+        tr_list = db.select_all(
+            'source_file',
+            db.SourceFile.source == self.my_source
             )
         existing_files = [tr.name for tr in tr_list]
-        
+
         q = mp.Queue()
         proc_list = []
         for xml_file in xml_files:
@@ -300,13 +287,13 @@ class Medline(NihUploader):
                 )
             proc_list.append(p)
         n_tot = len(proc_list)
-        
+
         for _ in range(n_procs):
             if len(proc_list):
                 proc_list.pop(0).start()
 
         while len(proc_list):
-            article_info = q.get() # This will block until at least one is done
+            article_info = q.get()  # Block until at least one is done.
             proc_list.pop(0).start()
             self.upload_article(db, article_info)
             n_tot -= 1
@@ -315,34 +302,36 @@ class Medline(NihUploader):
             article_info = q.get()
             self.upload_article(db, article_info)
             n_tot -= 1
-        
+
         return
 
 
 class PmcUploader(NihUploader):
     my_source = NotImplemented
+
     def __init__(self, *args, **kwargs):
         super(PmcUploader, self).__init__(*args, **kwargs)
         self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
-        self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 'content',)
-
+        self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 
+                        'content',)
 
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
         #print("Beginning to filter text refs...")
-        tr_list = db.select(
+        tr_list = db.select_all(
             'text_ref',
             db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
             db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
             )
         db_conts = {
-            'pmid':[tr.pmid for tr in tr_list],
-            'pmcid':[tr.pmcid for tr in tr_list]
+            'pmid': [tr.pmid for tr in tr_list],
+            'pmcid': [tr.pmcid for tr in tr_list]
             }
         #print("\tGot db contents...")
-        
+
         # Define some helpful functions.
         filtered_tr_records = []
+
         def add_record(tr_entry):
             entry_lst = []
             for k in self.tr_cols:
@@ -359,36 +348,35 @@ class PmcUploader(NihUploader):
             tr.pmcid = tr_entry['pmcid']
             db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
             #print("\tDone updating...")
-        
+
         def update_record_with_pmid(tr_entry, pmid=None):
             #print("\tUpdating a record with a new pmid...")
             tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
             #print("\tDone updating...")
-            
+
         def lookup_pmid(pmcid):
             #print("\tLooking for a missing pmid...")
             ret = id_lookup(pmcid)
             #print("\tDone looking...")
             return None if 'pmid' not in ret.keys() else ret['pmid']
-        
+
         def db_has_pmid(pmid):
             #print("\tLooking for pmid in db...")
             ret = db.has_entry('text_ref', db.TextRef.pmid==pmid)
             #print("\tDetermined pmid status...")
             return ret
-        
+
         def get_tr_from_pmid(pmid):
             for tr in tr_list:
                 if tr.pmid == pmid:
                     return tr
             return None
-        
+
         # Process the text ref data.
         pmcids_to_skip = []
-        N = len(tr_data)
-        for i, tr_entry in enumerate(tr_data):
+        for tr_entry in tr_data:
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:
                     pmid = lookup_pmid(tr_entry['pmcid'])
@@ -411,7 +399,8 @@ class PmcUploader(NihUploader):
                     else:
                         with open('review.txt', 'a') as f:
                             f.write(
-                                'Skipped record from %s with pmcid %s due to conflicting pmids. Please review.\n' 
+                                'Skipped record from %s with pmcid %s due to '
+                                'conflicting pmids. Please review.\n'
                                 % (self.my_source, tr_entry['pmcid'])
                                 )
                         pmcids_to_skip.append(tr_entry['pmcid'])
@@ -420,25 +409,25 @@ class PmcUploader(NihUploader):
         print("\nDone filtering text refs...")
         return filtered_tr_records, pmcids_to_skip
 
-
     def filter_text_content(self, db, tc_data):
         'Filter the text content'
         print("Beginning to filter text content...")
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
-        tref_list = db.select(
-            'text_ref', 
+        tref_list = db.select_all(
+            'text_ref',
             db.TextRef.pmcid.in_(arc_pmcid_list)
             )
         pmcid_trid_dict = {
-            pmcid:trid for (pmcid, trid) in
+            pmcid: trid for (pmcid, trid) in
             db.get_values(tref_list, ['pmcid', 'id'])
             }
-        existing_tcs = db.select(
-            'text_content', 
+        # This should be a very small list, in general.
+        existing_tcs = db.select_all(
+            'text_content',
             db.TextContent.text_ref_id.in_(pmcid_trid_dict.values()),
-            db.TextContent.source==self.my_source,
-            db.TextContent.format=='xml'
-            ) # This should be a very small list, in general.
+            db.TextContent.source == self.my_source,
+            db.TextContent.format == formats.XML
+            )
         existing_tc_records = [
             (tc.text_ref_id, tc.source, tc.format, tc.text_type)
             for tc in existing_tcs
@@ -447,10 +436,10 @@ class PmcUploader(NihUploader):
         for tc in tc_data:
             tc_records.append(
                 (
-                    pmcid_trid_dict[tc['pmcid']], 
-                    self.my_source, 
-                    'xml', 
-                    tc['text_type'], 
+                    pmcid_trid_dict[tc['pmcid']],
+                    self.my_source,
+                    formats.XML,
+                    tc['text_type'],
                     tc['content']
                     )
                 )
@@ -459,7 +448,6 @@ class PmcUploader(NihUploader):
             ]
         print("Finished filtering the text content...")
         return filtered_tc_records
-
 
     def upload_batch(self, db, tr_data, tc_data):
         "Add a batch of text refs and text content to the database."
@@ -471,7 +459,7 @@ class PmcUploader(NihUploader):
                 ]
         else:
             mod_tc_data = tc_data
-        
+
         # Upload the text content data.
         print('Adding %d new text refs...' % len(filtered_tr_records))
         db.copy('text_ref', filtered_tr_records, self.tr_cols)
@@ -483,7 +471,6 @@ class PmcUploader(NihUploader):
         print('Adding %d more text content entries...' % len(filtered_tc_records))
         db.copy('text_content', filtered_tc_records, self.tc_cols)
 
-    
     def get_data_from_xml_str(self, xml_str, filename):
         "Get the data out of the xml string."
         try:
@@ -492,30 +479,31 @@ class PmcUploader(NihUploader):
             print("Could not parse %s. Skipping." % filename)
             return None
         id_data = {
-            e.get('pub-id-type'):e.text for e in 
+            e.get('pub-id-type'): e.text for e in
             tree.findall('.//article-id')
             }
         if 'pmc' not in id_data.keys():
             print("Did not get a 'pmc' in %s." % filename)
             return None
-            
-        #if 'PMC'+id_data['pmc'] not in pmcid_list:
-        #    continue
         if 'pmcid' not in id_data.keys():
             id_data['pmcid'] = 'PMC' + id_data['pmc']
         rec_dict = dict.fromkeys(self.tr_cols)
         rec_dict.update(id_data)
-        tr_data_entries= [rec_dict]
+        tr_data_entries = [rec_dict]
         tc_data_entries = []
-        for typ, lbl in [(texttypes.ABSTRACT,'abstract'), (texttypes.FULLTEXT,'body')]:
+        typ_lbl_list = [
+            (texttypes.ABSTRACT, 'abstract'),
+            (texttypes.FULLTEXT, 'body')
+            ]
+        for typ, lbl in typ_lbl_list:
             cont_xml = tree.find('.//'+lbl)
             if cont_xml is not None:
                 content = ET.tostring(cont_xml).decode('utf8')
                 tc_data_entries.append(
                     {
-                        'pmcid':id_data['pmcid'], 
-                        'text_type':typ, 
-                        'content':zip_string(content)
+                        'pmcid': id_data['pmcid'],
+                        'text_type': typ,
+                        'content': zip_string(content)
                         }
                     )
         return tr_data_entries, tc_data_entries
@@ -524,36 +512,34 @@ class PmcUploader(NihUploader):
         "Process a single tar gzipped article archive."
         tr_data = []
         tc_data = []
-        
+
         def submit(tag, tr_data, tc_data):
             batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
-            print("Submitting %s of data for %s..." % 
+            print("Submitting %s of data for %s..." %
                   (batch_name, archive))
-            
+
             if q is not None:
                 q.put(((batch_name, archive), tr_data[:], tc_data[:]))
             else:
                 self.upload_batch(db, tr_data[:], tc_data[:])
             tr_data.clear()
             tc_data.clear()
-        
+
         with tarfile.open(archive, mode='r:gz') as tar:
             print('Loading %s...' % archive)
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
-                #print("Reading %s. File %d/%d." % (xml_file, i, len(xml_files)))
                 xml_str = tar.extractfile(xml_file).read()
                 res = self.get_data_from_xml_str(xml_str, xml_file.name)
                 if res is None:
                     continue
                 tr_data += res[0]
                 tc_data += res[1]
-                if (i+1)%BATCH_SIZE==0: # Upload in batches, so as not to overwhelm ram.
+                if (i+1) % BATCH_SIZE is 0:
                     submit((i+1)/BATCH_SIZE, tr_data, tc_data)
             else:
                 submit('final', tr_data, tc_data)
         return
-
 
     def process_archive(self, db, archive, q=None):
         try:
@@ -563,15 +549,12 @@ class PmcUploader(NihUploader):
         finally:
             os.remove(archive)
 
-
     def get_file_list(self):
         return [k for k in self.ftp.ftp_ls() if self.is_archive(k)]
-    
-    
+
     def populate(self, db, n_procs=1, continuing=False):
-        """
-        Perform the initial population of the pubmed content into the database.
-        
+        """Perform the initial population of the pmc content into the database.
+
         Inputs
         ------
         db: indra.db.DatabaseManager instance
@@ -585,13 +568,13 @@ class PmcUploader(NihUploader):
             files will be read and parsed.
         """
         archives = self.get_file_list()
-        
-        sf_list = db.select(
-            'source_file', 
-            db.SourceFile.source==self.my_source
+
+        sf_list = db.select_all(
+            'source_file',
+            db.SourceFile.source == self.my_source
             )
         existing_arcs = [sf.name for sf in sf_list]
-        
+
         q = mp.Queue(len(archives))
         wait_list = []
         for archive in archives:
@@ -600,25 +583,26 @@ class PmcUploader(NihUploader):
                 continue
             p = mp.Process(
                 target=self.process_archive,
-                args=(db,archive,q,),
+                args=(db, archive, q,),
                 daemon=True
                 )
             wait_list.append((archive, p))
-        
+
         active_list = []
+
         def start_next_proc():
             if len(wait_list) is not 0:
                 archive, proc = wait_list.pop(0)
                 proc.start()
                 active_list.append((archive, proc))
-        
+
         # Start the processes running
         for _ in range(min(n_procs, len(archives))):
             start_next_proc()
 
         # Monitor the processes while any are still active.
         while len(active_list) is not 0:
-            for a, p in [(a,p) for a,p in active_list if not p.is_alive()]:
+            for a, p in [(a, p) for a, p in active_list if not p.is_alive()]:
                 if a not in existing_arcs:
                     db.insert('source_file', source=self.my_source, name=a)
                 active_list.remove((a, p))
@@ -628,30 +612,30 @@ class PmcUploader(NihUploader):
                 label, tr_data, tc_data = q.get_nowait()
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 continue
             print("Beginning to upload %s from %s..." % label)
             self.upload_batch(db, tr_data, tc_data)
             print("Finished %s from %s..." % label)
             time.sleep(0.1)
-                
+
         # Empty the queue.
         while not q.empty():
             try:
                 tr_data, tc_data = q.get(timeout=1)
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 break
             self.upload_batch(db, tr_data, tc_data)
-        
+
         return
 
 
 class PmcOA(PmcUploader):
     my_path = 'pub/pmc'
     my_source = 'pmc_oa'
-    
+
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
@@ -659,6 +643,7 @@ class PmcOA(PmcUploader):
 class Manuscripts(PmcUploader):
     my_path = 'pub/pmc/manuscript'
     my_source = 'manuscripts'
+
     def get_tarname_from_filename(self, fname):
         "Get the name of the tar file based on the file name (or a pmcid)."
         re_match = re.match('(PMC00\d).*?', fname)
@@ -668,7 +653,6 @@ class Manuscripts(PmcUploader):
             tarname = None
         return tarname
 
-
     def is_archive(self, k):
         return k.endswith('.xml.tar.gz')
 
@@ -676,17 +660,17 @@ class Manuscripts(PmcUploader):
 if __name__ == '__main__':
     from sys import argv
     if '--continue' in argv or 'continue' in argv:
-        continuing=True
+        continuing = True
     else:
-        continuing=False
+        continuing = False
     if '-n' in argv:
         n = int(argv[argv.index('-n') + 1])
-    db = get_aws_db()
+    db = get_primary_db()
     if not continuing:
         db._clear()
     Medline().populate(db, n, continuing)
-    PmcOA().populate(db, n, continuing)
     Manuscripts().populate(db, n, continuing)
+    PmcOA().populate(db, n, continuing)
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
@@ -701,5 +685,3 @@ if __name__ == '__main__':
     # 6. Obtain Elsevier XML for Elsevier articles
     # 7. Obtain Springer content for Springer articles
     # 8. Obtain scraped PDF content for other articles available via OA-DOI.
-
-

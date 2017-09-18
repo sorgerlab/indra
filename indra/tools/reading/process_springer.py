@@ -233,7 +233,7 @@ def upload_springer(springer_dir, verbose = False, since_date=None,
         db.grab_session()
         
         # For now pmid's are the primary ID, so that should be the primary
-        tr_list = db.select('text_ref', db.TextRef.pmid==ref_data['pmid'])
+        tr_list = db.select_all('text_ref', db.TextRef.pmid==ref_data['pmid'])
         suf = " text ref %%s for pmid: %s, and doi: %s." % (ref_data['pmid'], ref_data['doi'])
         if len(tr_list) is 0:
             text_ref_id = db.insert('text_ref', **ref_data)
