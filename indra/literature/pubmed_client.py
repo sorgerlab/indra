@@ -24,7 +24,18 @@ pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
 def send_request(url, data):
-    res = requests.get(url, params=data)
+    try:
+        res = requests.get(url, params=data)
+    except requests.exceptions.Timeout as e:
+        logger.error('PubMed request timed out')
+        logger.error('url: %s, data: %s' % (url, data))
+        logger.error(e)
+        return None
+    except requests.exceptions.RequestException as e:
+        logger.error('PubMed request exception')
+        logger.error('url: %s, data: %s' % (url, data))
+        logger.error(e)
+        return None
     if not res.status_code == 200:
         return None
     tree = ET.XML(res.content, parser=UTB())
