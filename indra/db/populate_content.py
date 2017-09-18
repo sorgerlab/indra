@@ -329,7 +329,7 @@ class PmcUploader(NihUploader):
 
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
-        print("Beginning to filter text refs...")
+        #print("Beginning to filter text refs...")
         tr_list = db.select(
             'text_ref',
             db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
@@ -339,7 +339,7 @@ class PmcUploader(NihUploader):
             'pmid':[tr.pmid for tr in tr_list],
             'pmcid':[tr.pmcid for tr in tr_list]
             }
-        print("\tGot db contents...")
+        #print("\tGot db contents...")
         
         # Define some helpful functions.
         filtered_tr_records = []
@@ -354,29 +354,29 @@ class PmcUploader(NihUploader):
             filtered_tr_records.append(tuple(entry_lst))
 
         def update_record_with_pmcid(tr_entry):
-            print("\tUpdating a record with a new pmcid....")
+            #print("\tUpdating a record with a new pmcid....")
             tr = db.select_one('text_ref', db.TextRef.pmid==tr_entry['pmid'])
             tr.pmcid = tr_entry['pmcid']
             db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
-            print("\tDone updating...")
+            #print("\tDone updating...")
         
         def update_record_with_pmid(tr_entry, pmid=None):
-            print("\tUpdating a record with a new pmid...")
+            #print("\tUpdating a record with a new pmid...")
             tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
-            print("\tDone updating...")
+            #print("\tDone updating...")
             
         def lookup_pmid(pmcid):
-            print("\tLooking for a missing pmid...")
+            #print("\tLooking for a missing pmid...")
             ret = id_lookup(pmcid)
-            print("\tDone looking...")
+            #print("\tDone looking...")
             return None if 'pmid' not in ret.keys() else ret['pmid']
         
         def db_has_pmid(pmid):
-            print("\tLooking for pmid in db...")
+            #print("\tLooking for pmid in db...")
             ret = db.has_entry('text_ref', db.TextRef.pmid==pmid)
-            print("\tDetermined pmid status...")
+            #print("\tDetermined pmid status...")
             return ret
         
         def get_tr_from_pmid(pmid):
@@ -389,8 +389,6 @@ class PmcUploader(NihUploader):
         pmcids_to_skip = []
         N = len(tr_data)
         for i, tr_entry in enumerate(tr_data):
-            if N >= 100 and i%int(N/25):
-                print('|', end='')
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:
                     pmid = lookup_pmid(tr_entry['pmcid'])
@@ -419,7 +417,7 @@ class PmcUploader(NihUploader):
                         pmcids_to_skip.append(tr_entry['pmcid'])
                 else:
                     add_record(tr_entry)
-        print("Done filtering text refs...")
+        print("\nDone filtering text refs...")
         return filtered_tr_records, pmcids_to_skip
 
 
