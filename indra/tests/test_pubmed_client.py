@@ -65,3 +65,6 @@ def test_get_metadata_for_ids():
     metadata = pubmed_client.get_metadata_for_ids(pmids)
     assert unicode_strs(metadata)
 
+def test_send_request_invalid():
+    res = pubmed_client.send_request('http://xxxxxxx', data={})
+    assert res is None
