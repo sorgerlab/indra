@@ -73,6 +73,8 @@ class PybelAssembler(object):
                 self._assemble_complex(stmt)
             elif isinstance(stmt, Conversion):
                 self._assemble_conversion(stmt)
+            elif isinstance(stmt, Autophosphorylation):
+                self._assemble_autophosphorylation(stmt)
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
@@ -207,6 +209,20 @@ class PybelAssembler(object):
                                    stmt.evidence)
             for edge_data in edge_data_list:
                 self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+
+    def _assemble_autophosphorylation(self, stmt):
+        (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
+        sub_agent = deepcopy(stmt.enz)
+        mc = stmt._get_mod_condition()
+        sub_agent.mods.append(mc)
+        (sub_node, sub_attr, sub_edge) = _get_agent_node(sub_agent)
+        self.model.add_node(enz_node, attr_dict=enz_attr)
+        self.model.add_node(sub_node, attr_dict=sub_attr)
+        pybel_relation = pc.DIRECTLY_INCREASES
+        edge_data_list = _combine_edge_data(pybel_relation, enz_edge, sub_edge,
+                                            stmt.evidence)
+        for edge_data in edge_data_list:
+            self.model.add_edge(enz_node, sub_node, attr_dict=edge_data)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
