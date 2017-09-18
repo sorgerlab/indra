@@ -97,7 +97,11 @@ def process_paper(model_name, pmid):
         txt_format = 'existing_json'
     # If the paper has not been read, download the text and read
     else:
-        txt, txt_format = get_full_text(pmid, 'pmid')
+        try:
+            txt, txt_format = get_full_text(pmid, 'pmid')
+        except:
+            return None, None
+
         if txt_format == 'pmc_oa_xml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True)
             if os.path.exists('reach_output.json'):
