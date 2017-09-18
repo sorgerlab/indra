@@ -4,6 +4,7 @@ from builtins import dict, str
 import json
 import time
 from io import BytesIO
+from os import path
 from docutils.io import InputError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
@@ -16,7 +17,6 @@ from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
-from indra.databases import hgnc_client
 
 
 @compiles(DropTable, "postgresql")
@@ -468,12 +468,20 @@ class DatabaseManager(object):
 
 
 def get_primary_db():
-    with open(DEFAULTS_FILE, 'r') as f:
-        defaults_list = f.read().split_lines()
+    if not path.isabs(DEFAULTS_FILE):
+        full_path = path.join(__path__[0], DEFAULTS_FILE)
+    else:
+        full_path = DEFAULTS_FILE
+    with open(full_path, 'r') as f:
+        defaults_list = f.read().splitlines()
     for default in defaults_list:
-        key, value = default.split(':')
-        if key is "primary":
+        key, value = default.split('=')
+        print(key)
+        if key == "primary":
             primary_host = value
+            break
+    else:
+        raise Exception("Couldn't find primary host.")
 
     db = DatabaseManager(primary_host)
     db.grab_session()

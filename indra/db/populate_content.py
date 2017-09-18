@@ -669,8 +669,8 @@ if __name__ == '__main__':
     if not continuing:
         db._clear()
     Medline().populate(db, n, continuing)
-    Manuscripts().populate(db, n, continuing)
     PmcOA().populate(db, n, continuing)
+    Manuscripts().populate(db, n, continuing)
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
