@@ -97,11 +97,11 @@ class PybelAssembler(object):
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_modification(self, stmt):
-        (enz_node, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
+        (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
         sub_agent = _get_modified_substrate(stmt)
-        (sub_node, sub_attr, sub_edge) = _get_agent_node(sub_agent)
-        self.model.add_node(enz_node, attr_dict=enz_attr)
-        self.model.add_node(sub_node, attr_dict=sub_attr)
+        (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
+        enz_node = self.model.add_node_from_data(enz_attr)
+        sub_node = self.model.add_node_from_data(sub_attr)
         pybel_relation = pc.DIRECTLY_INCREASES \
                          if isinstance(stmt, AddModification) \
                          else pc.DIRECTLY_DECREASES
@@ -131,8 +131,8 @@ class PybelAssembler(object):
         ras.activity = ActivityCondition('gtpbound', True)
         (subj_node, subj_attr, subj_edge) = _get_agent_node(gef)
         (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
-        self.model.add_node(subj_node, attr_dict=subj_attr)
-        self.model.add_node(obj_node, attr_dict=obj_attr)
+        subj_node = self.model.add_node_from_data(subj_attr)
+        obj_node = self.model.add_node_from_data(obj_attr)
         pybel_relation = pc.DIRECTLY_INCREASES
         edge_data_list = _combine_edge_data(pybel_relation, subj_edge,
                                             obj_edge, stmt.evidence)
@@ -169,16 +169,7 @@ class PybelAssembler(object):
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_complex(self, stmt):
-        members_list = []
-        for member in stmt.agent_list():
-            func, namespace, name = _get_agent_grounding(member)
-            members_list.append({
-                pc.FUNCTION: func,
-                pc.NAMESPACE: namespace,
-                pc.NAME: name})
-        complex_node_data = {
-                pc.FUNCTION: pc.COMPLEX,
-                pc.MEMBERS: members_list}
+        complex_node_data = _get_complex_node(stmt.members)
         self.model.add_node_from_data(complex_node_data)
 
     def _assemble_conversion(self, stmt):
@@ -260,6 +251,31 @@ def _get_activated_object(reg_stmt):
 
 
 def _get_agent_node(agent):
+    if agent.bound_conditions:
+        members = [agent] + [bc.agent for bc in agent.bound_conditions
+                             if bc.is_bound]
+        return _get_complex_node(members)
+    else:
+        return _get_agent_node_no_bcs(agent)
+
+
+def _get_complex_node(members):
+    members_list = []
+    for member in members:
+        func, namespace, name = _get_agent_grounding(member)
+        members_list.append({
+            pc.FUNCTION: func,
+            pc.NAMESPACE: namespace,
+            pc.NAME: name})
+    complex_node_data = {
+            pc.FUNCTION: pc.COMPLEX,
+            pc.MEMBERS: members_list}
+    # TODO: Refactor to allow activity on a complex drawn from the prime agent
+    # from a set of bound conditions
+    return (None, complex_node_data, None)
+
+
+def _get_agent_node_no_bcs(agent):
     (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
     if abundance_type is None:
         logger.warning('Agent %s has no grounding.', agent)
@@ -361,6 +377,7 @@ def _get_evidence(evidence):
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
+
 
 """
 Representation of PTM reactions in PyBEL/BEL

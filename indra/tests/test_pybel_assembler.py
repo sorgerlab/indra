@@ -426,30 +426,17 @@ def test_bound_condition():
                 pc.NAME: 'SOS1'},]
     for member in members_list:
         assert member in complex_members
-
-    """
-    edge = {pc.RELATION: pc.DIRECTLY_INCREASES,
-             pc.SUBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gef',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-             pc.OBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gtp',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
-    _, _, edge_data = belgraph.edges(data=True)[0]
-    assert edge_data == edge
-
-    sos = Agent('SOS1', db_refs={'HGNC': id('SOS1')})
-    stmt = Complex([egfr, grb2, sos])
-    pba = pa.PybelAssembler([stmt])
-    belgraph = pba.make_model()
-    # The graph should contain the node for the complex as well as nodes
-    # for all of the members
-    assert len(belgraph) == 4
-    """
+    kras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
+    assert kras_node in belgraph.nodes()
+    assert (complex_tuple, kras_node) in belgraph.edges()
+    edge_data = (complex_tuple, kras_node,
+                {pc.RELATION: pc.DIRECTLY_INCREASES,
+                 pc.OBJECT: {
+                     pc.MODIFIER: pc.ACTIVITY,
+                     pc.EFFECT: {
+                         pc.NAME: 'gtp',
+                         pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}})
+    assert edge_data in belgraph.edges(data=True)
 
 
 def test_transphosphorylation():
@@ -457,6 +444,11 @@ def test_transphosphorylation():
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
+# TODO: Negative bound conditions should create inhibition edges between
+#       proteins and complexes?
+# TODO: Activity conditions/modifiers on complexes drawn from the main
+#       agent in a set of bound conditions
+# TODO: Is it possible to have modified proteins inside a complex in BEL/PyBEL?
 
 if __name__ == '__main__':
     test_bound_condition()
