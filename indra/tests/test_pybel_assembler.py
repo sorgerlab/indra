@@ -330,9 +330,41 @@ def test_rxn_no_controller():
         ]
     }
 
+
+def test_rxn_with_controller():
+    hk1 = Agent('HK1', db_refs={'HGNC': id('HK1')})
+    glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
+    g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
+    stmt = Conversion(hk1, [glu], [g6p])
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    # The graph should contain the node for the reaction as well as nodes
+    # for all of the members
+    assert len(belgraph) == 4
+    rxn_tuple = [n for n in belgraph.nodes() if n[0] == pc.REACTION][0]
+    # The reaction data should be the same as before
+    assert belgraph.node[rxn_tuple] == {
+        pc.FUNCTION: pc.REACTION,
+        pc.REACTANTS: [
+            {
+                pc.FUNCTION: pc.ABUNDANCE,
+                pc.NAMESPACE: 'CHEBI',
+                pc.NAME: 'CHEBI:17634',
+            }
+        ],
+        pc.PRODUCTS: [
+            {
+                pc.FUNCTION: pc.ABUNDANCE,
+                pc.NAMESPACE: 'CHEBI',
+                pc.NAME: 'CHEBI:4170'
+            }
+        ]
+    }
+
+
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
 
 if __name__ == '__main__':
-    test_rxn_no_controller()
+    test_rxn_with_controller()
     #test_complex()
