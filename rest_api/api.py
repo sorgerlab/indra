@@ -327,8 +327,7 @@ def get_ccle_mrna_levels():
     gene_list = body.get('gene_list')
     cell_lines = body.get('cell_lines')
     mrna_amounts = cbio_client.get_ccle_mrna(gene_list, cell_lines)
-    mrna_amounts_str = json.dumps(mrna_amounts)
-    res = {'mrna_amounts': mrna_amounts_str}
+    res = {'mrna_amounts': mrna_amounts}
     return res
 
 
@@ -350,8 +349,7 @@ def get_ccle_cna():
     gene_list = body.get('gene_list')
     cell_lines = body.get('cell_lines')
     cna = cbio_client.get_ccle_cna(gene_list, cell_lines)
-    cna_str = json.dumps(cna)
-    res = {'cna': cna_str}
+    res = {'cna': cna}
     return res
 
 
@@ -367,9 +365,8 @@ def get_ccle_mutations():
     body = json.loads(response)
     gene_list = body.get('gene_list')
     cell_lines = body.get('cell_lines')
-    mutations_str = json.dumps(mutations)
-    res = {'mutations': mutations_str}
     mutations = cbio_client.get_ccle_mutations(gene_list, cell_lines)
+    res = {'mutations': mutations}
     return res
 
 
