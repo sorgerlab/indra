@@ -1,7 +1,9 @@
 import os
+import itertools
 from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
+from indra.sources import biopax
 from indra.tools.reading.submit_reading_pipeline_aws import \
     submit_run_reach, submit_combine, wait_for_complete
 from assemble_pysb import *
@@ -29,11 +31,35 @@ def run_reading(pmid_fname):
     # Download the file and save
 
 
+def grouped_biopax_query(gene_names, database_filter, block_size=60):
+    gene_blocks = [gene_names[i:i+block_size] for i in
+                   range(0, len(gene_names), block_size)]
+    stmts = []
+    # Run pathsfromto between pairs of blocks and pathsbetween
+    # within each block. This breaks up a single call with N genes into
+    # (N/block_size)*(N/blocksize) calls with block_size genes
+    for genes1, genes2 in itertools.product(gene_blocks, repeat=2):
+        if genes1 == genes2:
+            bp = biopax.process_pc_pathsbetween(genes1,
+                                            database_filter=database_filter)
+        else:
+            bp = biopax.process_pc_pathsfromto(genes1, genes2,
+                                           database_filter=database_filter)
+        stmts += bp.statements
+    return stmts
+
+
 def build_prior(gene_names):
     """Build a corpus of prior Statements from PC and BEL."""
     gn = GeneNetwork(gene_names, basen)
-    stmts = gn.get_statements(filter=False)
-    ac.dump_statements(stmts, os.path.join(based, basen + '_prior.pkl'))
+    bel_stmts = gn.get_bel_stmts(filter=False)
+    ac.dump_statements(bel_stmts, os.path.join(based, basen + '_bel.pkl'))
+    # This call results in 504 error currently
+    #biopax_stmts = gn.get_biopax_stmts(filter=False)
+    database_filter = ['reactome', 'psp', 'kegg', 'pid']
+    biopax_stmts = grouped_biopax_query(gene_names, database_filter)
+    ac.dump_statements(biopax_stmts,
+                       os.path.join(based, basen + '_biopax.pkl'))
 
 
 if __name__ == '__main__':
