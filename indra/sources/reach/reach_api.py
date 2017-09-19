@@ -247,6 +247,7 @@ def process_nxml_file(file_name, citation=None, offline=False):
         nxml_str = f.read().decode('utf-8')
         return process_nxml_str(nxml_str, citation, False)
 
+
 def process_json_file(file_name, citation=None):
     """Return a ReachProcessor by processing the given REACH json file.
 

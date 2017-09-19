@@ -1122,6 +1122,10 @@ def test_eq_mut():
     assert(not MutCondition('600', 'V', 'E').equals(
                                              MutCondition('600', 'V', 'D')))
 
+def test_mut_hgvs():
+    mc = MutCondition('600', 'V', 'E')
+    assert mc.to_hgvs() == 'p.Val600Glu'
+
 def test_eq_agent():
     assert(Agent('one').equals(Agent('one')))
     assert(not Agent('one').equals(Agent('two')))
@@ -1333,7 +1337,6 @@ def test_mod_condition_is_mod():
     mc2 = ModCondition('ubiquitination', 'K', '99', False)
     assert not mc1.refinement_of(mc2, hierarchies)
 
-
 def test_unicode_str_methods():
     ag = Agent('MAPK1\U0001F4A9')
     print(ag)
@@ -1450,4 +1453,16 @@ def test_conversion_set_agent_list():
     assert(len(st2.obj_to) == 1)
     assert(len(st3.obj_from) == 1)
     assert(len(st3.obj_to) == 2)
+
+def test_get_act_condition():
+    braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt = Activation(braf, mek)
+    ac = stmt._get_activity_condition()
+    assert ac.activity_type == 'activity'
+    assert ac.is_active
+    stmt = Inhibition(braf, mek, 'kinase')
+    ac = stmt._get_activity_condition()
+    assert ac.activity_type == 'kinase'
+    assert not ac.is_active
 

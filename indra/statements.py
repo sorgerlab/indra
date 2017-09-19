@@ -243,6 +243,17 @@ class MutCondition(object):
                         'residue_to': self.residue_to})
         return json_dict
 
+    def to_hgvs(self):
+        res_from = _aa_short_caps(self.residue_from)
+        res_to = _aa_short_caps(self.residue_to)
+        if res_to and res_from and self.position:
+            hgvs_str = 'p.%s%s%s' % (res_from, self.position, res_to)
+        elif res_to is None and res_from and self.position:
+            hgvs_str = 'p.%s%s?' % (res_from, self.position)
+        else:
+            hgvs_str = 'p.?'
+        return hgvs_str
+
     @classmethod
     def _from_json(cls, json_dict):
         position = json_dict.get('position')
@@ -1278,6 +1289,12 @@ class SelfModification(Statement):
                   (self.position == other.position)
         return matches
 
+    def _get_mod_condition(self):
+        """Return a ModCondition corresponding to this Modification."""
+        mod_type = modclass_to_modtype[self.__class__]
+        mc = ModCondition(mod_type, self.residue, self.position, True)
+        return mc
+
     def to_json(self):
         generic = super(SelfModification, self).to_json()
         json_dict = _o({'type': generic['type']})
@@ -1571,6 +1588,10 @@ class RegulateActivity(Statement):
                   (self.obj_activity == other.obj_activity) and\
                   (self.is_activation == other.is_activation)
         return matches
+
+    def _get_activity_condition(self):
+        """Return ActivityCondition corresponding to this RegulateActivity."""
+        return ActivityCondition(self.obj_activity, self.is_activation)
 
 
 class Inhibition(RegulateActivity):
@@ -2533,6 +2554,14 @@ def _read_amino_acids():
 
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
+def _aa_short_caps(res):
+    if res is None:
+        return None
+    res_info = amino_acids.get(res)
+    if not res_info:
+        return None
+    return res_info['short_name'].capitalize()
+
 # Mapping between modification type strings and subclasses of Modification
 modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \
                        AddModification.__subclasses__() + \
@@ -2545,6 +2574,9 @@ modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in \
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modclass_to_modtype[Modification] = 'modification'
+modclass_to_modtype[Autophosphorylation] = 'phosphorylation'
+modclass_to_modtype[Transphosphorylation] = 'phosphorylation'
+
 # These are the modification types that are valid in ModConditions
 modtype_conditions = [modclass_to_modtype[mt] for mt in \
                       AddModification.__subclasses__()]
