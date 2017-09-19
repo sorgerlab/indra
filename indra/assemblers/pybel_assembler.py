@@ -78,6 +78,9 @@ class PybelAssembler(object):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
         obj_data, obj_edge = _get_agent_node(obj_agent)
+        # If we failed to create nodes for subject or object, skip it
+        if subj_data is None or obj_data is None:
+            return
         subj_node = self.model.add_node_from_data(subj_data)
         obj_node = self.model.add_node_from_data(obj_data)
         edge_data_list = \
@@ -201,6 +204,7 @@ class PybelAssembler(object):
         #cyto_go = cyto_uri.rsplit('/')[-1]
         pass
 
+
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
     if subj_edge:
@@ -231,23 +235,28 @@ def _get_complex_node(members):
     members_list = []
     for member in members:
         func, namespace, name = _get_agent_grounding(member)
+        if func is None:
+            continue
         members_list.append({
             pc.FUNCTION: func,
             pc.NAMESPACE: namespace,
             pc.NAME: name})
-    complex_node_data = {
-            pc.FUNCTION: pc.COMPLEX,
-            pc.MEMBERS: members_list}
+    if members_list:
+        complex_node_data = {
+                pc.FUNCTION: pc.COMPLEX,
+                pc.MEMBERS: members_list}
+        return (complex_node_data, None)
+    else:
+        return (None, None)
     # TODO: Refactor to allow activity on a complex drawn from the prime agent
     # from a set of bound conditions
-    return (complex_node_data, None)
 
 
 def _get_agent_node_no_bcs(agent):
     (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
     if abundance_type is None:
         logger.warning('Agent %s has no grounding.', agent)
-        return None
+        return (None, None)
     node_data = {pc.FUNCTION: abundance_type,
                  pc.NAMESPACE: db_ns,
                  pc.NAME: db_id}
@@ -269,9 +278,11 @@ def _get_agent_node_no_bcs(agent):
             var[pc.PMOD_POSITION] = int(mod.position)
         variants.append(var)
     for mut in agent.mutations:
-        var = {pc.KIND: pc.HGVS,
-               pc.IDENTIFIER: mut.to_hgvs()}
-        variants.append(var)
+        if mut.residue_from is not None and mut.residue_to is not None and \
+           mut.position is not None:
+            var = {pc.KIND: pc.HGVS,
+                   pc.IDENTIFIER: mut.to_hgvs()}
+            variants.append(var)
     if variants:
         node_data[pc.VARIANTS] = variants
     # Also get edge data for the agent
@@ -291,6 +302,10 @@ def _get_agent_grounding(agent):
     mesh_id = agent.db_refs.get('MESH')
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+        if not hgnc_name:
+            logger.warning('Agent %s with HGNC ID %s has no HGNC name.',
+                           agent, hgnc_id)
+            return (None, None, None)
         return (pc.PROTEIN, 'HGNC', hgnc_name)
     elif uniprot_id:
         return (pc.PROTEIN, 'UP', uniprot_id)
