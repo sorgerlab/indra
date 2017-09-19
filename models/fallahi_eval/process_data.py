@@ -1,4 +1,5 @@
 from indra.util import _require_python3
+import pickle
 import numpy
 import pandas
 import itertools
@@ -12,10 +13,11 @@ expression_file = 'data/Expression_Filtered.csv'
 mutation_file = 'data/WES_variants_filtered.csv'
 
 
-def read_rppa_data(fname=rppa_file):
+def read_rppa_data(fname=rppa_pkl):
     """Return RPPA data as a dict median/std DataFrames."""
     # If the filename passed is a pickle, just load it and return
     if fname.endswith('pkl'):
+        print('Loading data from %s' % fname)
         with open(fname, 'rb') as fh:
             data = pickle.load(fh)
             return data
