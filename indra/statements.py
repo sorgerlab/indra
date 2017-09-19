@@ -246,7 +246,13 @@ class MutCondition(object):
     def to_hgvs(self):
         res_from = _aa_short_caps(self.residue_from)
         res_to = _aa_short_caps(self.residue_to)
-        return 'p.%s%s%s' % (res_from, self.position, res_to)
+        if res_to and res_from and self.position:
+            hgvs_str = 'p.%s%s%s' % (res_from, self.position, res_to)
+        elif res_to is None and res_from and self.position:
+            hgvs_str = 'p.%s%s?' % (res_from, self.position)
+        else:
+            hgvs_str = 'p.?'
+        return hgvs_str
 
     @classmethod
     def _from_json(cls, json_dict):
@@ -2549,7 +2555,12 @@ def _read_amino_acids():
 amino_acids, amino_acids_reverse = _read_amino_acids()
 
 def _aa_short_caps(res):
-    return amino_acids[res]['short_name'].capitalize()
+    if res is None:
+        return None
+    res_info = amino_acids.get(res)
+    if not res_info:
+        return None
+    return res_info['short_name']
 
 # Mapping between modification type strings and subclasses of Modification
 modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \

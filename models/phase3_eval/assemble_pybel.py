@@ -13,7 +13,7 @@ def assemble_pybel(stmts, out_file_prefix):
     pba = PybelAssembler(stmts, name='INDRA/REACH Korkut Model',
                          description='Automatically assembled model of '
                                      'cancer signaling.',
-                         version='0.0.8')
+                         version='0.0.10')
     pba.make_model()
     pybel.to_bel_path(pba.model, out_file_prefix + '.bel')
     with open(out_file_prefix, 'wt') as f:

@@ -49,8 +49,8 @@ class PybelAssembler(object):
     >>> stmt = Phosphorylation(map2k1, mapk1, 'T', '185')
     >>> pba = PybelAssembler([stmt])
     >>> belgraph = pba.make_model()
-    >>> belgraph.nodes()
-    [('Protein', 'HGNC', 'MAP2K1'), ('Protein', 'HGNC', 'MAPK1', ('pmod', ('bel', 'Ph'), 'Thr', 185)), ('Protein', 'HGNC', 'MAPK1')]
+    >>> sorted(belgraph.nodes())
+    [('Protein', 'HGNC', 'MAP2K1'), ('Protein', 'HGNC', 'MAPK1'), ('Protein', 'HGNC', 'MAPK1', ('pmod', ('bel', 'Ph'), 'Thr', 185))]
     >>> len(belgraph)
     3
     >>> belgraph.number_of_edges()
@@ -306,11 +306,8 @@ def _get_agent_node_no_bcs(agent):
             var[pc.PMOD_POSITION] = int(mod.position)
         variants.append(var)
     for mut in agent.mutations:
-        if mut.residue_from is not None and mut.residue_to is not None and \
-           mut.position is not None:
-            var = {pc.KIND: pc.HGVS,
-                   pc.IDENTIFIER: mut.to_hgvs()}
-            variants.append(var)
+        var = {pc.KIND: pc.HGVS, pc.IDENTIFIER: mut.to_hgvs()}
+        variants.append(var)
     if variants:
         node_data[pc.VARIANTS] = variants
     # Also get edge data for the agent
