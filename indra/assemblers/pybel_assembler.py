@@ -224,8 +224,11 @@ def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
 
 def _get_agent_node(agent):
     if agent.bound_conditions:
-        members = [agent] + [bc.agent for bc in agent.bound_conditions
-                             if bc.is_bound]
+        # "Flatten" the bound conditions for the agent at this level
+        agent_no_bc = deepcopy(agent)
+        agent_no_bc.bound_conditions = []
+        members = [agent_no_bc] + [bc.agent for bc in agent.bound_conditions
+                                   if bc.is_bound]
         return _get_complex_node(members)
     else:
         return _get_agent_node_no_bcs(agent)
@@ -237,15 +240,6 @@ def _get_complex_node(members):
         member_data, member_edge = _get_agent_node(member)
         if member_data:
             members_list.append(member_data)
-        """
-        func, namespace, name = _get_agent_grounding(member)
-        if func is None:
-            continue
-        members_list.append({
-            pc.FUNCTION: func,
-            pc.NAMESPACE: namespace,
-            pc.NAME: name})
-        """
     if members_list:
         complex_node_data = {
                 pc.FUNCTION: pc.COMPLEX,
@@ -253,8 +247,6 @@ def _get_complex_node(members):
         return (complex_node_data, None)
     else:
         return (None, None)
-    # TODO: Refactor to allow activity on a complex drawn from the prime agent
-    # from a set of bound conditions
 
 
 def _get_agent_node_no_bcs(agent):

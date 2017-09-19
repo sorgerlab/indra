@@ -529,6 +529,20 @@ def test_complex_with_pmod():
     for member in members_list:
         assert member in cplx_node_data[pc.MEMBERS]
 
+def test_complex_with_complex():
+    grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
+    egfr_grb2 = Agent('EGFR', db_refs={'HGNC': id('EGFR')},
+                      bound_conditions=[BoundCondition(grb2)])
+    sos1_phos = Agent('SOS1',
+                      mods=[ModCondition('phosphorylation', 'Y', '100')],
+                      db_refs={'HGNC': id('SOS1')})
+    stmt = Complex([sos1_phos, egfr_grb2])
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 6
+    assert belgraph.number_of_edges() == 5
+    cplx_node_list = [n for n in belgraph.nodes() if n[0] == pc.COMPLEX]
+    assert len(cplx_node_list) == 2
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
@@ -536,8 +550,4 @@ def test_complex_with_pmod():
 #       proteins and complexes?
 # TODO: Activity conditions/modifiers on complexes drawn from the main
 #       agent in a set of bound conditions
-# TODO: Is it possible to have modified proteins inside a complex in BEL/PyBEL?
-
-if __name__ == '__main__':
-    test_complex_with_pmod()
 
