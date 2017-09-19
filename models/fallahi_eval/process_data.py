@@ -178,6 +178,16 @@ def get_antibody_agents():
     return antibody_agents
 
 
+def get_test_cases():
+    """Return the test cases to be explained."""
+    # We observe a dose-dependent decrease of p-S6(S235/236)
+    # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
+    # drugs. Feel free to use any or all of the time points in your
+    # explanation.
+    #for drug in drug_dict.keys():
+
+
+
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
               'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
 
