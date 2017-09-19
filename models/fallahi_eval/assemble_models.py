@@ -75,11 +75,6 @@ if __name__ == '__main__':
     data = process_data.read_rppa_data()
     gene_names = process_data.get_gene_names(data)
 
-    # Load various files that were previously produced
-    reach_stmts = ac.load_statements(prefixed_pkl('reach'))
-    bel_stmts = ac.load_statements(prefixed_pkl('bel'))
-    biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
-
     # If generic assembly needs to be done (instead of just loading the result)
     # set this to True
     reassemble = False
@@ -87,8 +82,13 @@ if __name__ == '__main__':
     # The file in which the preassembled statements will be saved
     pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
-        # Load the raw statements
-        stmts = ac.load_statements(reach_stmts_file)
+        # Load various files that were previously produced
+        reach_stmts = ac.load_statements(prefixed_pkl('reach'))
+        bel_stmts = ac.load_statements(prefixed_pkl('bel'))
+        biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
+        # Combine the raw statements
+        stmts = reach_stmts + bel_stmts + biopax_stmts
+
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
         stmts = ac.map_grounding(stmts)
