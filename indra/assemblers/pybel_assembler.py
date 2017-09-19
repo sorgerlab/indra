@@ -7,7 +7,6 @@ import pybel
 import pybel.constants as pc
 from copy import deepcopy, copy
 from pybel.parser.language import pmod_namespace
-from pybel.parser.canonicalize import node_to_tuple
 from indra.assemblers.pysb_assembler import mod_acttype_map
 
 
@@ -77,8 +76,8 @@ class PybelAssembler(object):
 
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
-        _, subj_data, subj_edge = _get_agent_node(subj_agent)
-        _, obj_data, obj_edge = _get_agent_node(obj_agent)
+        subj_data, subj_edge = _get_agent_node(subj_agent)
+        obj_data, obj_edge = _get_agent_node(obj_agent)
         subj_node = self.model.add_node_from_data(subj_data)
         obj_node = self.model.add_node_from_data(obj_data)
         edge_data_list = \
@@ -88,14 +87,19 @@ class PybelAssembler(object):
 
     def _assemble_regulate_activity(self, stmt):
         """Example: p(HGNC:MAP2K1) => act(p(HGNC:MAPK1))"""
-        act_obj = _get_activated_object(stmt)
+        act_obj = deepcopy(stmt.obj)
+        act_obj.activity = stmt._get_activity_condition()
+        # We set is_active to True here since the polarity is encoded
+        # in the edge (decreases/increases)
+        act_obj.activity.is_active = True
         relation = pc.DIRECTLY_INCREASES if isinstance(stmt, Activation) \
                                          else pc.DIRECTLY_DECREASES
         self._add_nodes_edges(stmt.subj, act_obj, relation, stmt.evidence)
 
     def _assemble_modification(self, stmt):
         """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
-        sub_agent = _get_modified_substrate(stmt)
+        sub_agent = deepcopy(stmt.sub)
+        sub_agent.mods.append(stmt._get_mod_condition())
         relation = pc.DIRECTLY_INCREASES if isinstance(stmt, AddModification) \
                                          else pc.DIRECTLY_DECREASES
         self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt.evidence)
@@ -132,8 +136,8 @@ class PybelAssembler(object):
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
-        _, complex_node_data, _ = _get_complex_node(stmt.members)
-        self.model.add_node_from_data(complex_node_data)
+        complex_data, _ = _get_complex_node(stmt.members)
+        self.model.add_node_from_data(complex_data)
 
     def _assemble_conversion(self, stmt):
         """Example: p(HGNC:HK1) => rxn(reactants(a(CHEBI:"CHEBI:17634")),
@@ -156,8 +160,8 @@ class PybelAssembler(object):
         obj_edge = None # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
-            subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
-            self.model.add_node_from_data(subj_attr)
+            subj_attr, subj_edge = _get_agent_node(stmt.subj)
+            subj_node = self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(pc.DIRECTLY_INCREASES,
                                            subj_edge, obj_edge, stmt.evidence)
             for edge_data in edge_data_list:
@@ -186,11 +190,16 @@ class PybelAssembler(object):
         assert stmt.enz.bound_conditions[0].is_bound
         # Create a modified protein node for the bound target
         sub_agent = deepcopy(stmt.enz.bound_conditions[0].agent)
-        mc = stmt._get_mod_condition()
-        sub_agent.mods.append(mc)
+        sub_agent.mods.append(stmt._get_mod_condition())
         self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
                               stmt.evidence)
 
+    def _assemble_translocation(self, stmt):
+        #cc = hierarchies['cellular_component']
+        #nuc_uri = cc.find_entity('nucleus')
+        #cyto_uri = cc.find_entity('cytoplasm')
+        #cyto_go = cyto_uri.rsplit('/')[-1]
+        pass
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
     edge_data = {pc.RELATION: relation}
@@ -207,23 +216,6 @@ def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
         edge_data_one.update(pybel_ev)
         edge_data_list.append(edge_data_one)
     return edge_data_list
-
-
-def _get_modified_substrate(mod_stmt):
-    mod_agent = deepcopy(mod_stmt.sub)
-    mc = mod_stmt._get_mod_condition()
-    mod_agent.mods.append(mc)
-    return mod_agent
-
-
-def _get_activated_object(reg_stmt):
-    act_agent = deepcopy(reg_stmt.obj)
-    ac = reg_stmt._get_activity_condition()
-    # We set is_active to True here since the polarity is encoded
-    # in the edge (decreases/increases)
-    ac.is_active = True
-    act_agent.activity = ac
-    return act_agent
 
 
 def _get_agent_node(agent):
@@ -248,7 +240,7 @@ def _get_complex_node(members):
             pc.MEMBERS: members_list}
     # TODO: Refactor to allow activity on a complex drawn from the prime agent
     # from a set of bound conditions
-    return (None, complex_node_data, None)
+    return (complex_node_data, None)
 
 
 def _get_agent_node_no_bcs(agent):
@@ -256,7 +248,7 @@ def _get_agent_node_no_bcs(agent):
     if abundance_type is None:
         logger.warning('Agent %s has no grounding.', agent)
         return None
-    node_attr = {pc.FUNCTION: abundance_type,
+    node_data = {pc.FUNCTION: abundance_type,
                  pc.NAMESPACE: db_ns,
                  pc.NAME: db_id}
     variants = []
@@ -281,11 +273,10 @@ def _get_agent_node_no_bcs(agent):
                pc.IDENTIFIER: mut.to_hgvs()}
         variants.append(var)
     if variants:
-        node_attr[pc.VARIANTS] = variants
-    node_tuple = node_to_tuple(node_attr)
+        node_data[pc.VARIANTS] = variants
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
-    return (node_tuple, node_attr, edge_data)
+    return (node_data, edge_data)
 
 
 def _get_agent_grounding(agent):

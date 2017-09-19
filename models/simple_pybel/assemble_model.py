@@ -48,13 +48,22 @@ stmts = [
     Autophosphorylation(p38_tab1, 'Y', '100'),
     Transphosphorylation(egfr_dimer, 'Y', '1173'),
 ]
+
+ev = Evidence('assertion', 'assertion', 'assertion', 'assertion')
+for stmt in stmts:
+    stmt.evidence = [ev]
+
 model_description = 'Test of INDRA Statement assembly into PyBEL.'
 print("Assembling to PyBEL...")
 
 pba = PybelAssembler(stmts, name='INDRA_PyBEL_test',
-                     description=model_description, version='0.0.21')
-pba.make_model()
+                     description=model_description, version='0.0.22')
+belgraph = pba.make_model()
 
+# Write to BEL file
+pybel.to_bel_path(belgraph, 'simple_pybel.bel')
+
+# Upload to PyBEL web
 with open('pybel_model.json', 'wt') as f:
     pybel.to_json_file(pba.model, f)
 url =  'https://pybel.scai.fraunhofer.de/api/receive'

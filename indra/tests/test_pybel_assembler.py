@@ -1,9 +1,10 @@
-from indra.assemblers import pybel_assembler as pa
-from indra.statements import *
-import pybel
 import networkx as nx
+import pybel
 import pybel.constants as pc
+from indra.statements import *
 from indra.databases import hgnc_client
+from indra.assemblers import pybel_assembler as pa
+from indra.preassembler.hierarchy_manager import hierarchies
 
 def id(gene_name):
     return hgnc_client.get_hgnc_id(gene_name)
@@ -287,7 +288,6 @@ def test_active_form():
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
         assert len(belgraph) == 2
-        # TODO: Add tests for specific edge content
 
 
 def test_complex():
@@ -479,6 +479,16 @@ def test_transphosphorylation():
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {pc.RELATION: pc.DIRECTLY_INCREASES}
 
+
+def test_translocation():
+    foxo = Agent('FOXO1', db_refs={'HGNC': id('FOXO1')})
+    stmt = Translocation(foxo, 'cytoplasm', 'nucleus')
+    nuc_go = 'GO:0005634'
+    cyto_go = 'GO:0005737'
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph) == 1
+
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
 # TODO: Negative bound conditions should create inhibition edges between
@@ -488,6 +498,5 @@ def test_transphosphorylation():
 # TODO: Is it possible to have modified proteins inside a complex in BEL/PyBEL?
 
 if __name__ == '__main__':
-    #test_simple_modification_no_evidence()
-    #test_modification_with_mutation()
-    test_gap()
+    test_translocation()
+
