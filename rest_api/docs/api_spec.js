@@ -789,6 +789,50 @@ var api_spec = {
         }
       }
     },
+    "/databases/cbio/get_ccle_mutations": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for mutations (CNAs) using the cBioPortal client",
+        "operationId": "get_ccle_mutations",
+        "description": "Returns mutations for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CNAs levels obtained.",
+            "example" : {
+              "mutations": {
+                "SKMEL28_SKIN": {
+                  "BRAF": [
+                    "V600E"
+                  ],
+                  "MAP2K1": []
+                },
+                "BT20_BREAST": {
+                  "BRAF": [],
+                  "MAP2K1": []
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
