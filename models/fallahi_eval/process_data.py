@@ -58,7 +58,7 @@ def get_gene_names(data):
     antibody_list = list(set(antibody_list))
     antibody_gene_list = []
     for ab in antibody_list:
-        antibody_gene_list += antibody_HGNC_dict[ab]
+        antibody_gene_list += list(antibody_map[ab].keys())
     ras_gene_list = _read_gene_list('../../data/ras_pathway_proteins.csv')
     msb2015_gene_list = \
             _read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
@@ -66,7 +66,7 @@ def get_gene_names(data):
             _read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
     gene_names = (ras_gene_list + msb2015_gene_list +
                   msb2017_gene_list + antibody_gene_list)
-    gene_names = list(set(gene_names))
+    gene_names = sorted(list(set(gene_names)))
     return gene_names
 
 
@@ -174,7 +174,7 @@ drug_dict = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
                              '1029872-54-5'],
              'PLX4720': ['PLX4720', 'PLX 4720', 'PLX-4720', 'PLX_4720']}
 
-antibody_HGNC_dict = {
+antibody_map = {
     'pMEK(S217/221)':
         {'MAP2K1': [('S', '218')],
          'MAP2K2': [('S', '222')]},
