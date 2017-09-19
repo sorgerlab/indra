@@ -19,7 +19,7 @@ import sys
 import click
 import os
 
-from indra.machine.utils import copy_default_config
+from indra.machine.config import copy_default_config
 
 
 @click.group()

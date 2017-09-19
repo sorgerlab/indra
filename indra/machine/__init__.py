@@ -2,9 +2,9 @@
 
 """The RAS Machine"""
 
-from . import utils
-from .utils import *
+from . import config
+from .config import *
 
 __all__ = (
-    utils.__all__
+    config.__all__
 )
