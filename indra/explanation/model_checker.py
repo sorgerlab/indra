@@ -520,18 +520,30 @@ class ModelChecker(object):
         return scored_paths
 
     def prune_influence_map(self):
+        """Remove edges between rules causing problematic non-transitivity.
+
+        In this conservative implementation, edges are only removed between
+        rules when they share *all* child nodes except for each other;
+        that is, they have a mutual relationship with each other and share
+        all of the same children.
+        """
         im = self.get_im()
         remove_im_params(self.model, im)
         # For every rule in the influence map
         predecessors = im.predecessors_iter
-        for node in im.nodes():
-            # ...get the parents of the node
-            parents = list(predecessors(node))
-            # Check for edges among the immediate parents of the node...
-            for p1, p2 in itertools.permutations(parents, 2):
-                # If there is an edge, remove it
-                if im.has_edge((p1, p2)):
-                    im.remove_edge((p1, p2))
+        successors = im.successors_iter
+        combos = list(itertools.combinations(im.nodes(), 2))
+        for ix, (p1, p2) in enumerate(combos):
+            p1_children = set(successors(p1))
+            p2_children = set(successors(p2))
+            if p1_children.difference(p2_children) == set([p2]) and \
+               p2_children.difference(p1_children) == set([p1]):
+                for u, v in ((p1, p2), (p2, p1)):
+                    edge = im.get_edge(u, v)
+                    edge_sign = _get_edge_sign(edge)
+                    logger.info('Removing edge (%s, %s) with polarity %s',
+                                u, v, edge_sign)
+                    im.remove_edge(edge)
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
