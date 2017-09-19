@@ -8,43 +8,15 @@ rppa_file = 'data/TableS1-Split.xlsx'
 expression_file = 'data/Expression_Filtered.csv'
 mutation_file = 'data/WES_variants_filtered.csv'
 
-cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
-              'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
-
-drug_dict = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
-             'Selumetinib': ['Selumetinib', 'AZD6244', 'AZD 6244',
-                             'ARRY-142886', '606143-52-6'],
-             'SB590885': ['SB590885', 'SB-590885', 'J-501805', '405554-55-4'],
-             'Vemurafenib': ['Vemurafenib', 'Zelboraf', 'PLX4032', 'PLX-4032',
-                             'RG7204', 'RG-7204', 'R05185426', '918504-65-1',
-                             '1029872-54-5'],
-             'PLX4720': ['PLX4720', 'PLX 4720', 'PLX-4720', 'PLX_4720']}
-
-antibody_HGNC_dict = {'pMEK(S217/221)': ['MAP2K1', 'MAP2K2'],
-                      'pERK(T202/Y204)': ['MAPK1', 'MAPK3'],
-                      'p-p90RSK(S380)': ['RPS6KA1'],
-                      'p-p90RSK(T573)': ['RPS6KA1'],
-                      'p-AKT(T308)': ['AKT1'],
-                      'p-AKT(S473)': ['AKT1', 'AKT2', 'AKT3'],
-                      'p-mTOR(S2448)': ['MTOR'],
-                      'p-p70S6K(T421/S424)': ['RPS6KB1'],
-                      'p-p70S6K(T389)': ['RPS6KB1'],
-                      'p-S6(S235/236)': ['RPS6'],
-                      'p-AMPK(T172)': ['PRKAA1'],
-                      'p-JNK(T183/Y185)': ['MAPK8', 'MAPK9', 'MAPK10'],
-                      'Total c-Jun': ['JUN'],
-                      'p-cJun(S63)': ['JUN'],
-                      'p-P38(T180/Y182)': ['MAPK14'],
-                      'p-HSP27(S82)': ['HSPB1'],
-                      'p-NFKB(S536)': ['RELA'],
-                      'Bim': ['BCL2L11'],
-                      'cPARP': ['PARP1'],
-                      'p-Histone H3(S10)': ['HIST1H3A', 'HIST1H3B', 'HIST1H3C',
-                                            'HIST1H3D', 'HIST1H3E', 'HIST1H3F',
-                                            'HIST1H3G', 'HIST1H3H', 'HIST1H3I',
-                                            'HIST1H3J', 'HIST2H3A', 'HIST2H3C',
-                                            'HIST2H3D', 'H3F3A', 'H3F3B'],
-                      'p27 Kip1': ['CDKN1B']}
+def agent_phos(name, phos_sites):
+    agent = Agent(name)
+    hgnc_id = hgnc_client.get_hgnc_id(name)
+    uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
+    agent.db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
+    for residue, position in phos_sites:
+        mc = ModCondition('phosphorylation', residue, position, True)
+        agent.mods.append(mc)
+    return agent
 
 
 def read_rppa_data(fname=rppa_file):
@@ -189,6 +161,84 @@ def find_cell_line_vars(data, fold_change, save_file=None):
             for vals in all_vals:
                 fh.write(','.join([str(v) for v in vals]) + '\n')
     return all_vals
+
+cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
+              'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
+
+drug_dict = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
+             'Selumetinib': ['Selumetinib', 'AZD6244', 'AZD 6244',
+                             'ARRY-142886', '606143-52-6'],
+             'SB590885': ['SB590885', 'SB-590885', 'J-501805', '405554-55-4'],
+             'Vemurafenib': ['Vemurafenib', 'Zelboraf', 'PLX4032', 'PLX-4032',
+                             'RG7204', 'RG-7204', 'R05185426', '918504-65-1',
+                             '1029872-54-5'],
+             'PLX4720': ['PLX4720', 'PLX 4720', 'PLX-4720', 'PLX_4720']}
+
+antibody_HGNC_dict = {
+    'pMEK(S217/221)':
+        {'MAP2K1': [('S', '218')],
+         'MAP2K2': [('S', '222')]},
+    'pERK(T202/Y204)':
+        {'MAPK1': [('T', '202'), ('Y', '204')],
+         'MAPK3': [('T', '185'), ('Y', '187')]},
+    'p-p90RSK(S380)':
+        {'RPS6KA1': [('S', '380')]},
+    'p-p90RSK(T573)':
+        {'RPS6KA1': [('T', '573')]},
+    'p-AKT(T308)':
+        {'AKT1': [('T', '308')]},
+    'p-AKT(S473)':
+        {'AKT1': [('S', '473')],
+         'AKT2': [('S', '474')],
+         'AKT3': [('S', '475')]},
+    'p-mTOR(S2448)':
+        {'MTOR': [('S', '2448')]},
+    'p-p70S6K(T421/S424)':
+        {'RPS6KB1': [('T', '421'), ('S', '424')]},
+    'p-p70S6K(T389)':
+        {'RPS6KB1': [('T', '389')]},
+    'p-S6(S235/236)': 
+        {'RPS6': [('S', '235'), ('S', '236')]},
+    'p-AMPK(T172)':
+        {'PRKAA1': [('T', '172')]},
+    'p-JNK(T183/Y185)':
+        {'MAPK8': [('T', '183'), ('Y', '185')],
+         'MAPK9': [('T', '183'), ('Y', '185')],
+         'MAPK10': [('T', '183'), ('Y', '185')]},
+    'Total c-Jun':
+        {'JUN': []},
+    'p-cJun(S63)':
+        {'JUN': [('S', '63')]},
+    'p-P38(T180/Y182)':
+        {'MAPK14': [('T', '180'), ('Y', '182')]},
+    'p-HSP27(S82)':
+        {'HSPB1': [('S', '82')]},
+    'p-NFKB(S536)':
+        {'RELA': [('S', '536')]},
+    'Bim':
+        {'BCL2L11': []},
+    'cPARP':
+        {'PARP1': []},
+    'p-Histone H3(S10)':
+        {'HIST1H3A': [('S', '10')],
+         'HIST1H3B': [('S', '10')],
+         'HIST1H3C': [('S', '10')],
+         'HIST1H3D': [('S', '10')],
+         'HIST1H3E': [('S', '10')],
+         'HIST1H3F': [('S', '10')],
+         'HIST1H3G': [('S', '10')],
+         'HIST1H3H': [('S', '10')],
+         'HIST1H3I': [('S', '10')],
+         'HIST1H3J': [('S', '10')],
+         'HIST2H3A': [('S', '10')],
+         'HIST2H3C': [('S', '10')],
+         'HIST2H3D': [('S', '10')],
+         'H3F3A': [('S', '10')],
+         'H3F3B': [('S', '10')]},
+    'p27 Kip1':
+        {'CDKN1B': []}
+    }
+
 
 
 if __name__ == '__main__':
