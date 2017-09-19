@@ -2560,7 +2560,7 @@ def _aa_short_caps(res):
     res_info = amino_acids.get(res)
     if not res_info:
         return None
-    return res_info['short_name']
+    return res_info['short_name'].capitalize()
 
 # Mapping between modification type strings and subclasses of Modification
 modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \
