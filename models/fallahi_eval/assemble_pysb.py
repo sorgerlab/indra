@@ -2,6 +2,7 @@ from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler, IndexCardAssembler
+from process_data import antibody_map
 
 def assemble_pysb(stmts, data_genes):
     # Filter the INDRA Statements to be put into the model
@@ -55,4 +56,12 @@ def contextualize_model(model, cell_line):
 
 def get_mod_whitelist():
     # TODO: populate this with the actual antibody sites
-    return {'MAP2K1': [('phosphorylation', 'S', '222')]}
+    mod_whitelist = {}
+    for members in antibody_map.values():
+        for gene_name, phos_sites in members.items():
+            for residue, position in phos_sites:
+                if gene_name not in mod_whitelist:
+                    mod_whitelist[gene_name] = []
+                entry = ('phosphorylation', residue, position)
+                mod_whitelist[gene_name].append(entry)
+    return mod_whitelist
