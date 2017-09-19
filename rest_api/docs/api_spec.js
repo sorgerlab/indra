@@ -702,6 +702,50 @@ var api_spec = {
           }
         }
       }
+    },
+    "/databases/cbio/get_ccle_mrna": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for mRNA amounts using the cBioPortal client",
+        "operationId": "get_ccle_mrna",
+        "description": "Returns mRNA amounts for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mRNA levels obtained.",
+            "example" : {
+              "mrna_amounts": {
+                "SKMEL28_SKIN": {
+                  "BRAF": 6.2354449999999995,
+                  "MAP2K1": 10.26864
+                },
+                "BT20_BREAST": {
+                  "BRAF": 8.774852000000001,
+                  "MAP2K1": 12.08755
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     }
   },
   "definitions": {
