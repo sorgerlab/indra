@@ -157,7 +157,10 @@ def map_to_human_site(up_id, mod_res, mod_pos):
         human_site = human_sites[0]
     human_site_str = human_site.MOD_RSD.split('-')[0]
     human_res = human_site_str[0]
-    assert human_res == mod_res
     human_pos = human_site_str[1:]
+    if human_res != mod_res:
+        logger.warning("Mapped residue %s at position %s does not match "
+                       "original residue %s" % (human_res, human_pos, mod_res))
+        return None
     return human_pos
 
