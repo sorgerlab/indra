@@ -49,6 +49,11 @@ def main():
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',
             ],
+          entry_points={
+            'console_scripts': [
+                'indra = indra.cli:main',
+                ]
+            }
           )
 if __name__ == '__main__':
     main()
