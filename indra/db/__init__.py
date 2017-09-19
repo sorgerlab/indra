@@ -17,6 +17,7 @@ from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
+from time import sleep
 
 
 @compiles(DropTable, "postgresql")
@@ -189,6 +190,10 @@ class DatabaseManager(object):
         self.engine = create_engine(host)
         self.session = None
 
+    def __del__(self, *args, **kwargs):
+        self.grab_session()
+        self.session.rollback()
+
     def create_tables(self):
         "Create the tables for INDRA database."
         self.Base.metadata.create_all(self.engine)
@@ -201,6 +206,7 @@ class DatabaseManager(object):
         "Brutal clearing of all tables."
         # This is intended for testing purposes, not general use.
         # Use with care.
+        self.session.rollback()
         self.drop_tables()
         self.create_tables()
 
@@ -313,6 +319,7 @@ class DatabaseManager(object):
             print("WARNING: You are not using postresql or do not have pgcopy,"
                   " so this will likely be very slow.")
             self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
+            sleep(1)
 
     def filter_query(self, tbls, *args):
         "Query a table and filter results."

@@ -1,24 +1,44 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+import re
 from sys import version_info
 from nose import SkipTest
-from os import listdir, remove, path
+from os import remove, path
 from nose.tools import assert_equal, assert_list_equal
 from sqlalchemy.exc import IntegrityError
-from indra.db.populate_content import Medline, PmcOA, Manuscripts
-from indra.db import DatabaseManager, get_primary_db, texttypes, DEFAULTS_FILE
+from indra.db.manage_content import Medline, PmcOA, Manuscripts
+from indra.db import DatabaseManager, texttypes, get_defaults
 
-
-TEST_FILE = 'indra_test.db'
-TEST_HOST = 'sqlite:///' + TEST_FILE
-with open(DEFAULTS_FILE, 'r') as f:
-    pass  # TODO: Do this
-
+defaults = get_defaults()
+test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # TODO: implement setup-teardown system.
-LOCAL_START_SUCCESS = True
-REMOTE_START_SUCCESS = False
+TEST_HOST = None
+for k, v in test_defaults.items():
+    m = re.match('(\w+)://.*?/([\w.]+)', v)
+    if m is None:
+        raise SkipTest(
+            "No hosts found for testing. Please update defaults.txt if you\n"
+            "wish to run these tests. Test host entries must be of the form\n"
+            "test*=<sql type>://<passwords and such>/<database name>")
+    sqltype = m.groups()[0]
+    db_name = m.groups()[1]
+    try:
+        db = DatabaseManager(v, sqltype=sqltype)
+        db._clear()
+    except Exception:
+        pass  # Clearly this test table won't work.
+    if db_name.endswith('.db'):
+        TEST_FILE = db_name
+        if path.exists(TEST_FILE):
+            remove(TEST_FILE)
+    else:
+        TEST_FILE = None
+    TEST_HOST = v
+    break
+else:
+    raise SkipTest("Not able to start up any of the available test hosts.")
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -32,74 +52,27 @@ def assert_contents_equal(list1, list2, msg=None):
     assert res, err_msg
 
 
-def local_startup():
+def get_db():
     "Set up the database for testing."
-    if not LOCAL_START_SUCCESS:
-        raise SkipTest("Could not create test table.")
-
     db = DatabaseManager(TEST_HOST, sqltype='sqlite')
     db.grab_session()
     db._clear()
-
     return db
 
-
-def remote_startup():
-    "Set up the database for testing."
-    if not REMOTE_START_SUCCESS:
-        raise SkipTest("Could not create test table.")
-
-    db = get_primary_db()
-    db.grab_session()
-    db._clear()
-
-    return db
 
 #==============================================================================
 # The following are tests for the database manager itself.
 #==============================================================================
-def test_local_startup():
-    "Test the local_startup function."
-    # Cleanup from the last run, if necessary.
-    if TEST_FILE in listdir('.'):
-        remove(TEST_FILE)
-    try:
-        db = local_startup()
-        db.create_tables()
-        assert TEST_FILE in listdir('.'), "Test database not created"
-        assert db.session is not None, "Could not get db session."
-    except Exception:
-        global LOCAL_START_SUCCESS
-        LOCAL_START_SUCCESS = False
-        raise
-    return
-
-
-def test_remote_startup():
-    "Test the remote_startup function."
-    # Cleanup from the last run, if necessary.
-    raise SkipTest("Do not mess with the database...")
-    try:
-        db = remote_startup()
-        db.create_tables()
-        assert db.session is not None, "Could not get db session."
-    except Exception:
-        global REMOTE_START_SUCCESS
-        REMOTE_START_SUCCESS = False
-        raise
-    return
-
-
 def test_create_tables():
     "Test the create_tables feature"
-    db = local_startup()
+    db = get_db()
     db.create_tables()
     assert_contents_equal(db.get_active_tables(), db.get_tables())
 
 
 def test_insert_and_query_pmid():
     "Test that we can add a text_ref and get the text_ref back."
-    db = local_startup()
+    db = get_db()
     pmid = '1234'
     text_ref_id = db.insert('text_ref', pmid=pmid)
     entries = db.select_all('text_ref', db.TextRef.pmid == pmid)
@@ -110,7 +83,7 @@ def test_insert_and_query_pmid():
 
 def test_uniqueness_text_ref_doi_pmid():
     "Test uniqueness enforcement behavior for text_ref insertion."
-    db = local_startup()
+    db = get_db()
     pmid = '1234'
     doi = 'foo/1234'
     db.insert('text_ref', doi=doi, pmid=pmid)
@@ -125,7 +98,7 @@ def test_uniqueness_text_ref_doi_pmid():
 
 def test_uniqueness_text_ref_url():
     "Test whether the uniqueness imposed on the url of text_refs is enforced."
-    db = local_startup()
+    db = get_db()
     url = 'http://foobar.com'
     db.insert('text_ref', url=url)
     try:
@@ -137,7 +110,7 @@ def test_uniqueness_text_ref_url():
 
 def test_get_abstracts():
     "Test the ability to get a list of abstracts."
-    db = local_startup()
+    db = get_db()
 
     # Create a world of abstracts.
     ref_id_list = db.insert_many(
@@ -201,7 +174,7 @@ def test_get_abstracts():
 
 def test_get_all_pmids():
     "Test whether we get all the pmids."
-    db = local_startup()
+    db = get_db()
     db.insert_many('text_ref', [{'pmid': '1234'}, {'pmid': '5678'}])
     pmid_list = db.get_all_pmids()
     assert_contents_equal(pmid_list, ['1234', '5678'])
@@ -230,7 +203,7 @@ def test_full_local_upload():
     # faster) scale. Errors in the ftp service will not be caught by this test.
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
-    db = local_startup()
+    db = get_db()
     Medline(ftp_url=TEST_FTP, local=True).populate(db)
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
@@ -253,7 +226,7 @@ def test_multiple_pmids():
     "Test that pre-existing pmids are correctly handled."
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
-    db = local_startup()
+    db = get_db()
     med = Medline(ftp_url=TEST_FTP, local=True)
     med.populate(db)
     num_refs = len(db.select_all('text_ref'))
@@ -267,7 +240,7 @@ def test_multible_pmc_oa_content():
     "Test to make sure repeated content is handled correctly."
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
-    db = local_startup()
+    db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
     pmc.populate(db)
     num_conts = len(db.select_all('text_content'))
@@ -281,7 +254,7 @@ def test_multiple_text_ref_pmc_oa():
     "Test whether a duplicate text ref in pmc oa is handled correctly."
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
-    db = local_startup()
+    db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
     inp = dict.fromkeys(pmc.tr_cols)
     inp.update(pmcid='PMC5579538', doi='10.1021/acsomega.7b00205')
@@ -298,39 +271,11 @@ def test_continuing_upload():
     raise SkipTest("Not sure how to actually test this....")
 
 
-def test_full_remote_upload():
-    "Test whether we can perform a targeted upload to aws."
-    # This uses a specially curated sample directory designed to access all code
-    # paths that the real system might experience, but on a much smaller (thus
-    # faster) scale. Errors in the ftp service will not be caught by this test.
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
-    raise SkipTest("Do not mess with the database...")
-    db = remote_startup()
-    loc_path = 'test_ftp'
-    Medline(ftp_url=loc_path, local=True).populate(db)
-    tr_list = db.select_all('text_ref')
-    assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
-        'All text_refs MUST have pmids by now.'
-    PmcOA(ftp_url=loc_path, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
-        db.TextContent.text_type == texttypes.FULLTEXT
-        )
-    assert len(tc_list), "No fulltext was added."
-    Manuscripts(ftp_url=loc_path, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
-        db.TextContent.source == Manuscripts.my_source
-        )
-    assert len(tc_list), "No manuscripts uploaded."
-
-
 def test_id_handling_pmc_oa():
     "Test every conceivable combination pmid/pmcid presense."
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
-    db = local_startup()
+    db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
 
     # Initialize with all possible states we could have gotten from medline.
@@ -390,7 +335,7 @@ def test_id_handling_pmc_oa():
 
 
 def test_ftp_service():
-    "Test the progenitor childrens' ftp access."
+    "Test the NIH FTP access client on the content managers."
     if not TEST_POPULATE:
         raise SkipTest("These feautures are only supported in Python 3.x")
     cases = [

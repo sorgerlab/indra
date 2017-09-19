@@ -375,15 +375,19 @@ class PmcManager(NihManager):
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
         logger.info("Beginning to filter text refs...")
-        tr_list = db.select_all(
-            'text_ref',
-            db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
-            db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
-            )
-        db_conts = {
-            'pmid': [tr.pmid for tr in tr_list],
-            'pmcid': [tr.pmcid for tr in tr_list]
-            }
+        if len(tr_data):
+            tr_list = db.select_all(
+                'text_ref',
+                db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
+                db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
+                )
+            db_conts = {
+                'pmid': [tr.pmid for tr in tr_list],
+                'pmcid': [tr.pmcid for tr in tr_list]
+                }
+        else:
+            tr_list = []
+            db_conts = {'pmid': [], 'pmcid': []}
         logger.debug("Got db contents...")
 
         # Define some helpful functions.
@@ -604,11 +608,11 @@ class PmcManager(NihManager):
                 submit('final', tr_data, tc_data)
         return
 
-    def process_archive(self, db, archive, q=None):
+    def process_archive(self, archive, q=None, db=None):
         try:
             logger.info('Downloading archive %s.' % archive)
             self.ftp.download_file(archive)
-            self.upload_archive(db, archive, q)
+            self.upload_archive(archive, q=q, db=db)
         finally:
             os.remove(archive)
 
