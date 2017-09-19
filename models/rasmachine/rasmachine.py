@@ -4,7 +4,7 @@ import sys
 
 import click
 
-from utils import run_with_pmids_helper, run_with_search_helper, summarize_helper
+from indra.machine.utils import run_with_pmids_helper, run_with_search_helper, summarize_helper
 
 
 @click.group()
