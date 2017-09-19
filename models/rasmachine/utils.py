@@ -1,22 +1,18 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import io
 import sys
 import yaml
 import time
-import json
-import pytz
 import click
 import shutil
 import tzlocal
 import logging
 import datetime
-import argparse
-import gmail_client
-import twitter_client
 from indra.sources import reach
+from indra.machine import gmail_client
 from indra.databases import ndex_client
+from indra.machine import twitter_client
 import indra.tools.assemble_corpus as ac
 from indra.tools.gene_network import GeneNetwork
 from indra.literature import pubmed_client, get_full_text, elsevier_client

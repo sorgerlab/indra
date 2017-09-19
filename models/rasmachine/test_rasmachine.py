@@ -3,7 +3,7 @@ from builtins import dict, str
 from os.path import join, abspath, dirname
 from rasmachine import make_status_message
 from rasmachine import _increment_ndex_ver, get_email_pmids
-import gmail_client
+from indra.machine import gmail_client
 
 stats = {}
 stats['new_abstracts'] = 0
