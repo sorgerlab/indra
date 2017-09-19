@@ -744,6 +744,33 @@ var api_spec = {
         }
       }
     },
+    "gene_list": {
+      "type": "array",
+      "example": [
+        "BRAF",
+        "MAP2K1"
+      ]},
+    "cell_lines": {
+      "type": "array",
+      "example": [
+        "SKMEL28_SKIN",
+        "BT20_BREAST"
+      ]},
+    "contextRequestObj": {
+      "type": "object",
+      "required": [
+        "gene_list",
+        "cell_lines"
+      ],
+      "properties": {
+        "gene_list": {
+          "$ref": "#/definitions/gene_list"
+        },
+        "cell_lines": {
+          "$ref": "#/definitions/cell_lines"
+        }
+      }
+    },
     "genesSourceTargetObj": {
       "type": "object",
       "required": [
