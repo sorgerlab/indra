@@ -454,6 +454,10 @@ def main():
                                 'looks for config.yaml in model path')
 def run_with_search(model_path, config):
     """Run with PubMed search for new papers."""
+    run_with_search_helper(model_path, config)
+
+
+def run_with_search_helper(model_path, config):
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
 
@@ -557,6 +561,9 @@ def run_with_search(model_path, config):
 @click.argument('model_path')
 def summarize(model_path):
     """Print model summary."""
+    summarize_helper(model_path)
+
+def summarize_helper(model_path):
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, 'model.pkl')
@@ -573,6 +580,10 @@ def summarize(model_path):
               help="A file with a PMID on each line")
 def run_with_pmids(model_path, pmids):
     """Run with given list of PMIDs."""
+    run_with_pmids_helper(model_path, pmids)
+
+
+def run_with_pmids_helper(model_path, pmids):
     default_config_fname = os.path.join(model_path, 'config.yaml')
     config = get_config(default_config_fname)
 
@@ -587,6 +598,7 @@ def run_with_pmids(model_path, pmids):
         ndex_cred=ndex_cred,
         twitter_cred=twitter_cred
     )
+
 
 if __name__ == '__main__':
     main()
