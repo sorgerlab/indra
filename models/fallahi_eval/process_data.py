@@ -3,20 +3,12 @@ import numpy
 import pandas
 import itertools
 from indra.literature import pubmed_client
+from indra.statements import Agent, ModCondition
+from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
 expression_file = 'data/Expression_Filtered.csv'
 mutation_file = 'data/WES_variants_filtered.csv'
-
-def agent_phos(name, phos_sites):
-    agent = Agent(name)
-    hgnc_id = hgnc_client.get_hgnc_id(name)
-    uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
-    agent.db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
-    for residue, position in phos_sites:
-        mc = ModCondition('phosphorylation', residue, position, True)
-        agent.mods.append(mc)
-    return agent
 
 
 def read_rppa_data(fname=rppa_file):
@@ -161,6 +153,30 @@ def find_cell_line_vars(data, fold_change, save_file=None):
             for vals in all_vals:
                 fh.write(','.join([str(v) for v in vals]) + '\n')
     return all_vals
+
+
+def agent_phos(name, phos_sites):
+    """Return an INDRA agent from a name and list of phos sites."""
+    agent = Agent(name)
+    hgnc_id = hgnc_client.get_hgnc_id(name)
+    uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
+    agent.db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
+    for residue, position in phos_sites:
+        mc = ModCondition('phosphorylation', residue, position, True)
+        agent.mods.append(mc)
+    return agent
+
+
+def get_antibody_agents():
+    """Return a list of INDRA Agents corresponding to each antibody."""
+    antibody_agents = {}
+    for ab, agents in antibody_map.items():
+        antibody_agents[ab] = []
+        for name, phos_sites in agents.items():
+            agent = agent_phos(name, phos_sites)
+            antibody_agents[ab].append(agent)
+    return antibody_agents
+
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
               'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
