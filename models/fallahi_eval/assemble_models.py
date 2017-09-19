@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 import itertools
 from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
@@ -108,3 +109,5 @@ if __name__ == '__main__':
     # Run assembly into a PySB model
     pysb_stmts, pysb_model = assemble_pysb(stmts, gene_names)
     ac.dump_statements(pysb_stmts, prefixed_pkl('pysb_stmts'))
+    with open(prefixed_pkl('pysb_model'), 'wb') as f:
+        pickle.dump(pysb_model, f)
