@@ -25,6 +25,37 @@ _indra_pybel_act_map = {
 
 
 class PybelAssembler(object):
+    """Assembles a PyBEL graph from a set of INDRA Statements.
+
+    PyBEL tools can subsequently be used to export the PyBEL graph into BEL
+    script files, SIF files, and other related output formats.
+
+    Parameters
+    ----------
+    stmts : list[:py:class:`indra.statement.Statement`]
+        The list of Statements to assemble.
+    name : str
+        Name of the assembled PyBEL network.
+    description : str
+        Description of the assembled PyBEL network.
+    version : str
+        Version of the assembled PyBEL network.
+
+    Examples
+    --------
+    >>> from indra.statements import *
+    >>> map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    >>> mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    >>> stmt = Phosphorylation(map2k1, mapk1, 'T', '185')
+    >>> pba = PybelAssembler([stmt])
+    >>> belgraph = pba.make_model()
+    >>> belgraph.nodes()
+    [('Protein', 'HGNC', 'MAP2K1'), ('Protein', 'HGNC', 'MAPK1', ('pmod', ('bel', 'Ph'), 'Thr', 185)), ('Protein', 'HGNC', 'MAPK1')]
+    >>> len(belgraph)
+    3
+    >>> belgraph.number_of_edges()
+    2
+    """
     def __init__(self, stmts=None, name=None, description=None, version=None,
                  **kwargs):
         if stmts is None:
