@@ -479,7 +479,7 @@ def test_transphosphorylation():
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {pc.RELATION: pc.DIRECTLY_INCREASES}
 
-
+"""
 def test_translocation():
     foxo = Agent('FOXO1', db_refs={'HGNC': id('FOXO1')})
     stmt = Translocation(foxo, 'cytoplasm', 'nucleus')
@@ -488,6 +488,37 @@ def test_translocation():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 1
+"""
+
+def test_complex_with_pmod():
+    sos1_phos = Agent('SOS1',
+                      mods=[ModCondition('phosphorylation', 'Y', '100')],
+                      db_refs={'HGNC': id('SOS1')})
+    grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
+    egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
+    stmt = Complex([sos1_phos, grb2, egfr])
+    pba = pa.PybelAssembler()
+    belgraph = pba.make_model()
+    assert len(belgraph) == 5
+    members_list = [{
+                 pc.FUNCTION: pc.PROTEIN,
+                 pc.NAMESPACE: 'HGNC',
+                 pc.NAME: 'EGFR'
+             }, {
+                 pc.FUNCTION: pc.PROTEIN,
+                 pc.NAMESPACE: 'HGNC',
+                 pc.NAME: 'GRB2'
+             }, {
+                pc.FUNCTION: pc.PROTEIN,
+                pc.NAMESPACE: 'HGNC',
+                pc.NAME: 'SOS1',
+                pc.VARIANTS: [{
+                    pc.KIND: pc.PMOD,
+                    pc.IDENTIFIER: {
+                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
+                        pc.NAME: 'Ph'},
+                    pc.PMOD_CODE: 'Tyr',
+                    pc.PMOD_POSITION: 100}]}]
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
