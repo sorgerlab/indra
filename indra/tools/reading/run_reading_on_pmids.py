@@ -18,7 +18,7 @@ from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
 
 # Logger
-logger = logging.getLogger('runreach')
+logger = logging.getLogger('runreader')
 
 
 def join_parts(prefix):
@@ -197,10 +197,8 @@ def process_reach_from_s3(pmid):
     else:
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
-
-def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
-        force_fulltext, path_to_reach, reach_version, cleanup=False,
-        verbose=True):
+def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
+                        force_fulltext, force_read):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -214,7 +212,7 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     output_dir = os.path.join(base_dir, 'output')
     os.makedirs(input_dir)
     os.makedirs(output_dir)
-    pmids_to_read = []
+    #pmids_to_read = []
 
     # Get multiprocessing pool
     logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
@@ -261,6 +259,31 @@ def run(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
         pickle.dump(pmids_unread, f, protocol=2)
+    
+    return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
+
+
+def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
+                force_fulltext, path_to_reach, reach_version, cleanup=False,
+                verbose=True):
+    'Run the sparser reader on the pmids in pmid_list.'
+    base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
+        get_content_to_read(
+            pmid_list, start_index, end_index, tmp_dir, num_cores, 
+            force_fulltext, force_read
+            )
+    
+
+
+def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index, 
+              force_read, force_fulltext, path_to_reach, reach_version, 
+              cleanup=False, verbose=True):
+    'Run the reach reader on the pmids in pmid_list.'
+    base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
+        get_content_to_read(
+            pmid_list, start_index, end_index, tmp_dir, num_cores, 
+            force_fulltext, force_read
+            )
 
     # Create the REACH configuration file
     conf_file_text = """
@@ -473,7 +496,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.upload_json:
         args.readers='none'
-    print(args.readers, args.upload_json, args.pmid_list)
+    #print(args.readers, args.upload_json, args.pmid_list)
     
     
     # Old usages:
@@ -501,10 +524,22 @@ if __name__ == '__main__':
         pmid_list = [line.strip('\n') for line in f.readlines()]
 
     # Do the reading
-    (stmts, content_types) = run(pmid_list, args.out_dir, args.num_cores, args.start_index,
+    readers = []
+    if 'all' in args.readers:
+        readers = ['reach', 'sparser']
+    else:
+        readers = args.readers[:]
+    
+    read_func_dict = {'reach':run_reach, 'sparser':run_sparser}
+    results = []
+    for reader in readers:
+        run_reader = read_func_dict[reader]
+        res = run_reader(pmid_list, args.out_dir, args.num_cores, args.start_index,
                                  args.end_index, force_read, args.force_fulltext,
                                  path_to_reach, reach_version,
                                  cleanup=args.cleanup, verbose=args.verbose)
+        results.append(res)
+        
 
     # Pickle the statements
     pickle_file = '%s_stmts_%d_%d.pkl' % (args.basename, args.start_index, args.end_index)
