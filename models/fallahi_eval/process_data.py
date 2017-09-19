@@ -202,12 +202,12 @@ def get_agent_values_for_condition(data, cell_line, drug, time, dose):
 
 def get_task_1(data):
     """Return the test cases to be explained."""
-    antibody_agents = get_antibody_agents()
     # TASK 1
     # We observe a dose-dependent decrease of p-S6(S235/236)
     # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
     # drugs. Feel free to use any or all of the time points in your
     # explanation.
+    antibody_agents = get_antibody_agents()
     obs_agents = antibody_agents['p-S6(S235/236)']
     # We fix the time point to 10 hours
     time = 10
