@@ -53,6 +53,7 @@ def contextualize_model(model, cell_line):
     pa = PysbAssembler()
     pa.model = model
     pa.set_context(cell_line)
+    return pa.model
 
 def get_mod_whitelist():
     # TODO: populate this with the actual antibody sites
