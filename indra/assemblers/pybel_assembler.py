@@ -234,6 +234,10 @@ def _get_agent_node(agent):
 def _get_complex_node(members):
     members_list = []
     for member in members:
+        member_data, member_edge = _get_agent_node(member)
+        if member_data:
+            members_list.append(member_data)
+        """
         func, namespace, name = _get_agent_grounding(member)
         if func is None:
             continue
@@ -241,6 +245,7 @@ def _get_complex_node(members):
             pc.FUNCTION: func,
             pc.NAMESPACE: namespace,
             pc.NAME: name})
+        """
     if members_list:
         complex_node_data = {
                 pc.FUNCTION: pc.COMPLEX,

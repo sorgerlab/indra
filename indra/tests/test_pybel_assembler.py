@@ -497,7 +497,7 @@ def test_complex_with_pmod():
     grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
     egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
     stmt = Complex([sos1_phos, grb2, egfr])
-    pba = pa.PybelAssembler()
+    pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 5
     members_list = [{
@@ -519,6 +519,16 @@ def test_complex_with_pmod():
                         pc.NAME: 'Ph'},
                     pc.PMOD_CODE: 'Tyr',
                     pc.PMOD_POSITION: 100}]}]
+    # Get the complex node
+    cplx_node_list = [n for n in belgraph.nodes(data=True)
+                 if n[0][0] == pc.COMPLEX]
+    assert len(cplx_node_list) == 1
+    cplx_node = cplx_node_list[0]
+    cplx_node_data = cplx_node[1]
+    # Check the constituents of the complex node
+    for member in members_list:
+        assert member in cplx_node_data[pc.MEMBERS]
+
 
 # TODO: Add tests for evidence
 # TODO: Add tests for different groundings
@@ -529,5 +539,5 @@ def test_complex_with_pmod():
 # TODO: Is it possible to have modified proteins inside a complex in BEL/PyBEL?
 
 if __name__ == '__main__':
-    test_translocation()
+    test_complex_with_pmod()
 
