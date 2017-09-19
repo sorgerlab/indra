@@ -242,14 +242,20 @@ def test_gef():
 
 
 def test_gap():
-    gef = Agent('RASA1', mods=[ModCondition('phosphorylation')],
+    gap = Agent('RASA1', mods=[ModCondition('phosphorylation')],
                 db_refs={'HGNC':'9871'})
     ras = Agent('KRAS', db_refs={'HGNC':'6407'})
-    stmt = Gap(gef, ras)
+    stmt = Gap(gap, ras)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph) == 2
-    assert belgraph.number_of_edges() == 1
+    assert len(belgraph) == 3
+    assert belgraph.number_of_edges() == 2
+    gap_node = (pc.PROTEIN, 'HGNC', 'RASA1',
+                 (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph')))
+    ras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
+    assert gap_node in belgraph
+    assert ras_node in belgraph
+    edge_data = get_edge_data(belgraph, gap_node, ras_node)
     edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
              pc.SUBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
@@ -261,7 +267,6 @@ def test_gap():
                  pc.EFFECT: {
                      pc.NAME: 'gtp',
                      pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
-    _, _, edge_data = belgraph.edges(data=True)[0]
     assert edge_data == edge
 
 
@@ -485,4 +490,4 @@ def test_transphosphorylation():
 if __name__ == '__main__':
     #test_simple_modification_no_evidence()
     #test_modification_with_mutation()
-    test_autophosphorylation()
+    test_gap()

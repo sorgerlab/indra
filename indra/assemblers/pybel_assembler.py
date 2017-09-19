@@ -10,12 +10,6 @@ from pybel.parser.language import pmod_namespace
 from pybel.parser.canonicalize import node_to_tuple
 from indra.assemblers.pysb_assembler import mod_acttype_map
 
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger('pybel_assembler')
 
@@ -81,91 +75,69 @@ class PybelAssembler(object):
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
 
-    def _add_edges(self, relation, subj_node, subj_edge, obj_node, obj_edge,
-                   evidence):
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
+        """Given subj/obj agents, relation, and evidence, add nodes/edges."""
+        _, subj_data, subj_edge = _get_agent_node(subj_agent)
+        _, obj_data, obj_edge = _get_agent_node(obj_agent)
+        subj_node = self.model.add_node_from_data(subj_data)
+        obj_node = self.model.add_node_from_data(obj_data)
         edge_data_list = \
             _combine_edge_data(relation, subj_edge, obj_edge, evidence)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_regulate_activity(self, stmt):
-        # Get node data and add to model
-        subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
+        """Example: p(HGNC:MAP2K1) => act(p(HGNC:MAPK1))"""
         act_obj = _get_activated_object(stmt)
-        obj_node, obj_attr, obj_edge = _get_agent_node(act_obj)
-        self.model.add_node(subj_node, attr_dict=subj_attr)
-        self.model.add_node(obj_node, attr_dict=obj_attr)
-        # Define the edge data
-        pybel_relation = pc.DIRECTLY_INCREASES \
-                         if isinstance(stmt, Activation) \
-                         else pc.DIRECTLY_DECREASES
-        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
-                        obj_edge, stmt.evidence)
+        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, Activation) \
+                                         else pc.DIRECTLY_DECREASES
+        self._add_nodes_edges(stmt.subj, act_obj, relation, stmt.evidence)
 
     def _assemble_modification(self, stmt):
-        (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
+        """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
         sub_agent = _get_modified_substrate(stmt)
-        (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
-        enz_node = self.model.add_node_from_data(enz_attr)
-        sub_node = self.model.add_node_from_data(sub_attr)
-        pybel_relation = pc.DIRECTLY_INCREASES \
-                         if isinstance(stmt, AddModification) \
-                         else pc.DIRECTLY_DECREASES
-        self._add_edges(pybel_relation, enz_node, enz_edge, sub_node, sub_edge,
-                        stmt.evidence)
+        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, AddModification) \
+                                         else pc.DIRECTLY_DECREASES
+        self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt.evidence)
 
     def _assemble_regulate_amount(self, stmt):
-        (subj_node, subj_attr, subj_edge) = _get_agent_node(stmt.subj)
-        (obj_node, obj_attr, obj_edge) = _get_agent_node(stmt.obj)
-        self.model.add_node(subj_node, attr_dict=subj_attr)
-        self.model.add_node(obj_node, attr_dict=obj_attr)
-        pybel_relation = pc.DIRECTLY_INCREASES \
-                         if isinstance(stmt, IncreaseAmount) \
-                         else pc.DIRECTLY_DECREASES
-        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
-                        obj_edge, stmt.evidence)
+        """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
+        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, IncreaseAmount) \
+                                         else pc.DIRECTLY_DECREASES
+        self._add_nodes_edges(stmt.subj, stmt.obj, relation, stmt.evidence)
 
     def _assemble_gef(self, stmt):
+        """Example: act(p(HGNC:SOS1), ma(gef)) => act(p(HGNC:KRAS), ma(gtp))"""
         gef = deepcopy(stmt.gef)
         gef.activity = ActivityCondition('gef', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        (subj_node, subj_attr, subj_edge) = _get_agent_node(gef)
-        (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
-        subj_node = self.model.add_node_from_data(subj_attr)
-        obj_node = self.model.add_node_from_data(obj_attr)
-        self._add_edges(pc.DIRECTLY_INCREASES, subj_node, subj_edge, obj_node,
-                        obj_edge, stmt.evidence)
+        self._add_nodes_edges(gef, ras, pc.DIRECTLY_INCREASES, stmt.evidence)
 
     def _assemble_gap(self, stmt):
+        """Example: act(p(HGNC:RASA1), ma(gap)) =| act(p(HGNC:KRAS), ma(gtp))"""
         gap = deepcopy(stmt.gap)
         gap.activity = ActivityCondition('gap', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        (subj_node, subj_attr, subj_edge) = _get_agent_node(gap)
-        (obj_node, obj_attr, obj_edge) = _get_agent_node(ras)
-        self.model.add_node(subj_node, attr_dict=subj_attr)
-        self.model.add_node(obj_node, attr_dict=obj_attr)
-        self._add_edges(pc.DIRECTLY_DECREASES, subj_node, subj_edge, obj_node,
-                        obj_edge, stmt.evidence)
+        self._add_nodes_edges(gap, ras, pc.DIRECTLY_DECREASES, stmt.evidence)
 
     def _assemble_active_form(self, stmt):
+        """Example: p(HGNC:ELK1, pmod(Ph)) => act(p(HGNC:ELK1), ma(tscript))"""
         act_agent = Agent(stmt.agent.name, db_refs=stmt.agent.db_refs)
         act_agent.activity = ActivityCondition(stmt.activity, True)
-        pybel_relation = pc.DIRECTLY_INCREASES if stmt.is_active \
-                                               else pc.DIRECTLY_DECREASES
-        (subj_node, subj_attr, subj_edge) = _get_agent_node(stmt.agent)
-        (obj_node, obj_attr, obj_edge) = _get_agent_node(act_agent)
-        self.model.add_node(subj_node, attr_dict=subj_attr)
-        self.model.add_node(obj_node, attr_dict=obj_attr)
-        self._add_edges(pybel_relation, subj_node, subj_edge, obj_node,
-                        obj_edge, stmt.evidence)
+        relation = pc.DIRECTLY_INCREASES if stmt.is_active \
+                                         else pc.DIRECTLY_DECREASES
+        self._add_nodes_edges(stmt.agent, act_agent, relation, stmt.evidence)
 
     def _assemble_complex(self, stmt):
+        """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
         _, complex_node_data, _ = _get_complex_node(stmt.members)
         self.model.add_node_from_data(complex_node_data)
 
     def _assemble_conversion(self, stmt):
+        """Example: p(HGNC:HK1) => rxn(reactants(a(CHEBI:"CHEBI:17634")),
+                                       products(a(CHEBI:"CHEBI:4170")))"""
         pybel_lists = ([], [])
         for pybel_list, agent_list in \
                             zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
@@ -184,14 +156,16 @@ class PybelAssembler(object):
         obj_edge = None # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
-            # Add the node
             subj_node, subj_attr, subj_edge = _get_agent_node(stmt.subj)
             self.model.add_node_from_data(subj_attr)
-            self._add_edges(pc.DIRECTLY_INCREASES, subj_node, subj_edge,
-                            obj_node, obj_edge, stmt.evidence)
+            edge_data_list = _combine_edge_data(pc.DIRECTLY_INCREASES,
+                                           subj_edge, obj_edge, stmt.evidence)
+            for edge_data in edge_data_list:
+                self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
 
     def _assemble_autophosphorylation(self, stmt):
-        (_, enz_attr, enz_edge) = _get_agent_node(stmt.enz)
+        """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1)) =>
+                                        p(HGNC:MAPK14, pmod(Ph, Tyr, 100))"""
         sub_agent = deepcopy(stmt.enz)
         mc = stmt._get_mod_condition()
         sub_agent.mods.append(mc)
@@ -201,27 +175,21 @@ class PybelAssembler(object):
         # modifications.
         sub_agent.bound_conditions = []
         # FIXME
-        (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
-        enz_node = self.model.add_node_from_data(enz_attr)
-        sub_node = self.model.add_node_from_data(sub_attr)
-        self._add_edges(pc.DIRECTLY_INCREASES, enz_node, enz_edge, sub_node,
-                        sub_edge, stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
+                              stmt.evidence)
 
     def _assemble_transphosphorylation(self, stmt):
+        """Example: complex(p(HGNC:EGFR)) =>
+                                          p(HGNC:EGFR, pmod(Ph, Tyr, 1173))"""
         # Check our assumptions about the bound condition of the enzyme
         assert len(stmt.enz.bound_conditions) == 1
         assert stmt.enz.bound_conditions[0].is_bound
-        # Get the "enzyme" node as the complex
-        _, complex_data, complex_edge = _get_agent_node(stmt.enz)
         # Create a modified protein node for the bound target
         sub_agent = deepcopy(stmt.enz.bound_conditions[0].agent)
         mc = stmt._get_mod_condition()
         sub_agent.mods.append(mc)
-        (_, sub_attr, sub_edge) = _get_agent_node(sub_agent)
-        complex_node = self.model.add_node_from_data(complex_data)
-        sub_node = self.model.add_node_from_data(sub_attr)
-        self._add_edges(pc.DIRECTLY_INCREASES, complex_node, complex_edge,
-                        sub_node, sub_edge, stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
+                              stmt.evidence)
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
@@ -385,71 +353,4 @@ def _get_evidence(evidence):
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
-
-
-"""
-Representation of PTM reactions in PyBEL/BEL
---------------------------------------------
-- Kin -> pmod(Sub) vs.
-- Kin -> rxn(Sub + ATP, pmod(Sub) + ADP)
-
-
-structure of bel graph.
-- node/tuple, maps to
-  - dict with node/tuples as keys, each one mapped to
-    - a dict, with integers (negative integers???) as keys, each one mapped to
-      - a dict with edge information
-
-inner dict has fields such as
-{'annotations': {},
-'citation': {
-    'authors': '',
-    'comments': '',
-    'date': '',
-    'name': 'Mol Cell Biol 2001 Apr 21(8) 2659-70',
-    'reference': '11283246',
-    'type': 'PubMed'},
-'evidence': 'Modified assertion',
-'subject': {
-    'effect': {'name': 'kin', 'namespace': 'bel'},
-    'modifier': 'Activity'}}}
-'relation': 'increases',
-'object': {
-    'effect': {'name': 'kin', 'namespace': 'bel'},
-    'modifier': 'Activity'},
-
-Note that Activity modifiers are listed in the subject/object dicts.
-
-Edges are added between top level nodes and modified nodes using a hasVariant
-relation:
-
-('Protein',
-  'HGNC',
-  'BRAF',
-  ('hgvs', 'p.Val600Glu')): {-4: {'relation': 'hasVariant'}},
-
-
-"""
-
-# Need function for building up terms from agent conditions, including
-# (mainly for now) modification conditions
-
-# Example nodes in graph:
-"""
-('Protein', 'RGD', 'Pdpk1', ('pmod', ('bel', 'Ph'))),
- ('Complex', ('Protein', 'HGNC', 'JUP'), ('Protein', 'PFH', 'AXIN Family')),
- ('RNA', 'HGNC', 'LTV1'),
- ('RNA', 'MGI', 'Nfix'),
- ('Protein', 'HGNC', 'PAX7'),
- ('RNA', 'HGNC', 'NEUROG1'),
- ('RNA', 'MGI', 'Mup1'),
- ('Protein', 'HGNC', 'PPARA'),
- ('RNA', 'EGID', '66935'),
- ('RNA', 'HGNC', 'AKIRIN1'),
-"""
-
-# Then need patterns for assembling modifications, activations, rasgef/gap
-
-# Can start with this, then add evidence/context, etc.
-
 
