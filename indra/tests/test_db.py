@@ -7,11 +7,14 @@ from os import listdir, remove, path
 from nose.tools import assert_equal, assert_list_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.populate_content import Medline, PmcOA, Manuscripts
-from indra.db import DatabaseManager, get_primary_db, texttypes
+from indra.db import DatabaseManager, get_primary_db, texttypes, DEFAULTS_FILE
 
 
 TEST_FILE = 'indra_test.db'
 TEST_HOST = 'sqlite:///' + TEST_FILE
+with open(DEFAULTS_FILE, 'r') as f:
+    pass  # TODO: Do this
+
 
 # TODO: implement setup-teardown system.
 LOCAL_START_SUCCESS = True

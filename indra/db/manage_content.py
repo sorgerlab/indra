@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+from builtins import dict, str, int
+
 
 import csv
 import time
@@ -13,20 +14,61 @@ import multiprocessing as mp
 from os import path
 from ftplib import FTP
 from io import BytesIO
+logger = logging.getLogger('content_manager')
+if __name__ == '__main__':
+    # NOTE: PEP8 will complain about this, however having the args parsed up
+    # here prevents a long wait just to fined out you entered a command wrong.
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description='Manage content on INDRA\'s database.'
+        )
+    parser.add_argument(
+        choices=['upload', 'update'],
+        dest='task',
+        help=('Choose whether you want to perform an initial upload or update '
+              'the existing content on the database.')
+        )
+    parser.add_argument(
+        '-c', '--continue',
+        dest='continuing',
+        action='store_true',
+        help='Continue uploading or updating, picking up where you left off.'
+        )
+    parser.add_argument(
+        '-n', '--num_procs',
+        dest='num_procs',
+        type=int,
+        default=1,
+        help=('Select the number of processors to use during this operation. '
+              'Default is 1.')
+        )
+    parser.add_argument(
+        '-d', '--debug',
+        dest='debug',
+        action='store_true',
+        help='Run with debugging level output.'
+        )
+    args = parser.parse_args()
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+
 from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 from indra.db import get_primary_db, texttypes, formats
 
-logger = logging.getLogger('update_db')
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
 BATCH_SIZE = 10000
 
 
+class UploadError(Exception):
+    pass
+
+
 class NihFtpClient(object):
-    """High level access to the nih ftp repositories.
+    """High level access to the NIH FTP repositories.
 
     Parameters
     ----------
@@ -44,7 +86,7 @@ class NihFtpClient(object):
         self.is_local = local
         self.ftp_url = ftp_url
 
-    def path_join(self, *args):
+    def _path_join(self, *args):
         joined_str = path.join(*args)
         part_list = joined_str.split('/')
         for part in part_list[1:]:
@@ -65,14 +107,16 @@ class NihFtpClient(object):
         return ftp
 
     def get_xml_file(self, xml_file):
-        print("Downloading %s" % (xml_file))
+        "Get the content from an xml file as an ElementTree."
+        logger.info("Downloading %s" % (xml_file))
         ret = self.get_file(xml_file)
-        print("Unzipping")
+        logger.info("Unzipping")
         xml_bytes = zlib.decompress(ret, 16+zlib.MAX_WBITS)
-        print("Parsing XML metadata")
+        logger.info("Parsing XML metadata")
         return ET.XML(xml_bytes, parser=UTB())
 
     def get_csv_as_dict(self, csv_file):
+        "Get the content from a csv file as a list of dicts."
         csv_str = self.get_file(csv_file).decode('utf8')
         lst = []
         reader = csv.reader(csv_str.splitlines())
@@ -81,7 +125,8 @@ class NihFtpClient(object):
         return [dict(zip(lst[0], row)) for row in lst[1:]]
 
     def ret_file(self, f_path, buf):
-        full_path = self.path_join(self.my_path, f_path)
+        "Load the content of a file into the given buffer."
+        full_path = self._path_join(self.my_path, f_path)
         if not self.is_local:
             with self.get_ftp_connection() as ftp:
                 ftp.retrbinary('RETR /%s' % full_path,
@@ -89,38 +134,43 @@ class NihFtpClient(object):
                                blocksize=ftp_blocksize)
                 buf.flush()
         else:
-            with open(self.path_join(self.ftp_url, full_path), 'rb') as f:
+            with open(self._path_join(self.ftp_url, full_path), 'rb') as f:
                 buf.write(f.read())
                 buf.flush()
         return
 
     def download_file(self, f_path):
+        "Download a file into a file given by f_path."
         name = path.basename(f_path)
         with open(name, 'wb') as gzf:
             self.ret_file(f_path, gzf)
         return name
 
     def get_file(self, f_path):
+        "Get the contents of a file as a string."
         gzf_bytes = BytesIO()
         self.ret_file(f_path, gzf_bytes)
         return gzf_bytes.getvalue()
 
     def ftp_ls(self, ftp_path=None):
+        "Get a list of the contents in the ftp directory."
         if ftp_path is None:
             ftp_path = self.my_path
         else:
-            ftp_path = self.path_join(self.my_path, ftp_path)
+            ftp_path = self._path_join(self.my_path, ftp_path)
         if not self.is_local:
             with self.get_ftp_connection() as ftp:
                 contents = ftp.nlst()
         else:
-            contents = os.listdir(self.path_join(self.ftp_url, ftp_path))
+            contents = os.listdir(self._path_join(self.ftp_url, ftp_path))
         return contents
 
 
-class Uploader(object):
-    """This abstract class provides the api required for any object that is used
-    to upload content into the database.
+class Manager(object):
+    """Abstract class for all upload/update managers.
+
+    This abstract class provides the api required for any object that is
+    used to manage content between the database and the content.
     """
     my_source = NotImplemented
 
@@ -137,9 +187,8 @@ class Uploader(object):
             )
 
 
-class NihUploader(Uploader):
-    """This is an abstract class for all the uploaders that use the nih ftp
-    service.
+class NihManager(Manager):
+    """Abstract class for all the managers that use the NIH FTP service.
 
     See `NihFtpClient` for parameters.
     """
@@ -149,7 +198,8 @@ class NihUploader(Uploader):
         self.ftp = NihFtpClient(self.my_path, *args, **kwargs)
 
 
-class Medline(NihUploader):
+class Medline(NihManager):
+    "Manager for the medline content."
     my_path = 'pubmed/baseline'
     my_source = 'pubmed'
 
@@ -172,7 +222,7 @@ class Medline(NihUploader):
             prepend_title=False
             )
         if q is not None:
-            q.put(article_info)
+            q.put((xml_file, article_info))
             return
         else:
             return article_info
@@ -186,23 +236,23 @@ class Medline(NihUploader):
             return
         if doi[:L] != doi[L:]:
             return
-        print("\tFixing doubled doi: %s" % doi)
+        logger.info("Fixing doubled doi: %s" % doi)
         return doi[:L]
 
     def upload_article(self, db, article_info):
         deleted_pmids = self.get_deleted_pmids()
 
-        print("%d PMIDs in XML dataset" % len(article_info))
+        logger.info("%d PMIDs in XML dataset" % len(article_info))
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
         text_ref_records = []
         text_content_info = {}
         valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
-        print("%d valid PMIDs" % len(valid_pmids))
+        logger.info("%d valid PMIDs" % len(valid_pmids))
         existing_pmids = set(db.get_pmids(valid_pmids))
-        print("%d valid PMIDs already in text_refs." % len(existing_pmids))
+        logger.info("%d valid PMIDs already in text_refs." % len(existing_pmids))
         pmids_to_add = valid_pmids.difference(existing_pmids)
-        print("%d PMIDs to add to text_refs" % len(pmids_to_add))
+        logger.info("%d PMIDs to add to text_refs" % len(pmids_to_add))
         for pmid in pmids_to_add:
             pmid_data = article_info[pmid]
             rec = (
@@ -253,8 +303,8 @@ class Medline(NihUploader):
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial input of the pubmed content into the database.
 
-        Inputs
-        ------
+        Parameters
+        ----------
         db : indra.db.DatabaseManager instance
             The database to which the data will be uploaded.
         n_procs : int
@@ -266,20 +316,19 @@ class Medline(NihUploader):
             read and parsed.
         """
         xml_files = self.get_file_list()
-        tr_list = db.select_all(
+        sf_list = db.select_all(
             'source_file',
             db.SourceFile.source == self.my_source
             )
-        existing_files = [tr.name for tr in tr_list]
+        existing_files = [sf.name for sf in sf_list]
 
+        # This could perhaps be simplified with map_async from mp.pool.
         q = mp.Queue()
         proc_list = []
         for xml_file in xml_files:
             if continuing and xml_file in existing_files:
-                print("Skipping %s. Already uploaded." % xml_file)
+                logger.info("Skipping %s. Already uploaded." % xml_file)
                 continue
-            if xml_file not in existing_files:
-                db.insert('source_file', source=self.my_source, name=xml_file)
             p = mp.Process(
                 target=self.get_article_info,
                 args=(xml_file, q, ),
@@ -293,31 +342,39 @@ class Medline(NihUploader):
                 proc_list.pop(0).start()
 
         while len(proc_list):
-            article_info = q.get()  # Block until at least one is done.
+            xml_file, article_info = q.get()  # Block until at least 1 is done.
             proc_list.pop(0).start()
             self.upload_article(db, article_info)
+            if xml_file not in existing_files:
+                db.insert('source_file', source=self.my_source, name=xml_file)
             n_tot -= 1
 
         while n_tot is not 0:
-            article_info = q.get()
+            xml_file, article_info = q.get()
+            if xml_file not in existing_files:
+                db.insert('source_file', source=self.my_source, name=xml_file)
             self.upload_article(db, article_info)
             n_tot -= 1
 
         return
 
 
-class PmcUploader(NihUploader):
+class PmcManager(NihManager):
+    """Abstract class for uploaders of PMC content.
+
+    For Paramters, see `NihManager`.
+    """
     my_source = NotImplemented
 
     def __init__(self, *args, **kwargs):
-        super(PmcUploader, self).__init__(*args, **kwargs)
+        super(PmcManager, self).__init__(*args, **kwargs)
         self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
-        self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type', 
+        self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
                         'content',)
 
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
-        #print("Beginning to filter text refs...")
+        logger.info("Beginning to filter text refs...")
         tr_list = db.select_all(
             'text_ref',
             db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
@@ -327,7 +384,7 @@ class PmcUploader(NihUploader):
             'pmid': [tr.pmid for tr in tr_list],
             'pmcid': [tr.pmcid for tr in tr_list]
             }
-        #print("\tGot db contents...")
+        logger.debug("Got db contents...")
 
         # Define some helpful functions.
         filtered_tr_records = []
@@ -343,29 +400,29 @@ class PmcUploader(NihUploader):
             filtered_tr_records.append(tuple(entry_lst))
 
         def update_record_with_pmcid(tr_entry):
-            #print("\tUpdating a record with a new pmcid....")
+            logger.debug("Updating a record with a new pmcid....")
             tr = db.select_one('text_ref', db.TextRef.pmid==tr_entry['pmid'])
             tr.pmcid = tr_entry['pmcid']
             db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
-            #print("\tDone updating...")
+            logger.debug("Done updating...")
 
         def update_record_with_pmid(tr_entry, pmid=None):
-            #print("\tUpdating a record with a new pmid...")
+            logger.debug("Updating a record with a new pmid...")
             tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
-            #print("\tDone updating...")
+            logger.debug("Done updating...")
 
         def lookup_pmid(pmcid):
-            #print("\tLooking for a missing pmid...")
+            logger.debug("Looking for a missing pmid...")
             ret = id_lookup(pmcid)
-            #print("\tDone looking...")
+            logger.debug("Done looking...")
             return None if 'pmid' not in ret.keys() else ret['pmid']
 
         def db_has_pmid(pmid):
-            #print("\tLooking for pmid in db...")
-            ret = db.has_entry('text_ref', db.TextRef.pmid==pmid)
-            #print("\tDetermined pmid status...")
+            logger.debug("Looking for pmid in db...")
+            ret = db.has_entry('text_ref', db.TextRef.pmid == pmid)
+            logger.debug("Determined pmid status...")
             return ret
 
         def get_tr_from_pmid(pmid):
@@ -376,6 +433,7 @@ class PmcUploader(NihUploader):
 
         # Process the text ref data.
         pmcids_to_skip = []
+        logger.debug("Beginning to filter text refs...")
         for tr_entry in tr_data:
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:
@@ -406,12 +464,12 @@ class PmcUploader(NihUploader):
                         pmcids_to_skip.append(tr_entry['pmcid'])
                 else:
                     add_record(tr_entry)
-        print("\nDone filtering text refs...")
+        logger.debug("Done filtering text refs...")
         return filtered_tr_records, pmcids_to_skip
 
     def filter_text_content(self, db, tc_data):
-        'Filter the text content'
-        print("Beginning to filter text content...")
+        'Filter the text content to identify pre-existing records.'
+        logger.info("Beginning to filter text content...")
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
         tref_list = db.select_all(
             'text_ref',
@@ -446,7 +504,7 @@ class PmcUploader(NihUploader):
         filtered_tc_records = [
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
-        print("Finished filtering the text content...")
+        logger.info("Finished filtering the text content...")
         return filtered_tc_records
 
     def upload_batch(self, db, tr_data, tc_data):
@@ -461,14 +519,14 @@ class PmcUploader(NihUploader):
             mod_tc_data = tc_data
 
         # Upload the text content data.
-        print('Adding %d new text refs...' % len(filtered_tr_records))
+        logger.info('Adding %d new text refs...' % len(filtered_tr_records))
         db.copy('text_ref', filtered_tr_records, self.tr_cols)
 
         # Process the text content data
         filtered_tc_records = self.filter_text_content(db, mod_tc_data)
 
         # Upload the text content data.
-        print('Adding %d more text content entries...' % len(filtered_tc_records))
+        logger.info('Adding %d more text content entries...' % len(filtered_tc_records))
         db.copy('text_content', filtered_tc_records, self.tc_cols)
 
     def get_data_from_xml_str(self, xml_str, filename):
@@ -476,14 +534,14 @@ class PmcUploader(NihUploader):
         try:
             tree = ET.XML(xml_str)
         except ET.ParseError:
-            print("Could not parse %s. Skipping." % filename)
+            logger.info("Could not parse %s. Skipping." % filename)
             return None
         id_data = {
             e.get('pub-id-type'): e.text for e in
             tree.findall('.//article-id')
             }
         if 'pmc' not in id_data.keys():
-            print("Did not get a 'pmc' in %s." % filename)
+            logger.info("Did not get a 'pmc' in %s." % filename)
             return None
         if 'pmcid' not in id_data.keys():
             id_data['pmcid'] = 'PMC' + id_data['pmc']
@@ -508,25 +566,30 @@ class PmcUploader(NihUploader):
                     )
         return tr_data_entries, tc_data_entries
 
-    def upload_archive(self, db, archive, q=None):
+    def upload_archive(self, archive, q=None, db=None):
         "Process a single tar gzipped article archive."
         tr_data = []
         tc_data = []
 
         def submit(tag, tr_data, tc_data):
             batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
-            print("Submitting %s of data for %s..." %
+            logger.info("Submitting %s of data for %s..." %
                   (batch_name, archive))
 
             if q is not None:
                 q.put(((batch_name, archive), tr_data[:], tc_data[:]))
-            else:
+            elif db is not None:
                 self.upload_batch(db, tr_data[:], tc_data[:])
+            else:
+                raise UploadError(
+                    "upload_archive must receive either a db instance"
+                    " or a queue instance."
+                    )
             tr_data.clear()
             tc_data.clear()
 
         with tarfile.open(archive, mode='r:gz') as tar:
-            print('Loading %s...' % archive)
+            logger.info('Loading %s...' % archive)
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
                 xml_str = tar.extractfile(xml_file).read()
@@ -543,7 +606,7 @@ class PmcUploader(NihUploader):
 
     def process_archive(self, db, archive, q=None):
         try:
-            print('Downloading archive %s.' % archive)
+            logger.info('Downloading archive %s.' % archive)
             self.ftp.download_file(archive)
             self.upload_archive(db, archive, q)
         finally:
@@ -555,13 +618,13 @@ class PmcUploader(NihUploader):
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial population of the pmc content into the database.
 
-        Inputs
-        ------
-        db: indra.db.DatabaseManager instance
+        Parameters
+        ----------
+        db : indra.db.DatabaseManager instance
             The database to which the data will be uploaded.
-        n_procs: int
-            (Not used) The number of processes to use when parsing xmls.
-        continuing: bool
+        n_procs : int
+            The number of processes to use when parsing xmls.
+        continuing : bool
             If true, assume that we are picking up after an error, or
             otherwise continuing from an earlier process. This means we will
             skip over source files contained in the database. If false, all
@@ -579,11 +642,12 @@ class PmcUploader(NihUploader):
         wait_list = []
         for archive in archives:
             if continuing and archive in existing_arcs:
-                print("Skipping %s. Already uploaded." % archive)
+                logger.info("Skipping %s. Already uploaded." % archive)
                 continue
             p = mp.Process(
                 target=self.process_archive,
-                args=(db, archive, q,),
+                args=(archive, ),
+                kwargs={'q': q, },
                 daemon=True
                 )
             wait_list.append((archive, p))
@@ -614,9 +678,9 @@ class PmcUploader(NihUploader):
                 raise
             except Exception:
                 continue
-            print("Beginning to upload %s from %s..." % label)
+            logger.info("Beginning to upload %s from %s..." % label)
             self.upload_batch(db, tr_data, tc_data)
-            print("Finished %s from %s..." % label)
+            logger.info("Finished %s from %s..." % label)
             time.sleep(0.1)
 
         # Empty the queue.
@@ -632,7 +696,8 @@ class PmcUploader(NihUploader):
         return
 
 
-class PmcOA(PmcUploader):
+class PmcOA(PmcManager):
+    "Manager for the pmc open access content."
     my_path = 'pub/pmc'
     my_source = 'pmc_oa'
 
@@ -640,7 +705,8 @@ class PmcOA(PmcUploader):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
 
-class Manuscripts(PmcUploader):
+class Manuscripts(PmcManager):
+    "Manager for the pmc manuscripts."
     my_path = 'pub/pmc/manuscript'
     my_source = 'manuscripts'
 
@@ -658,19 +724,17 @@ class Manuscripts(PmcUploader):
 
 
 if __name__ == '__main__':
-    from sys import argv
-    if '--continue' in argv or 'continue' in argv:
-        continuing = True
-    else:
-        continuing = False
-    if '-n' in argv:
-        n = int(argv[argv.index('-n') + 1])
     db = get_primary_db()
-    if not continuing:
-        db._clear()
-    Medline().populate(db, n, continuing)
-    PmcOA().populate(db, n, continuing)
-    Manuscripts().populate(db, n, continuing)
+    logger.info("Performing %s." % args.task)
+    if args.task == 'upload':
+        if not args.continuing:
+            logger.info("Clearing database.")
+            db._clear()
+        Medline().populate(db, args.num_procs, args.continuing)
+        PmcOA().populate(db, args.num_procs, args.continuing)
+        Manuscripts().populate(db, args.num_procs, args.continuing)
+    elif args.task == 'update':
+        logger.warning("Sorry, this feature not yet available.")
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,

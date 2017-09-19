@@ -1,14 +1,35 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+if __name__ == '__main__':
+    # NOTE: PEP8 will complain about this, however having the args parsed up
+    # here prevents a long wait just to fined out you entered a command wrong.
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description="This tool allows you to create a small sample of the NIH "
+                    "FTP service on your local machine for testing your "
+                    "database managers."
+        )
+    parser.add_argument(
+        dest='n',
+        help=('Select the number of examples of each case to produce. '
+              'A larger number will generally take longer, but will also '
+              'help protect you from being attacked by special cases.')
+        )
+    parser.add_argument(
+        dest='parent_dir',
+        help=('Select the name/path of the top level directory containing '
+              'your sample.')
+        )
+    args = parser.parse_args()
+
 from io import BytesIO
 from indra.literature import pubmed_client as pub
-from indra.db.populate_content import PmcOA, Medline, Manuscripts
+from indra.db.manage_content import PmcOA, Medline, Manuscripts
 
 import xml.etree.ElementTree as ET
 import tarfile
 import zipfile
-import zlib
 import gzip
 import random
 import os
@@ -40,7 +61,7 @@ def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
         while d['PMCID'] not in pmcid_list:
             d = random.choice(man_dicts)
         ret = (d['PMID'], d['PMCID'], d['MID'])
-    elif case == (1,0,1):
+    elif case == (1, 0, 1):
         pmcid_list = [d['Accession ID'] for d in pmc_dicts]
         d = random.choice(man_dicts)
         while d['PMCID'] in pmcid_list:
@@ -110,7 +131,7 @@ def build_set(n, parent_dir):
             examples.append(example)
     double_doi_info = med.get_article_info('medline17n0343.xml.gz')
     pmids_w_double_doi = [
-        k for k, v in double_doi_info.items() 
+        k for k, v in double_doi_info.items()
         if v['doi'] is not None and len(v['doi']) > 100
         ]
     examples.append((random.choice(pmids_w_double_doi), '','',))
@@ -210,8 +231,4 @@ def build_set(n, parent_dir):
 
 
 if __name__ == '__main__':
-    from sys import argv
-    assert len(argv) == 3, "Error with args: %s." % argv
-    n = int(argv[1])
-    parent_dir = argv[2]
-    build_set(n, parent_dir)
+    build_set(args.n, args.parent_dir)

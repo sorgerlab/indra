@@ -33,7 +33,7 @@ except ImportError:
     CAN_COPY = False
 
 
-DEFAULTS_FILE = 'defaults.txt'
+DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
 
 
 def _get_timestamp():
@@ -300,8 +300,11 @@ class DatabaseManager(object):
                           or isinstance(element, Number)):
                         new_entry.append(element)
                     else:
-                        raise Exception("Don't know what to do with %s" %
-                                        type(element))
+                        raise IndraDatabaseError(
+                            "Don't know what to do with element of type %s."
+                            "Should be str, bytes, None, or a number." %
+                            type(element)
+                            )
                 data_bts.append(tuple(new_entry))
             mngr.copy(data_bts, BytesIO)
             conn.commit()
@@ -320,16 +323,20 @@ class DatabaseManager(object):
             elif isinstance(tbls[0], str):
                 query_args = [self.tables[tbl] for tbl in tbls]
             else:
-                raise InputError('Unrecognized table specification type: %s.' %
-                                 type(tbls[0]))
+                raise IndraDatabaseError(
+                    'Unrecognized table specification type: %s.' %
+                    type(tbls[0])
+                    )
         else:
             if isinstance(tbls, type(self.Base)):
                 query_args = [tbls]
             elif isinstance(tbls, str):
                 query_args = [self.tables[tbls]]
             else:
-                raise InputError('Unrecognized table specification type: %s.' %
-                                 type(tbls))
+                raise IndraDatabaseError(
+                    'Unrecognized table specification type: %s.' %
+                    type(tbls)
+                    )
 
         return self.session.query(*query_args).filter(*args)
 
@@ -415,7 +422,7 @@ class DatabaseManager(object):
                 elif i_ag == 1:
                     role = 'OBJECT'
                 else:
-                    assert False, "Unhandled agent role."
+                    raise IndraDatabaseError("Unhandled agent role.")
 
                 input_list = []
                 for db_name, db_id in ag.db_refs.items():
@@ -467,21 +474,28 @@ class DatabaseManager(object):
         return self.get_values(text_refs, 'pmid')
 
 
+class IndraDatabaseError(Exception):
+    pass
+
+
+def get_defaults():
+    "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
+    with open(DEFAULTS_FILE, 'r') as f:
+        defaults_raw = f.read().splitlines()
+    defaults_dict = {}
+    for default_line in defaults_raw:
+        key, value = default_line.split('=')
+        defaults_dict[key.strip()] = value.strip()
+    return defaults_dict
+
+
 def get_primary_db():
-    if not path.isabs(DEFAULTS_FILE):
-        full_path = path.join(__path__[0], DEFAULTS_FILE)
+    "Get an instance to the primary database host."
+    defaults = get_defaults()
+    if 'primary' in defaults.keys():
+        primary_host = defaults['primary']
     else:
-        full_path = DEFAULTS_FILE
-    with open(full_path, 'r') as f:
-        defaults_list = f.read().splitlines()
-    for default in defaults_list:
-        key, value = default.split('=')
-        print(key)
-        if key == "primary":
-            primary_host = value
-            break
-    else:
-        raise Exception("Couldn't find primary host.")
+        raise IndraDatabaseError("No primary host available in defaults file.")
 
     db = DatabaseManager(primary_host)
     db.grab_session()
