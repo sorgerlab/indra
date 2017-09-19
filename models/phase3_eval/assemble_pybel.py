@@ -9,14 +9,15 @@ def assemble_pybel(stmts, out_file_prefix):
     """Return a PyBEL Assembler"""
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
-    pba = PybelAssembler(stmts, name='INDRA_Korkut_Model',
+
+    pba = PybelAssembler(stmts, name='INDRA/REACH Korkut Model',
                          description='Automatically assembled model of '
                                      'cancer signaling.',
-                         version='0.0.1')
+                         version='0.0.8')
     pba.make_model()
+    pybel.to_bel_path(pba.model, out_file_prefix + '.bel')
     with open(out_file_prefix, 'wt') as f:
         pybel.to_json_file(pba.model, f)
     url =  'https://pybel.scai.fraunhofer.de/api/receive'
     headers = {'content-type': 'application/json'}
     requests.post(url, json=pybel.to_json(pba.model), headers=headers)
-

@@ -343,7 +343,8 @@ def _get_agent_activity(agent):
 
 
 def _get_evidence(evidence):
-    pybel_ev = {pc.EVIDENCE: evidence.text}
+    text = evidence.text if evidence.text else 'No evidence text.'
+    pybel_ev = {pc.EVIDENCE: text}
     # If there is a PMID, use it as the citation
     if evidence.pmid:
         citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
