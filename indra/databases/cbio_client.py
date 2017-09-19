@@ -301,7 +301,7 @@ def get_cancer_types(cancer_filter=None):
     return type_ids
 
 
-def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
+def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
 
     This is a specialized call to get_mutations tailored to CCLE cell lines.
