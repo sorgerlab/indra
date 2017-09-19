@@ -746,6 +746,49 @@ var api_spec = {
         }
       }
     },
+    "/databases/cbio/get_ccle_cna": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for copy number alterations (CNAs) using the cBioPortal client",
+        "operationId": "get_ccle_cna",
+        "description": "Returns CNAs for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CNAs levels obtained.",
+            "example" : {
+              "cna": {
+                "SKMEL28_SKIN": {
+                  "BRAF": 1,
+                  "MAP2K1": -1
+                },
+                "BT20_BREAST": {
+                  "BRAF": 1,
+                  "MAP2K1": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     }
   },
   "definitions": {
