@@ -7,12 +7,20 @@ from indra.statements import Agent, ModCondition
 from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
+rppa_pkl = 'data/TableS1-Split.pkl'
 expression_file = 'data/Expression_Filtered.csv'
 mutation_file = 'data/WES_variants_filtered.csv'
 
 
 def read_rppa_data(fname=rppa_file):
     """Return RPPA data as a dict median/std DataFrames."""
+    # If the filename passed is a pickle, just load it and return
+    if fname.endswith('pkl'):
+        with open(fname, 'rb') as fh:
+            data = pickle.load(fh)
+            return data
+
+    # Otherwise just read the excel file
     data = {}
     for cell_line in cell_lines:
         print('Reading data for %s' % cell_line)
@@ -75,7 +83,7 @@ def get_gene_pmids(gene_names):
 def get_drug_pmids():
     """Return PMIDs for all the drugs and their synonyms."""
     drugs_pmid_list = []
-    for drug_synonyms in drug_dict.values():
+    for drug_synonyms in drug_names.values():
         for drug_synonym in drug_synonyms:
             drugs_pmid_list += pubmed_client.get_ids(drug_synonym, retmax=5000)
     drugs_pmid_list = list(set(drugs_pmid_list))
@@ -178,20 +186,45 @@ def get_antibody_agents():
     return antibody_agents
 
 
-def get_test_cases():
+def get_agent_values_for_condition(data, cell_line, drug, time, dose):
+    df = data[cell_line]
+    df = df[df['Drug'] == drug]
+    df = df[df['Time (hr)'] == time]
+    df = df[df['Concentration (uM)'] == dose]
+    import ipdb; ipdb;set_trace()
+
+def get_test_cases(data):
     """Return the test cases to be explained."""
+    antibody_agents = get_antibody_agents()
+    # TASK 1
     # We observe a dose-dependent decrease of p-S6(S235/236)
     # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
     # drugs. Feel free to use any or all of the time points in your
     # explanation.
-    #for drug in drug_dict.keys():
-
+    obs_agents = antibody_agents['p-S6(S235/236)']
+    # We fix the time point to 10 hours
+    time = 10
+    for cell_line  in ('C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421'):
+        for drug in drug_names.keys():
+            target_agents = [agent_phos(target, []) for
+                             target in drug_targets[drug]]
+            for target in target_agents:
+                for obs in obs_agents:
+                    for dose in drug_doses:
+                        st = Phosphorylation(target, obs)
+                        values = get_agent_values_for_condition(data,
+                                                                cell_line,
+                                                                drug,
+                                                                time,
+                                                                dose)
+                        (st, values)
 
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
               'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
 
-drug_dict = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
+
+drug_names = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
              'Selumetinib': ['Selumetinib', 'AZD6244', 'AZD 6244',
                              'ARRY-142886', '606143-52-6'],
              'SB590885': ['SB590885', 'SB-590885', 'J-501805', '405554-55-4'],
@@ -199,6 +232,18 @@ drug_dict = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
                              'RG7204', 'RG-7204', 'R05185426', '918504-65-1',
                              '1029872-54-5'],
              'PLX4720': ['PLX4720', 'PLX 4720', 'PLX-4720', 'PLX_4720']}
+
+
+drug_targets = {'AZ628': ['BRAF'],
+                'Selumetinib': ['MAP2K1', 'MAP2K2'],
+                'SB590885': ['BRAF'],
+                'Vemurafenib': ['BRAF'],
+                'PLX4720': ['BRAF']}
+
+
+drug_doses = [0.0032, 0.01, 0.0316, 0.1, 0.316, 1.0, 3.16]
+
+
 
 antibody_map = {
     'pMEK(S217/221)':
