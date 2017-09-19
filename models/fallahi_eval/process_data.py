@@ -4,7 +4,7 @@ import numpy
 import pandas
 import itertools
 from indra.literature import pubmed_client
-from indra.statements import Agent, ModCondition
+from indra.statements import Agent, ModCondition, Phosphorylation
 from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
@@ -189,13 +189,18 @@ def get_antibody_agents():
 
 
 def get_agent_values_for_condition(data, cell_line, drug, time, dose):
-    df = data[cell_line]
+    df = data[cell_line]['median']
     df = df[df['Drug'] == drug]
     df = df[df['Time (hr)'] == time]
     df = df[df['Concentration (uM)'] == dose]
-    import ipdb; ipdb;set_trace()
+    values = {}
+    for ab in df.columns[3:]:
+        value = df[ab].values[0]
+        if not pandas.isnull(value):
+            values[ab] = value
+    return values
 
-def get_test_cases(data):
+def get_task_1(data):
     """Return the test cases to be explained."""
     antibody_agents = get_antibody_agents()
     # TASK 1
@@ -206,20 +211,22 @@ def get_test_cases(data):
     obs_agents = antibody_agents['p-S6(S235/236)']
     # We fix the time point to 10 hours
     time = 10
+    # Structure: cell line / drug / dose / time
+    stmts_to_check = {}
     for cell_line  in ('C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421'):
+        stmts_to_check[cell_line] = {}
         for drug in drug_names.keys():
+            stmts_to_check[cell_line][drug] = {}
             target_agents = [agent_phos(target, []) for
                              target in drug_targets[drug]]
-            for target in target_agents:
-                for obs in obs_agents:
-                    for dose in drug_doses:
-                        st = Phosphorylation(target, obs)
-                        values = get_agent_values_for_condition(data,
-                                                                cell_line,
-                                                                drug,
-                                                                time,
-                                                                dose)
-                        (st, values)
+            for dose in drug_doses:
+                stmts_to_check[cell_line][drug][dose] = []
+                for target, obs in itertools.product(target_agents, obs_agents):
+                    st = Phosphorylation(target, obs)
+                    values = get_agent_values_for_condition(data, cell_line,
+                                                            drug, time, dose)
+                    stmts_to_check[cell_line][drug][dose].append((st, values))
+    return stmts_to_check
 
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
@@ -312,8 +319,3 @@ antibody_map = {
         {'CDKN1B': []}
     }
 
-
-
-if __name__ == '__main__':
-    rppa_data = read_rppa_data(rppa_file)
-    all_pmids = get_all_pmids(rppa_data, pmid_file='pmids.txt')
