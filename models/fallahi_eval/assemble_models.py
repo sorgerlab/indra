@@ -15,6 +15,8 @@ basen = 'fallahi_eval'
 # MODIFY ACCORDING TO YOUR OWN SETUP
 based = os.path.join(os.environ['HOME'], 'data', basen)
 
+# This makes it easier to make standardized pickle file paths
+prefixed_pkl = lambda suffix: os.path.join(based, basen + '_' + suffix + '.pkl')
 
 def run_reading(pmid_fname):
     """Run reading on Amazon to produce a pickle of INDRA Statements
@@ -53,29 +55,33 @@ def build_prior(gene_names):
     """Build a corpus of prior Statements from PC and BEL."""
     gn = GeneNetwork(gene_names, basen)
     bel_stmts = gn.get_bel_stmts(filter=False)
-    ac.dump_statements(bel_stmts, os.path.join(based, basen + '_bel.pkl'))
+    ac.dump_statements(bel_stmts, prefixed_pkl('bel'))
     # This call results in 504 error currently
     #biopax_stmts = gn.get_biopax_stmts(filter=False)
     database_filter = ['reactome', 'psp', 'kegg', 'pid']
     biopax_stmts = grouped_biopax_query(gene_names, database_filter)
-    ac.dump_statements(biopax_stmts,
-                       os.path.join(based, basen + '_biopax.pkl'))
+    ac.dump_statements(biopax_stmts, prefixed_pkl('biopax'))
 
 
 if __name__ == '__main__':
+    # Load the data and get the gene names
     data = process_data.read_rppa_data()
     gene_names = process_data.get_gene_names(data)
 
+    # Load various files that were previously produced
+    reach_stmts = ac.load_statements(prefixed_pkl('reach'))
+    bel_stmts = ac.load_statements(prefixed_pkl('bel'))
+    biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
+
     # If generic assembly needs to be done (instead of just loading the result)
     # set this to True
-    reassemble = False
+    reassemble = True
 
-    raw_stmts_file = os.path.join(based, basen + '_reach.pkl')
-    pre_stmts_file = os.path.join(based, basen + '_reach_preassembled.pkl')
-
+    # The file in which the preassembled statements will be saved
+    pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
         # Load the raw statements
-        stmts = ac.load_statements(raw_stmts_file)
+        stmts = ac.load_statements(reach_stmts_file)
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
         stmts = ac.map_grounding(stmts)
@@ -94,4 +100,5 @@ if __name__ == '__main__':
     # Load the preassembled statements
     stmts = ac.load_statements(pre_stmts_file)
     # Run assembly into a PySB model
-    model = assemble_pysb(stmts, gene_names)
+    pysb_stmts, pysb_model = assemble_pysb(stmts, gene_names)
+    ac.dump_statements(prefixed_pkl('pysb_stmts'))

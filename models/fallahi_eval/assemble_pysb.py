@@ -44,7 +44,7 @@ def assemble_pysb(stmts, data_genes):
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    return model
+    return stmts, model
 
 def contextualize_model(model, cell_line):
     # Here we just make a PysbAssembler to be able
