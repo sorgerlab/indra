@@ -46,8 +46,8 @@ def test_get_ccle_lines_for_mutation():
     assert(len(cl_BRAF_V600E) == 55)
 
 
-def test_get_mutations_ccle():
-    muts = cbio_client.get_mutations_ccle(['BRAF', 'AKT1'],
+def test_get_ccle_mutations():
+    muts = cbio_client.get_ccle_mutations(['BRAF', 'AKT1'],
                                           ['LOXIMVI_SKIN', 'A101D_SKIN'])
     assert len([x for x in muts]) == 2
     assert 'V600E' in muts['LOXIMVI_SKIN']['BRAF']
