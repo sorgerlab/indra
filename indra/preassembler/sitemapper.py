@@ -402,9 +402,12 @@ class SiteMapper(object):
                         continue
                 # Check for methionine offset (off by one)
                 if do_methionine_offset and up_id and hgnc_id:
-                    offset_pos = str(int(old_mod.position) + 1)
-                    #site_valid_plus_one = uniprot_client.verify_location(
-                    #                        up_id, old_mod.residue, offset_pos)
+                    try:
+                        offset_pos = str(int(old_mod.position) + 1)
+                    except ValueError:
+                        logger.warning("Invalid position: %s" %
+                                       old_mod.position)
+                        continue
                     human_pos = phosphosite_client.map_to_human_site(
                                   up_id, old_mod.residue, offset_pos)
                     # If it's valid at the offset position, create the mapping
