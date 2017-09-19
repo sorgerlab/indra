@@ -1,4 +1,5 @@
 import os
+import json
 import itertools
 from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
@@ -9,11 +10,16 @@ from indra.tools.reading.submit_reading_pipeline_aws import \
 from assemble_pysb import *
 import process_data
 
+# CREATE A JSON FILE WITH THIS INFORMATION, E.G., a file consisting of:
+# {"basename": "fallahi_eval", "basedir": "output"}
+with open('config.json', 'rt') as f:
+    config = json.load(f)
 # This is the base name used for all files created/saved
-basen = 'fallahi_eval'
+basen = config['basename']
 # This is the base folder to read/write (potentially large) files from/to
 # MODIFY ACCORDING TO YOUR OWN SETUP
-based = os.path.join(os.environ['HOME'], 'data', basen)
+based = config['basedir']
+
 
 # This makes it easier to make standardized pickle file paths
 prefixed_pkl = lambda suffix: os.path.join(based, basen + '_' + suffix + '.pkl')
@@ -75,7 +81,7 @@ if __name__ == '__main__':
 
     # If generic assembly needs to be done (instead of just loading the result)
     # set this to True
-    reassemble = True
+    reassemble = False
 
     # The file in which the preassembled statements will be saved
     pre_stmts_file = prefixed_pkl('preassembled')
@@ -101,4 +107,4 @@ if __name__ == '__main__':
     stmts = ac.load_statements(pre_stmts_file)
     # Run assembly into a PySB model
     pysb_stmts, pysb_model = assemble_pysb(stmts, gene_names)
-    ac.dump_statements(prefixed_pkl('pysb_stmts'))
+    ac.dump_statements(pysb_stmts, prefixed_pkl('pysb_stmts'))
