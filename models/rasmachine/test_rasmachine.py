@@ -1,8 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, abspath, dirname
-from rasmachine import make_status_message
-from rasmachine import _increment_ndex_ver, get_email_pmids
+from utils import make_status_message, get_email_pmids
 from indra.machine import gmail_client
 
 stats = {}
@@ -32,13 +31,6 @@ def test_gmail_get_message():
     # Get the mailbox ID of the INBOX
     mbox = gmail_client.select_mailbox(M, 'INBOX')
     pmids = gmail_client.get_message_pmids(M, day_limit=10)
-
-def test_ndex_ver():
-    assert(_increment_ndex_ver(None) == '1.0')
-    assert(_increment_ndex_ver('') == '1.0')
-    assert(_increment_ndex_ver('1.0') == '1.1')
-    assert(_increment_ndex_ver('1.9') == '1.10')
-    assert(_increment_ndex_ver('2.10') == '2.11')
 
 def test_noabs_nopaper():
     s = stats.copy()

@@ -3,7 +3,7 @@ from builtins import dict, str
 import os
 from indra.sources.ndex_cx import process_cx_file, process_ndex_network
 from indra.sources.ndex_cx.processor import NdexCxProcessor
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, ndex_client
 from indra.statements import Agent, Statement
 from requests.exceptions import HTTPError
 from nose.tools import raises
@@ -12,6 +12,14 @@ from nose.tools import raises
 path_this = os.path.dirname(os.path.abspath(__file__))
 ncp_file = \
     process_cx_file(os.path.join(path_this, 'merged_BRCA1_formatted.cx'))
+
+
+def test_ndex_ver():
+    assert(ndex_client._increment_ndex_ver(None) == '1.0')
+    assert(ndex_client._increment_ndex_ver('') == '1.0')
+    assert(ndex_client._increment_ndex_ver('1.0') == '1.1')
+    assert(ndex_client._increment_ndex_ver('1.9') == '1.10')
+    assert(ndex_client._increment_ndex_ver('2.10') == '2.11')
 
 
 def test_process_cx_file():
