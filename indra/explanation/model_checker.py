@@ -464,6 +464,20 @@ class ModelChecker(object):
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
                     sigma=0.15):
+        """Return scores associated with a given set of paths.
+
+        Parameters
+        ----------
+        paths : list[PathResult]
+            A list of paths obtained from path finding.
+        agents_values : dict[indra.statements.Agent, float]
+            A dictionary of INDRA Agents and their corresponding measured
+            value in a given experimental condition.
+        loss_of_function : boolean
+            If True, flip the polarity of the path. For instance, if the effect
+            of an inhibitory drug is explained, set this to True.
+            Default: False
+        """
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
