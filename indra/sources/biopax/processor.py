@@ -101,7 +101,7 @@ class BiopaxProcessor(object):
         with additional constraints to specify the type of state change
         occurring (phosphorylation, deubiquitination, etc.).
         """
-        for modclass, modtype in modclass_to_modtype.items():
+        for modtype, modclass in modtype_to_modclass.items():
             # TODO: we could possibly try to also extract generic
             # modifications here
             if modtype == 'modification':
