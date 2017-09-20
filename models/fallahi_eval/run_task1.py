@@ -1,5 +1,6 @@
 import pickle
 from copy import deepcopy
+import itertools
 from indra.explanation.model_checker import ModelChecker
 from process_data import read_rppa_data, get_task_1, get_antibody_agents
 from assemble_models import prefixed_pkl
@@ -11,22 +12,10 @@ def get_agent_values(antibody_agents, values):
     for ab, value in values.items():
         for agent in antibody_agents[ab]:
             agent_values[agent] = value
-    return
+    return agent_values
 
 
-def check_for_cell_line(cell_line, stmts, agents_to_observe):
-    print('Cell line: %s\n=============' % cell_line)
-    # Check for a single dose here since this part is not scored yet
-    results = {}
-    dose = 1.0
-    for drug in stmts.keys():
-        print('Drug: %s\n=============' % drug)
-        stmts_condition = [stmt for stmt, _ in stmts[drug][dose]]
-        mc = ModelChecker(model_cell_line, stmts_condition, agents_to_observe)
-        path_results = mc.check_model(1, 5)
-        results[drug] = path_results
-    return path_results
-
+flatten = lambda x: list(itertools.chain.from_iterable(x))
 
 if __name__ == '__main__':
     # Some basic setup
@@ -41,12 +30,39 @@ if __name__ == '__main__':
     # Get all the data for Task 1
     stmts_to_check = get_task_1(data)
 
-    all_results = {}
+    dose = 1.0
+    scored_paths = {}
     # Run model checking per cell line
     for cell_line in stmts_to_check.keys():
+        print('Cell line: %s\n=============' % cell_line)
         model_cell_line = deepcopy(model)
         model_cell_line = contextualize_model(model_cell_line, cell_line)
-        results = check_for_cell_line(cell_line, stmts_to_check[cell_line],
-                                      agents_to_observe)
-        all_results[cell_line] = results
-    #agent_values = get_agent_values(antibody_agents, values)
+        scored_paths[cell_line] = {}
+        for drug in stmts_to_check[cell_line].keys():
+            print('Drug: %s\n=============' % drug)
+            # Get all the statements and values for the condition
+            stmts_condition, values_condition = \
+                stmts_to_check[cell_line][drug][dose]
+            # Make a Model Checker with the
+            # - model contextualized to the cell line
+            # - the statements for the given condition
+            # - agents for which observables need to be made
+            mc = ModelChecker(model_cell_line, stmts_condition,
+                              agents_to_observe)
+            path_results = mc.check_model(10, 5)
+            # Get a dict of measured values by INDRA Agents for this condition
+            agent_values = get_agent_values(antibody_agents, values_condition)
+            # Get a single list of paths for this condition
+            # The length of this will be the max path number times the number
+            # of Statements being checked
+            paths = flatten([pr[1].paths for pr in path_results])
+            # Run score paths with
+            # - the list of paths the model checker produced
+            # - the values of observed agents in the current condition
+            # - loss of function mode since these are inhibitory drugs
+            # - sigma corresponding to the log2 normalized measurements
+            scored_paths_condition = mc.score_paths(paths, agent_values,
+                                                    loss_of_function=True,
+                                                    sigma=0.5)
+            scored_paths[cell_line][drug] = scored_paths_condition
+
