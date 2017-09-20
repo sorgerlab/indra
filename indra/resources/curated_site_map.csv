@@ -1,4 +1,5 @@
 Gene,OrigRes,OrigPos,CorrectRes,CorrectPos,Comment
+AKT3,S,475,S,472,"off by three, supported by UniProt, Phosphosite"
 ARHGEF2,S,885,S,886,off by one
 BRAF,T,151,S,151,wrong residue
 BRAF,S,578,S,579,wrong residue
@@ -18,6 +19,8 @@ MAPK3,T,201,T,202,off by one
 MAPK3,Y,203,Y,204,off by one
 MAPK7,T,218,T,219,off by one
 MAPK7,Y,220,Y,221,off by one
+MAPK10,T,183,T,221,"numbering from isoform 3, supported by UniProt, Phosphosite"
+MAPK10,Y,185,Y,223,"numbering from isoform 3, supported by UniProt, Phosphosite"
 PAK1,S,198,S,199,off by one
 PAK1,S,203,S,204,off by one
 RAF1,S,269,T,269,wrong residue
@@ -75,6 +78,21 @@ EIF4EBP1,S,11,S,12,off by 1 (methionine removed)
 FOXO4,S,142,S,197,numbering from isoform zeta
 FOXO4,S,207,S,262,numbering from isoform zeta
 HCK,Y,410,Y,411,off by 1 (methionine removed)
+HIST1H3A,S,10,S,11,off by one
+HIST1H3B,S,10,S,11,off by one
+HIST1H3C,S,10,S,11,off by one
+HIST1H3D,S,10,S,11,off by one
+HIST1H3E,S,10,S,11,off by one
+HIST1H3F,S,10,S,11,off by one
+HIST1H3G,S,10,S,11,off by one
+HIST1H3H,S,10,S,11,off by one
+HIST1H3I,S,10,S,11,off by one
+HIST1H3J,S,10,S,11,off by one
+HIST2H3A,S,10,S,11,off by one
+HIST2H3C,S,10,S,11,off by one
+HIST2H3D,S,10,S,11,off by one
+H3F3A,S,10,S,11,off by one
+H3F3B,S,10,S,11,off by one
 INSR,Y,1322,Y,1361,off by 39 (cleavage?)
 INSR,Y,1316,Y,1355,off by 39 (cleavage?)
 INSR,Y,1151,Y,1190,off by 39 (cleavage?)
@@ -88,6 +106,7 @@ LYN,Y,507,Y,508,off by 1 (methionine removed)
 LYN,Y,396,Y,397,off by 1 (methionine removed)
 MAP2K2,S,218,S,222,numbering from MAP2K1
 PRKAA1,S,487,S,496,immunogen using misnumbered SGpSVS sequence
+PRKAA1,T,172,T,183,"Listed as T172/183 in some online resources, not clear where T172 comes from"
 SHC1,S,29,S,139,numbering from isoform p52
 SHC1,Y,239,Y,349,numbering from isoform p52
 SHC1,Y,317,Y,427,numbering from isoform p52
