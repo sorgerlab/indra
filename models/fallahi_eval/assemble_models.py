@@ -86,8 +86,10 @@ if __name__ == '__main__':
         reach_stmts = ac.load_statements(prefixed_pkl('reach'))
         bel_stmts = ac.load_statements(prefixed_pkl('bel'))
         biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
+        trips_stmts = ac.load_statements(prefixed_pkl('trips'))
+        r3_stmts = ac.load_statements(prefixed_pkl('r3'))
         # Combine the raw statements
-        stmts = reach_stmts + bel_stmts + biopax_stmts
+        stmts = reach_stmts + trips_stmts + bel_stmts + biopax_stmts + r3_stmts
 
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
