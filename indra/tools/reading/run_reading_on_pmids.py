@@ -1,6 +1,104 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import logging
+from datetime import datetime
+import random
+logger = logging.getLogger('runreader')
+if __name__ == '__main__':
+    # Set some variables
+    # path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    # path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    path_to_reach = '/home/patrick/Workspace/reach/target/scala-2.11/reach-gordo-1.3.4-SNAPSHOT.jar'
+    reader_version = '1.3.4-b4a284'
+    force_read = True
+
+    # Check the arguments
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Apply NLP readers to the content available for a list of pmids.'
+        )
+    parser.add_argument(
+        '-r', '--reader',
+        choices=['reach', 'sparser', 'all'],
+        default='all',
+        dest='readers',
+        nargs=1,
+        help='Choose which reader(s) to use.'
+        )
+    parser.add_argument(
+        '-u', '--upload_json',
+        dest='upload_json',
+        action='store_true',
+        help='Option to simply upload previously read json files. Overrides -r option, so no reading will be done.'
+        )
+    parser.add_argument(
+        '-f', '--force_fulltext',
+        dest='force_fulltext',
+        action='store_true',
+        help='Option to force reading of the full text.'
+        )
+    parser.add_argument(
+        '-n', '--num_cores',
+        dest = 'num_cores',
+        default=1,
+        type=int,
+        help='Select the number of cores you want to use.'
+        )
+    parser.add_argument(
+        '-v', '--verbose',
+        dest='verbose',
+        action='store_true',
+        help='Show more output to screen.'
+        )
+    parser.add_argument(
+        '-c', '--cleanup',
+        dest='cleanup',
+        action='store_true',
+        help='Clean up after run.'
+        )
+    parser.add_argument(
+        '-s', '--start_index',
+        dest='start_index',
+        type=int,
+        help='Select the first pmid in the list to start reading.',
+        default=0
+        )
+    parser.add_argument(
+        '-e', '--end_index',
+        dest='end_index',
+        type=int,
+        help='Select the last pmid in the list to read.',
+        default=-1
+        )
+    parser.add_argument(
+        '--shuffle',
+        dest='shuffle',
+        action='store_true',
+        help=('Select a random sample of the pmids provided. -s/--start_index '
+              'will be ingored, and -e/--end_index will set the number of '
+              'samples to take.')
+        )
+    parser.add_argument(
+        dest='basename',
+        help='The name of this job.'
+        )
+    parser.add_argument(
+        dest='out_dir',
+        help='The output directory where stuff is written. This is only a temporary directory when reading.'
+        )
+    parser.add_argument(
+        dest='pmid_list_file',
+        help='Path to a file containing a list of line separated pmids for the articles to be read.'
+        )
+    args = parser.parse_args()
+    if args.upload_json:
+        args.readers = 'none'
+    if 'reach' in args.readers and not os.path.exists(path_to_reach):
+        logger.warning("Reach path invalid. Reach reading will not be performed.")
+        args.readers.remove('reach')
+        
+        
 import stat
 import sys
 import tempfile
@@ -9,17 +107,14 @@ import subprocess
 import glob
 import json
 import pickle
-import logging
 import functools
 import multiprocessing as mp
 from collections import Counter
 from indra.sources import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
-from indra.sources.sparser.sparser_api import process_nxml_file
+from indra.sources.sparser import sparser_api as sparser
 
-# Logger
-logger = logging.getLogger('runreader')
 
 
 def join_parts(prefix):
@@ -38,7 +133,7 @@ def join_parts(prefix):
     return {'events': events, 'entities': entities, 'sentences': sentences}
 
 
-def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
+def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
     # The prefixes should be PMIDs
     pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
@@ -48,7 +143,7 @@ def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
         logger.error('REACH output missing JSON for %s' % pmid)
         return {pmid: []}
     # Upload the REACH output to S3
-    s3_client.put_reach_output(full_json, pmid, reach_version, source_text)
+    s3_client.put_reach_output(full_json, pmid, reader_version, source_text)
     # Process the REACH output with INDRA
     # Convert the JSON object into a string first so that a series of string
     # replacements can happen in the REACH processor
@@ -56,7 +151,7 @@ def upload_process_pmid(pmid_info, output_dir=None, reach_version=None):
     return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
-def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
+def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
                                num_cores):
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
@@ -80,7 +175,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
     logger.info('Uploading and processing local REACH JSON files')
     upload_process_pmid_func = \
             functools.partial(upload_process_pmid, output_dir=output_dir,
-                              reach_version=reach_version)
+                              reader_version=reader_version)
     res = pool.map(upload_process_pmid_func, pmid_info)
     stmts_by_pmid = {pmid: stmts for res_dict in res
                                  for pmid, stmts in res_dict.items()}
@@ -205,7 +300,7 @@ def process_reach_from_s3(pmid):
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
 def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
-                        force_fulltext, force_read, reach_version):
+                        force_fulltext, force_read, reader, reader_version):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -229,7 +324,8 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     logger.info('Getting content for PMIDs in parallel')
     download_from_s3_func = functools.partial(download_from_s3,
                                          input_dir=input_dir,
-                                         reach_version=reach_version,
+                                         reader=reader,
+                                         reader_version=reader_version,
                                          force_read=force_read,
                                          force_fulltext=force_fulltext)
     res = pool.map(download_from_s3_func, pmids_in_range)
@@ -240,12 +336,12 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
                                   for pmid, results in pmid_dict.items()}
     # Tabulate and log content results here
     pmids_read = {pmid: result for pmid, result in pmid_results.items()
-                       if result.get('reach_version') == reach_version}
+                       if result.get('reader_version') == reader_version}
     pmids_unread = {pmid: pmid_results[pmid]
                     for pmid in
                     set(pmid_results.keys()).difference(set(pmids_read.keys()))}
     logger.info('%d / %d papers already read with REACH %s' %
-                (len(pmids_read), len(pmid_results), reach_version))
+                (len(pmids_read), len(pmid_results), reader_version))
     num_found = len([pmid for pmid in pmids_unread
                           if pmids_unread[pmid].get('content_path')])
     logger.info('Retrieved content for %d / %d papers to be read' %
@@ -266,43 +362,58 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
         pickle.dump(pmids_unread, f, protocol=2)
-    
+
     return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
 
 
 def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
-                force_fulltext, path_to_reach, reach_version, cleanup=False,
+                force_fulltext, path_to_reach, reader_version, cleanup=False,
                 verbose=True):
     'Run the sparser reader on the pmids in pmid_list.'
-    base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
+    _, input_dir, _, _, pmids_unread, _ =\
         get_content_to_read(
             pmid_list, start_index, end_index, tmp_dir, num_cores, 
-            force_fulltext, force_read
+            force_fulltext, force_read, 'sparser', reader_version
             )
-    ret = {}
+    stmts = {}
     for pmid, result in pmids_unread.items():
         source = result['content_source']
         cont_path = result['content_path']
-        if source is 'content_not_found' or source.startswith('unhandled_content_type'):
+        if (source is 'content_not_found' 
+            or source.startswith('unhandled_content_type')
+            or source.endswith('failure')):
             logger.info('No content read for %s.' % pmid)
             continue  # No real content here.
 
         if cont_path.endswith('.nxml') and source.startswith('pmc'):
             new_fname = os.path.join(input_dir, 'PMC%s.nxml' % pmid)
             os.rename(cont_path, new_fname)
-            ret.update(process_nxml_file(new_fname))
-        elif cont_path.endswith('.txt') and source is 'abstract':
-            pass
+            sp = sparser.process_nxml_file(new_fname)
+            if sp is None:
+                logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                continue
+            stmts[pmid] = sp.statements
+        elif cont_path.endswith('.txt'):
+            abst_txt = ''
+            with open(cont_path, 'r') as f:
+                abst_txt = f.read()
+            sp = sparser.process_text(abst_txt)
+            if sp is None:
+                logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                continue
+            stmts[pmid] = sp.statements
+    return (stmts, pmids_unread)
+        
 
 
 def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index, 
-              force_read, force_fulltext, path_to_reach, reach_version, 
+              force_read, force_fulltext, path_to_reach, reader_version, 
               cleanup=False, verbose=True):
     'Run the reach reader on the pmids in pmid_list.'
     base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
         get_content_to_read(
             pmid_list, start_index, end_index, tmp_dir, num_cores, 
-            force_fulltext, force_read
+            force_fulltext, force_read, 'reach', reader_version
             )
 
     # Create the REACH configuration file
@@ -411,7 +522,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         # Process JSON files from local file system, process to INDRA Statements
         # and upload to S3
         stmts.update(upload_process_reach_files(output_dir, pmids_unread,
-                                            reach_version, num_cores))
+                                            reader_version, num_cores))
         # Delete the tmp directory if desired
         if cleanup:
             shutil.rmtree(base_dir)
@@ -436,100 +547,22 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
     #    for c in content_not_found:
     #        f.write('%s\n' % c)
 
+
 if __name__ == '__main__':
-    # Set some variables
-    path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    #path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    reach_version = '1.3.3-b4a284'
-    force_read = True
-
-    # Check the arguments
-    import argparse
-    parser = argparse.ArgumentParser(
-        description='Apply NLP readers to the content available for a list of pmids.'
-        )
-    parser.add_argument(
-        '-r', '--reader',
-        choices=['reach', 'sparser', 'all'],
-        default='all',
-        dest='readers',
-        nargs=1,
-        help='Choose which reader(s) to use.'
-        )
-    parser.add_argument(
-        '-u', '--upload_json',
-        dest='upload_json',
-        action='store_true',
-        help='Option to simply upload previously read json files. Overrides -r option, so no reading will be done.'
-        )
-    parser.add_argument(
-        '-f', '--force_fulltext',
-        dest='force_fulltext',
-        action='store_true',
-        help='Option to force reading of the full text.'
-        )
-    parser.add_argument(
-        '-n', '--num_cores',
-        dest = 'num_cores',
-        default=1,
-        type=int,
-        help='Select the number of cores you want to use.'
-        )
-    parser.add_argument(
-        '-v', '--verbose',
-        dest='verbose',
-        action='store_true',
-        help='Show more output to screen.'
-        )
-    parser.add_argument(
-        '-c', '--cleanup',
-        dest='cleanup',
-        action='store_true',
-        help='Clean up after run.'
-        )
-    parser.add_argument(
-        '-s', '--start_index',
-        dest='start_index',
-        type=int,
-        help='Select the first pmid in the list to start reading.',
-        default=0
-        )
-    parser.add_argument(
-        '-e', '--end_index',
-        dest='end_index',
-        type=int,
-        help='Select the last pmid in the list to read.',
-        default=-1
-        )
-    parser.add_argument(
-        dest='basename',
-        help='The name of this job.'
-        )
-    parser.add_argument(
-        dest='out_dir',
-        help='The output directory where stuff is written. This is only a temporary directory when reading.'
-        )
-    parser.add_argument(
-        dest='pmid_list_file',
-        help='Path to a file containing a list of line separated pmids for the articles to be read.'
-        )
-    args = parser.parse_args()
-    if args.upload_json:
-        args.readers='none'
-    #print(args.readers, args.upload_json, args.pmid_list)
-    
-    
     # Old usages:
-    #usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
-    #        "end_index [force_fulltext]\n" % sys.argv[0]
-    #usage += "Alternative usage: %s upload_json basename output_dir " \
-    #                    "content_types_file num_cores" % sys.argv[0]
-
+    # usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
+    #         "end_index [force_fulltext]\n" % sys.argv[0]
+    # usage += "Alternative usage: %s upload_json basename output_dir " \
+    #                     "content_types_file num_cores" % sys.argv[0]
+    now = datetime.now()
+    if not os.path.exists(args.out_dir):
+        os.mkdir(args.out_dir)
+    
     # One type of operation: just upload previously read JSON files
     if args.upload_json:
         with open(args.pmid_list_file, 'rb') as f:
             text_sources = pickle.load(f)
-        stmts = upload_process_reach_files(args.out_dir, text_sources, reach_version,
+        stmts = upload_process_reach_files(args.out_dir, text_sources, reader_version,
                                            args.num_cores)
         pickle_file = '%s_stmts.pkl' % args.basename
         with open(pickle_file, 'wb') as f:
@@ -542,6 +575,8 @@ if __name__ == '__main__':
     # Load the list of PMIDs from the given file
     with open(args.pmid_list_file) as f:
         pmid_list = [line.strip('\n') for line in f.readlines()]
+    if args.shuffle:
+        pmid_list = random.sample(pmid_list, args.end_index)
 
     # Do the reading
     readers = []
@@ -549,20 +584,21 @@ if __name__ == '__main__':
         readers = ['reach', 'sparser']
     else:
         readers = args.readers[:]
-    
+
     read_func_dict = {'reach':run_reach, 'sparser':run_sparser}
-    results = []
+    stmts = {}
     for reader in readers:
         run_reader = read_func_dict[reader]
-        res = run_reader(pmid_list, args.out_dir, args.num_cores, args.start_index,
+        some_stmts, _ = run_reader(pmid_list, args.out_dir, args.num_cores, args.start_index,
                                  args.end_index, force_read, args.force_fulltext,
-                                 path_to_reach, reach_version,
+                                 path_to_reach, reader_version,
                                  cleanup=args.cleanup, verbose=args.verbose)
-        results.append(res)
-        
+        stmts[reader] = some_stmts
 
     # Pickle the statements
     pickle_file = '%s_stmts_%d_%d.pkl' % (args.basename, args.start_index, args.end_index)
     with open(pickle_file, 'wb') as f:
         pickle.dump(stmts, f, protocol=2)
+    time_taken = datetime.now() - now
+    print(time_taken)
 
