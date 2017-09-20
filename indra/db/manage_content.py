@@ -51,7 +51,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
-
 from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
@@ -405,14 +404,14 @@ class PmcManager(NihManager):
 
         def update_record_with_pmcid(tr_entry):
             logger.debug("Updating a record with a new pmcid....")
-            tr = db.select_one('text_ref', db.TextRef.pmid==tr_entry['pmid'])
+            tr = db.select_one('text_ref', db.TextRef.pmid == tr_entry['pmid'])
             tr.pmcid = tr_entry['pmcid']
             db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
             logger.debug("Done updating...")
 
         def update_record_with_pmid(tr_entry, pmid=None):
             logger.debug("Updating a record with a new pmid...")
-            tr = db.select_one('text_ref', db.TextRef.pmcid==tr_entry['pmcid'])
+            tr = db.select_one('text_ref', db.TextRef.pmcid == tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
             logger.debug("Done updating...")
@@ -437,8 +436,11 @@ class PmcManager(NihManager):
 
         # Process the text ref data.
         pmcids_to_skip = []
-        logger.debug("Beginning to filter text refs...")
-        for tr_entry in tr_data:
+        N = len(tr_data)
+        logger.debug("Beginning to filter %d text refs..." % N)
+        for i, tr_entry in enumerate(tr_data):
+            if i % int(N/10) is 0:
+                logger.debug('%d%% done filtering text_refs...' % (100*i/N))
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:
                     pmid = lookup_pmid(tr_entry['pmcid'])
@@ -530,7 +532,8 @@ class PmcManager(NihManager):
         filtered_tc_records = self.filter_text_content(db, mod_tc_data)
 
         # Upload the text content data.
-        logger.info('Adding %d more text content entries...' % len(filtered_tc_records))
+        logger.info('Adding %d more text content entries...' %
+                    len(filtered_tc_records))
         db.copy('text_content', filtered_tc_records, self.tc_cols)
 
     def get_data_from_xml_str(self, xml_str, filename):
@@ -578,7 +581,7 @@ class PmcManager(NihManager):
         def submit(tag, tr_data, tc_data):
             batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
             logger.info("Submitting %s of data for %s..." %
-                  (batch_name, archive))
+                        (batch_name, archive))
 
             if q is not None:
                 q.put(((batch_name, archive), tr_data[:], tc_data[:]))
@@ -678,8 +681,6 @@ class PmcManager(NihManager):
             try:
                 # This will not block until at least one is done
                 label, tr_data, tc_data = q.get_nowait()
-            except KeyboardInterrupt:
-                raise
             except Exception:
                 continue
             logger.info("Beginning to upload %s from %s..." % label)
@@ -691,8 +692,6 @@ class PmcManager(NihManager):
         while not q.empty():
             try:
                 tr_data, tc_data = q.get(timeout=1)
-            except KeyboardInterrupt:
-                raise
             except Exception:
                 break
             self.upload_batch(db, tr_data, tc_data)

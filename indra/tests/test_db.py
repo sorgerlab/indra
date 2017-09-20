@@ -4,13 +4,17 @@ from builtins import dict, str
 import re
 from sys import version_info
 from nose import SkipTest
+from nose.failure import Failure
 from os import remove, path
 from nose.tools import assert_equal, assert_list_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.manage_content import Medline, PmcOA, Manuscripts
 from indra.db import DatabaseManager, texttypes, get_defaults
 
-defaults = get_defaults()
+try:
+    defaults = get_defaults()
+except Exception:
+    raise Failure("Could not load the default hosts for the database.")
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # TODO: implement setup-teardown system.

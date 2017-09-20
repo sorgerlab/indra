@@ -17,7 +17,6 @@ from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
-from time import sleep
 
 
 @compiles(DropTable, "postgresql")
@@ -281,6 +280,15 @@ class DatabaseManager(object):
                     (input_dict_list, tbl_name))
         return self.get_values(entry_list, ret_info)
 
+    def delete_all(self, entry_list):
+        "Remove the given records from the given table."
+        self.grab_session()
+        for entry in entry_list:
+            self.session.delete(entry)
+        self.commit("Could not remove %d records from the database." %
+                    len(entry_list))
+        return
+
     def copy(self, tbl_name, data, cols=None):
         "Use pg_copy to copy over a large amount of data."
         if len(data) is 0:
@@ -319,7 +327,6 @@ class DatabaseManager(object):
             print("WARNING: You are not using postresql or do not have pgcopy,"
                   " so this will likely be very slow.")
             self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
-            sleep(1)
 
     def filter_query(self, tbls, *args):
         "Query a table and filter results."
