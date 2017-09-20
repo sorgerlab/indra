@@ -63,5 +63,5 @@ def get_mutations(gene_names, cell_types):
         that is keyed by gene name, with a list of amino acid substitutions
         as values.
     """
-    mutations = cbio_client.get_mutations_ccle(gene_names, cell_types)
+    mutations = cbio_client.get_ccle_mutations(gene_names, cell_types)
     return mutations
