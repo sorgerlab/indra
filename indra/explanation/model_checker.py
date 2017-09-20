@@ -468,8 +468,11 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        paths : list[PathResult]
-            A list of paths obtained from path finding.
+        paths : list[list[tuple[str, int]]]
+            A list of paths obtained from path finding. Each path is a list
+            of tuples (which are edges in the path), with the first element
+            of the tuple the name of a rule, and the second element its
+            polarity in the path.
         agents_values : dict[indra.statements.Agent, float]
             A dictionary of INDRA Agents and their corresponding measured
             value in a given experimental condition.
