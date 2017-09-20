@@ -220,12 +220,12 @@ def get_task_1(data):
             target_agents = [agent_phos(target, []) for
                              target in drug_targets[drug]]
             for dose in drug_doses:
-                stmts_to_check[cell_line][drug][dose] = []
+                values = get_agent_values_for_condition(data, cell_line,
+                                                        drug, time, dose)
+                stmts_to_check[cell_line][drug][dose] = [[], values]
                 for target, obs in itertools.product(target_agents, obs_agents):
                     st = Phosphorylation(target, obs)
-                    values = get_agent_values_for_condition(data, cell_line,
-                                                            drug, time, dose)
-                    stmts_to_check[cell_line][drug][dose].append((st, values))
+                    stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
 
