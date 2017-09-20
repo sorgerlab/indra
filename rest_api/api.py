@@ -7,6 +7,7 @@ from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
     CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
+from indra.databases import cbio_client
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -311,6 +312,61 @@ def assemble_loopy():
     sa.make_model(use_name_as_key=True)
     model_str = sa.print_loopy(as_url=True)
     res = {'loopy_url': model_str}
+    return res
+
+
+#   CCLE mRNA amounts   #
+@route('/databases/cbio/get_ccle_mrna', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_ccle_mrna_levels():
+    """Get CCLE mRNA amounts using cBioClient"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    mrna_amounts = cbio_client.get_ccle_mrna(gene_list, cell_lines)
+    res = {'mrna_amounts': mrna_amounts}
+    return res
+
+
+#   CCLE CNA   #
+@route('/databases/cbio/get_ccle_cna', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_ccle_cna():
+    """Get CCLE CNA
+    -2 = homozygous deletion
+    -1 = hemizygous deletion
+     0 = neutral / no change
+     1 = gain
+     2 = high level amplification
+    """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    cna = cbio_client.get_ccle_cna(gene_list, cell_lines)
+    res = {'cna': cna}
+    return res
+
+
+@route('/databases/cbio/get_ccle_mutations', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_ccle_mutations():
+    """Get CCLE mutations
+    returns the amino acid changes for a given list of genes and cell lines
+    """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    gene_list = body.get('gene_list')
+    cell_lines = body.get('cell_lines')
+    mutations = cbio_client.get_ccle_mutations(gene_list, cell_lines)
+    res = {'mutations': mutations}
     return res
 
 

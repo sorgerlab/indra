@@ -702,6 +702,137 @@ var api_spec = {
           }
         }
       }
+    },
+    "/databases/cbio/get_ccle_mrna": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for mRNA amounts using the cBioPortal client",
+        "operationId": "get_ccle_mrna",
+        "description": "Returns mRNA amounts for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mRNA levels obtained.",
+            "example" : {
+              "mrna_amounts": {
+                "SKMEL28_SKIN": {
+                  "BRAF": 6.2354449999999995,
+                  "MAP2K1": 10.26864
+                },
+                "BT20_BREAST": {
+                  "BRAF": 8.774852000000001,
+                  "MAP2K1": 12.08755
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/databases/cbio/get_ccle_cna": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for copy number alterations (CNAs) using the cBioPortal client",
+        "operationId": "get_ccle_cna",
+        "description": "Returns CNAs for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CNAs levels obtained.",
+            "example" : {
+              "cna": {
+                "SKMEL28_SKIN": {
+                  "BRAF": 1,
+                  "MAP2K1": -1
+                },
+                "BT20_BREAST": {
+                  "BRAF": 1,
+                  "MAP2K1": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/databases/cbio/get_ccle_mutations": {
+      "post": {
+        "tags": [
+          "databases"
+        ],
+        "summary": "Query CCLE for mutations (CNAs) using the cBioPortal client",
+        "operationId": "get_ccle_mutations",
+        "description": "Returns mutations for the provided list of genes and cell lines within CCLE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "contextRequestObj",
+            "description": "object with a key of \"gene_list\" referencing a list of HGNC symbols and a key of \"cell_lines\" referencing a list of CCLE cell line names.",
+            "schema": {
+              "$ref": "#/definitions/contextRequestObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CNAs levels obtained.",
+            "example" : {
+              "mutations": {
+                "SKMEL28_SKIN": {
+                  "BRAF": [
+                    "V600E"
+                  ],
+                  "MAP2K1": []
+                },
+                "BT20_BREAST": {
+                  "BRAF": [],
+                  "MAP2K1": []
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -741,6 +872,33 @@ var api_spec = {
             "BRAF",
             "MAP2K1"
           ]
+        }
+      }
+    },
+    "gene_list": {
+      "type": "array",
+      "example": [
+        "BRAF",
+        "MAP2K1"
+      ]},
+    "cell_lines": {
+      "type": "array",
+      "example": [
+        "SKMEL28_SKIN",
+        "BT20_BREAST"
+      ]},
+    "contextRequestObj": {
+      "type": "object",
+      "required": [
+        "gene_list",
+        "cell_lines"
+      ],
+      "properties": {
+        "gene_list": {
+          "$ref": "#/definitions/gene_list"
+        },
+        "cell_lines": {
+          "$ref": "#/definitions/cell_lines"
         }
       }
     },

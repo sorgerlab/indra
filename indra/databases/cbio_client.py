@@ -172,7 +172,7 @@ def get_profile_data(study_id, gene_list,
             'case_set_id': case_set_id,
             'genetic_profile_id': genetic_profile,
             'gene_list': gene_list_str,
-            'skiprows': 2}
+            'skiprows': -1}
     df = send_request(**data)
     case_list_df = [x for x in df.columns.tolist()
                     if x not in ['GENE_ID', 'COMMON']]
@@ -219,6 +219,12 @@ def get_genetic_profiles(study_id, profile_filter=None):
     'cellline_ccle_broad_mutations' for mutations, 'cellline_ccle_broad_CNA'
     for copy number alterations, etc.
 
+    CNA values correspond to the following alterations
+    -2 = homozygous deletion
+    -1 = hemizygous deletion
+     0 = neutral / no change
+     1 = gain
+     2 = high level amplification
 
     Parameters
     ----------
@@ -301,7 +307,7 @@ def get_cancer_types(cancer_filter=None):
     return type_ids
 
 
-def get_mutations_ccle(gene_list, cell_lines, mutation_type=None):
+def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
 
     This is a specialized call to get_mutations tailored to CCLE cell lines.
@@ -423,6 +429,8 @@ def get_ccle_mrna(gene_list, cell_lines):
             for gene in gene_list:
                 value_cell = df[cell_line][df['COMMON'] == gene]
                 if value_cell.empty:
+                    mrna_amounts[cell_line][gene] = None
+                elif pandas.isnull(value_cell.values[0]):
                     mrna_amounts[cell_line][gene] = None
                 else:
                     value = value_cell.values[0]
