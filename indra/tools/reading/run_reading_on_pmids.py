@@ -16,6 +16,7 @@ from collections import Counter
 from indra.sources import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
+from indra.sources.sparser.sparser_api import process_nxml_file
 
 # Logger
 logger = logging.getLogger('runreader')
@@ -102,10 +103,16 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reach_version,
 # Version 2: If JSON is available, return JSON or process
 # it and return statements (process it?)
 
-def download_from_s3(pmid, input_dir=None, reach_version=None,
+def download_from_s3(pmid, reader, input_dir=None, reader_version=None,
                      force_read=False, force_fulltext=False):
     if input_dir is None:
         raise ValueError('input_dir must be defined')
+    
+    if reader is "sparser":
+        logger.warning(
+            'Cannot yet search for preexisting reading for sparser.'
+            )
+        force_read = True
 
     # First define the text retrieval function
     def get_text():
@@ -158,20 +165,20 @@ def download_from_s3(pmid, input_dir=None, reach_version=None,
 
     # If we're forcing a read regardless of whether there is cached REACH
     # output, then we download the text content
-    if force_read or reach_version is None:
+    if force_read or reader_version is None:
         return get_text()
     # If not, look for REACH JSON on S3
     (read_reach_version, read_source_text) = \
                             s3_client.get_reach_metadata(pmid)
     # Found it, same version, no need to get text
     if read_reach_version is not None and \
-        read_reach_version == reach_version:
-        result = {pmid: {'reach_version': read_reach_version,
+        read_reach_version == reader_version:
+        result = {pmid: {'reader_version': read_reach_version,
                         'reach_source_text': read_source_text}}
     # Found it, different version, get the text
     else:
         result = get_text()
-        result[pmid].update({'reach_version': read_reach_version,
+        result[pmid].update({'reader_version': read_reach_version,
                              'reach_source_text': read_source_text})
     return result
 
@@ -198,7 +205,7 @@ def process_reach_from_s3(pmid):
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
 def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
-                        force_fulltext, force_read):
+                        force_fulltext, force_read, reach_version):
     if end_index > len(pmid_list):
         end_index = len(pmid_list)
     pmids_in_range = pmid_list[start_index:end_index]
@@ -272,7 +279,20 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_rea
             pmid_list, start_index, end_index, tmp_dir, num_cores, 
             force_fulltext, force_read
             )
-    
+    ret = {}
+    for pmid, result in pmids_unread.items():
+        source = result['content_source']
+        cont_path = result['content_path']
+        if source is 'content_not_found' or source.startswith('unhandled_content_type'):
+            logger.info('No content read for %s.' % pmid)
+            continue  # No real content here.
+
+        if cont_path.endswith('.nxml') and source.startswith('pmc'):
+            new_fname = os.path.join(input_dir, 'PMC%s.nxml' % pmid)
+            os.rename(cont_path, new_fname)
+            ret.update(process_nxml_file(new_fname))
+        elif cont_path.endswith('.txt') and source is 'abstract':
+            pass
 
 
 def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index, 
