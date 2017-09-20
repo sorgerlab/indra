@@ -41,7 +41,7 @@ class SparserJSONProcessor(object):
                         json_stmt['obj_activity'] = obj_activity[0]
                 obj = json_stmt.get('obj')
                 if isinstance(obj, (list, str)):
-                  continue
+                    continue
             elif json_stmt.get('type') == 'Translocation':
                 # Fix locations if possible
                 for loc_param in ('from_location', 'to_location'):
