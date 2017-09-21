@@ -536,6 +536,13 @@ class ModelChecker(object):
                               reverse=True)
         return scored_paths
 
+    def _extreme_prune(self, node_list, filename='im.pdf'):
+        im = self.get_im()
+        for node in im.nodes():
+            if not node in node_list:
+                im.remove_node(node)
+        im.draw(filename, prog='dot')
+
     def prune_influence_map(self):
         """Remove edges between rules causing problematic non-transitivity.
 
@@ -572,8 +579,9 @@ class ModelChecker(object):
                     edge_sign = _get_edge_sign(edge)
                     logger.info('Will remove edge (%s, %s) with polarity %s',
                                 u, v, edge_sign)
-        for edge in edges_to_remove:
-            im.remove_edge(edge)
+        for edge in im.edges():
+            if edge in edges_to_remove:
+                im.remove_edge(edge)
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
@@ -967,7 +975,6 @@ def _stmt_from_rule(model, rule_name, stmts):
         for stmt in stmts:
             if stmt.uuid == stmt_uuid:
                 return stmt
-
 
 def _monomer_pattern_label(mp):
     """Return a string label for a MonomerPattern."""
