@@ -4,8 +4,6 @@ import pickle
 import itertools
 from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
-from indra.tools.gene_network import GeneNetwork
-from indra.sources import biopax
 from indra.tools.reading.submit_reading_pipeline_aws import \
     submit_run_reach, submit_combine, wait_for_complete
 from assemble_pysb import *
@@ -40,36 +38,6 @@ def run_reading(pmid_fname):
     # Download the file and save
 
 
-def grouped_biopax_query(gene_names, database_filter, block_size=60):
-    gene_blocks = [gene_names[i:i+block_size] for i in
-                   range(0, len(gene_names), block_size)]
-    stmts = []
-    # Run pathsfromto between pairs of blocks and pathsbetween
-    # within each block. This breaks up a single call with N genes into
-    # (N/block_size)*(N/blocksize) calls with block_size genes
-    for genes1, genes2 in itertools.product(gene_blocks, repeat=2):
-        if genes1 == genes2:
-            bp = biopax.process_pc_pathsbetween(genes1,
-                                            database_filter=database_filter)
-        else:
-            bp = biopax.process_pc_pathsfromto(genes1, genes2,
-                                           database_filter=database_filter)
-        stmts += bp.statements
-    return stmts
-
-
-def build_prior(gene_names):
-    """Build a corpus of prior Statements from PC and BEL."""
-    gn = GeneNetwork(gene_names, basen)
-    bel_stmts = gn.get_bel_stmts(filter=False)
-    ac.dump_statements(bel_stmts, prefixed_pkl('bel'))
-    # This call results in 504 error currently
-    #biopax_stmts = gn.get_biopax_stmts(filter=False)
-    database_filter = ['reactome', 'psp', 'kegg', 'pid']
-    biopax_stmts = grouped_biopax_query(gene_names, database_filter)
-    ac.dump_statements(biopax_stmts, prefixed_pkl('biopax'))
-
-
 if __name__ == '__main__':
     # Load the data and get the gene names
     data = process_data.read_rppa_data()
@@ -86,10 +54,12 @@ if __name__ == '__main__':
         reach_stmts = ac.load_statements(prefixed_pkl('reach'))
         bel_stmts = ac.load_statements(prefixed_pkl('bel'))
         biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
+        phosphosite_stmts = ac.load_statements(prefixed_pkl('phosphosite'))
         trips_stmts = ac.load_statements(prefixed_pkl('trips'))
         r3_stmts = ac.load_statements(prefixed_pkl('r3'))
         # Combine the raw statements
-        stmts = reach_stmts + trips_stmts + bel_stmts + biopax_stmts + r3_stmts
+        stmts = reach_stmts + trips_stmts + bel_stmts + \
+            biopax_stmts + r3_stmts + phosphosite_stmts
 
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
