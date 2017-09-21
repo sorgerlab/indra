@@ -1,3 +1,27 @@
+#{"drug_time_conc_line" : {
+#        "meta" : ["StartGene", "EndGene", "StartGene > ... >  EndGene", Lenght, Score],
+#            "path" : ["uuid_1", uuids, "uuid_n"]
+#                }
+#                }
+#
+
+def get_paths(scored_paths, model, stmts):
+    conc = 0.1
+    time = 10
+    paths = {}
+    for cell_line in scored_paths.keys():
+        for drug in scored_paths[cell_line].keys():
+            scpaths = scored_paths[cell_line][drug]
+            print(scpaths)
+            path, score = scpaths[0]
+            label = '%s_%s_%s_%s' % (drug, time, conc, cell_line)
+            paths[label] = {'meta': [], 'path': []}
+            stmts = stmts_for_path(path, model, stmts)
+            uuids = [stmt.uuid for stmt in stmts]
+            paths[label]['path'] = uuids
+    return paths
+
+
 def make_english_output(results, model, stmts):
     citations = {}
     citation_count = 1
@@ -52,6 +76,8 @@ def make_english_output(results, model, stmts):
     for k, v in sorted(citations.items(), key=lambda x: x[1]):
         references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
     print(references)
+
+
 def get_path_stmts(results, model, stmts):
     all_path_stmts = []
     for drug, target, polarity, value, found_path, paths, flag in results:
@@ -63,14 +89,18 @@ def get_path_stmts(results, model, stmts):
         all_path_stmts.append(path_stmts)
     return all_path_stmts
 
+
 def stmts_for_path(path, model, stmts):
     path_stmts = []
     for path_rule, sign in path:
         for rule in model.rules:
             if rule.name == path_rule:
                 stmt = _stmt_from_rule(model, path_rule, stmts)
+                if path_rule == 'BRAF_phosphoS446_phosphoS729_phosphorylation_MAP2K1_S218':
+                    import ipdb; ipdb.set_trace()
                 path_stmts.append(stmt)
     return path_stmts
+
 
 def get_path_genes(all_path_stmts):
     path_genes = []
@@ -81,6 +111,7 @@ def get_path_genes(all_path_stmts):
                     path_genes.append(agent.name)
     path_genes = sorted(list(set(path_genes)))
     return path_genes
+
 
 def _stmt_from_rule(model, rule_name, stmts):
     """Return the INDRA Statement corresponding to a given rule by name."""

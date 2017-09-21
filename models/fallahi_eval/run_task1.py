@@ -1,10 +1,11 @@
 import pickle
 from copy import deepcopy
 import itertools
+import indra.tools.assemble_corpus as ac
 from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
+from indra.explanation.reporting import *
 from process_data import read_rppa_data, get_task_1, get_antibody_agents
-from assemble_models import prefixed_pkl
-from assemble_pysb import contextualize_model
+from assemble_pysb import contextualize_model, prefixed_pkl
 
 
 def get_agent_values(antibody_agents, values):
@@ -24,6 +25,10 @@ def get_global_mc(model, stmts_to_check, agents_to_observe):
     mc = ModelChecker(model, all_stmts_condition, agents_to_observe)
     mc.prune_influence_map()
     return mc
+
+def export_paths(scored_paths, model):
+    stmts = ac.load_statements(prefixed_pkl('pysb_stmts'))
+    paths = get_paths(scored_paths, model, stmts)
 
 flatten = lambda x: list(itertools.chain.from_iterable(x))
 
