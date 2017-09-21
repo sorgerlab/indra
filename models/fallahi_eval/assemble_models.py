@@ -55,7 +55,7 @@ if __name__ == '__main__':
         stmts = []
         for source in sources:
             stmts += ac.load_statements(prefixed_pkl(source))
-
+        stmts = ac.filter_no_hypothesis(stmts)
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
         stmts = ac.map_grounding(stmts)
@@ -74,7 +74,4 @@ if __name__ == '__main__':
     # Load the preassembled statements
     stmts = ac.load_statements(pre_stmts_file)
     # Run assembly into a PySB model
-    pysb_stmts, pysb_model = assemble_pysb(stmts, gene_names)
-    ac.dump_statements(pysb_stmts, prefixed_pkl('pysb_stmts'))
-    with open(prefixed_pkl('pysb_model'), 'wb') as f:
-        pickle.dump(pysb_model, f)
+    assemble_pysb(stmts, gene_names)

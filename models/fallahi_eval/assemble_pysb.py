@@ -1,11 +1,13 @@
+import pickle
 from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler, IndexCardAssembler
-from process_data import antibody_map
+from process_data import antibody_map, cell_lines
 from indra.databases import context_client
+from assemble_models import prefixed_pkl
 
-def assemble_pysb(stmts, data_genes):
+def assemble_pysb(stmts, data_genes, contextualize=False):
     # Filter the INDRA Statements to be put into the model
     stmts = ac.filter_by_type(stmts, Complex, invert=True)
     stmts = ac.filter_direct(stmts)
@@ -43,12 +45,32 @@ def assemble_pysb(stmts, data_genes):
         num_stmts = len(ml.statements)
     stmts = ml.statements
 
-    stmts = contextualize_stmts(stmts, 'SKMEL28', data_genes)
-
+    # Just generate the generic model
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    return stmts, model
+    ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
+    with open(prefixed_pkl('pysb_model'), 'wb') as f:
+        pickle.dump(model, f)
+
+    # Run this extra part only if contextualize is set to True
+    if not contextualize:
+        return
+
+    cell_lines_no_data = ['COLO858', 'K2', 'MMACSF', 'MZ7MEL', 'WM1552C']
+    for cell_line in cell_lines:
+        if cell_line not in cell_lines_no_data:
+            stmtsc = contextualize_stmts(stmts, 'C32', data_genes)
+        else:
+            stmtsc = stmts
+        pa = PysbAssembler()
+        pa.add_statements(stmtsc)
+        model = pa.make_model()
+        if cell_line not in cell_lines_no_data:
+            contextualize_model(model, cell_line)
+        ac.dump_statements(stmtsc, prefixed_pkl('pysb_stmts_%s' % cell_line))
+        with open(prefixed_pkl('pysb_model_%s' % cell_line), 'wb') as f:
+            pickle.dump(model, f)
 
 
 def contextualize_stmts(stmts, cell_line, genes):
