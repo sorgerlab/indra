@@ -28,7 +28,7 @@ if __name__ == '__main__':
         agents_to_observe += agents
 
     # Get all the data for Task 1
-    stmts_to_check = get_task_1(data)
+    stmts_to_check = get_task_1(data, False)
 
     dose = 1.0
     scored_paths = {}

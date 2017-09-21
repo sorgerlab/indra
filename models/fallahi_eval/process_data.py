@@ -4,7 +4,8 @@ import numpy
 import pandas
 import itertools
 from indra.literature import pubmed_client
-from indra.statements import Agent, ModCondition, Phosphorylation
+from indra.statements import Agent, ModCondition, Phosphorylation, \
+    Dephosphorylation
 from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
@@ -200,7 +201,7 @@ def get_agent_values_for_condition(data, cell_line, drug, time, dose):
             values[ab] = value
     return values
 
-def get_task_1(data):
+def get_task_1(data, inverse=False):
     """Return the test cases to be explained."""
     # TASK 1
     # We observe a dose-dependent decrease of p-S6(S235/236)
@@ -224,7 +225,10 @@ def get_task_1(data):
                                                         drug, time, dose)
                 stmts_to_check[cell_line][drug][dose] = [[], values]
                 for target, obs in itertools.product(target_agents, obs_agents):
-                    st = Phosphorylation(target, obs)
+                    if not inverse:
+                        st = Phosphorylation(target, obs)
+                    else:
+                        st = Dephosphorylation(target, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
