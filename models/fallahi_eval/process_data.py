@@ -5,7 +5,7 @@ import pandas
 import itertools
 from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition, Phosphorylation, \
-    Dephosphorylation
+    Dephosphorylation, IncreaseAmount, DecreaseAmount
 from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
