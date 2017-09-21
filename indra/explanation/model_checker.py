@@ -543,8 +543,13 @@ class ModelChecker(object):
         rules when they share *all* child nodes except for each other;
         that is, they have a mutual relationship with each other and share
         all of the same children.
+
+        Note that edges must be removed in batch at the end to prevent edge
+        removal from affecting the lists of rule children during the comparison
+        process.
         """
         im = self.get_im()
+        edges_to_remove = []
         remove_im_params(self.model, im)
         # For every rule in the influence map
         predecessors = im.predecessors_iter
@@ -557,10 +562,12 @@ class ModelChecker(object):
                p2_children.difference(p1_children) == set([p1]):
                 for u, v in ((p1, p2), (p2, p1)):
                     edge = im.get_edge(u, v)
+                    edges_to_remove.append(edge)
                     edge_sign = _get_edge_sign(edge)
-                    logger.info('Removing edge (%s, %s) with polarity %s',
+                    logger.info('Will remove edge (%s, %s) with polarity %s',
                                 u, v, edge_sign)
-                    im.remove_edge(edge)
+        for edge in edges_to_remove:
+            im.remove_edge(edge)
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
