@@ -377,31 +377,42 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_rea
             )
     stmts = {}
     for pmid, result in pmids_unread.items():
-        source = result['content_source']
-        cont_path = result['content_path']
-        if (source is 'content_not_found' 
-            or source.startswith('unhandled_content_type')
-            or source.endswith('failure')):
-            logger.info('No content read for %s.' % pmid)
-            continue  # No real content here.
+        try:
+            source = result['content_source']
+            cont_path = result['content_path']
+            if (source is 'content_not_found' 
+                or source.startswith('unhandled_content_type')
+                or source.endswith('failure')):
+                logger.info('No content read for %s.' % pmid)
+                continue  # No real content here.
 
-        if cont_path.endswith('.nxml') and source.startswith('pmc'):
-            new_fname = os.path.join(input_dir, 'PMC%s.nxml' % pmid)
-            os.rename(cont_path, new_fname)
-            sp = sparser.process_nxml_file(new_fname)
-            if sp is None:
-                logger.error('Failed to run sparser on pmid: %s.' % pmid)
-                continue
-            stmts[pmid] = sp.statements
-        elif cont_path.endswith('.txt'):
-            abst_txt = ''
-            with open(cont_path, 'r') as f:
-                abst_txt = f.read()
-            sp = sparser.process_text(abst_txt)
-            if sp is None:
-                logger.error('Failed to run sparser on pmid: %s.' % pmid)
-                continue
-            stmts[pmid] = sp.statements
+            if cont_path.endswith('.nxml') and source.startswith('pmc'):
+                new_fname = os.path.join(input_dir, 'PMC%s.nxml' % pmid)
+                os.rename(cont_path, new_fname)
+                sp = sparser.process_nxml_file(new_fname)
+                if sp is None:
+                    logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                    continue
+                stmts[pmid] = sp.statements
+            elif cont_path.endswith('.txt'):
+                abst_txt = ''
+                with open(cont_path, 'r') as f:
+                    abst_txt = f.read()
+                sp = sparser.process_text(abst_txt)
+                if sp is None:
+                    logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                    continue
+                stmts[pmid] = sp.statements
+        except Exception as e:
+            logger.error('Failed to process data for %s.' % pmid)
+            logger.exception(e)
+            continue
+        except KeyboardInterrupt as e:
+            logger.exception(e)
+            logger.info('Caught keyboard interrupt...stopping. \n'
+                        'Results so far will be pickled unless '
+                        'Keyboard interupt is hit again.')
+            break
     return (stmts, pmids_unread)
         
 
