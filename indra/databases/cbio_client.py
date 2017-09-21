@@ -180,7 +180,8 @@ def get_profile_data(study_id, gene_list,
                     for case in case_list_df}
     for case in case_list_df:
         profile_values = df[case].tolist()
-        for g, cv in zip(gene_list, profile_values):
+        df_gene_list = df['COMMON'].tolist()
+        for g, cv in zip(df_gene_list, profile_values):
             if not pandas.isnull(cv):
                 profile_data[case][g] = cv
     return profile_data
