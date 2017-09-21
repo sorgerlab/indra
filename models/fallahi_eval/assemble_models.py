@@ -51,15 +51,10 @@ if __name__ == '__main__':
     pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
         # Load various files that were previously produced
-        reach_stmts = ac.load_statements(prefixed_pkl('reach'))
-        bel_stmts = ac.load_statements(prefixed_pkl('bel'))
-        biopax_stmts = ac.load_statements(prefixed_pkl('biopax'))
-        phosphosite_stmts = ac.load_statements(prefixed_pkl('phosphosite'))
-        trips_stmts = ac.load_statements(prefixed_pkl('trips'))
-        r3_stmts = ac.load_statements(prefixed_pkl('r3'))
-        # Combine the raw statements
-        stmts = reach_stmts + trips_stmts + bel_stmts + \
-            biopax_stmts + r3_stmts + phosphosite_stmts
+        sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3']
+        stmts = []
+        for source in sources:
+            stmts += ac.load_statements(prefixed_pkl(source))
 
         # Fix grounding and filter to grounded entities and for proteins,
         # filter to the human ones
