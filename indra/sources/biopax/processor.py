@@ -85,7 +85,7 @@ class BiopaxProcessor(object):
             members = self._get_complex_members(bpe)
             if members is not None:
                 if len(members) > 10:
-                    logger.info('Skipping complex with more than 10 members.')
+                    logger.debug('Skipping complex with more than 10 members.')
                     continue
                 complexes = _get_combinations(members)
                 for c in complexes:
@@ -204,7 +204,7 @@ class BiopaxProcessor(object):
                     continue
                 cat_dir = control.getCatalysisDirection()
                 if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                    logger.info('Unexpected catalysis direction: %s.' % \
+                    logger.debug('Unexpected catalysis direction: %s.' % \
                         control.getCatalysisDirection())
                     continue
 
@@ -585,7 +585,7 @@ class BiopaxProcessor(object):
         if not member_pes:
             member_pes = cplx.getMemberPhysicalEntity().toArray()
             if not member_pes:
-                logger.info('Complex "%s" has no members.' %
+                logger.debug('Complex "%s" has no members.' %
                             cplx.getDisplayName())
                 return None
         members = []
@@ -653,7 +653,7 @@ class BiopaxProcessor(object):
                 continue
             cat_dir = control.getCatalysisDirection()
             if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                logger.info('Unexpected catalysis direction: %s.' % \
+                logger.debug('Unexpected catalysis direction: %s.' % \
                     control.getCatalysisDirection())
                 continue
 
@@ -754,13 +754,13 @@ class BiopaxProcessor(object):
                 else:
                     msg = 'Cannot handle complex enzymes with ' + \
                             'aggregate non-protein binding partners.'
-                    logger.info(msg)
+                    logger.debug(msg)
                     continue
             return enzs
         else:
             msg = 'Cannot handle complex enzymes with ' + \
                     'multiple protein members.'
-            logger.info(msg)
+            logger.debug(msg)
             return None
 
     @staticmethod
@@ -868,7 +868,7 @@ class BiopaxProcessor(object):
                 known_mf_type = mf_type_indra
                 break
         if not known_mf_type:
-            logger.info('Skipping modification with unknown terms: %s' %
+            logger.debug('Skipping modification with unknown terms: %s' %
                         ', '.join(mf_type_terms))
             return None
 
@@ -890,7 +890,7 @@ class BiopaxProcessor(object):
                 if mf_pos_status is None:
                     mod_pos = None
                 elif mf_pos_status and mf_pos_status.toString() != 'EQUAL':
-                    logger.info('Modification site position is %s' %
+                    logger.debug('Modification site position is %s' %
                                 mf_pos_status.toString())
                 else:
                     mod_pos = mf_site.getSequencePosition()
@@ -994,7 +994,7 @@ class BiopaxProcessor(object):
         elif _is_physical_entity(bpe):
             name = bpe.getDisplayName()
         else:
-            logger.info('Unhandled entity type %s' %
+            logger.debug('Unhandled entity type %s' %
                         bpe.getModelInterface().getName())
             name = bpe.getDisplayName()
 
