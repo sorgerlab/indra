@@ -494,12 +494,26 @@ class IndraDatabaseError(Exception):
 
 def get_defaults():
     "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    with open(DEFAULTS_FILE, 'r') as f:
-        defaults_raw = f.read().splitlines()
-    defaults_dict = {}
-    for default_line in defaults_raw:
-        key, value = default_line.split('=')
-        defaults_dict[key.strip()] = value.strip()
+    default_default_file = 'defaults.txt'
+    env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
+    env = os.environ
+    available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}
+    if not path.exists(default_default_file) and not available_keys:
+        raise IndraDatabaseError(
+            "Cannot find default file or environment vars."
+            )
+    elif path.exists(default_default_file):
+        with open(default_default_file, 'r') as f:
+            defaults_raw = f.read().splitlines()
+        defaults_dict = {}
+        for default_line in defaults_raw:
+            key, value = default_line.split('=')
+            defaults_dict[key.strip()] = value.strip()
+    else:
+        defaults_dict = {
+            purpose: env_val for purpose, my_env_key in env_key_dict.items()
+            for env_key, env_val in env.items() if my_env_key == env_key
+            }
     return defaults_dict
 
 
