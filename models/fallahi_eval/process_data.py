@@ -270,14 +270,21 @@ def get_task_5(data, inverse=False):
     return stmts_to_check
 
 
-def build_context_json(data, cell_lines, filename="fallahi_data.json"):
+def build_context_json(data, cell_lines, filename="fallahi"):
     """Save context in a format readable by the pathway map"""
+    select_df = pandas.DataFrame(columns=['Drug',
+                                          'Concentration (uM)',
+                                          'Time (hr)'])
     long_df = pandas.DataFrame(columns=['id', 'variable', 'value'])
     for cl in cell_lines:
         df = deepcopy(data[cl]['median'])
+        select_df = select_df.append(df[['Drug',
+                                         'Concentration (uM)',
+                                         'Time (hr)']])
+        select_df['cell_line'] = cl
         df['id'] = df.apply(lambda x: '%s_%s_%s_%s' %
-                            (x['Drug'], x['Time (hr)'],
-                             x['Concentration (uM)'], cl),
+                            (x['Drug'], x['Concentration (uM)'],
+                             x['Time (hr)'], cl),
                             axis=1)
         df = df.drop(['Drug', 'Time (hr)', 'Concentration (uM)'], axis=1)
         df = df.melt(id_vars=['id'])
@@ -317,8 +324,15 @@ def build_context_json(data, cell_lines, filename="fallahi_data.json"):
             df5 = df3[df3['site'].isin([None])]
             j[i][g]['node']['antibodies'] = df5['antibody'].tolist()
             j[i][g]['node']['values'] = df5['value'].tolist()
-    with open(filename, 'w') as outfile:
+    with open(filename + '_data.json', 'w') as outfile:
         json.dump(j, outfile, indent=None, sort_keys=True)
+    select_df = select_df.drop_duplicates()
+    select_df = select_df[['Drug', 'Concentration (uM)',
+                           'Time (hr)', 'cell_line']]
+    select_array = select_df.values.tolist()
+    with open(filename + '_select.json', 'w') as outfile:
+        json.dump(select_array, outfile, indent=None, sort_keys=False)
+
 
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
