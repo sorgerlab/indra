@@ -1,10 +1,13 @@
 import pickle
+import itertools
 from indra.util import _require_python3
 from indra.sources import biopax
 from indra.tools.gene_network import GeneNetwork
+import indra.tools.assemble_corpus as ac
+from assemble_models import prefixed_pkl, based
 
 
-phosphosite_owl_file = 'Kinase_substrates.owl'
+phosphosite_owl_file = 'sources/Kinase_substrates.owl'
 
 
 def read_phosphosite_owl(fname=phosphosite_owl_file):
@@ -35,7 +38,7 @@ def grouped_biopax_query(gene_names, database_filter, block_size=60):
     final_stmts = []
     for stmt in stmts:
         source_ids = [ev.source_id for ev in stmt.evidence]
-        if set(ev.source_id) & set(biopax_blacklist):
+        if set(source_ids) & set(biopax_blacklist):
             continue
         final_stmts.append(stmt)
     return final_stmts
@@ -47,8 +50,7 @@ def build_prior(gene_names):
     bel_stmts = gn.get_bel_stmts(filter=False)
     ac.dump_statements(bel_stmts, prefixed_pkl('bel'))
     # This call results in 504 error currently
-    #biopax_stmts = gn.get_biopax_stmts(filter=False)
-    database_filter = ['reactome', , 'kegg', 'pid']
+    database_filter = ['reactome', 'kegg', 'pid']
     biopax_stmts = grouped_biopax_query(gene_names, database_filter)
     ac.dump_statements(biopax_stmts, prefixed_pkl('biopax'))
     phosphosite_stmts = read_phosphosite_owl(phosphosite_owl_file)
