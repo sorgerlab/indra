@@ -5,92 +5,87 @@ import logging
 from datetime import datetime
 import random
 logger = logging.getLogger('runreader')
+import argparse
+parser = argparse.ArgumentParser(
+    description='Apply NLP readers to the content available for a list of pmids.'
+    )
+parser.add_argument(
+    '-r', '--reader',
+    choices=['reach', 'sparser', 'all'],
+    default='all',
+    dest='readers',
+    nargs=1,
+    help='Choose which reader(s) to use.'
+    )
+parser.add_argument(
+    '-u', '--upload_json',
+    dest='upload_json',
+    action='store_true',
+    help='Option to simply upload previously read json files. Overrides -r option, so no reading will be done.'
+    )
+parser.add_argument(
+    '-f', '--force_fulltext',
+    dest='force_fulltext',
+    action='store_true',
+    help='Option to force reading of the full text.'
+    )
+parser.add_argument(
+    '-n', '--num_cores',
+    dest = 'num_cores',
+    default=1,
+    type=int,
+    help='Select the number of cores you want to use.'
+    )
+parser.add_argument(
+    '-v', '--verbose',
+    dest='verbose',
+    action='store_true',
+    help='Show more output to screen.'
+    )
+parser.add_argument(
+    '-c', '--cleanup',
+    dest='cleanup',
+    action='store_true',
+    help='Clean up after run.'
+    )
+parser.add_argument(
+    '-s', '--start_index',
+    dest='start_index',
+    type=int,
+    help='Select the first pmid in the list to start reading.',
+    default=0
+    )
+parser.add_argument(
+    '-e', '--end_index',
+    dest='end_index',
+    type=int,
+    help='Select the last pmid in the list to read.',
+    default=-1
+    )
+parser.add_argument(
+    '--shuffle',
+    dest='shuffle',
+    action='store_true',
+    help=('Select a random sample of the pmids provided. -s/--start_index '
+          'will be ingored, and -e/--end_index will set the number of '
+          'samples to take.')
+    )
+parser.add_argument(
+    dest='basename',
+    help='The name of this job.'
+    )
+parser.add_argument(
+    dest='out_dir',
+    help='The output directory where stuff is written. This is only a temporary directory when reading.'
+    )
+parser.add_argument(
+    dest='pmid_list_file',
+    help='Path to a file containing a list of line separated pmids for the articles to be read.'
+    )
 if __name__ == '__main__':
-    # Set some variables
-    # path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    # path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    path_to_reach = '/home/patrick/Workspace/reach/target/scala-2.11/reach-gordo-1.3.4-SNAPSHOT.jar'
-    reader_version = '1.3.4-b4a284'
-    force_read = True
+
 
     # Check the arguments
-    import argparse
-    parser = argparse.ArgumentParser(
-        description='Apply NLP readers to the content available for a list of pmids.'
-        )
-    parser.add_argument(
-        '-r', '--reader',
-        choices=['reach', 'sparser', 'all'],
-        default='all',
-        dest='readers',
-        nargs=1,
-        help='Choose which reader(s) to use.'
-        )
-    parser.add_argument(
-        '-u', '--upload_json',
-        dest='upload_json',
-        action='store_true',
-        help='Option to simply upload previously read json files. Overrides -r option, so no reading will be done.'
-        )
-    parser.add_argument(
-        '-f', '--force_fulltext',
-        dest='force_fulltext',
-        action='store_true',
-        help='Option to force reading of the full text.'
-        )
-    parser.add_argument(
-        '-n', '--num_cores',
-        dest = 'num_cores',
-        default=1,
-        type=int,
-        help='Select the number of cores you want to use.'
-        )
-    parser.add_argument(
-        '-v', '--verbose',
-        dest='verbose',
-        action='store_true',
-        help='Show more output to screen.'
-        )
-    parser.add_argument(
-        '-c', '--cleanup',
-        dest='cleanup',
-        action='store_true',
-        help='Clean up after run.'
-        )
-    parser.add_argument(
-        '-s', '--start_index',
-        dest='start_index',
-        type=int,
-        help='Select the first pmid in the list to start reading.',
-        default=0
-        )
-    parser.add_argument(
-        '-e', '--end_index',
-        dest='end_index',
-        type=int,
-        help='Select the last pmid in the list to read.',
-        default=-1
-        )
-    parser.add_argument(
-        '--shuffle',
-        dest='shuffle',
-        action='store_true',
-        help=('Select a random sample of the pmids provided. -s/--start_index '
-              'will be ingored, and -e/--end_index will set the number of '
-              'samples to take.')
-        )
-    parser.add_argument(
-        dest='basename',
-        help='The name of this job.'
-        )
-    parser.add_argument(
-        dest='out_dir',
-        help='The output directory where stuff is written. This is only a temporary directory when reading.'
-        )
-    parser.add_argument(
-        dest='pmid_list_file',
-        help='Path to a file containing a list of line separated pmids for the articles to be read.'
-        )
     args = parser.parse_args()
     if args.upload_json:
         args.readers = 'none'
@@ -366,6 +361,49 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
 
 
+def get_stmts(input_dir, pmids_unread):
+        stmts = {}
+        for pmid, result in pmids_unread.items():
+            try:
+                source = result['content_source']
+                cont_path = result['content_path']
+                if (source is 'content_not_found' 
+                    or source.startswith('unhandled_content_type')
+                    or source.endswith('failure')):
+                    logger.info('No content read for %s.' % pmid)
+                    continue  # No real content here.
+    
+                if cont_path.endswith('.nxml') and source.startswith('pmc'):
+                    new_fname = os.path.join(input_dir, 'PMC%s%d.nxml' % 
+                                             (pmid, mp.current_process().pid))
+                    os.rename(cont_path, new_fname)
+                    sp = sparser.process_nxml_file(new_fname)
+                    if sp is None:
+                        logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                        continue
+                    stmts[pmid] = sp.statements
+                elif cont_path.endswith('.txt'):
+                    abst_txt = ''
+                    with open(cont_path, 'r') as f:
+                        abst_txt = f.read()
+                    sp = sparser.process_text(abst_txt)
+                    if sp is None:
+                        logger.error('Failed to run sparser on pmid: %s.' % pmid)
+                        continue
+                    stmts[pmid] = sp.statements
+            except Exception as e:
+                logger.error('Failed to process data for %s.' % pmid)
+                logger.exception(e)
+                continue
+            except KeyboardInterrupt as e:
+                logger.exception(e)
+                logger.info('Caught keyboard interrupt...stopping. \n'
+                            'Results so far will be pickled unless '
+                            'Keyboard interupt is hit again.')
+                break
+        return stmts
+
+
 def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_read,
                 force_fulltext, path_to_reach, reader_version, cleanup=False,
                 verbose=True):
@@ -375,44 +413,28 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index, force_rea
             pmid_list, start_index, end_index, tmp_dir, num_cores, 
             force_fulltext, force_read, 'sparser', reader_version
             )
-    stmts = {}
-    for pmid, result in pmids_unread.items():
-        try:
-            source = result['content_source']
-            cont_path = result['content_path']
-            if (source is 'content_not_found' 
-                or source.startswith('unhandled_content_type')
-                or source.endswith('failure')):
-                logger.info('No content read for %s.' % pmid)
-                continue  # No real content here.
-
-            if cont_path.endswith('.nxml') and source.startswith('pmc'):
-                new_fname = os.path.join(input_dir, 'PMC%s.nxml' % pmid)
-                os.rename(cont_path, new_fname)
-                sp = sparser.process_nxml_file(new_fname)
-                if sp is None:
-                    logger.error('Failed to run sparser on pmid: %s.' % pmid)
-                    continue
-                stmts[pmid] = sp.statements
-            elif cont_path.endswith('.txt'):
-                abst_txt = ''
-                with open(cont_path, 'r') as f:
-                    abst_txt = f.read()
-                sp = sparser.process_text(abst_txt)
-                if sp is None:
-                    logger.error('Failed to run sparser on pmid: %s.' % pmid)
-                    continue
-                stmts[pmid] = sp.statements
-        except Exception as e:
-            logger.error('Failed to process data for %s.' % pmid)
-            logger.exception(e)
-            continue
-        except KeyboardInterrupt as e:
-            logger.exception(e)
-            logger.info('Caught keyboard interrupt...stopping. \n'
-                        'Results so far will be pickled unless '
-                        'Keyboard interupt is hit again.')
-            break
+    if num_cores is 1:
+        stmts = get_stmts(input_dir, pmids_unread)
+    elif num_cores > 1:
+        pool = mp.Pool(num_cores)
+        pmids_to_read = list(pmids_unread.keys())
+        N = len(pmids_unread)
+        dn = int(N/num_cores)
+        batches = []
+        for i in range(num_cores):
+            batches.append({
+                k: pmids_unread[k] for k in pmids_to_read[i*dn:min((i+1)*dn, N)]
+                })
+        get_stmts_func = functools.partial(
+            get_stmts,
+            input_dir
+            )
+        res = pool.map(get_stmts_func, batches)
+        pool.close()
+        stmts = {
+            pmid: stmt_list for res_dict in res
+            for pmid, stmt_list in res_dict.items()
+            }
     return (stmts, pmids_unread)
         
 
@@ -559,13 +581,14 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
     #        f.write('%s\n' % c)
 
 
-if __name__ == '__main__':
-    # Old usages:
-    # usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
-    #         "end_index [force_fulltext]\n" % sys.argv[0]
-    # usage += "Alternative usage: %s upload_json basename output_dir " \
-    #                     "content_types_file num_cores" % sys.argv[0]
-    now = datetime.now()
+def main(args):
+    now = datetime.now()    # Set some variables
+    # path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    # path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
+    path_to_reach = '/home/patrick/Workspace/reach/target/scala-2.11/reach-gordo-1.3.4-SNAPSHOT.jar'
+    reader_version = '1.3.4-b4a284'
+    force_read = True
+    
     if not os.path.exists(args.out_dir):
         os.mkdir(args.out_dir)
     
@@ -611,5 +634,18 @@ if __name__ == '__main__':
     with open(pickle_file, 'wb') as f:
         pickle.dump(stmts, f, protocol=2)
     time_taken = datetime.now() - now
-    print(time_taken)
+    print('This run took', time_taken)
+    time_file = os.path.join(os.path.dirname(__file__), 'time_data.txt')
+    with open(time_file, 'a') as f:
+        f.write('Started run at %s with args %s lasting %s.\n' % 
+                (now, str(args), time_taken))
+    return pickle_file
+
+if __name__ == '__main__':
+    # Old usages:
+    # usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
+    #         "end_index [force_fulltext]\n" % sys.argv[0]
+    # usage += "Alternative usage: %s upload_json basename output_dir " \
+    #                     "content_types_file num_cores" % sys.argv[0]
+    main(args)
 

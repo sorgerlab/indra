@@ -5,6 +5,7 @@ import json
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
+import multiprocessing as mp
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from .processor import SparserXMLProcessor, SparserJSONProcessor
 
@@ -58,7 +59,7 @@ def process_text(text, output_format='json'):
 
 
 def process_nxml_str(nxml_str, output_format='json'):
-    tmp_fname = 'PMC12345.nxml'
+    tmp_fname = 'PMC%d.nxml' % mp.current_process().pid
     with open(tmp_fname, 'wb') as fh:
         fh.write(nxml_str.encode('utf-8'))
     return process_nxml_file(tmp_fname, output_format)
