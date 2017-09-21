@@ -3,7 +3,7 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import logging
 import numbers
-import networkx
+import networkx as nx
 import itertools
 import numpy as np
 import scipy.stats
@@ -539,25 +539,31 @@ class ModelChecker(object):
     def prune_influence_map(self):
         """Remove edges between rules causing problematic non-transitivity.
 
-        In this conservative implementation, edges are only removed between
-        rules when they share *all* child nodes except for each other;
-        that is, they have a mutual relationship with each other and share
-        all of the same children.
+        First, all self-loops are removed. After this initial step, edges are
+        removed between rules when they share *all* child nodes except for each
+        other; that is, they have a mutual relationship with each other and
+        share all of the same children.
 
         Note that edges must be removed in batch at the end to prevent edge
         removal from affecting the lists of rule children during the comparison
         process.
         """
         im = self.get_im()
+        # First, remove all self-loops
+        for e in im.edges():
+            if e[0] == e[1]:
+                logger.info('Removing self loop: %s', e)
+                im.remove_edge(e)
+        # Now compare nodes pairwise and look for overlap between child nodes
         edges_to_remove = []
         remove_im_params(self.model, im)
-        # For every rule in the influence map
         predecessors = im.predecessors_iter
         successors = im.successors_iter
         combos = list(itertools.combinations(im.nodes(), 2))
         for ix, (p1, p2) in enumerate(combos):
             p1_children = set(successors(p1))
             p2_children = set(successors(p2))
+            # Children are identical except for mutual relationship
             if p1_children.difference(p2_children) == set([p2]) and \
                p2_children.difference(p1_children) == set([p1]):
                 for u, v in ((p1, p2), (p2, p1)):
@@ -979,6 +985,14 @@ def _monomer_pattern_label(mp):
             site_str = '%s_%s' % (site, cond)
         site_strs.append(site_str)
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
+
+
+def _agraph_to_multidigraph(agraph):
+    edges = [(e[0], e[1], dict([('polarity', _get_edge_sign(e))]))
+             for e in agraph.edges()]
+    mdg = nx.MultiDiGraph()
+    mdg.add_edges_from(edges)
+    return mdg
 
 
 def _is_obs_node(node):
