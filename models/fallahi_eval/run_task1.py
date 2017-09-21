@@ -15,6 +15,15 @@ def get_agent_values(antibody_agents, values):
     return agent_values
 
 
+def get_global_im(model, stmts_to_check, agents_to_observe):
+    all_stmts_condition = []
+    for drug in stmts_to_check['C32'].keys():
+        stmts_condition, _ = stmts_to_check['C32'][drug][0.1]
+        all_stmts_condition += stmts_condition
+    mc = ModelChecker(model, all_stmts_condition, agents_to_observe)
+    mc.prune_influence_map()
+    return mc
+
 flatten = lambda x: list(itertools.chain.from_iterable(x))
 
 if __name__ == '__main__':
@@ -29,7 +38,7 @@ if __name__ == '__main__':
 
     # Get all the data for Task 1
     stmts_to_check = get_task_1(data, False)
-
+    global_im = None
     dose = 1.0
     scored_paths = {}
     # Run model checking per cell line
@@ -49,7 +58,11 @@ if __name__ == '__main__':
             # - agents for which observables need to be made
             mc = ModelChecker(model_cell_line, stmts_condition,
                               agents_to_observe)
-            path_results = mc.check_model(10, 5)
+            if not global_im:
+                global_im = get_global_im(model_cell_line, stmts_to_check,
+                                          agents_to_observe)
+            mc._im  = global_im
+            path_results = mc.check_model(2, 5)
             # Get a dict of measured values by INDRA Agents for this condition
             agent_values = get_agent_values(antibody_agents, values_condition)
             # Get a single list of paths for this condition
