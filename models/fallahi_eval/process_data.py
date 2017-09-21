@@ -7,6 +7,9 @@ from indra.literature import pubmed_client
 from indra.statements import Agent, ModCondition, Phosphorylation, \
     Dephosphorylation, IncreaseAmount, DecreaseAmount
 from indra.databases import hgnc_client, uniprot_client
+from copy import deepcopy
+import collections
+import json
 
 rppa_file = 'data/TableS1-Split.xlsx'
 rppa_pkl = 'data/TableS1-Split.pkl'
@@ -265,6 +268,57 @@ def get_task_5(data, inverse=False):
                         st = DecreaseAmount(target, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
+
+
+def build_context_json(data, cell_lines, filename="fallahi_data.json"):
+    """Save context in a format readable by the pathway map"""
+    long_df = pandas.DataFrame(columns=['id', 'variable', 'value'])
+    for cl in cell_lines:
+        df = deepcopy(data[cl]['median'])
+        df['id'] = df.apply(lambda x: '%s_%s_%s_%s' %
+                            (x['Drug'], x['Time (hr)'],
+                             x['Concentration (uM)'], cl),
+                            axis=1)
+        df = df.drop(['Drug', 'Time (hr)', 'Concentration (uM)'], axis=1)
+        df = df.melt(id_vars=['id'])
+        long_df = long_df.append(df)
+    ab_dict = {'antibody': [], 'gene': [], 'site': []}
+    for ab, d in antibody_map.items():
+        for hgnc, sites in d.items():
+            residue = None
+            if len(sites) > 0:
+                for s in sites:
+                    residue = s[0] + s[1]
+                    ab_dict['antibody'].append(ab)
+                    ab_dict['gene'].append(hgnc)
+                    ab_dict['site'].append(residue)
+            else:
+                residue = None
+                ab_dict['antibody'].append(ab)
+                ab_dict['gene'].append(hgnc)
+                ab_dict['site'].append(residue)
+    ab_df = pandas.DataFrame(ab_dict)
+    long_data = pandas.merge(long_df, ab_df,
+                             left_on='variable', right_on='antibody')
+    long_data = long_data.dropna()
+    recursivedict = lambda: collections.defaultdict(recursivedict)
+    j = recursivedict()
+    df1 = long_data
+    ids = df1['id'].unique().tolist()
+    for i in ids:
+        df2 = df1[df1['id'] == i]
+        genes = df2['gene'].unique().tolist()
+        for g in genes:
+            df3 = df2[df2['gene'] == g]
+            df4 = df3[~df3['site'].isin([None])]
+            j[i][g]['members']['antibodies'] = df4['antibody'].tolist()
+            j[i][g]['members']['sites'] = df4['site'].tolist()
+            j[i][g]['members']['values'] = df4['value'].tolist()
+            df5 = df3[df3['site'].isin([None])]
+            j[i][g]['node']['antibodies'] = df5['antibody'].tolist()
+            j[i][g]['node']['values'] = df5['value'].tolist()
+    with open(filename, 'w') as outfile:
+        json.dump(j, outfile, indent=None, sort_keys=True)
 
 
 cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
