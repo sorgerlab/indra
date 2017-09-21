@@ -6,22 +6,10 @@ from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
 from indra.tools.reading.submit_reading_pipeline_aws import \
     submit_run_reach, submit_combine, wait_for_complete
-from assemble_pysb import *
+import assemble_pysb
 import process_data
+from util import *
 
-# CREATE A JSON FILE WITH THIS INFORMATION, E.G., a file consisting of:
-# {"basename": "fallahi_eval", "basedir": "output"}
-with open('config.json', 'rt') as f:
-    config = json.load(f)
-# This is the base name used for all files created/saved
-basen = config['basename']
-# This is the base folder to read/write (potentially large) files from/to
-# MODIFY ACCORDING TO YOUR OWN SETUP
-based = config['basedir']
-
-
-# This makes it easier to make standardized pickle file paths
-prefixed_pkl = lambda suffix: os.path.join(based, basen + '_' + suffix + '.pkl')
 
 def run_reading(pmid_fname):
     """Run reading on Amazon to produce a pickle of INDRA Statements
@@ -51,7 +39,8 @@ if __name__ == '__main__':
     pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
         # Load various files that were previously produced
-        sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3']
+        sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
+                   'sparser_1_fixed']
         stmts = []
         for source in sources:
             stmts += ac.load_statements(prefixed_pkl(source))
@@ -74,4 +63,4 @@ if __name__ == '__main__':
     # Load the preassembled statements
     stmts = ac.load_statements(pre_stmts_file)
     # Run assembly into a PySB model
-    assemble_pysb(stmts, gene_names)
+    assemble_pysb.assemble_pysb(stmts, gene_names)

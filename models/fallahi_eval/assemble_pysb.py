@@ -5,7 +5,7 @@ import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler, IndexCardAssembler
 from process_data import antibody_map, cell_lines
 from indra.databases import context_client
-from assemble_models import prefixed_pkl
+from util import prefixed_pkl
 
 def assemble_pysb(stmts, data_genes, contextualize=False):
     # Filter the INDRA Statements to be put into the model
