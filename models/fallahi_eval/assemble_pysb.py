@@ -3,6 +3,7 @@ from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import PysbAssembler, IndexCardAssembler
 from process_data import antibody_map
+from indra.databases import context_client
 
 def assemble_pysb(stmts, data_genes):
     # Filter the INDRA Statements to be put into the model
@@ -42,21 +43,43 @@ def assemble_pysb(stmts, data_genes):
         num_stmts = len(ml.statements)
     stmts = ml.statements
 
+    stmts = contextualize_stmts(stmts, 'SKMEL28', data_genes)
+
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
     return stmts, model
 
+
+def contextualize_stmts(stmts, cell_line, genes):
+    mutations = context_client.get_mutations(genes, [cell_line])
+    mutations = mutations.get(cell_line)
+    muts_to_use = {}
+    for gene, mut_list in mutations.items():
+        muts_to_use[gene] = []
+        for mut in mut_list:
+            try:
+                from_aa = mut[0]
+                to_aa = mut[-1]
+                pos = mut[1:-1]
+                muts_to_use.append((from_aa, pos, to_aa))
+            except Exception:
+                print(mut)
+    stmts = ac.filter_mutation_status(stmts, mutations, [])
+    return stmts
+
+
 def contextualize_model(model, cell_line):
     # Here we just make a PysbAssembler to be able
     # to apply set_context on the model being passed in
+    if not cell_line.endswith('_SKIN'):
+        cell_line = cell_line + '_SKIN'
     pa = PysbAssembler()
     pa.model = model
     pa.set_context(cell_line)
     return pa.model
 
 def get_mod_whitelist():
-    # TODO: populate this with the actual antibody sites
     mod_whitelist = {}
     for members in antibody_map.values():
         for gene_name, phos_sites in members.items():
