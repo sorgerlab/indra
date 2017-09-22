@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-N', REACH_JOB_NAME,
                     '-pe', 'orte', str(num_cores), 'python', '-m',
-                    'indra.tools.reading.run_reading_on_pmids', pmid_list,
+                    'indra.tools.reading.read_pmids', pmid_list,
                     tmp_dir, str(num_cores), str(node_start_ix),
                     str(node_end_ix)]
         print(' '.join(cmd_list))
