@@ -1,13 +1,39 @@
+DOC = \
 """
-This script is intended to be run on an Amazon ECS container, so information for
-the job either needs to be provided in environment variables (e.g., the
+This script is intended to be run on an Amazon ECS container, so information 
+for the job either needs to be provided in environment variables (e.g., the
 REACH version and path) or loaded from S3 (e.g., the list of PMIDs).
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 if __name__ == '__main__':
-    from indra.tools.reading import run_reach_on_pmids as rr
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description=DOC
+        )
+    parser.add_argument(
+        dest='basename',
+        help='The name of this run.'
+        )
+    parser.add_arguement(
+        dest='out_dir',
+        help='The name of the temporary output directory'
+        )
+    parser.add_argument(
+        dest='num_cores',
+        help='Select the number of cores on which to run.'
+        )
+    parser.add_arguement(
+        dest='start_index',
+        help='Select the index of the first pmid in the list to read.'
+        )
+    parser.add_argument(
+        dest='end_index',
+        help='Select the index of the last pmid in the list to read.'
+        )
+    args = parser.parse_args()
+    from indra.tools.reading import read_pmids as read
     import boto3
     import botocore
     import os
@@ -35,7 +61,7 @@ if __name__ == '__main__':
         pmid_list_obj = client.get_object(Bucket=bucket_name, Key=pmid_list_key)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] =='NoSuchKey':
+        if e.response['Error']['Code'] == 'NoSuchKey':
             logger.info('Could not find PMID list file at %s, exiting' %
                         pmid_list_key)
             sys.exit(1)
@@ -46,10 +72,23 @@ if __name__ == '__main__':
     pmid_list_str = pmid_list_obj['Body'].read().decode('utf8').strip()
     pmid_list = [line.strip() for line in pmid_list_str.split('\n')]
 
-    # Run the REACH reading pipeline
-    (stmts, content_types) = rr.run(pmid_list, tmp_dir, num_cores, start_index,
-                                    end_index, False, False, path_to_reach,
-                                    reach_version, cleanup=False, verbose=True)
+    # Run the reading pipelines
+    stmts = {}
+    for reader, run_reader in read.READER_DICT:
+        some_stmts, content_types = run_reader(
+            pmid_list,
+            tmp_dir,
+            num_cores,
+            start_index,
+            end_index,
+            False,
+            False,
+            path_to_reach,
+            reach_version,
+            cleanup=False,
+            verbose=True)
+        stmts[reader] = some_stmts
+
     # Pickle the content types to S3
     ct_key_name = 'reading_results/%s/content_types/%d_%d.pkl' % \
                   (basename, start_index, end_index)
