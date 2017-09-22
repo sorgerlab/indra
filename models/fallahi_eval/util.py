@@ -1,6 +1,7 @@
 from indra.util import _require_python3
 import os
 import json
+import pickle
 
 # CREATE A JSON FILE WITH THIS INFORMATION, E.G., a file consisting of:
 # {"basename": "fallahi_eval", "basedir": "output"}
@@ -15,3 +16,13 @@ based = config['basedir']
 # This makes it easier to make standardized pickle file paths
 prefixed_pkl = lambda suffix: os.path.join(based, basen + '_' + suffix + '.pkl')
 
+def pkldump(suffix, content):
+    fname = prefixed_pkl(suffix)
+    with open(fname, 'wb') as fh:
+        pickle.dump(content, fh)
+
+def pklload(suffix):
+    fname = prefixed_pkl(suffix)
+    with open(fname, 'rb') as fh:
+        content = pickle.load(fh)
+    return content
