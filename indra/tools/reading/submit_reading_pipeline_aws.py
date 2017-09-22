@@ -10,6 +10,7 @@ bucket_name = 'bigmech'
 
 logger = logging.getLogger('aws_reading')
 
+
 def wait_for_complete(job_list, poll_interval=10):
     """Return when all jobs in the given list finished.
 
@@ -57,6 +58,7 @@ def wait_for_complete(job_list, poll_interval=10):
 
         sleep(poll_interval)
         total_time += poll_interval
+
 
 def get_environment():
     # Get AWS credentials
@@ -145,36 +147,69 @@ if __name__ == '__main__':
     import argparse
 
     # Create the top-level parser
-    parser = argparse.ArgumentParser('submit_reading_pipeline_aws.py',
-            description='Run machine reading with REACH using AWS Batch.')
-    subparsers = parser.add_subparsers(title='Job Type',
-            help='Type of jobs to submit.')
+    parser = argparse.ArgumentParser(
+        'submit_reading_pipeline_aws.py',
+        description='Run machine reading with REACH using AWS Batch.'
+        )
+    subparsers = parser.add_subparsers(
+        title='Job Type',
+        help='Type of jobs to submit.'
+        )
     subparsers.required = True
     subparsers.dest = 'job_type'
     parent_read_parser = argparse.ArgumentParser(add_help=False)
-    parent_read_parser.add_argument('basename',
-        help='Defines job names and S3 keys')
-    parent_read_parser.add_argument('pmid_file',
-        help='Path to file containing PMIDs to read')
-    parent_read_parser.add_argument('--start_ix', type=int,
-        help='Start index of PMIDs to read.')
-    parent_read_parser.add_argument('--end_ix', type=int,
-        help='End index of PMIDs to read (default: read all PMIDs)')
-    parent_read_parser.add_argument('--force_read', action='store_true',
-        help='Read papers even if previously read by current REACH.')
-    parent_read_parser.add_argument('--force_fulltext', action='store_true',
-        help='Get full text content even if content already on S3.')
-    parent_read_parser.add_argument('--pmids_per_job', default=3000, type=int,
-        help='Number of PMIDs to read for each AWS Batch job.')
-    parent_read_parser.add_argument('--num_tries', default=2, type=int,
-        help='Maximum number of times to try running job.')
-    read_parser = subparsers.add_parser('read', parents=[parent_read_parser],
+    parent_read_parser.add_argument(
+        'basename',
+        help='Defines job names and S3 keys'
+        )
+    parent_read_parser.add_argument(
+        'pmid_file',
+        help='Path to file containing PMIDs to read'
+        )
+    parent_read_parser.add_argument(
+        '--start_ix',
+        type=int,
+        help='Start index of PMIDs to read.'
+        )
+    parent_read_parser.add_argument(
+        '--end_ix',
+        type=int,
+        help='End index of PMIDs to read (default: read all PMIDs)'
+        )
+    parent_read_parser.add_argument(
+        '--force_read',
+        action='store_true',
+        help='Read papers even if previously read by current REACH.'
+        )
+    parent_read_parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Get full text content even if content already on S3.'
+        )
+    parent_read_parser.add_argument(
+        '--pmids_per_job',
+        default=3000,
+        type=int,
+        help='Number of PMIDs to read for each AWS Batch job.'
+        )
+    parent_read_parser.add_argument(
+        '--num_tries',
+        default=2,
+        type=int,
+        help='Maximum number of times to try running job.'
+        )
+    read_parser = subparsers.add_parser(
+        'read',
+        parents=[parent_read_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    combine_parser = subparsers.add_parser('combine',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    combine_parser = subparsers.add_parser(
+        'combine',
         help='Combine INDRA Statement subsets into a single file.',
-        description='Combine INDRA Statement subsets into a single file.')
+        description='Combine INDRA Statement subsets into a single file.'
+        )
     combine_parser.add_argument('basename',
         help='Defines job name and S3 keys')
     full_parser = subparsers.add_parser('full',
