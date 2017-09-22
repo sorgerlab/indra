@@ -400,9 +400,18 @@ def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence if ev.text]
     ev_txts = list(set(ev_txts))
     if not ev_txts:
-        sources = list(set([ev.source_api for ev in stmt.evidence]))
-        ev_txts = ['Evidence text not available in source database: %s' % \
-            ', '.join(sources)]
+        for ev in stmt.evidence:
+            txt = 'Evidence text not available for %s entry: %s' % \
+                (ev.source_api, ev.source_id)
+            if txt not in ev_txts:
+                ev_txts.append(txt)
+    if hasattr(stmt, 'partial_evidence'):
+        for ev in stmt.partial_evidence:
+            if ev.text is None:
+                continue
+            txt = 'PARTIAL: %s' % ev.text
+            if txt not in ev_txts:
+                ev_txts.append(txt)
     return ev_txts
 
 def _get_is_direct(stmt):
