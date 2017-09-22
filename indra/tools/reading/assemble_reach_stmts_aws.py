@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+
 def assemble_batch_results(result_type):
     # The trailing slash here is important
     prefix = 'reading_results/%s/%s/' % (basename, result_type)
@@ -48,11 +49,10 @@ def assemble_batch_results(result_type):
         client.put_object(Key=pickle_key_name, Body=results_bytes,
                           Bucket=bucket_name)
 
+
 if __name__ == '__main__':
-    from indra.tools.reading import run_reach_on_pmids as rr
     import boto3
     import botocore
-    import os
     import sys
     import pickle
     import logging
@@ -66,4 +66,3 @@ if __name__ == '__main__':
     result_types = ('content_types', 'stmts')
     for rt in result_types:
         assemble_batch_results(rt)
-
