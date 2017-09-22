@@ -70,7 +70,7 @@ if __name__ == '__main__':
                                           agents_to_observe)
             path_results = []
             for stmt in stmts_condition:
-                pr = global_mc.check_statement(stmt, 20, 10)
+                pr = global_mc.check_statement(stmt, 1000, 10)
                 path_results.append(pr)
             #path_results = mc.check_model(2, 5)
             # Get a dict of measured values by INDRA Agents for this condition
