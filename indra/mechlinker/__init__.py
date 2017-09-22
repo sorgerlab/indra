@@ -59,9 +59,11 @@ class MechLinker(object):
                 agent_base = self._get_base(stmt.agent)
                 agent_base.add_activity(stmt.activity)
                 if stmt.is_active:
-                    agent_base.add_active_state(stmt.activity, stmt.agent)
+                    agent_base.add_active_state(stmt.activity, stmt.agent,
+                                                stmt.evidence)
                 else:
-                    agent_base.add_inactive_state(stmt.activity, stmt.agent)
+                    agent_base.add_inactive_state(stmt.activity, stmt.agent,
+                                                  stmt.evidence)
 
     def gather_implicit_activities(self):
         """Aggregate all implicit activities and active forms of Agents.
@@ -192,7 +194,8 @@ class MechLinker(object):
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
                         new_stmt.uuid = str(uuid.uuid4())
-                        af.apply_to(new_stmt.enz)
+                        evs = af.apply_to(new_stmt.enz)
+                        new_stmt.partial_evidence = evs
                         new_stmts.append(new_stmt)
             elif isinstance(stmt, RegulateAmount) or \
                 isinstance(stmt, RegulateActivity):
@@ -207,7 +210,8 @@ class MechLinker(object):
                     for af in active_forms:
                         new_stmt = deepcopy(stmt)
                         new_stmt.uuid = str(uuid.uuid4())
-                        af.apply_to(new_stmt.subj)
+                        evs = af.apply_to(new_stmt.subj)
+                        new_stmt.partial_evidence = evs
                         new_stmts.append(new_stmt)
             else:
                 new_stmts.append(stmt)
@@ -630,15 +634,15 @@ class BaseAgent(object):
         if activity_type not in self.activity_types:
             self.activity_types.append(activity_type)
 
-    def add_active_state(self, activity_type, agent):
-        agent_state = AgentState(agent)
+    def add_active_state(self, activity_type, agent, evidence):
+        agent_state = AgentState(agent, evidence)
         if activity_type in self.active_states:
             self.active_states[activity_type].append(agent_state)
         else:
             self.active_states[activity_type] = [agent_state]
 
-    def add_inactive_state(self, activity_type, agent):
-        agent_state = AgentState(agent)
+    def add_inactive_state(self, activity_type, agent, evidence):
+        agent_state = AgentState(agent, evidence)
         if activity_type in self.inactive_states:
             self.inactive_states[activity_type].append(agent_state)
         else:
@@ -695,11 +699,12 @@ class AgentState(object):
     mutations : list[indra.statements.Mutation]
     location : indra.statements.location
     """
-    def __init__(self, agent):
+    def __init__(self, agent, evidence=None):
         self.bound_conditions = agent.bound_conditions
         self.mods = agent.mods
         self.mutations = agent.mutations
         self.location = agent.location
+        self.evidence = evidence or []
 
     def apply_to(self, agent):
         """Apply this object's state to an Agent.
@@ -713,6 +718,7 @@ class AgentState(object):
         agent.mods = self.mods
         agent.mutations = self.mutations
         agent.location = self.location
+        return self.evidence
 
     def __repr__(self):
         s = 'AgentState(%s, %s, %s, %s)' % (self.bound_conditions, self.mods,
