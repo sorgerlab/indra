@@ -106,7 +106,7 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
             job_end_ix = end_ix
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = ['python', '-m',
-                        'indra.tools.reading.run_reach_on_pmids_aws',
+                        'indra.tools.reading.read_pmids_aws.py',
                         basename, '/tmp', '16', str(job_start_ix),
                         str(job_end_ix)]
         print(command_list)
