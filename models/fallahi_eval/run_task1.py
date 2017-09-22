@@ -7,7 +7,6 @@ from indra.explanation.reporting import *
 from process_data import read_rppa_data, get_task_1, get_antibody_agents
 from assemble_pysb import contextualize_model, prefixed_pkl
 
-
 def get_agent_values(antibody_agents, values):
     agent_values = {}
     for ab, value in values.items():
@@ -33,27 +32,6 @@ def export_paths(scored_paths, model):
 
 flatten = lambda x: list(itertools.chain.from_iterable(x))
 
-"""
-def group_scored_paths(scored_paths, mc):
-    groups = set()
-    for path, score in scored_paths:
-        for ix, rule in enumerate(path):
-            # The last rule should be an observable, which won't have a
-            # statement associated with it (for now)
-            if ix == len(path) - 1:
-                rule_stmt = path[-2]
-                obj = rule_stmt.agent_list()[1]
-                gene_name = obj.db_refs.get('HGNC')
-            else:
-                rule_stmt = _stmt_from_rule(mc.model, rule, mc.statements)
-                if not rule_stmt:
-                    continue
-                subj = rule_stmt.agent_list()[0]
-                gene_name = subj.db_refs.get('HGNC')
-            if gene_name:
-                grouped_path.append(gene_name)
-        # At end, get the object of the last rule
-"""
 
 if __name__ == '__main__':
     # Some basic setup
@@ -111,5 +89,5 @@ if __name__ == '__main__':
                                                     sigma=0.5)
             scored_paths[cell_line][drug] = scored_paths_condition
 
-
-
+with open('scored_paths.pkl', 'wb') as f:
+    pickle.dump((scored_paths, global_mc.model), f)
