@@ -29,6 +29,7 @@ def get_global_mc(model, stmts_to_check, agents_to_observe):
 def export_paths(scored_paths, model):
     stmts = ac.load_statements(prefixed_pkl('pysb_stmts'))
     paths = get_paths(scored_paths, model, stmts)
+    return paths
 
 flatten = lambda x: list(itertools.chain.from_iterable(x))
 
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     for cell_line in stmts_to_check.keys():
         print('Cell line: %s\n=============' % cell_line)
         model_cell_line = deepcopy(model)
-        model_cell_line = contextualize_model(model_cell_line, cell_line)
+        #model_cell_line = contextualize_model(model_cell_line, cell_line)
         scored_paths[cell_line] = {}
         for drug in stmts_to_check[cell_line].keys():
             print('Drug: %s\n=============' % drug)

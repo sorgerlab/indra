@@ -12,12 +12,11 @@ def get_paths(scored_paths, model, stmts):
     for cell_line in scored_paths.keys():
         for drug in scored_paths[cell_line].keys():
             scpaths = scored_paths[cell_line][drug]
-            print(scpaths)
             path, score = scpaths[0]
             label = '%s_%s_%s_%s' % (drug, time, conc, cell_line)
             paths[label] = {'meta': [], 'path': []}
-            stmts = stmts_for_path(path, model, stmts)
-            uuids = [stmt.uuid for stmt in stmts]
+            path_stmts = stmts_for_path(path, model, stmts)
+            uuids = [stmt.uuid for stmt in path_stmts]
             paths[label]['path'] = uuids
     return paths
 
@@ -96,8 +95,7 @@ def stmts_for_path(path, model, stmts):
         for rule in model.rules:
             if rule.name == path_rule:
                 stmt = _stmt_from_rule(model, path_rule, stmts)
-                if path_rule == 'BRAF_phosphoS446_phosphoS729_phosphorylation_MAP2K1_S218':
-                    import ipdb; ipdb.set_trace()
+                assert stmt is not None
                 path_stmts.append(stmt)
     return path_stmts
 
