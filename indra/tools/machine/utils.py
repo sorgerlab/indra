@@ -10,14 +10,14 @@ import tzlocal
 import logging
 import datetime
 from indra.sources import reach
-from indra.machine import gmail_client
 from indra.databases import ndex_client
-from indra.machine import twitter_client
 import indra.tools.assemble_corpus as ac
-from indra.tools.gene_network import GeneNetwork
-from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler
+from indra.tools.machine import gmail_client
+from indra.tools.machine import twitter_client
+from indra.tools.gene_network import GeneNetwork
 from indra.tools.incremental_model import IncrementalModel
+from indra.literature import pubmed_client, get_full_text, elsevier_client
 
 try:
     import boto3
