@@ -220,13 +220,6 @@ def get_genetic_profiles(study_id, profile_filter=None):
     'cellline_ccle_broad_mutations' for mutations, 'cellline_ccle_broad_CNA'
     for copy number alterations, etc.
 
-    CNA values correspond to the following alterations
-    -2 = homozygous deletion
-    -1 = hemizygous deletion
-     0 = neutral / no change
-     1 = gain
-     2 = high level amplification
-
     Parameters
     ----------
     study_id : str
@@ -380,6 +373,13 @@ def get_ccle_cna(gene_list, cell_lines):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
     This is a specialized call to get_mutations tailored to CCLE cell lines.
+
+    CNA values correspond to the following alterations
+    -2 = homozygous deletion
+    -1 = hemizygous deletion
+     0 = neutral / no change
+     1 = gain
+     2 = high level amplification
 
     Parameters
     ----------
