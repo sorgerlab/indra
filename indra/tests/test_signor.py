@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
+from nose.tools import raises
 
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -41,8 +42,24 @@ def test_get_agent():
     test_ag = Agent('AZD1480', db_refs={'PUBCHEM': 'CID:16659841'})
     sp_ag = sp._get_agent('AZD1480', 'chemical', 'CID:16659841', 'PUBCHEM')
     assert test_ag.matches(sp_ag)
+    # Signor phenotype
+    test_ag = Agent('Cell cycle progr.', db_refs={'SIGNOR': 'SIGNOR-PH42'})
+    sp_ag = sp._get_agent('Cell cycle progr.', 'phenotype', 'SIGNOR-PH42',
+                          'SIGNOR')
+    assert test_ag.matches(sp_ag)
+    # Ungrounded -- couldn't find a real example in the dataset
+    test_ag = Agent('Foobar', db_refs={})
+    sp_ag = sp._get_agent('Foobar', 'pathway', None, None)
+    assert test_ag.matches(sp_ag)
+    sp_ag = sp._get_agent('Foobar', 'antibody', None, None)
+    assert test_ag.matches(sp_ag)
+
+@raises(KeyError)
+def test_get_agent_keyerror():
+    sp_ag = sp._get_agent('foo', 'bar', None, None)
 
 
 if __name__ == '__main__':
     test_parse_csv()
     test_get_agent()
+    test_get_agent_keyerror()
