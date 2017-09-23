@@ -15,6 +15,7 @@ rppa_file = 'data/TableS1-Split.xlsx'
 rppa_pkl = 'data/TableS1-Split.pkl'
 expression_file = 'data/Expression_Filtered.csv'
 mutation_file = 'data/WES_variants_filtered.csv'
+mutation_effect_file = 'data/mutation_effects.tsv'
 
 
 def read_rppa_data(fname=rppa_pkl):
@@ -76,6 +77,39 @@ def read_variants():
         muts = read_for_cell_line(cell_line_df)
         mutations[cell_line] = muts
     return mutations
+
+
+def read_mutation_effects():
+    """Read mutation effects from PathwayCommons as ActiveForms."""
+    df = pandas.read_csv(mutation_effect_file, sep='\t')
+    stmts = []
+    for _, row in df.iterrows():
+        # Check for usable AA substitution
+        match = re.match('([A-Z])(\d+)([A-Z])', row['Substitution'])
+        if not match:
+            continue
+        groups = match.groups()
+        if len(groups) != 3:
+            continue
+        aa_from, position, aa_to = groups
+        # Make a grounded agent for the ActiveForm
+        agent = agent_from_gene_name(row['Gene'])
+        if not agent.db_refs:
+            continue
+        # Check if the reported effect is positive or negative
+        if 'decreasing' in row['Effect']:
+            is_active = False
+        elif 'increasing' in row['Effect']:
+            is_active = True
+        else:
+            continue
+        # Make an ActiveForm Statement
+        mc = MutCondition(position, aa_from, aa_to)
+        agent.mutations = [mc]
+        af = ActiveForm(agent, 'activity', is_active)
+        stmts.append(af)
+    return stmts
+
 
 def _read_gene_list(path):
     df = pandas.read_csv(path, sep='\t', error_bad_lines=False, header=None)
@@ -202,13 +236,19 @@ def find_cell_line_vars(data, fold_change, save_file=None):
 
 def agent_phos(name, phos_sites):
     """Return an INDRA agent from a name and list of phos sites."""
+    agent = agent_from_gene_name(name)
+    for residue, position in phos_sites:
+        mc = ModCondition('phosphorylation', residue, position, True)
+        agent.mods.append(mc)
+    return agent
+
+
+def agent_from_gene_name(name):
+    """Return a grounded Agent based on a gene name."""
     agent = Agent(name)
     hgnc_id = hgnc_client.get_hgnc_id(name)
     uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
     agent.db_refs = {'HGNC': hgnc_id, 'UP': uniprot_id}
-    for residue, position in phos_sites:
-        mc = ModCondition('phosphorylation', residue, position, True)
-        agent.mods.append(mc)
     return agent
 
 

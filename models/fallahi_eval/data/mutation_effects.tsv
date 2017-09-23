@@ -1,0 +1,6391 @@
+Gene	Substitution	Effect
+AANAT	A129T	disrupting
+AANAT	G12V	unknown
+AATF	S141A	decreasing
+AATF	S189A	disrupting
+AATF	S474A	decreasing
+AATF	S508A	decreasing
+AATF	S141A	disrupting
+ABCA1	C1477R	disrupting strength
+ABCA1	K939M	disrupting strength
+ABCA1	Q597R	disrupting strength
+ABCA1	R587W	disrupting strength
+ABCA1	S1506L	disrupting strength
+ABCA1	W590S	increasing strength
+ABHD14A	R383K	unknown
+ABHD14A	R90K	unknown
+ABL1	K290R	disrupting
+ABL1	T735A	decreasing
+ABL1	T315I	unknown
+ABL2	R198K	disrupting
+ABL2	K317R	decreasing
+ABL2	K219A	decreasing
+ABLIM1	Y644E	increasing
+ACADVL	S518A	disrupting
+ACBD3	C463S	disrupting
+ACHE	C611S	unknown
+ACTL7A	A41Y	disrupting strength
+ACTL7A	A31Y	disrupting strength
+ACTN2	D475N	disrupting
+ACTN2	M604V	disrupting
+ACTN2	Q9R	disrupting
+ACTR6	G93A	unknown
+ACTR6	G37R	unknown
+ACTR6	K67M	disrupting strength
+ACVR1B	T206E	unknown
+ACVR1B	T206E	increasing
+ACY1	L1310R	disrupting strength
+ACY3	L127A	decreasing
+ACY3	I131A	decreasing
+ADAM17	N452Q	unknown
+ADAM17	S266A	unknown
+ADAM22	R854Q	decreasing
+ADAM22	R831Q	decreasing
+ADAM22	R831Q	disrupting
+ADAM22	S832G	decreasing
+ADAM22	S855A	decreasing
+ADAM9	D315A	unknown
+ADAR	K554E	disrupting strength
+ADARB2	L499A	disrupting
+ADCK3	R213W	disrupting
+ADCK3	E551K	disrupting
+ADCK3	G272V	disrupting
+ADCYAP1	R213D	disrupting
+ADGRG1	R38Q	disrupting
+ADGRG1	C91S	disrupting
+ADGRG1	Y88C	disrupting
+ADORA2A	R291A	decreasing
+ADORA2A	R296A	decreasing
+ADORA2A	R300A	decreasing
+ADRB1	E474A	decreasing
+ADRB1	E474T	decreasing
+ADRB1	F383A	decreasing
+ADRB1	K476R	decreasing
+ADRB1	V477L	decreasing
+ADRB1	V477M	decreasing
+ADRB1	V477I	decreasing
+ADRB1	V477A	decreasing
+ADRB1	S475A	decreasing
+ADRB2	S411A	decreasing strength
+ADRB2	S396G	decreasing strength
+ADRB2	S355A	decreasing strength
+ADRB2	S356G	decreasing strength
+ADRB2	S401A	decreasing strength
+ADRB2	T360A	decreasing strength
+ADRB2	S407G	decreasing strength
+ADRB2	S364G	decreasing strength
+AEBP2	R383L	disrupting
+AEN	N124S	decreasing
+AFF1	C672S	unknown
+AGFG1	F436V	disrupting
+AGFG1	F451V	disrupting
+AGFG1	F542V	disrupting
+AGFG1	F561V	disrupting
+AGFG1	L160S	decreasing
+AGFG1	L173S	decreasing
+AGFG1	L171S	decreasing
+AGFG1	L164S	decreasing
+AGFG1	L163S	decreasing
+AGO2	L339A	increasing
+AGO2	K278A	increasing
+AGO2	F312G	increasing
+AGO2	F294A	increasing
+AGO2	Y311A	increasing
+AGO2	R277A	increasing
+AGO2	Y338A	increasing
+AGT	F8A	unknown
+AGT	F8I	unknown
+AGTRAP	G12V	unknown
+AHCY	T56A	increasing
+AHCY	F30A	increasing
+AHCY	L57A	increasing
+AHCY	K88E	decreasing
+AHCY	K87E	decreasing
+AHCY	H86A	decreasing
+AHCY	F29A	increasing
+AHI1	V443D	unknown
+AHI1	V443D	decreasing
+AHI1	V443D	disrupting
+AHR	L331A	disrupting strength
+AHR	C333A	disrupting strength
+AHR	E335A	disrupting strength
+AIM2	D15R	disrupting strength
+AIM2	F27G	disrupting strength
+AIM2	G38E	decreasing strength
+AIM2	K39E	decreasing strength
+AIM2	R24E	disrupting strength
+AIM2	Y74R	disrupting strength
+AIPL1	G262S	decreasing
+AIPL1	R302L	decreasing
+AIPL1	R53W	decreasing
+AIPL1	V96I	decreasing
+AIPL1	M79T	decreasing
+AIRE	W78R	decreasing
+AKAP3	L131P	decreasing
+AKT1	K14Q	disrupting
+AKT1	S473D	unknown
+AKT1	S473A	decreasing
+AKT1	T308A	decreasing
+AKT1	T308D	unknown
+AKT1	K20Q	disrupting
+AKT1	K179M	decreasing
+AKT1	K179A	decreasing
+AKT1	K14R	disrupting
+AKT1	E40K	increasing
+ALDH3A2	S150N	unknown
+ALDH3A2	A153V	unknown
+ALDH3A2	A153V	decreasing
+ALDH3A2	A153V	disrupting
+ALK	F1174L	increasing rate
+ALK	F1245C	decreasing rate
+ALK	L1196M	increasing rate
+ALK	L1196M	decreasing rate
+ALK	I1250T	decreasing rate
+ALK	D1270G	disrupting rate
+ALK	L1196M	unknown
+ALK	F1245C	increasing rate
+ALK	L1204F	increasing rate
+ALK	M1166R	increasing rate
+ALK	I1183T	increasing rate
+ALK	F1245C	unknown
+ALK	F1245V	decreasing rate
+ALK	M1166R	unknown
+ALK	F1245V	increasing rate
+ALK	L1204F	decreasing rate
+ALK	I1183T	decreasing rate
+ALK	R1192P	unknown
+ALK	I1171N	increasing rate
+ALK	G1128A	increasing rate
+ALK	F1245V	unknown
+ALK	G1128A	unknown
+ALK	G1286R	increasing rate
+ALK	I1170N	decreasing rate
+ALK	I1170N	increasing rate
+ALK	I1171N	unknown
+ALK	I1170S	decreasing rate
+ALK	Y1278S	increasing rate
+ALK	T1151M	increasing rate
+ALK	R1275Q	increasing rate
+ALK	I1170S	increasing rate
+ALK	R1231Q	decreasing rate
+ALK	R1192P	increasing rate
+ALK	A1200V	increasing rate
+ALK	Y1278S	unknown
+AMFR	G308V	disrupting
+AMFR	T377D	decreasing
+AMFR	W368A	decreasing
+AMFR	R867C	decreasing
+AMFR	G1040R	decreasing
+AMFR	D454A	disrupting
+AMFR	D70N	decreasing
+AMFR	R379E	decreasing
+AMFR	D554N	disrupting
+AMFR	I661T	decreasing
+AMPH	M604V	disrupting
+ANAPC1	C215S	disrupting strength
+ANAPC10	I2020T	unknown
+ANAPC15	K179E	decreasing
+ANAPC15	W174A	disrupting
+ANAPC2	S364A	unknown
+ANAPC4	P261A	disrupting strength
+ANAPC4	W258A	disrupting strength
+ANAPC4	W199A	disrupting strength
+ANAPC4	P202A	disrupting strength
+ANAPC7	L13A	increasing
+ANGPTL4	C80S	unknown
+ANGPTL4	E40K	unknown
+ANGPTL4	C76S	unknown
+ANK1	K105E	decreasing
+ANK1	R104G	decreasing
+ANK1	T99P	decreasing
+ANK1	K101E	decreasing
+ANKRD49	K150I	increasing strength
+ANKRD49	G183C	increasing strength
+ANKRD49	D107I	increasing strength
+ANKRD49	K150C	increasing strength
+ANKRD49	D107C	increasing strength
+ANOS1	N267K	disrupting
+ANTXR1	D50A	decreasing
+ANTXR1	T118A	decreasing
+ANTXR2	R40C	unknown
+ANXA2	K80A	decreasing
+ANXA2	K81A	decreasing
+ANXA2	R77A	decreasing
+ANXA2	K88A	decreasing
+ANXA2	R78A	decreasing
+ANXA6	G2019S	increasing rate
+ANXA6	D1994A	disrupting rate
+AP1B1	I488F	unknown
+AP1B1	I85D	disrupting strength
+AP1B1	V88D	decreasing strength
+AP1B1	V88D	disrupting strength
+AP1B1	I85D	decreasing strength
+AP1S2	V3349A	decreasing
+AP1S2	H340A	disrupting
+AP2B1	E849A	disrupting strength
+AP2B1	L106A	decreasing strength
+AP2B1	E902A	decreasing strength
+AP2B1	F3346A	disrupting
+AP2M1	M209A	decreasing
+AP2M1	K82A	decreasing
+AP2M1	I96A	decreasing
+AP2M1	G270A	decreasing
+AP2M1	T156A	decreasing strength
+AP2M1	D269A	decreasing
+AP2M1	Y83A	decreasing
+AP2M1	F265A	decreasing
+APC	N507K	disrupting
+APEH	N171K	disrupting
+APEX1	K6R	decreasing
+APEX1	K6R	increasing
+APEX1	K7R	decreasing
+APLF	R27A	unknown
+APOA1	E26R	increasing
+APOA1	A18P	disrupting
+APOA5	K211Q	decreasing
+APOA5	R210E	decreasing
+APOE	C130R	unknown
+APP	E340N	unknown
+APP	K670M	unknown
+APP	T668A	decreasing
+APP	T688A	decreasing
+APP	A673T	decreasing rate
+APP	S26C	unknown
+APP	K670M	decreasing
+AR	V730M	decreasing
+AR	L701H	decreasing
+AR	R726L	decreasing
+AR	Q798E	decreasing
+AR	F754L	decreasing
+AR	K520R	disrupting
+AR	K386R	disrupting
+AR	H874Y	decreasing
+AR	T877A	decreasing
+AR	V715M	decreasing
+ARAC4	P2326A	disrupting
+ARAC4	P2325A	disrupting
+ARAC4	P2315A	disrupting
+ARAC4	P2317A	disrupting
+ARAC4	P2318A	disrupting
+ARAF	R662L	decreasing strength
+ARAF	V600E	increasing strength
+ARAF	R509H	decreasing strength
+ARF1	A136P	increasing strength
+ARF1	L77D	disrupting strength
+ARF1	K73D	decreasing strength
+ARF1	I49D	disrupting strength
+ARF1	H80D	disrupting strength
+ARF1	V53D	decreasing strength
+ARF1	T32N	decreasing
+ARF1	N126I	increasing
+ARF1	W172D	increasing strength
+ARF1	Q71L	unknown
+ARF1	Q71L	increasing
+ARF6	T28N	decreasing
+ARFGEF2	I292P	decreasing
+ARFGEF2	V289W	disrupting
+ARFGEF2	V534W	disrupting
+ARHGAP1	R292A	unknown
+ARHGAP39	L724A	disrupting
+ARHGAP39	N813A	decreasing
+ARHGAP39	N813A	disrupting
+ARHGAP39	T722A	decreasing
+ARHGAP39	T722A	disrupting
+ARHGAP39	L724A	decreasing
+ARHGAP39	Y814A	decreasing
+ARHGAP39	Y814A	disrupting
+ARHGAP8	P189A	increasing
+ARHGAP8	D256K	decreasing
+ARHGAP8	P187A	increasing
+ARHGAP8	P186A	increasing
+ARHGAP8	P184A	increasing
+ARHGAP8	L188A	increasing
+ARHGAP8	D257K	decreasing
+ARHGEF1	E27A	decreasing
+ARHGEF1	E29A	decreasing
+ARHGEF7	P340E	increasing
+ARID4B	K73R	disrupting strength
+ARID4B	K76R	disrupting strength
+ARIH1	I124A	disrupting
+ARIH1	C357S	increasing
+ARIH1	C375S	increasing
+ARIH1	E431A	disrupting
+ARIH1	E503A	disrupting
+ARIH1	H205A	disrupting
+ARIH1	V123A	decreasing
+ARIH1	F430A	disrupting
+ARIH1	W140A	disrupting
+ARIH1	V123A	disrupting
+ARIH2	C300A	increasing
+ARIH2	V86A	decreasing
+ARIH2	L84A	decreasing
+ARIH2	H158A	disrupting
+ARIH2	W100A	decreasing
+ARIH2	C318A	increasing
+ARIH2	C310A	increasing
+ARIH2	C310S	increasing
+ARL6	Q73L	unknown
+ARL6	A89V	decreasing
+ARL6	Q73L	increasing
+ARL6	L170W	disrupting
+ARL6	G169A	disrupting
+ARMC9	G2019S	increasing
+ARMC9	R1441C	increasing
+ARMC9	Y1699C	increasing
+ARMC9	T1348N	disrupting
+ARNT2	L644A	disrupting
+ARPC4	R40C	unknown
+ARRB2	R169E	decreasing strength
+ASAH1	D29E	disrupting
+ASCC2	C91S	disrupting
+ASCC2	R38Q	disrupting
+ASCC2	Y88C	disrupting
+ASF1	D54A	disrupting
+ASF1	K71A	decreasing
+ASF1	V94A	decreasing
+ASF1	V45A	decreasing
+ASNA1	R394A	decreasing
+ASNA1	K395A	decreasing
+ASNS	K1936M	disrupting
+ATAD1	E193Q	nt
+ATF2	T52A	disrupting rate
+ATF4	S219N	disrupting
+ATF4	S219N	decreasing
+ATF4	D218N	decreasing
+ATG12	N151R	decreasing rate
+ATG12	N151A	decreasing strength
+ATG16L1	T300A	increasing rate
+ATG16L1	D299E	disrupting rate
+ATG5	P103A	disrupting
+ATG5	W436R	disrupting
+ATG7	F359D	decreasing
+ATIC	P509S	decreasing
+ATIC	P506T	increasing
+ATIC	P497S	decreasing
+ATIC	P497H	decreasing
+ATIC	P525S	disrupting
+ATL1	K80A	decreasing
+ATL3	A391D	disrupting
+ATM	D2870A	disrupting
+ATM	N2875K	disrupting
+ATP5C1	P727A	decreasing
+ATP5C1	P730A	decreasing
+ATP5C1	P747A	decreasing
+ATP5C1	P750A	decreasing
+ATP5J	D164A	disrupting
+ATP6V0A1	D2870A	disrupting
+ATP6V1A	Y42A	decreasing
+ATP6V1A	Y143L	disrupting
+ATP6V1A	Y143A	disrupting
+ATP6V1A	T47A	decreasing
+ATP6V1A	D36A	decreasing
+ATP6V1A	Y42F	decreasing
+ATP6V1D	T668A	decreasing
+ATP7A	S189A	disrupting
+ATP8B1	R867C	decreasing
+ATP8B1	I661T	decreasing
+ATP8B1	D554N	disrupting
+ATP8B1	G1040R	decreasing
+ATP8B1	D70N	decreasing
+ATP8B1	D454A	disrupting
+ATP8B1	G308V	disrupting
+ATR	K2327R	disrupting
+ATRX	S141A	disrupting
+ATXN1	L858R	unknown
+ATXN1	D25N	unknown
+ATXN1	K772T	disrupting
+ATXN3	K283N	disrupting
+ATXN3	R285H	disrupting
+ATXN3	R282H	disrupting
+ATXN3	R284H	disrupting
+AUP1	C135A	unknown
+AUP1	C173A	unknown
+AUP1	C33A	unknown
+AUP1	C165A	unknown
+AURKA	T287D	unknown
+AURKA	Q62R	increasing
+AURKA	K162R	disrupting rate
+AURKB	T495D	decreasing
+AXIN1	V25A	decreasing
+AXIN1	R22A	disrupting
+AXIN1	E29A	decreasing
+AXIN1	G27A	disrupting
+AXIN1	G521P	decreasing
+AXIN1	P26A	decreasing
+AXIN1	P23A	decreasing
+AXIN1	P24A	decreasing
+Actr1a	K88R	unknown
+Agap2	S414N	disrupting
+Agap2	K413A	disrupting
+Agap2	Y1032F	disrupting
+Agap2	Y1124F	disrupting
+Aifm1	P550A	disrupting
+Aifm1	P543A	disrupting
+Aifm1	P544A	disrupting
+Aifm1	P553A	disrupting
+Aifm1	P547A	disrupting
+Ap1g1	L71E	disrupting strength
+Ap1g1	L71E	decreasing strength
+Ap1g1	L68D	decreasing strength
+Ap1g1	R15E	disrupting
+Ap1g1	L102E	decreasing strength
+Ap1g1	L102E	disrupting strength
+Ap1g1	L68D	disrupting strength
+Ap1g1	Q28R	decreasing
+Ap1m1	D319R	decreasing
+Ap1m1	D174A	disrupting
+Ap2a1	I374S	unknown
+Ap2a1	L393A	unknown
+Ap2a1	I370A	unknown
+Arap3	Y1399F	decreasing
+Arhgef2	E243K	disrupting
+Arrb1	Q394L	decreasing strength
+Arrb2	K207R	decreasing
+Arrb2	K18R	decreasing
+Arrb2	K108R	decreasing
+Arrb2	K296R	decreasing
+Arrb2	K107R	decreasing
+Arsb	K88R	increasing
+Arsb	K88E	increasing
+Atp2a2	T287D	unknown
+Atp5a1	S508A	decreasing
+Atp5a1	S141A	disrupting
+Atp5a1	S141A	decreasing
+Atp5a1	S474A	decreasing
+Axin1	R378A	decreasing
+B3GALT2	L858R	unknown
+B3GALT2	D25N	unknown
+BABAM1	G33R	disrupting
+BABAM1	T441M	increasing
+BABAM1	G51R	disrupting
+BACE1	L499A	disrupting
+BAG2	D160N	unknown
+BAG3	F126A	disrupting
+BAG3	H155A	disrupting
+BAG5	D410A	unknown
+BAG5	D54A	decreasing
+BAG5	R68A	unknown
+BAG5	R332A	disrupting
+BAG5	D410A	disrupting
+BAG5	R332A	unknown
+BAG5	D318A	decreasing
+BAG5	R424A	unknown
+BAG5	R68A	decreasing
+BAG5	R332A	decreasing
+BAG5	D228A	unknown
+BAG5	D54A	disrupting
+BAG5	R68A	disrupting
+BAG5	R424A	decreasing
+BAG5	R424A	disrupting
+BAG5	D410A	decreasing
+BAG5	R242A	decreasing
+BAG5	R242A	disrupting
+BAG5	D318A	unknown
+BAG5	R242A	unknown
+BAG5	D318A	disrupting
+BAG5	D54A	unknown
+BAG5	D228A	disrupting
+BAG5	D228A	decreasing
+BAIAP2	W413G	disrupting
+BAIAP2	R11E	decreasing
+BAIAP2	S268P	disrupting
+BAIAP2	K143E	decreasing
+BAIAP2	R11E	disrupting
+BAIAP2	K147E	decreasing
+BAIAP2	Q23E	decreasing
+BAIAP2	I267N	disrupting
+BAIAP2	K143E	disrupting
+BAIAP2	P270A	disrupting
+BAIAP3	T85D	increasing
+BAK1	Y110E	decreasing
+BAK1	L78A	decreasing
+BAK1	Y110E	increasing
+BANP	S73A	decreasing
+BARD1	C645R	disrupting
+BARD1	L44P	disrupting
+BARD1	V695L	disrupting
+BARD1	K619A	disrupting
+BASP1	K38A	unknown
+BAX	D68R	decreasing
+BAX	C62A	unknown
+BAX	D68R	decreasing strength
+BAX	I136C	disrupting strength
+BAX	E69C	increasing strength
+BAX	M74R	disrupting
+BAX	K64A	disrupting
+BAX	M74A	decreasing
+BAX	M74D	decreasing
+BAX	M74D	disrupting
+BAX	V121C	disrupting strength
+BAX	M74E	decreasing
+BAX	M74E	disrupting
+BAX	S184L	unknown
+BAX	R134C	unknown
+BAX	R109D	decreasing strength
+BAX	M74R	decreasing
+BAX	M74K	decreasing
+BBS1	M390R	decreasing
+BBS10	R49W	decreasing strength
+BBS10	S311A	decreasing strength
+BBS10	Y613H	decreasing strength
+BBS10	P363L	decreasing strength
+BBS10	C91W	decreasing strength
+BBS10	D81N	decreasing strength
+BBS10	G677V	decreasing strength
+BBS10	L308F	decreasing strength
+BBS10	L308F	increasing strength
+BBS10	S329L	decreasing strength
+BBS10	T689P	decreasing strength
+BBS10	V240G	decreasing strength
+BBS10	P363L	increasing strength
+BBS10	R34P	decreasing strength
+BBS12	T501M	decreasing strength
+BBS12	A289P	decreasing strength
+BBS12	G540V	decreasing strength
+BBS12	I346T	decreasing strength
+BBS12	P159L	decreasing strength
+BBS4	G277E	disrupting
+BBS4	P187S	unknown
+BBS4	R295P	disrupting
+BCAP31	D155A	unknown
+BCAP31	D238A	unknown
+BCL10	S218D	increasing
+BCL10	S231D	increasing
+BCL2	G145A	decreasing
+BCL2	T69E	increasing
+BCL2	S117R	decreasing
+BCL2	R146A	disrupting
+BCL2	R129C	increasing
+BCL2	P59T	decreasing
+BCL2	I48F	increasing
+BCL2	G145A	unknown
+BCL2	D31H	increasing
+BCL2	A60V	increasing
+BCL2L1	G148E	decreasing
+BCL2L1	G138A	disrupting
+BCL2L1	G138A	decreasing
+BCL2L1	F131V	decreasing
+BCL2L1	D133A	decreasing
+BCL2L1	G187A	decreasing
+BCL2L1	G227A	decreasing
+BCL2L1	K233A	decreasing
+BCL2L1	N52D	unknown
+BCL2L1	R232A	decreasing
+BCL2L1	L226A	decreasing
+BCL2L11	F159E	decreasing
+BCL2L11	G66A	disrupting
+BCL2L11	G66E	disrupting
+BCL2L11	L152E	decreasing
+BCL2L2_PABPN1	T208D	disrupting strength
+BCL2L2_PABPN1	K227A	disrupting strength
+BCL2L2_PABPN1	C29S	unknown
+BCL2L2_PABPN1	A128L	unknown
+BCL2L2_PABPN1	R95P	disrupting
+BCR	G119R	disrupting
+BCR	E100R	decreasing
+BCR_ABL_fusion	M975I	increasing
+BCR_ABL_fusion	M747I	decreasing
+BCS1L	R155P	disrupting
+BECN1	G120E	disrupting
+BECN1	R120G	unknown
+BECN1	D121A	disrupting
+BECN1	F123A	disrupting
+BECN1	G120E	decreasing
+BECN1	K117A	decreasing
+BECN1	F123A	decreasing
+BECN1	L112A	decreasing
+BECN1	L116A	decreasing
+BECN1	L116A	disrupting
+BECN1	K117A	increasing
+BECN2	I80S	disrupting strength
+BET1L	S21N	decreasing
+BET1L	Q66L	unknown
+BID	D95A	disrupting
+BID	G94A	decreasing
+BID	G94A	disrupting
+BID	G94E	disrupting
+BID	M97A	decreasing strength
+BID	L90A	disrupting
+BIRC2	W316A	decreasing
+BIRC2	R65E	decreasing
+BIRC2	E64A	decreasing
+BIRC2	D320A	decreasing
+BIRC3	E47A	decreasing
+BIRC5	F101A	disrupting
+BIRC5	L102A	disrupting
+BIRC7	D138A	decreasing
+BIRC7	D120A	decreasing
+BIRC8	D160A	unknown
+BIRC8	K135A	unknown
+BIRC8	K154A	unknown
+BIRC8	K155A	unknown
+BIRC8	N161A	unknown
+BIRC8	R124A	unknown
+BIRC8	K123A	unknown
+BLK	V600E	unknown
+BLK	G2019S	increasing rate
+BLK	D1994A	decreasing rate
+BLOC1S4	S306A	disrupting
+BMI1	E116A	decreasing
+BMI1	S121A	decreasing
+BMI1	S123A	decreasing
+BOLL	S59A	disrupting
+BPTF	F2870A	disrupting
+BPTF	K382R	disrupting
+BPTF	L2748E	decreasing
+BPTF	W2748E	disrupting
+BPTF	C2870A	decreasing
+BRAF	G466V	decreasing strength
+BRAF	G466E	disrupting rate
+BRAF	G464V	unknown
+BRAF	G464V	increasing strength
+BRAF	G464E	unknown
+BRAF	G464V	decreasing rate
+BRAF	G466V	disrupting rate
+BRAF	G464E	increasing strength
+BRAF	G464E	decreasing strength
+BRAF	G464E	decreasing rate
+BRAF	R509H	decreasing strength
+BRAF	G464V	decreasing strength
+BRAF	G466V	increasing strength
+BRAF	R509H	unknown
+BRAF	I617R	decreasing strength
+BRAF	R188L	decreasing
+BRAF	R462E	disrupting strength
+BRAF	R188L	disrupting
+BRAF	R188N	disrupting
+BRAF	R462E	decreasing strength
+BRAF	R462E	decreasing rate
+BRAF	I666R	disrupting strength
+BRAF	V600E	increasing strength
+BRAF	T529N	disrupting
+BRAF	T529N	decreasing
+BRAF	R662L	decreasing strength
+BRAF	V600E	disrupting
+BRAF	V600E	unknown
+BRCA1	M1775R	disrupting strength
+BRCA1	T5P	disrupting
+BRCA1	M18T	disrupting
+BRCA1	M1775R	increasing
+BRCA1	M1775R	disrupting
+BRCA1	I90A	decreasing
+BRCA1	A1708E	increasing
+BRCA1	C61G	disrupting
+BRCA1	L86A	decreasing
+BRCA1	C64G	disrupting
+BRCA1	I89A	decreasing
+BRCA2	S3291E	decreasing
+BRCA2	Y42C	disrupting
+BRCA2	T1526A	decreasing
+BRCA2	Y42C	decreasing
+BRCA2	S3291A	decreasing
+BRD4	Y139A	decreasing
+BRD4	H437D	decreasing strength
+BRD4	Y139A	disrupting
+BRD4	Y432A	decreasing
+BRD4	D144H	increasing strength
+BRPF1	E88A	decreasing
+BRPF1	V89A	disrupting
+BRPF1	S79A	decreasing
+BRPF1	S36A	decreasing
+BRPF1	Q83A	disrupting
+BRPF1	S84S	decreasing
+BST2	Y8A	disrupting
+BST2	Y8A	decreasing
+BST2	Y6A	disrupting
+BST2	Y6A	decreasing
+BST2	V11A	disrupting
+BST2	L41A	disrupting
+BST2	L37A	disrupting
+BST2	K28M	increasing
+BST2	I34A	disrupting
+BST2	C20S	unknown
+BST2	C91A	disrupting
+BST2	C53A	disrupting
+BST2	C63A	disrupting
+BST2	I26A	decreasing
+BTBD1	S832G	decreasing
+BTBD1	R831Q	disrupting
+BTBD1	R831Q	decreasing
+BTG2	L96A	disrupting
+BTG2	L92A	disrupting
+BTK	R307K	decreasing
+BTK	Y223F	decreasing
+BTK	Y551F	decreasing
+BTK	W251L	decreasing
+BTRC	Y357F	increasing strength
+BTRC	T458A	disrupting
+BTRC	H457A	disrupting
+BTRC	R459A	disrupting
+BTRC	K1057A	decreasing
+BTRC	P2325A	disrupting
+BTRC	K456A	disrupting
+BTRC	P2326A	disrupting
+BTRC	R474A	decreasing
+BUB1B	K795M	decreasing
+BUB3	N169A	decreasing
+BUB3	D164A	decreasing
+Bak1	G124E	disrupting
+Bak1	L76E	decreasing
+Bak1	W123A	disrupting
+Bap1	L690P	disrupting
+Bcl9l	Y561A	disrupting
+Bid	C126S	unknown
+Bid	G34E	decreasing
+Bid	C30S	unknown
+Bmpr1a	R175H	increasing
+Bmpr1a	C190S	unknown
+C10orf88	M5G	unknown
+C14orf105	L858R	decreasing strength
+C16orf59	H80D	disrupting strength
+C16orf59	A136P	increasing strength
+C16orf59	I49D	disrupting strength
+C16orf59	Q71L	unknown
+C16orf59	K73D	decreasing strength
+C16orf59	L77D	disrupting strength
+C16orf59	W172D	increasing strength
+C16orf59	V53D	decreasing strength
+C16orf70	P187S	unknown
+C16orf72	Y110E	decreasing
+C1orf220	I2020F	disrupting
+C1orf220	G2019V	disrupting
+C1orf94	L344P	disrupting
+C1qbp	W61D	unknown
+C1qbp	K507S	disrupting strength
+C1qbp	F39S	disrupting
+C1qbp	D537E	decreasing strength
+C1qbp	R515S	disrupting strength
+C1qbp	D351H	disrupting strength
+C1qbp	V426S	decreasing strength
+C1qbp	S17N	disrupting
+C22orf29	L118A	decreasing strength
+C2CD3	C88A	unknown
+C3	R1320E	increasing
+CA10	H292S	decreasing
+CA10	H292S	unknown
+CA10	C290S	decreasing
+CA10	C290S	unknown
+CAB39	Y33R	decreasing
+CABS1	G464E	unknown
+CABYR	S155A	decreasing rate
+CABYR	S155A	disrupting rate
+CABYR	T151A	decreasing rate
+CABYR	T151A	disrupting rate
+CAD	S735E	unknown
+CAD	S731A	unknown
+CALM3	F90L	decreasing
+CALM3	T35C	unknown
+CALR	W200A	disrupting
+CAND1	T35S	decreasing
+CAND1	E37G	decreasing
+CAND1	Q61L	unknown
+CAND1	G12V	unknown
+CAND1	G1069D	disrupting
+CAND1	Y40C	decreasing
+CAND1	G12V	decreasing
+CANT1	G464E	unknown
+CAPN2	D395A	decreasing
+CAPN2	D397A	decreasing
+CAPN2	E396A	decreasing
+CAPN2	E398A	decreasing
+CAPZA2	I161A	decreasing
+CAPZA2	D167A	decreasing
+CAPZA2	R166A	disrupting
+CAPZA2	Q168A	decreasing
+CAPZA2	E170A	decreasing
+CARD11	S652A	disrupting rate
+CARD11	S652A	decreasing rate
+CARD11	S644A	disrupting rate
+CARD11	S558A	decreasing rate
+CARD9	I155R	disrupting
+CARM1	Y91A	disrupting
+CARM1	Y108A	disrupting
+CARM1	W95A	disrupting
+CARM1	W57A	decreasing
+CARM1	W123A	disrupting
+CARM1	L76E	decreasing
+CARM1	G124E	disrupting
+CARM1	F60A	disrupting
+CASK	V117D	disrupting
+CASK	S24D	decreasing
+CASK	V117Q	disrupting
+CASK	V26L	decreasing
+CASKIN1	I375A	disrupting
+CASKIN1	R379A	decreasing
+CASKIN1	V377A	decreasing
+CASKIN1	W376A	disrupting
+CASKIN1	L378A	disrupting
+CASP1	C285A	unknown
+CASP10	C401S	unknown
+CASP3	C163A	unknown
+CASP7	S239A	decreasing
+CASP7	S30A	decreasing
+CASP7	T173A	decreasing
+CASP8	Q283P	disrupting
+CASP8	C377S	unknown
+CASP8	C360S	increasing
+CASP8	C360S	unknown
+CASP9	D315A	unknown
+CASP9	E306A	unknown
+CASP9	D315A	decreasing
+CASP9	D330A	unknown
+CASQ2	R33Q	decreasing
+CASQ2	D307H	decreasing
+CAT	N797D	decreasing
+CAT	D764V	decreasing
+CAT	N797I	decreasing
+CAT	N785D	decreasing
+CAT	Y788A	disrupting
+CAT	Y788F	decreasing
+CAT	Y788E	disrupting
+CAT	P786A	decreasing
+CAV1	Y14F	disrupting
+CBL	Y700F	disrupting
+CBL	Y731F	disrupting
+CBL	Y700F	decreasing
+CBL	I744F	disrupting
+CBL	Y731F	decreasing
+CBX1	G12V	unknown
+CBX1	Y485A	disrupting
+CBX4	F11A	unknown
+CBX4	K191R	unknown
+CBX4	W35L	unknown
+CBX5	I165E	disrupting
+CBX5	W174A	disrupting
+CCAR1	T667A	decreasing
+CCAR1	T667D	increasing
+CCAR2	L42P	decreasing
+CCAR2	G122A	decreasing
+CCDC14	L86A	decreasing
+CCDC155	I85D	disrupting strength
+CCDC155	V88D	disrupting strength
+CCDC22	L97E	decreasing
+CCDC22	T17A	decreasing
+CCDC22	V60E	decreasing
+CCDC22	V54E	decreasing
+CCDC22	V187E	decreasing
+CCDC22	V73E	decreasing
+CCDC22	V144E	decreasing
+CCDC22	T17A	disrupting
+CCDC22	I109E	decreasing
+CCDC22	I125E	decreasing
+CCDC22	L166E	decreasing
+CCDC22	V152E	decreasing
+CCDC50	L116P	decreasing
+CCDC8	K634S	increasing
+CCDC8	R263S	decreasing
+CCDC8	R28S	decreasing
+CCDC8	R580S	increasing
+CCDC8	K265S	decreasing
+CCDC8	R262S	decreasing
+CCDC85B	Y730F	unknown
+CCDC85B	Y583F	unknown
+CCDC85B	Y463F	unknown
+CCDC85B	Y585F	unknown
+CCNB1IP1	T221A	decreasing
+CCNB1IP1	P222A	decreasing
+CCND1	K112E	decreasing
+CCND1	T286A	unknown
+CCND1	P287A	unknown
+CCNE1	S59A	disrupting
+CCNE1	S399A	decreasing
+CCNF	M309A	unknown
+CCNY	S71A	decreasing
+CCNY	S71A	disrupting
+CCNY	S73A	decreasing
+CCNY	S73A	disrupting
+CCR2	L316T	decreasing
+CCR2	F319D	decreasing
+CCT2	T68P	decreasing
+CCT2	C716A	decreasing
+CCT2	K88E	decreasing
+CCT2	R91P	decreasing
+CCT3	R95P	disrupting
+CCT5	L90A	disrupting
+CCT5	D95A	disrupting
+CCT6A	K45A	unknown
+CCT8	C30S	unknown
+CCT8	C126S	unknown
+CD244	T226D	unknown
+CD244	K68A	decreasing
+CD244	S222D	unknown
+CD244	K68A	disrupting
+CD244	E70A	disrupting
+CD244	E70A	decreasing
+CD244	S226D	unknown
+CD247	Y42T	decreasing
+CD247	Y42F	decreasing
+CD247	Y42A	decreasing
+CD247	T47Y	decreasing
+CD247	T47A	decreasing
+CD247	D36S	decreasing
+CD247	L39A	decreasing
+CD247	F50A	decreasing
+CD247	D36N	decreasing
+CD247	D36A	decreasing
+CD274	R90K	disrupting
+CD274	R90K	decreasing
+CD274	R383K	disrupting
+CD274	R383K	decreasing
+CD37	Y13F	disrupting
+CD4	P393M	unknown
+CD40	T254A	decreasing
+CD44	F294A	increasing
+CD44	F312G	increasing
+CD44	F3346A	disrupting
+CD44	L339A	increasing
+CD44	K278A	increasing
+CD44	Y311A	increasing
+CD44	Y338A	increasing
+CD44	R277A	increasing
+CD74	P112G	unknown
+CD74	L113A	unknown
+CD74	M107A	unknown
+CD74	M115A	unknown
+CDC20	I37A	decreasing rate
+CDC20	W35D	decreasing rate
+CDC20	R46A	decreasing rate
+CDC20	R41E	increasing
+CDC20	N98R	decreasing rate
+CDC25C	K720R	unknown
+CDC27	C66R	increasing
+CDC42	Q61L	unknown
+CDC42	E61L	unknown
+CDC42	E38A	decreasing
+CDC42	F37A	disrupting
+CDC42	G12V	decreasing
+CDC42	G12V	increasing
+CDC42	G12V	unknown
+CDC42	K27A	unknown
+CDC42	D38A	decreasing
+CDC42	D118A	disrupting
+CDC42	Q61L	decreasing
+CDC42	C189S	unknown
+CDC42	C188S	unknown
+CDC42	Q61L	disrupting
+CDC42	F37A	decreasing
+CDC42	T17N	disrupting
+CDC42	V189S	unknown
+CDC42	Y40C	decreasing
+CDC42	Y40C	disrupting
+CDC42	Y40K	decreasing
+CDC42	S30G	unknown
+CDC42BPA	S234A	decreasing
+CDC42BPA	T240A	decreasing
+CDC42BPA	T403A	decreasing
+CDC42BPA	K106A	decreasing
+CDC42BPA	H1582A	decreasing
+CDC42BPA	H1579A	decreasing
+CDC5L	Q73L	increasing
+CDC73	K44M	disrupting
+CDCA5	F166A	increasing
+CDCA5	F168A	decreasing
+CDCA5	F166A	decreasing
+CDCA5	F168A	increasing
+CDHR2	L1310R	decreasing
+CDHR2	L1310R	disrupting strength
+CDHR5	I845R	disrupting strength
+CDHR5	R109G	disrupting strength
+CDK1	K33A	decreasing rate
+CDK10	T133A	disrupting
+CDK14	K164A	unknown
+CDK14	S119A	decreasing
+CDK2	A120A	unknown
+CDK2	K33M	unknown
+CDK2AP1	R340E	disrupting
+CDK2AP1	K379E	disrupting
+CDK3	K33M	unknown
+CDK5	K177A	decreasing
+CDK5	D144N	unknown
+CDK5	D170A	decreasing
+CDK6	R31C	disrupting
+CDKN1A	M147A	decreasing
+CDKN1A	F150A	decreasing
+CDKN1A	D149A	decreasing
+CDKN1B	Y89F	unknown
+CDKN1B	Y89F	decreasing
+CDKN1B	Y89A	increasing
+CDKN1B	Y88F	decreasing
+CDKN1B	Y88A	increasing
+CDKN1B	K153Q	decreasing strength
+CDKN1B	K165A	decreasing
+CDKN1B	S175A	decreasing
+CDKN1B	S178A	decreasing
+CDKN1B	Y88F	disrupting
+CDKN1B	Y74F	decreasing
+CDKN1B	S183A	decreasing
+CDKN1B	Y74A	increasing
+CDKN1C	F276V	disrupting
+CDKN1C	K278E	disrupting
+CDKN2A	A20P	disrupting
+CDKN2A	R87P	increasing strength
+CDKN2A	A20P	disrupting strength
+CDKN2A	M53I	disrupting strength
+CDKN2A	R87P	decreasing strength
+CDKN2A	R24P	disrupting
+CDKN2A	R24P	disrupting strength
+CDKN2A	R87P	disrupting strength
+CDKN2A	M53I	increasing strength
+CDKN2C	F37I	disrupting
+CDKN2C	A72P	disrupting
+CDKN2C	A61D	decreasing
+CDR2	S169P	decreasing
+CDR2	H149R	decreasing
+CEACAM5	E133A	decreasing strength
+CEACAM5	I125A	decreasing strength
+CEACAM5	Y68A	decreasing strength
+CEACAM5	F63R	decreasing strength
+CEACAM5	L129S	decreasing strength
+CEACAM5	S66N	decreasing strength
+CEACAM5	Q78R	decreasing strength
+CEACAM5	V73C	unknown
+CEACAM5	L54T	unknown
+CEACAM5	L52S	unknown
+CEACAM5	V73A	decreasing strength
+CEACAM5	Q78L	decreasing strength
+CEBPB	C12A	disrupting
+CEBPZ	G2019S	increasing rate
+CENPK	L106A	decreasing strength
+CENPK	F43A	decreasing strength
+CENPK	V158A	decreasing strength
+CENPT	T85D	increasing
+CEP104	C76S	unknown
+CEP104	C80S	unknown
+CEP131	K35E	increasing
+CEP135	Y1699C	decreasing
+CEP135	C88A	unknown
+CEP135	L588P	disrupting
+CEP135	R1514Q	decreasing
+CEP152	K35E	increasing
+CEP152	T735A	decreasing
+CEP250	A134M	disrupting
+CEP250	L131P	decreasing
+CEP295	L939W	decreasing
+CEP295	L1143P	decreasing
+CEP44	V600E	disrupting
+CEP55	P465L	disrupting
+CEP55	D1994A	disrupting rate
+CEP63	S1453A	decreasing
+CEP63	Y1399F	decreasing
+CEP70	S406A	disrupting
+CEP72	D376A	disrupting
+CEP72	R221A	disrupting
+CFH	Y402H	decreasing strength
+CFL1	S3A	decreasing
+CHAF1B	A111G	disrupting
+CHD4	K379E	increasing
+CHD7	G2108R	disrupting
+CHD7	W2091R	disrupting
+CHD7	H2096R	disrupting
+CHEK1	D130A	disrupting rate
+CHEK2	P2325A	disrupting strength
+CHEK2	P2317A	disrupting strength
+CHEK2	P2326A	disrupting strength
+CHEK2	D347A	disrupting
+CHEK2	D347A	unknown
+CHEK2	L42P	disrupting
+CHEK2	P2315A	disrupting strength
+CHEK2	P2318A	disrupting strength
+CHM	H507R	disrupting
+CHMP2A	K185R	decreasing
+CHMP2B	D121A	disrupting
+CHMP2B	F123A	decreasing
+CHMP2B	K117A	decreasing
+CHMP2B	L112A	decreasing
+CHMP2B	G120E	disrupting
+CHMP2B	L116A	disrupting
+CHMP4B	G93A	unknown
+CHMP4B	G37R	unknown
+CHUK	S176E	increasing
+CHUK	K44M	disrupting
+CHUK	S176A	decreasing
+CHUK	K44A	disrupting
+CIDEB	Y160F	disrupting strength
+CIDEB	Y160F	disrupting rate
+CILP	I395T	increasing
+CIRBP	D195A	increasing
+CIRBP	C227S	increasing
+CISH	D319R	decreasing
+CKAP5	G120E	disrupting strength
+CKS1B	N45R	decreasing
+CLCN7	R175H	unknown
+CLTC	F129L	unknown
+CLTC	I3347A	decreasing
+CLTC	Y1176F	disrupting
+CLTC	Y1193F	disrupting
+CLTC	Y1217F	disrupting
+CLU	S323A	disrupting
+CNBP	R25A	decreasing
+CNBP	R27A	decreasing
+CNOT10	R2331A	disrupting
+CNOT4	D48K	unknown
+COG6	K82R	increasing
+COL18A1	R27A	decreasing strength
+COL18A1	R27A	disrupting strength
+COL18A1	R53A	decreasing strength
+COL18A1	R53A	disrupting
+COL18A1	R62A	decreasing
+COL18A1	R62A	decreasing strength
+COL18A1	R62A	disrupting
+COL18A1	R63A	decreasing
+COL18A1	R63A	decreasing strength
+COL18A1	R63A	disrupting
+COL18A1	R53A	disrupting strength
+COL18A1	R53A	decreasing
+COL18A1	R27A	decreasing
+COL18A1	R24A	decreasing
+COL18A1	R27A	disrupting
+COL18A1	R24A	disrupting strength
+COL18A1	C135A	unknown
+COL18A1	C165A	unknown
+COL18A1	R24A	disrupting
+COL18A1	C173A	unknown
+COL18A1	C33A	unknown
+COL18A1	R24A	decreasing strength
+COL18A1	R139A	decreasing
+COL18A1	R139A	decreasing strength
+COL18A1	R139A	disrupting
+COL18A1	R139A	disrupting strength
+COMMD2	I44A	decreasing
+COMMD9	Y39F	disrupting strength
+COMMD9	A196G	decreasing
+COMMD9	Y125F	disrupting strength
+COPB1	T821A	disrupting
+COPB1	T826A	disrupting
+COPG1	R33Q	decreasing
+COPG1	M74R	decreasing
+COPG1	D307H	decreasing
+COPG1	M74K	decreasing
+COPG1	M74E	disrupting
+COPG1	M74D	disrupting
+COPG1	M74A	decreasing
+COPS6	S148A	disrupting rate
+COPS7A	R1320E	increasing
+COPS7B	V659E	increasing
+COPS7B	I654V	increasing
+COPS8	D44V	disrupting
+CORO1C	D190Q	decreasing
+CORO1C	K187R	decreasing
+CORO1C	S188V	decreasing
+CORO1C	D190L	decreasing
+CORO1C	D190K	decreasing
+CORO2A	Y350A	decreasing
+CREB1	S133A	decreasing
+CREB1	S129A	decreasing
+CREBBP	S92A	decreasing
+CRKL	S53P	decreasing
+CRKL	H33R	decreasing
+CRKL	K72R	decreasing
+CRX	R90W	decreasing
+CRX	R41W	decreasing
+CRYAA	R116C	disrupting
+CRYAA	R116C	unknown
+CRYAA	R116C	increasing
+CRYAB	R120G	decreasing
+CRYAB	R120G	increasing
+CRYAB	R120G	unknown
+CRYBA4	F94S	disrupting
+CRYBA4	V36M	disrupting
+CRYBA4	L69P	disrupting
+CRYBB2	V73N	decreasing
+CRYBB2	I125E	decreasing
+CRYBB2	V60N	decreasing
+CRYBB2	V60E	decreasing
+CRYBB2	V54N	decreasing
+CRYBB2	V187E	decreasing
+CRYBB2	V187N	decreasing
+CRYBB2	V54E	decreasing
+CRYBB2	I109E	decreasing
+CRYBB2	V152N	decreasing
+CRYBB2	V152E	decreasing
+CRYBB2	I109N	decreasing
+CRYBB2	V73E	decreasing
+CRYBB2	V144N	decreasing
+CRYBB2	I125N	decreasing
+CRYBB2	L109E	decreasing
+CRYBB2	V144E	decreasing
+CRYBB2	L166E	decreasing
+CRYBB2	L97N	decreasing
+CRYBB2	L166N	decreasing
+CRYBB2	L97E	decreasing
+CRYGC	T5P	disrupting
+CRYGC	T5P	unknown
+CSK	R283A	decreasing
+CSK	R384A	decreasing
+CSK	R279A	decreasing
+CSK	R389A	decreasing
+CSK	R281A	decreasing
+CSPP1	D286A	decreasing
+CSPP1	K125L	decreasing
+CSTA	Y766F	decreasing
+CSTA	R609V	disrupting
+CSTA	R609V	decreasing
+CSTA	V758D	disrupting
+CSTA	V636D	disrupting
+CSTA	D755V	disrupting
+CSTA	D755V	decreasing
+CTDP1	C86S	disrupting
+CTNNB1	W504A	disrupting
+CTNNB1	Y654F	disrupting
+CTNNB1	Y670F	disrupting
+CTNNB1	I507A	decreasing
+CTNNB1	W504A	decreasing
+CTNNB1	S33Y	increasing
+CTNNB1	R2331A	disrupting
+CTNNB1	P2322A	disrupting
+CTNNB1	S33Y	decreasing strength
+CTNNB1	I507A	disrupting
+CTNNB1	S33Y	unknown
+CTNNB1	P2325A	disrupting
+CTNNB1	P2326A	disrupting
+CTNNB1	R2328A	decreasing strength
+CTNNB1	R2328A	disrupting
+CTNND1	N478A	decreasing
+CTNND1	N155A	disrupting
+CTNND1	K78M	disrupting
+CTNND1	K121M	disrupting
+CTNND1	W154A	decreasing
+CTNND1	K401M	decreasing
+CUL1	F111I	increasing
+CUL1	K759C	unknown
+CUL1	K720R	unknown
+CUL1	K720R	increasing
+CUL1	K720A	disrupting rate
+CUL1	C752A	unknown
+CUL1	F111I	decreasing
+CUL1	E159K	decreasing
+CUL1	L421E	unknown
+CUL2	R87P	decreasing strength
+CUL5	K724R	decreasing
+CYBA	A163G	decreasing
+CYBA	P156Q	disrupting
+CYBRD1	R25A	decreasing
+CYBRD1	R27A	decreasing
+CYFIP1	K725E	decreasing
+CYFIP1	D724A	decreasing
+CYFIP1	R726A	decreasing
+CYFIP2	G12V	unknown
+CYLD	Y485A	disrupting
+CYP1A1	C305S	disrupting
+CYP1A1	S518A	disrupting
+CYP1A1	C308S	disrupting
+CYP1A1	C1351S	decreasing
+CYP1A1	C1351S	disrupting
+CYP1A1	C1360S	decreasing
+CYP1A1	C1360S	disrupting
+CYP1A1	T318A	unknown
+CYP1A1	S314A	unknown
+CYTH2	F190Y	unknown
+CYTIP	I1588A	decreasing
+CYTIP	Y1618A	disrupting
+CYTIP	L1595A	decreasing
+Calml3	A63C	unknown
+Calml3	V1153A	decreasing
+Camk2a	T286D	increasing
+Camk2a	K42R	increasing
+Camk2a	T286A	unknown
+Camk2b	K43R	unknown
+Camk2b	K43R	increasing
+Camk2b	T287D	increasing
+Camk2b	T287D	unknown
+Camk2b	Y287D	increasing
+Casp3	C163S	unknown
+Ccnd1	P286A	unknown
+Ccnd1	T286A	unknown
+Cdh1	S842A	decreasing strength
+Cdh1	E114A	disrupting
+Cdh1	S849A	decreasing strength
+Cdh1	S54A	decreasing strength
+Cdh1	S854A	decreasing strength
+Cdh1	S840A	decreasing strength
+Cdh1	S852A	decreasing strength
+Cdh1	S846A	decreasing strength
+Cdh1	E47A	disrupting
+Cep120	T276A	increasing
+Cep152	R280K	unknown
+Cep55	R280K	unknown
+Cep78	C83A	unknown
+Cep78	C128A	unknown
+Cep85l	K290R	disrupting
+Chmp2a	C265S	disrupting
+Copa	T2159E	decreasing
+Ctbp2	V72R	disrupting
+Ctbp2	A58E	disrupting
+Ctnna1	A142S	decreasing
+Ctnna1	L131A	decreasing
+Ctnna1	L132A	decreasing
+Ctnna1	L138A	decreasing
+Ctnna1	L139A	decreasing
+Ctnna1	L141A	decreasing
+Ctnna1	S133A	increasing
+Ctnna1	R129A	increasing
+Ctnna1	R137A	decreasing
+Ctnna1	T136A	increasing
+Ctnna1	V125A	decreasing
+Ctnna1	V135A	decreasing
+Ctnna1	R126A	increasing
+Ctnnb1	Y654E	decreasing
+Ctnnb1	S605A	disrupting
+Ctnnb1	S605A	decreasing
+Ctnnb1	S246A	disrupting
+Ctnnb1	D164A	disrupting
+Ctnnb1	S246A	decreasing
+Ctnnb1	S191A	disrupting
+Cttn	D20G	disrupting
+Cttn	W22A	disrupting
+Cttn	W526K	disrupting
+Cyld	R76A	decreasing
+DAAM1	A229D	disrupting
+DAAM1	F1046A	disrupting
+DAB2IP	L562A	disrupting
+DAB2IP	P564A	disrupting
+DACT1	R120G	decreasing
+DAPK1	W305D	decreasing rate
+DAPK1	W305D	increasing rate
+DAPK1	S308A	disrupting rate
+DAPK1	W305Y	decreasing
+DAPK1	W305D	decreasing
+DAPK1	W305Y	decreasing rate
+DAPK2	L434A	decreasing
+DAPK2	I441A	decreasing
+DAPK2	F448A	decreasing
+DAPK3	P216S	unknown
+DAPK3	A116N	unknown
+DAPK3	D161A	unknown
+DAPK3	D161N	decreasing rate
+DAPK3	T180A	decreasing rate
+DAPK3	T112M	unknown
+DAPK3	T112M	decreasing rate
+DAPK3	P216S	decreasing rate
+DAZAP1	R69A	disrupting
+DAZAP1	F51A	decreasing
+DAZAP1	W118R	disrupting
+DBN1	S142D	decreasing
+DBN1	S142A	disrupting
+DBNL	P69A	decreasing
+DBNL	L261P	disrupting
+DBNL	D146N	decreasing
+DBNL	C46Y	disrupting
+DCAF7	V51E	disrupting
+DDB1	C378R	unknown
+DDB2	V659E	increasing
+DDB2	I654V	increasing
+DDX19B	R89L	decreasing
+DDX41	R525H	decreasing strength
+DDX47	S422A	decreasing strength
+DDX49	T1491A	disrupting rate
+DDX58	L484P	disrupting
+DDX58	F123A	disrupting
+DEPDC7	V1153A	disrupting
+DERL1	G180V	unknown
+DES	N342D	disrupting
+DES	L370P	unknown
+DES	A360P	disrupting
+DES	A357P	disrupting
+DGKI	P903A	disrupting
+DGKI	P147A	disrupting
+DIAPH1	L1203A	disrupting
+DIAPH1	M256D	disrupting
+DIS3	S518A	disrupting
+DIXDC1	M79T	decreasing
+DIXDC1	R302L	decreasing
+DIXDC1	R53W	decreasing
+DIXDC1	V96I	decreasing
+DIXDC1	G262S	decreasing
+DKC1	K66E	unknown
+DKC1	R163E	unknown
+DLG4	E685A	unknown
+DLGAP1	E685A	unknown
+DLGAP1	L690A	decreasing
+DLGAP1	L693A	decreasing
+DMD	D267N	decreasing
+DNAJB11	K73R	disrupting strength
+DNAJB11	K76R	disrupting strength
+DNM1	R730C	unknown
+DNM1	R15C	unknown
+DNM1	C424S	unknown
+DNM1	C86S	unknown
+DNM1	C708S	unknown
+DNM1	C427S	unknown
+DNM1	C442S	unknown
+DNM1	C607S	unknown
+DNM1L	T59A	unknown
+DNM1L	R247A	unknown
+DNM1L	P159A	unknown
+DNM1L	K38E	decreasing
+DNM1L	K38A	unknown
+DNM1L	K216A	unknown
+DNMT3A	R882H	decreasing
+DNMT3A	R882H	disrupting
+DNMT3A	R882H	unknown
+DOCK1	I488F	unknown
+DOCK1	W45A	unknown
+DOCK1	W45A	decreasing
+DOCK1	G171D	unknown
+DOCK1	G171E	decreasing
+DOCK6	W634A	disrupting
+DOCK6	W623A	disrupting
+DPM1	G152V	disrupting
+DPM3	I78T	disrupting
+DPM3	L85S	disrupting
+DPM3	L74S	disrupting
+DRG1	K33M	unknown
+DSC2	D852T	unknown
+DSC2	V854S	unknown
+DSC2	Y853M	unknown
+DSN1	C306R	disrupting
+DSP	N458Y	decreasing strength
+DSP	I533T	decreasing strength
+DTNA	T52A	disrupting rate
+DTNBP1	K42R	increasing
+DTNBP1	T286D	increasing
+DTNBP1	R1441C	increasing
+DTNBP1	Y1699C	decreasing
+DTNBP1	I2020T	increasing
+DTNBP1	G2019S	increasing
+DUSP1	F339A	decreasing
+DUSP1	S323A	decreasing
+DUSP1	F341A	decreasing
+DUSP1	S296A	decreasing
+DUSP26	C152S	unknown
+DVL1	T558S	unknown
+DVL2	E499G	decreasing
+DVL2	C501R	decreasing
+DYNC1H1	F140A	disrupting
+DYNC1H1	F260A	disrupting
+DYNC1I1	L67A	decreasing strength
+DYRK1A	S520A	decreasing
+Dab2	R718A	decreasing
+Dab2	R718A	disrupting
+Dctn3	G2019S	increasing
+Ddb1	L602A	decreasing
+Ddb1	I609A	decreasing
+Disc1	G226R	disrupting
+Dlg1	S597A	decreasing
+Dlg1	S597A	disrupting
+Dlg1	S601A	disrupting
+Dpm2	Y23S	decreasing
+Dpm2	F21L	decreasing
+Dvl2	Y568A	decreasing
+Dync1li1	F213A	disrupting
+Dync1li1	F241A	decreasing
+Dync1li1	H240A	disrupting
+Dync1li1	H240A	decreasing
+Dync1li1	Q66L	unknown
+Dync1li1	H212A	decreasing
+Dync1li1	F241A	disrupting
+Dync1li1	H212A	disrupting
+Dyrk1a	Y321F	disrupting
+E6	R954W	increasing
+E6	M947T	increasing
+E7	L61E	decreasing
+E7	R60E	decreasing
+E7	L67A	decreasing strength
+E7	E74R	decreasing
+ECSIT	V659E	increasing
+ECSIT	I654V	increasing
+ECT2	L195M	disrupting
+ECT2	P163E	decreasing
+ECT2	V153A	decreasing
+ECT2	V153A	disrupting
+EDA	Y179A	increasing
+EDA	K174A	decreasing
+EDA	K173A	decreasing
+EDA	G177A	decreasing
+EDA	S178A	increasing
+EDA	D175A	decreasing
+EDA	E176A	decreasing
+EDA	R172A	decreasing
+EED	A1017L	decreasing
+EED	A1017V	decreasing
+EED	A1018V	decreasing
+EED	G1003A	decreasing
+EED	G1006V	decreasing
+EED	G1007A	decreasing
+EED	G1007I	decreasing
+EED	G230A	decreasing
+EED	G230A	disrupting
+EED	G231A	decreasing
+EED	G231A	disrupting
+EED	L1001A	decreasing
+EED	G1003I	decreasing
+EED	G1006I	decreasing
+EED	G1005A	decreasing
+EED	L1011A	increasing
+EED	Y32A	disrupting
+EED	V1015L	decreasing
+EED	V1004L	decreasing
+EED	V1002L	decreasing
+EED	V1002I	decreasing strength
+EED	G1003L	decreasing
+EED	V1000L	decreasing
+EED	V1002A	decreasing
+EED	T1012A	decreasing
+EED	M256K	decreasing
+EED	L1014A	decreasing
+EED	L1011V	increasing
+EED	T1012L	decreasing
+EFHC1	T508R	disrupting
+EFHC1	R221H	disrupting
+EFHC1	A394S	disrupting
+EFHC1	P77T	disrupting
+EFS	S418D	increasing strength
+EFS	S422D	decreasing strength
+EGFR	S246D	decreasing
+EGFR	L858R	decreasing strength
+EGFR	L858R	unknown
+EGFR	M668I	unknown
+EGFR	L858R	increasing strength
+EGFR	L858R	increasing
+EGFR	L858R	disrupting
+EGFR	S53N	decreasing
+EGFR	K745A	increasing strength
+EGFR	K745A	disrupting strength
+EGFR	I664E	decreasing strength
+EGFR	G719S	increasing strength
+EGFR	G719S	increasing
+EGFR	D855A	disrupting strength
+EGFR	L861Q	unknown
+EGFR	D25N	unknown
+EGFR	D458R	increasing strength
+EGFR	R681A	disrupting
+EGFR	Y1138A	decreasing strength
+EGFR	Y1092A	decreasing strength
+EGFR	Y1092A	decreasing
+EGFR	D174A	disrupting
+EGFR	Y1016A	decreasing
+EGFR	M650L	unknown
+EGFR	V943R	unknown
+EGFR	V834L	unknown
+EGFR	T790M	unknown
+EGFR	S57N	decreasing
+EGFR	V948R	unknown
+EHMT2	K5M	decreasing
+EIF1AX	E30R	disrupting
+EIF2AK2	K296R	unknown
+EIF2B1	V121C	disrupting strength
+EIF2B1	I136C	disrupting strength
+EIF2B4	A391D	disrupting
+EIF2B4	A228V	disrupting
+EIF2S1	S49A	decreasing
+EIF2S1	S52D	increasing
+EIF3D	V1037D	decreasing
+EIF3D	R1042G	decreasing
+EIF3D	L931R	decreasing
+EIF3D	L1035A	decreasing
+EIF3D	L1034S	decreasing
+EIF3D	D1039A	decreasing
+EIF3D	V935A	decreasing
+EIF3D	V928G	decreasing
+EIF3I	S464N	disrupting
+EIF3I	F437S	disrupting
+EIF3I	R353C	decreasing
+EIF3I	D255E	disrupting
+EIF3K	D255E	disrupting
+EIF3K	F437S	disrupting
+EIF3K	R353C	decreasing
+EIF3K	S464N	disrupting
+EIF3L	C464A	decreasing
+EIF4A1	D265R	decreasing
+EIF4A1	E268K	decreasing
+EIF4A1	T298K	decreasing
+EIF4A1	D296A	decreasing
+EIF4EBP1	P564A	disrupting
+EIF4EBP1	S65A	increasing
+EIF4EBP1	T70E	decreasing
+EIF4EBP1	S83E	decreasing
+EIF4EBP1	S65E	decreasing
+EIF4EBP1	T37E	decreasing
+EIF4EBP1	T46A	increasing
+EIF4EBP1	T46E	decreasing
+EIF4EBP1	T70A	increasing
+EIF4EBP1	T37A	increasing
+EIF4EBP1	S83A	increasing
+EIF4G1	F355R	decreasing
+EIF4G1	F977A	decreasing
+EIF4G1	G2019S	increasing
+EIF4G1	R1441C	increasing
+ELF3	D159R	disrupting
+ELF3	L380R	disrupting
+ELF3	Q341D	increasing
+ELF3	Y147R	disrupting
+ELK1	E55A	decreasing
+ELL	D25N	unknown
+ELL	L858R	unknown
+ELMO1	W665A	decreasing
+ELMO2	G12V	unknown
+ELMO3	H99A	unknown
+ELMO3	C102A	unknown
+ELMSAN1	V1153A	decreasing
+EMC2	E545K	increasing
+EMC7	C165A	unknown
+EMC7	C173A	unknown
+EMC7	C135A	unknown
+EMC7	C33A	unknown
+EMD	P208A	decreasing
+EMD	D70A	decreasing
+EMD	E145A	unknown
+EMD	E146A	unknown
+EMD	G112A	unknown
+EMD	G214A	decreasing
+EMD	I164A	unknown
+EMD	I206A	decreasing
+EMD	T122A	unknown
+EMD	S198A	decreasing
+EMD	S197A	decreasing
+EMD	R45A	decreasing
+EMD	S123A	unknown
+EMD	P183T	increasing strength
+EMD	S175A	decreasing
+EMD	S192A	decreasing
+EMD	P183H	unknown
+EMD	Q133H	increasing strength
+EMD	Y34A	unknown
+EMD	P183T	decreasing strength
+EMD	L179A	unknown
+EMD	L76A	decreasing
+EMD	P183H	decreasing
+EMD	P183H	increasing strength
+EMD	R207A	decreasing
+ENO2	L92A	disrupting
+ENO2	L96A	disrupting
+EP300	D1399Y	disrupting
+EP300	N2875K	disrupting
+EP300	D2870A	disrupting
+EP400	Y600F	decreasing strength
+EPB41	I462S	disrupting
+EPHA2	S897A	decreasing
+EPHA2	S897D	decreasing
+EPHA7	T105Q	decreasing
+EPM2A	C266S	increasing
+EPM2A	F84L	disrupting
+EPM2A	G240S	decreasing
+EPM2A	G279S	decreasing
+EPM2A	G279S	disrupting
+EPM2A	P301L	decreasing
+EPM2A	Q293L	decreasing
+EPM2A	R108C	decreasing
+EPM2A	R108C	disrupting
+EPM2A	T194I	disrupting
+EPM2A	W32G	disrupting
+EPM2A	Y294N	disrupting
+EPM2A	Q293L	disrupting
+EPM2A	P301L	disrupting
+EPOR	Y504F	decreasing
+EPOR	Y456F	decreasing
+EPOR	Y426F	decreasing
+EPOR	Y454F	decreasing
+EPS15	C15A	decreasing
+EPS15	C18A	decreasing
+ERBB2	R1146A	disrupting
+ERBB2	P1149A	disrupting
+ERBB2	K753M	disrupting rate
+ERBB2	I654V	increasing
+ERBB2	V659E	increasing
+ERBB2	Y1139A	decreasing strength
+ERBB2	Y1196A	decreasing
+ERBB2	Y426F	decreasing
+ERBB2	P1152A	disrupting
+ERBB3	G284R	increasing
+ERBB3	P262H	increasing
+ERBB3	Q809R	increasing
+ERBB3	Y1199A	decreasing strength
+ERBB3	Y1197F	disrupting
+ERBB3	Y1222F	disrupting
+ERBB3	Y1260F	disrupting
+ERBB3	Y1262A	decreasing strength
+ERBB3	Y1276F	disrupting
+ERBB3	Y1289F	disrupting
+ERBB3	Y1054F	disrupting
+ERBB4	E872K	increasing strength
+ERBB4	E542K	increasing strength
+ERBIN	P315L	decreasing
+ERG	Y356A	disrupting
+ERI1	R587W	disrupting strength
+ERI1	S1506L	disrupting strength
+ERI1	Q597R	disrupting strength
+ERI1	C1477R	disrupting strength
+ERI1	W590S	increasing strength
+ERN1	C332S	decreasing
+ERN1	C148S	decreasing
+ESR1	S118E	increasing
+ETS1	S276A	increasing strength
+ETS1	S276D	increasing strength
+ETS1	P281A	disrupting strength
+ETS1	S276A	increasing rate
+ETS1	S282A	increasing strength
+ETS1	S282D	increasing strength
+ETS1	V280A	disrupting strength
+ETS1	Y283F	increasing rate
+ETS1	Y283F	increasing strength
+ETS2	V308A	disrupting strength
+ETS2	V52A	decreasing strength
+ETS2	P309A	disrupting strength
+ETS2	V308A	decreasing strength
+ETS2	V52A	disrupting strength
+ETS2	P53A	decreasing strength
+ETS2	P309A	decreasing strength
+ETS2	P53A	disrupting strength
+EVPL	Y49A	increasing
+EVPL	R70A	increasing
+EXO1	P770L	disrupting
+EXO1	P770L	decreasing
+EXO1	P640S	disrupting
+EXO1	P640S	decreasing
+EXO1	G759E	disrupting
+EXO1	G759E	decreasing
+EXOC1	Y49A	increasing
+EXOC2	Y49A	decreasing
+EXOC3	Y49A	decreasing
+EXOC4	S399A	decreasing
+EXOC5	Y89F	unknown
+EXOC6B	Y49A	decreasing
+EXOC7	L195M	disrupting
+EXOC7	V153A	disrupting
+EXOC7	Y49A	disrupting
+EXOC8	Y49A	decreasing
+EXOSC1	S73A	disrupting
+EXOSC1	S71A	disrupting
+EXOSC1	R70A	increasing
+EXOSC1	E71A	decreasing
+EXOSC5	Y49A	decreasing
+EZH2	H320R	unknown
+EZH2	L69P	disrupting
+EZH2	H324L	unknown
+Eif4e	W73A	decreasing
+Epm2a	C265S	disrupting
+Erbb2	V660E	unknown
+Erbb4	Y1035A	disrupting
+Ercc6l	W61D	unknown
+Espl1	K179E	increasing
+F7	N117D	disrupting
+F7	F388S	decreasing
+F7	R139Q	decreasing
+FADD	R117E	disrupting
+FADD	R135E	disrupting
+FADD	R142E	decreasing
+FADD	V121N	decreasing
+FADD	K153E	decreasing
+FADD	S194A	disrupting
+FADD	L172K	decreasing
+FADD	L176E	decreasing
+FADD	R117E	decreasing
+FADD	D123R	decreasing
+FADD	D175K	decreasing
+FADD	L172A	disrupting
+FADD	L172E	disrupting
+FAH	F51A	increasing
+FAHD1	R69A	decreasing
+FAHD2A	R69A	decreasing
+FAM103A1	R69A	decreasing
+FAM103A1	F51A	increasing
+FAM111A	G12V	unknown
+FAM127C	R86M	decreasing strength
+FAM13A	K94D	decreasing strength
+FAM13A	M96D	decreasing strength
+FAM175A	S406A	increasing
+FAM175A	S406A	disrupting
+FAM219A	C163A	unknown
+FAM219A	D315A	unknown
+FAM76B	H223A	decreasing
+FAM76B	E219A	decreasing
+FAM84B	K1057A	decreasing
+FAM84B	I395T	increasing
+FAM9B	L858R	unknown
+FAM9B	D25N	unknown
+FANCC	L554P	disrupting
+FANCD2	K562R	decreasing
+FANCD2	K561R	unknown
+FANCG	L71P	disrupting
+FANCG	S7A	disrupting strength
+FAS	V239N	disrupting
+FAS	Y291D	decreasing
+FAS	V254N	decreasing
+FAS	T270K	disrupting
+FAS	T270K	decreasing
+FAS	S333P	decreasing
+FAS	R250E	decreasing
+FAS	Q283K	disrupting
+FAS	Q283K	decreasing
+FAS	K287D	decreasing
+FAS	G247F	decreasing strength
+FAS	F248A	decreasing strength
+FAS	E272K	disrupting
+FAS	E272K	decreasing
+FAS	E261K	disrupting
+FAS	E261K	decreasing
+FAS	D260Y	decreasing
+FAS	D260V	disrupting
+FAS	A257D	disrupting
+FAS	T241F	decreasing strength
+FAS	A257D	decreasing
+FBL	Q341E	increasing
+FBLN5	S227P	decreasing
+FBLN5	C217R	decreasing
+FBN1	R62C	decreasing
+FBN1	S115C	decreasing
+FBN1	T101A	decreasing
+FBP1	F194S	disrupting
+FBP1	G260R	disrupting
+FBXL2	C420S	decreasing
+FBXO18	I1030F	disrupting
+FBXO18	G774R	decreasing
+FBXO25	S244L	disrupting
+FBXO4	S12A	disrupting
+FBXO4	S8R	decreasing
+FBXO4	S8R	disrupting
+FBXO4	S12E	increasing
+FBXO4	S12A	decreasing
+FBXO7	T22M	disrupting
+FBXW11	L474A	disrupting
+FBXW7	R465C	unknown
+FBXW7	R465C	decreasing strength
+FGF1	R134E	decreasing strength
+FGF1	R134E	decreasing
+FGF1	R134E	disrupting strength
+FGF1	R50K	decreasing strength
+FGF1	Y109A	decreasing strength
+FGF1	N110A	decreasing strength
+FGF1	K133E	disrupting strength
+FGF1	K133E	decreasing strength
+FGF1	R50E	decreasing
+FGF1	K128E	disrupting strength
+FGF1	K128E	decreasing strength
+FGF1	K128E	decreasing
+FGF1	K127E	disrupting strength
+FGF1	K127E	decreasing strength
+FGF1	E102A	decreasing strength
+FGF1	K133E	decreasing
+FGF1	K127E	decreasing
+FGFR1	R609V	decreasing
+FGFR1	D755V	disrupting
+FGFR1	D755V	decreasing
+FGFR1	Y583F	unknown
+FGFR1	Y463F	unknown
+FGFR1	Y585F	unknown
+FGFR1	Y730F	unknown
+FGFR1	Y766F	decreasing
+FGFR1	V636D	disrupting
+FGFR1	V758D	disrupting
+FGFR1	R609V	disrupting
+FGFR2	Y328D	decreasing
+FHOD3	T1476A	disrupting rate
+FHOD3	T1476A	decreasing rate
+FHOD3	T1474D	disrupting
+FHOD3	T1476D	disrupting
+FHOD3	T1474A	disrupting rate
+FHOD3	T1474A	decreasing rate
+FIP1L1	V695L	disrupting
+FIP1L1	C645R	disrupting
+FIP1L1	K619A	disrupting
+FIP1L1	L44P	disrupting
+FIS1	L42P	decreasing
+FIS1	L42P	disrupting
+FIS1	L58P	decreasing
+FIS1	L58P	increasing
+FIS1	L91P	increasing
+FIS1	L91P	disrupting
+FIS1	L91P	decreasing
+FIS1	L77P	disrupting
+FIS1	L77P	decreasing
+FIS1	L58P	disrupting
+FKBP6	F72L	disrupting
+FKBP9	M74K	decreasing
+FKBP9	M74D	disrupting
+FKBP9	M74E	disrupting
+FLG	S3391H	disrupting
+FLG	S3385H	disrupting
+FLG	T3392H	disrupting
+FLG	Y3388H	disrupting
+FLG	Q3389H	disrupting
+FLNA	E303Q	unknown
+FLNA	F3348A	disrupting
+FLNB	K110A	decreasing
+FLNB	R5A	decreasing
+FLT3	Y599A	decreasing
+FLT3	Y597A	disrupting
+FLT3	Y597A	decreasing
+FLT3	Y591A	disrupting
+FLT3	Y589A	disrupting
+FLT3	Y599A	disrupting
+FLYWCH2	K158M	unknown
+FMR1	Q61L	unknown
+FMR1	V189S	unknown
+FNBP1	P602L	decreasing
+FNBP1	R515A	disrupting
+FNBP1	R515A	decreasing
+FNBP1	D519A	disrupting
+FOPNL	C130A	unknown
+FOPNL	C87A	unknown
+FOXC1	R127H	decreasing strength
+FOXC1	S131L	decreasing strength
+FOXC1	F112S	disrupting
+FOXM1	R286H	disrupting
+FOXO1	S249A	unknown
+FOXO1	T24A	unknown
+FOXO3	S315A	increasing
+FOXO3	S253A	increasing
+FOXO3	T32A	increasing
+FOXP2	F260A	disrupting
+FOXP2	F140A	disrupting
+FOXP3	S422D	decreasing strength
+FOXP3	I363V	disrupting
+FOXP3	Q70H	disrupting
+FOXP3	S418A	decreasing strength
+FOXP3	S418C	increasing strength
+FOXP3	S418D	disrupting strength
+FOXP3	S418D	increasing strength
+FOXP3	S418G	increasing strength
+FOXP3	S422A	decreasing strength
+FPR1	S342D	disrupting
+FRK	K262R	unknown
+FRK	E346G	unknown
+FRS3	S37D	disrupting
+FSD2	K220R	decreasing
+FUNDC1	S17A	decreasing
+FUNDC1	S17D	increasing
+FUNDC1	N118A	disrupting
+FYN	K299M	decreasing
+FYN	K299A	decreasing
+FYN	E98H	decreasing
+FYN	T97H	decreasing
+FYN	R176K	decreasing
+FYN	Y531F	unknown
+FYN	R96I	decreasing
+FZD4	M105V	decreasing
+FZD4	V537A	decreasing
+FZD7	T572A	disrupting
+FZD7	V574A	disrupting
+FZD7	V574A	decreasing
+FZR1	K159R	increasing
+FZR1	K69R	increasing
+Fas	I225D	decreasing
+Fat4	G4578R	disrupting
+Fat4	G4834R	disrupting
+Fyn	V296R	disrupting
+Fyn	E528F	increasing
+Fyn	E528F	disrupting
+G3BP1	L176E	decreasing
+G3BP1	L172A	disrupting
+G6PD	K403Q	disrupting
+G6PD	K386Q	decreasing
+GAB2	Y476F	decreasing
+GAB2	Y643F	decreasing
+GAB2	Y452F	decreasing
+GAB2	R515A	decreasing
+GAB2	P511A	decreasing
+GAB2	Y614F	decreasing
+GAB2	Y584F	decreasing
+GABARAP	L50A	disrupting
+GABARAP	L50A	decreasing
+GABARAP	R70A	increasing
+GABARAP	Y49A	increasing
+GABARAP	Y49A	disrupting
+GABARAP	Y25H	decreasing
+GABARAP	Y49A	decreasing
+GABARAP	K24Q	disrupting
+GABARAP	K24Q	decreasing
+GABARAP	D54H	disrupting
+GABARAP	D54H	decreasing
+GABARAP	Y25H	disrupting
+GABARAPL1	A73G	disrupting
+GABARAPL2	Y1699C	decreasing
+GABARAPL2	R1441C	decreasing
+GABPB1	V298A	decreasing
+GABPB1	V295A	decreasing
+GABPB1	V253A	decreasing
+GABPB1	V252A	decreasing
+GADD45G	K5M	decreasing
+GADD45GIP1	L212A	disrupting strength
+GADD45GIP1	E216A	disrupting strength
+GADD45GIP1	D214A	disrupting strength
+GAN	V82F	decreasing
+GAN	R545C	disrupting
+GAPDH	C156S	unknown
+GATA3	A318R	decreasing strength
+GATA3	C320K	decreasing strength
+GATAD2A	D315A	unknown
+GATAD2A	K149R	decreasing
+GBAS	F59E	disrupting strength
+GBAS	D48R	disrupting strength
+GBAS	E13R	disrupting strength
+GBAS	K26E	disrupting strength
+GBAS	D48N	decreasing strength
+GBAS	R41E	decreasing strength
+GBAS	K21Q	disrupting strength
+GCA	Y732A	decreasing
+GCC2	Y1618A	disrupting
+GCC2	L1595A	disrupting
+GCC2	L1595A	decreasing
+GCC2	I1588A	disrupting
+GCC2	I1588A	decreasing
+GCM2	R47L	disrupting
+GCM2	G63S	disrupting
+GDF5	T201P	decreasing
+GDF5	R438L	increasing strength
+GDF5	L441P	disrupting rate
+GDF5	L441P	decreasing strength
+GEMIN2	K430A	disrupting
+GEMIN2	K429A	disrupting
+GEMIN2	R213D	disrupting
+GEMIN2	Y52D	decreasing
+GEMIN4	L858R	unknown
+GEMIN4	D25N	unknown
+GEMIN5	L270A	decreasing
+GEMIN5	L996A	decreasing
+GEMIN5	L265A	decreasing
+GEMIN5	Y991A	decreasing
+GFI1	F5A	disrupting
+GFI1	K10A	disrupting
+GFI1	K11A	disrupting
+GGA1	L182A	decreasing
+GINS2	T180A	disrupting
+GINS2	S182A	disrupting
+GKAP1	Q72L	unknown
+GLCE	K372R	decreasing
+GLI1	S1060A	disrupting
+GLI1	G122A	decreasing
+GLI1	S84E	decreasing
+GLI1	Y859F	disrupting
+GLI1	Y872F	disrupting
+GLI1	S84A	disrupting
+GLMN	F112L	unknown
+GNG11	S17D	increasing
+GNPDA1	M74R	disrupting
+GNPDA1	M74E	disrupting
+GNS	K386R	disrupting
+GNS	K520R	disrupting
+GOLGA2	C86S	disrupting
+GOLPH3	T143A	decreasing rate
+GOLPH3	R90L	decreasing
+GOLPH3	T143E	increasing strength
+GOLPH3	T148A	decreasing rate
+GOLPH3	R174A	decreasing
+GOLPH3	R171A	decreasing
+GOLPH3	T148E	increasing strength
+GOLPH3	T143D	increasing strength
+GOLPH3	T148D	increasing strength
+GOPC	M97A	decreasing strength
+GOSR1	T1155A	disrupting strength
+GOSR1	S1158A	disrupting strength
+GOT1	F51A	decreasing
+GOT1	R69A	disrupting
+GOT2	T377D	decreasing
+GP1BA	C71A	unknown
+GP1BA	E513G	unknown
+GP1BB	C173S	unknown
+GP9	C170N	unknown
+GPIHBP1	C65Y	decreasing
+GPIHBP1	Q115P	decreasing
+GPR3	S237A	increasing
+GPR3	D133A	decreasing
+GPR3	R134A	decreasing
+GRB14	S366A	increasing strength
+GRB14	S362A	increasing strength
+GRB14	S358A	increasing strength
+GRB2	K211Q	decreasing
+GRB2	R86M	decreasing strength
+GRB2	R86K	unknown
+GRB2	R86K	disrupting
+GRB2	R86K	decreasing strength
+GRB2	R210E	decreasing
+GRB2	R86K	decreasing
+GRB2	W36K	disrupting
+GRPEL1	M402A	disrupting
+GRPEL1	K403A	disrupting
+GRSF1	K745A	increasing strength
+GSK3B	S9A	disrupting
+GSK3B	S9A	increasing
+GSK3B	K86I	disrupting
+GSK3B	K85M	disrupting
+GSK3B	K120Q	disrupting
+GSPT1	A73G	disrupting
+GSTK1	A463P	disrupting
+GSTO1	T191E	decreasing
+GTF2A2	T73A	decreasing
+GTF2A2	C68A	decreasing
+GTF2A2	D41A	decreasing
+GTF2A2	E109A	decreasing
+GTF2A2	F67A	decreasing
+GTF2A2	F74A	decreasing
+GTF2A2	D20A	decreasing
+GTF2A2	K42A	decreasing
+GTF2A2	W72A	decreasing
+GTF2A2	K101A	decreasing
+GTF2A2	Y65A	decreasing
+GTF2A2	F40A	decreasing
+GTF2B	R185E	decreasing
+GTF2B	R193E	decreasing
+GTPBP4	R394A	decreasing
+GTPBP4	K395A	decreasing
+GUCY1B3	C541S	unknown
+GUCY1B3	G476C	unknown
+GYPA	R50W	disrupting
+GYPA	G83A	disrupting strength
+GYPA	G24G	disrupting
+GYPA	G102I	decreasing
+GZMA	S212A	unknown
+Gli2	G270V	disrupting
+Gli2	G270A	disrupting
+Grm5	T1155A	disrupting strength
+Grm5	S1158A	disrupting strength
+H1F0	F72L	disrupting
+H2AFX	Y143L	disrupting
+H2AFX	Y143A	disrupting
+H2AFY	S204A	disrupting
+H2AFY	E202G	disrupting
+H2afx	S140A	decreasing
+H3F3A	K28M	increasing
+HAP1	T441M	increasing
+HCFC1	P197S	decreasing
+HCFC1	T1085A	decreasing
+HCFC1	P134S	decreasing
+HCFC1	T1082A	decreasing
+HCFC1	P252S	unknown
+HCFC1	P30S	decreasing
+HCFC1	P319S	decreasing
+HCFC1	P1079A	decreasing
+HCFC1	P1078A	decreasing
+HCFC1	N1077A	decreasing
+HCFC1	R344A	decreasing
+HCFC1	T1087A	disrupting
+HCFC1	E289A	decreasing
+HCFC1	E1081A	increasing
+HCFC1	S338A	decreasing
+HCFC1	T1088A	disrupting
+HCFC1	E1081A	disrupting
+HCFC1	C82D	decreasing
+HCFC1	T1090A	disrupting
+HCFC1	T1092A	disrupting
+HCFC1	R228D	decreasing
+HCFC1	P79S	decreasing
+HCFC1	C1080A	decreasing
+HCFC1	C1075A	decreasing
+HCFC1	H1083A	decreasing
+HCK	H93T	increasing
+HCK	D96A	disrupting
+HCK	Y89A	disrupting
+HCK	I92R	increasing
+HCK	Y87A	disrupting
+HCK	W114A	disrupting
+HCST	D57A	decreasing
+HERC2	G2019S	unknown
+HFE	Q283P	disrupting
+HGF	K62E	unknown
+HGF	K60E	decreasing
+HGF	R73E	decreasing
+HGF	K60E	unknown
+HGF	R73E	disrupting
+HGF	R73E	unknown
+HGF	K60E	disrupting
+HGF	K62E	disrupting
+HGF	K62E	decreasing
+HGS	T1348N	decreasing
+HGS	R1441C	increasing
+HGS	R1398L	decreasing
+HGS	G2019S	increasing
+HGS	Y1699C	increasing
+HIC1	L244A	disrupting
+HIF1A	P564T	disrupting
+HIF1A	P402A	disrupting
+HIF1A	P564L	disrupting
+HIF1A	P402A	unknown
+HIF1A	P564D	disrupting
+HIF1A	P564A	decreasing
+HIF1A	P564G	disrupting
+HIF1A	P564A	disrupting
+HIF1A	P564A	unknown
+HIF1A	P564Q	disrupting
+HIF1A	P564N	disrupting
+HIF1A	P564F	disrupting
+HIF1A	I408A	decreasing
+HIF1A	K391R	decreasing
+HIF1A	P564E	disrupting
+HIF1A	P564I	disrupting
+HIF1A	P564K	disrupting
+HIF1A	P402A	decreasing
+HIF1A	P564S	disrupting
+HIF1A	A403A	decreasing
+HIF1A	P564V	disrupting
+HIF1A	P564W	disrupting
+HIF1A	P564Y	disrupting
+HIF1A	K477R	decreasing
+HIF1A	P564H	disrupting
+HIF1A	K719T	disrupting
+HIF1A	P564M	disrupting
+HIF1A	P564C	decreasing
+HIF1A	L562A	disrupting
+HIRA	R227K	decreasing strength
+HIRA	R227K	unknown
+HIST1H1E	K26A	decreasing
+HIST1H3G	S11Y	unknown
+HIST1H3G	L127A	decreasing
+HIST1H3G	K5M	unknown
+HIST1H3G	A2A	decreasing
+HIST1H3G	I131A	decreasing
+HIST1H4F	F101A	decreasing
+HIST1H4F	H19A	decreasing
+HIST1H4F	H19Q	decreasing
+HIST1H4F	H19Y	decreasing
+HIST1H4F	R20K	disrupting
+HIST3H3	K5M	decreasing
+HLA_DMA	I98A	disrupting
+HLA_DMA	I98A	decreasing
+HLA_DMA	P194A	disrupting
+HLA_DMA	Q92A	decreasing strength
+HLA_DMA	R124A	decreasing
+HLA_DMA	R220A	decreasing
+HLA_DMA	N151A	decreasing strength
+HLA_DMA	N151R	decreasing rate
+HLA_DMB	C64S	unknown
+HLA_DMB	N92D	unknown
+HLA_DRA	R125A	decreasing strength
+HLA_DRA	Q43F	decreasing
+HLA_DRA	G74S	increasing
+HLA_DRA	G53H	disrupting
+HLA_DRA	G53D	disrupting
+HLA_DRA	G53D	decreasing
+HLA_DRA	F76W	increasing strength
+HLA_DRA	F76V	decreasing strength
+HLA_DRA	F76L	decreasing strength
+HLA_DRA	F49S	increasing
+HLA_DRA	W68F	decreasing
+HLA_DRA	E80A	increasing strength
+HLA_DRA	V90C	unknown
+HLA_DRA	S78H	disrupting
+HLA_DRB1	C59S	unknown
+HLA_F	R383K	decreasing
+HLA_F	R90K	decreasing
+HLA_F	R90K	disrupting
+HLTF	F37Y	decreasing strength
+HLTF	P35A	decreasing strength
+HM13	D265A	nt
+HM13	D265A	increasing
+HMBOX1	R339A	disrupting
+HMGA1	R60A	decreasing
+HMGA1	R58A	decreasing
+HNRNPA1	D262V	decreasing
+HNRNPA3	Y980F	disrupting
+HNRNPA3	K1033A	disrupting
+HNRNPK	D1994A	disrupting rate
+HNRNPK	I2020T	increasing rate
+HNRNPK	G2019S	increasing rate
+HNRNPU	D481R	decreasing
+HNRNPU	E545K	unknown
+HNRNPUL1	Q283P	disrupting
+HOMER3	W27A	decreasing
+HRAS	G12V	unknown
+HRAS	K185G	unknown
+HRAS	Q61L	unknown
+HRAS	T35S	disrupting
+HRAS	S17N	disrupting
+HRAS	Y40C	decreasing
+HRAS	Y40C	disrupting
+HRAS	E37G	disrupting
+HRAS	E37G	decreasing
+HRAS	G12V	increasing
+HRAS	G12V	decreasing
+HRAS	T35S	decreasing
+HRAS	S189K	decreasing
+HRC	S96A	decreasing
+HRC	S96A	decreasing strength
+HSBP1	R509H	unknown
+HSF1	S121D	decreasing
+HSF1	S121A	increasing
+HSP90AA1	D93N	decreasing
+HSP90AA1	D93N	disrupting
+HSP90AA1	E47A	increasing
+HSP90AA1	E47A	unknown
+HSP90AA1	D93N	unknown
+HSP90AB1	D29E	disrupting
+HSP90AB2P	T298K	decreasing
+HSP90AB2P	E268K	decreasing
+HSP90AB2P	D296A	decreasing
+HSP90AB2P	D265R	decreasing
+HSPA8	T38A	decreasing strength
+HSPA8	T38E	increasing strength
+HSPB1	S90E	unknown
+HSPB1	S90A	unknown
+HSPB1	S15E	unknown
+HSPB1	S15A	unknown
+HTR1A	F411A	decreasing
+HTR1A	F407A	decreasing
+HTR1A	D406A	decreasing
+HTR1A	I414A	decreasing
+HTR1A	I415A	decreasing
+HTR1A	K412A	decreasing
+HTR1A	K413A	decreasing
+HTR1A	K416A	decreasing
+HTR1A	Q408A	decreasing
+HTR2C	P159A	decreasing
+HTR3A	W178S	disrupting
+HTRA2	A134M	disrupting
+HTRA2	A230A	decreasing
+HTRA2	S173A	disrupting
+HTRA2	S306A	disrupting
+HTT	D25N	unknown
+HTT	L858R	unknown
+Haus1	R1441G	decreasing
+Haus1	T1343D	decreasing
+Haus1	R1441H	decreasing
+Haus1	K1347A	disrupting
+Haus1	R1441C	increasing
+Hipk1	K219A	decreasing
+Hipk2	K228R	increasing
+Hmgb1	C106A	disrupting
+Htra2	R144G	disrupting
+Htra2	Y147I	increasing
+ICAM5	K867R	decreasing
+ICAM5	K867A	disrupting
+ICAM5	K866R	decreasing
+ICAM5	K866A	disrupting
+ICAM5	K866A	decreasing
+ID1	V98G	decreasing
+ID1	Y101D	decreasing
+IDH3A	R115Q	decreasing
+IDH3B	R133Q	decreasing
+IDH3G	R136Q	decreasing
+IFI16	S235D	increasing strength
+IFI16	S235D	decreasing strength
+IFI16	K162R	disrupting rate
+IFI16	D281K	unknown
+IFNAR1	S535A	decreasing
+IFNAR1	S535A	disrupting
+IFNAR2	K399A	decreasing
+IFNAR2	S364A	decreasing
+IFNAR2	S384A	decreasing
+IFNAR2	S400A	increasing
+IFT20	V136I	disrupting
+IFT81	Y1095F	decreasing
+IFT88	T153A	decreasing rate
+IFT88	T149A	disrupting rate
+IGF1R	K1033A	disrupting
+IGF1R	Y980F	disrupting
+IGHA2	Y1032F	disrupting
+IGHA2	Y1124F	disrupting
+IKBIP	T31N	disrupting
+IKBKB	T180A	decreasing rate
+IKBKB	S177A	decreasing rate
+IKBKB	K44M	disrupting
+IKBKB	E39G	decreasing
+IKBKB	K44A	decreasing
+IKBKE	K38A	unknown
+IKBKE	K38A	disrupting rate
+IL10	N134N	unknown
+IL2RB	A3D	unknown
+IL2RB	L17D	unknown
+IL2RB	S45D	unknown
+IL2RG	S53D	unknown
+IL6ST	E542K	increasing strength
+IL6ST	E872K	increasing strength
+IL6ST	L858R	decreasing strength
+ILK	M402A	disrupting
+ILK	K403A	disrupting
+IMP4	S916A	disrupting
+IMPDH1	H507R	disrupting
+IMPDH2	N72A	disrupting
+INCA1	S406A	disrupting
+ING1	T598A	disrupting
+ING2	E197A	decreasing
+ING2	K195R	decreasing
+ING2	E197A	disrupting
+ING2	K195R	disrupting
+INIP	M602V	decreasing
+INSR	K1057A	decreasing
+INSR	Y999F	decreasing
+INTS1	N151A	decreasing
+INTS1	T145A	decreasing
+INTS1	R1728H	increasing rate
+INTS1	G2019S	increasing rate
+INTS1	T2031S	increasing rate
+IPO11	R1170W	decreasing
+IPO11	W1186S	decreasing
+IPO13	E436R	decreasing
+IPO13	K802E	decreasing
+IPO13	R938E	decreasing
+IPO13	D369R	decreasing
+IPO13	D481R	decreasing
+IPO4	R176K	decreasing
+IQGAP1	S1443A	decreasing
+IQGAP1	S1441A	decreasing
+IQGAP3	G466V	increasing strength
+IQGAP3	G464V	increasing strength
+IQGAP3	G464E	increasing strength
+IRAK1	S144A	disrupting
+IRAK1	S144A	decreasing
+IRAK1	S131A	disrupting
+IRAK1	S131A	decreasing
+IRAK1	S173A	disrupting
+IRAK1	K239S	disrupting
+IRAK1	S173A	decreasing
+IRAK1	F196A	decreasing
+IRAK4	K213A	disrupting
+IRF3	S396D	unknown
+IRF7	S247D	unknown
+IRF9	R292Q	decreasing
+IRF9	K81R	decreasing
+IRS1	T608R	decreasing
+ISLR	M105V	decreasing
+ISYNA1	A2A	decreasing
+ITGA2	K1160A	decreasing
+ITGA2	K1162P	decreasing
+ITGA2B	G1003L	decreasing
+ITGA2B	G1003I	decreasing
+ITGA2B	G1006I	decreasing
+ITGA2B	G1006V	decreasing
+ITGA2B	G1007I	decreasing
+ITGA2B	G1003A	decreasing
+ITGA2B	G1005A	decreasing
+ITGA2B	V1002I	decreasing strength
+ITGA2B	V1015L	decreasing
+ITGA2B	V1004L	decreasing
+ITGA2B	V1002L	decreasing
+ITGA2B	V1002A	decreasing
+ITGA2B	V1000L	decreasing
+ITGA2B	T1012L	decreasing
+ITGA2B	T1012A	decreasing
+ITGA2B	L1014A	decreasing
+ITGA2B	L1011V	increasing
+ITGA2B	A1018V	decreasing
+ITGA2B	A1017V	decreasing
+ITGA2B	A1017L	decreasing
+ITGA2B	L1001A	decreasing
+ITGA2B	G1007L	decreasing
+ITGA2B	L1011A	increasing
+ITGA2B	G1007A	decreasing
+ITGA4	C99S	unknown
+ITGA4	S984I	decreasing
+ITGA4	R558A	unknown
+ITGA4	C102S	unknown
+ITGA4	F991A	decreasing
+ITGA4	G988I	decreasing
+ITGA5	E39G	decreasing
+ITGAL	K1124A	disrupting
+ITGAL	K1122A	disrupting
+ITGB1	Y788F	decreasing
+ITGB1	Y788E	disrupting
+ITGB1	Y788A	disrupting
+ITGB1	P786A	decreasing
+ITGB1	N797I	decreasing
+ITGB1	N785D	decreasing
+ITGB1	E47A	unknown
+ITGB1	D764V	decreasing
+ITGB1	N797D	decreasing
+ITGB5	P772A	disrupting
+ITGB5	L773A	decreasing
+ITGB5	Y774A	disrupting
+ITGB7	G730I	decreasing
+ITGB7	G734I	decreasing
+ITIH3	T81A	decreasing strength
+ITPA	E39G	decreasing
+IWS1	Q71L	unknown
+IYD	S280L	disrupting
+IYD	C125R	disrupting
+Ifnar1	S526A	disrupting
+Il1rl1	S442A	decreasing
+Irak3	E71A	decreasing
+Irak3	Q78G	decreasing
+Irak3	W74A	disrupting
+Isy1	S3A	decreasing
+JADE3	G2019S	unknown
+JADE3	D1994K	disrupting rate
+JAK2	V617F	decreasing strength
+JAK2	V617F	unknown
+JMJD6	H187A	disrupting strength
+JUN	S73A	decreasing
+JUN	K288E	decreasing strength
+JUN	Q304E	decreasing strength
+JUN	K283E	decreasing strength
+JUN	R302E	decreasing strength
+JUN	S63A	decreasing
+JUP	Y644E	increasing
+Jak2	V617F	increasing strength
+KANK1	S167A	disrupting
+KANSL1	C599Y	unknown
+KANSL1	R592A	disrupting
+KANSL2	L411E	disrupting
+KANSL2	V413D	disrupting
+KANSL2	L405Y	unknown
+KAT14	K82A	decreasing
+KAT7	G2019S	increasing rate
+KCND3	P10E	disrupting
+KCND3	A15E	disrupting
+KCND3	W8E	disrupting
+KCNH1	F717S	decreasing
+KCNH1	R716E	decreasing
+KCNH1	F714S	decreasing
+KCNH1	L154S	disrupting
+KCNH1	L158S	disrupting
+KCNH1	L670C	unknown
+KCNH1	R681N	decreasing
+KCNH1	P706C	unknown
+KCNH1	F151S	disrupting
+KCNH1	R677N	decreasing
+KCNH1	R675N	decreasing
+KCNH1	F151N	decreasing
+KCNH1	R711E	decreasing
+KCNH1	L674N	decreasing
+KCNH1	L154N	decreasing
+KCNH1	I678N	decreasing
+KCNIP1	V134E	disrupting
+KCNJ10	A167V	decreasing
+KCNQ1	L602A	decreasing
+KCNQ1	I609A	decreasing
+KCTD21	R1441C	decreasing strength
+KCTD21	K1347A	disrupting strength
+KDM2A	L85P	disrupting strength
+KDM2A	I81T	disrupting strength
+KDM2A	A77P	disrupting strength
+KDM3A	Q73L	unknown
+KDM4A	K241A	disrupting
+KDM4A	Y177F	decreasing
+KDM4A	K241L	disrupting
+KDM4A	D135A	decreasing
+KDM4A	Y973A	disrupting
+KDM4A	Y177L	disrupting
+KDM4A	H188A	unknown
+KDM4A	D945R	decreasing
+KDM4A	N290A	disrupting
+KDM4A	N290D	disrupting
+KDM4A	Y175F	decreasing
+KDM4A	N290I	disrupting
+KDM4A	N290V	disrupting
+KDM4A	N86A	decreasing
+KDM4A	Q88A	decreasing
+KDM4A	W967H	disrupting
+KDM4C	H190G	unknown
+KDM4C	E192A	unknown
+KDM5B	K1435R	unknown
+KDM5B	K1435R	decreasing strength
+KDR	N245Q	decreasing strength
+KDR	N318Q	decreasing strength
+KDR	N374Q	decreasing strength
+KDR	N721Q	decreasing strength
+KDR	N395Q	decreasing strength
+KDR	N675Q	decreasing strength
+KDR	N704Q	decreasing strength
+KEAP1	Y572A	decreasing
+KEAP1	Y525A	decreasing
+KIAA0368	Y525A	decreasing
+KIAA0368	Y572A	decreasing
+KIAA0586	Y121F	decreasing
+KIAA0586	Y36F	decreasing
+KIAA0586	Y148F	decreasing
+KIAA1143	G2019S	unknown
+KIF1B	V1153A	decreasing
+KIF1B	V1153A	disrupting
+KIF21A	M947T	increasing
+KIF21A	R954W	increasing
+KIFC3	V600E	unknown
+KIR2DS2	E114A	decreasing
+KIR2DS2	E47A	decreasing
+KIRREL	K729A	decreasing strength
+KIRREL	Y730A	decreasing strength
+KIT	K623M	increasing
+KIT	D816V	disrupting
+KLF11	Q62R	increasing
+KLF6	C265Y	disrupting
+KLHL10	Q216P	disrupting
+KLHL36	S96A	decreasing
+KLHL38	M105V	decreasing
+KLHL7	S150N	unknown
+KLHL7	A153V	unknown
+KLHL7	A153V	disrupting
+KLHL7	A153V	decreasing
+KLHL7	A153T	disrupting
+KLKB1	N124S	decreasing
+KMT2A	Q1587A	decreasing
+KMT2A	M1606D	disrupting strength
+KMT2A	T1457A	disrupting
+KMT2A	R3765A	decreasing
+KMT2A	K729A	decreasing strength
+KMT2A	W1594E	decreasing
+KMT2A	T1469A	disrupting
+KMT2A	W1594E	disrupting
+KMT2A	Y730A	decreasing strength
+KMT2A	H3769A	decreasing
+KMT2A	Y1581A	decreasing
+KMT2A	H3769F	increasing
+KNG1	F8L	unknown
+KNSTRN	R86K	disrupting
+KNSTRN	D48K	unknown
+KNTC1	R525H	decreasing strength
+KPNB1	H27Y	increasing
+KPNB1	C360S	unknown
+KPNB1	H57D	increasing
+KPNB1	Q26K	increasing
+KRAS	S181A	disrupting
+KRAS	S181D	disrupting
+KRAS	G2019S	increasing rate
+KRAS	G12V	unknown
+KRAS	G12V	increasing
+KRAS	G12V	disrupting
+KRAS	T35S	decreasing
+KRAS	E37G	disrupting
+KRAS	D1994A	disrupting rate
+KRAS	Y40C	disrupting
+KRAS	G12V	decreasing
+KRT13	Q61L	decreasing rate
+KRT15	R163E	unknown
+KRT15	K66E	unknown
+KRT2	I477N	disrupting
+KRT2	L484P	disrupting
+KRT31	I164A	decreasing
+KRT31	R86K	decreasing
+KRT31	F209A	decreasing
+KRT38	Q65R	disrupting
+KRT38	Q65A	disrupting
+KRT6A	N171K	disrupting
+KRT6A	I462S	disrupting
+KRT6A	A463P	disrupting
+KRTAP10_3	R213W	disrupting
+KRTAP10_7	V3349A	disrupting
+KRTAP10_7	Y600F	decreasing strength
+KRTAP19_5	D1994A	disrupting rate
+KRTAP5_9	H57D	increasing
+KRTAP5_9	R109D	decreasing strength
+KRTAP5_9	H27Y	increasing
+KRTAP5_9	Q26K	increasing
+Kcna4	V655A	decreasing
+Kcna4	T653A	increasing
+Kcna4	V655E	decreasing
+Kcnk2	A39S	unknown
+Keap1	S602A	disrupting
+Keap1	S508A	decreasing
+Keap1	N382A	disrupting
+Keap1	Y334A	disrupting
+Keap1	Q530A	decreasing
+Keap1	R415A	disrupting
+Keap1	S363A	disrupting
+Keap1	S508A	disrupting
+Keap1	S555A	decreasing
+Keap1	R380A	decreasing
+Keap1	R415A	decreasing
+Kidins220	Y1095F	decreasing
+Ksr1	C809Y	decreasing
+Ktn1	V39P	decreasing
+Ktn1	N41P	decreasing
+Ktn1	D40P	decreasing
+L3MBTL1	D355D	decreasing
+L3MBTL1	F379A	decreasing
+LACC1	F29A	increasing
+LACC1	F30A	increasing
+LAMP1	N76S	disrupting
+LASP1	S146D	unknown
+LAT	Y220F	decreasing
+LAT	Y200F	decreasing
+LATS1	L85P	disrupting strength
+LATS1	I81T	disrupting strength
+LATS1	A77P	disrupting strength
+LCK	R154K	disrupting
+LCK	W97A	disrupting
+LCK	W97A	decreasing
+LCK	R154K	unknown
+LCP1	G2019S	increasing rate
+LCP1	D1994A	disrupting rate
+LDHA	K5Q	increasing
+LDHD	R175H	unknown
+LDLR	G565V	increasing
+LDLR	Y828A	disrupting strength
+LDLR	Y828C	disrupting strength
+LDLRAP1	F165A	disrupting strength
+LDLRAP1	F165V	disrupting strength
+LDLRAP1	R266A	disrupting strength
+LDLRAP1	E216A	disrupting strength
+LDLRAP1	D214A	disrupting strength
+LDLRAP1	L212A	disrupting strength
+LDOC1	R273H	unknown
+LGALS3	D93N	disrupting
+LGALS3	E47A	increasing
+LGALS3	R186S	disrupting
+LGR4	L1034S	disrupting
+LGR4	L154A	increasing
+LGR4	I149A	increasing
+LGR4	V928G	disrupting
+LIG3	E233G	disrupting
+LIG4	A3V	disrupting
+LIMA1	K38A	disrupting rate
+LIMK1	S596A	decreasing rate
+LIMK1	T508E	unknown
+LIMK1	S323A	decreasing rate
+LIMS1	Q40A	disrupting
+LIN28A	F194S	disrupting
+LIN28B	H137A	decreasing
+LIN7A	E200A	unknown
+LIN7A	D198A	unknown
+LINC00636	V448A	decreasing
+LINC00636	L101P	decreasing
+LITAF	A111G	disrupting
+LITAF	Y61A	disrupting
+LITAF	P17A	disrupting
+LITAF	G112S	disrupting
+LITAF	Y23A	disrupting
+LITAF	Y23A	decreasing
+LITAF	A19G	disrupting
+LITAF	S18G	disrupting
+LMNA	L530P	disrupting
+LMNA	R527P	disrupting
+LMTK2	F1357A	disrupting
+LMTK2	V1355A	disrupting
+LNX1	L858R	unknown
+LNX1	D25N	unknown
+LOC153684	K26A	decreasing
+LONP1	W770P	decreasing
+LONP1	K529R	decreasing
+LONP1	G894P	decreasing
+LONP1	G893P	decreasing
+LOXL2	H626Q	disrupting
+LPAR1	P402A	disrupting
+LPAR1	P564G	disrupting
+LPAR2	L351A	decreasing
+LRP4	W1186S	decreasing
+LRP4	R1170W	decreasing
+LRP5	G171V	disrupting
+LRP6	S1490A	decreasing
+LRRK1	V1269W	decreasing
+LRRK2	K1347A	decreasing rate
+LRRK2	K1347A	disrupting
+LRRK2	K1347A	disrupting strength
+LRRK2	R1441H	disrupting rate
+LRRK2	K1906M	unknown
+LRRK2	G2019S	increasing
+LRRK2	T1343A	increasing
+LRRK2	T1343A	decreasing rate
+LRRK2	R1441Q	decreasing
+LRRK2	K1906M	increasing strength
+LRRK2	K1906A	decreasing
+LRRK2	S973A	increasing strength
+LRRK2	Y1699C	increasing
+LRRK2	I2020T	unknown
+LRRK2	N1437H	increasing strength
+LRRK2	N1437S	decreasing
+LRRK2	R1398L	decreasing
+LRRK2	R1398L	decreasing rate
+LRRK2	R1398L	disrupting
+LRRK2	K1347A	decreasing
+LRRK2	S955A	increasing strength
+LRRK2	S935A	increasing strength
+LRRK2	S910A	increasing strength
+LRRK2	R1728L	increasing
+LRRK2	D1994A	increasing
+LRRK2	G2019S	increasing rate
+LRRK2	D1994A	disrupting rate
+LRRK2	D1994A	disrupting
+LRRK2	R1514Q	decreasing
+LRRK2	S1403A	increasing rate
+LRRK2	D1994A	decreasing rate
+LRRK2	S1443A	disrupting
+LRRK2	D1994A	decreasing
+LRRK2	D1994A	increasing rate
+LRRK2	D1994K	disrupting rate
+LRRK2	K1906S	increasing
+LRRK2	D1994N	decreasing rate
+LRRK2	G2019S	increasing strength
+LRRK2	S1443A	disrupting rate
+LRRK2	Y1699C	increasing strength
+LRRK2	D1994N	disrupting rate
+LRRK2	D2017A	decreasing
+LRRK2	G2019S	unknown
+LRRK2	G2019V	disrupting
+LRRK2	S1444A	decreasing rate
+LRRK2	S1444A	disrupting
+LRRK2	S1444A	disrupting rate
+LRRK2	S1444A	increasing rate
+LRRK2	R1441H	increasing
+LRRK2	R1398L	disrupting rate
+LRRK2	I2020T	increasing rate
+LRRK2	G2019S	disrupting rate
+LRRK2	D2017A	increasing
+LRRK2	I2020F	disrupting
+LRRK2	T1343D	decreasing
+LRRK2	T1343V	decreasing rate
+LRRK2	R1728H	increasing
+LRRK2	T1343V	disrupting
+LRRK2	T1343V	disrupting rate
+LRRK2	T1491A	increasing
+LRRK2	T1491A	disrupting rate
+LRRK2	T1348A	decreasing rate
+LRRK2	T1348N	decreasing
+LRRK2	T1491A	decreasing rate
+LRRK2	G2019S	decreasing
+LRRK2	K1906M	decreasing
+LRRK2	T1348N	disrupting
+LRRK2	T1452A	decreasing rate
+LRRK2	T1410A	increasing rate
+LRRK2	T1404A	increasing rate
+LRRK2	T1349A	increasing rate
+LRRK2	K1906M	increasing
+LRRK2	K1906M	disrupting rate
+LRRK2	K1906M	decreasing rate
+LRRK2	T1348N	disrupting strength
+LRRK2	T1348N	disrupting rate
+LRRK2	R1441H	increasing rate
+LRRK2	R1441H	decreasing rate
+LRRK2	T1348N	decreasing rate
+LRRK2	G2019S	decreasing rate
+LRRK2	R1728H	increasing rate
+LRRK2	I2020T	decreasing
+LRRK2	R1441C	disrupting strength
+LRRK2	R1441C	increasing
+LRRK2	R1441C	decreasing strength
+LRRK2	R1441C	decreasing rate
+LRRK2	R1441C	decreasing
+LRRK2	R1441C	increasing rate
+LRRK2	R1441G	decreasing
+LRRK2	R1398L	increasing rate
+LRRK2	R1441G	disrupting
+LRRK2	R1441G	disrupting rate
+LRRK2	R1441G	increasing
+LRRK2	Y1699C	decreasing rate
+LRRK2	R1441G	increasing strength
+LRRK2	R1441H	decreasing
+LRRK2	Y1699C	decreasing
+LRRK2	T2031S	increasing rate
+LRRK2	I2020T	increasing
+LRRK2	D2017A	disrupting rate
+LRRK2	T1503A	increasing rate
+LRRK2	T1491D	decreasing
+LRRK2	G2385R	increasing
+LRRK2	R1441C	disrupting
+LRRK2	R1441C	disrupting rate
+LSM1	T508E	unknown
+LTF	E626A	increasing
+LTF	Q630A	increasing
+LTF	R627A	increasing
+LTF	K629A	increasing
+LTF	L628A	decreasing
+LTK	E763K	increasing
+LTK	G750E	increasing
+LUC7L3	A463P	disrupting
+LUZP1	K28M	increasing
+LUZP1	G138A	decreasing
+LY9	M602V	decreasing
+LY96	F126A	disrupting
+LY96	H155A	disrupting
+LYAR	K35E	increasing
+LYN	Y32E	increasing
+LYN	Y508F	unknown
+LYN	Y32F	disrupting
+Lck	R154K	decreasing
+Lck	P112K	decreasing
+MAD2L1	V193Q	decreasing
+MAD2L1	R184E	decreasing
+MAD2L1	F141A	decreasing
+MAD2L1	R133A	decreasing
+MAD2L1	L13A	increasing
+MAD2L1	L13A	unknown
+MAD2L1BP	Q83A	decreasing
+MAD2L1BP	F191A	decreasing
+MAGEA3	S187A	decreasing
+MAGEA3	S195A	decreasing
+MAGEA3	S206A	decreasing
+MAGEA3	S214A	decreasing
+MAGEA4	L244A	disrupting
+MAGOH	E72R	decreasing
+MAGOH	E68R	decreasing
+MAGOH	E117R	decreasing
+MAGOH	L136R	decreasing
+MAN1A1	S24D	decreasing
+MAN1A1	V26L	decreasing
+MAP1LC3B	R69A	disrupting
+MAP1LC3B	L53A	increasing
+MAP1LC3B	Q26K	increasing
+MAP1LC3B	R69A	decreasing
+MAP1LC3B	F52A	increasing
+MAP1LC3B	F51A	increasing
+MAP1LC3B	H27Y	increasing
+MAP1LC3B	H57D	increasing
+MAP1LC3B	R70A	disrupting
+MAP1LC3B	Y357F	increasing strength
+MAP1LC3B	F51A	decreasing
+MAP1LC3B	F51A	disrupting
+MAP1LC3C	K57D	increasing
+MAP1LC3C	V26K	increasing
+MAP1LC3C	A27Y	increasing
+MAP2K1	S228E	disrupting rate
+MAP2K1	F129L	unknown
+MAP2K1	I310A	disrupting
+MAP2K1	E203K	unknown
+MAP2K1	I310E	decreasing rate
+MAP2K1	I310E	decreasing strength
+MAP2K1	I310E	disrupting rate
+MAP2K1	I310E	disrupting strength
+MAP2K1	K205A	unknown
+MAP2K1	M230A	decreasing rate
+MAP2K1	L314E	disrupting strength
+MAP2K1	S228E	disrupting strength
+MAP2K1	M230A	decreasing strength
+MAP2K1	M230A	disrupting rate
+MAP2K1	M308A	disrupting
+MAP2K1	Q56P	unknown
+MAP2K1	S218E	decreasing
+MAP2K1	S222E	decreasing
+MAP2K1	S228E	decreasing strength
+MAP2K1	L314E	disrupting rate
+MAP2K1	M230A	disrupting strength
+MAP2K1	S228E	decreasing rate
+MAP2K3	T222E	increasing
+MAP2K3	S218E	increasing
+MAP2K5	S311A	increasing
+MAP2K5	K195M	increasing
+MAP2K5	T315A	increasing
+MAP2K6	K82A	decreasing
+MAP3K11	K144R	disrupting
+MAP3K11	K144E	decreasing
+MAP3K14	K430A	unknown
+MAP3K14	K430A	disrupting
+MAP3K14	K429A	unknown
+MAP3K14	K429A	disrupting
+MAP3K5	C1351S	disrupting
+MAP3K5	C1360S	decreasing
+MAP3K5	C1351S	decreasing
+MAP3K5	K709N	unknown
+MAP3K5	K709R	unknown
+MAP3K5	C1360S	disrupting
+MAP3K8	D270A	decreasing
+MAP3K8	S400A	decreasing
+MAP3K8	S413A	decreasing
+MAP4K1	K49M	unknown
+MAP4K5	K49M	unknown
+MAPK1	D318N	decreasing strength
+MAPK1	D321N	decreasing strength
+MAPK13	D176A	unknown
+MAPK13	F324S	unknown
+MAPK14	A96D	decreasing rate
+MAPK14	F62A	decreasing rate
+MAPK14	S602A	disrupting
+MAPK14	R415A	disrupting
+MAPK14	Q530A	decreasing
+MAPK14	R380A	decreasing
+MAPK14	S363A	disrupting
+MAPK14	S508A	disrupting
+MAPK14	S555A	decreasing
+MAPK14	Y334A	disrupting
+MAPK14	N382A	disrupting
+MAPK3	K289N	unknown
+MAPK3	T202A	disrupting rate
+MAPK3	Y204F	decreasing rate
+MAPK8	K49M	unknown
+MAPKAPK5	K51M	disrupting
+MAPKAPK5	T182A	disrupting
+MAPRE1	E499G	decreasing
+MAPRE2	Y32E	increasing
+MAPT	C639A	decreasing
+MAPT	R120G	unknown
+MAPT	T231A	decreasing rate
+MAPT	T153A	decreasing rate
+MAPT	T149A	disrupting rate
+MARCH6	C9A	increasing
+MAT2A	Q65R	disrupting
+MAVS	C508R	unknown
+MAVS	R1441G	decreasing
+MAVS	R1441C	decreasing
+MAVS	R1441H	decreasing
+MAVS	Y1699C	decreasing
+MAVS	C508R	decreasing
+MBD1	D32A	disrupting
+MBD2	G2019S	increasing rate
+MBIP	L277P	decreasing strength
+MBP	P89A	decreasing
+MBP	P89D	decreasing
+MBP	P89V	decreasing
+MBP	P85D	decreasing
+MCC	P156Q	disrupting
+MCL1	T163E	increasing
+MCM7	Y600F	disrupting
+MCM7	Y600F	decreasing strength
+MCM7	Y600F	decreasing
+MCM7	Y600F	unknown
+MCM7	Y600E	increasing
+MCMBP	H380C	nt
+MDC1	K1936M	decreasing
+MDC1	T331S	decreasing
+MDC1	T699A	decreasing
+MDC1	R1933Q	disrupting
+MDC1	K1936M	disrupting
+MDC1	F722A	unknown
+MDC1	E334A	decreasing
+MDC1	F702A	unknown
+MDC1	T719A	decreasing
+MDC1	T752A	decreasing
+MDC1	T1898V	decreasing
+MDFI	R831Q	disrupting
+MDFI	G2019S	increasing rate
+MDFI	D1994A	decreasing rate
+MDM2	C464S	disrupting rate
+MDM2	G448S	decreasing
+MDM2	C464A	decreasing
+MDM2	D367A	unknown
+MDM2	E66L	decreasing
+MDM2	C475S	unknown
+MDM2	S269A	decreasing
+MDM2	P147A	decreasing
+MDM2	S150A	disrupting
+MDM2	S395A	decreasing
+MDM2	Y394A	decreasing
+MDM2	Y104G	increasing rate
+MDM2	K446R	unknown
+MDM4	R453K	increasing rate
+MDM4	N448C	increasing rate
+MDM4	K435E	unknown
+MDM4	I450V	increasing rate
+MDN1	W27A	decreasing
+MED15	I64Y	increasing
+MED15	D68K	increasing
+MED15	A60D	disrupting
+MED15	L58D	disrupting
+MED15	E42A	disrupting
+MED26	R61A	disrupting
+MED26	K74A	disrupting
+MED26	R61A	unknown
+MED28	C99S	unknown
+MED28	C102S	unknown
+MED8	S916A	decreasing
+MELK	D150A	disrupting
+MEN1	F159C	disrupting
+MEN1	W183S	disrupting
+MEN1	A164D	disrupting
+MEN1	P320L	disrupting
+MEN1	P12L	disrupting
+MEN1	H139D	disrupting
+MEN1	P12L	decreasing
+MEN1	H139D	decreasing
+MEN1	L22R	disrupting
+MEOX2	S17A	decreasing
+MET	D482F	decreasing
+MET	E489F	decreasing
+MFHAS1	K422A	increasing
+MIA3	K158M	unknown
+MIB2	S993A	unknown
+MIB2	E895A	unknown
+MIB2	L891A	unknown
+MIB2	C969A	unknown
+MICU1	H385A	disrupting
+MICU1	D376A	disrupting
+MICU1	F383A	disrupting
+MICU1	R221A	disrupting
+MISP	W1957A	decreasing
+MKKS	L277P	decreasing strength
+MKKS	T57A	decreasing
+MKKS	T57A	decreasing strength
+MLC1	S280L	disrupting
+MLC1	S280L	decreasing
+MLC1	S246R	decreasing
+MLC1	C125R	unknown
+MLC1	S246R	unknown
+MLC1	C125R	disrupting
+MLKL	C86S	disrupting
+MLKL	T357E	decreasing
+MLLT1	K550E	disrupting
+MLLT1	K550E	decreasing
+MLLT3	K558E	decreasing
+MLPH	R35W	disrupting
+MLPH	R35F	disrupting
+MLPH	R35K	disrupting
+MLPH	R35V	disrupting
+MMACHC	R206W	decreasing strength
+MMACHC	R161Q	decreasing strength
+MMGT1	E328K	decreasing
+MMGT1	E208K	decreasing
+MMP2	R368A	disrupting strength
+MMP2	F297A	decreasing
+MMP2	F297A	decreasing strength
+MMP2	F297A	disrupting strength
+MMP2	R368A	decreasing strength
+MMP2	R252A	disrupting strength
+MMP2	F297A	unknown
+MMP2	R252A	decreasing strength
+MMP2	R252A	decreasing
+MMP2	R252A	unknown
+MMP2	R368A	decreasing
+MOB1B	K153A	decreasing
+MOB1B	R154A	decreasing
+MOB1B	K63E	unknown
+MOB1B	R157A	decreasing
+MOB3C	G120E	disrupting strength
+MOCS2	V7F	disrupting
+MOS	R86K	unknown
+MPHOSPH8	D41A	decreasing
+MPHOSPH8	F67A	decreasing
+MPHOSPH8	Y65A	decreasing
+MPHOSPH8	W72A	decreasing
+MPHOSPH8	T73A	decreasing
+MPHOSPH8	K101A	decreasing
+MPHOSPH8	F74A	decreasing
+MPHOSPH8	C68A	decreasing
+MPHOSPH9	Y1699C	decreasing
+MRAS	G22V	unknown
+MRGBP	S652A	disrupting rate
+MRGBP	S558A	decreasing rate
+MRGBP	S652A	decreasing rate
+MRGBP	S644A	disrupting rate
+MRPL1	Y1139A	decreasing strength
+MRPL38	E545K	unknown
+MRPL39	T22N	unknown
+MRPL39	Q67L	unknown
+MRPL39	K442A	unknown
+MRPL39	K382Q	increasing
+MRPL39	K373Q	increasing
+MRPL39	K295M	unknown
+MRPL39	D518A	unknown
+MRPL39	E510A	unknown
+MRPL43	Q65L	increasing
+MRPL46	K11A	disrupting
+MRPL46	K10A	disrupting
+MRPL46	F5A	disrupting
+MRPS15	E545K	increasing
+MRPS15	E545K	unknown
+MRPS25	T55V	disrupting strength
+MRPS30	K11A	disrupting
+MRPS30	F5A	disrupting
+MRPS30	K10A	disrupting
+MRPS6	E545K	unknown
+MRPS9	E545K	unknown
+MRRF	D138A	decreasing
+MSH2	D167H	decreasing
+MSH2	K393M	decreasing
+MSH2	P622L	decreasing
+MSH2	P622L	disrupting
+MSH2	R524P	disrupting
+MSH2	G674S	decreasing
+MSH2	R524P	decreasing
+MSH2	T905R	decreasing
+MSL3P1	C189S	unknown
+MSN	N210F	decreasing
+MSN	S46A	disrupting rate
+MSN	T558S	unknown
+MSR1	E12A	disrupting
+MST1	C672S	unknown
+MTA2	K116E	decreasing
+MTA2	A233E	decreasing
+MTA2	D278A	decreasing
+MTA2	L132V	disrupting
+MTA2	R168Y	decreasing
+MTA2	R173C	decreasing
+MTA2	R195P	decreasing
+MTA2	A170P	disrupting
+MTDH	E399R	disrupting strength
+MTDH	E399R	unknown
+MTDH	E400R	disrupting strength
+MTDH	D393R	unknown
+MTDH	D393R	disrupting strength
+MTDH	D389R	unknown
+MTDH	W394D	disrupting strength
+MTDH	W394D	unknown
+MTDH	D389R	disrupting strength
+MTDH	W401D	disrupting strength
+MTDH	E400R	unknown
+MTDH	W401D	decreasing strength
+MTG2	G2019S	increasing
+MTM1	D278A	disrupting
+MTM1	P205L	disrupting
+MTM1	C375S	disrupting
+MTM1	R184G	disrupting
+MTM1	R241C	disrupting
+MTMR2	D320A	unknown
+MTR	P1173L	increasing strength
+MTRR	E12A	disrupting
+MTUS2	K26A	decreasing
+MT_CO2	K391A	unknown
+MUC1	C87A	disrupting
+MUC1	C89A	disrupting
+MVP	R144G	disrupting
+MXD1	L474A	disrupting
+MYB	I269A	decreasing
+MYB	V267A	decreasing
+MYB	V267I	increasing
+MYB	V270A	decreasing
+MYB	V270I	increasing
+MYC	V394D	decreasing
+MYC	S62D	decreasing
+MYC	S62A	decreasing
+MYH7B	C61G	disrupting
+MYH7B	C64G	disrupting
+MYH9	V3349A	decreasing
+MYO1C	D1994A	disrupting rate
+MYO1C	G2019S	increasing rate
+MYO6	A1013G	decreasing
+MYOF	N238C	decreasing
+MZT2A	Y118F	decreasing
+MZT2A	Y118E	increasing
+MZT2A	Y31F	decreasing
+MZT2A	Y31E	increasing
+Mad2l1	L171S	decreasing
+Mad2l1	L164S	decreasing
+Mad2l1	L163S	decreasing
+Mad2l1	L173S	decreasing
+Mad2l1	L160S	decreasing
+Map2k1	S218D	increasing
+Map2k1	S222D	unknown
+Map2k1	T226D	unknown
+Map2k1	S222D	increasing
+Map2k2	S222D	unknown
+Map2k2	K101A	unknown
+Map2k2	S226D	unknown
+Map2k2	S226D	increasing
+Map2k2	S226A	decreasing
+Map2k2	S222D	increasing
+Map2k2	S222A	decreasing
+Map2k2	K101A	decreasing
+Map2k5	S311D	unknown
+Map2k5	T315D	unknown
+Map3k1	L438A	disrupting
+Map3k1	M440A	disrupting
+Map3k7	K63Y	increasing
+Mbd2	K53R	disrupting
+Mbd2	K335R	decreasing
+Mbd2	K347R	decreasing
+Mcf2l	Y889F	decreasing
+Mcf2l	Y889F	unknown
+Mcf2l	H814A	decreasing
+Mdm4	G57A	unknown
+Mecp2	A140V	decreasing
+Mecp2	A140V	disrupting
+Mecp2	R133C	decreasing
+Mecp2	R133C	disrupting
+NABP2	T117A	disrupting
+NAGLU	R61Q	decreasing
+NAT10	S275A	decreasing
+NAT10	S276A	decreasing
+NBAS	R399E	increasing rate
+NBAS	Q393K	disrupting rate
+NBN	K160M	disrupting
+NBN	K160M	decreasing
+NBN	R28A	decreasing
+NBN	S42A	decreasing
+NBN	S42A	disrupting
+NBR1	Y732A	decreasing
+NBR1	D50R	decreasing
+NCAPH	G464V	unknown
+NCBP1	T315A	increasing
+NCBP1	S311A	increasing
+NCBP1	K195M	increasing
+NCF1	I164A	decreasing
+NCF1	F209A	decreasing
+NCF1	S303D	unknown
+NCK1	W143K	disrupting
+NCK1	R308K	decreasing
+NCK1	R308K	disrupting
+NCK1	W38K	decreasing
+NCK1	W229K	disrupting
+NCK1	W38K	disrupting
+NCK1	W229K	decreasing
+NCK1	W143K	decreasing
+NCK2	R311K	disrupting
+NCK2	E296Q	unknown
+NCOA1	L690A	decreasing
+NCOA1	E685A	unknown
+NCOA1	L693A	decreasing
+NCOA2	L644A	disrupting
+NCOA3	S102A	disrupting
+NCOA3	S101A	disrupting
+NCOR2	Y470A	unknown
+NDE1	L858R	unknown
+NDE1	T191E	decreasing
+NDE1	T790M	unknown
+NDE1	T191V	decreasing
+NDP	C95R	decreasing
+NDP	K54D	decreasing
+NDP	R115L	decreasing
+NDUFA11	L858R	increasing strength
+NDUFA13	L858R	decreasing strength
+NDUFA2	L858R	increasing strength
+NDUFA2	C699A	unknown
+NDUFA5	R95A	increasing
+NDUFA5	F100A	increasing
+NDUFA7	L858R	increasing strength
+NDUFA9	L858R	increasing strength
+NDUFB11	L858R	increasing strength
+NDUFS3	L858R	increasing strength
+NDUFS5	M140A	decreasing
+NDUFS5	L858R	increasing strength
+NDUFV3	L858R	increasing strength
+NEDD8	A72R	increasing rate
+NEDD8	E32D	decreasing rate
+NEDD8	L8A	decreasing rate
+NEDD8	I44A	disrupting rate
+NEDD8	E31Q	disrupting rate
+NEDD9	A128L	unknown
+NEDD9	C29S	unknown
+NEK2	K391A	unknown
+NEK2	K391A	decreasing
+NEK2	K37R	increasing
+NEK2	K37R	decreasing
+NEK4	L314E	disrupting strength
+NEK4	M230A	decreasing strength
+NEK4	M230A	disrupting strength
+NEK4	S228E	disrupting strength
+NEK4	I310E	disrupting strength
+NEK4	S228E	decreasing strength
+NEK4	I310E	decreasing strength
+NEK6	D1994A	disrupting rate
+NELFE	L116A	decreasing
+NELFE	F123A	decreasing
+NF1	R90K	disrupting
+NF1	R90K	decreasing
+NF1	R383K	disrupting
+NF1	R383K	decreasing
+NF2	E463K	decreasing
+NF2	C99A	decreasing
+NF2	F62S	disrupting strength
+NF2	L141P	disrupting strength
+NF2	L46R	disrupting strength
+NF2	L64P	disrupting strength
+NF2	N220Y	decreasing
+NF2	R346S	decreasing
+NF2	S518A	decreasing
+NF2	S518A	increasing
+NF2	S518D	decreasing
+NFATC1	Y371A	disrupting
+NFKB1	S927A	unknown
+NFKB1	L841A	disrupting
+NFKB1	L841A	decreasing
+NFKBIA	R17A	decreasing
+NFKBIA	I124A	decreasing strength
+NFKBIA	I124R	decreasing strength
+NFKBIA	T90D	disrupting rate
+NFKBIA	I124E	decreasing strength
+NFKBIA	T183D	decreasing rate
+NFKBIA	T90A	disrupting rate
+NFKBIA	I124K	decreasing strength
+NFKBIA	I124Q	decreasing strength
+NHLRC1	C46Y	disrupting
+NHLRC1	C26S	decreasing
+NHLRC1	F33S	decreasing
+NHLRC1	Q302P	decreasing
+NHLRC1	L261P	disrupting
+NHLRC1	P69A	decreasing
+NHLRC1	D146N	decreasing
+NHLRC1	Q302P	disrupting
+NHLRC1	E280K	disrupting
+NIPAL4	A176D	decreasing
+NKAP	C420S	decreasing
+NKG7	K227A	disrupting strength
+NKG7	T208D	disrupting strength
+NLRC3	E460A	decreasing
+NLRC3	Q459A	decreasing
+NLRC3	S457A	decreasing
+NLRC3	L458A	decreasing
+NLRP3	M27E	disrupting strength
+NLRP3	R262W	increasing
+NLRP3	E64R	decreasing strength
+NLRP3	E629G	increasing
+NLRP3	E15R	disrupting strength
+NLRP3	R43W	disrupting strength
+NLRP3	D82R	decreasing strength
+NLRP3	D305N	increasing
+NME1	S120G	decreasing
+NME1	C145S	decreasing
+NME1	P96S	decreasing
+NME2	T752A	decreasing
+NME2	T719A	decreasing
+NME2	T699A	decreasing
+NOD1	D54K	disrupting
+NOD1	E53K	disrupting
+NOD1	E56K	disrupting
+NOD1	R69E	decreasing
+NOD1	S96A	decreasing strength
+NOD1	V41A	decreasing
+NOD2	Y71A	decreasing
+NOD2	E64A	decreasing
+NOD2	D70A	decreasing
+NOD2	R702W	decreasing
+NOD2	R702W	decreasing strength
+NOD2	W63A	decreasing
+NOD2	W68A	decreasing
+NOD2	L1007C	disrupting
+NOD2	F74A	decreasing
+NOD2	R334W	decreasing
+NOD2	K305R	disrupting
+NOD2	L77A	decreasing
+NOD2	L496F	decreasing
+NOD2	E69A	decreasing
+NOD2	G908R	increasing
+NOD2	E72A	decreasing
+NOP2	I164A	decreasing
+NOP2	F209A	decreasing
+NOS3	T495D	decreasing
+NOTCH1	S2121A	disrupting strength
+NOTCH1	S2121A	decreasing strength
+NOTCH1	A2044E	decreasing
+NOTCH2NL	R273H	unknown
+NOXA1	S406A	disrupting
+NOXA1	W436R	disrupting
+NOXO1	Q341A	disrupting
+NOXO1	Q341D	increasing
+NOXO1	Q341E	increasing
+NOXO1	R197R	disrupting
+NOXO1	R343A	disrupting
+NOXO1	L195D	decreasing
+NOXO1	L195E	decreasing
+NOXO1	L195A	decreasing
+NPC1	N70Q	unknown
+NPC1	N122Q	unknown
+NPC1	N185Q	unknown
+NPHP4	G754R	decreasing
+NPHS1	Y1176F	disrupting
+NPHS1	Y1193F	decreasing
+NPHS1	Y1193F	disrupting
+NPHS1	Y1217F	decreasing
+NPHS1	Y1176F	decreasing
+NPHS1	Y1217F	disrupting
+NPM1	C21F	disrupting
+NPM1	D286A	decreasing
+NPM1	D286A	disrupting
+NPM2	R462E	decreasing strength
+NPM2	R462E	disrupting strength
+NPM2	I666R	disrupting strength
+NPM2	G466V	decreasing strength
+NPM2	G464V	decreasing strength
+NPM2	G464E	decreasing strength
+NQO1	P187S	unknown
+NQO1	Y127A	disrupting
+NQO1	Y129A	disrupting
+NR1H4	K218R	decreasing rate
+NR1H4	K220R	disrupting rate
+NR1H4	K220R	decreasing
+NR3C1	S134A	disrupting
+NR3C1	F602S	unknown
+NR4A1	F489A	decreasing
+NR4A1	L497A	decreasing
+NR5A2	K301A	decreasing
+NR5A2	L454A	disrupting
+NR5A2	M329A	decreasing
+NR5A2	Q273A	disrupting
+NR5A2	Q281A	disrupting
+NR5A2	Q282A	disrupting
+NR5A2	Q305A	decreasing
+NR5A2	F308A	decreasing
+NR5A2	D327A	decreasing
+NR5A2	D326A	decreasing
+NR5A2	L453A	disrupting
+NRAS	G12V	unknown
+NRAS	K44M	disrupting
+NRG1	I155R	increasing
+NRG4	Y177F	decreasing
+NRG4	N86A	decreasing
+NRG4	N290V	disrupting
+NRG4	D135A	decreasing
+NRG4	K241A	disrupting
+NRG4	Y177L	disrupting
+NRG4	K241L	disrupting
+NRG4	N290A	disrupting
+NRG4	N290D	disrupting
+NRG4	N290I	disrupting
+NRG4	Q88A	decreasing
+NS	K41A	unknown
+NS	R38A	unknown
+NS	G184R	unknown
+NS	I106M	unknown
+NS	S103F	unknown
+NSUN2	C41S	decreasing
+NSUN2	C44S	decreasing
+NTRK1	A463P	disrupting
+NTRK1	N171K	disrupting
+NUAK1	T211A	unknown
+NUAK1	T211E	unknown
+NUAK1	T211D	unknown
+NUAK1	K84A	unknown
+NUDT16	A22V	unknown
+NUFIP2	L78A	decreasing
+NUP153	P2A	unknown
+NUP160	L32A	decreasing
+NUP160	F31A	decreasing
+NUP160	E28A	decreasing
+NUTM1	Y527F	unknown
+NXF1	R451A	decreasing
+NXF1	L450A	decreasing
+NXF1	K456A	disrupting
+NXF1	R453A	decreasing
+NXF1	R459A	disrupting
+NXF1	H457A	disrupting
+NXF1	F452A	decreasing
+NXF1	T458A	disrupting
+NYAP2	Y600E	increasing
+Naa50	F1000M	unknown
+Ncaph	D724A	decreasing
+Ncaph	F62A	disrupting
+Ncaph	K725E	decreasing
+Ncaph	R726A	decreasing
+Ncstn	R1064K	decreasing
+Nedd1	P564A	unknown
+Nedd1	K477R	decreasing
+Nedd1	K391R	decreasing
+Nedd1	P402A	unknown
+Nedd1	C190S	unknown
+Nf2	V24A	unknown
+Nf2	R25A	unknown
+Nf2	V27A	unknown
+Nf2	L141P	unknown
+Nf2	L46R	unknown
+Nf2	E270G	unknown
+Nf2	A211D	unknown
+Nf2	L64P	unknown
+Nf2	I26A	unknown
+Nfatc2	S31A	decreasing rate
+Npnt	K541A	decreasing
+Npnt	R543A	decreasing
+Npnt	K503A	decreasing
+Npnt	R542A	decreasing
+Npnt	R528A	decreasing
+Npnt	R558A	decreasing
+Npnt	R471A	decreasing
+Npnt	R445A	decreasing
+Npnt	K557A	decreasing
+Npnt	R502A	decreasing
+Npnt	H504A	decreasing
+Npnt	K459A	decreasing
+Npnt	K464A	decreasing
+Npnt	G559A	decreasing
+Npnt	R560A	decreasing
+Nr2f2	G2019S	increasing
+Nr2f2	R1398L	decreasing
+Nr2f2	R1441C	increasing
+Nr2f2	T1348N	decreasing
+Nr2f2	Y1699C	increasing
+Nr3c1	R488Q	unknown
+OBSCN	T6241P	disrupting
+OBSCN	T6240P	disrupting
+OBSCN	T6238P	disrupting
+ODC1	Y89F	unknown
+OFD1	E1615A	unknown
+OFD1	D1587A	unknown
+OFD1	R1583A	unknown
+OFD1	V82F	decreasing
+OFD1	K1617A	unknown
+OFD1	D1614A	unknown
+OFD1	E1640A	unknown
+OFD1	E1638A	unknown
+OFD1	K44A	decreasing
+OPRD1	F325A	decreasing
+OPTN	E50K	increasing
+OPTN	K193R	decreasing strength
+OPTN	K193R	disrupting strength
+OPTN	E50K	decreasing
+OPTN	E50K	disrupting
+ORAI1	L273S	decreasing
+ORC3	S516A	disrupting
+ORC6	T615P	decreasing
+ORF	L858R	unknown
+ORF	D25N	unknown
+ORF8	D29E	disrupting
+OTUB1	N22A	disrupting strength
+OTUB1	N22A	unknown
+OTUB1	N22A	decreasing rate
+OTUB1	R40C	unknown
+OTUD7A	T5P	unknown
+OXSM	G2019S	unknown
+OXSM	D1994K	disrupting rate
+OXSR1	K46A	decreasing
+OXSR1	K46A	unknown
+Orc2	G12V	unknown
+P2RY12	S308A	disrupting rate
+P4HA1	H98A	unknown
+P4HA1	C101A	unknown
+PA2G4	R364A	decreasing
+PA2G4	K22A	disrupting
+PA2G4	K20A	disrupting
+PABPC1	F567A	disrupting
+PABPC1	F567A	decreasing
+PABPC1	K580A	disrupting
+PAFAH1B1	S169P	decreasing
+PAFAH1B1	H149R	decreasing
+PAIP2	E117A	decreasing
+PAIP2	A115L	decreasing
+PAIP2	K116A	decreasing
+PAIP2	L111A	decreasing
+PAIP2	P113A	decreasing
+PAIP2	P120A	decreasing
+PAIP2	F118A	disrupting
+PAK1	T423E	increasing
+PAK1	L107F	increasing
+PAK1	K299A	decreasing
+PAK2	L449Q	increasing
+PAK2	N664C	increasing
+PAK2	L449Q	decreasing
+PAK2	A662C	increasing
+PALB2	L1143P	decreasing
+PALB2	L939W	decreasing
+PALB2	T1030I	decreasing
+PAN3	F293A	decreasing
+PANX1	Y732A	decreasing
+PARK2	H257W	decreasing
+PARK2	C431F	decreasing
+PARK2	C431A	decreasing strength
+PARK2	C421A	decreasing strength
+PARK2	T240R	decreasing strength
+PARK2	T415N	disrupting strength
+PARK7	C106A	decreasing
+PARK7	C106S	disrupting strength
+PARK7	C53S	decreasing strength
+PARK7	L166P	disrupting
+PARK7	L166P	decreasing
+PARK7	L166A	decreasing
+PARK7	C46S	disrupting strength
+PARL	S167A	disrupting
+PAWR	E68D	increasing
+PAWR	L69I	increasing
+PAWR	N70A	disrupting
+PAWR	N72A	disrupting
+PAWR	N71A	disrupting
+PCBP1	V477A	decreasing
+PCDH10	F1000M	unknown
+PCF11	M1775R	disrupting strength
+PCM1	R280K	unknown
+PCNA	R5A	unknown
+PCNA	K110A	unknown
+PCNA	K110A	decreasing
+PCNA	R5A	decreasing
+PCSK9	Q554E	increasing
+PDCD4	D253A	decreasing
+PDCD4	D418A	decreasing
+PDCD6	E114A	disrupting
+PDCD6	E47A	decreasing
+PDCD6	Y91A	disrupting
+PDCD6	F60A	disrupting
+PDCD6	W57A	decreasing
+PDCD6	E47A	disrupting
+PDCD6	W95A	disrupting
+PDCD6	Y108A	disrupting
+PDCD6	E114A	decreasing
+PDCD6IP	V498D	decreasing
+PDCD6IP	I683D	decreasing
+PDCD6IP	P758A	decreasing
+PDCD6IP	R757A	decreasing
+PDCD6IP	F676D	disrupting
+PDCD6IP	I212D	disrupting
+PDCD6IP	P720L	disrupting
+PDCD6IP	V498D	disrupting
+PDE4DIP	L858R	decreasing strength
+PDE6D	I98A	unknown
+PDE6D	F94A	unknown
+PDE6D	R48E	disrupting
+PDGFRB	Y1009F	disrupting strength
+PDHB	I81T	disrupting strength
+PDHB	A77P	disrupting strength
+PDHB	L85P	disrupting strength
+PDLIM5	K104R	disrupting
+PDLIM5	V103D	disrupting
+PDRG1	V82F	decreasing
+PECAM1	R179A	disrupting strength
+PECAM1	R179A	decreasing strength
+PECAM1	K255A	disrupting strength
+PECAM1	K176A	disrupting strength
+PECAM1	K176A	decreasing strength
+PECAM1	H239A	disrupting strength
+PECAM1	H239A	decreasing strength
+PEG10	K558E	decreasing
+PENK	M5G	unknown
+PEX19	R116C	increasing
+PFDN6	K72R	decreasing
+PFDN6	S53P	decreasing
+PFDN6	H33R	decreasing
+PFKL	E762C	unknown
+PGBD3	I507A	decreasing
+PGBD3	W504A	decreasing
+PHC3	I1653E	disrupting
+PHF8	S84D	decreasing
+PHF8	S33D	decreasing
+PHKG2	K33M	unknown
+PHLDB2	A230T	decreasing
+PHLDB2	E250Q	decreasing
+PHYHIP	H292S	decreasing
+PHYHIP	K127E	disrupting strength
+PHYHIP	K128E	disrupting strength
+PHYHIP	K133E	disrupting strength
+PHYHIP	R134E	disrupting strength
+PHYHIP	C290S	decreasing
+PI4KA	W1957A	decreasing
+PICALM	C607S	unknown
+PICALM	C86S	unknown
+PICALM	C708S	unknown
+PICALM	R730C	unknown
+PICALM	R15C	unknown
+PICALM	C442S	unknown
+PICALM	C424S	unknown
+PICALM	C427S	unknown
+PID1	D1994A	disrupting rate
+PID1	G2019S	increasing rate
+PID1	R1441C	increasing rate
+PIGU	W9A	decreasing
+PIH1D1	R168A	disrupting strength
+PIH1D1	K64A	disrupting strength
+PIH1D1	K64A	decreasing strength
+PIH1D1	K57A	unknown
+PIH1D1	K57A	disrupting strength
+PIH1D1	K166A	decreasing strength
+PIH1D1	K113A	decreasing strength
+PIH1D1	R163A	decreasing strength
+PIH1D1	K64A	unknown
+PIK3C2B	R15E	disrupting
+PIK3C2B	Q28R	decreasing
+PIK3CA	M1043I	increasing
+PIK3CA	K111N	increasing
+PIK3CA	E545A	increasing
+PIK3CA	E545G	increasing
+PIK3CA	E545K	decreasing
+PIK3CA	E545K	increasing
+PIK3CA	Q546P	unknown
+PIK3CA	Q546K	increasing
+PIK3CA	N345K	increasing
+PIK3CA	E545K	unknown
+PIK3CA	E542K	increasing
+PIK3R1	R151A	decreasing
+PIK3R1	K379E	disrupting
+PIK3R1	R274A	unknown
+PIK3R1	R340E	disrupting
+PIK3R1	R151A	unknown
+PIK3R1	K379E	increasing
+PIK3R3	R383K	decreasing
+PIK3R3	R383K	disrupting
+PIK3R3	R383L	disrupting
+PIK3R3	R90K	decreasing
+PIK3R3	R90K	disrupting
+PIK3R3	R383K	unknown
+PIK3R3	R90K	unknown
+PILRA	Y298F	decreasing
+PILRA	Y269F	decreasing
+PIM1	K67M	disrupting rate
+PIM1	K67M	disrupting strength
+PIM1	K158M	unknown
+PIN1	H157A	unknown
+PIN1	S16A	disrupting
+PIN1	C113A	unknown
+PIN1	W34A	disrupting
+PIN1	Y24A	decreasing
+PIN1	Y23A	decreasing
+PIN1	Y23A	disrupting
+PINK1	K219M	decreasing
+PINK1	G309D	decreasing
+PINX1	I1030F	disrupting
+PIR	E103A	disrupting
+PITX2	K88E	decreasing
+PITX2	K88R	increasing
+PITX2	K88R	decreasing
+PITX2	K88E	increasing
+PITX2	T68P	unknown
+PITX2	T68P	decreasing
+PITX2	K88R	disrupting
+PITX2	R91P	decreasing
+PITX2	T68P	disrupting
+PITX2	K88R	unknown
+PKD2	S812A	disrupting
+PKD2	L884H	disrupting
+PKD2	D886A	disrupting
+PKM	R399E	increasing rate
+PKM	Q393K	disrupting rate
+PKMYT1	N238A	unknown
+PKMYT1	R486A	decreasing
+PKN2	L520I	unknown
+PKN3	S142D	decreasing
+PKN3	S142A	disrupting
+PKNOX1	F86C	decreasing
+PKNOX1	P80G	decreasing
+PKP2	A1200V	increasing rate
+PKP2	T1151M	increasing rate
+PKP2	F1245C	increasing rate
+PKP2	F1245V	increasing rate
+PKP2	G1128A	increasing rate
+PKP2	G1286R	increasing rate
+PKP2	I1170N	increasing rate
+PKP2	M1166R	increasing rate
+PKP2	I1170S	increasing rate
+PKP2	I1171N	increasing rate
+PKP2	Y1278S	increasing rate
+PKP2	I1183T	increasing rate
+PKP2	L1196M	increasing rate
+PKP2	R1192P	increasing rate
+PKP2	L1204F	increasing rate
+PKP2	R1231Q	decreasing rate
+PKP2	D1270G	disrupting rate
+PKP2	S644P	disrupting
+PKP2	I1250T	decreasing rate
+PKP2	S140F	disrupting
+PLAU	T63N	disrupting
+PLAUR	G14V	unknown
+PLAUR	T24A	unknown
+PLCB4	Y600F	unknown
+PLCG1	W828A	disrupting
+PLCG2	Y368F	decreasing
+PLD2	Y169F	disrupting
+PLD2	Y179F	decreasing
+PLD2	Y169F	decreasing
+PLD2	Y179F	disrupting
+PLD2	N181D	decreasing
+PLEK	T114E	unknown
+PLEK	S113E	unknown
+PLEK	S117E	unknown
+PLEKHM2	C869D	decreasing
+PLEKHM2	G828D	decreasing
+PLEKHM2	R831A	decreasing
+PLEKHM2	R831D	decreasing
+PLEKHS1	D68F	disrupting
+PLGRKT	K138C	unknown
+PLK1	K82R	increasing
+PLK1	T210A	decreasing
+PLK3	K52R	unknown
+PLK3	K52R	decreasing
+PLSCR1	S37D	disrupting
+PLSCR1	Y600E	increasing
+PLSCR3	F49A	decreasing
+PLSCR3	F49A	disrupting
+PLSCR3	F49L	decreasing
+PLSCR3	F49Y	decreasing
+PLSCR3	F52A	disrupting
+PLSCR3	P43A	decreasing
+PLSCR3	P47A	decreasing
+PLSCR3	P53A	decreasing
+PLSCR3	P45A	decreasing
+PLXNB1	T1795A	increasing
+PLXNB1	T1697A	increasing
+PM20D2	K744R	unknown
+PMAIP1	F32E	decreasing
+PMAIP1	K35E	increasing
+PMAIP1	L29E	decreasing
+PMAIP1	L36E	decreasing
+PML	K160A	disrupting
+PML	K104R	disrupting
+PML	K490A	disrupting
+PML	K65A	disrupting
+PML	S403A	unknown
+PML	S518A	decreasing
+PML	S518A	disrupting
+PML	S518A	unknown
+PML	T409A	unknown
+PML	V103D	disrupting
+PMS2	M622I	decreasing
+PMS2	T511K	decreasing
+PMS2	T597S	decreasing
+PNKD	S46A	disrupting
+PNKP	L99E	unknown
+PNMA1	D161N	decreasing rate
+PNMA1	D142N	disrupting
+PNMA1	T180A	decreasing rate
+PNMA1	L858R	decreasing strength
+PNMA1	T112M	decreasing rate
+PNMA1	S227A	disrupting
+PNMA1	P216S	decreasing rate
+PNMA5	K24Q	decreasing
+PNMA5	D54H	decreasing
+PNMA5	Y25H	decreasing
+PNMA5	S456A	disrupting
+POLDIP3	M89D	decreasing strength
+POLDIP3	K87D	decreasing strength
+POLG	E200A	unknown
+POLG	D198A	unknown
+POLI	P717R	decreasing strength
+POLR1E	R343A	disrupting
+POLR2E	L152A	disrupting
+POLR2E	L156A	disrupting
+POLR2E	L149A	disrupting
+POLR2E	P163A	disrupting
+POLR2E	L158A	disrupting
+POLR2E	V165A	disrupting
+POU2AF1	V51E	disrupting
+POU2F1	S173A	disrupting
+PPARA	K185R	decreasing
+PPARD	S173A	disrupting
+PPARGC1A	Y213A	decreasing
+PPARGC1A	L147A	decreasing
+PPARGC1A	L147A	disrupting
+PPARGC1A	V91A	decreasing
+PPARGC1A	V91A	disrupting
+PPEF1	S173A	disrupting
+PPIB	S173A	disrupting
+PPIB	K5A	disrupting
+PPIB	K34A	disrupting
+PPIB	F100A	increasing
+PPIB	R95A	increasing
+PPIE	F51E	decreasing
+PPM1A	V98G	decreasing
+PPME1	D1994A	disrupting rate
+PPME1	I2020T	increasing rate
+PPME1	T28A	disrupting rate
+PPME1	T46A	disrupting rate
+PPME1	T54A	disrupting rate
+PPME1	G2019S	increasing rate
+PPP1CA	S42C	increasing
+PPP1CA	S182C	increasing
+PPP1CB	F1389A	disrupting
+PPP1R12A	L118A	decreasing strength
+PPP1R12A	L1007A	disrupting
+PPP1R13L	L724A	decreasing
+PPP1R13L	L724A	disrupting
+PPP1R13L	N813A	decreasing
+PPP1R13L	Y814A	disrupting
+PPP1R13L	N813A	disrupting
+PPP1R13L	S113D	disrupting
+PPP1R13L	T722A	decreasing
+PPP1R13L	S84D	increasing
+PPP1R13L	S84D	disrupting
+PPP1R13L	S113A	disrupting
+PPP1R13L	S84D	decreasing
+PPP1R13L	S84A	disrupting
+PPP1R13L	S113D	decreasing
+PPP1R13L	S84A	decreasing
+PPP1R13L	S113D	increasing
+PPP1R13L	S113A	decreasing
+PPP1R13L	Y814A	decreasing
+PPP1R13L	T722A	disrupting
+PPP1R18	R90K	unknown
+PPP1R18	R383K	unknown
+PPP1R3C	D250A	disrupting
+PPP1R3C	V85A	unknown
+PPP1R3C	F87A	unknown
+PPP1R3C	D247A	disrupting
+PPP2R1B	D504G	decreasing
+PPP2R1B	V448A	decreasing
+PPP2R1B	G8R	decreasing
+PPP2R1B	K343E	decreasing
+PPP2R1B	V545A	decreasing
+PPP2R1B	L101P	decreasing
+PPP2R2B	E1615A	unknown
+PPP2R2B	D1587A	unknown
+PPP2R2B	D1614A	unknown
+PPP2R2D	A229D	disrupting
+PPP2R5C	C408L	decreasing
+PPP2R5C	Q402G	decreasing
+PPP2R5C	S520A	decreasing
+PPP2R5C	S520D	disrupting
+PPP2R5C	S520D	increasing
+PPP2R5C	S520A	disrupting
+PPP3CC	K339A	disrupting
+PPP3CC	R312A	disrupting
+PPP3R1	K339A	disrupting
+PPP3R1	R322A	decreasing
+PPP4C	H56Q	unknown
+PPP4C	R86A	unknown
+PPP4C	E64K	disrupting
+PPP4C	E39K	disrupting
+PPP4C	E39K	decreasing
+PPP4C	E277K	disrupting
+PPP4C	R107E	decreasing
+PPP4C	N76D	disrupting
+PPP4C	R107E	disrupting
+PPP4C	N76D	decreasing
+PPP4C	E277K	decreasing
+PPP4R4	R501D	disrupting
+PPP4R4	V618A	disrupting
+PPP4R4	V618D	disrupting
+PPP5C	K97A	disrupting
+PPP5C	R101A	disrupting
+PPP6R1	W197A	decreasing
+PPP6R1	E201A	decreasing
+PRDM16	K568R	decreasing
+PRDM16	L620S	decreasing
+PRDM16	D619A	decreasing
+PRDM16	L591S	decreasing
+PRDM16	D590A	decreasing
+PRDX1	T183A	decreasing rate
+PRDX1	T90A	disrupting rate
+PRDX1	T90A	decreasing rate
+PRDX1	T18A	decreasing rate
+PRDX1	T183D	decreasing rate
+PRDX1	T90D	disrupting rate
+PRDX1	T156A	decreasing rate
+PRDX1	C52S	decreasing
+PRDX1	C173S	decreasing
+PRDX1	T111A	decreasing rate
+PRDX3	T146A	disrupting
+PRDX5	D159N	decreasing
+PRDX5	L138F	decreasing
+PRDX5	R258H	decreasing
+PRICKLE1	R104Q	decreasing
+PRICKLE1	G63S	disrupting
+PRKAR2A	L14A	decreasing
+PRKD1	S397A	unknown
+PRKD1	S401A	unknown
+PRKD3	S735E	unknown
+PRKD3	S731A	unknown
+PRKG1	M602V	decreasing
+PRLR	C413A	decreasing strength
+PRLR	T415A	decreasing strength
+PROX1	L70A	disrupting
+PROX1	L73A	disrupting
+PRPF19	S392E	decreasing
+PRPF19	L1143P	decreasing
+PRPF19	L939W	decreasing
+PRPF19	S392A	increasing
+PRPF31	R1441C	disrupting rate
+PRPF31	S1444A	disrupting rate
+PRPF31	K1906M	unknown
+PRPF31	S1443A	disrupting rate
+PRPF31	R1441H	disrupting rate
+PRPF31	R1441G	disrupting rate
+PRPF31	S1444A	decreasing rate
+PRPF40A	D25N	unknown
+PRPF40A	L858R	unknown
+PRPF8	K725E	decreasing
+PRPF8	W73A	decreasing
+PRPF8	D724A	decreasing
+PRPF8	R726A	decreasing
+PRR3	S84A	disrupting
+PRR3	S113A	disrupting
+PRR3	S113A	decreasing
+PRR3	S84A	decreasing
+PRRC2A	L36E	decreasing
+PRRC2A	L29E	decreasing
+PRRC2A	F32E	decreasing
+PRTFDC1	W828A	disrupting
+PSMA1	F319D	decreasing
+PSMA1	S119A	decreasing
+PSMA4	V660E	unknown
+PSMA5	D265A	nt
+PSMA7	D159A	disrupting
+PSMA7	D159R	disrupting
+PSMA7	F155A	disrupting
+PSMA7	L380R	disrupting
+PSMA7	W143K	disrupting
+PSMA7	Y147R	disrupting
+PSMB2	C699A	unknown
+PSMB2	D130A	disrupting rate
+PSMB6	W38K	disrupting
+PSMB6	K191R	unknown
+PSMD13	S73A	decreasing
+PSMD13	S63A	decreasing
+PSMD13	C318A	increasing
+PSMD6	G230A	disrupting
+PSMD6	G231A	disrupting
+PSMD7	E233G	disrupting
+PSME4	N1716T	disrupting strength
+PSTPIP1	A230T	decreasing
+PSTPIP1	W232A	disrupting
+PSTPIP1	E250Q	disrupting
+PSTPIP1	E250Q	decreasing
+PTEN	C124S	decreasing rate
+PTEN	Y336F	increasing
+PTEN	V403A	decreasing
+PTEN	Y336F	unknown
+PTEN	P402A	unknown
+PTEN	T401A	decreasing
+PTEN	R130G	decreasing rate
+PTEN	K289E	decreasing
+PTEN	K13E	decreasing
+PTEN	G129E	decreasing rate
+PTEN	C124S	increasing
+PTEN	K402W	decreasing
+PTH1R	E587A	disrupting
+PTH1R	L585A	disrupting
+PTH1R	W589A	disrupting
+PTH1R	L584A	disrupting
+PTK2	L1035A	decreasing
+PTK2	L931R	decreasing
+PTK2	R1042G	decreasing
+PTK2	L1034S	disrupting
+PTK2	D1039A	decreasing
+PTK2	E1015A	disrupting
+PTK2	Y925F	disrupting
+PTK2	Y5F	disrupting
+PTK2	Y194F	decreasing
+PTK2	Y194E	increasing
+PTK2	V935A	decreasing
+PTK2	V928G	disrupting
+PTK2	V928G	decreasing
+PTK2	V1037D	decreasing
+PTK2	L1034S	decreasing
+PTK2	Y194F	disrupting
+PTOV1	C464S	disrupting rate
+PTPN1	Y66F	decreasing
+PTPN1	C215S	disrupting strength
+PTPN1	C215S	increasing
+PTPN1	Y153F	increasing
+PTPN1	K73R	decreasing
+PTPN1	K53R	disrupting
+PTPN1	K347R	decreasing
+PTPN1	Y66F	increasing
+PTPN1	K335R	decreasing
+PTPN1	E132Q	decreasing strength
+PTPN1	R153H	increasing strength
+PTPN1	R87Q	decreasing strength
+PTPN1	Y152F	disrupting
+PTPN1	Y152F	decreasing
+PTPN1	T137I	increasing strength
+PTPN1	C215A	disrupting
+PTPN1	C215S	unknown
+PTPN12	C231S	decreasing
+PTPN22	C227S	increasing
+PTPN22	D195A	unknown
+PTPN22	D195A	increasing
+PTPN22	R620W	decreasing strength
+PTPN22	C227S	unknown
+PTPN3	D811A	increasing
+PTPN3	Y676F	increasing
+PTPN6	D419A	increasing
+PTPN6	C453S	unknown
+PTPN6	C453S	decreasing
+PTPRJ	C1239S	increasing strength
+PUF60	V514F	unknown
+PUS7	D164A	disrupting
+PUS7	W165A	disrupting
+PXN	Y31F	decreasing
+PXN	Y118F	decreasing
+PXN	S273A	decreasing
+PXN	S273D	increasing
+PXN	Y118E	increasing
+PXN	Y31E	increasing
+PYCARD	K21Q	disrupting strength
+PYCARD	D48N	decreasing strength
+PYCARD	F59E	disrupting strength
+PYCARD	R41E	decreasing strength
+PYCARD	R41E	disrupting strength
+PYCARD	F59E	decreasing strength
+PYCARD	D48R	disrupting strength
+PYCARD	D48R	decreasing strength
+PYCARD	E13R	disrupting strength
+PYCARD	P31R	decreasing strength
+PYCARD	K26E	disrupting strength
+PYGO1	W366F	unknown
+PYM1	Y1278S	unknown
+Papss1	Y470A	unknown
+Pax3	K437R	decreasing
+Pax3	K475R	decreasing
+Pcna	G2385R	increasing
+Pcna	R1441C	decreasing
+Pdcd6	E47D	disrupting strength
+Pdcd6	E114D	disrupting strength
+Pdlim5	F241A	disrupting
+Pdlim5	F241A	decreasing
+Pdlim5	L245A	decreasing
+Pdlim5	H240A	decreasing
+Pdlim5	H240A	disrupting
+Pdlim5	H212A	disrupting
+Pdlim5	F213A	disrupting
+Pik3ca	T208D	disrupting strength
+Pik3ca	T208D	decreasing
+Pik3ca	K227A	disrupting strength
+Pik3ca	K227A	decreasing
+Pik3cb	S205D	disrupting
+Pik3cb	Y187A	disrupting strength
+Pik3cb	V203S	disrupting strength
+Pik3cb	V203K	disrupting strength
+Pik3cb	V192S	disrupting strength
+Pik3cb	T227D	disrupting strength
+Pik3cb	T227D	decreasing strength
+Pik3cb	S205D	decreasing strength
+Pik3cb	E183A	decreasing strength
+Pik3cb	E219A	decreasing strength
+Pik3cb	Q207D	decreasing strength
+Pik3cb	L186A	disrupting strength
+Pik3cb	K231A	disrupting strength
+Pik3cb	K231A	decreasing strength
+Pik3cb	K224A	disrupting
+Pik3cb	K224A	decreasing strength
+Pik3cb	K190A	decreasing strength
+Pik3cb	K185A	decreasing strength
+Pik3cb	A194K	disrupting strength
+Pik3cb	A194S	decreasing strength
+Pik3cb	D202A	disrupting strength
+Pik3cb	R229A	disrupting strength
+Pik3cb	Q223D	decreasing strength
+Pik3cb	V192K	disrupting strength
+Pin1	S16A	disrupting
+Ppp2r1a	D299E	disrupting rate
+Ppp2r1a	T300A	increasing rate
+Ppp6c	E39K	decreasing
+Ppp6c	R107E	decreasing
+Ppp6c	N76D	decreasing
+Ppp6c	E277K	disrupting
+Ppp6c	E64K	disrupting
+Prdx1	C173S	unknown
+Prdx1	C52S	disrupting
+Prdx1	C52S	unknown
+Prdx1	C83S	decreasing
+Prdx1	C83S	unknown
+Prdx1	C173S	increasing
+Prdx6	S32A	decreasing strength
+Prkca	F90L	decreasing
+Prkd1	S916A	disrupting
+Prkd1	S916A	decreasing
+QSOX2	W287A	disrupting
+RAB11A	Q70L	unknown
+RAB11B	Q70A	increasing strength
+RAB11B	S25D	decreasing strength
+RAB11FIP2	R186S	disrupting
+RAB11FIP5	T276D	disrupting
+RAB11FIP5	T276D	decreasing
+RAB11FIP5	T276A	increasing
+RAB11FIP5	T276D	increasing
+RAB13	T22N	unknown
+RAB13	Q67L	unknown
+RAB14	S25N	disrupting
+RAB14	S25N	decreasing
+RAB14	N124I	decreasing
+RAB14	Q70L	increasing
+RAB18	S22N	decreasing
+RAB1A	S25N	decreasing strength
+RAB1A	Q70L	unknown
+RAB1A	Q70L	increasing strength
+RAB1A	S25N	unknown
+RAB21	Q78L	unknown
+RAB21	T33N	decreasing
+RAB26	T77N	decreasing strength
+RAB26	N177I	disrupting strength
+RAB26	N177I	decreasing strength
+RAB29	Q67L	disrupting
+RAB29	Q67L	increasing
+RAB29	T21N	increasing
+RAB2A	Q65L	increasing
+RAB3IL1	T668A	decreasing
+RAB5A	S34N	unknown
+RAB5A	Q79L	decreasing
+RAB5A	Q79L	unknown
+RAB5A	S34N	disrupting
+RAB5B	T6D	increasing rate
+RAB5B	T6A	disrupting rate
+RAB5B	N133I	decreasing strength
+RAB5B	T2A	disrupting rate
+RAB5B	T2A	decreasing rate
+RAB5B	T6D	decreasing strength
+RAB5B	Q79L	decreasing rate
+RAB5B	N133I	disrupting rate
+RAB6A	T27N	disrupting
+RAB6A	Q72L	unknown
+RAB6B	T27N	disrupting
+RAB6B	Q72L	unknown
+RAB7A	Q67L	unknown
+RAB8A	Q67L	unknown
+RAB8A	T22N	decreasing
+RAB8A	T22N	unknown
+RAB9A	S21N	decreasing
+RAB9A	Q66L	unknown
+RAB9A	S21D	disrupting
+RABEP1	Q566A	decreasing
+RABEP1	M563R	decreasing
+RABEP1	N568R	decreasing
+RABEP1	Q566R	decreasing
+RABEP1	Q561A	decreasing
+RABGEF1	A58G	decreasing
+RABGEF1	A196G	decreasing
+RABGEF1	Y25F	decreasing
+RABGEF1	T34N	decreasing
+RABGEF1	A79L	increasing
+RAC1	Q61L	decreasing rate
+RAC1	P2326A	disrupting
+RAC1	G12V	unknown
+RAC1	Q61L	unknown
+RAC1	G12V	increasing
+RAC1	T17N	decreasing
+RAC1	T17N	decreasing strength
+RAC1	I33D	decreasing strength
+RAC1	A35T	decreasing
+RAC1	E74R	decreasing
+RAC1	Y40C	unknown
+RAC1	P2325A	disrupting
+RAC2	Q61L	unknown
+RAC3	S151A	decreasing
+RACGAP1	W167A	decreasing
+RAD51AP1	W287A	disrupting
+RAD51C	L138F	decreasing
+RAD51C	D159N	decreasing
+RAD51C	R258H	decreasing
+RAD51D	L858R	unknown
+RAD51D	E233G	disrupting
+RAD51D	D25N	unknown
+RAD54L	G696R	disrupting
+RAF1	T421N	disrupting
+RAF1	Y341D	unknown
+RAF1	R89L	decreasing
+RAF1	Y340D	unknown
+RAF1	R89L	disrupting
+RALA	S183A	decreasing
+RALA	S194A	decreasing
+RALB	G23V	unknown
+RAN	K130E	disrupting
+RAN	Q69L	disrupting strength
+RAN	Q69L	increasing
+RAN	R95E	disrupting
+RAN	T24N	unknown
+RAN	V188R	decreasing strength
+RANBP9	Q111L	disrupting
+RAP1A	G12V	unknown
+RAP1B	G12V	unknown
+RAP2A	S17N	disrupting
+RAP2A	F39S	disrupting
+RAP2A	F39S	decreasing
+RAP2A	G12V	unknown
+RARA	K399R	decreasing
+RASSF5	K154A	unknown
+RASSF5	R124A	unknown
+RASSF5	K155A	unknown
+RASSF5	N161A	unknown
+RASSF5	D160A	unknown
+RASSF5	K123A	unknown
+RASSF5	K135A	unknown
+RASSF9	Y463F	unknown
+RASSF9	Y583F	unknown
+RASSF9	Y585F	unknown
+RASSF9	Y730F	unknown
+RB1	P568A	decreasing
+RB1	T826A	disrupting
+RB1	T821A	disrupting
+RB1	S567A	increasing
+RB1	C706F	decreasing
+RBBP4	V42A	disrupting
+RBBP4	E126A	disrupting
+RBBP4	R46A	disrupting
+RBBP4	E179A	disrupting
+RBBP4	E231A	decreasing
+RBBP4	P40A	disrupting
+RBBP4	E44A	disrupting
+RBBP4	E275A	decreasing
+RBBP4	E319A	decreasing
+RBBP4	D248A	decreasing
+RBM10	T153A	decreasing rate
+RBM10	T149A	disrupting rate
+RBM22	W61D	unknown
+RBM23	D281K	unknown
+RBM28	F325A	decreasing
+RBM5	T69E	increasing
+RBM8A	L118R	decreasing
+RBMS1	S11Y	unknown
+RBX1	N98R	decreasing rate
+RBX1	R46A	decreasing rate
+RBX1	V38P	decreasing
+RBX1	N98A	decreasing rate
+RBX1	N41P	decreasing
+RBX1	V39P	decreasing
+RBX1	I37A	decreasing rate
+RBX1	D40P	decreasing
+RBX1	A63C	unknown
+RBX1	W35D	decreasing rate
+RBX1	I37P	decreasing
+RBX1	N98R	increasing rate
+RCAN1	T192A	decreasing
+RCAN1	S112A	disrupting
+RCAN1	T192A	disrupting
+RCAN1	S112A	decreasing
+RCC1	D182A	disrupting
+RCOR1	R427A	disrupting
+RCOR1	R426E	disrupting
+RCOR1	R426A	disrupting
+RCOR1	K418E	disrupting
+RCOR1	N419D	disrupting
+RELA	C216A	decreasing
+RELA	Y36A	disrupting strength
+RELA	E39A	disrupting strength
+RELA	R35A	disrupting strength
+RELA	R33A	disrupting strength
+RELA	K62A	disrupting strength
+RELA	K56A	disrupting strength
+RELA	S536A	decreasing rate
+RELA	K310R	disrupting
+RET	D707N	unknown
+RET	D707N	disrupting
+RET	D1017N	unknown
+REV1	K104A	disrupting
+RFC2	P564A	unknown
+RFC2	P402A	unknown
+RFFL	H333A	unknown
+RFWD2	S387A	decreasing
+RGCC	S45A	disrupting
+RGCC	S47A	disrupting
+RHEB	A174C	unknown
+RHOA	E114A	decreasing
+RHOA	C190S	unknown
+RHOA	F39A	disrupting
+RHOA	F39A	decreasing
+RHOA	F106A	disrupting
+RHOA	F106A	decreasing
+RHOA	L72A	decreasing
+RHOA	E47A	decreasing
+RHOA	L69A	decreasing
+RHOA	T19N	decreasing
+RHOA	L72A	disrupting
+RHOA	R68A	disrupting
+RHOA	T19N	unknown
+RHOA	G14V	unknown
+RHOA	G14V	increasing
+RHOA	G14A	unknown
+RHOA	Q63L	unknown
+RHOBTB3	N138D	unknown
+RHOC	G14V	increasing
+RHOD	T31K	disrupting
+RHOD	G26V	unknown
+RHOG	G12V	unknown
+RHOT1	E208K	decreasing
+RHOT1	E328K	decreasing
+RHOT1	E328K	decreasing strength
+RHOT1	E208K	decreasing strength
+RHOU	F83G	disrupting
+RHOU	F86C	decreasing
+RHOU	T63N	disrupting
+RHOU	P80G	decreasing
+RHOU	P80G	disrupting
+RHOU	Q107L	decreasing
+RHOU	T63N	decreasing
+RHOU	F86C	disrupting
+RHOXF2	D135A	decreasing
+RHOXF2	N86A	decreasing
+RHOXF2	Y177L	disrupting
+RHOXF2	K241L	disrupting
+RHOXF2	N290V	disrupting
+RHOXF2	K241A	disrupting
+RHOXF2	N290I	disrupting
+RHOXF2	N290D	disrupting
+RHOXF2	N290A	disrupting
+RHOXF2	Y177F	decreasing
+RHOXF2	Q88A	decreasing
+RIN1	Y36F	decreasing
+RIN1	Y148F	decreasing
+RIN1	Y121F	decreasing
+RIPK1	K530Q	disrupting
+RIPK1	Y544D	decreasing strength
+RIPK1	I539D	decreasing strength
+RIPK1	I541D	decreasing strength
+RIPK1	G542D	decreasing strength
+RIPK1	A543D	decreasing strength
+RIPK1	Q540D	decreasing strength
+RIPK1	K45A	unknown
+RIPK1	N545D	decreasing strength
+RIPK2	R483E	disrupting
+RIPK2	R444E	disrupting
+RIPK2	R488E	disrupting
+RIPK3	G461D	decreasing strength
+RIPK3	D142N	disrupting
+RIPK3	D160N	unknown
+RIPK3	D462K	decreasing strength
+RIPK3	G457D	decreasing strength
+RIPK3	G461P	decreasing strength
+RIPK3	K50A	decreasing
+RIPK3	V458P	decreasing strength
+RIPK3	V458E	decreasing strength
+RIPK3	V460D	decreasing strength
+RIPK3	V460E	decreasing strength
+RIPK3	S456D	decreasing strength
+RIPK3	S227A	disrupting
+RIPK3	V460P	decreasing strength
+RIPK3	Q459P	decreasing strength
+RIPK3	Q459D	decreasing strength
+RIPK3	K50A	unknown
+RIPK3	V458D	decreasing strength
+RIPK4	K145R	decreasing
+RIPK4	K51R	decreasing
+RIT1	S35N	decreasing
+RLN3	R37E	increasing
+RLN3	R41E	decreasing
+RLN3	R41E	increasing
+RLN3	R37E	decreasing
+RLN3	R51E	increasing
+RLN3	R51E	decreasing
+RMDN2	D25N	unknown
+RMDN2	L858R	unknown
+RNASE1	R67D	decreasing
+RNASE1	R67L	decreasing
+RNASE1	R67L	increasing
+RNASE1	R119D	decreasing
+RNASE1	N95D	decreasing
+RNASE1	G66R	decreasing
+RNASE1	G117D	decreasing
+RND3	T55V	disrupting strength
+RND3	T214A	disrupting strength
+RND3	S218A	disrupting strength
+RND3	S210A	disrupting strength
+RNF11	Y40A	disrupting
+RNF11	C102S	unknown
+RNF11	C99A	decreasing
+RNF11	Y40A	decreasing
+RNF11	C99S	unknown
+RNF149	S33Y	unknown
+RNF168	A450G	decreasing
+RNF168	A179G	decreasing
+RNF2	L11H	disrupting
+RNF2	F16A	disrupting
+RNF2	W44F	disrupting
+RNF2	P88A	decreasing
+RNF2	P47A	disrupting
+RNF2	Y85A	decreasing
+RNF31	T77N	decreasing strength
+RNF31	N177I	disrupting strength
+RNF34	H342A	unknown
+RNF4	V188R	decreasing strength
+RNF43	H292S	decreasing
+RNF43	C290S	unknown
+RNF43	C290S	decreasing
+RNF43	H292S	unknown
+RNF5	C27A	increasing
+RNF5	C30A	increasing
+RNF5	C42S	increasing
+RNF8	R61Q	decreasing
+RNF8	R42A	disrupting
+RNH1	Y438A	increasing
+RNH1	Y438F	decreasing
+RNH1	Y435F	decreasing
+RNH1	Y435A	increasing
+RNPS1	Y732A	decreasing
+ROPN1B	L18A	decreasing
+ROR1	K506A	unknown
+ROR1	K506A	decreasing rate
+RORA	S84A	disrupting
+RPA1	Y531F	unknown
+RPA1	D25N	unknown
+RPA1	C453S	decreasing
+RPA1	H182A	disrupting
+RPA1	Y511F	decreasing
+RPA1	Y483F	decreasing
+RPA1	H180A	decreasing
+RPA1	L858R	unknown
+RPA1	S188L	increasing
+RPA1	S31A	decreasing rate
+RPA2	Y511F	decreasing
+RPA2	Y483F	decreasing
+RPA2	L858R	unknown
+RPA2	D25N	unknown
+RPA3	D25N	unknown
+RPA3	G2019S	increasing rate
+RPA3	D1994A	disrupting rate
+RPA3	V600E	unknown
+RPA3	S33Y	decreasing strength
+RPA3	L858R	unknown
+RPA3	D1994A	decreasing rate
+RPGR	H98Q	disrupting
+RPGR	T255I	disrupting
+RPGR	G215V	disrupting
+RPGR	E216R	disrupting
+RPGR	P235S	decreasing
+RPGR	G275S	disrupting
+RPGRIP1L	Y23A	disrupting
+RPGRIP1L	P17A	disrupting
+RPGRIP1L	S18G	disrupting
+RPGRIP1L	T615P	decreasing
+RPGRIP1L	A19G	disrupting
+RPL10	C328A	disrupting strength
+RPL22	E30R	disrupting
+RPL3	S56N	unknown
+RPL3	S52N	unknown
+RPL31	K1033A	disrupting
+RPL32	E233G	disrupting
+RPP38	F324S	unknown
+RPS10	D852T	unknown
+RPS10	Y853M	unknown
+RPS10	V854S	unknown
+RPS11	T22N	unknown
+RPS11	T54A	disrupting rate
+RPS11	C227S	unknown
+RPS11	T46A	disrupting rate
+RPS11	T28A	disrupting rate
+RPS13	L585A	disrupting
+RPS13	L584A	disrupting
+RPS15	T136A	decreasing rate
+RPS18	T211D	unknown
+RPS18	T211E	unknown
+RPS18	S323A	disrupting
+RPS19	R62W	increasing
+RPS19	R56Q	increasing
+RPS19	R101H	decreasing
+RPS2	S25N	decreasing
+RPS24	N22A	disrupting strength
+RPS27A	R72A	increasing rate
+RPS27A	D32E	increasing rate
+RPS27A	I44A	decreasing rate
+RPS3	S520D	disrupting
+RPS3	S209A	disrupting
+RPS3A	A58E	disrupting
+RPS3A	V72R	disrupting
+RPS4X	T254A	decreasing
+RPS6	E55A	decreasing
+RPS6KB1	T389E	increasing
+RPS6KB1	T412E	unknown
+RPS6KB1	T389A	disrupting
+RPS6KB2	K196R	unknown
+RPS8	K50E	disrupting
+RPS9	C475S	unknown
+RPS9	K446R	unknown
+RRAGA	A120A	unknown
+RRAGA	T75A	unknown
+RRAGA	T21L	decreasing
+RRAGA	E66L	decreasing
+RRAGB	K81R	decreasing
+RRAGB	Q99L	decreasing strength
+RRAGB	T54N	increasing strength
+RRAGC	S75N	increasing strength
+RRAGC	S75A	unknown
+RRAGD	Q121L	increasing strength
+RRAGD	S77L	decreasing strength
+RRAS	G38V	unknown
+RRAS2	E195K	unknown
+RRAS2	G23V	unknown
+RRM2	T33A	disrupting strength
+RRM2	R49A	unknown
+RRM2	T33A	decreasing strength
+RRM2	I51A	unknown
+RRM2	R49A	disrupting strength
+RRM2	I51A	disrupting strength
+RRP8	G318R	decreasing
+RRP8	G316N	decreasing
+RRP8	G316D	decreasing
+RSPO1	R66A	disrupting
+RTKN	L154A	disrupting
+RTKN	I149A	disrupting
+RUNX1	L345E	decreasing
+RUNX1	L345Q	decreasing
+RUNX1T1	H695A	disrupting
+RUNX1T1	L345E	disrupting
+RUNX1T1	W692A	decreasing
+RUNX1T1	S675A	decreasing
+RUNX1T1	Q688A	decreasing
+RUNX3	K94R	disrupting
+RUNX3	K87R	disrupting
+RUNX3	K148R	disrupting
+RUNX3	K186R	disrupting
+RUNX3	K129R	disrupting
+RUNX3	K171R	decreasing
+RUNX3	K171R	disrupting
+RUSC2	W526K	disrupting
+RXFP4	D104R	increasing
+RXFP4	D104R	decreasing
+RXFP4	E100R	increasing
+RXFP4	E182R	decreasing
+RXFP4	E100R	decreasing
+Rab21	Q76L	increasing
+Rab21	T31N	decreasing
+Rab29	Q67L	decreasing
+Rab29	T21N	decreasing
+Rab3gap1	H380C	nt
+Rab4b	S22N	disrupting
+Racgap1	A167V	decreasing
+Rela	K310R	disrupting
+Rep68	H457A	disrupting
+Rep68	T458A	disrupting
+Rep68	R459A	disrupting
+Rep68	K456A	disrupting
+Rep68	K340H	increasing
+Rhod	T31N	disrupting
+Rit2	S34N	decreasing
+Rmdn3	D141N	disrupting
+Rmdn3	Y42T	decreasing
+Rmdn3	K2327R	disrupting
+Rrbp1	K289N	unknown
+Rrbp1	W2748E	disrupting
+S100A1	L11H	disrupting
+S100A1	F16A	disrupting
+S100A10	C83S	unknown
+S100A10	C83Q	unknown
+S100A4	Y268A	disrupting
+S100A4	E272A	disrupting
+S100A4	L280A	disrupting
+S100A4	Y277A	disrupting
+S100A6	E272A	disrupting
+S100A6	L280A	disrupting
+S100A6	Y268A	disrupting
+S100A6	Y277A	disrupting
+S100A8	C42S	unknown
+S100A9	C3S	decreasing
+S100A9	C3A	unknown
+S100B	F89A	decreasing
+S100B	F88A	decreasing
+S100P	D70A	decreasing
+S100P	E69A	decreasing
+S100P	W68A	decreasing
+S100P	E72A	decreasing
+S100P	F15A	disrupting
+S100P	F71A	disrupting
+S100P	F74A	decreasing
+S100P	F74G	disrupting
+S100P	F74V	disrupting
+S100P	I11A	disrupting
+S100P	I12A	disrupting
+S100P	I75G	decreasing
+S100P	I75G	disrupting
+S100P	L77A	decreasing
+S100P	V76G	decreasing
+S100P	V76G	disrupting
+S100P	W63A	decreasing
+S100P	Y71A	decreasing
+S100P	E64A	decreasing
+S100a10	C83S	decreasing strength
+S100a10	C83Q	decreasing strength
+SAFB	E272A	disrupting
+SAFB	L280A	disrupting
+SAFB	Y268A	disrupting
+SAFB	Y277A	disrupting
+SARNP	M89D	decreasing strength
+SARNP	K87D	decreasing strength
+SART3	Y245A	decreasing
+SATB1	K744R	disrupting
+SATB1	K744R	unknown
+SBNO1	K520R	disrupting
+SBNO1	K386R	disrupting
+SCAP	N590E	increasing strength
+SCAP	N263E	increasing strength
+SCAP	N641E	increasing strength
+SCN5A	S516A	decreasing
+SCN5A	S516A	decreasing rate
+SCN5A	S516E	decreasing
+SCN5A	S593A	increasing
+SCN5A	T594A	decreasing
+SCN5A	T594A	decreasing rate
+SCN5A	T594A	disrupting rate
+SCN5A	T594E	decreasing
+SCN5A	S516A	disrupting rate
+SCRIB	S853A	unknown
+SCRIB	K1399A	disrupting
+SCRIB	R839A	decreasing
+SCRIB	R839A	unknown
+SCRIB	S1448D	unknown
+SCRIB	S1448A	unknown
+SDF4	G2019S	increasing
+SEC14L4	R213W	disrupting
+SEC16A	C216A	decreasing
+SEC61A1	R1441C	decreasing
+SENP2	S916A	decreasing
+SENP7	C992A	increasing
+SENP7	L149A	disrupting
+SENP7	L152A	disrupting
+SENP7	L156A	disrupting
+SENP7	L158A	disrupting
+SENP7	V165A	disrupting
+SENP7	P163A	disrupting
+SEPT11	S55N	disrupting
+SEPT4	R46A	disrupting
+SEPT4	E44A	disrupting
+SEPT4	V42A	disrupting
+SEPT4	P40A	disrupting
+SEPT5	S58N	disrupting
+SEPT5	V45A	decreasing
+SEPT5	V94A	decreasing
+SEPT5	K71A	decreasing
+SEPT5	D54A	disrupting
+SERBP1	R1441H	increasing rate
+SERBP1	G2019S	increasing rate
+SERBP1	S1444A	increasing rate
+SERPINB1	W78R	decreasing
+SERPINE1	N173H	unknown
+SETD6	Y285A	unknown
+SETD6	Y285A	disrupting
+SETD7	Y245A	decreasing
+SETD7	K317A	increasing
+SETD7	K317A	decreasing
+SETX	L389S	unknown
+SF1	Y40C	disrupting
+SF1	T35S	disrupting
+SF3A3	W1594E	decreasing
+SF3B1	I462S	disrupting
+SF3B1	S518A	decreasing
+SFN	F72L	disrupting
+SFPQ	K1347A	disrupting strength
+SGF11	A86D	unknown
+SGF11	L85D	unknown
+SGF11	L89D	unknown
+SGF11	R86D	unknown
+SGF73	H93A	unknown
+SGK1	W526K	disrupting
+SGO1	Q71L	unknown
+SGTB	R280K	unknown
+SH2B1	R555E	disrupting
+SH2D1B	R31K	disrupting
+SH3BP2	P418V	increasing
+SH3BP2	P418V	decreasing
+SH3BP2	R415A	disrupting
+SH3BP2	S416E	increasing
+SH3BP2	P417A	increasing
+SH3BP2	Q421E	increasing
+SH3BP2	Q414A	unknown
+SH3BP2	S422E	increasing
+SH3BP2	G420A	disrupting
+SH3BP2	P418G	increasing
+SH3BP2	F423A	unknown
+SH3BP2	F423A	increasing
+SH3BP2	D419A	decreasing
+SH3BP2	Q414A	increasing
+SH3GL2	T73A	decreasing rate
+SH3GL2	S75A	decreasing rate
+SH3KBP1	K121M	disrupting
+SH3KBP1	W154A	decreasing
+SH3KBP1	N155A	disrupting
+SH3KBP1	K78M	disrupting
+SH3RF1	V605N	disrupting
+SH3RF1	P607N	disrupting
+SHC1	R175Q	decreasing strength
+SHMT2	T255I	disrupting
+SHOX	R173C	decreasing
+SHOX	A233E	decreasing
+SHOX	R195P	decreasing
+SHOX	K116E	decreasing
+SHOX	L132V	disrupting
+SHOX	R168Y	decreasing
+SHOX	A170P	disrupting
+SHOX	D278A	decreasing
+SIAH1	C41S	decreasing
+SIAH1	C44S	decreasing
+SIAH1	T615P	decreasing
+SIAH2	H98A	unknown
+SIAH2	C101A	unknown
+SIGLEC14	R362A	decreasing
+SIK1	T182A	decreasing
+SIK3	T163A	decreasing
+SIRT1	H363Y	unknown
+SIRT1	S659A	decreasing
+SIRT1	S661A	decreasing
+SIRT1	F474A	unknown
+SIRT1	H363Y	decreasing
+SIRT1	H363Y	decreasing rate
+SIRT1	F474A	decreasing
+SIRT1	H363Y	disrupting
+SIRT2	H150Y	unknown
+SIRT2	H150Y	increasing
+SIRT2	H187Y	unknown
+SIRT2	L12A	increasing
+SIRT2	L4A	increasing
+SIRT3	H248Y	disrupting
+SIX1	V17E	decreasing strength
+SIX5	A158T	decreasing
+SIX5	T552M	decreasing
+SKA3	L86A	decreasing
+SKP1	P2A	unknown
+SKP2	P101A	decreasing strength
+SKP2	D319A	decreasing
+SKP2	W97A	decreasing strength
+SKP2	K68R	decreasing strength
+SKP2	K71L	decreasing strength
+SKP2	K71Q	decreasing strength
+SKP2	R126A	decreasing strength
+SKP2	D98A	disrupting strength
+SKP2	K68Q	decreasing strength
+SKP2	L105A	disrupting strength
+SKP2	K71R	decreasing strength
+SKP2	K68L	decreasing strength
+SKP2	I108A	decreasing strength
+SKP2	F109A	disrupting strength
+SLC12A1	E28A	decreasing
+SLC12A1	V25A	decreasing
+SLC12A1	N27A	decreasing
+SLC12A1	R20A	decreasing
+SLC12A1	S24A	decreasing
+SLC12A1	V23A	decreasing
+SLC12A1	F21A	decreasing
+SLC30A7	D315A	unknown
+SLC30A8	E276W	disrupting
+SLC35E1	L26D	decreasing
+SLC35E1	I29D	decreasing
+SLC35F6	R1064K	decreasing
+SLC39A7	S275A	decreasing
+SLC39A7	S276A	decreasing
+SLC7A2	A60D	disrupting
+SLC7A2	E42A	disrupting
+SLC7A2	L58D	disrupting
+SLC9A3R1	D301V	decreasing
+SLC9A3R1	N210F	decreasing
+SLC9A3R1	K172N	decreasing
+SLC9A3R1	F355R	decreasing
+SLC9A3R1	D301V	increasing
+SLMAP	R32A	decreasing
+SLMAP	R31D	decreasing
+SLMAP	H55A	decreasing
+SLX4	S1453A	decreasing
+SMAD1	S214A	unknown
+SMAD1	Y424F	decreasing strength
+SMAD1	S206A	unknown
+SMAD1	S206A	decreasing
+SMAD1	V317D	disrupting strength
+SMAD1	D297H	disrupting strength
+SMAD1	S465D	unknown
+SMAD1	D448H	disrupting strength
+SMAD1	S195A	decreasing
+SMAD1	K373S	disrupting strength
+SMAD1	K418S	disrupting strength
+SMAD1	S214A	decreasing
+SMAD1	R426S	disrupting strength
+SMAD1	S187A	decreasing
+SMAD1	S187A	unknown
+SMAD1	S463D	unknown
+SMAD1	S195A	unknown
+SMAD2	D450E	disrupting
+SMAD2	S465A	disrupting
+SMAD2	S464A	disrupting
+SMAD2	S467A	disrupting
+SMAD3	K341R	decreasing
+SMAD3	K409R	decreasing
+SMAD3	T179V	disrupting
+SMAD3	S204A	disrupting
+SMAD3	S208A	disrupting
+SMAD3	S213A	disrupting
+SMAD3	K333R	decreasing
+SMAD3	K378R	decreasing
+SMAD4	D537E	decreasing strength
+SMAD4	D351H	disrupting strength
+SMAD4	K507S	disrupting strength
+SMAD4	R515S	disrupting strength
+SMAD4	V426S	decreasing strength
+SMAD6	G471S	disrupting
+SMAD7	Y211S	disrupting
+SMAD7	P210G	disrupting
+SMARCAL1	A20S	decreasing
+SMARCAL1	K27A	decreasing
+SMARCAL1	R17A	decreasing
+SMARCAL1	Q9A	decreasing
+SMARCAL1	N16A	decreasing
+SMARCAL1	K12A	decreasing
+SMARCAL1	L5A	decreasing
+SMARCC1	R1064K	decreasing
+SMARCC1	R273H	unknown
+SMARCC1	R1064K	disrupting rate
+SMARCC2	R273H	unknown
+SMC1A	D25N	unknown
+SMC1A	L858R	unknown
+SMC2	D159R	disrupting
+SMC2	L380R	disrupting
+SMC2	Y147R	disrupting
+SMC3	Y1009F	disrupting strength
+SMC6	S178A	decreasing
+SMC6	S175A	decreasing
+SMC6	G506R	decreasing
+SMG5	G120E	disrupting strength
+SMG7	R163E	unknown
+SMG7	K66E	unknown
+SMG7	G100E	disrupting strength
+SMG7	T103E	disrupting strength
+SMN2	Y272C	unknown
+SMN2	Y272C	disrupting
+SMN2	G279V	decreasing
+SMN2	E134K	unknown
+SMN2	D44V	disrupting
+SMN2	E134K	decreasing
+SMNDC1	E134K	unknown
+SMPD4	A111G	disrupting
+SMURF1	C699A	unknown
+SMURF1	C725A	unknown
+SMURF1	T161A	disrupting rate
+SMURF1	T682A	disrupting rate
+SMURF1	T145A	disrupting rate
+SMURF2	C716A	disrupting
+SMURF2	C716G	disrupting
+SMURF2	F29A	increasing
+SMURF2	T56A	increasing
+SMURF2	L57A	increasing
+SMURF2	K88E	decreasing
+SMURF2	K87E	decreasing
+SMURF2	F30A	increasing
+SMURF2	H86A	decreasing
+SNAI1	S11A	disrupting strength
+SNAI1	R8A	disrupting strength
+SNAI1	K146R	decreasing strength
+SNAI1	K187R	decreasing strength
+SNAI1	K187R	disrupting strength
+SNAI1	L6A	disrupting strength
+SNAI1	P2A	disrupting
+SNAI1	K146R	disrupting strength
+SNAI1	S11E	increasing strength
+SNAI1	S11V	disrupting strength
+SNAI2	K44M	disrupting
+SNAPIN	T117A	decreasing rate
+SNAPIN	T117D	decreasing
+SNCA	A30P	decreasing
+SNCA	Y39F	disrupting strength
+SNCA	Y125F	disrupting strength
+SNCA	A30P	increasing
+SNCA	A53T	unknown
+SNCA	Y39F	disrupting rate
+SNCA	D2A	decreasing
+SNCA	F4A	disrupting
+SNCA	S129D	increasing strength
+SNCA	V3A	disrupting
+SNCA	Y125F	decreasing rate
+SNCA	A53T	increasing
+SNCA	Y39F	decreasing rate
+SNCAIP	L529A	decreasing
+SNCAIP	A519N	decreasing
+SNCAIP	K524A	decreasing
+SNCAIP	K527A	decreasing
+SNCAIP	L518A	decreasing
+SNCAIP	V523N	decreasing
+SNCAIP	L525A	decreasing
+SNRNP27	A669D	decreasing
+SNRNP27	R725E	disrupting
+SNRPA1	F51E	decreasing
+SNX20	R116Q	disrupting
+SNX3	R154K	decreasing
+SOD1	L9Q	increasing strength
+SOD1	G93A	unknown
+SOD1	G37R	unknown
+SOD1	A5V	unknown
+SOD1	G11V	increasing strength
+SOD1	G38R	increasing
+SOD1	G38R	unknown
+SOD1	G94A	unknown
+SOD1	G86R	unknown
+SOD1	G94A	increasing
+SORBS1	C716A	decreasing
+SOX2	K1160A	decreasing
+SOX2	K1162P	decreasing
+SOX2	Q76L	increasing
+SOX21	Q76L	increasing
+SP2	A22V	unknown
+SPATC1L	K104A	disrupting
+SPC25	I149A	increasing
+SPC25	L154A	decreasing
+SPC25	L154A	disrupting
+SPC25	L154A	increasing
+SPC25	I149A	decreasing
+SPC25	I149A	disrupting
+SPECC1	D138A	decreasing
+SPECC1	C190S	unknown
+SPHK1	G82D	unknown
+SPICE1	M947T	increasing
+SPICE1	R954W	increasing
+SPRTN	K106A	decreasing
+SPRTN	S234A	decreasing
+SPRTN	T240A	decreasing
+SPRTN	T403A	decreasing
+SPT23	R280K	decreasing
+SPT23	R248T	disrupting
+SPT23	L194F	disrupting
+SPT23	R175H	disrupting
+SPTBN1	T2159E	decreasing
+SPTLC1	R227K	decreasing strength
+SQSTM1	K7A	decreasing
+SQSTM1	Y1699C	increasing
+SQSTM1	H340A	disrupting
+SRC	K442A	unknown
+SRC	D518A	decreasing
+SRC	D518A	unknown
+SRC	E510A	unknown
+SRC	K295M	unknown
+SRC	K442A	decreasing
+SRC	Y527F	unknown
+SRCIN1	C716G	disrupting
+SREK1IP1	E551K	disrupting
+SRF	G12V	unknown
+SRGAP3	P1059A	disrupting
+SRGAP3	P1056A	disrupting
+SRI	F112L	unknown
+SRPK2	Y33R	disrupting
+SRPK2	W316A	decreasing
+SRPK2	S812A	disrupting
+SRPK2	S1165A	increasing
+SRPK2	D320A	decreasing
+SRPK2	R101H	decreasing
+SRPK2	R56Q	increasing
+SRPK2	R62W	increasing
+SRR	V403A	decreasing
+SSE1	N367S	decreasing
+SSE1	F394A	decreasing
+SSE1	N572Y	disrupting
+SSE1	F392A	decreasing
+SSE1	D396A	decreasing
+SSE1	F439L	decreasing
+SSE1	A280T	decreasing
+SSE1	L489A	decreasing
+SSE1	M441A	decreasing
+SSE1	T364V	decreasing
+SSE1	E575A	disrupting
+SSE1	L433A	decreasing
+SSR4	D301V	decreasing
+SSX2IP	H33R	decreasing
+SSX2IP	K72R	decreasing
+SSX2IP	S53P	decreasing
+ST5	L154A	increasing
+ST5	I149A	increasing
+STAM	K1906M	disrupting rate
+STAMBP	S247A	increasing
+STAMBP	S245A	increasing
+STAMBP	S243A	increasing
+STAT2	K384R	decreasing
+STAT2	K390R	increasing
+STAT2	K415R	increasing
+STAT2	K419R	decreasing
+STAT3	A662C	disrupting
+STAT3	Y705F	decreasing
+STAT3	N664C	disrupting
+STAT5B	T31N	disrupting
+STAT6	S407A	unknown
+STAU1	F135A	disrupting
+STK11	S3291A	decreasing
+STK11	S3291E	decreasing
+STK11	Y568A	decreasing
+STK26	K53E	decreasing
+STK3	T180A	decreasing
+STK38	L79A	decreasing
+STK38	R41A	disrupting
+STK38	R44A	decreasing
+STK38	R78A	disrupting
+STK38	T74A	disrupting
+STK38	K24A	decreasing
+STK38	Y31A	disrupting
+STK38L	Y32A	disrupting
+STK4	L444P	decreasing
+STK4	K59R	increasing
+STON2	W738A	decreasing
+STON2	K740A	decreasing
+STRAP	C152S	decreasing
+STRAP	C152S	disrupting
+STRAP	C270S	decreasing
+STRAP	C270S	disrupting
+STRN	Y1197F	disrupting
+STRN	Y1222F	disrupting
+STRN	Y1054F	disrupting
+STRN	Y1260F	disrupting
+STRN	Y1276F	disrupting
+STRN	Y1289F	disrupting
+STUB1	K44A	decreasing
+STX11	R462E	decreasing strength
+STX11	I617R	decreasing strength
+STX11	Y1199A	decreasing strength
+STX11	Y1262A	decreasing strength
+STXBP5L	R35W	disrupting
+SUB1	F452A	decreasing
+SUB1	L450A	decreasing
+SUB1	R451A	decreasing
+SUB1	R453A	decreasing
+SUFU	Y147R	decreasing
+SUFU	L380R	disrupting
+SUFU	D159A	disrupting
+SUFU	D159R	decreasing
+SUFU	D159R	disrupting
+SUFU	F155A	decreasing
+SUFU	F155A	disrupting
+SUFU	Y147R	disrupting
+SUFU	W61D	unknown
+SUFU	L380R	decreasing
+SULT4A1	T8A	disrupting
+SULT4A1	T11A	disrupting
+SUN2	H628A	disrupting strength
+SUN2	L536D	decreasing strength
+SUN2	D542N	decreasing strength
+SUN2	S641E	disrupting strength
+SUN2	T33A	unknown
+SUPT16H	K1906M	disrupting rate
+SUV39H1	H324L	unknown
+SUV39H1	H320R	unknown
+SYK	R195G	decreasing
+SYK	R197L	decreasing
+SYNCRIP	H223A	decreasing
+SYNCRIP	E37G	disrupting
+SYNCRIP	E219A	decreasing
+SYNCRIP	Y40C	disrupting
+SYNE1	C8774S	disrupting strength
+SYNE1	C8774S	decreasing strength
+SYNE1	C8774S	disrupting
+SYNE2	L6876A	disrupting strength
+SYNE2	T6885T	disrupting strength
+SYNE2	C6862S	disrupting strength
+SYNE2	Y6878A	disrupting strength
+SYNE2	P6883A	disrupting strength
+SYNPO	V514F	unknown
+SYT_SSX1	K453M	unknown
+Samhd1	G12V	unknown
+Sdc2	G177A	decreasing
+Sdc2	D175A	decreasing
+Sdc2	E176A	decreasing
+Sdc2	S178A	decreasing
+Sdc2	K173A	decreasing
+Sdc2	K174A	decreasing
+Sdc2	Y179A	increasing
+Sdc2	Y179A	decreasing
+Sdc2	S178A	increasing
+Sdc2	R172A	decreasing
+Sdc4	Y192F	disrupting
+Sec24c	I29D	decreasing
+Sec24c	L26D	decreasing
+Sh3bp2	R413Q	disrupting
+Sh3bp2	R413Q	decreasing
+Sh3bp2	G423Q	disrupting
+Sh3bp2	P416H	disrupting
+Sh3bp2	G418R	disrupting
+Sh3bp2	R413H	disrupting
+Siah2	H99A	unknown
+Siah2	C102A	unknown
+Sirt1	S154A	unknown
+Sirt1	S683A	unknown
+Sirt1	S649A	unknown
+Sirt1	S651A	unknown
+Sirt1	H355A	decreasing
+Slamf1	Y315F	decreasing
+Slamf1	Y288F	decreasing
+Smchd1	S624A	disrupting
+Smurf2	C716A	decreasing
+Smurf2	C716A	unknown
+Snw1	S465D	unknown
+Snw1	S463D	unknown
+Socs5	S189K	decreasing
+Socs5	G12V	unknown
+Sod1	E513G	unknown
+Sox17	G103R	disrupting
+Sox4	R61A	decreasing
+Sox4	F66A	decreasing
+Sox4	M67A	decreasing
+Sox4	P62A	decreasing
+Spire2	R1441G	disrupting
+Spire2	S1444A	disrupting
+Spsb2	L123A	disrupting
+Spsb2	S126A	disrupting
+Spsb2	V206A	disrupting
+Spsb2	Y120A	disrupting
+Sqstm1	S351A	increasing
+Sqstm1	P350A	decreasing
+Sqstm1	E354A	decreasing
+Sqstm1	D349A	decreasing
+Sqstm1	T352A	decreasing
+Src	K303M	unknown
+Srp72	K529R	decreasing
+Srsf1	Y319F	disrupting
+Sstr3	Q247F	increasing
+Sstr3	A243F	increasing
+Sstr3	Q247A	increasing
+Sstr3	C246A	disrupting
+Sstr3	P244A	increasing
+Stat3	N664C	increasing
+Stat3	S727A	disrupting
+Stat3	N664C	disrupting
+Stat3	E434A	decreasing
+Stat3	D170A	decreasing
+Stat3	A662C	increasing
+Stat3	A662C	disrupting
+Stat3	K177A	decreasing
+Strn	G305R	disrupting
+Syt1	K190A	decreasing
+Syt1	K189A	decreasing
+TAC1	S5K	unknown
+TACC2	C716A	decreasing
+TACC3	Y32F	disrupting
+TADA2A	R175Q	decreasing strength
+TAF1	K296R	unknown
+TAF10	D190L	decreasing
+TAF10	D190K	decreasing
+TAF10	S188V	decreasing
+TAF10	D190Q	decreasing
+TAF10	K187R	decreasing
+TAGLN2	S83A	increasing
+TAGLN2	S163D	decreasing
+TAGLN2	S83D	decreasing
+TAGLN2	S163A	increasing
+TARDBP	K562R	decreasing
+TARDBP	F229L	disrupting
+TAX1BP1	S624A	disrupting
+TAX1BP1	S593A	disrupting
+TBC1D14	R472A	unknown
+TBC1D9B	A153V	unknown
+TBK1	K38M	disrupting rate
+TBK1	K38M	unknown
+TBPL1	N37E	disrupting
+TCAP	R87Q	decreasing strength
+TCAP	T137I	increasing strength
+TCAP	E132Q	decreasing strength
+TCAP	R153H	increasing strength
+TCERG1	S228E	decreasing rate
+TCERG1	M230A	disrupting rate
+TCERG1	M230A	decreasing rate
+TCERG1	L314E	disrupting rate
+TCERG1	I310E	decreasing rate
+TCERG1	I310E	disrupting rate
+TCERG1	S228E	disrupting rate
+TCF4	C53S	decreasing strength
+TCF4	C46S	disrupting strength
+TCF4	C106S	disrupting strength
+TCF7L2	S60E	unknown
+TCF7L2	S60E	decreasing
+TCP1	K745A	disrupting strength
+TCP1	L305A	decreasing strength
+TCP1	L326A	decreasing strength
+TCP1	R319A	decreasing strength
+TCP1	V311A	decreasing strength
+TCP10L	L89P	disrupting
+TCP11L1	F213A	decreasing
+TCP11L1	F43A	disrupting
+TCP11L1	F43A	disrupting strength
+TCP11L1	F6A	disrupting
+TCP11L1	H212A	decreasing
+TCP11L1	F241A	decreasing
+TCP11L1	H5A	disrupting
+TCP11L1	M34A	disrupting
+TCP11L1	M34A	disrupting strength
+TCP11L1	H240A	decreasing
+TEAD2	G112S	disrupting
+TEC	V514F	unknown
+TELO2	D492A	disrupting strength
+TELO2	D490A	disrupting strength
+TELO2	S491Y	unknown
+TELO2	D493A	disrupting strength
+TERF2IP	K5Q	increasing
+TES	C328A	disrupting strength
+TFB1M	G65A	decreasing
+TFCP2	Y147I	increasing
+TFCP2	R144G	disrupting
+TFRC	G647A	decreasing
+TFRC	R646K	decreasing
+TGFA	L147A	decreasing
+TGFA	L146A	decreasing
+TGFB1	Y426F	decreasing
+TGM2	R263S	decreasing rate
+TGM2	R28S	decreasing rate
+TGM2	R580S	increasing
+TGM2	R263S	decreasing
+TGM2	K634S	decreasing rate
+TGM2	C277S	disrupting
+TGM2	K202S	decreasing rate
+TGM2	K205S	decreasing rate
+TGM2	K265S	decreasing
+TGM2	K634S	increasing
+TGM2	R19S	decreasing rate
+TGM2	R28S	decreasing
+TGM2	R262S	decreasing
+TGM2	R262S	decreasing rate
+TGOLN2	T81A	decreasing strength
+TGOLN2	S46A	decreasing strength
+TGOLN2	S315A	decreasing strength
+TGOLN2	S33A	decreasing strength
+THAP1	R1441C	increasing rate
+THAP1	D1994A	disrupting rate
+THAP1	G2019S	increasing rate
+THEMIS	P555A	disrupting
+THOC2	V928G	disrupting
+THOC2	L1034S	disrupting
+THRB	H229G	decreasing
+THRB	T232A	decreasing
+THRB	R243W	increasing
+THRB	P214R	increasing
+THRB	P214R	decreasing
+THRB	K288I	disrupting
+THRB	E457Q	decreasing
+THRB	A228G	decreasing
+THRSP	E132Q	decreasing strength
+THRSP	R87Q	decreasing strength
+TIMMDC1	L858R	decreasing strength
+TINF2	P236S	disrupting
+TIPIN	L195A	decreasing
+TJP2	P1106A	disrupting strength
+TJP2	P1106A	decreasing
+TJP2	P1116A	disrupting strength
+TKT	R69A	disrupting
+TKT	F51A	disrupting
+TLE1	L26D	decreasing
+TLE1	I29D	decreasing
+TLN1	W359A	disrupting
+TLN1	A360E	disrupting
+TM9SF1	F324S	unknown
+TM9SF1	D176A	unknown
+TMEM17	N138D	unknown
+TMEM173	Y240A	disrupting strength
+TMEM173	N242A	disrupting strength
+TMEM173	H232R	unknown
+TMEM173	H232R	increasing strength
+TMEM173	R238A	disrupting strength
+TMEM173	S162A	decreasing strength
+TMEM173	G230A	increasing strength
+TMEM173	T263A	decreasing strength
+TMEM173	E260A	decreasing strength
+TMEM59	L280A	disrupting
+TMEM59	E272A	disrupting
+TMEM59	Y277A	disrupting
+TMEM59	Y268A	disrupting
+TMPO	R690C	decreasing
+TMPO	R62W	increasing
+TMPO	R101H	decreasing
+TNF	R31D	decreasing
+TNF	R31D	unknown
+TNFAIP3	R562A	disrupting
+TNFAIP3	S565A	disrupting
+TNFRSF10A	D369L	decreasing
+TNFRSF10A	F368P	decreasing
+TNFRSF13B	E125R	disrupting
+TNFRSF14	E271A	decreasing
+TNFRSF1A	L195A	decreasing
+TNFRSF1A	K345A	decreasing
+TNIK	C375S	disrupting
+TNKS2	N413Q	disrupting
+TNKS2	L560W	disrupting
+TNKS2	N565A	decreasing
+TNKS2	R525A	disrupting
+TNKS2	R525D	disrupting
+TNKS2	L245W	disrupting
+TNKS2	Y569A	disrupting
+TNKS2	S527A	disrupting
+TNKS2	E598A	disrupting
+TNKS2	F593A	disrupting
+TNKS2	Y536A	disrupting
+TNKS2	Y536A	decreasing
+TNKS2	W591A	disrupting
+TNKS2	L92W	disrupting
+TNKS2	L560W	decreasing
+TNKS2	V416H	disrupting
+TNKS2	L713W	disrupting
+TNPO3	N240E	decreasing
+TNPO3	Q761E	decreasing
+TNPO3	R400E	decreasing
+TNPO3	R262E	decreasing
+TNPO3	P264E	disrupting
+TNRC6A	P2325A	disrupting
+TNRC6A	P2322D	disrupting
+TNRC6A	P2326A	disrupting
+TNRC6B	W634A	disrupting
+TNRC6B	W623Y	disrupting
+TNRC6B	W623F	decreasing
+TNRC6B	W623A	disrupting
+TNRC6C	W1395A	decreasing
+TNRC6C	W1385A	decreasing
+TNRC6C	R166A	disrupting
+TNRC6C	Q168A	decreasing
+TNRC6C	E170A	decreasing
+TNRC6C	F1389A	disrupting
+TNRC6C	P1394A	decreasing
+TNRC6C	D25N	unknown
+TNRC6C	P1386A	decreasing
+TNRC6C	L858R	unknown
+TNRC6C	I161A	decreasing
+TNRC6C	G1392A	decreasing
+TNRC6C	D167A	decreasing
+TNRC6C	Q1294A	decreasing
+TNS3	Y1173F	decreasing
+TNS3	Y1206F	decreasing
+TOB2	F140A	disrupting
+TOB2	F260A	disrupting
+TOMM40	V394D	decreasing
+TOP1	G471S	disrupting
+TOP2B	D25N	unknown
+TOP2B	L858R	unknown
+TOR1A	E303Q	unknown
+TP53	K370Q	decreasing
+TP53	K373R	decreasing strength
+TP53	K373R	increasing
+TP53	K381A	decreasing
+TP53	K381A	disrupting
+TP53	R273Q	decreasing strength
+TP53	K381E	disrupting
+TP53	R280K	decreasing
+TP53	K382R	decreasing
+TP53	K382R	decreasing strength
+TP53	R248H	decreasing
+TP53	K382R	increasing
+TP53	K386R	decreasing
+TP53	K386R	decreasing strength
+TP53	L147A	decreasing
+TP53	L194F	disrupting
+TP53	L22E	disrupting
+TP53	R280K	unknown
+TP53	L22Q	decreasing
+TP53	R282W	unknown
+TP53	L344P	disrupting
+TP53	P359A	decreasing
+TP53	P309S	unknown
+TP53	K370R	decreasing strength
+TP53	K382R	disrupting
+TP53	K373Q	decreasing
+TP53	K373E	disrupting
+TP53	R175H	unknown
+TP53	R175H	increasing
+TP53	R175H	disrupting strength
+TP53	R175H	disrupting
+TP53	S127A	decreasing strength
+TP53	P72R	increasing strength
+TP53	W23S	disrupting
+TP53	P71R	decreasing
+TP53	P359A	disrupting
+TP53	K382Q	increasing
+TP53	K372E	disrupting
+TP53	K372A	disrupting
+TP53	K373Q	increasing
+TP53	K382Q	decreasing
+TP53	R273H	unknown
+TP53	K382E	disrupting
+TP53	R273H	decreasing
+TP53	R248W	disrupting
+TP53	K382A	disrupting
+TP53	R248W	decreasing
+TP53	K372R	decreasing
+TP53	R248T	disrupting
+TP53	K382A	decreasing
+TP53	K381R	decreasing strength
+TP53	K372R	decreasing strength
+TP53	K373A	disrupting
+TP53	K381R	decreasing
+TP53	R172H	unknown
+TP53	K370R	increasing
+TP53	H179Y	unknown
+TP53	T150A	disrupting strength
+TP53	T150A	increasing strength
+TP53	T81A	disrupting strength
+TP53	T81A	decreasing
+TP53	C229K	decreasing strength
+TP53	S315A	disrupting strength
+TP53	S315A	disrupting
+TP53	S315A	decreasing strength
+TP53	S315A	decreasing
+TP53	T81A	increasing strength
+TP53	S215D	increasing strength
+TP53	D281K	unknown
+TP53	F341K	decreasing strength
+TP53	T81A	decreasing strength
+TP53	T81A	disrupting
+TP53	S127A	increasing strength
+TP53	S127A	disrupting strength
+TP53	S46A	decreasing strength
+TP53	I332A	disrupting
+TP53	K120Q	disrupting
+TP53	C236F	unknown
+TP53	V143A	disrupting
+TP53	V91A	decreasing
+TP53	W23S	decreasing
+TP53	S46A	disrupting rate
+TP53	S46A	decreasing
+TP53	S392E	disrupting
+TP53	S392E	decreasing
+TP53	S392A	increasing
+TP53	S392A	decreasing
+TP53	S37D	disrupting
+TP53	S46A	disrupting strength
+TP53	S376E	disrupting
+TP53	S376E	decreasing
+TP53	S362A	decreasing
+TP53	S33D	decreasing
+TP53	S33A	increasing strength
+TP53	S33A	disrupting strength
+TP53	S33A	disrupting
+TP53	S33A	decreasing strength
+TP53	S33A	decreasing
+TP53	S46A	increasing
+TP53	S46A	increasing strength
+TP53	T150A	decreasing strength
+TP53	S315A	increasing strength
+TP53	K120R	disrupting
+TP53	K164R	disrupting
+TP53	S46A	disrupting
+TP53	K319A	disrupting
+TP53	K319E	disrupting
+TP53	K370E	disrupting
+TP53	K370A	disrupting
+TP53	K321R	decreasing strength
+TP53	K320R	decreasing strength
+TP53	K319R	decreasing
+TP53	K319R	decreasing strength
+TP53BP2	W1098K	disrupting strength
+TP63	F55A	decreasing
+TP63	W59A	decreasing
+TP63	L62A	decreasing
+TP73	S235A	decreasing strength
+TP73	S235D	unknown
+TP73	S235D	decreasing strength
+TP73	S235A	decreasing rate
+TP73	S235D	disrupting strength
+TP73	S235D	increasing strength
+TRAF3IP2	D10N	disrupting
+TRAF4	P60A	disrupting
+TRAK2	I2020T	unknown
+TRAPPC13	M5G	unknown
+TRAPPC2	V600E	unknown
+TRAPPC2L	D144H	increasing strength
+TRAPPC2L	H437D	decreasing strength
+TRAPPC5	C12A	disrupting
+TRAPPC9	L1203A	disrupting
+TRIM21	Q394L	decreasing strength
+TRIM27	D367A	unknown
+TRIM37	S60E	unknown
+TRIM41	H695A	disrupting
+TRIM41	Q688A	decreasing
+TRIM41	S675A	decreasing
+TRIM41	W692A	decreasing
+TRIM42	D504G	decreasing
+TRIM42	K343E	decreasing
+TRIM42	V545A	decreasing
+TRIM42	L101P	decreasing
+TRIM42	V448A	decreasing
+TRIM5	C18A	decreasing
+TRIM5	C15A	decreasing
+TRIM54	R90K	disrupting
+TRIM54	I488F	unknown
+TRIM54	R383K	decreasing
+TRIM54	R383K	disrupting
+TRIM54	R86K	disrupting
+TRIM54	R90K	decreasing
+TRIM59	G272V	disrupting
+TRPC3	E28A	decreasing
+TRPC3	F31A	decreasing
+TRPC3	L32A	decreasing
+TRRAP	Q72L	unknown
+TRRAP	K195M	increasing
+TRUB2	V72R	disrupting
+TRUB2	A58E	disrupting
+TSC1	S511D	decreasing
+TSC1	S487D	decreasing
+TSC22D4	D25N	unknown
+TSC22D4	L858R	unknown
+TSG101	N45A	decreasing strength
+TSG101	Y63A	decreasing
+TSG101	V89A	decreasing strength
+TSG101	M95A	decreasing strength
+TSGA10	R882H	decreasing
+TSPAN2	Y124F	disrupting
+TSPYL2	V203K	disrupting strength
+TSPYL2	V192S	disrupting strength
+TSPYL2	E183A	decreasing strength
+TSPYL2	V192K	disrupting strength
+TSPYL2	A194K	disrupting strength
+TSPYL2	Y187A	disrupting strength
+TSPYL2	A194S	decreasing strength
+TSPYL2	Q207D	decreasing strength
+TSPYL2	L186A	disrupting strength
+TSPYL2	R229A	disrupting strength
+TSPYL2	D202A	disrupting strength
+TSPYL2	V203S	disrupting strength
+TSPYL2	E219A	decreasing strength
+TSPYL2	Q223D	decreasing strength
+TSPYL2	K224A	decreasing strength
+TSPYL2	I33D	decreasing strength
+TSPYL2	K185A	decreasing strength
+TSPYL2	T227D	decreasing strength
+TSPYL2	S205D	decreasing strength
+TSPYL2	K231A	decreasing strength
+TSPYL2	K190A	decreasing strength
+TSSK6	D135N	decreasing
+TSSK6	K41M	decreasing
+TTK	D664A	unknown
+TTN	V54M	decreasing
+TTN	A743V	decreasing
+TUBA1C	V3349A	disrupting
+TUBB	A364D	disrupting
+TUBB	A364E	disrupting
+TUBB	A364S	disrupting
+TUBB1	S362K	unknown
+TUBB2A	S364A	unknown
+TUBB2B	S364A	unknown
+TUBB3	S364A	unknown
+TUBB4A	A364D	disrupting
+TUBB4A	A364E	disrupting
+TUBB4A	A364S	disrupting
+TUBB4B	S364A	unknown
+TUBB6	K362S	disrupting
+TUBB6	Q56P	unknown
+TUBB6	P320R	disrupting
+TUBB6	A364S	disrupting
+TUFM	R50W	disrupting
+TUFT1	G138A	disrupting
+TWIST1	K76R	decreasing strength
+TWIST1	K73R	disrupting strength
+TWIST1	K76R	disrupting strength
+TWIST1	K73R	decreasing strength
+TXN	C35S	decreasing
+TXN	C32S	decreasing
+TXN	C35S	unknown
+TXN	C35S	nt
+TXNDC9	L90A	disrupting
+TXNDC9	D95A	disrupting
+TYROBP	G49F	increasing
+TYROBP	A12I	decreasing
+TYROBP	T54A	decreasing
+TYROBP	T54A	increasing
+TYROBP	L16A	decreasing
+TYROBP	A58F	decreasing
+TYROBP	D50A	increasing
+TYROBP	G41F	increasing
+TYROBP	G45F	increasing
+TYROBP	A13V	decreasing
+TYSND1	S481A	unknown
+TYW1	V574A	disrupting
+TYW1	V574A	decreasing
+TYW1	T572A	disrupting
+Tcap	S157E	decreasing
+Tcap	S157D	decreasing
+Tcap	S159E	disrupting strength
+Tcap	T155E	disrupting strength
+Tcap	S157A	increasing
+Tcap	S157E	disrupting strength
+Tipin	N52D	unknown
+Tln1	C336S	unknown
+Tmed2	F112S	disrupting
+Tp53	R169H	unknown
+Tp53	T18A	unknown
+Tp53	L22Q	decreasing
+Tpm1	V1153A	disrupting
+Tsc2	S1389A	disrupting
+Ttgn1	Y350A	decreasing
+Tubg1	G22V	unknown
+Twist1	S188L	increasing
+Twist1	H182A	disrupting
+Twist1	H180A	decreasing
+UBA1	C360S	unknown
+UBA5	Y68A	decreasing strength
+UBA5	F63R	decreasing strength
+UBA5	I125A	decreasing strength
+UBA5	S66N	decreasing strength
+UBA5	E133A	decreasing strength
+UBA5	L129S	decreasing strength
+UBA5	Q78L	decreasing strength
+UBASH3A	E400R	unknown
+UBASH3A	E399R	unknown
+UBB	I44A	decreasing
+UBB	D58A	decreasing
+UBC	K399R	decreasing
+UBC	S129D	increasing strength
+UBC	K1435R	unknown
+UBC	V27A	unknown
+UBC	I26A	unknown
+UBC	F452A	decreasing
+UBC	R51E	increasing
+UBC	R453A	decreasing
+UBC	E193Q	nt
+UBC	R25A	unknown
+UBC	R451A	decreasing
+UBC	L450A	decreasing
+UBC	I477N	disrupting
+UBC	V24A	unknown
+UBE2A	L91P	disrupting
+UBE2A	L91P	decreasing
+UBE2A	L77P	disrupting
+UBE2A	L77P	decreasing
+UBE2A	L58P	increasing
+UBE2A	L58P	disrupting
+UBE2A	L58P	decreasing
+UBE2A	L91P	increasing
+UBE2A	L42P	disrupting
+UBE2A	L42P	decreasing
+UBE2A	C88A	unknown
+UBE2B	C88A	unknown
+UBE2D2	K63E	unknown
+UBE2D2	S108L	increasing rate
+UBE2D3	A96D	decreasing rate
+UBE2D3	A96D	decreasing
+UBE2D3	F62A	decreasing rate
+UBE2D3	F62A	disrupting
+UBE2D3	C85S	unknown
+UBE2D4	R882H	disrupting
+UBE2G2	S111N	decreasing
+UBE2G2	E108R	decreasing
+UBE2G2	V113T	decreasing
+UBE2I	C93S	disrupting
+UBE2K	C35S	nt
+UBE2M	R116A	decreasing rate
+UBE2M	C111S	unknown
+UBE2M	N103S	unknown
+UBE2M	N113A	disrupting strength
+UBE2Z	K323R	decreasing
+UBN1	I162E	decreasing strength
+UBN1	F138E	decreasing strength
+UBN1	F160E	decreasing strength
+UBQLN1	L858R	unknown
+UBQLN1	D25N	unknown
+UBQLN2	P497H	decreasing
+UBQLN2	P509S	decreasing
+UBQLN2	P497S	decreasing
+UBQLN2	P506T	decreasing
+UBQLN2	P506T	disrupting
+UBQLN2	P506T	increasing
+UBQLN2	P525S	decreasing
+UBQLN2	P525S	disrupting
+UBQLN4	I55A	disrupting
+UCHL1	V403A	decreasing
+UGP2	G23V	unknown
+UNG	R76A	decreasing
+UNG	R88C	decreasing
+UPF1	K498A	increasing
+UPF1	G495R	increasing
+UPF1	G497E	increasing
+UQCRB	L858R	decreasing strength
+US3	K220N	unknown
+USF1	S262A	unknown
+USF1	S262D	unknown
+USP11	G12V	increasing
+USP2	R462E	decreasing rate
+USP2	G466V	disrupting rate
+USP2	G466E	disrupting rate
+USP2	G464V	decreasing rate
+USP2	G464E	decreasing rate
+USP39	K403A	disrupting
+USP39	M402A	disrupting
+USP54	C392S	disrupting
+USP54	C426S	decreasing
+USP54	C426S	disrupting
+USP54	C392S	decreasing
+USP7	D164A	disrupting
+USP7	N169A	decreasing
+USP7	R1441C	decreasing strength
+USP7	D164A	decreasing
+USP7	W165A	disrupting
+USP9X	K49M	unknown
+UTP4	R565W	decreasing
+Ubash3b	H380C	nt
+Ufl1	R195G	decreasing
+Ufl1	R197L	decreasing
+Unc5b	V619Q	unknown
+Usp8	C748A	unknown
+VAMP7	Y45S	decreasing
+VAMP7	L43S	decreasing
+VANGL2	S464N	disrupting
+VANGL2	R353C	decreasing
+VANGL2	F437S	disrupting
+VANGL2	D255E	disrupting
+VAPA	M96D	decreasing strength
+VAPA	K94D	decreasing strength
+VAPA	L99E	unknown
+VAPB	M89D	decreasing strength
+VAPB	K87D	decreasing strength
+VAV1	Y836F	decreasing
+VAV1	P833L	decreasing
+VCAM1	G40A	disrupting
+VCP	S748A	disrupting
+VCP	G23V	unknown
+VCP	N171K	disrupting
+VEGFA	C86A	unknown
+VEGFA	C128A	unknown
+VEGFA	R185E	unknown
+VEGFA	C130A	unknown
+VEGFA	C77A	unknown
+VEGFA	C83A	unknown
+VEGFA	R150E	unknown
+VEGFA	R149E	unknown
+VEGFA	C87A	unknown
+VGLL4	F241A	disrupting
+VGLL4	F241A	decreasing
+VGLL4	F213A	disrupting
+VGLL4	F213A	decreasing
+VGLL4	H212A	decreasing
+VGLL4	W249A	decreasing
+VGLL4	L245A	decreasing
+VGLL4	H240A	decreasing
+VGLL4	H240A	disrupting
+VGLL4	H212A	disrupting
+VHL	S111C	unknown
+VHL	L63A	decreasing
+VHL	R60A	decreasing
+VHL	N67A	decreasing
+VIM	S39A	disrupting
+VIM	S325A	increasing
+VIM	L858R	increasing strength
+VIMP	Y213A	decreasing
+VIMP	V91A	decreasing
+VIMP	L147A	disrupting
+VIMP	L147A	decreasing
+VIMP	V91A	disrupting
+VKORC1	T22M	disrupting
+VP35	R312A	disrupting
+VP35	R305A	unknown
+VP35	K319A	disrupting
+VP35	R322A	disrupting
+VP35	R322A	decreasing
+VP35	R312A	unknown
+VP35	K339A	disrupting
+VP35	F239A	disrupting
+VP35	K309A	unknown
+VPS16	A669D	decreasing
+VPS16	A669D	unknown
+VPS16	R725E	disrupting
+VPS16	R725E	unknown
+VPS33A	Y438P	disrupting strength
+VPS33A	Y438D	disrupting
+VPS33A	K429D	disrupting
+VPS33A	I441K	disrupting
+VPS33B	D252E	decreasing
+VPS33B	S243F	decreasing
+VPS33B	L30P	disrupting
+VPS33B	L30P	decreasing
+VPS33B	D234H	decreasing
+VPS33B	F229L	disrupting
+VPS33B	G249V	decreasing
+VPS37C	S134A	disrupting
+VPS53	K42R	increasing
+VPS53	T286D	increasing
+VRK1	K169E	unknown
+VRK1	S342A	disrupting
+VRK1	S342A	decreasing
+VRK1	E313G	increasing
+VRK1	K179E	unknown
+VRK1	K179E	disrupting
+VRK1	K179E	decreasing
+VRK1	K179E	increasing
+VRK2	A169E	disrupting rate
+VRK2	K168E	increasing
+VWF	E1640A	unknown
+VWF	E1615A	decreasing
+VWF	D1614A	decreasing
+VWF	D1614A	unknown
+VWF	E1638A	unknown
+VWF	E1615A	unknown
+VWF	D1587A	unknown
+VWF	K1617A	decreasing
+VWF	D1587A	decreasing
+VWF	R1583A	unknown
+VWF	K1617A	unknown
+V_SRC	W118R	disrupting
+Vcp	Y805F	decreasing
+Vcp	Y796F	decreasing
+Vps4b	Y39F	disrupting rate
+WAC	D68K	increasing
+WAC	I64Y	increasing
+WAS	Y107C	decreasing
+WAS	S484A	decreasing
+WAS	S483A	decreasing
+WAS	A134T	decreasing
+WAS	R86H	decreasing
+WASL	W503A	decreasing
+WBP1	Y141A	disrupting
+WBP2	Y200A	disrupting
+WDCP	Q72L	unknown
+WDFY3	K3343A	decreasing
+WDFY3	I3347A	decreasing
+WDFY3	F3348A	disrupting
+WDFY3	V3349A	disrupting
+WDFY3	F3346A	disrupting
+WDFY3	D3344A	decreasing
+WDFY3	Y3351A	decreasing
+WDFY3	V3349A	decreasing
+WDFY3	F3348A	decreasing
+WDR5	D107A	decreasing
+WDR5	F149A	decreasing
+WDR5	F263A	decreasing
+WDR5	F133A	decreasing
+WDR74	E64R	decreasing strength
+WDR74	E15R	disrupting strength
+WDR74	D82R	decreasing strength
+WDR74	G2019S	unknown
+WDR74	M27E	disrupting strength
+WDR74	R43W	disrupting strength
+WDR77	T5A	decreasing
+WDR77	T264A	decreasing
+WDR82	S117E	unknown
+WDR82	T114E	unknown
+WDR82	S113E	unknown
+WDTC1	I2020T	unknown
+WEE1	D52A	decreasing
+WEE1	E116A	decreasing
+WEE1	S121A	decreasing
+WEE1	S53A	decreasing rate
+WEE1	S123A	decreasing
+WEE1	S53A	decreasing
+WHAMM	W807A	decreasing
+WIF1	I155R	disrupting
+WIF1	I172R	decreasing
+WIF1	L123R	decreasing
+WIF1	I155R	decreasing
+WIF1	I155R	increasing
+WIPF1	S436A	disrupting
+WIPI1	T255A	decreasing strength
+WIPI1	S205A	decreasing strength
+WIPI1	S203A	decreasing strength
+WIPI1	R226A	decreasing strength
+WIPI1	T209A	decreasing strength
+WIPI1	H257A	decreasing strength
+WIPI1	R112A	disrupting strength
+WIPI1	S251A	decreasing strength
+WIPI1	H185A	disrupting strength
+WIPI1	G228A	decreasing strength
+WIPI1	G208A	decreasing strength
+WIPI1	R212A	disrupting strength
+WIPI1	R227A	decreasing strength
+WRAP53	F164L	decreasing strength
+WRAP53	R398W	increasing strength
+WRAP53	R398W	decreasing strength
+WRAP53	H376Y	increasing strength
+WRAP53	H376Y	decreasing strength
+WRAP53	G435R	unknown
+WRAP53	F164L	increasing strength
+WRAP53	G435R	increasing strength
+WRN	K577M	unknown
+WSB1	F359D	decreasing
+WWOX	Y85A	decreasing
+WWOX	P47A	disrupting
+WWOX	Y33R	disrupting
+WWOX	W44F	disrupting
+WWOX	Y33R	decreasing
+WWOX	P88A	decreasing
+WWP1	C170N	unknown
+WWP2	C838A	disrupting rate
+WWTR1	W152A	disrupting
+WWTR1	P155A	disrupting
+Wasl	H208D	disrupting
+XIAP	H223A	decreasing
+XIAP	E219A	disrupting
+XIAP	E219A	decreasing
+XIAP	D214S	disrupting
+XIAP	D214S	decreasing
+XIAP	D148A	disrupting
+XIAP	D148A	decreasing
+XIAP	E314S	disrupting
+XIAP	Q319A	decreasing
+XIAP	I292P	decreasing
+XIAP	W323A	decreasing
+XIAP	W310A	disrupting
+XPO1	T558S	unknown
+XPO1	S11Y	unknown
+XPO1	R592A	disrupting
+XPO1	C599Y	unknown
+XPO5	F474A	unknown
+XRCC1	T523V	decreasing
+XRCC5	Y519F	decreasing
+XRCC5	Y490F	decreasing
+YAP1	K160M	decreasing
+YAP1	F43A	disrupting strength
+YAP1	H5A	disrupting
+YAP1	M34A	disrupting
+YAP1	M34A	disrupting strength
+YAP1	P202A	disrupting strength
+YAP1	P261A	disrupting strength
+YAP1	R28A	decreasing
+YAP1	S42A	decreasing
+YAP1	Y357F	increasing strength
+YAP1	F6A	disrupting
+YAP1	W258A	disrupting strength
+YAP1	W199A	disrupting strength
+YAP1	S42A	disrupting
+YAP1	F43A	disrupting
+YAP1	K160M	disrupting
+YBX1	S102A	disrupting
+YDJC	V73C	unknown
+YHB1	C112R	decreasing
+YTHDC1	V1153A	disrupting
+YWHAE	Y223F	decreasing
+YWHAE	V179A	decreasing
+YWHAE	S178A	disrupting
+YWHAE	R307K	decreasing
+YWHAE	N176A	decreasing
+YWHAE	L175A	decreasing
+YWHAE	F177A	disrupting
+YWHAE	F180A	decreasing
+YWHAE	Y551F	decreasing
+YWHAE	K50E	disrupting
+YWHAG	D1994A	disrupting rate
+YWHAZ	R60E	decreasing
+YWHAZ	K49E	decreasing
+YWHAZ	L227D	unknown
+YWHAZ	L220E	decreasing
+YWHAZ	L216D	unknown
+YWHAZ	E5K	decreasing
+YWHAZ	R56E	decreasing
+YWHAZ	V176D	decreasing
+ZACN	Y283F	increasing rate
+ZACN	P281A	disrupting strength
+ZACN	S276A	increasing rate
+ZACN	S276A	increasing strength
+ZACN	S276D	increasing strength
+ZACN	S282A	increasing strength
+ZACN	S282D	increasing strength
+ZACN	V280A	disrupting strength
+ZACN	Y283F	increasing strength
+ZAP70	Y319F	disrupting
+ZBTB1	D1994A	disrupting
+ZBTB1	D1994A	disrupting rate
+ZBTB1	D1994N	disrupting rate
+ZBTB1	G2019S	decreasing
+ZBTB1	E587A	disrupting
+ZBTB1	R1398L	disrupting
+ZBTB1	T1348N	decreasing rate
+ZBTB1	T1348N	decreasing
+ZBTB1	T1343V	disrupting rate
+ZBTB1	T1343V	disrupting
+ZBTB1	T1343V	decreasing rate
+ZBTB1	R1398L	disrupting rate
+ZBTB1	R1398L	decreasing rate
+ZBTB1	T1348N	disrupting
+ZBTB1	L585A	disrupting
+ZBTB1	K1906M	disrupting rate
+ZBTB1	K1347A	decreasing rate
+ZBTB1	K1347A	decreasing
+ZBTB1	G2019S	increasing rate
+ZBTB1	G2019S	increasing
+ZBTB1	G2019S	disrupting rate
+ZBTB1	G2019S	decreasing rate
+ZBTB1	L584A	disrupting
+ZBTB1	W589A	disrupting
+ZBTB17	S155A	disrupting rate
+ZBTB17	S155A	decreasing rate
+ZBTB17	T151A	decreasing rate
+ZBTB17	T151A	disrupting rate
+ZC3H12A	D141N	disrupting
+ZC3H12A	C306R	disrupting
+ZC3H14	H380C	nt
+ZC3H3	T206E	increasing
+ZCCHC11	D1011A	unknown
+ZCCHC13	S406A	disrupting
+ZCCHC7	I172R	decreasing
+ZCCHC7	I155R	decreasing
+ZCCHC7	L123R	decreasing
+ZCCHC8	S456A	disrupting
+ZER1	C13S	disrupting
+ZER1	L9S	disrupting
+ZFX	Q61L	unknown
+ZG16B	F49L	decreasing
+ZG16B	F49Y	decreasing
+ZG16B	F52A	disrupting
+ZG16B	P43A	decreasing
+ZG16B	P45A	decreasing
+ZG16B	F49A	decreasing
+ZG16B	F49A	disrupting
+ZG16B	P53A	decreasing
+ZG16B	P47A	decreasing
+ZMYND11	P354A	decreasing
+ZMYND11	P353A	decreasing
+ZMYND11	P350A	decreasing
+ZNF114	E545K	decreasing
+ZNF165	F3346A	disrupting
+ZNF273	S406A	disrupting
+ZNF41	Q111L	disrupting
+ZNF417	L244A	disrupting
+ZNF473	I2020T	increasing rate
+ZNF473	G2019S	increasing rate
+ZNF473	D1994A	disrupting rate
+ZNF550	Y1699C	increasing
+ZNF622	C308S	unknown
+ZNF622	S314A	unknown
+ZNF622	C305S	decreasing
+ZNF622	C308S	disrupting
+ZNF622	C305S	disrupting
+ZNF622	C305S	unknown
+ZNF622	C308S	decreasing
+ZNF622	T318A	unknown
+ZNF707	S222D	unknown
+ZNF707	S222A	decreasing
+ZNF707	S226A	decreasing
+ZNF707	S222D	increasing
+ZNF707	K101A	decreasing
+ZNF707	S226D	unknown
+ZNF707	S226D	increasing
+ZNF774	R882H	decreasing
+ZNF844	V448A	decreasing
+ZNF844	L101P	decreasing
+ZNRF3	P103A	disrupting
+ZSCAN26	L858R	decreasing strength
+ZSWIM5	Y600F	unknown
+ZYG11B	L18S	disrupting
+ZYG11B	C22S	disrupting
+ZYX	A31S	decreasing
+ZYX	F39S	increasing
+ZYX	F71A	decreasing
+ZYX	F71A	disrupting
+ZYX	F93A	decreasing
+ZYX	F26S	decreasing
+ZYX	V29S	decreasing
+Zc3h12a	S435A	decreasing
+Zc3h12a	S435A	disrupting
+Zc3h12a	S439A	decreasing
+Zc3h12a	S439A	disrupting
+anapc11	F602S	unknown
+bst2_vpu_fusion	Y6A	disrupting
+bst2_vpu_fusion	Y8A	disrupting
+bst2_vpu_fusion_chimera	Y6A	disrupting
+bst2_vpu_fusion_chimera	E149A	decreasing
+bst2_vpu_fusion_chimera	E149A	disrupting
+bst2_vpu_fusion_chimera	Y8A	disrupting
+bst2_vpu_fusion_chimera	Y6A	decreasing
+bst2_vpu_fusion_chimera	Y8A	decreasing
+crb	S2120A	unknown
+crb	S2122A	unknown
+crb	T2115A	unknown
+crb	T2118A	unknown
+csp_playo	R319T	decreasing
+csp_playo	R317T	decreasing
+csp_playo	R315T	decreasing
+env	D25N	unknown
+env	L858R	unknown
+g3gth2_crigr	H164A	disrupting
+g3gth2_crigr	H164A	decreasing
+g3gth2_crigr	F26A	disrupting
+g3gth2_crigr	K167A	disrupting
+g3gth2_crigr	Y24A	disrupting
+g3gth2_crigr	K167A	decreasing
+gag	P222A	decreasing strength
+gag	L78A	decreasing
+gag	C392S	decreasing
+gag	C392S	disrupting
+gag	C426S	decreasing
+gag	C426S	disrupting
+gag	E303Q	unknown
+gag	G221V	disrupting
+gag	N189A	decreasing strength
+gag	N206D	decreasing strength
+gag	P222A	disrupting
+gag	P459R	decreasing
+gag	Y458S	decreasing
+gag	Y496S	decreasing
+gag_pol	D167A	decreasing
+gag_pol	D25N	unknown
+gag_pol	W132A	disrupting
+gag_pol	D64A	increasing
+gag_pol	L172A	decreasing
+gag_pol	L172A	disrupting
+gag_pol	L858R	unknown
+gag_pol	N74D	decreasing
+gag_pol	Q168A	decreasing
+gag_pol	R166A	disrupting
+gag_pol	V165A	disrupting
+gag_pol	I161A	decreasing
+gag_pol	E170A	decreasing
+gag_pol	W131A	disrupting
+h3_peptide_1_10	R2A	decreasing
+icp27_hhv11	P465L	disrupting
+ipaB	N61A	decreasing
+jnk_1	K148R	disrupting
+nbs1	G103D	decreasing
+nbs1	K45A	decreasing
+nbs1	K76A	decreasing
+nbs1	R28A	decreasing
+nbs1	S42A	decreasing
+nef	I153I	unknown
+o40955_pro_0000240177	P727A	decreasing
+o40955_pro_0000240177	P730A	decreasing
+o40955_pro_0000240177	P747A	decreasing
+o40955_pro_0000240177	P750A	decreasing
+o54918_2	S53P	decreasing
+o54918_2	S53P	unknown
+o54918_2	T54A	decreasing
+o54918_2	D51G	unknown
+o54918_2	T54A	unknown
+o89168_9hepc	F37N	decreasing
+o92972_pro_0000278742	E53A	decreasing
+ospF	C180G	decreasing strength
+ospF	E182A	decreasing strength
+ospF	I178R	decreasing strength
+p03243_1	K104R	disrupting
+p19712_pro_0000038050	C112R	decreasing
+p26660_pro_0000037609	G119L	unknown
+p27958_pro_0000037566	N15S	decreasing
+p27958_pro_0000037566	R17H	decreasing
+p27958_pro_0000037566	I136A	decreasing strength
+p27958_pro_0000037566	V139A	decreasing strength
+p27958_pro_0000037566	Y135A	decreasing
+p27958_pro_0000037576	I12E	disrupting strength
+p27958_pro_0000037576	P354A	decreasing
+p27958_pro_0000037576	P353A	decreasing
+p27958_pro_0000037576	P350A	decreasing
+p27958_pro_0000037576	I8D	disrupting strength
+p27958_pro_0000037576	F19D	disrupting strength
+p31424_2	T1123A	decreasing strength
+p31424_2	S1126A	decreasing strength
+p37238_1	P495L	decreasing
+p51492850	Q341A	disrupting
+p54256_2	T598A	disrupting
+p7242199	E233G	disrupting
+p9672	V136I	disrupting
+p97836_5	L666A	disrupting
+p97836_5	L666A	unknown
+p98078_1	F589V	disrupting
+p98078_1	F736V	disrupting
+p98078_1	F765V	disrupting
+pagA	D712N	decreasing
+pagA	E762C	unknown
+pep2	L7A	disrupting
+pep2	P8A	decreasing
+peptide_yqrl	Y1A	decreasing
+polg_hcvco	P2326A	disrupting
+polg_hcvco	P2328A	disrupting
+polg_hcvco	P2325A	disrupting
+polg_hcvco	P2317A	disrupting
+polg_hcvco	P2322A	disrupting
+polg_hcvh	P2315A	disrupting
+polg_hcvh	P2315A	disrupting strength
+polg_hcvh	P2317A	disrupting
+polg_hcvh	P2317A	disrupting strength
+polg_hcvh	P2318A	disrupting
+polg_hcvh	P2318A	disrupting strength
+polg_hcvh	P2322A	decreasing
+polg_hcvh	S1165A	increasing
+polg_hcvh	R2331A	disrupting
+polg_hcvh	P2322D	disrupting
+polg_hcvh	P2322A	disrupting strength
+polg_hcvh	R2328A	disrupting
+polg_hcvh	R2328A	decreasing strength
+polg_hcvh	P2328A	disrupting
+polg_hcvh	P2326A	disrupting strength
+polg_hcvh	P2322A	disrupting
+polg_hcvh	P2325A	disrupting strength
+polg_hcvh	P2325A	disrupting
+polg_hcvh	P2325A	decreasing
+polg_hcvh	P2324A	decreasing
+polg_hcvh	P2326A	disrupting
+polg_hcvr6	P2326A	disrupting
+polg_hcvr6	P2325A	disrupting
+polg_hcvr6	P2318A	disrupting
+polg_hcvr6	P2317A	disrupting
+polg_hcvr6	P2315A	disrupting
+pre_C_C	K125K	disrupting
+pre_C_C	K125L	decreasing
+pre_C_C	K125E	decreasing
+q53fc7_human	D29E	disrupting
+q569j1_human	P461H	disrupting
+q569j1_human	A463R	disrupting
+q569j1_human	A463R	decreasing
+q569j1_human	L278M	decreasing
+q569j1_human	L279I	decreasing
+q569j1_human	N284T	decreasing
+q60953_2	S17A	decreasing
+q60953_2	S47A	decreasing
+q60953_2	S45A	decreasing
+q7db50_eco57	R208K	decreasing rate
+q7db50_eco57	Q293A	decreasing rate
+q8qvz0_9hepc	V158A	decreasing strength
+q8qvz0_9hepc	L106A	decreasing strength
+q8qvz0_9hepc	F43A	decreasing strength
+q8te30_human	I204Y	unknown
+q8te30_human	H230A	unknown
+q8te30_human	D702Y	unknown
+q8te30_human	D205G	unknown
+q8te30_human	D145A	unknown
+q8te30_human	I407A	decreasing strength
+q8te30_human	R155A	unknown
+q8te30_human	I411A	decreasing strength
+q91au0_9hepc	V122A	decreasing strength
+q91au0_9hepc	L126A	decreasing strength
+q91au0_9hepc	L119A	decreasing strength
+q99ib8_pro_0000045592	G79A	decreasing rate
+q99ib8_pro_0000045592	W82A	decreasing rate
+q99ib8_pro_0000045596	N151A	decreasing
+q99ib8_pro_0000045596	T145A	decreasing
+q99ib8_pro_0000045602	T348A	decreasing
+q99ib8_pro_0000045602	K345A	decreasing
+q9qwy8_1	R811A	disrupting
+q9qwy8_1	R811A	decreasing
+q9qwy8_1	P913A	disrupting
+q9qwy8_1	P910A	disrupting
+q9wmx2_pro_0000037551	W9A	decreasing
+q9wmx2_pro_0000037551	I12V	decreasing
+q9wmx2_pro_0000037551	V121A	decreasing
+q9wmx2_pro_0000037552	P540A	disrupting strength
+q9wmx2_pro_0000037552	P540A	decreasing
+q9xtf3_2	K196R	unknown
+q9z305_cavpo	E1612K	disrupting
+q9z305_cavpo	I1653E	disrupting
+rad3	D2249E	disrupting
+rta_ebvb9	M140A	decreasing
+shepherdin_peptide	S46A	disrupting
+sifA	E201A	decreasing
+sifA	L130D	decreasing
+sifA	M131D	decreasing
+sifA	W197A	decreasing
+sopB	R466A	unknown
+sopB	L84P	decreasing
+sopB	L76P	decreasing
+sopB	L63P	decreasing
+sopB	L52P	decreasing
+sopB	L73P	decreasing
+sopE	G168A	decreasing
+sseJ	F121D	decreasing
+sspH2	C580A	decreasing rate
+tat	H13E	decreasing
+tat	R49A	disrupting
+tir	Y511F	decreasing
+tir	Y490F	decreasing
+tir	Y483F	decreasing
+tir	Y519F	decreasing
+trxA	F37A	disrupting
+tx1_strgf	L5A	decreasing
+tx1_strgf	R22A	decreasing
+tx1_strgf	R3A	decreasing
+tx1_strgf	W30A	decreasing
+tx1_strgf	F6A	decreasing
+tx1_strgf	D31A	decreasing
+vif	Q105A	disrupting
+virA	R188K	disrupting rate
+virA	Q280A	disrupting rate
+vpr	Q65R	disrupting
+vpr	Q65A	disrupting
+vpr	Q65R	unknown
+vpr	R80A	unknown
+vpu	W22A	decreasing
+vpu	V25L	decreasing strength
+vpu	S57N	decreasing
+vpu	S56N	unknown
+vpu	A10F	decreasing
+vpu	S56N	disrupting strength
+vpu	S53N	decreasing
+vpu	S52N	unknown
+vpu	S52N	disrupting strength
+vpu	Q5C	unknown
+vpu	I17F	decreasing strength
+vpu	E63A	disrupting
+vpu	A14F	disrupting
+vpu	A18F	disrupting
+vpu	A18F	decreasing
+vpu	V21F	decreasing strength
+vpu	A14F	decreasing
+vpu	A10F	disrupting
+vpu	E63A	decreasing
+vpx	Q76R	disrupting
+vpx	K77A	disrupting
+yv018_human	H27Y	increasing
+yv018_human	Q26K	increasing
+yv018_human	H57D	increasing
