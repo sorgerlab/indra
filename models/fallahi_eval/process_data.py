@@ -1,15 +1,15 @@
 from indra.util import _require_python3
-import pickle
+import re
+import json
 import numpy
+import pickle
 import pandas
 import itertools
-from indra.literature import pubmed_client
-from indra.statements import Agent, ModCondition, Phosphorylation, \
-    Dephosphorylation, IncreaseAmount, DecreaseAmount
-from indra.databases import hgnc_client, uniprot_client
-from copy import deepcopy
 import collections
-import json
+from copy import deepcopy
+from indra.statements import *
+from indra.literature import pubmed_client
+from indra.databases import hgnc_client, uniprot_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
 rppa_pkl = 'data/TableS1-Split.pkl'
@@ -45,6 +45,37 @@ def read_rppa_data(fname=rppa_pkl):
             data[cell_line][data_type] = df
     return data
 
+
+def read_variants():
+    def read_aa_change(aa_change):
+        match = re.match('p.([A-Z])(\d+)([A-Z])', aa_change)
+        if not match:
+            return None
+        groups = match.groups()
+        if len(groups) != 3:
+            return None
+        return groups
+
+    def read_for_cell_line(cell_line):
+        muts = {}
+        df_filt = df[df.SAMPLE == cell_line]
+        for _, row in df_filt.iterrows():
+            aa_change = read_aa_change(row['AA'])
+            if not aa_change:
+                continue
+            # TODO: handle multiple mutations on same gene?
+            muts[row['Gene']] = [aa_change]
+        return muts
+
+    mutations = {}
+    df = pandas.read_csv(mutation_file)
+    cell_line_map = {'SK-MEL-28': 'SKMEL28', 'WM-115': 'WM115',
+            'MZ7-mel': 'MZ7MEL', 'MMAC-SF': 'MMACSF', 'RVH-421': 'RVH421',
+            'C32': 'C32'}
+    for cell_line_df, cell_line in cell_line_map.items():
+        muts = read_for_cell_line(cell_line_df)
+        mutations[cell_line] = muts
+    return mutations
 
 def _read_gene_list(path):
     df = pandas.read_csv(path, sep='\t', error_bad_lines=False, header=None)
@@ -235,14 +266,16 @@ def get_task_1(data, inverse=False):
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
+
 def get_task_5(data, inverse=False):
     """Return the test cases to be explained for Task 5."""
     # TASK 5: We observe a dose-dependent increase in total c-Jun
     # in the cell line RVH421 but a dose-dependent decrease in total
     # c-Jun in the cell line C32.
     antibody_agents = get_antibody_agents()
-    obs_agents = antibody_agents['Total c-Jun']
-    # We fix the time point to 10 hours
+    #obs_agents = antibody_agents['Total c-Jun']
+    obs_agents = [Agent('RB1', activity=ActivityCondition('activity', False), db_refs={'HGNC': '9884'})]
+    # We fix the time point to 24 hours
     time = 24
     # We look at doses at least 0.1 since the effect is only observed there
     dose_lower_bound = 0.1
@@ -263,9 +296,9 @@ def get_task_5(data, inverse=False):
                 for target, obs in itertools.product(target_agents, obs_agents):
                     if (cell_line == 'C32' and not inverse) or \
                         (cell_line == 'RVH421' and inverse):
-                        st = IncreaseAmount(target, obs)
+                        st = Activation(target, obs)
                     else:
-                        st = DecreaseAmount(target, obs)
+                        st = Inhibition(target, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
