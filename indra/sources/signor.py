@@ -5,6 +5,7 @@ from collections import namedtuple
 
 from indra.statements import *
 from indra.util import read_unicode_csv
+from indra.databases import hgnc_client, uniprot_client
 
 logger = logging.getLogger('signor')
 
@@ -40,11 +41,24 @@ _signor_fields = [
 ]
 
 
+_type_db_map = {
+    ('antibody', None): None,
+    ('protein', 'UNIPROT'): 'UP',
+    ('complex', 'SIGNOR'): 'SIGNOR',
+    ('proteinfamily', 'SIGNOR'): 'SIGNOR',
+    ('smallmolecule', 'SIGNOR'): 'PUBCHEM',
+    ('pathway', None): None,
+    ('phenotype', 'SIGNOR'): 'SIGNOR',
+    ('stimulus', 'SIGNOR'): 'SIGNOR',
+    ('chemical', 'PUBCHEM'): 'PUBCHEM',
+}
+
+
 SignorRow = namedtuple('SignorRow', _signor_fields)
 
 
 class SignorProcessor(object):
-    """Processor for Signor dataset available at http://signor.uniroma2.it.
+    """Processor for Signor dataset, available at http://signor.uniroma2.it.
 
     See publication:
 
@@ -68,8 +82,25 @@ class SignorProcessor(object):
         self._data = [SignorRow(*r) for r in data_iter]
 
     @staticmethod
-    def _entity_a(row):
-        return Agent('RELA', db_refs={'HGNC': '9955', 'UP': 'Q04206'})
+    def _get_agent(ent_name, ent_type, id, database):
+        gnd_type = _type_db_map[(ent_type, database)]
+        if gnd_type == 'UP':
+            up_id = id
+            db_refs = {'UP': up_id}
+            name = uniprot_client.get_gene_name(up_id)
+            hgnc_id = hgnc_client.get_hgnc_id(name)
+            if hgnc_id:
+                db_refs['HGNC'] = hgnc_id
+        # Other possible groundings are PUBCHEM and SIGNOR
+        elif gnd_type is not None:
+            assert database in ('PUBCHEM', 'SIGNOR')
+            db_refs = {database: id}
+            name = ent_name
+        # If no grounding, include as an untyped/ungrounded node
+        else:
+            name = ent_name
+            db_refs = {}
+        return Agent(name, db_refs=db_refs)
 
     def _process_row():
         agent_a = _entity_a(row)

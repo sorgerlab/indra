@@ -23,18 +23,6 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         the Met gene is a direct target of NFkappaB and that Met participates
         in NFkappaB-mediated cell survival.""", SIGNOR_ID='SIGNOR-241929')
 
-signor_entity_types = [
-    'antibody',
-    'protein',
-    'complex',
-    'proteinfamily',
-    'smallmolecule',
-    'pathway',
-    'phenotype',
-    'stimulus',
-    'chemical'
-]
-
 
 def test_parse_csv():
     sp = SignorProcessor(signor_test_path)
@@ -43,12 +31,18 @@ def test_parse_csv():
     globals().update(locals())
 
 
-def test_entity_a():
+def test_get_agent():
+    # Protein/gene
     test_ag = Agent('RELA', db_refs={'HGNC': _id('RELA'), 'UP': 'Q04206'})
-    sp_ag = sp._entity_a(test_row)
+    sp_ag = sp._get_agent(test_row.ENTITYA, test_row.TYPEA, test_row.IDA,
+                          test_row.DATABASEA)
+    assert test_ag.matches(sp_ag)
+    # Chemical
+    test_ag = Agent('AZD1480', db_refs={'PUBCHEM': 'CID:16659841'})
+    sp_ag = sp._get_agent('AZD1480', 'chemical', 'CID:16659841', 'PUBCHEM')
     assert test_ag.matches(sp_ag)
 
 
 if __name__ == '__main__':
     test_parse_csv()
-    test_entity_a()
+    test_get_agent()
