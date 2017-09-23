@@ -87,13 +87,21 @@ def test_get_evidence():
                       "is a direct target of NFkappaB and that Met " \
                       "participates in NFkappaB-mediated cell survival."
 
-#def test_get_mechanism():
-#    sp = SignorProcessor(signor_test_path)
-#    mechs, mech_map = sp.make_model()
 
+def test_process_row():
+    stmt = SignorProcessor._process_row(test_row)
+    assert isinstance(stmt, IncreaseAmount)
+
+
+def test_get_mechanism():
+    sp = SignorProcessor(signor_test_path)
+    assert sp.statements
+    globals().update(locals())
 
 if __name__ == '__main__':
     test_parse_csv()
     test_get_agent()
     test_get_agent_keyerror()
     test_get_evidence()
+    test_process_row()
+    test_get_mechanism()
