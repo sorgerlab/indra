@@ -1,6 +1,44 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
+from collections import namedtuple
 from indra.util import read_unicode_csv
+
+logger = logging.getLogger('signor')
+
+
+_signor_fields = [
+    'ENTITYA',
+    'TYPEA',
+    'IDA',
+    'DATABASEA',
+    'ENTITYB',
+    'TYPEB',
+    'IDB',
+    'DATABASEB',
+    'EFFECT',
+    'MECHANISM',
+    'RESIDUE',
+    'SEQUENCE',
+    'TAX_ID',
+    'CELL_DATA',
+    'TISSUE_DATA',
+    'MODULATOR_COMPLEX',
+    'TARGET_COMPLEX',
+    'MODIFICATIONA',
+    'MODASEQ',
+    'MODIFICATIONB',
+    'MODBSEQ',
+    'PMID',
+    'DIRECT',
+    'NOTES',
+    'ANNOTATOR',
+    'SENTENCE',
+    'SIGNOR_ID',
+]
+
+
+SignorRow = namedtuple('SignorRow', _signor_fields)
 
 
 class SignorProcessor(object):
@@ -20,6 +58,14 @@ class SignorProcessor(object):
         Field delimiter for CSV file. Defaults to semicolon ';'.
     """
     def __init__(self, signor_csv, delimiter=';'):
-        self._data = list(read_unicode_csv(signor_csv, delimiter=';'))
-        
+        # Get generator over the CSV file
+        data_iter = read_unicode_csv(signor_csv, delimiter=';')
+        # Skip the header row
+        next(data_iter)
+        # Process into a list of SignorRow namedtuples
+        self._data = [SignorRow(*r) for r in data_iter]
+
+    def _process_row(self):
+        pass
+
 
