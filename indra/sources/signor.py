@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 from collections import namedtuple
+
+from indra.statements import *
 from indra.util import read_unicode_csv
 
 logger = logging.getLogger('signor')
@@ -65,7 +67,11 @@ class SignorProcessor(object):
         # Process into a list of SignorRow namedtuples
         self._data = [SignorRow(*r) for r in data_iter]
 
-    def _process_row(self):
-        pass
+    @staticmethod
+    def _entity_a(row):
+        return Agent('RELA', db_refs={'HGNC': '9955', 'UP': 'Q04206'})
+
+    def _process_row():
+        agent_a = _entity_a(row)
 
 
