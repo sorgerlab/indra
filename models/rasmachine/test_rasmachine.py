@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, abspath, dirname
-from utils import make_status_message, get_email_pmids
-from indra.machine import gmail_client
+from indra.tools.machine.utils import make_status_message, get_email_pmids
+from indra.tools.machine import gmail_client
 
 stats = {}
 stats['new_abstracts'] = 0
