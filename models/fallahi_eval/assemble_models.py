@@ -40,7 +40,7 @@ if __name__ == '__main__':
     if reassemble:
         # Load various files that were previously produced
         sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
-                   'sparser_1_fixed']
+                   'sparser']
         stmts = []
         for source in sources:
             stmts += ac.load_statements(prefixed_pkl(source))
@@ -63,4 +63,4 @@ if __name__ == '__main__':
     # Load the preassembled statements
     stmts = ac.load_statements(pre_stmts_file)
     # Run assembly into a PySB model
-    assemble_pysb.assemble_pysb(stmts, gene_names)
+    assemble_pysb.assemble_pysb(stmts, gene_names, contextualize=True)
