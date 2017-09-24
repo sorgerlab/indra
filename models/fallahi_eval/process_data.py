@@ -9,7 +9,7 @@ import collections
 from copy import deepcopy
 from indra.statements import *
 from indra.literature import pubmed_client
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, cbio_client
 
 rppa_file = 'data/TableS1-Split.xlsx'
 rppa_pkl = 'data/TableS1-Split.pkl'
@@ -58,25 +58,32 @@ def read_variants():
         return groups
 
     def read_for_cell_line(cell_line):
-        muts = {}
+        miss = {}
+        nons = []
         df_filt = df[df.SAMPLE == cell_line]
         for _, row in df_filt.iterrows():
-            aa_change = read_aa_change(row['AA'])
-            if not aa_change:
+            # Check for valid/usable gene name
+            if not hgnc_client.get_hgnc_id(row['Gene']):
                 continue
-            # TODO: handle multiple mutations on same gene?
-            muts[row['Gene']] = [aa_change]
-        return muts
+            if row['Classification'] == 'missense':
+                aa_change = read_aa_change(row['AA'])
+                if not aa_change:
+                    continue
+                # TODO: handle multiple mutations on same gene?
+                miss[row['Gene']] = [aa_change]
+            elif row['Classification'] == 'nonsense':
+                nons.append(row['Gene'])
+        return miss, nons
 
-    mutations = {}
+    variants = {'missense': {}, 'nonsense': {}}
     df = pandas.read_csv(mutation_file)
     cell_line_map = {'SK-MEL-28': 'SKMEL28', 'WM-115': 'WM115',
             'MZ7-mel': 'MZ7MEL', 'MMAC-SF': 'MMACSF', 'RVH-421': 'RVH421',
             'C32': 'C32'}
     for cell_line_df, cell_line in cell_line_map.items():
-        muts = read_for_cell_line(cell_line_df)
-        mutations[cell_line] = muts
-    return mutations
+        variants['missense'][cell_line], variants['nonsense'][cell_line] = \
+            read_for_cell_line(cell_line_df)
+    return variants
 
 
 def read_mutation_effects():
@@ -109,6 +116,29 @@ def read_mutation_effects():
         af = ActiveForm(agent, 'activity', is_active)
         stmts.append(af)
     return stmts
+
+
+def analyze_cna_mrna(genes, cell_line):
+    """Plot CNA vs mRNA reported by CCLE for given genes in a cell line."""
+    import matplotlib.pyplot as plt
+    cna = cbio_client.get_ccle_cna(genes, [cell_line])[cell_line]
+    mrna = cbio_client.get_ccle_mrna(genes, [cell_line])[cell_line]
+    plt.ion()
+    plt.figure()
+    for gene, cna_val in cna.items():
+        if cna_val is None or gene not in mrna:
+            continue
+        mrna_val = mrna[gene]
+        if mrna_val is None:
+            continue
+        plt.plot(cna_val, mrna_val, 'ro', alpha=0.5)
+    plt.xlim([-2.1, 2.1])
+    cna_vals = list(range(-2, 3))
+    plt.title('%s cell line' % cell_line)
+    plt.xticks(cna_vals, [str(c) for c in cna_vals])
+    plt.ylabel('mRNA amounts reported by CCLE')
+    plt.xlabel('DNA copy number alteration reported by CCLE')
+    plt.show()
 
 
 def _read_gene_list(path):
