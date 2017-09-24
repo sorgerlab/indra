@@ -179,3 +179,33 @@ def _get_belief_package(stmt, n=1):
     belief_packages.append(belief_package)
     return belief_packages
 
+
+def sample_statements(stmts, seed=None):
+    """Return statements sampled according to belief.
+
+    Statements are sampled independently according to their
+    belief scores. For instance, a Staement with a belief
+    score of 0.7 will end up in the returned Statement list
+    with probability 0.7.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements to sample.
+    seed : Optional[int]
+        A seed for the random number generator used for sampling.
+
+    Returns
+    -------
+    new_stmts : list[indra.statements.Statement]
+        A list of INDRA Statements that were chosen by random sampling
+        according to their respective belief scores.
+    """
+    if seed:
+        numpy.random.seed(seed)
+    new_stmts = []
+    r = numpy.random.rand(len(stmts))
+    for i, stmt in enumerate(stmts):
+        if r[i] < stmt.belief:
+            new_stmts.append(stmt)
+    return new_stmts

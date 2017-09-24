@@ -3,7 +3,7 @@ from builtins import dict, str
 from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package, default_probs
+from indra.belief import _get_belief_package, default_probs, sample_statements
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -212,6 +212,24 @@ def test_default_probs_extend():
                 assert v == 0.05
             else:
                 assert default_probs[err_type][k] == v
+
+def test_sample_statements():
+    st1 = Phosphorylation(Agent('B'), Agent('A1'))
+    st2 = Phosphorylation(None, Agent('A1'))
+    st3 = Phosphorylation(None, Agent('A'))
+    st1.supported_by = [st2, st3]
+    st2.supported_by = [st3]
+    st2.supports = [st1]
+    st3.supports = [st1, st2]
+    st1.belief = 0.8
+    st2.belief = 0.6
+    st3.belief = 0.5
+    stmts = sample_statements([st1, st2, st3], seed=10)
+    # Random numbers are 0.77132064  0.02075195  0.63364823 with this seed
+    assert len(stmts) == 2
+    assert st1 in stmts
+    assert st2 in stmts
+    assert st3 not in stmts
 
 @raises(Exception)
 def test_check_prior_probs():
