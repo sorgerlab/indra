@@ -13,6 +13,6 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 def copy_default_config(destination):
     """Copies the default configuration to the given destination
 
-    :param str destination:
+    :param str destination: The location to which a default RAS Machine config file is placed
     """
     shutil.copy(os.path.join(HERE, 'default-config.yaml'), destination)
