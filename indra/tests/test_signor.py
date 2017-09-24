@@ -139,5 +139,5 @@ if __name__ == '__main__':
     test_get_agent_keyerror()
     test_get_evidence()
     test_process_row()
-    test_parse_residue_position()
+    test_parse_residue_positions()
     test_get_mechanism()

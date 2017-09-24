@@ -140,18 +140,21 @@ class SignorProcessor(object):
         self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
         # Process into statements
         self.statements = []
+        self.skipped_rows = []
         for row in self._data:
-            self.statements.append(self._process_row(row))
-            """
-            mechs = []
-            mech_map = defaultdict(list)
-                key = (row.EFFECT, row.MECHANISM)
-                mechs.append(key)
-                mech_map[key].append(row)
-            mech_ctr = Counter(mechs)
-            mech_ctr = sorted(mech_ctr.items(), key=lambda x: x[1], reverse=True)
-            """
-        #return (mech_ctr, mech_map)
+            (effect_stmt, mech_stmts, af_stmt) = self._process_row(row)
+            if effect_stmt:
+                self.statements.append(effect_stmt)
+            if not mech_stmts:
+                self.skipped_rows.append(row)
+            else:
+                self.statements += mech_stmts
+            if af_stmt:
+                self.statements.append(af_stmt)
+        # Skipped statements by type
+        skip_ctr = Counter([row.MECHANISM for row in self.skipped_rows])
+        self.skip_ctr = sorted([(k, v) for k, v in skip_ctr.items()],
+                               key=lambda x: x[1], reverse=True)
 
     @staticmethod
     def _get_agent(ent_name, ent_type, id, database):
@@ -208,10 +211,10 @@ class SignorProcessor(object):
         evidence = SignorProcessor._get_evidence(row)
         effect_stmt_type = _effect_map[row.EFFECT]
         if not effect_stmt_type:
-            return None
+            effect_stmt = None
         # FIXME: The effect statement may be missing activity conditions on the
         # subject and object!
-        if effect_stmt_type == Complex:
+        elif effect_stmt_type == Complex:
             effect_stmt = effect_stmt_type([agent_a, agent_b],
                                            evidence=evidence)
         else:
@@ -222,7 +225,8 @@ class SignorProcessor(object):
             mech_stmt_type = None
         # If the mechanism is transcriptional regulation, we need to check
         # the effect to know whether it is an increase or decrease
-        elif row.MECHANISM == 'transcriptional regulation':
+        elif row.MECHANISM == 'transcriptional regulation' and \
+             not row.EFFECT == 'unknown':
             assert row.EFFECT and (row.EFFECT.startswith('up') or \
                                    row.EFFECT.startswith('down'))
             mech_stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
