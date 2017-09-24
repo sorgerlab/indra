@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import pandas
 import logging
 import requests
@@ -451,3 +452,39 @@ def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     else:
         data_list = df[data_col].to_dict()
     return data_list
+
+
+def _read_ccle_cna():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_CNA.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t')
+    except Exception:
+        df = None
+    return df
+
+ccle_cna_df = _read_ccle_cna()
+
+
+def _read_ccle_mrna():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_expression_median.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t')
+    except Exception:
+        df = None
+    return df
+
+ccle_mrna_df = _read_ccle_mrna()
+
+
+def _read_ccle_mutations():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_mutations_extended.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t', skiprows=2)
+    except Exception:
+        df = None
+    return df
+
+ccle_mutations_df = _read_ccle_mutations()

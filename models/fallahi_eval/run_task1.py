@@ -1,11 +1,12 @@
 import pickle
-from copy import deepcopy
 import itertools
+from copy import deepcopy
 import indra.tools.assemble_corpus as ac
-from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
 from indra.explanation.reporting import *
-from process_data import read_rppa_data, get_task_1, get_antibody_agents
+from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
+from util import pkldump
 from assemble_pysb import contextualize_model, prefixed_pkl
+from process_data import read_rppa_data, get_task_1, get_antibody_agents
 
 def get_agent_values(antibody_agents, values):
     agent_values = {}
@@ -63,8 +64,6 @@ if __name__ == '__main__':
             # - model contextualized to the cell line
             # - the statements for the given condition
             # - agents for which observables need to be made
-            #mc = ModelChecker(model_cell_line, stmts_condition,
-            #                  agents_to_observe)
             if not global_mc:
                 global_mc = get_global_mc(model_cell_line, stmts_to_check,
                                           agents_to_observe)
@@ -89,5 +88,5 @@ if __name__ == '__main__':
                                                     sigma=0.5)
             scored_paths[cell_line][drug] = scored_paths_condition
 
-with open('scored_paths.pkl', 'wb') as f:
-    pickle.dump((scored_paths, global_mc.model), f)
+# Dump results in standard folder
+pkldump('task1_scored_paths', (scored_paths, global_mc.model))
