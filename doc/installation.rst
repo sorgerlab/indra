@@ -187,5 +187,12 @@ rely on it. It can be installed as
 Optional additional dependencies
 ````````````````````````````````
 Some applications built on top of INDRA (for instance The RAS Machine) have
-additional dependencies. In such cases a specific `README` or
-`requirements.txt` is provided in the folder to guide the set up.
+additional dependencies that are encoded as
+`extras in setup.py <https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-extras-optional-features-with-their-own-dependencies>`_
+such that they can be installed with ``pip``.
+
+.. code-block:: bash
+
+    pip install indra[machine]
+
+In other cases a specific `README` or `requirements.txt` is provided in the folder to guide the set up.
