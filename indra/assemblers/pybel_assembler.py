@@ -64,12 +64,12 @@ class PybelAssembler(object):
             self.statements = stmts
 
         # Create the model and assign metadata
-        self.model = pybel.BELGraph(**kwargs)
-        self.model.graph[pc.GRAPH_METADATA] = {
-                pc.METADATA_NAME: name,
-                pc.METADATA_DESCRIPTION: description,
-                pc.METADATA_VERSION: version
-            }
+        self.model = pybel.BELGraph(
+            name=name,
+            version=version,
+            description=description,
+            **kwargs
+        )
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
