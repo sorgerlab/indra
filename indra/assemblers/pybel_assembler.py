@@ -171,6 +171,9 @@ class PybelAssembler(object):
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
         complex_data, _ = _get_complex_node(stmt.members)
+        if complex_data is None:
+            logger.info('skip adding complex with no members: %s', stmt.members)
+            return
         self.model.add_node_from_data(complex_data)
 
     def _assemble_conversion(self, stmt):
