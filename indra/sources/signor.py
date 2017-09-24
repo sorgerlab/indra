@@ -235,38 +235,45 @@ class SignorProcessor(object):
         # Now check if we were able to successfully get a mechanism type;
         # if not, don't make a mechanism statement
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
-            # Because this is a modification, check for a residue
-            res, pos = _parse_residue_position(row.RESIDUE) \
-                        if row.RESIDUE else (None, None)
-            mech_stmt = mech_stmt_type(agent_a, agent_b, res, pos,
-                                       evidence=evidence)
+            if not row.RESIDUE:
+                mech_stmts = [mech_stmt_type(agent_a, agent_b, None, None,
+                                             evidence=evidence)]
+            else:
+                # Because this is a modification, check for a residue
+                residues = _parse_residue_positions(row.RESIDUE)
+                mech_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                                        evidence=evidence) for res in residues]
         elif mech_stmt_type:
-            mech_stmt = mech_stmt_type(agent_a, agent_b, evidence=evidence)
+            mech_stmts = [mech_stmt_type(agent_a, agent_b, evidence=evidence)]
         else:
-            mech_stmt = None
+            mech_stmts = []
 
-        return (effect_stmt, mech_stmt, None)
+        return (effect_stmt, mech_stmts, None)
 
 # TODO: Mappings for SIGNOR families, complexes, etc.
 
-def _parse_residue_position(respos):
-    # Split off the amino acid
-    res = respos[0:3]
-    pos = respos[3:]
-    # Get the abbreviated amino acid
-    res = amino_acids_reverse.get(res.lower())
-    if not res:
-        logger.warning("Could not get amino acid residue for residue/position "
-                       "%s" % respos)
-        return (None, None)
-    # If there's no position, return residue only
-    if not pos:
-        return (res, None)
-    # Make sure the position is an integer
-    try:
-        int(pos)
-    except ValueError:
-        logger.warning("Could not get valid position for residue/position "
-                       "%s" % respos)
-        return (None, None)
-    return (res, pos)
+def _parse_residue_positions(residue_field):
+    # First see if this string contains two positions
+    res_strs = [rs.strip() for rs in residue_field.split(';')]
+    def _parse_respos(respos):
+        # Split off the amino acid
+        res = respos[0:3]
+        pos = respos[3:]
+        # Get the abbreviated amino acid
+        res = amino_acids_reverse.get(res.lower())
+        if not res:
+            logger.warning("Could not get amino acid residue for "
+                           "residue/position %s" % respos)
+            return (None, None)
+        # If there's no position, return residue only
+        if not pos:
+            return (res, None)
+        # Make sure the position is an integer
+        try:
+            int(pos)
+        except ValueError:
+            logger.warning("Could not get valid position for residue/position "
+                           "%s" % respos)
+            return (None, None)
+        return (res, pos)
+    return [_parse_respos(rp) for rp in res_strs]

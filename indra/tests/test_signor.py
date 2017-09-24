@@ -6,7 +6,7 @@ from nose.tools import raises
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.sources.signor import SignorProcessor, SignorRow, \
-                                 _parse_residue_position
+                                 _parse_residue_positions
 
 def _id(gene):
     return hgnc_client.get_hgnc_id(gene)
@@ -90,28 +90,43 @@ def test_get_evidence():
 
 
 def test_process_row():
-    (effect_stmt, mech_stmt, af_stmt) = SignorProcessor._process_row(test_row)
+    (effect_stmt, mech_stmts, af_stmt) = SignorProcessor._process_row(test_row)
     assert isinstance(effect_stmt, IncreaseAmount)
-    assert isinstance(mech_stmt, IncreaseAmount)
+    assert isinstance(mech_stmts, list)
+    assert len(mech_stmts) == 1
+    assert isinstance(mech_stmts[0], IncreaseAmount)
 
 
-def test_parse_residue_position():
-    res, pos = _parse_residue_position('TYR304')
-    assert res == 'Y'
-    assert pos == '304'
+def test_parse_residue_positions():
+    residues = _parse_residue_positions('TYR304')
+    assert len(residues) == 1
+    assert residues[0][0] == 'Y'
+    assert residues[0][1] == '304'
     # Invalid residue
-    res, pos = _parse_residue_position('Foo')
-    assert res is None
-    assert pos is None
+    residues = _parse_residue_positions('Foo')
+    assert len(residues) == 1
+    assert residues[0] == (None, None)
     # Residue but not position
-    res, pos = _parse_residue_position('gly')
-    assert res == 'G'
-    assert pos == None
+    residues = _parse_residue_positions('gly')
+    assert residues[0][0] == 'G'
+    assert residues[0][1] == None
     # Position can't be converted to int
-    res, pos = _parse_residue_position('glyxxx')
-    assert res == None
-    assert pos == None
-
+    residues = _parse_residue_positions('glyxxx')
+    assert len(residues) == 1
+    assert residues[0] == (None, None)
+    # Multiple positions separated by semicolons
+    residues = _parse_residue_positions('Tyr1185; Tyr1190')
+    assert len(residues) == 2
+    assert residues[0][0] == 'Y'
+    assert residues[0][1] == '1185'
+    assert residues[1][0] == 'Y'
+    assert residues[1][1] == '1190'
+    residues = _parse_residue_positions('Thr169;Tyr171')
+    assert len(residues) == 2
+    assert residues[0][0] == 'T'
+    assert residues[0][1] == '169'
+    assert residues[1][0] == 'Y'
+    assert residues[1][1] == '171'
 
 def test_get_mechanism():
     sp = SignorProcessor(signor_test_path)
