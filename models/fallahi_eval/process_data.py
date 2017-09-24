@@ -1,5 +1,6 @@
 from indra.util import _require_python3
 import re
+import copy
 import json
 import numpy
 import pickle
@@ -47,7 +48,7 @@ def read_rppa_data(fname=rppa_pkl):
     return data
 
 
-def read_variants():
+def read_variants(gene_names):
     def read_aa_change(aa_change):
         match = re.match('p.([A-Z])(\d+)([A-Z])', aa_change)
         if not match:
@@ -63,14 +64,16 @@ def read_variants():
         df_filt = df[df.SAMPLE == cell_line]
         for _, row in df_filt.iterrows():
             # Check for valid/usable gene name
-            if not hgnc_client.get_hgnc_id(row['Gene']):
+            if row['Gene'] not in gene_names:
                 continue
             if row['Classification'] == 'missense':
                 aa_change = read_aa_change(row['AA'])
                 if not aa_change:
                     continue
-                # TODO: handle multiple mutations on same gene?
-                miss[row['Gene']] = [aa_change]
+                if row['Gene'] not in miss:
+                    miss[row['Gene']] = [aa_change]
+                else:
+                    miss[row['Gene']].append(aa_change)
             elif row['Classification'] == 'nonsense':
                 nons.append(row['Gene'])
         return miss, nons
@@ -79,10 +82,43 @@ def read_variants():
     df = pandas.read_csv(mutation_file)
     cell_line_map = {'SK-MEL-28': 'SKMEL28', 'WM-115': 'WM115',
             'MZ7-mel': 'MZ7MEL', 'MMAC-SF': 'MMACSF', 'RVH-421': 'RVH421',
-            'C32': 'C32'}
+            'C32': 'C32', 'LOXIMVI': 'LOXIMVI'}
     for cell_line_df, cell_line in cell_line_map.items():
         variants['missense'][cell_line], variants['nonsense'][cell_line] = \
             read_for_cell_line(cell_line_df)
+    return variants
+
+
+def read_ccle_variants(gene_names):
+    cell_lines_db = [cl + '_SKIN' for cl in cell_lines]
+    nons = cbio_client.get_ccle_mutations(gene_names, cell_lines_db, 'nonsense')
+    miss = cbio_client.get_ccle_mutations(gene_names, cell_lines_db, 'missense')
+    tmp = copy.deepcopy(nons)
+    for cell_line, content in tmp.items():
+        for gene, muts in content.items():
+            if not muts:
+                nons[cell_line].pop(gene, None)
+    tmp = copy.deepcopy(miss)
+    for cell_line, content in tmp.items():
+        for gene, muts in content.items():
+            if not muts:
+                miss[cell_line].pop(gene, None)
+                continue
+            # Check for usable AA substitution
+            grouped_muts = []
+            for mut in muts:
+                match = re.match('([A-Z])(\d+)([A-Z])', mut)
+                if not match:
+                    continue
+                groups = match.groups()
+                if len(groups) != 3:
+                    continue
+                grouped_muts.append(groups)
+            miss[cell_line][gene] = grouped_muts
+
+    variants = {}
+    variants['missense'] = miss
+    variants['nonsense'] = nons
     return variants
 
 
