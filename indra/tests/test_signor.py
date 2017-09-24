@@ -89,8 +89,9 @@ def test_get_evidence():
 
 
 def test_process_row():
-    stmt = SignorProcessor._process_row(test_row)
-    assert isinstance(stmt, IncreaseAmount)
+    (effect_stmt, mech_stmt, af_stmt) = SignorProcessor._process_row(test_row)
+    assert isinstance(effect_stmt, IncreaseAmount)
+    assert isinstance(mech_stmt, IncreaseAmount)
 
 
 def test_get_mechanism():

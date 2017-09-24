@@ -82,7 +82,7 @@ _mechanism_map = {
     'trimethylation': Methylation,
     'ubiquitination': Ubiquitination,
     'post transcriptional regulation': None,
-    'relocalization': Translocation,
+    'relocalization': None, # Translocation,
     'small molecule catalysis': None,
     's-nitrosylation': None,
     'transcriptional regulation': RegulateAmount, # Subject has tscript activity
@@ -121,7 +121,7 @@ class SignorProcessor(object):
 
     Perfetto et al., "SIGNOR: a database of causal relationships between
     biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
-    January 2016, Pages D548–D554. https://doi.org/10.1093/nar/gkv1048
+    January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 
     Parameters
     ----------
@@ -217,4 +217,49 @@ class SignorProcessor(object):
         else:
             effect_stmt = effect_stmt_type(agent_a, agent_b, evidence=evidence)
 
-        return effect_stmt
+        # Next, get mechanism statement
+        if row.MECHANISM == 'binding':
+            mech_stmt_type = None
+        # If the mechanism is transcriptional regulation, we need to check
+        # the effect to know whether it is an increase or decrease
+        elif row.MECHANISM == 'transcriptional regulation':
+            assert row.EFFECT and (row.EFFECT.startswith('up') or \
+                                   row.EFFECT.startswith('down'))
+            mech_stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
+                                            else DecreaseAmount
+        elif row.MECHANISM:
+            mech_stmt_type = _mechanism_map[row.MECHANISM]
+        else:
+            mech_stmt_type = None
+
+        # Now check if we were able to successfully get a mechanism type;
+        # if not, don't make a mechanism statement
+        if mech_stmt_type and issubclass(mech_stmt_type, Modification):
+            # Because this is a modification, check for a residue
+            res_pos = row.RESIDUE
+            mech_stmt = mech_stmt_type(agent_a, agent_b, evidence=evidence)
+        elif mech_stmt_type:
+            mech_stmt = mech_stmt_type(agent_a, agent_b, evidence=evidence)
+        else:
+            mech_stmt = None
+
+        return (effect_stmt, mech_stmt, None)
+
+# TODO: Mappings for SIGNOR families, complexes, etc.
+
+def _parse_residue_position(respos):
+    # Split off the amino acid
+    res = respos[0:3]
+    pos = respos[3:]
+    # Get the abbreviated amino acid
+    aa = amino_acids_reverse.get(res.lower())
+    if not aa:
+        logger.warning("Could not get amino acid residue for residue/position "
+                       "%s" % respos)
+    # Make sure the position is an integer
+    try:
+        int(pos)
+    except ValueError:
+        logger.warning("Could not get valid position for residue/position "
+                       "%s" % respos)
+    return (res, pos)
