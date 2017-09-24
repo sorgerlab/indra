@@ -104,7 +104,26 @@ class PybelAssembler(object):
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
+    
+    def save_model(self, path, output_format=None):
+        """Saves the :class:`pybel.BELGraph` using one of the outputs from 
+        :py:mod:`pybel`
 
+        :param str path: The path to output to
+        :param Optional[str] output_format: Output format as ``cx``, 
+                            ``pickle``, ``json`` or defaults to ``bel``
+        """
+        if output_format == 'pickle':
+            pybel.to_pickle(self.model, path)
+        else:
+            with open(path, 'w') as fh:
+                if output_format == 'json':
+                    pybel.to_json_file(self.model, fh)
+                elif output_format == 'cx':
+                    pybel.to_cx_file(self.model, fh)
+                else: # output_format == 'bel':
+                    pybel.to_bel(self.model, fh)
+    
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
