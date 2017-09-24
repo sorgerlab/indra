@@ -19,8 +19,6 @@ import sys
 import click
 import os
 
-from indra.machine.config import copy_default_config
-
 
 @click.group()
 def main():
@@ -36,6 +34,8 @@ def machine():
 @click.argument('directory')
 def make(directory):
     """Makes a RAS Machine directory"""
+    from indra.tools.machine.config import copy_default_config
+
     if os.path.exists(directory):
         if os.path.isdir(directory):
             click.echo('Directory already exists')
@@ -48,6 +48,34 @@ def make(directory):
     os.mkdir(os.path.join(directory, 'json', 'abstract'))
     os.mkdir(os.path.join(directory, 'json', 'full'))
     copy_default_config(os.path.join(directory, 'config.yaml'))
+
+
+@machine.command()
+@click.argument('model_path')
+@click.option('--config', help='Specify configuration file path, otherwise '
+                               'looks for config.yaml in model path')
+def run_with_search(model_path, config):
+    """Run with PubMed search for new papers."""
+    from indra.tools.machine.utils import run_with_search_helper
+    run_with_search_helper(model_path, config)
+
+
+@machine.command()
+@click.argument('model_path')
+def summarize(model_path):
+    """Print model summary."""
+    from indra.tools.machine.utils import summarize_helper
+    summarize_helper(model_path)
+
+
+@machine.command()
+@click.argument('model_path')
+@click.option('--pmids', type=click.File(), default=sys.stdin,
+              help="A file with a PMID on each line")
+def run_with_pmids(model_path, pmids):
+    """Run with given list of PMIDs."""
+    from indra.tools.machine.utils import run_with_pmids_helper
+    run_with_pmids_helper(model_path, pmids)
 
 
 if __name__ == '__main__':
