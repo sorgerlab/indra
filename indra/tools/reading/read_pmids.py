@@ -738,7 +738,13 @@ def main(args):
             stmts[reader] = some_stmts
 
         # Pickle the statements
-        pickle_file = '%s_stmts_%d_%d.pkl' % (args.basename, args.start_index, args.end_index)
+        if args.end_index is None:
+            args.end_index = 'end'
+        pickle_file = '%s_stmts_%s-%s.pkl' % (
+            args.basename,
+            args.start_index,
+            args.end_index
+            )
         with open(pickle_file, 'wb') as f:
             pickle.dump(stmts, f, protocol=2)
         ret = pickle_file
