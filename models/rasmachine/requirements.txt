@@ -1,6 +1,0 @@
-pytz
-tzlocal
-tweepy
-ndex
-pyyaml
-click

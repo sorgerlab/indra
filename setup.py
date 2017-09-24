@@ -3,6 +3,17 @@ use_setuptools()
 from setuptools import setup
 import sys
 
+EXTRAS_REQUIRE = {
+    'machine': [
+        'pytz',
+        'tzlocal',
+        'tweepy',
+        'ndex',
+        'pyyaml',
+    ],
+}
+
+
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
@@ -52,7 +63,8 @@ def main():
             'console_scripts': [
                 'indra = indra.cli:main',
                 ]
-            }
+            },
+          extras_require=EXTRAS_REQUIRE,
           )
 if __name__ == '__main__':
     main()
