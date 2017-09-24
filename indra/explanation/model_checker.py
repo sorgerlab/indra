@@ -577,8 +577,8 @@ class ModelChecker(object):
                     edge = im.get_edge(u, v)
                     edges_to_remove.append(edge)
                     edge_sign = _get_edge_sign(edge)
-                    logger.info('Will remove edge (%s, %s) with polarity %s',
-                                u, v, edge_sign)
+                    logger.debug('Will remove edge (%s, %s) with polarity %s',
+                                 u, v, edge_sign)
         for edge in im.edges():
             if edge in edges_to_remove:
                 im.remove_edge(edge)
