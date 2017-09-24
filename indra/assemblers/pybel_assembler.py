@@ -72,7 +72,7 @@ class PybelAssembler(object):
             }
 
     def add_statements(self, stmts_to_add):
-        self.stmts += stmts_to_add
+        self.statements += stmts_to_add
 
     def make_model(self):
         for stmt in self.statements:
