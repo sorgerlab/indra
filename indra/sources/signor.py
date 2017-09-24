@@ -236,8 +236,10 @@ class SignorProcessor(object):
         # if not, don't make a mechanism statement
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
             # Because this is a modification, check for a residue
-            res_pos = row.RESIDUE
-            mech_stmt = mech_stmt_type(agent_a, agent_b, evidence=evidence)
+            res, pos = _parse_residue_position(row.RESIDUE) \
+                        if row.RESIDUE else (None, None)
+            mech_stmt = mech_stmt_type(agent_a, agent_b, res, pos,
+                                       evidence=evidence)
         elif mech_stmt_type:
             mech_stmt = mech_stmt_type(agent_a, agent_b, evidence=evidence)
         else:
@@ -252,14 +254,19 @@ def _parse_residue_position(respos):
     res = respos[0:3]
     pos = respos[3:]
     # Get the abbreviated amino acid
-    aa = amino_acids_reverse.get(res.lower())
-    if not aa:
+    res = amino_acids_reverse.get(res.lower())
+    if not res:
         logger.warning("Could not get amino acid residue for residue/position "
                        "%s" % respos)
+        return (None, None)
+    # If there's no position, return residue only
+    if not pos:
+        return (res, None)
     # Make sure the position is an integer
     try:
         int(pos)
     except ValueError:
         logger.warning("Could not get valid position for residue/position "
                        "%s" % respos)
+        return (None, None)
     return (res, pos)

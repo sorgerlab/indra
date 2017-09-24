@@ -5,7 +5,8 @@ from nose.tools import raises
 
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.sources.signor import SignorProcessor, SignorRow
+from indra.sources.signor import SignorProcessor, SignorRow, \
+                                 _parse_residue_position
 
 def _id(gene):
     return hgnc_client.get_hgnc_id(gene)
@@ -94,6 +95,24 @@ def test_process_row():
     assert isinstance(mech_stmt, IncreaseAmount)
 
 
+def test_parse_residue_position():
+    res, pos = _parse_residue_position('TYR304')
+    assert res == 'Y'
+    assert pos == '304'
+    # Invalid residue
+    res, pos = _parse_residue_position('Foo')
+    assert res is None
+    assert pos is None
+    # Residue but not position
+    res, pos = _parse_residue_position('gly')
+    assert res == 'G'
+    assert pos == None
+    # Position can't be converted to int
+    res, pos = _parse_residue_position('glyxxx')
+    assert res == None
+    assert pos == None
+
+
 def test_get_mechanism():
     sp = SignorProcessor(signor_test_path)
     assert sp.statements
@@ -105,4 +124,5 @@ if __name__ == '__main__':
     test_get_agent_keyerror()
     test_get_evidence()
     test_process_row()
+    test_parse_residue_position()
     test_get_mechanism()
