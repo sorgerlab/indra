@@ -136,8 +136,6 @@ def contextualize_model(model, cell_line, genes):
     pa.model = model
     pa.set_context(cell_line_ccle)
 
-    # TODO TODO TODO: we need to set the initial conditions of mutated
-    # proteins here to replacce the WT state set by default.
     variants = read_ccle_variants(genes)
     mutations = variants['missense'][cell_line_ccle]
     for gene, mut_list in mutations.items():
@@ -165,7 +163,8 @@ def get_mod_whitelist():
     return mod_whitelist
 
 
-def print_initial_conditions(cell_lines, gene_names):
+def print_initial_conditions(cell_lines, gene_names, fname):
+    fh = open(fname, 'wt')
     genes_per_model = {}
     for cell_line in cell_lines:
         genes_per_model[cell_line] = {}
@@ -186,8 +185,8 @@ def print_initial_conditions(cell_lines, gene_names):
             if extra_states:
                 val_str += ' (%s)' % ', '.join(extra_states)
             genes_per_model[cell_line][name] = val_str
-    header = 'Protein\t' + '\t'.join(cell_lines)
-    print(header)
+    header = 'Protein\t' + '\t'.join(cell_lines) + '\n'
+    fh.write(header)
     for gene in gene_names:
         line_vals = [gene]
         no_val = True
@@ -200,4 +199,5 @@ def print_initial_conditions(cell_lines, gene_names):
             line_vals.append(val)
         line = '\t'.join(line_vals)
         if not no_val:
-            print(line)
+            fh.write(line + '\n')
+    fh.close()
