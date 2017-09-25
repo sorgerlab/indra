@@ -49,17 +49,17 @@ def num_paths_by_group(path_details):
     num_paths = {}
     for group, paths in path_details.items():
         if group in num_paths:
-            num_paths[group] = len(paths)
-        else:
             num_paths[group] += len(paths)
+        else:
+            num_paths[group] = len(paths)
     return num_paths
 
 
 def print_list(mylist):
-    print('\n'.join(sorted([str(i) for i in mylist])))
+    print('\n'.join([str(i) for i in mylist]))
 
 def print_dict(mydict):
-    print('\n'.join(sorted(['%s: %s' % (k, v) for k, v in mydict.items()])))
+    print('\n'.join(['%s: %s' % (k, v) for k, v in mydict.items()]))
 
 
 def rank_paths(groups, protein_data):
@@ -85,12 +85,31 @@ def rank_paths(groups, protein_data):
     return ranked_dict
 
 
+def all_scores(path_details):
+    all_scores = {}
+    for group in path_details.keys():
+        scores = [score for path, score in path_details[group]]
+        all_scores[group] = scores
+    return all_scores
+
+
+def top_scores(path_details):
+    top_scores = {}
+    for group in path_details.keys():
+        scores = [score for path, score in path_details[group]]
+        top_scores[group] = max(scores)
+    ts_tuples = sorted([(k, v) for k, v in top_scores.items()],
+                       key=lambda x: (x[1], -len(x[0])), reverse=True)
+    return ts_tuples
+
+
 if __name__ == '__main__':
     # Run run_task1.py before running this one
     with open(prefixed_pkl('pysb_stmts'), 'rb') as f:
         stmts = pickle.load(f)
     with open('scored_paths.pkl', 'rb') as f:
         (scored_paths, model) = pickle.load(f)
+
     all_groups = set()
     all_path_details = {}
     for cell_line, drug_dict in scored_paths.items():
