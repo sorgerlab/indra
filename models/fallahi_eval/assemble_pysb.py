@@ -69,7 +69,7 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
         pa.add_statements(stmtsc)
         model = pa.make_model()
         if cell_line not in cell_lines_no_data:
-            contextualize_model(model, cell_line)
+            contextualize_model(model, cell_line, data_genes)
         ac.dump_statements(stmtsc, prefixed_pkl('pysb_stmts_%s' % cell_line))
         with open(prefixed_pkl('pysb_model_%s' % cell_line), 'wb') as f:
             pickle.dump(model, f)
@@ -77,7 +77,6 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
 
 def contextualize_stmts(stmts, cell_line, genes):
     """Contextualize model at the level of INDRA Statements."""
-
     to_remove = []
     cell_line_ccle = cell_line + '_SKIN'
     # Remove genes with CNA = -2
@@ -103,6 +102,7 @@ def contextualize_stmts(stmts, cell_line, genes):
     to_remove_nonsense = list(variants['nonsense'][cell_line_ccle].keys())
     if to_remove_nonsense:
         print('To remove nonsense: %s' % ', '.join(to_remove_nonsense))
+        to_remove += to_remove_nonsense
     # Remove Statements for these genes
     new_stmts = []
     for stmt in stmts:
@@ -122,24 +122,32 @@ def contextualize_stmts(stmts, cell_line, genes):
         muts_to_use[gene] = []
         for mut in mut_list:
             muts_to_use[gene].append(mut)
-    stmts = ac.filter_mutation_status(stmts, mutations, [])
+    stmts = ac.filter_mutation_status(new_stmts, mutations, [])
     return stmts
 
 
-def contextualize_model(model, cell_line):
+def contextualize_model(model, cell_line, genes):
     """Contextualize model at the level of a PySB model."""
     # Here we just make a PysbAssembler to be able
     # to apply set_context on the model being passed in
     model.name = cell_line
-    if not cell_line.endswith('_SKIN'):
-        cell_line = cell_line + '_SKIN'
+    cell_line_ccle = cell_line + '_SKIN'
     pa = PysbAssembler()
     pa.model = model
-    pa.set_context(cell_line)
-
+    pa.set_context(cell_line_ccle)
 
     # TODO TODO TODO: we need to set the initial conditions of mutated
     # proteins here to replacce the WT state set by default.
+    variants = read_ccle_variants(genes)
+    mutations = variants['missense'][cell_line_ccle]
+    for gene, mut_list in mutations.items():
+        for fres, loc, tres in mut_list:
+            site_name = fres + loc
+            for ic in model.initial_conditions:
+                if ic[0].monomer_patterns[0].monomer.name == gene:
+                    sc = ic[0].monomer_patterns[0].site_conditions
+                    if site_name in sc:
+                        sc[site_name] = tres
 
     return pa.model
 
@@ -176,14 +184,20 @@ def print_initial_conditions(cell_lines, gene_names):
 
             val_str = '%d' % initial.value
             if extra_states:
-                val_str + ' (%s)' % ', '.join(extra_states)
+                val_str += ' (%s)' % ', '.join(extra_states)
             genes_per_model[cell_line][name] = val_str
+    header = 'Protein\t' + '\t'.join(cell_lines)
+    print(header)
     for gene in gene_names:
         line_vals = [gene]
+        no_val = True
         for cell_line in cell_lines:
             val = genes_per_model[cell_line].get(gene)
             if not val:
                 val = '-'
+            else:
+                no_val = False
             line_vals.append(val)
         line = '\t'.join(line_vals)
-        print(line)
+        if not no_val:
+            print(line)

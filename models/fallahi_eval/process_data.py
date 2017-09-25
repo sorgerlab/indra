@@ -474,9 +474,8 @@ def build_context_json(data, cell_lines, filename="fallahi"):
 
 
 
-cell_lines = ['C32', 'COLO858', 'K2', 'LOXIMVI', 'MMACSF', 'MZ7MEL',
-              'RVH421', 'SKMEL28', 'WM115', 'WM1552C']
-
+cell_lines = ['C32', 'LOXIMVI', 'RVH421', 'SKMEL28', 'WM115',
+              'COLO858', 'K2', 'MMACSF', 'MZ7MEL', 'WM1552C']
 
 drug_names = {'AZ628': ['AZ628', 'AZ_628', 'AZ-628', '878739-06-1'],
              'Selumetinib': ['Selumetinib', 'AZD6244', 'AZD 6244',
