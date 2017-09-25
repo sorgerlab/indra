@@ -93,7 +93,10 @@ class NihFtpClient(object):
                 idx = part_list.index(part) - 1
                 part_list.pop(idx)
                 part_list.pop(idx)
-        return path.join(*part_list)
+        ret = path.join(*part_list)
+        if part_list[0] == '':
+            ret = '/' + ret
+        return ret
 
     def get_ftp_connection(self, ftp_path=None):
         if ftp_path is None:

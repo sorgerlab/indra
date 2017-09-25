@@ -196,7 +196,7 @@ TEST_POPULATE = True
 if version_info.major is not 3:
     TEST_POPULATE = False
 
-TEST_FTP = 'test_ftp'
+TEST_FTP = path.abspath(path.join(path.dirname(__file__), 'test_ftp'))
 if TEST_POPULATE and not path.exists(TEST_FTP):
     print("Creating test directory. This could take a while...")
     from indra.db.build_sample_set import build_set
