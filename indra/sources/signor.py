@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
+from os.path import join, dirname
 from collections import namedtuple, Counter, defaultdict
 
 from indra.statements import *
@@ -112,6 +113,10 @@ _effect_map = {
     'up-regulates quantity by expression': IncreaseAmount,
     'up-regulates quantity by stabilization': IncreaseAmount
 }
+
+
+signor_default_path = join(dirname(__file__), '..', '..', 'data',
+                          'all_data_23_09_17.csv')
 
 
 class SignorProcessor(object):
