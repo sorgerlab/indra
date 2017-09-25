@@ -1,11 +1,85 @@
 import pickle
 from copy import deepcopy
 import itertools
+from indra.assemblers import EnglishAssembler
+from indra.explanation.reporting import stmts_for_path
 from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
 from util import pklload, pkldump
 from process_data import read_rppa_data, get_task_5, get_antibody_agents
 from assemble_pysb import contextualize_model, prefixed_pkl
 
+##################
+# Refactor these in reusable chunks into explanations/reporting
+def export_paths(scored_paths, model, stmts):
+    """Export paths for pathway map in JSON-like format."""
+    conc = 1.0
+    time = 10
+    paths = {}
+    for cell_line in scored_paths.keys():
+        for drug in scored_paths[cell_line].keys():
+            scpaths = scored_paths[cell_line][drug]
+            path, score = scpaths[0]
+            label = '%s_%s_%s_%s' % (drug, time, conc, cell_line)
+            paths[label] = {'meta': [], 'path': []}
+            path_stmts = stmts_for_path(path, model, stmts)
+            uuids = [stmt.uuid for stmt in path_stmts]
+            paths[label]['path'] = uuids
+    return paths
+
+
+def report_paths(scored_paths, model, stmts, cell_line):
+    """Report paths for a specific cell line."""
+    citations = {}
+    citation_count = 1
+    ab_name = 'Total c-Jun'
+    if cell_line == 'C32':
+        pol = 'decreased'
+    else:
+        pol = 'increased'
+    for drug in scored_paths.keys():
+        paths = scored_paths[drug]
+        for path, score in paths[:1]:
+            title = 'How does %s treatment result in %s %s' % \
+                (drug, pol, ab_name)
+            title += ' in %s cells?' % cell_line
+            print(title)
+            print('=' * len(title))
+            path_stmts = stmts_for_path(path, model, stmts)
+            sentences = []
+            for i, stmt in enumerate(path_stmts):
+                if i == 0:
+                    target = stmt.agent_list()[0].name
+                    sentences.append('%s is a target of %s.' %
+                                     (target, drug))
+                # Make citations
+                pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
+                cit_nums = []
+                for pmid in pmids:
+                    cit_num = citations.get(pmid)
+                    if cit_num is None:
+                        citations[pmid] = citation_count
+                        cit_num = citation_count
+                        citation_count += 1
+                    cit_nums.append(cit_num)
+                if cit_nums:
+                    cit_nums = sorted(list(set(cit_nums)))
+                    cit_str = ' [%s]' % (','.join([str(c) for c
+                                                  in cit_nums]))
+                else:
+                    cit_str = ''
+                ea = EnglishAssembler([stmt])
+                sentence = ea.make_model()
+                sentence = sentence[:-1] + cit_str + '.'
+                sentences.append(sentence)
+            sentences[-1] = sentences[-1][:-1] + \
+                ', which is measured by %s.' % ab_name
+            print(' '.join(sentences))
+            print()
+    references = 'References\n==========\n'
+    for k, v in sorted(citations.items(), key=lambda x: x[1]):
+        references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)
+    print(references)
+#################
 
 def get_agent_values(antibody_agents, values):
     agent_values = {}
@@ -28,7 +102,7 @@ def get_global_mc(model, stmts_to_check, agents_to_observe):
 flatten = lambda x: list(itertools.chain.from_iterable(x))
 
 if __name__ == '__main__':
-    INVERSE = False
+    INVERSE = True
     if INVERSE:
         print('Running Task 5 in INVERSE mode as control')
         print('=========================================')
@@ -61,7 +135,7 @@ if __name__ == '__main__':
                 stmts_to_check[cell_line][drug][dose]
             path_results = []
             for stmt in stmts_condition:
-                pr = global_mc.check_statement(stmt, 1, 10)
+                pr = global_mc.check_statement(stmt, 100, 10)
                 path_results.append(pr)
             # Get a dict of measured values by INDRA Agents for this condition
             agent_values = get_agent_values(antibody_agents, values_condition)
@@ -80,8 +154,8 @@ if __name__ == '__main__':
             scored_paths[cell_line][drug] = scored_paths_condition
         models[cell_line] = global_mc.model
 
-# Dump results in standard folder
-fname = 'task5_scored_paths'
-if INVERSE:
-    fname += '_inverse'
-pkldump(fname, (scored_paths, models))
+    # Dump results in standard folder
+    fname = 'task5_scored_paths'
+    if INVERSE:
+        fname += '_inverse'
+    pkldump(fname, (scored_paths, models))
