@@ -180,6 +180,8 @@ class MechLinker(object):
             This list is also set as the internal Statement list of the
             MechLinker.
         """
+        logger.info('Setting required active forms on %d statements...' %
+                    len(self.statements))
         new_stmts = []
         for stmt in self.statements:
             if isinstance(stmt, Modification):
