@@ -6,7 +6,7 @@ from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
 from indra.databases import context_client, cbio_client
 from indra.assemblers import PysbAssembler, IndexCardAssembler
-from util import prefixed_pkl
+from util import prefixed_pkl, pklload
 from process_data import antibody_map, cell_lines, read_ccle_variants
 
 def assemble_pysb(stmts, data_genes, contextualize=False):
@@ -136,6 +136,11 @@ def contextualize_model(model, cell_line):
     pa = PysbAssembler()
     pa.model = model
     pa.set_context(cell_line)
+
+
+    # TODO TODO TODO: we need to set the initial conditions of mutated
+    # proteins here to replacce the WT state set by default.
+
     return pa.model
 
 
@@ -152,17 +157,33 @@ def get_mod_whitelist():
     return mod_whitelist
 
 
-def print_initial_conditions(models, gene_names):
-    inits = sorted(model.initial_conditions,
-        key=lambda x: x[0].monomer_patterns[0].monomer.name)
-    basic_states = ['n', 'u', 'WT', 'inactive', None]
-    for cplx, initial in inits:
-        name = cplx.monomer_patterns[0].monomer.name
-        extra_states = []
-        for site, state in cplx.monomer_patterns[0].site_conditions.items():
-            if site == 'loc':
-                continue
-            if state not in basic_states:
-                extra_states.append('%s=%s' % (site, state))
+def print_initial_conditions(cell_lines, gene_names):
+    genes_per_model = {}
+    for cell_line in cell_lines:
+        genes_per_model[cell_line] = {}
+        model = pklload('pysb_model_%s' % cell_line)
+        inits = sorted(model.initial_conditions,
+            key=lambda x: x[0].monomer_patterns[0].monomer.name)
+        basic_states = ['n', 'u', 'WT', 'inactive', None]
+        for cplx, initial in inits:
+            name = cplx.monomer_patterns[0].monomer.name
+            extra_states = []
+            for site, state in cplx.monomer_patterns[0].site_conditions.items():
+                if site == 'loc':
+                    continue
+                if state not in basic_states:
+                    extra_states.append('%s=%s' % (site, state))
 
-        print('%s\t%s\t%d' % (name, ', '.join(extra_states), initial.value))
+            val_str = '%d' % initial.value
+            if extra_states:
+                val_str + ' (%s)' % ', '.join(extra_states)
+            genes_per_model[cell_line][name] = val_str
+    for gene in gene_names:
+        line_vals = [gene]
+        for cell_line in cell_lines:
+            val = genes_per_model[cell_line].get(gene)
+            if not val:
+                val = '-'
+            line_vals.append(val)
+        line = '\t'.join(line_vals)
+        print(line)
