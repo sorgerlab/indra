@@ -41,7 +41,7 @@ if __name__ == '__main__':
     import pickle
     import logging
 
-    logger = logging.getLogger('run_reach_on_pmids_aws')
+    logger = logging.getLogger('read_pmids_aws')
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
@@ -74,8 +74,9 @@ if __name__ == '__main__':
 
     # Run the reading pipelines
     stmts = {}
+    content_types = {}
     for reader, run_reader in read.READER_DICT:
-        some_stmts, content_types = run_reader(
+        some_stmts, some_content_types = run_reader(
             pmid_list,
             tmp_dir,
             num_cores,
@@ -88,6 +89,7 @@ if __name__ == '__main__':
             cleanup=False,
             verbose=True)
         stmts[reader] = some_stmts
+        content_types[reader] = some_content_types
 
     # Pickle the content types to S3
     ct_key_name = 'reading_results/%s/content_types/%d_%d.pkl' % \
