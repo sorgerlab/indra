@@ -379,8 +379,8 @@ def get_task_5(data, inverse=False):
     # in the cell line RVH421 but a dose-dependent decrease in total
     # c-Jun in the cell line C32.
     antibody_agents = get_antibody_agents()
-    #obs_agents = antibody_agents['Total c-Jun']
-    obs_agents = [Agent('RB1', activity=ActivityCondition('activity', False), db_refs={'HGNC': '9884'})]
+    obs_agents = antibody_agents['Total c-Jun']
+    #obs_agents = [Agent('RB1', activity=ActivityCondition('activity', False), db_refs={'HGNC': '9884'})]
     # We fix the time point to 24 hours
     time = 24
     # We look at doses at least 0.1 since the effect is only observed there
@@ -402,9 +402,9 @@ def get_task_5(data, inverse=False):
                 for target, obs in itertools.product(target_agents, obs_agents):
                     if (cell_line == 'C32' and not inverse) or \
                         (cell_line == 'RVH421' and inverse):
-                        st = Activation(target, obs)
+                        st = IncreaseAmount(target, obs)
                     else:
-                        st = Inhibition(target, obs)
+                        st = DecreaseAmount(target, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 

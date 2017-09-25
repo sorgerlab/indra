@@ -51,6 +51,7 @@ if __name__ == '__main__':
     global_mc = None
     dose = 1.0
     scored_paths = {}
+    models = {}
     # Run model checking per cell line
     for cell_line in stmts_to_check.keys():
         print('Cell line: %s\n=============' % cell_line)
@@ -87,9 +88,10 @@ if __name__ == '__main__':
                                                     loss_of_function=True,
                                                     sigma=0.5)
             scored_paths[cell_line][drug] = scored_paths_condition
+        models[cell_line] = global_mc.model
 
 # Dump results in standard folder
 fname = 'task1_scored_paths'
 if INVERSE:
     fname += '_inverse'
-pkldump(fname, (scored_paths, global_mc.model))
+pkldump(fname, (scored_paths, models))
