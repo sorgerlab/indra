@@ -46,50 +46,49 @@ def export_paths(scored_paths, model, stmts):
     return paths
 
 
-def report_paths(scored_paths, model, stmts):
+def report_paths(scored_paths, model, stmts, cell_line):
     citations = {}
     citation_count = 1
     ab_name = 'p-S6(S235/236)'
-    for cell_line in scored_paths.keys():
-        for drug in scored_paths[cell_line].keys():
-            paths = scored_paths[cell_line][drug]
-            for path, score in paths[:1]:
-                title = 'How does %s treatment result in decreased %s' % \
-                    (drug, ab_name)
-                title += ' in %s cells?' % cell_line
-                print(title)
-                print('=' * len(title))
-                path_stmts = stmts_for_path(path, model, stmts)
-                sentences = []
-                for i, stmt in enumerate(path_stmts):
-                    if i == 0:
-                        target = stmt.agent_list()[0].name
-                        sentences.append('%s is a target of %s.' %
-                                         (target, drug))
-                    # Make citations
-                    pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
-                    cit_nums = []
-                    for pmid in pmids:
-                        cit_num = citations.get(pmid)
-                        if cit_num is None:
-                            citations[pmid] = citation_count
-                            cit_num = citation_count
-                            citation_count += 1
-                        cit_nums.append(cit_num)
-                    if cit_nums:
-                        cit_nums = sorted(list(set(cit_nums)))
-                        cit_str = ' [%s]' % (','.join([str(c) for c
-                                                      in cit_nums]))
-                    else:
-                        cit_str = ''
-                    ea = EnglishAssembler([stmt])
-                    sentence = ea.make_model()
-                    sentence = sentence[:-1] + cit_str + '.'
-                    sentences.append(sentence)
-                sentences[-1] = sentences[-1][:-1] + \
-                    ', which is measured by %s.' % ab_name
-                print(' '.join(sentences))
-                print()
+    for drug in scored_paths.keys():
+        paths = scored_paths[drug]
+        for path, score in paths[:1]:
+            title = 'How does %s treatment result in decreased %s' % \
+                (drug, ab_name)
+            title += ' in %s cells?' % cell_line
+            print(title)
+            print('=' * len(title))
+            path_stmts = stmts_for_path(path, model, stmts)
+            sentences = []
+            for i, stmt in enumerate(path_stmts):
+                if i == 0:
+                    target = stmt.agent_list()[0].name
+                    sentences.append('%s is a target of %s.' %
+                                     (target, drug))
+                # Make citations
+                pmids = [ev.pmid for ev in stmt.evidence if ev.pmid]
+                cit_nums = []
+                for pmid in pmids:
+                    cit_num = citations.get(pmid)
+                    if cit_num is None:
+                        citations[pmid] = citation_count
+                        cit_num = citation_count
+                        citation_count += 1
+                    cit_nums.append(cit_num)
+                if cit_nums:
+                    cit_nums = sorted(list(set(cit_nums)))
+                    cit_str = ' [%s]' % (','.join([str(c) for c
+                                                  in cit_nums]))
+                else:
+                    cit_str = ''
+                ea = EnglishAssembler([stmt])
+                sentence = ea.make_model()
+                sentence = sentence[:-1] + cit_str + '.'
+                sentences.append(sentence)
+            sentences[-1] = sentences[-1][:-1] + \
+                ', which is measured by %s.' % ab_name
+            print(' '.join(sentences))
+            print()
     references = 'References\n==========\n'
     for k, v in sorted(citations.items(), key=lambda x: x[1]):
         references += '[%d] https://www.ncbi.nlm.nih.gov/pubmed/%s\n' % (v, k)

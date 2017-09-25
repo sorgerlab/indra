@@ -2,9 +2,9 @@ from util import *
 import indra.tools.assemble_corpus as ac
 from run_task1 import export_paths, report_paths
 
-cell_line = 'C32'
-scored_paths, models = pklload('task1_scored_paths')
-model = models[cell_line]
-stmts = pklload('pysb_stmts_%s' % cell_line)
+for cell line in ['C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421']:
+    scored_paths, models = pklload('task1_scored_paths')
+    model = models[cell_line]
+    stmts = pklload('pysb_stmts_%s' % cell_line)
 
-report_paths(scored_paths, model, stmts)
+    report_paths(scored_paths[cell_line], model, stmts, cell_line)
