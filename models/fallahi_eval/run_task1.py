@@ -4,7 +4,7 @@ from copy import deepcopy
 import indra.tools.assemble_corpus as ac
 from indra.explanation.reporting import *
 from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
-from util import pkldump
+from util import pkldump, pklload
 from assemble_pysb import contextualize_model, prefixed_pkl
 from process_data import read_rppa_data, get_task_1, get_antibody_agents
 
@@ -35,9 +35,11 @@ flatten = lambda x: list(itertools.chain.from_iterable(x))
 
 
 if __name__ == '__main__':
+    INVERSE = False
+    if INVERSE:
+        print('Running Task 1 in INVERSE mode as control')
+        print('=========================================')
     # Some basic setup
-    with open(prefixed_pkl('pysb_model'), 'rb') as fh:
-        model = pickle.load(fh)
     data = read_rppa_data()
     antibody_agents = get_antibody_agents()
     agents_to_observe = []
@@ -45,28 +47,26 @@ if __name__ == '__main__':
         agents_to_observe += agents
 
     # Get all the data for Task 1
-    stmts_to_check = get_task_1(data, False)
+    stmts_to_check = get_task_1(data, INVERSE)
     global_mc = None
     dose = 1.0
     scored_paths = {}
     # Run model checking per cell line
     for cell_line in stmts_to_check.keys():
         print('Cell line: %s\n=============' % cell_line)
-        model_cell_line = deepcopy(model)
-        #model_cell_line = contextualize_model(model_cell_line, cell_line)
+        model = pklload('pysb_model_%s' % cell_line)
         scored_paths[cell_line] = {}
+        # Make a Model Checker with the
+        # - model contextualized to the cell line
+        # - the statements for the given condition
+        # - agents for which observables need to be made
+        global_mc = get_global_mc(model, stmts_to_check,
+                                  agents_to_observe)
         for drug in stmts_to_check[cell_line].keys():
             print('Drug: %s\n=============' % drug)
             # Get all the statements and values for the condition
             stmts_condition, values_condition = \
                 stmts_to_check[cell_line][drug][dose]
-            # Make a Model Checker with the
-            # - model contextualized to the cell line
-            # - the statements for the given condition
-            # - agents for which observables need to be made
-            if not global_mc:
-                global_mc = get_global_mc(model_cell_line, stmts_to_check,
-                                          agents_to_observe)
             path_results = []
             for stmt in stmts_condition:
                 pr = global_mc.check_statement(stmt, 1000, 10)
@@ -89,4 +89,7 @@ if __name__ == '__main__':
             scored_paths[cell_line][drug] = scored_paths_condition
 
 # Dump results in standard folder
-pkldump('task1_scored_paths', (scored_paths, global_mc.model))
+fname = 'task1_scored_paths'
+if INVERSE:
+    fname += '_inverse'
+pkldump(fname, (scored_paths, global_mc.model))
