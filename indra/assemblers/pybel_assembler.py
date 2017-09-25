@@ -109,9 +109,13 @@ class PybelAssembler(object):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
         :py:mod:`pybel`
 
-        :param str path: The path to output to
-        :param Optional[str] output_format: Output format as ``cx``, 
-                            ``pickle``, ``json`` or defaults to ``bel``
+
+        Parameters
+        ----------
+        path : str
+            The path to output to
+        output_format : Optional[str]
+            Output format as ``cx``, ``pickle``, ``json`` or defaults to ``bel``
         """
         if output_format == 'pickle':
             pybel.to_pickle(self.model, path)
