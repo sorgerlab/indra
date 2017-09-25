@@ -249,7 +249,9 @@ class Medline(NihManager):
         valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
         logger.info("%d valid PMIDs" % len(valid_pmids))
         existing_pmids = set(db.get_pmids(valid_pmids))
-        logger.info("%d valid PMIDs already in text_refs." % len(existing_pmids))
+        logger.info(
+            "%d valid PMIDs already in text_refs." % len(existing_pmids)
+            )
         pmids_to_add = valid_pmids.difference(existing_pmids)
         logger.info("%d PMIDs to add to text_refs" % len(pmids_to_add))
         for pmid in pmids_to_add:
@@ -410,7 +412,7 @@ class PmcManager(NihManager):
             logger.debug("Done updating...")
 
         def update_record_with_pmid(tr_entry, pmid=None):
-            logger.debug("Updating a record with a new pmid...")
+            logger.debug("Updating a record with a new pmid %s..." % pmid)
             tr = db.select_one('text_ref', db.TextRef.pmcid == tr_entry['pmcid'])
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
@@ -439,7 +441,7 @@ class PmcManager(NihManager):
         N = len(tr_data)
         logger.debug("Beginning to filter %d text refs..." % N)
         for i, tr_entry in enumerate(tr_data):
-            if i % int(N/10) is 0:
+            if N >= 10 and i % int(N/10) is 0:
                 logger.debug('%d%% done filtering text_refs...' % (100*i/N))
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] is None:

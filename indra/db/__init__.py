@@ -191,7 +191,14 @@ class DatabaseManager(object):
 
     def __del__(self, *args, **kwargs):
         self.grab_session()
-        self.session.rollback()
+        try:
+            self.session.rollback()
+        except Exception as e:
+            logger.error(
+                "Failed to execute rollback of database upon deletion."
+                )
+            logger.exception(e)
+            raise e
 
     def create_tables(self):
         "Create the tables for INDRA database."
@@ -205,6 +212,7 @@ class DatabaseManager(object):
         "Brutal clearing of all tables."
         # This is intended for testing purposes, not general use.
         # Use with care.
+        self.grab_session()
         self.session.rollback()
         self.drop_tables()
         self.create_tables()
@@ -214,6 +222,8 @@ class DatabaseManager(object):
         if self.session is None or not self.session.is_active:
             DBSession = sessionmaker(bind=self.engine)
             self.session = DBSession()
+            if self.session is None:
+                raise IndraDatabaseError("Failed to grab session.")
 
     def get_tables(self):
         "Get a list of available tables."
@@ -300,7 +310,7 @@ class DatabaseManager(object):
             assert all([col in self.get_columns(tbl_name) for col in cols]),\
                 "Do not recognize one of the columns in %s for table %s." % \
                 (cols, tbl_name)
-        if self.sqltype is sqltypes.POSTGRESQL and CAN_COPY:
+        if self.sqltype == sqltypes.POSTGRESQL and CAN_COPY:
             conn = self.engine.raw_connection()
             mngr = CopyManager(conn, tbl_name, cols)
             data_bts = []
@@ -494,7 +504,7 @@ class IndraDatabaseError(Exception):
 
 def get_defaults():
     "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    default_default_file = 'defaults.txt'
+    default_default_file = os.path.join(os.path.dirname(__file__), 'defaults.txt')
     env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
     env = os.environ
     available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}

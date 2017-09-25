@@ -2,24 +2,24 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import re
+from os import remove, path
 from sys import version_info
 from nose import SkipTest
-from nose.failure import Failure
-from os import remove, path
 from nose.tools import assert_equal, assert_list_equal
 from sqlalchemy.exc import IntegrityError
 from indra.db.manage_content import Medline, PmcOA, Manuscripts
 from indra.db import DatabaseManager, texttypes, get_defaults
 
-try:
-    defaults = get_defaults()
-except Exception:
-    raise Failure("Could not load the default hosts for the database.")
+defaults = get_defaults()
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # TODO: implement setup-teardown system.
 TEST_HOST = None
-for k, v in test_defaults.items():
+TEST_HOST_TYPE = ''
+key_list = list(test_defaults.keys())
+key_list.sort()
+for k in key_list:
+    v = test_defaults[k]
     m = re.match('(\w+)://.*?/([\w.]+)', v)
     if m is None:
         raise SkipTest(
@@ -31,8 +31,9 @@ for k, v in test_defaults.items():
     try:
         db = DatabaseManager(v, sqltype=sqltype)
         db._clear()
-    except Exception:
-        pass  # Clearly this test table won't work.
+    except Exception as e:
+        print("Tried to use %s, but failed due to:\n%s" % (k, e))
+        continue  # Clearly this test table won't work.
     if db_name.endswith('.db'):
         TEST_FILE = db_name
         if path.exists(TEST_FILE):
@@ -40,6 +41,8 @@ for k, v in test_defaults.items():
     else:
         TEST_FILE = None
     TEST_HOST = v
+    TEST_HOST_TYPE = sqltype
+    print("Using test database %s." % k)
     break
 else:
     raise SkipTest("Not able to start up any of the available test hosts.")
@@ -58,7 +61,7 @@ def assert_contents_equal(list1, list2, msg=None):
 
 def get_db():
     "Set up the database for testing."
-    db = DatabaseManager(TEST_HOST, sqltype='sqlite')
+    db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
     db.grab_session()
     db._clear()
     return db
@@ -331,7 +334,11 @@ def test_id_handling_pmc_oa():
         ('25409783', 'PMC4238023')
         ]
     actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select_all('text_ref')]
-    assert_list_equal(actual_pairs, expected_pairs, 'DB text refs incorrect.')
+    assert_contents_equal(
+        actual_pairs,
+        expected_pairs,
+        'DB text refs incorrect.'
+        )
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
@@ -358,6 +365,3 @@ def test_ftp_service():
                 assert ret is not None,\
                     "Failed to load %s from %s." % (file, Child.__name__)
         # TODO: test the download.
-
-
-
