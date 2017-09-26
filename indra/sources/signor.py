@@ -237,7 +237,7 @@ class SignorProcessor(object):
             stmts.append(IncreaseAmount(agent_a, agent_b, evidence=evidence))
         elif row.MECHANISM == 'destabilization' and \
              row.EFFECT in ('down-regulates', 'down-regulates quantity',
-                            'down-regulates quantity by stabilization'):
+                            'down-regulates quantity by destabilization'):
             stmts.append(DecreaseAmount(agent_a, agent_b, evidence=evidence))
         elif row.MECHANISM == 'chemical activation' and \
              row.EFFECT in ('up-regulates', 'up-regulates activity'):

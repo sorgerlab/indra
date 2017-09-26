@@ -14,6 +14,7 @@ def _id(gene):
 signor_test_path = join(dirname(__file__), '..', '..', 'data',
                         'all_data_23_09_17.csv')
 
+
 test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
         DATABASEB='UNIPROT', EFFECT='up-regulates quantity',
@@ -27,27 +28,6 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
                  "in NFkappaB-mediated cell survival.",
         SIGNOR_ID='SIGNOR-241929')
 
-test_row_binding = SignorRow(ENTITYA='SERPINA1', TYPEA='protein', IDA='P01009', 
-        DATABASEA='UNIPROT', ENTITYB='LRP1', TYPEB='protein', IDB='Q07954',
-        DATABASEB='UNIPROT', EFFECT='up-regulates', MECHANISM='binding',
-        RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
-        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
-        MODIFICATIONB='', MODBSEQ='', PMID='8626456', DIRECT='YES', NOTES='',
-        ANNOTATOR='gcesareni', SENTENCE='In vitro binding studies revealed '\
-                'that antithrombin iii (atiii)thrombin, heparin cofactor ii '\
-                '(hcii)thrombin, and ?1-antitrypsin (?1AT)trypsin bound to '\
-                'purified lrp',
-        SIGNOR_ID='SIGNOR-41180')
-
-test_row_dup1 = SignorRow(ENTITYA='722544-51-6', TYPEA='chemical',
-        IDA='CID:16007391', DATABASEA='PUBCHEM', ENTITYB='AURKB',
-        TYPEB='protein', IDB='Q96GD4', DATABASEB='UNIPROT',
-        EFFECT='down-regulates', MECHANISM='chemical inhibition', RESIDUE='',
-        SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
-        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
-        MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
-        NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
-        SIGNOR_ID='SIGNOR-190245')
 
 def test_parse_csv():
     sp = SignorProcessor(signor_test_path)
@@ -119,6 +99,14 @@ def test_process_row():
 
 
 def test_process_row_binding():
+    test_row_binding = SignorRow(ENTITYA='SERPINA1', TYPEA='protein',
+        IDA='P01009', DATABASEA='UNIPROT', ENTITYB='LRP1', TYPEB='protein',
+        IDB='Q07954', DATABASEB='UNIPROT', EFFECT='up-regulates',
+        MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
+        CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+        MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+        PMID='8626456', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
+        SENTENCE='', SIGNOR_ID='SIGNOR-41180')
     stmts = SignorProcessor._process_row(test_row_binding)
     assert isinstance(stmts, list)
     assert len(stmts) == 2
@@ -126,11 +114,83 @@ def test_process_row_binding():
     assert isinstance(stmts[1], Complex)
 
 
-def test_process_row_dup1():
-    stmts = SignorProcessor._process_row(test_row_dup1)
+def test_process_row_chem_inh():
+    test_row_chem_inh = SignorRow(ENTITYA='722544-51-6', TYPEA='chemical',
+        IDA='CID:16007391', DATABASEA='PUBCHEM', ENTITYB='AURKB',
+        TYPEB='protein', IDB='Q96GD4', DATABASEB='UNIPROT',
+        EFFECT='down-regulates', MECHANISM='chemical inhibition', RESIDUE='',
+        SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
+        NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
+        SIGNOR_ID='SIGNOR-190245')
+    stmts = SignorProcessor._process_row(test_row_chem_inh)
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], Inhibition)
+
+
+def test_process_row_chem_act():
+    test_row_chem_act = SignorRow(ENTITYA='Prostaglandin E2',
+        TYPEA='smallmolecule', IDA='CID:5280360', DATABASEA='PUBCHEM',
+        ENTITYB='GNG12', TYPEB='protein', IDB='Q9UBI6', DATABASEB='UNIPROT',
+        EFFECT='up-regulates', MECHANISM='chemical activation', RESIDUE='',
+        SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='16293724', DIRECT='YES', NOTES='',
+        ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-141820')
+    stmts = SignorProcessor._process_row(test_row_chem_act)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], Activation)
+
+
+def test_process_row_stab():
+    test_row_stab = SignorRow(ENTITYA='UCHL5', TYPEA='protein', IDA='Q9Y5K5',
+            DATABASEA='UNIPROT', ENTITYB='TGFBR1', TYPEB='protein',
+            IDB='P36897', DATABASEB='UNIPROT', EFFECT='up-regulates',
+            MECHANISM='stabilization', RESIDUE='', SEQUENCE='', TAX_ID='9606',
+            CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='17052192', DIRECT='YES', NOTES='',
+            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-150135')
+    stmts = SignorProcessor._process_row(test_row_stab)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], IncreaseAmount)
+
+
+def test_process_row_destab():
+    test_row_destab = SignorRow(ENTITYA='INS', TYPEA='protein', IDA='P01308',
+            DATABASEA='UNIPROT', ENTITYB='APOB', TYPEB='protein', IDB='P04114',
+            DATABASEB='UNIPROT',
+            EFFECT='down-regulates quantity by destabilization',
+            MECHANISM='destabilization', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='BTO:0000575', TISSUE_DATA='',
+            MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
+            MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='23721961',
+            DIRECT='NO', NOTES='', ANNOTATOR='miannu',
+            SENTENCE='', SIGNOR_ID='SIGNOR-252114')
+    stmts = SignorProcessor._process_row(test_row_destab)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], DecreaseAmount)
+
+
+def test_process_row_binding_complex():
+    test_row = SignorRow(ENTITYA='ATG5', TYPEA='protein', IDA='Q9H1Y0',
+            DATABASEA='UNIPROT', ENTITYB='ATG12/5/16L1', TYPEB='complex',
+            IDB='SIGNOR-C109', DATABASEB='SIGNOR', EFFECT='form complex',
+            MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
+            CELL_DATA='', TISSUE_DATA='BTO:0000007', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='18321988', DIRECT='YES', NOTES='',
+            ANNOTATOR='lperfetto', SENTENCE='', SIGNOR_ID='SIGNOR-226693')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], Complex)
+    assert len(stmts[0].agent_list()) == 2
 
 
 def test_parse_residue_positions():
@@ -171,12 +231,13 @@ def test_get_mechanism():
     globals().update(locals())
 
 if __name__ == '__main__':
+    test_process_row_destab()
     #test_parse_csv()
     #test_get_agent()
     #test_get_agent_keyerror()
     #test_get_evidence()
     #test_process_row()
-    test_process_row_binding()
-    #test_process_row_dup1()
+    #test_process_row_binding()
+    #test_process_row_chem_inh()
     #test_parse_residue_positions()
     #test_get_mechanism()
