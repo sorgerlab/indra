@@ -452,6 +452,10 @@ def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     return data_list
 
 
+# Deactivate this section for the time being, can be reinstated
+# once these are fully integrated
+'''
+
 def _read_ccle_cna():
     fname = os.path.dirname(os.path.abspath(__file__)) + \
         '/../../data/ccle_CNA.txt'
@@ -486,3 +490,4 @@ def _read_ccle_mutations():
     return df
 
 ccle_mutations_df = _read_ccle_mutations()
+'''
