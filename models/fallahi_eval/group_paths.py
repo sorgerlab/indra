@@ -58,6 +58,7 @@ def num_paths_by_group(path_details):
 def print_list(mylist):
     print('\n'.join([str(i) for i in mylist]))
 
+
 def print_dict(mydict):
     print('\n'.join(['%s: %s' % (k, v) for k, v in mydict.items()]))
 
@@ -101,6 +102,24 @@ def top_scores(path_details):
     ts_tuples = sorted([(k, v) for k, v in top_scores.items()],
                        key=lambda x: (x[1], -len(x[0])), reverse=True)
     return ts_tuples
+
+
+def print_top_group_scores(scored_paths, model, stmts):
+    groups, path_details = group_scored_paths(scored_paths, model, stmts)
+    ts = top_scores(path_details)
+    last_sign = 1
+    for path, score in ts:
+        path_str = ''
+        for ix, (node, sign) in enumerate(path):
+            if ix == 0:
+                path_str += node
+            else:
+                if sign == last_sign:
+                    path_str += ' -> %s' % node
+                else:
+                    path_str += ' -| %s' % node
+            last_sign = sign
+        print('%s : score %s' % (path_str, score))
 
 
 if __name__ == '__main__':
