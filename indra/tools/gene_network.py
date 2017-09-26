@@ -143,7 +143,7 @@ class GeneNetwork(object):
                 logger.warning('Using neighborhood query for one gene.')
                 query = 'neighborhood'
             if query == 'pathsbetween':
-                if self.gene_list > 60:
+                if len(self.gene_list) > 60:
                     block_size = 60
                 else:
                     block_size = None
