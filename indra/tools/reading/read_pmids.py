@@ -745,13 +745,14 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
             f.write(conf_file_text)
 
         # Run REACH!
-        args = ['java', '-jar', path_to_reach, conf_file_path]
+        logger.info("Beginning reach.")
+        args = ['java', '-Dconfig.file=%s' % conf_file_path, '-jar', path_to_reach]
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         if verbose:
             for line in iter(p.stdout.readline, b''):
                 logger.info(line)
-        (p_out, p_err) = p.communicate()
+        (p_out, p_err) = p.communicate(timeout=10*num_found)
         if p.returncode:
             logger.error('Problem running REACH:')
             logger.error('Stdout: %s' % p_out.decode('utf-8'))
